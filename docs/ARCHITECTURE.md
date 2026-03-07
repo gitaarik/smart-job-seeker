@@ -3,8 +3,8 @@
 ## Overview
 
 Smart Job Seeker is a SvelteKit application that helps users manage their job
-search process. It integrates with Directus CMS for data management and uses LLM
-capabilities for generating personalized content.
+search process. It integrates with Directus CMS for data management and uses
+LangChain with multiple LLM providers for generating personalized content.
 
 ## Technology Stack
 
@@ -21,109 +21,124 @@ capabilities for generating personalized content.
 - **SvelteKit Server** - SSR and API routes
 - **Prisma ORM** - Database access layer
 - **PostgreSQL** - Primary database
-- **Directus CMS** - Headless CMS as source of truth
+- **Directus CMS** - Headless CMS for content management
+- **Better Auth** - Authentication (email/password)
+- **Redis** - Background job queues
 
-### External Services
+### AI / LLM
 
-- **Groq API** - LLM completions (with fallback support)
-- **OpenAI API** - Alternative LLM provider
+- **LangChain** - LLM abstraction layer
+- **Groq** (default), **Gemini**, **OpenAI**, **DeepSeek**, **Cerebras** -
+  Configurable LLM providers
+- **Zod schemas** - Structured output validation
 
 ## Project Structure
 
-````
+```
 smart-job-seeker/
 ├── src/
 │   ├── lib/
-│   │   ├── components/        # Reusable UI components
+│   │   ├── components/            # Reusable UI components
 │   │   │   ├── ProfileDisplay/
 │   │   │   ├── contact-info/
 │   │   │   └── *.svelte
-│   │   ├── data/             # Static data and types
-│   │   ├── server/           # Server-side code
-│   │   │   ├── cache/        # LLM response caching
-│   │   │   ├── middleware/   # Rate limiting, etc.
-│   │   │   ├── monitoring/   # Error tracking
-│   │   │   ├── utils/        # Retry logic, helpers
-│   │   │   ├── validation/   # Zod schemas
-│   │   │   ├── webhook-handlers/  # Modular webhook handlers
-│   │   │   ├── config.ts     # Centralized configuration
-│   │   │   ├── llm.ts        # LLM abstraction layer
-│   │   │   └── directus.ts   # Directus client
-│   │   ├── stores/           # Svelte 5 rune-based stores
-│   │   └── tools/            # Shared utilities
-│   ├── routes/              # SvelteKit file-based routing
-│   │   ├── api/webhook/     # Webhook endpoint
-│   │   ├── cv/              # CV page
-│   │   ├── portfolio/       # Portfolio page
-│   │   │   ├── components/  # Portfolio utilities
-│   │   │   └── sections/    # Portfolio sections
-│   │   └── resume/          # Resume page
-│   └── app.css             # Global styles
+│   │   ├── data/                  # Static data and types
+│   │   ├── server/                # Server-side code
+│   │   │   ├── ai-chat/           # AI prompt/response generation
+│   │   │   ├── auth/              # Better Auth + API key auth
+│   │   │   ├── browser/           # Browser automation
+│   │   │   ├── directus/          # Directus CMS client
+│   │   │   ├── email/             # Email service
+│   │   │   ├── export/            # Profile data export/import
+│   │   │   ├── html/              # HTML parsing/extraction
+│   │   │   ├── job/               # Job matching and processing
+│   │   │   ├── llm/               # LangChain LLM integration + cache
+│   │   │   ├── middleware/        # Rate limiting
+│   │   │   ├── monitoring/        # Error tracking
+│   │   │   ├── profile/           # Profile management
+│   │   │   ├── queue/             # Redis job queues
+│   │   │   ├── resume/            # Resume parsing
+│   │   │   ├── schemas/           # Zod AI prompt schemas
+│   │   │   ├── uploads/           # File upload handling
+│   │   │   ├── utils/             # Retry logic, helpers
+│   │   │   ├── validation/        # Request validation schemas
+│   │   │   ├── webhook-handlers/  # Webhook handlers (profile export, version links)
+│   │   │   └── config.ts          # Centralized configuration
+│   │   ├── stores/                # Client-side stores
+│   │   │   ├── is-human.svelte.ts # Bot detection
+│   │   │   └── theme.svelte.ts    # Theme management
+│   │   └── tools/                 # Shared utilities
+│   ├── routes/                    # SvelteKit file-based routing
+│   │   ├── api/                   # API endpoints
+│   │   │   ├── ai/                # AI generation (letters, questions, chats)
+│   │   │   ├── education/         # Education CRUD
+│   │   │   ├── jobs/              # Job operations
+│   │   │   ├── job-searches/      # Job search management
+│   │   │   ├── matcher/           # Job matcher status
+│   │   │   ├── media/             # Media uploads
+│   │   │   ├── platforms/         # Platform config
+│   │   │   ├── profile/           # Profile endpoints
+│   │   │   ├── webhook/           # Directus webhook processing
+│   │   │   ├── work-experience/   # Work experience CRUD
+│   │   │   └── ...                # Other API routes
+│   │   ├── dashboard/             # Dashboard UI
+│   │   │   ├── applications/      # Applications, letters, salary
+│   │   │   ├── jobs/              # Browse, matches, saved, settings
+│   │   │   ├── profile/           # Profile editing (experience, education, skills, etc.)
+│   │   │   └── ...                # Other dashboard pages
+│   │   ├── p/[slug]/              # Public profile pages
+│   │   │   └── portfolio/         # Portfolio website
+│   │   ├── login/                 # Auth pages
+│   │   ├── signup/
+│   │   └── ...
+│   └── app.css                    # Global styles
 ├── prisma/
-│   └── schema.prisma       # Database schema
-├── generated/              # Prisma generated code
-├── docs/                   # Documentation
-└── tests/                  # Test utilities
+│   └── schema.prisma              # Database schema
+├── generated/                     # Prisma generated code
+├── scripts/                       # Utility scripts
+├── docs/                          # Documentation
+└── tests/                         # Test utilities
+```
 
 ## Key Architecture Patterns
 
 ### 1. Svelte 5 Modern Patterns
 
 All components use modern Svelte 5 runes:
+
 - `$props()` for component properties
 - `$state()` for reactive state
 - `$derived()` for computed values
 - `$effect()` for side effects
 
-**Example:**
-```typescript
-interface Props {
-  profile: Profile;
-  showDetails?: boolean;
-}
-
-let { profile, showDetails = false }: Props = $props();
-let activeTab = $state('overview');
-const fullName = $derived(`${profile.firstName} ${profile.lastName}`);
-````
-
 ### 2. Webhook Handler Registry
 
-Webhooks are handled through a modular registry system:
+Webhooks from Directus are handled through a modular registry. Currently 2
+handlers are registered:
 
-```typescript
-// src/lib/server/webhook-handlers/index.ts
-const handlers = new Map<string, WebhookHandler>([
-  ["profile.export", profileExportHandler],
-  ["ai_chats.generate_full_prompt", aiChatGeneratePromptHandler],
-  // ... more handlers
-]);
-```
+- `profile.export` - Profile data and schema export
+- `profile.version-links` - Profile version link management
 
-Each handler implements a simple interface:
+AI generation handlers have been migrated to direct API endpoints under
+`/api/ai/`.
 
-```typescript
-interface WebhookHandler {
-  eventType: string;
-  handle(data: Record<string, unknown>): Promise<WebhookHandlerResult>;
-}
-```
+### 3. AI Generation via API Endpoints
 
-### 3. Production Reliability
+AI features (letter generation, question answering, follow-ups) are served
+through direct API routes at `/api/ai/` rather than webhook handlers. This
+provides:
 
-#### Caching
+- Direct request/response flow
+- Better error handling
+- Dashboard integration
 
-LLM responses are cached using SHA-256 hashes of prompts:
+### 4. LLM Provider Abstraction
 
-```typescript
-// Check cache first
-const cachedResponse = llmCache.get(cacheKey, model);
-if (cachedResponse) return cachedResponse;
+LLM calls go through LangChain (`src/lib/server/llm/langchain.ts`), which
+supports provider switching via the `SJS_LLM_PROVIDER` env var. Responses are
+cached using SHA-256 hashes of prompts with configurable TTL.
 
-// Make request and cache result
-const response = await makeRequest();
-llmCache.set(cacheKey, response, model, TTL);
-```
+### 5. Production Reliability
 
 #### Retry Logic
 
@@ -142,215 +157,124 @@ await withRetry(
 
 #### Rate Limiting
 
-Token bucket algorithm per client IP:
-
-```typescript
-if (!rateLimiter.tryConsume(request)) {
-  return createRateLimitResponse();
-}
-```
+Token bucket algorithm per client IP for API endpoints.
 
 #### Error Tracking
 
-Structured logging with context:
+Structured logging with context via `src/lib/server/monitoring/`.
 
-```typescript
-errorTracker.logError(
-  "Operation failed",
-  error,
-  {
-    operation: "webhook",
-    metadata: { id, type },
-  },
-);
-```
-
-### 4. Type Safety
+### 6. Type Safety
 
 #### Prisma Types
 
-Database access is fully typed through Prisma:
-
-```typescript
-const profile = await db.profile.findUnique({
-  where: { id },
-  include: {
-    work_experiences: true,
-    education: true,
-  },
-});
-```
+Database access is fully typed through Prisma.
 
 #### Zod Validation
 
-Request payloads are validated with Zod:
-
-```typescript
-const schema = z.object({
-  event: z.string(),
-  payload: z.record(z.unknown()),
-});
-
-const validated = schema.parse(data);
-```
+Request payloads and AI structured outputs are validated with Zod schemas
+(`src/lib/server/schemas/ai-prompt-schemas.ts` and
+`src/lib/server/validation/`).
 
 ## Data Flow
 
-### 1. Webhook Processing
+### 1. AI Content Generation (via API)
+
+```
+User Dashboard
+    |
+POST /api/ai/{letters,questions,chats}
+    |
+Authentication (Better Auth)
+    |
+Load profile + job context
+    |
+Build prompt from template
+    |
+LLM call (LangChain -> provider)
+    |
+Cache response
+    |
+Database update (Prisma)
+    |
+Response to client
+```
+
+### 2. Webhook Processing
 
 ```
 Directus Flow
-    ↓
+    |
 POST /api/webhook
-    ↓
-Rate Limit Check
-    ↓
-Authentication
-    ↓
-Payload Validation
-    ↓
-Handler Registry
-    ↓
-Specific Handler (e.g., aiChatGeneratePromptHandler)
-    ↓
-Business Logic (with retry + caching)
-    ↓
+    |
+HMAC-SHA256 Signature Verification
+    |
+Handler Registry (2 handlers)
+    |
+Business Logic
+    |
 Database Update (Prisma)
-    ↓
-Cache Clearing (Directus)
-    ↓
+    |
 Response
 ```
 
-### 2. Page Rendering
+### 3. Page Rendering
 
 ```
 User Request
-    ↓
+    |
 SvelteKit Route (+page.server.ts)
-    ↓
-Load Function (Prisma query)
-    ↓
+    |
+Auth Guard + Load Function (Prisma query)
+    |
 Page Component (+page.svelte)
-    ↓
-Section Components (portfolio/sections/)
-    ↓
-Utility Components (portfolio/components/)
-    ↓
+    |
 Rendered HTML
 ```
 
 ## Configuration
 
-All configuration is centralized in `src/lib/server/config.ts`:
+All configuration is centralized in `src/lib/server/config.ts`. Key settings:
 
-```typescript
-export const config = {
-  // Environment
-  nodeEnv: "production",
-  isDevelopment: false,
-
-  // Services
-  directusUrl: "https://...",
-  groqApiKey: "...",
-
-  // Reliability
-  rateLimitMaxTokens: 20,
-  retryMaxAttempts: 3,
-  llmCacheTTL: 3600000, // 1 hour
-};
-```
-
-Environment variables are loaded from `.env` and validated on startup.
+- **LLM**: Provider selection, API keys, model overrides, cache TTL, retry config
+- **Database**: PostgreSQL connection via `SJS_DATABASE_URL`
+- **Auth**: Better Auth with Prisma adapter
+- **External Services**: Directus URL and token, webhook secret
+- **Browser**: Chrome path for PDF generation and scraping
+- **Scraping**: Cooldown and rate limits
+- **Redis**: Host and port for job queues
 
 ## Testing Strategy
 
-### Unit Tests (Vitest)
+- **508 tests** across 37 test files
+- **Vitest** for unit and integration testing
+- Tests colocated in `__tests__/` directories alongside source code
+- External services mocked (LLM providers, Directus, database)
 
-- Server functions (`src/lib/server/__tests__/`)
-- Webhook handlers (`src/routes/api/webhook/__tests__/`)
-- Utilities and helpers
-
-### Test Coverage
-
-- 180 tests total
-- Focus on business logic and API endpoints
-- Mock external services (Groq, Directus)
-
-## Performance Considerations
-
-### Caching Strategy
-
-- **LLM Responses**: 1 hour TTL, SHA-256 keys
-- **Directus Data**: Manual invalidation via webhook
-- **Static Assets**: Handled by Vercel CDN
-
-### Database Optimization
-
-- Selective includes to minimize joins
-- Indexed fields for common queries
-- Connection pooling via Prisma
-
-### Bundle Size
-
-- Code splitting per route
-- Tree shaking for unused imports
-- Dynamic imports for large dependencies
+See [TESTING.md](TESTING.md) for the full testing guide.
 
 ## Security
 
-### Authentication
-
-- Webhook secret verification
-- Environment-based secrets (never committed)
-
-### Rate Limiting
-
-- Per-IP tracking
-- Separate limits for different endpoints
-- Token bucket algorithm
-
-### Input Validation
-
-- Zod schemas for all inputs
-- Type checking at runtime
-- SQL injection prevention via Prisma
+- **Better Auth** - Email/password authentication with session management
+- **API Key Auth** - For programmatic access (`sjs_` prefix keys)
+- **HMAC-SHA256** - Webhook signature verification
+- **Rate Limiting** - Per-IP token bucket
+- **Zod Validation** - All inputs validated at runtime
+- **Prisma** - SQL injection prevention
 
 ## Deployment
 
-### Vercel
-
-- Automatic deployments from Git
-- Environment variables in Vercel dashboard
-- Serverless functions for API routes
-
 ### Docker Compose (Development)
 
-- `database`: PostgreSQL
-- `admin`: Directus CMS
-- `app`: SvelteKit development server
+- `database` - PostgreSQL
+- `admin` - Directus CMS
+- `app` - SvelteKit development server
 
-See `DEPLOYMENT.md` for detailed deployment instructions.
+### Production
 
-## Future Enhancements
-
-### Monitoring
-
-- Sentry integration for error tracking
-- Performance monitoring with Web Vitals
-- LLM usage analytics
-
-### Testing
-
-- E2E tests with Playwright
-- Component visual regression tests
-- Integration test suite
-
-### Features
-
-- Multi-language support
-- PDF generation server-side
-- Real-time collaboration
+- SvelteKit app deployed with Node adapter
+- PostgreSQL database
+- Redis for background job queues
+- Directus CMS for content management
 
 ## Contributing
 
@@ -362,4 +286,4 @@ When contributing to the codebase:
 4. Run `npx deno fmt` before committing
 5. Follow existing code organization
 
-See `TESTING.md` for testing guidelines.
+See [TESTING.md](TESTING.md) for testing guidelines.

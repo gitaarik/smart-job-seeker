@@ -7,32 +7,39 @@ contributing to Smart Job Seeker.
 
 - Node.js 18+
 - Docker & Docker Compose
-- npm or yarn
+- npm
 
 ## Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd smart-job-seeker
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure environment variables**
+
    ```bash
    cp .env.example .env
    ```
 
-   Update `.env` with your configuration:
-   - `SJS_APP_URL_HOST` - Public site URL (external access)
-   - `SJS_JWT_SECRET` - Secret for JWT tokens
+   Key environment variables:
+
    - `SJS_DATABASE_URL` - PostgreSQL connection string
-   - `SJS_LLM_API_KEY_GROQ` - Groq API key for AI features
-   - Directus admin credentials and configuration
+   - `SJS_APP_URL_HOST` - Public site URL (default: http://localhost:5173)
+   - `SJS_ADMIN_URL_HOST` - Directus admin URL (default: http://localhost:8055)
+   - `SJS_ADMIN_TOKEN` - Directus API token
+   - `SJS_WEBHOOK_SECRET` - Webhook authentication secret
+   - `SJS_LLM_PROVIDER` - LLM provider (groq, gemini, openai, deepseek, cerebras)
+   - `SJS_LLM_API_KEY_GROQ` - Groq API key (default provider)
+   - Directus admin credentials
 
 ## Development Workflow
 
@@ -116,30 +123,40 @@ npm run test:ui                 # Test UI dashboard
 smart-job-seeker/
 ├── src/
 │   ├── routes/                    # SvelteKit pages and API routes
-│   │   ├── +page.svelte          # Home page
-│   │   ├── portfolio/            # Portfolio section
-│   │   ├── resume/               # Resume page
-│   │   └── api/                  # API endpoints
-│   │       └── webhook/          # Webhook handler
+│   │   ├── dashboard/             # Dashboard UI (profile, jobs, applications)
+│   │   ├── p/[slug]/              # Public profile pages
+│   │   │   └── portfolio/         # Portfolio website
+│   │   ├── login/                 # Auth pages
+│   │   ├── signup/
+│   │   └── api/                   # API endpoints
+│   │       ├── ai/                # AI generation (letters, questions, chats)
+│   │       ├── webhook/           # Directus webhook handler
+│   │       ├── profile/           # Profile endpoints
+│   │       ├── jobs/              # Job operations
+│   │       └── ...                # Other API routes
 │   ├── lib/
-│   │   ├── server/               # Server-side utilities
-│   │   │   ├── __tests__/       # Unit tests
-│   │   │   ├── ai-chat-*.ts     # AI chat modules
-│   │   │   ├── html-*.ts        # HTML utilities
-│   │   │   ├── llm.ts           # LLM integration
-│   │   │   └── scrapers/        # Job scraping modules
-│   │   ├── components/           # Reusable Svelte components
-│   │   ├── data/                 # Static data and config
-│   │   └── images/               # Image assets
-│   ├── app.html                  # Root HTML template
-│   ├── app.css                   # Global styles
-│   └── hooks.server.ts           # Server hooks
+│   │   ├── server/                # Server-side utilities
+│   │   │   ├── ai-chat/           # AI prompt/response generation
+│   │   │   ├── auth/              # Better Auth + API key auth
+│   │   │   ├── llm/               # LangChain integration + cache
+│   │   │   ├── job/               # Job matching and processing
+│   │   │   ├── profile/           # Profile management
+│   │   │   ├── queue/             # Redis job queues
+│   │   │   ├── schemas/           # Zod AI prompt schemas
+│   │   │   ├── webhook-handlers/  # Webhook handlers
+│   │   │   └── config.ts          # Centralized configuration
+│   │   ├── components/            # Reusable Svelte components
+│   │   ├── data/                  # Static data and config
+│   │   └── stores/                # Client-side stores (is-human, theme)
+│   ├── app.html                   # Root HTML template
+│   ├── app.css                    # Global styles
+│   └── hooks.server.ts            # Server hooks
 ├── prisma/
-│   ├── schema.prisma             # Database schema
-│   └── migrations/               # Database migrations
+│   ├── schema.prisma              # Database schema
+│   └── migrations/                # Database migrations
 ├── scripts/                       # Utility scripts
-├── docs/                         # Documentation
-├── docker-compose.yml            # Docker services configuration
+├── docs/                          # Documentation
+├── docker-compose.yml             # Docker services configuration
 ├── Dockerfile                     # SvelteKit app image
 └── CLAUDE.md                      # Development notes
 ```
@@ -186,20 +203,12 @@ npm run test:ui          # Open test UI dashboard
 
 ### Test Structure
 
-- Webhook handler tests: `src/routes/api/webhook/__tests__/`
-- Server utility tests: `src/lib/server/__tests__/`
+- Tests live in `__tests__/` directories alongside the code they test
+- Server utility tests: `src/lib/server/*/__tests__/`
+- API route tests: `src/routes/api/*/__tests__/`
 - Mocked database calls for isolation
 
-### Writing Tests
-
-When adding new features:
-
-1. Write tests in `__tests__/` directory next to the module
-2. Follow existing test patterns (see examples in codebase)
-3. Mock external dependencies (database, APIs)
-4. Ensure all tests pass before committing
-
-For complete testing guide, see [TESTING.md](TESTING.md).
+For the complete testing guide, see [TESTING.md](TESTING.md).
 
 ## Docker Services
 
@@ -247,31 +256,24 @@ docker compose logs -f admin
 
 ## API Development
 
-### Webhook Endpoints
+### AI Endpoints
 
-Secure webhook endpoint at `POST /api/webhook` for Directus integration.
+AI features are served through direct API routes at `/api/ai/`:
 
-**Features:**
+- Letter generation, question answering, follow-up refinement
+- Authentication via Better Auth sessions
+- Direct request/response flow
+
+### Webhook Endpoint
+
+Webhook endpoint at `POST /api/webhook` for Directus integration:
 
 - HMAC-SHA256 signature verification
-- Multiple event type support
-- Batch profile export
-
-**Event Types:**
-
-- `profile.export` - Export profile data and schema
-- `item.create` - Item creation handler
-- `item.update` - Item update handler
-- `item.delete` - Item deletion handler
-- `custom.event` - Custom event handler
-
-See [WEBHOOK.md](WEBHOOK.md) for detailed setup.
+- 2 registered handlers: profile export, profile version links
 
 ## Code Quality Standards
 
 ### Before Committing
-
-Run these checks:
 
 ```bash
 npm run check           # Type checking and svelte-check
@@ -289,41 +291,12 @@ npx deno fmt          # Format all code
 - All tests passing
 - No type errors
 
-## Deployment
-
-The application is configured for deployment on **Vercel**.
-
-### Build Process
-
-```bash
-npm install
-npm run build
-```
-
-### Environment Variables
-
-Required in production:
-
-- `SJS_JWT_SECRET` - Secure random token
-- `SJS_DATABASE_URL` - Production PostgreSQL URL
-- `SJS_LLM_API_KEY_GROQ` - Groq API credentials
-- `SJS_WEBHOOK_SECRET` - Webhook authentication
-- Directus configuration (SJS_ADMIN_SECRET, SJS_ADMIN_EMAIL, etc.)
-
-## Performance Optimization
-
-- **Image Optimization** - Enhanced images with `@sveltejs/enhanced-img`
-- **Code Splitting** - Automatic via SvelteKit
-- **Lazy Loading** - AOS (Animate on Scroll)
-- **CSS Optimization** - Tailwind CSS with PurgeCSS
-- **Build Optimization** - Vite for fast builds
-
 ## Security
 
+- **Better Auth** - Email/password authentication with session management
+- **API Key Auth** - For programmatic access (`sjs_` prefix keys)
 - **HMAC-SHA256** - Webhook signature verification
-- **Secure Headers** - Automatic in production
 - **Environment Variable Protection** - Sensitive credentials stored securely
-- **JWT Authentication** - Secure user sessions
 
 ## Contributing
 
@@ -334,46 +307,3 @@ When contributing:
 3. Update documentation if needed
 4. Use descriptive commit messages
 5. Ensure all tests pass before submitting
-
-## Support
-
-For issues or questions:
-
-- Check existing documentation in `/docs`
-- Review test files for usage examples
-- Check the CLAUDE.md development notes
-- Consult API endpoint examples in authentication docs
-
-## Tech Stack Details
-
-### Frontend
-
-- **SvelteKit 5** - Modern web framework
-- **Svelte 5** - Reactive UI framework
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first CSS
-- **FontAwesome** - Icon library
-
-### Backend
-
-- **Node.js** - JavaScript runtime
-- **SvelteKit Server Routes** - API endpoints
-- **Prisma** - ORM for PostgreSQL
-- **JWT** - Authentication
-
-### Database & CMS
-
-- **PostgreSQL** - Relational database
-- **Directus** - Headless CMS
-- **Prisma Schema** - Database management
-
-### External Services
-
-- **Groq API** - High-performance LLM inference
-
-### DevOps
-
-- **Docker & Docker Compose** - Containerization
-- **Vite** - Build tool
-- **Vitest** - Testing framework
-- **Deno fmt** - Code formatting
