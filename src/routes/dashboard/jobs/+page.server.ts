@@ -57,18 +57,34 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   let matchesByJobId: Record<number, any> = {};
   let savedJobIds: number[] = [];
 
-  // Pre-build JSON filter SQL (used in both branches)
-  const hasJsonFilters = workLocation || jobType;
-  const jsonFilter = hasJsonFilters
-    ? buildJsonFilters(workLocation, jobType)
+  // Build filter SQL fragments shared by both branches (all reference jobs as `j`)
+  const jsonFilter = buildJsonFilters(workLocation, jobType);
+
+  let searchFilter = Prisma.sql`TRUE`;
+  if (search) {
+    const searchPattern = `%${search}%`;
+    searchFilter = Prisma.sql`(
+      j.title ILIKE ${searchPattern}
+      OR j.company ILIKE ${searchPattern}
+      OR j.office_location ILIKE ${searchPattern}
+      OR j.job_description ILIKE ${searchPattern}
+    )`;
+  }
+
+  const platformFilter = platform
+    ? Prisma.sql`j.job_platform = ${parseInt(platform)}`
     : Prisma.sql`TRUE`;
 
-  if (filter === "matches" || filter === "saved") {
-    // Query from job_matches table
-    // When JSON filters are active, use raw SQL to get filtered+paginated match IDs,
-    // then load full data with Prisma. This avoids post-LIMIT in-memory filtering.
+  let dateFilter = Prisma.sql`TRUE`;
+  if (datePosted) {
+    const days = parseInt(datePosted);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
+  }
 
-    // Build base match conditions
+  if (filter === "matches" || filter === "saved") {
+    // Build match-specific conditions
     let statusFilter = Prisma.sql`TRUE`;
     let scoreFilter = Prisma.sql`TRUE`;
     if (filter === "saved") {
@@ -77,32 +93,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       const minScoreVal = minScore ? parseInt(minScore) : 0;
       scoreFilter = Prisma.sql`jm.score > ${minScoreVal}`;
       statusFilter = Prisma.sql`jm.status != 'rejected'`;
-    }
-
-    // Build search filter
-    let searchFilter = Prisma.sql`TRUE`;
-    if (search) {
-      const searchPattern = `%${search}%`;
-      searchFilter = Prisma.sql`(
-        j.title ILIKE ${searchPattern}
-        OR j.company ILIKE ${searchPattern}
-        OR j.office_location ILIKE ${searchPattern}
-        OR j.job_description ILIKE ${searchPattern}
-      )`;
-    }
-
-    // Build platform filter
-    const platformFilter = platform
-      ? Prisma.sql`j.job_platform = ${parseInt(platform)}`
-      : Prisma.sql`TRUE`;
-
-    // Build date filter
-    let dateFilter = Prisma.sql`TRUE`;
-    if (datePosted) {
-      const days = parseInt(datePosted);
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - days);
-      dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
     }
 
     // Get filtered+paginated match IDs and count in one query
@@ -168,33 +158,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     }
   } else {
     // "all" - Query from jobs table directly
-    // Same approach: raw SQL for filtered IDs + count, Prisma for full data
-
-    // Build search filter
-    let searchFilter = Prisma.sql`TRUE`;
-    if (search) {
-      const searchPattern = `%${search}%`;
-      searchFilter = Prisma.sql`(
-        j.title ILIKE ${searchPattern}
-        OR j.company ILIKE ${searchPattern}
-        OR j.office_location ILIKE ${searchPattern}
-        OR j.job_description ILIKE ${searchPattern}
-      )`;
-    }
-
-    // Build platform filter
-    const platformFilter = platform
-      ? Prisma.sql`j.job_platform = ${parseInt(platform)}`
-      : Prisma.sql`TRUE`;
-
-    // Build date filter
-    let dateFilter = Prisma.sql`TRUE`;
-    if (datePosted) {
-      const days = parseInt(datePosted);
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - days);
-      dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
-    }
 
     // Get filtered+paginated job IDs and count
     const jobRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
