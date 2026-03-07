@@ -254,7 +254,14 @@
   let needsIntervention = $derived(isRunning || isBlocked);
   let isCloudMode = $derived(!!liveUrl);
   let isMagicLink = $derived(isBlocked && jobSearch.status_message?.includes("login link"));
-  let browserViewUrl = $derived(liveUrl || "/vnc/vnc.html?autoconnect=true&resize=scale");
+  // Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
+  let expectsCloudBrowser = $derived(
+    savedBrowserProvider === "hosted" || (!savedBrowserProvider && data.browserProvider === "goLogin")
+  );
+  // Only fall back to VNC when using local browser; show nothing while waiting for cloud live URL
+  let browserViewUrl = $derived(
+    liveUrl || (expectsCloudBrowser ? null : "/vnc/vnc.html?autoconnect=true&resize=scale")
+  );
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "Never";
@@ -1882,11 +1889,20 @@
         </div>
       </div>
       <div class="relative" style="padding-bottom: 56.25%;">
-        <iframe
-          src={browserViewUrl}
-          class="absolute inset-0 w-full h-full border-0"
-          title="Browser view for manual intervention"
-        ></iframe>
+        {#if browserViewUrl}
+          <iframe
+            src={browserViewUrl}
+            class="absolute inset-0 w-full h-full border-0"
+            title="Browser view for manual intervention"
+          ></iframe>
+        {:else}
+          <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+            <div class="text-center">
+              <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2" />
+              <p class="text-sm text-[var(--dash-text-muted)]">Starting cloud browser...</p>
+            </div>
+          </div>
+        {/if}
       </div>
       <div class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]">
         {#if isBlocked}
