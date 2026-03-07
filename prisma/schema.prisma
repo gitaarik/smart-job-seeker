@@ -740,6 +740,8 @@ model job_searches {
   status_message         String?                  @db.VarChar(255)
   platform_profile_id    Int?
   max_jobs               Int?
+  search_term            String?                  @db.VarChar(500)
+  browser_provider       String?                  @db.VarChar(20)
   runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onUpdate: NoAction)
@@ -1019,8 +1021,24 @@ model profiles {
   side_projects                                                     side_projects[]
   tech_skill_categories                                             tech_skill_categories[]
   work_experiences                                                  work_experiences[]
+  api_keys                                                          api_keys[]
 
   @@index([user_id])
+}
+
+model api_keys {
+  id           Int       @id(map: "api_keys_pkey") @default(autoincrement())
+  profile      Int
+  name         String    @db.VarChar(255)
+  key_hash     String    @unique(map: "api_keys_key_hash_key") @db.VarChar(64)
+  date_created DateTime? @default(now()) @db.Timestamptz(6)
+  expires_at   DateTime? @db.Timestamptz(6)
+  last_used    DateTime? @db.Timestamptz(6)
+  revoked      Boolean   @default(false)
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_keys_profile_foreign")
+
+  @@index([key_hash], map: "idx_api_keys_hash")
+  @@index([profile], map: "idx_api_keys_profile")
 }
 
 model project_stories {

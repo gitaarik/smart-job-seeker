@@ -437,6 +437,7 @@ export const ModelName = {
   profile_version_extensions: 'profile_version_extensions',
   profile_versions: 'profile_versions',
   profiles: 'profiles',
+  api_keys: 'api_keys',
   project_stories: 'project_stories',
   references: 'references',
   salary_expectations: 'salary_expectations',
@@ -477,7 +478,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "job_search_runs" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_search_run_items" | "job_match_config"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "job_search_runs" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_search_run_items" | "job_match_config"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4403,6 +4404,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    api_keys: {
+      payload: Prisma.$api_keysPayload<ExtArgs>
+      fields: Prisma.api_keysFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.api_keysFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.api_keysFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>
+        }
+        findFirst: {
+          args: Prisma.api_keysFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.api_keysFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>
+        }
+        findMany: {
+          args: Prisma.api_keysFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>[]
+        }
+        create: {
+          args: Prisma.api_keysCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>
+        }
+        createMany: {
+          args: Prisma.api_keysCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.api_keysCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>[]
+        }
+        delete: {
+          args: Prisma.api_keysDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>
+        }
+        update: {
+          args: Prisma.api_keysUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>
+        }
+        deleteMany: {
+          args: Prisma.api_keysDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.api_keysUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.api_keysUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>[]
+        }
+        upsert: {
+          args: Prisma.api_keysUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$api_keysPayload>
+        }
+        aggregate: {
+          args: Prisma.Api_keysAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateApi_keys>
+        }
+        groupBy: {
+          args: Prisma.api_keysGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Api_keysGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.api_keysCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Api_keysCountAggregateOutputType> | number
+        }
+      }
+    }
     project_stories: {
       payload: Prisma.$project_storiesPayload<ExtArgs>
       fields: Prisma.project_storiesFieldRefs
@@ -7008,7 +7083,9 @@ export const Job_searchesScalarFieldEnum = {
   is_active: 'is_active',
   status_message: 'status_message',
   platform_profile_id: 'platform_profile_id',
-  max_jobs: 'max_jobs'
+  max_jobs: 'max_jobs',
+  search_term: 'search_term',
+  browser_provider: 'browser_provider'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -7264,6 +7341,20 @@ export const ProfilesScalarFieldEnum = {
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
+
+
+export const Api_keysScalarFieldEnum = {
+  id: 'id',
+  profile: 'profile',
+  name: 'name',
+  key_hash: 'key_hash',
+  date_created: 'date_created',
+  expires_at: 'expires_at',
+  last_used: 'last_used',
+  revoked: 'revoked'
+} as const
+
+export type Api_keysScalarFieldEnum = (typeof Api_keysScalarFieldEnum)[keyof typeof Api_keysScalarFieldEnum]
 
 
 export const Project_storiesScalarFieldEnum = {
@@ -7956,6 +8047,7 @@ export type GlobalOmitConfig = {
   profile_version_extensions?: Prisma.profile_version_extensionsOmit
   profile_versions?: Prisma.profile_versionsOmit
   profiles?: Prisma.profilesOmit
+  api_keys?: Prisma.api_keysOmit
   project_stories?: Prisma.project_storiesOmit
   references?: Prisma.referencesOmit
   salary_expectations?: Prisma.salary_expectationsOmit

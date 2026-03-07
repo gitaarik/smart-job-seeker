@@ -3,6 +3,7 @@
  */
 
 import { error } from "@sveltejs/kit";
+import { dbDirect as db } from "$lib/server/db";
 
 /**
  * Require authenticated user from locals, or throw 401.
@@ -24,6 +25,19 @@ export function parseIntParam(value: string, label: string): number {
     error(400, `Invalid ${label} ID`);
   }
   return parsed;
+}
+
+/**
+ * Verify that a profile belongs to the given user, or throw 403.
+ */
+export async function requireProfileAccess(profileId: number, userId: string): Promise<void> {
+  const profile = await db.profiles.findFirst({
+    where: { id: profileId, user_id: userId },
+    select: { id: true },
+  });
+  if (!profile) {
+    error(403, "Not authorized");
+  }
 }
 
 type FieldType = "string" | "date" | "number";

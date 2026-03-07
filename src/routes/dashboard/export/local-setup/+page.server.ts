@@ -13,5 +13,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   return {
     apiKeys,
+    profileId: layoutData.selectedProfile.id,
   };
 };

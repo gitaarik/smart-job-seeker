@@ -60,11 +60,20 @@
   // URL editing state
   let canEditPlatformUrls = $state(data.canEditPlatformUrls);
   let searchUrlInput = $state<string>(jobSearch.search_url ?? "");
+  let searchTermInput = $state<string>(jobSearch.search_term ?? "");
   let loginUrlInput = $state<string>(jobSearch.job_platforms?.login_page_url ?? "");
   let isSavingSearchUrl = $state(false);
+  let isSavingSearchTerm = $state(false);
   let isSavingLoginUrl = $state(false);
   let searchUrlDirty = $derived(searchUrlInput.trim() !== (jobSearch.search_url ?? ""));
+  let searchTermDirty = $derived(searchTermInput.trim() !== (jobSearch.search_term ?? ""));
   let loginUrlDirty = $derived(loginUrlInput.trim() !== (jobSearch.job_platforms?.login_page_url ?? ""));
+
+  // Browser provider (hosted vs local) state
+  let browserProvider = $state<string | null>((jobSearch as any).browser_provider ?? null);
+  let savedBrowserProvider = $state<string | null>((jobSearch as any).browser_provider ?? null);
+  let browserProviderDirty = $derived(browserProvider !== savedBrowserProvider);
+  let isSavingBrowserProvider = $state(false);
 
   // Browser location state
   let browserCountryCode = $state(data.browserCountryCode || "");
@@ -198,7 +207,10 @@
     canEditPlatformUrls = data.canEditPlatformUrls;
     maxJobsInput = (data.jobSearch as any).max_jobs?.toString() ?? "";
     searchUrlInput = data.jobSearch.search_url ?? "";
+    searchTermInput = data.jobSearch.search_term ?? "";
     loginUrlInput = data.jobSearch.job_platforms?.login_page_url ?? "";
+    browserProvider = (data.jobSearch as any).browser_provider ?? null;
+    savedBrowserProvider = (data.jobSearch as any).browser_provider ?? null;
     browserCountryCode = data.browserCountryCode || "";
     savedBrowserCountryCode = data.browserCountryCode || "";
     browserLanguage = data.browserFingerprint.language;
@@ -579,6 +591,23 @@
     }
   }
 
+  async function saveSearchTerm() {
+    isSavingSearchTerm = true;
+    try {
+      const term = searchTermInput.trim() || null;
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ search_term: term }),
+      });
+      jobSearch.search_term = term;
+    } catch (err) {
+      console.error("Failed to save search term:", err);
+    } finally {
+      isSavingSearchTerm = false;
+    }
+  }
+
   async function saveLoginUrl() {
     if (!jobSearch.platform) return;
     isSavingLoginUrl = true;
@@ -615,6 +644,23 @@
       console.error("Failed to save browser country code:", err);
     } finally {
       isSavingBrowserCountry = false;
+    }
+  }
+
+  async function saveBrowserProvider() {
+    isSavingBrowserProvider = true;
+    try {
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ browser_provider: browserProvider }),
+      });
+      savedBrowserProvider = browserProvider;
+      (jobSearch as any).browser_provider = browserProvider;
+    } catch (err) {
+      console.error("Failed to save browser provider:", err);
+    } finally {
+      isSavingBrowserProvider = false;
     }
   }
 
@@ -1483,6 +1529,43 @@
             </div>
 
             <div>
+              <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Search Term <span class="font-normal">(optional)</span></h3>
+              <input
+                type="text"
+                bind:value={searchTermInput}
+                placeholder="e.g., frontend developer amsterdam"
+                class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+              />
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                For sites that don't support search in the URL. The scraper will type this into the search field.
+              </p>
+              {#if searchTermDirty}
+                <div class="flex items-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onclick={saveSearchTerm}
+                    disabled={isSavingSearchTerm}
+                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {#if isSavingSearchTerm}
+                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => (searchTermInput = jobSearch.search_term ?? "")}
+                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              {/if}
+            </div>
+
+            <div>
               <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Login URL</h3>
               {#if canEditPlatformUrls}
                 <div class="flex items-center gap-2">
@@ -1544,6 +1627,73 @@
             </div>
           </div>
 
+          <!-- Browser Mode (Hosted vs Local) -->
+          <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
+            <div class="flex items-center gap-2 mb-2">
+              <FontAwesomeIcon icon={faDesktop} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">Browser Mode</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex rounded-md overflow-hidden border border-[var(--dash-border)]">
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = null)}
+                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {browserProvider === null ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+                >
+                  <FontAwesomeIcon icon={faCog} class="w-3 h-3" />
+                  Default
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = "hosted")}
+                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {browserProvider === 'hosted' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+                >
+                  <FontAwesomeIcon icon={faCloud} class="w-3 h-3" />
+                  Hosted
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = "local")}
+                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {browserProvider === 'local' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+                >
+                  <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                  Local
+                </button>
+              </div>
+              {#if browserProviderDirty}
+                <button
+                  type="button"
+                  onclick={saveBrowserProvider}
+                  disabled={isSavingBrowserProvider}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingBrowserProvider}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = savedBrowserProvider)}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              {/if}
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+              {#if browserProvider === "hosted"}
+                Uses a cloud-hosted anti-detect browser (datacenter IP). Fast and reliable, but may trigger bot detection on some platforms.
+              {:else if browserProvider === "local"}
+                Uses your own computer's browser via the desktop app (residential IP). Less likely to be detected, but requires the desktop app to be running.
+              {:else}
+                Uses the server default ({data.browserProvider === "goLogin" ? "Hosted" : data.browserProvider === "tunnel" ? "Local" : data.browserProvider}).
+              {/if}
+            </p>
+          </div>
+
           <!-- Scraper Browser Location -->
           <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
             <div class="flex items-center gap-2 mb-2">
@@ -1583,9 +1733,9 @@
             <p class="text-xs text-[var(--dash-text-muted)] mt-2">
               The country the scraper will appear to browse from. Set this to match your actual location to avoid your account being flagged for logging in from unusual locations. If empty, your profile's country is used.
             </p>
-            {#if data.browserProvider !== "goLogin"}
+            {#if (savedBrowserProvider === "local" || (!savedBrowserProvider && data.browserProvider !== "goLogin"))}
               <p class="text-xs text-amber-500 mt-1">
-                ⚠ This setting only takes effect when using GoLogin as the browser provider.
+                ⚠ This setting only takes effect when using Hosted mode (GoLogin).
               </p>
             {/if}
 

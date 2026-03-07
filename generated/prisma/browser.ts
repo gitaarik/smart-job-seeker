@@ -283,6 +283,11 @@ export type profile_versions = Prisma.profile_versionsModel
  */
 export type profiles = Prisma.profilesModel
 /**
+ * Model api_keys
+ * 
+ */
+export type api_keys = Prisma.api_keysModel
+/**
  * Model project_stories
  * 
  */

@@ -34,6 +34,7 @@
   // Form states for new entry
   let newName = $state("");
   let newSearchUrl = $state("");
+  let newSearchTerm = $state("");
   let newStatus = $state("active");
   let newLoginPageUrl = $state("");
 
@@ -64,6 +65,7 @@
   // Form states for editing
   let editName = $state("");
   let editSearchUrl = $state("");
+  let editSearchTerm = $state("");
   let editStatus = $state("");
   let editLoginPageUrl = $state("");
   let editCredentialId = $state<string>("none");
@@ -190,6 +192,7 @@
     expandedId = search.id;
     editName = search.name || "";
     editSearchUrl = search.search_url || "";
+    editSearchTerm = search.search_term || "";
     editStatus = search.status || "active";
     editLoginPageUrl = search.job_platforms?.login_page_url || "";
     editCredentialId = search.platform_profile_id?.toString() || "none";
@@ -214,6 +217,7 @@
     showAddForm = false;
     newName = "";
     newSearchUrl = "";
+    newSearchTerm = "";
     newStatus = "active";
     newLoginPageUrl = "";
     detectedPlatform = null;
@@ -387,6 +391,28 @@
             </p>
           </div>
         {/if}
+
+        <!-- Search Term (optional — for sites that don't support query in URL) -->
+        <div>
+          <label
+            for="new-search-term"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Search Term
+            <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="new-search-term"
+            name="search_term"
+            bind:value={newSearchTerm}
+            placeholder="e.g., frontend developer amsterdam"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+          <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+            If this site doesn't support search keywords in the URL, enter them here. The scraper will type them into the search field.
+          </p>
+        </div>
 
         <!-- Search Name -->
         <div>
@@ -774,6 +800,28 @@
                       </div>
                     {/if}
 
+                    <!-- Search Term -->
+                    <div>
+                      <label
+                        for="edit-search-term-{search.id}"
+                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                      >
+                        Search Term
+                        <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="edit-search-term-{search.id}"
+                        name="search_term"
+                        bind:value={editSearchTerm}
+                        placeholder="e.g., frontend developer amsterdam"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                      <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+                        If this site doesn't support search keywords in the URL, enter them here. The scraper will type them into the search field.
+                      </p>
+                    </div>
+
                     <!-- Name -->
                     <div>
                       <label
@@ -929,6 +977,19 @@
                         {search.search_url}
                         <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
                       </a>
+                    </div>
+                  {/if}
+
+                  {#if search.search_term}
+                    <div>
+                      <p
+                        class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
+                      >
+                        Search Term
+                      </p>
+                      <p class="text-sm text-[var(--dash-text)]">
+                        {search.search_term}
+                      </p>
                     </div>
                   {/if}
 

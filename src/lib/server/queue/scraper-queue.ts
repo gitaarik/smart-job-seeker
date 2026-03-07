@@ -20,6 +20,7 @@ export interface ScrapeJobData {
   searchUrl: string;
   platformId: string;
   useVision?: boolean;
+  searchTerm?: string;
   triggeredBy: "user" | "scheduler";
 }
 

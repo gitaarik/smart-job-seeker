@@ -1,15 +1,15 @@
-import { json } from "@sveltejs/kit";
+import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { requireAuth } from "$lib/server/utils/api-helpers";
+import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
 import { createApiKey, listApiKeys } from "$lib/server/auth/api-key";
-import { dbDirect as db } from "$lib/server/db";
 
 /**
- * GET /api/api-keys — List API keys for the current user's selected profile
+ * GET /api/api-keys?profileId=123 — List API keys for a profile
  */
-export const GET: RequestHandler = async ({ locals, cookies }) => {
+export const GET: RequestHandler = async ({ locals, url }) => {
   const user = requireAuth(locals);
-  const profileId = getProfileId(cookies, user.id);
+  const profileId = parseIntParam(url.searchParams.get("profileId") ?? "", "profile");
+  await requireProfileAccess(profileId, user.id);
 
   const keys = await listApiKeys(profileId);
   return json({ keys });
@@ -18,11 +18,16 @@ export const GET: RequestHandler = async ({ locals, cookies }) => {
 /**
  * POST /api/api-keys — Create a new API key
  */
-export const POST: RequestHandler = async ({ request, locals, cookies }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
-  const profileId = getProfileId(cookies, user.id);
 
   const body = await request.json();
+  const profileId = body.profileId;
+  if (!profileId || typeof profileId !== "number") {
+    throw error(400, "profileId is required");
+  }
+  await requireProfileAccess(profileId, user.id);
+
   const name = typeof body.name === "string" ? body.name.trim() : "";
   if (!name) {
     return json({ error: "Name is required" }, { status: 400 });
@@ -35,12 +40,3 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
     key: result.key,
   });
 };
-
-/** Get the selected profile ID from cookie, verified against the user */
-function getProfileId(cookies: { get(name: string): string | undefined }, userId: string): number {
-  const profileIdStr = cookies.get("selected_profile_id");
-  if (!profileIdStr) {
-    throw new Response("No profile selected", { status: 400 });
-  }
-  return parseInt(profileIdStr, 10);
-}

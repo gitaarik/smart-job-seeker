@@ -84,6 +84,7 @@ const newCredentialSchema = z.object({
 
 export const jobSearchUpdateSchema = z.object({
   search_url: httpUrl("search_url").optional().nullable(),
+  search_term: z.string().max(500).optional().nullable(),
   max_jobs: z.union([
     z.null(),
     z.number().int().positive("max_jobs must be a positive integer"),
@@ -95,6 +96,7 @@ export const jobSearchUpdateSchema = z.object({
     z.number().int(),
     z.string().regex(/^\d+$/).transform(Number),
   ]).optional(),
+  browser_provider: z.enum(["hosted", "local"]).optional().nullable(),
 });
 
 // Platform update

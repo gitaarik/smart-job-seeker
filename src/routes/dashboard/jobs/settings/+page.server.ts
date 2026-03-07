@@ -136,6 +136,7 @@ export const actions: Actions = {
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const search_url = formData.get("search_url") as string;
+    const search_term = formData.get("search_term") as string;
     const is_active = formData.get("is_active") !== "false";
 
     // Platform data
@@ -183,6 +184,7 @@ export const actions: Actions = {
       data: {
         name: name.trim(),
         search_url: search_url.trim(),
+        search_term: search_term?.trim() || null,
         platform: resolvedPlatformId,
         platform_profile_id: resolvedCredentialId,
         is_active,
@@ -209,6 +211,7 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
     const name = formData.get("name") as string;
     const search_url = formData.get("search_url") as string;
+    const search_term = formData.get("search_term") as string;
     const is_active = formData.get("is_active") !== "false";
 
     // Platform data
@@ -265,6 +268,7 @@ export const actions: Actions = {
       data: {
         name: name.trim(),
         search_url: search_url?.trim() || null,
+        search_term: search_term?.trim() || null,
         platform: resolvedPlatformId,
         platform_profile_id: resolvedCredentialId,
         is_active,

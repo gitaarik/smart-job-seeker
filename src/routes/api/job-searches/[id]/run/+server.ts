@@ -129,6 +129,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     searchUrl: jobSearch.search_url,
     platformId: String(jobSearch.platform),
     triggeredBy: "user",
+    ...(jobSearch.search_term ? { searchTerm: jobSearch.search_term } : {}),
   });
 
   // Update run with BullMQ job ID

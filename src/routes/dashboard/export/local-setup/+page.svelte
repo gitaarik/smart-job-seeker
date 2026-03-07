@@ -34,7 +34,7 @@
 
   async function pollTunnelStatus() {
     try {
-      const res = await fetch("/api/tunnel");
+      const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
       const data = await res.json();
       tunnelConnected = data.connected === true;
       tunnelVersion = data.clientVersion || null;
@@ -64,13 +64,13 @@
       const res = await fetch("/api/api-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName.trim() }),
+        body: JSON.stringify({ name: newKeyName.trim(), profileId: data.profileId }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        errorMessage = result.error || "Failed to create API key";
+        errorMessage = result.error || result.message || "Failed to create API key";
         return;
       }
 
@@ -90,7 +90,7 @@
     if (!confirm("Revoke this API key? The desktop app will be disconnected.")) return;
 
     try {
-      const res = await fetch(`/api/api-keys/${keyId}`, { method: "DELETE" });
+      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, { method: "DELETE" });
       if (res.ok) {
         await invalidateAll();
         apiKeys = data.apiKeys;
