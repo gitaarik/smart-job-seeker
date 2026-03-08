@@ -272,7 +272,11 @@
   let screencastSrc = $state<string | null>(null);
   let screencastEventSource: EventSource | null = null;
 
+  let screencastError = $state<string | null>(null);
+
   async function toggleScreencast() {
+    screencastError = null;
+
     if (screencastEnabled) {
       // Stop
       screencastEnabled = false;
@@ -289,11 +293,21 @@
     } else {
       // Start
       screencastEnabled = true;
-      await fetch(`/api/tunnel/screencast/${data.profileId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "start" }),
-      }).catch(() => {});
+      try {
+        const res = await fetch(`/api/tunnel/screencast/${data.profileId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "start" }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+      } catch (err) {
+        screencastEnabled = false;
+        screencastError = `Failed to start: ${err instanceof Error ? err.message : String(err)}`;
+        return;
+      }
 
       // Connect SSE stream
       screencastEventSource = new EventSource(`/api/tunnel/screencast/${data.profileId}`);
@@ -1942,7 +1956,7 @@
               Action needed
             </span>
           {/if}
-          {#if isTunnelMode && needsIntervention}
+          {#if isTunnelMode}
             <button
               onclick={toggleScreencast}
               class="px-2 py-1 text-xs rounded transition-colors {screencastEnabled
@@ -1997,8 +2011,13 @@
           <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
             <div class="text-center">
               <FontAwesomeIcon icon={faDesktop} class="w-6 h-6 text-[var(--dash-text-muted)] mb-2" />
-              <p class="text-sm text-[var(--dash-text-muted)]">Browser running on your desktop</p>
-              <p class="text-xs text-[var(--dash-text-muted)] mt-1">Click "View" to enable live streaming</p>
+              {#if screencastError}
+                <p class="text-sm text-[var(--dash-error)]">{screencastError}</p>
+                <p class="text-xs text-[var(--dash-text-muted)] mt-1">Check that the desktop app is connected</p>
+              {:else}
+                <p class="text-sm text-[var(--dash-text-muted)]">Browser running on your desktop</p>
+                <p class="text-xs text-[var(--dash-text-muted)] mt-1">Click "View" to enable live streaming</p>
+              {/if}
             </div>
           </div>
         {:else}
