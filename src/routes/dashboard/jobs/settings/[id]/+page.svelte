@@ -258,10 +258,78 @@
   let expectsCloudBrowser = $derived(
     savedBrowserProvider === "hosted" || (!savedBrowserProvider && data.browserProvider === "goLogin")
   );
+  // Tunnel mode: uses desktop app browser (no VNC, no live URL by default)
+  let isTunnelMode = $derived(
+    savedBrowserProvider === "local" || (!savedBrowserProvider && data.browserProvider === "tunnel")
+  );
   // Only fall back to VNC when using local browser; show nothing while waiting for cloud live URL
   let browserViewUrl = $derived(
-    liveUrl || (expectsCloudBrowser ? null : "/vnc/vnc.html?autoconnect=true&resize=scale")
+    liveUrl || (expectsCloudBrowser ? null : (isTunnelMode ? null : "/vnc/vnc.html?autoconnect=true&resize=scale"))
   );
+
+  // Screencast state (for tunnel mode — streams JPEG frames from the desktop browser)
+  let screencastEnabled = $state(false);
+  let screencastSrc = $state<string | null>(null);
+  let screencastEventSource: EventSource | null = null;
+
+  async function toggleScreencast() {
+    if (screencastEnabled) {
+      // Stop
+      screencastEnabled = false;
+      screencastSrc = null;
+      if (screencastEventSource) {
+        screencastEventSource.close();
+        screencastEventSource = null;
+      }
+      await fetch(`/api/tunnel/screencast/${data.profileId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "stop" }),
+      }).catch(() => {});
+    } else {
+      // Start
+      screencastEnabled = true;
+      await fetch(`/api/tunnel/screencast/${data.profileId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start" }),
+      }).catch(() => {});
+
+      // Connect SSE stream
+      screencastEventSource = new EventSource(`/api/tunnel/screencast/${data.profileId}`);
+      screencastEventSource.onmessage = (event) => {
+        screencastSrc = `data:image/jpeg;base64,${event.data}`;
+      };
+      screencastEventSource.addEventListener("stop", () => {
+        screencastEnabled = false;
+        screencastSrc = null;
+        screencastEventSource?.close();
+        screencastEventSource = null;
+      });
+      screencastEventSource.onerror = () => {
+        // SSE reconnects automatically, but if the source is truly gone, clean up
+        if (screencastEventSource?.readyState === EventSource.CLOSED) {
+          screencastEnabled = false;
+          screencastSrc = null;
+          screencastEventSource = null;
+        }
+      };
+    }
+  }
+
+  // Clean up screencast on destroy
+  onDestroy(() => {
+    if (screencastEventSource) {
+      screencastEventSource.close();
+      screencastEventSource = null;
+      // Fire-and-forget stop
+      fetch(`/api/tunnel/screencast/${data.profileId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "stop" }),
+      }).catch(() => {});
+    }
+  });
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "Never";
@@ -1850,7 +1918,7 @@
     </div>
   </div>
 
-  <!-- Browser View (VNC for local, iframe for cloud) -->
+  <!-- Browser View (VNC for local, iframe for cloud, screencast for tunnel) -->
   {#if showBrowser || needsIntervention}
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
       <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
@@ -1862,12 +1930,29 @@
               Cloud
             </span>
           {/if}
+          {#if isTunnelMode}
+            <span class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded">
+              Desktop
+            </span>
+          {/if}
         </div>
         <div class="flex items-center gap-2">
           {#if isBlocked}
             <span class="text-sm text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-2 py-1 rounded">
               Action needed
             </span>
+          {/if}
+          {#if isTunnelMode && needsIntervention}
+            <button
+              onclick={toggleScreencast}
+              class="px-2 py-1 text-xs rounded transition-colors {screencastEnabled
+                ? 'bg-[var(--dash-primary)] text-white'
+                : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+              title={screencastEnabled ? "Disable live view (reduces latency)" : "Enable live view (streams from desktop browser)"}
+            >
+              <FontAwesomeIcon icon={faEye} class="w-3 h-3 mr-1" />
+              {screencastEnabled ? "Live" : "View"}
+            </button>
           {/if}
           {#if isCloudMode && liveUrl}
             <a
@@ -1881,7 +1966,7 @@
             </a>
           {/if}
           <button
-            onclick={() => (showBrowser = false)}
+            onclick={() => { showBrowser = false; if (screencastEnabled) toggleScreencast(); }}
             class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
           >
             <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
@@ -1889,12 +1974,33 @@
         </div>
       </div>
       <div class="relative" style="padding-bottom: 56.25%;">
-        {#if browserViewUrl}
+        {#if screencastEnabled && screencastSrc}
+          <img
+            src={screencastSrc}
+            alt="Live browser view"
+            class="absolute inset-0 w-full h-full object-contain bg-black"
+          />
+        {:else if screencastEnabled}
+          <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+            <div class="text-center">
+              <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2" />
+              <p class="text-sm text-[var(--dash-text-muted)]">Starting live view...</p>
+            </div>
+          </div>
+        {:else if browserViewUrl}
           <iframe
             src={browserViewUrl}
             class="absolute inset-0 w-full h-full border-0"
             title="Browser view for manual intervention"
           ></iframe>
+        {:else if isTunnelMode}
+          <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+            <div class="text-center">
+              <FontAwesomeIcon icon={faDesktop} class="w-6 h-6 text-[var(--dash-text-muted)] mb-2" />
+              <p class="text-sm text-[var(--dash-text-muted)]">Browser running on your desktop</p>
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1">Click "View" to enable live streaming</p>
+            </div>
+          </div>
         {:else}
           <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
             <div class="text-center">
