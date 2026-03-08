@@ -22,8 +22,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   // The tunnel server runs inside the worker, which exposes a status HTTP endpoint.
   // Try to reach it. In development, it's on localhost:9333; in production it may differ.
   try {
+    const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
     const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
-    const res = await fetch(`http://127.0.0.1:${tunnelPort}/status/${profileId}`, {
+    const res = await fetch(`http://${tunnelHost}:${tunnelPort}/status/${profileId}`, {
       signal: AbortSignal.timeout(2000),
     });
     if (res.ok) {

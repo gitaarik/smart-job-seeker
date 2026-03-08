@@ -2,6 +2,7 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
 
+const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
 const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
 
 /**
@@ -19,7 +20,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     // No timeout for SSE streams — the connection stays open indefinitely
     // and is closed by the client when they disable the browser view.
     const upstream = await fetch(
-      `http://127.0.0.1:${tunnelPort}/screencast/${profileId}/stream`,
+      `http://${tunnelHost}:${tunnelPort}/screencast/${profileId}/stream`,
     );
 
     if (!upstream.ok || !upstream.body) {
@@ -58,7 +59,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 
   try {
     const res = await fetch(
-      `http://127.0.0.1:${tunnelPort}/screencast/${profileId}/${action}`,
+      `http://${tunnelHost}:${tunnelPort}/screencast/${profileId}/${action}`,
       { method: "POST", signal: AbortSignal.timeout(5000) },
     );
 
