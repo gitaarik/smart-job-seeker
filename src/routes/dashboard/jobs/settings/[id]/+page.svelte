@@ -58,6 +58,16 @@
   }
   let stopAfterDuplicatesDirty = $derived(parseStopAfterDuplicates(stopAfterDuplicatesInput) !== ((jobSearch as any).stop_after_duplicates ?? null));
 
+  let skipFirstInput = $state<string>((jobSearch as any).skip_first?.toString() ?? "");
+  let isSavingSkipFirst = $state(false);
+
+  function parseSkipFirst(val: unknown): number | null {
+    if (val === undefined || val === null || val === "") return null;
+    const n = typeof val === "number" ? val : parseInt(String(val));
+    return isNaN(n) || n < 1 ? null : n;
+  }
+  let skipFirstDirty = $derived(parseSkipFirst(skipFirstInput) !== ((jobSearch as any).skip_first ?? null));
+
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
   const initialCredentialId = (jobSearch as any).platform_profile_id?.toString() ?? "none";
@@ -706,6 +716,23 @@
       console.error("Failed to save stop after duplicates:", err);
     } finally {
       isSavingStopAfterDuplicates = false;
+    }
+  }
+
+  async function saveSkipFirst() {
+    const skipFirst = parseSkipFirst(skipFirstInput);
+    isSavingSkipFirst = true;
+    try {
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skip_first: skipFirst }),
+      });
+      (jobSearch as any).skip_first = skipFirst;
+    } catch (err) {
+      console.error("Failed to save skip first:", err);
+    } finally {
+      isSavingSkipFirst = false;
     }
   }
 
@@ -1410,6 +1437,43 @@
                 <button
                   type="button"
                   onclick={() => (maxJobsInput = (jobSearch as any).max_jobs?.toString() ?? "")}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            {/if}
+          </div>
+
+          <div class="flex items-center flex-wrap gap-3">
+            <label for="skip-first" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Skip first</label>
+            <input
+              id="skip-first"
+              type="number"
+              min="1"
+              placeholder="Off"
+              bind:value={skipFirstInput}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+            />
+            <span class="text-sm text-[var(--dash-text-secondary)]">jobs</span>
+            {#if skipFirstDirty}
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick={saveSkipFirst}
+                  disabled={isSavingSkipFirst}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingSkipFirst}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (skipFirstInput = (jobSearch as any).skip_first?.toString() ?? "")}
                   class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                 >
                   Cancel

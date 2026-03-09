@@ -28,13 +28,14 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(jobSearchUpdateSchema, await request.json());
 
-  const data: { max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null } = {};
+  const data: { max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null } = {};
 
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
   if (body.search_term !== undefined) data.search_term = body.search_term?.trim() || null;
   if (body.max_jobs !== undefined) data.max_jobs = body.max_jobs;
   if (body.skip_existing !== undefined) data.skip_existing = body.skip_existing;
   if (body.stop_after_duplicates !== undefined) data.stop_after_duplicates = body.stop_after_duplicates;
+  if (body.skip_first !== undefined) data.skip_first = body.skip_first;
   if (body.browser_provider !== undefined) data.browser_provider = body.browser_provider;
 
   // Create new credential and assign it
