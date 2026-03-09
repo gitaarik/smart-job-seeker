@@ -7,7 +7,7 @@
   <title>Smart Job Seeker</title>
   <meta
     name="description"
-    content="What if you didn't have to hunt for a job, but if the jobs were hunting you?"
+    content="What if you didn't have to hunt for a job, but the jobs were hunting you?"
   />
 </svelte:head>
 
@@ -69,7 +69,7 @@
     class="mt-12 max-w-lg leading-relaxed text-[var(--dash-text-secondary)] text-xl"
   >
     What if you didn't have to hunt for a job,<br />
-    but if the jobs were hunting you?
+    but the jobs were hunting you?
   </p>
 
   <!-- Divider -->
