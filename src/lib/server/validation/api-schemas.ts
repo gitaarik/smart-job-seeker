@@ -91,6 +91,11 @@ export const jobSearchUpdateSchema = z.object({
     z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive("max_jobs must be a positive integer")),
   ]).optional(),
   skip_existing: z.boolean().optional(),
+  stop_after_duplicates: z.union([
+    z.null(),
+    z.number().int().min(1, "stop_after_duplicates must be at least 1"),
+    z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1, "stop_after_duplicates must be at least 1")),
+  ]).optional(),
   new_credential: newCredentialSchema.optional(),
   platform_profile_id: z.union([
     z.null(),

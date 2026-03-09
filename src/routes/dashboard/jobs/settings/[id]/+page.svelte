@@ -48,6 +48,16 @@
   let skipExisting = $state<boolean>((jobSearch as any).skip_existing ?? true);
   let isSavingSkipExisting = $state(false);
 
+  let stopAfterDuplicatesInput = $state<string>((jobSearch as any).stop_after_duplicates?.toString() ?? "");
+  let isSavingStopAfterDuplicates = $state(false);
+
+  function parseStopAfterDuplicates(val: unknown): number | null {
+    if (val === undefined || val === null || val === "") return null;
+    const n = typeof val === "number" ? val : parseInt(String(val));
+    return isNaN(n) || n < 1 ? null : n;
+  }
+  let stopAfterDuplicatesDirty = $derived(parseStopAfterDuplicates(stopAfterDuplicatesInput) !== ((jobSearch as any).stop_after_duplicates ?? null));
+
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
   const initialCredentialId = (jobSearch as any).platform_profile_id?.toString() ?? "none";
@@ -682,6 +692,23 @@
     }
   }
 
+  async function saveStopAfterDuplicates() {
+    const stopAfterDuplicates = parseStopAfterDuplicates(stopAfterDuplicatesInput);
+    isSavingStopAfterDuplicates = true;
+    try {
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stop_after_duplicates: stopAfterDuplicates }),
+      });
+      (jobSearch as any).stop_after_duplicates = stopAfterDuplicates;
+    } catch (err) {
+      console.error("Failed to save stop after duplicates:", err);
+    } finally {
+      isSavingStopAfterDuplicates = false;
+    }
+  }
+
   async function saveSearchUrl() {
     isSavingSearchUrl = true;
     try {
@@ -1263,6 +1290,46 @@
             <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin text-[var(--dash-text-muted)]" />
           {/if}
         </div>
+
+        <!-- Stop after duplicates setting (only when skip existing is off) -->
+        {#if !skipExisting}
+          <div class="flex items-center flex-wrap gap-3">
+            <label for="stop-after-duplicates" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Stop after</label>
+            <input
+              id="stop-after-duplicates"
+              type="number"
+              min="1"
+              placeholder="Off"
+              bind:value={stopAfterDuplicatesInput}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+            />
+            <span class="text-sm text-[var(--dash-text-secondary)]">duplicates in a row</span>
+            {#if stopAfterDuplicatesDirty}
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick={saveStopAfterDuplicates}
+                  disabled={isSavingStopAfterDuplicates}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingStopAfterDuplicates}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (stopAfterDuplicatesInput = (jobSearch as any).stop_after_duplicates?.toString() ?? "")}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/if}
 
         {#if errorMessage}
           <div class="p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
