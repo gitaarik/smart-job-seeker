@@ -1274,8 +1274,8 @@
           {/if}
         </div>
 
-        <!-- Stop after duplicates setting (grayed out when skip existing is on) -->
-        <div class="flex items-center flex-wrap gap-3" class:opacity-40={skipExisting}>
+        <!-- Stop after duplicates setting -->
+        <div class="flex items-center flex-wrap gap-3">
           <label for="stop-after-duplicates" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Stop after</label>
           <input
             id="stop-after-duplicates"
@@ -1283,11 +1283,10 @@
             min="1"
             placeholder="Off"
             bind:value={stopAfterDuplicatesInput}
-            disabled={skipExisting}
-            class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:cursor-not-allowed"
+            class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
           />
           <span class="text-sm text-[var(--dash-text-secondary)]">duplicates in a row</span>
-          {#if stopAfterDuplicatesDirty && !skipExisting}
+          {#if stopAfterDuplicatesDirty}
             <div class="flex items-center gap-2">
               <button
                 type="button"
