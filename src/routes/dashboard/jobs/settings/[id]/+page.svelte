@@ -45,6 +45,9 @@
   }
   let maxJobsDirty = $derived(parseMaxJobs(maxJobsInput) !== ((jobSearch as any).max_jobs ?? null));
 
+  let skipExisting = $state<boolean>((jobSearch as any).skip_existing ?? true);
+  let isSavingSkipExisting = $state(false);
+
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
   const initialCredentialId = (jobSearch as any).platform_profile_id?.toString() ?? "none";
@@ -663,6 +666,22 @@
     }
   }
 
+  async function saveSkipExisting() {
+    isSavingSkipExisting = true;
+    try {
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skip_existing: skipExisting }),
+      });
+      (jobSearch as any).skip_existing = skipExisting;
+    } catch (err) {
+      console.error("Failed to save skip existing:", err);
+    } finally {
+      isSavingSkipExisting = false;
+    }
+  }
+
   async function saveSearchUrl() {
     isSavingSearchUrl = true;
     try {
@@ -1225,6 +1244,23 @@
                 Cancel
               </button>
             </div>
+          {/if}
+        </div>
+
+        <!-- Skip existing jobs setting -->
+        <div class="flex items-center flex-wrap gap-3">
+          <label class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              bind:checked={skipExisting}
+              onchange={saveSkipExisting}
+              disabled={isSavingSkipExisting}
+              class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+            />
+            Skip already imported jobs
+          </label>
+          {#if isSavingSkipExisting}
+            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin text-[var(--dash-text-muted)]" />
           {/if}
         </div>
 
