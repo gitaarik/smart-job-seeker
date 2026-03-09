@@ -742,7 +742,7 @@ model job_searches {
   max_jobs               Int?
   search_term            String?                  @db.VarChar(500)
   browser_provider       String?                  @db.VarChar(20)
-  skip_existing          Boolean                  @default(true)
+  skip_existing          Boolean                  @default(false)
   stop_after_duplicates  Int?
   runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
