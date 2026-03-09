@@ -1237,98 +1237,6 @@
           {/if}
         </div>
 
-        <!-- Max jobs setting -->
-        <div class="flex items-center flex-wrap gap-3">
-          <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
-          <input
-            id="max-jobs"
-            type="number"
-            min="1"
-            placeholder="No limit"
-            bind:value={maxJobsInput}
-            class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-          />
-          {#if maxJobsDirty}
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                onclick={saveMaxJobs}
-                disabled={isSavingMaxJobs}
-                class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-              >
-                {#if isSavingMaxJobs}
-                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-                {:else}
-                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                {/if}
-                Save
-              </button>
-              <button
-                type="button"
-                onclick={() => (maxJobsInput = (jobSearch as any).max_jobs?.toString() ?? "")}
-                class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          {/if}
-        </div>
-
-        <!-- Stop after duplicates setting -->
-        <div class="flex items-center flex-wrap gap-3">
-          <label for="stop-after-duplicates" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Stop after</label>
-          <input
-            id="stop-after-duplicates"
-            type="number"
-            min="1"
-            placeholder="Off"
-            bind:value={stopAfterDuplicatesInput}
-            class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-          />
-          <span class="text-sm text-[var(--dash-text-secondary)]">duplicates in a row</span>
-          {#if stopAfterDuplicatesDirty}
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                onclick={saveStopAfterDuplicates}
-                disabled={isSavingStopAfterDuplicates}
-                class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-              >
-                {#if isSavingStopAfterDuplicates}
-                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-                {:else}
-                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                {/if}
-                Save
-              </button>
-              <button
-                type="button"
-                onclick={() => (stopAfterDuplicatesInput = (jobSearch as any).stop_after_duplicates?.toString() ?? "")}
-                class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          {/if}
-        </div>
-
-        <!-- Skip existing jobs setting -->
-        <div class="flex items-center flex-wrap gap-3">
-          <label class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              bind:checked={skipExisting}
-              onchange={saveSkipExisting}
-              disabled={isSavingSkipExisting}
-              class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-            />
-            Skip already imported jobs
-          </label>
-          {#if isSavingSkipExisting}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin text-[var(--dash-text-muted)]" />
-          {/if}
-        </div>
-
         {#if errorMessage}
           <div class="p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
             <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
@@ -1468,6 +1376,100 @@
               </p>
             </div>
           {/if}
+        </div>
+
+        <!-- Scraping Options -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide">Scraping Options</h3>
+
+          <div class="flex items-center flex-wrap gap-3">
+            <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
+            <input
+              id="max-jobs"
+              type="number"
+              min="1"
+              placeholder="No limit"
+              bind:value={maxJobsInput}
+              class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+            />
+            {#if maxJobsDirty}
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick={saveMaxJobs}
+                  disabled={isSavingMaxJobs}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingMaxJobs}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (maxJobsInput = (jobSearch as any).max_jobs?.toString() ?? "")}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            {/if}
+          </div>
+
+          <div class="flex items-center flex-wrap gap-3">
+            <label for="stop-after-duplicates" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Stop after</label>
+            <input
+              id="stop-after-duplicates"
+              type="number"
+              min="1"
+              placeholder="Off"
+              bind:value={stopAfterDuplicatesInput}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+            />
+            <span class="text-sm text-[var(--dash-text-secondary)]">duplicates in a row</span>
+            {#if stopAfterDuplicatesDirty}
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick={saveStopAfterDuplicates}
+                  disabled={isSavingStopAfterDuplicates}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingStopAfterDuplicates}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (stopAfterDuplicatesInput = (jobSearch as any).stop_after_duplicates?.toString() ?? "")}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            {/if}
+          </div>
+
+          <div class="flex items-center flex-wrap gap-3">
+            <label class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                bind:checked={skipExisting}
+                onchange={saveSkipExisting}
+                disabled={isSavingSkipExisting}
+                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+              />
+              Skip already imported jobs
+            </label>
+            {#if isSavingSkipExisting}
+              <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin text-[var(--dash-text-muted)]" />
+            {/if}
+          </div>
         </div>
 
         <!-- Missing config warnings -->
