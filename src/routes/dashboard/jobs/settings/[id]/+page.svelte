@@ -641,6 +641,17 @@
     });
   }
 
+  function scrollJobsToProcessing(runId: number) {
+    requestAnimationFrame(() => {
+      const container = document.querySelector(`[data-jobs-container="${runId}"]`) as HTMLElement | null;
+      if (!container) return;
+      const processingEl = container.querySelector('[data-item-status="processing"]') as HTMLElement | null;
+      if (processingEl) {
+        container.scrollTop = processingEl.offsetTop - container.offsetTop - container.clientHeight / 2 + processingEl.clientHeight / 2;
+      }
+    });
+  }
+
   function startLogPolling(runId: number) {
     if (logPollIntervals[runId]) return;
 
@@ -2434,7 +2445,7 @@
                 <!-- Tab buttons -->
                 <div class="flex border-b border-[var(--dash-border)]">
                   <button
-                    onclick={() => runTabView[run.id] = "jobs"}
+                    onclick={() => { runTabView[run.id] = "jobs"; scrollJobsToProcessing(run.id); }}
                     class={`px-4 py-2 text-sm font-medium transition-colors ${!runTabView[run.id] || runTabView[run.id] === "jobs" ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
                   >
                     Jobs
@@ -2485,7 +2496,7 @@
                       </div>
                     {/if}
 
-                    <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-80 overflow-y-auto">
+                    <div data-jobs-container={run.id} class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-80 overflow-y-auto">
                       {#if !runItems[run.id]?.items || runItems[run.id].items.length === 0}
                         <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
                           {#if loadingItems[run.id]}
@@ -2497,7 +2508,7 @@
                       {:else}
                         <div class="divide-y divide-[var(--dash-border)]">
                           {#each runItems[run.id].items as item (item.id)}
-                            <div class={`${getItemStatusBg(item.status)}`}>
+                            <div data-item-status={item.status} class={`${getItemStatusBg(item.status)}`}>
                               <!-- Item header (clickable for completed items with job details) -->
                               <button
                                 type="button"
