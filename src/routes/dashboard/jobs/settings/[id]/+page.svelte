@@ -1534,7 +1534,7 @@
               disabled={!stopAfterDuplicatesEnabled}
               class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
-            <span class="text-sm text-[var(--dash-text-secondary)]" class:opacity-40={!stopAfterDuplicatesEnabled}>duplicates in a row</span>
+            <span class="text-sm text-[var(--dash-text-secondary)]" class:opacity-40={!stopAfterDuplicatesEnabled}>already imported jobs in a row</span>
             {#if stopAfterDuplicatesDirty}
               <div class="flex items-center gap-2">
                 <button
@@ -1562,14 +1562,23 @@
           </div>
 
           <div class="flex items-center flex-wrap gap-3">
-            <label class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                bind:checked={skipExisting}
-                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-              />
-              Skip already imported jobs
-            </label>
+            <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Already imported jobs</span>
+            <div class="flex rounded-md border border-[var(--dash-border)] overflow-hidden">
+              <button
+                type="button"
+                onclick={() => (skipExisting = false)}
+                class={`px-3 py-1 text-xs font-medium transition-colors ${!skipExisting ? "bg-[var(--dash-primary)] text-white" : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"}`}
+              >
+                Update
+              </button>
+              <button
+                type="button"
+                onclick={() => (skipExisting = true)}
+                class={`px-3 py-1 text-xs font-medium transition-colors ${skipExisting ? "bg-[var(--dash-primary)] text-white" : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"}`}
+              >
+                Skip
+              </button>
+            </div>
             {#if skipExistingDirty}
               <div class="flex items-center gap-2">
                 <button
