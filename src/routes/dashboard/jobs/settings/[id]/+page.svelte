@@ -35,6 +35,7 @@
   let { data }: { data: PageData } = $props();
 
   let jobSearch = $state(data.jobSearch);
+  let maxJobsEnabled = $state<boolean>((jobSearch as any).max_jobs != null);
   let maxJobsInput = $state<string>((jobSearch as any).max_jobs?.toString() ?? "");
   let isSavingMaxJobs = $state(false);
 
@@ -43,11 +44,13 @@
     const n = typeof val === "number" ? val : parseInt(String(val));
     return isNaN(n) || n < 1 ? null : n;
   }
-  let maxJobsDirty = $derived(parseMaxJobs(maxJobsInput) !== ((jobSearch as any).max_jobs ?? null));
+  let maxJobsDirty = $derived((maxJobsEnabled ? parseMaxJobs(maxJobsInput) : null) !== ((jobSearch as any).max_jobs ?? null));
 
   let skipExisting = $state<boolean>((jobSearch as any).skip_existing ?? false);
   let isSavingSkipExisting = $state(false);
+  let skipExistingDirty = $derived(skipExisting !== ((jobSearch as any).skip_existing ?? false));
 
+  let stopAfterDuplicatesEnabled = $state<boolean>((jobSearch as any).stop_after_duplicates != null);
   let stopAfterDuplicatesInput = $state<string>((jobSearch as any).stop_after_duplicates?.toString() ?? "");
   let isSavingStopAfterDuplicates = $state(false);
 
@@ -56,8 +59,9 @@
     const n = typeof val === "number" ? val : parseInt(String(val));
     return isNaN(n) || n < 1 ? null : n;
   }
-  let stopAfterDuplicatesDirty = $derived(parseStopAfterDuplicates(stopAfterDuplicatesInput) !== ((jobSearch as any).stop_after_duplicates ?? null));
+  let stopAfterDuplicatesDirty = $derived((stopAfterDuplicatesEnabled ? parseStopAfterDuplicates(stopAfterDuplicatesInput) : null) !== ((jobSearch as any).stop_after_duplicates ?? null));
 
+  let skipFirstEnabled = $state<boolean>((jobSearch as any).skip_first != null);
   let skipFirstInput = $state<string>((jobSearch as any).skip_first?.toString() ?? "");
   let isSavingSkipFirst = $state(false);
 
@@ -66,7 +70,7 @@
     const n = typeof val === "number" ? val : parseInt(String(val));
     return isNaN(n) || n < 1 ? null : n;
   }
-  let skipFirstDirty = $derived(parseSkipFirst(skipFirstInput) !== ((jobSearch as any).skip_first ?? null));
+  let skipFirstDirty = $derived((skipFirstEnabled ? parseSkipFirst(skipFirstInput) : null) !== ((jobSearch as any).skip_first ?? null));
 
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
@@ -228,7 +232,10 @@
     jobSearch = data.jobSearch;
     platformCredentials = data.platformCredentials;
     canEditPlatformUrls = data.canEditPlatformUrls;
+    maxJobsEnabled = (data.jobSearch as any).max_jobs != null;
     maxJobsInput = (data.jobSearch as any).max_jobs?.toString() ?? "";
+    skipFirstEnabled = (data.jobSearch as any).skip_first != null;
+    stopAfterDuplicatesEnabled = (data.jobSearch as any).stop_after_duplicates != null;
     searchUrlInput = data.jobSearch.search_url ?? "";
     searchTermInput = data.jobSearch.search_term ?? "";
     loginUrlInput = data.jobSearch.job_platforms?.login_page_url ?? "";
@@ -670,7 +677,7 @@
   }
 
   async function saveMaxJobs() {
-    const maxJobs = parseMaxJobs(maxJobsInput);
+    const maxJobs = maxJobsEnabled ? parseMaxJobs(maxJobsInput) : null;
     isSavingMaxJobs = true;
     try {
       await fetch(`/api/job-searches/${jobSearch.id}`, {
@@ -703,7 +710,7 @@
   }
 
   async function saveStopAfterDuplicates() {
-    const stopAfterDuplicates = parseStopAfterDuplicates(stopAfterDuplicatesInput);
+    const stopAfterDuplicates = stopAfterDuplicatesEnabled ? parseStopAfterDuplicates(stopAfterDuplicatesInput) : null;
     isSavingStopAfterDuplicates = true;
     try {
       await fetch(`/api/job-searches/${jobSearch.id}`, {
@@ -720,7 +727,7 @@
   }
 
   async function saveSkipFirst() {
-    const skipFirst = parseSkipFirst(skipFirstInput);
+    const skipFirst = skipFirstEnabled ? parseSkipFirst(skipFirstInput) : null;
     isSavingSkipFirst = true;
     try {
       await fetch(`/api/job-searches/${jobSearch.id}`, {
@@ -1410,14 +1417,22 @@
           <h3 class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide">Scraping Options</h3>
 
           <div class="flex items-center flex-wrap gap-3">
-            <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                bind:checked={maxJobsEnabled}
+                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+              />
+              <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</span>
+            </label>
             <input
               id="max-jobs"
               type="number"
               min="1"
               placeholder="No limit"
               bind:value={maxJobsInput}
-              class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+              disabled={!maxJobsEnabled}
+              class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
             {#if maxJobsDirty}
               <div class="flex items-center gap-2">
@@ -1436,7 +1451,7 @@
                 </button>
                 <button
                   type="button"
-                  onclick={() => (maxJobsInput = (jobSearch as any).max_jobs?.toString() ?? "")}
+                  onclick={() => { maxJobsInput = (jobSearch as any).max_jobs?.toString() ?? ""; maxJobsEnabled = (jobSearch as any).max_jobs != null; }}
                   class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                 >
                   Cancel
@@ -1446,16 +1461,24 @@
           </div>
 
           <div class="flex items-center flex-wrap gap-3">
-            <label for="skip-first" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Skip first</label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                bind:checked={skipFirstEnabled}
+                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+              />
+              <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Skip first</span>
+            </label>
             <input
               id="skip-first"
               type="number"
               min="1"
               placeholder="Off"
               bind:value={skipFirstInput}
-              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+              disabled={!skipFirstEnabled}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
-            <span class="text-sm text-[var(--dash-text-secondary)]">jobs</span>
+            <span class="text-sm text-[var(--dash-text-secondary)]" class:opacity-40={!skipFirstEnabled}>jobs</span>
             {#if skipFirstDirty}
               <div class="flex items-center gap-2">
                 <button
@@ -1473,7 +1496,7 @@
                 </button>
                 <button
                   type="button"
-                  onclick={() => (skipFirstInput = (jobSearch as any).skip_first?.toString() ?? "")}
+                  onclick={() => { skipFirstInput = (jobSearch as any).skip_first?.toString() ?? ""; skipFirstEnabled = (jobSearch as any).skip_first != null; }}
                   class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                 >
                   Cancel
@@ -1483,16 +1506,24 @@
           </div>
 
           <div class="flex items-center flex-wrap gap-3">
-            <label for="stop-after-duplicates" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Stop after</label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                bind:checked={stopAfterDuplicatesEnabled}
+                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+              />
+              <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Stop after</span>
+            </label>
             <input
               id="stop-after-duplicates"
               type="number"
               min="1"
               placeholder="Off"
               bind:value={stopAfterDuplicatesInput}
-              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+              disabled={!stopAfterDuplicatesEnabled}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
-            <span class="text-sm text-[var(--dash-text-secondary)]">duplicates in a row</span>
+            <span class="text-sm text-[var(--dash-text-secondary)]" class:opacity-40={!stopAfterDuplicatesEnabled}>duplicates in a row</span>
             {#if stopAfterDuplicatesDirty}
               <div class="flex items-center gap-2">
                 <button
@@ -1510,7 +1541,7 @@
                 </button>
                 <button
                   type="button"
-                  onclick={() => (stopAfterDuplicatesInput = (jobSearch as any).stop_after_duplicates?.toString() ?? "")}
+                  onclick={() => { stopAfterDuplicatesInput = (jobSearch as any).stop_after_duplicates?.toString() ?? ""; stopAfterDuplicatesEnabled = (jobSearch as any).stop_after_duplicates != null; }}
                   class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                 >
                   Cancel
@@ -1524,14 +1555,33 @@
               <input
                 type="checkbox"
                 bind:checked={skipExisting}
-                onchange={saveSkipExisting}
-                disabled={isSavingSkipExisting}
                 class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
               />
               Skip already imported jobs
             </label>
-            {#if isSavingSkipExisting}
-              <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin text-[var(--dash-text-muted)]" />
+            {#if skipExistingDirty}
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick={saveSkipExisting}
+                  disabled={isSavingSkipExisting}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingSkipExisting}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (skipExisting = (jobSearch as any).skip_existing ?? false)}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             {/if}
           </div>
         </div>
@@ -2395,7 +2445,7 @@
                     {/if}
                   </button>
                   <button
-                    onclick={() => runTabView[run.id] = "logs"}
+                    onclick={() => { runTabView[run.id] = "logs"; logAutoScroll[run.id] = true; scrollLogToBottom(run.id); }}
                     class={`px-4 py-2 text-sm font-medium transition-colors ${runTabView[run.id] === "logs" ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
                   >
                     Logs
