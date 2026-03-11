@@ -422,7 +422,6 @@
     if (
       ["running", "blocked", "queued"].includes(data.jobSearch.status ?? "")
     ) {
-      showBrowser = true;
       startPolling();
     }
   });
@@ -456,88 +455,69 @@
           : "/vnc/vnc.html?autoconnect=true&resize=scale")),
   );
 
-  // Screencast state (for tunnel mode — streams JPEG frames from the desktop browser)
+  // Screencast state (for tunnel mode — polls JPEG frames from the desktop browser)
   let screencastEnabled = $state(false);
   let screencastSrc = $state<string | null>(null);
-  let screencastEventSource: EventSource | null = null;
+  let screencastPollTimer: ReturnType<typeof setTimeout> | null = null;
 
   let screencastError = $state<string | null>(null);
 
-  async function toggleScreencast() {
+  function pollScreencastFrame() {
+    if (!screencastEnabled) return;
+
+    const url = `/api/tunnel/screencast/${data.profileId}?t=${Date.now()}`;
+    fetch(url)
+      .then((res) => {
+        if (!screencastEnabled) return; // stopped while fetching
+        if (res.ok) {
+          return res.blob().then((blob) => {
+            if (!screencastEnabled) return;
+            // Revoke previous object URL to avoid memory leaks
+            if (screencastSrc && screencastSrc.startsWith("blob:")) {
+              URL.revokeObjectURL(screencastSrc);
+            }
+            screencastSrc = URL.createObjectURL(blob);
+          });
+        }
+        // 204 = no frame yet, just keep polling
+      })
+      .catch(() => {
+        // Network error, keep polling
+      })
+      .finally(() => {
+        if (screencastEnabled) {
+          screencastPollTimer = setTimeout(pollScreencastFrame, 1000);
+        }
+      });
+  }
+
+  function stopScreencast() {
+    screencastEnabled = false;
+    if (screencastPollTimer) {
+      clearTimeout(screencastPollTimer);
+      screencastPollTimer = null;
+    }
+    if (screencastSrc && screencastSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(screencastSrc);
+    }
+    screencastSrc = null;
+  }
+
+  function toggleScreencast() {
     screencastError = null;
 
     if (screencastEnabled) {
-      // Stop
-      screencastEnabled = false;
-      screencastSrc = null;
-      if (screencastEventSource) {
-        screencastEventSource.close();
-        screencastEventSource = null;
-      }
-      await fetch(`/api/tunnel/screencast/${data.profileId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "stop" }),
-      }).catch(() => {});
+      stopScreencast();
     } else {
-      // Start
       screencastEnabled = true;
-      try {
-        const res = await fetch(
-          `/api/tunnel/screencast/${data.profileId}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "start" }),
-          },
-        );
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${res.status}`);
-        }
-      } catch (err) {
-        screencastEnabled = false;
-        screencastError = `Failed to start: ${
-          err instanceof Error ? err.message : String(err)
-        }`;
-        return;
-      }
-
-      // Connect SSE stream
-      screencastEventSource = new EventSource(
-        `/api/tunnel/screencast/${data.profileId}`,
-      );
-      screencastEventSource.onmessage = (event) => {
-        screencastSrc = `data:image/jpeg;base64,${event.data}`;
-      };
-      screencastEventSource.addEventListener("stop", () => {
-        screencastEnabled = false;
-        screencastSrc = null;
-        screencastEventSource?.close();
-        screencastEventSource = null;
-      });
-      screencastEventSource.onerror = () => {
-        // SSE reconnects automatically, but if the source is truly gone, clean up
-        if (screencastEventSource?.readyState === EventSource.CLOSED) {
-          screencastEnabled = false;
-          screencastSrc = null;
-          screencastEventSource = null;
-        }
-      };
+      pollScreencastFrame();
     }
   }
 
   // Clean up screencast on destroy
   onDestroy(() => {
-    if (screencastEventSource) {
-      screencastEventSource.close();
-      screencastEventSource = null;
-      // Fire-and-forget stop
-      fetch(`/api/tunnel/screencast/${data.profileId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "stop" }),
-      }).catch(() => {});
+    if (screencastEnabled) {
+      stopScreencast();
     }
   });
 
@@ -1226,7 +1206,6 @@
       jobSearch.status = "queued";
       jobSearch.status_message = "Waiting in queue";
       currentRunId = result.runId;
-      showBrowser = true;
 
       // Reload runs to show the new one
       await loadRuns();
@@ -1466,7 +1445,6 @@
 
     // Start polling if already running/blocked/queued
     if (needsIntervention || isQueued) {
-      showBrowser = true;
       startPolling();
     }
   });
@@ -2866,289 +2844,311 @@
     </div>
   </div>
 
-  <!-- Browser View (VNC for local, iframe for cloud, screencast for tunnel) -->
-  {#if showBrowser || needsIntervention}
+  <!-- Browser View toggle button -->
+  <button
+    onclick={() => (showBrowser = !showBrowser)}
+    class="w-full p-4 border-2 border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-secondary)] transition-colors flex items-center justify-center gap-2"
+  >
+    <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
+    <span>{showBrowser ? "Hide" : "Show"} Browser View</span>
+  </button>
+
+  <!-- Browser View popup -->
+  {#if showBrowser}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onkeydown={(e) => {
+        if (e.key === "Escape") {
+          showBrowser = false;
+          if (screencastEnabled) toggleScreencast();
+        }
+      }}
     >
+      <!-- Backdrop -->
       <div
-        class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]"
+        class="absolute inset-0 bg-black/60"
+        onclick={() => {
+          showBrowser = false;
+          if (screencastEnabled) toggleScreencast();
+        }}
+        role="presentation"
+      ></div>
+      <!-- Popup content -->
+      <div
+        class="relative bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
       >
-        <div class="flex items-center gap-2">
-          <FontAwesomeIcon
-            icon={isCloudMode ? faCloud : faDesktop}
-            class="w-4 h-4 text-[var(--dash-text-secondary)]"
-          />
-          <h2 class="font-medium text-[var(--dash-text)]">Browser View</h2>
-          {#if isCloudMode}
-            <span
-              class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
-            >
-              Cloud
-            </span>
-          {/if}
-          {#if isTunnelMode}
-            <span
-              class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
-            >
-              Desktop
-            </span>
-          {/if}
-        </div>
-        <div class="flex items-center gap-2">
-          {#if isBlocked}
-            <span
-              class="text-sm text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-2 py-1 rounded"
-            >
-              Action needed
-            </span>
-          {/if}
-          {#if isTunnelMode}
-            <button
-              onclick={toggleScreencast}
-              class="
-                px-2 py-1 text-xs rounded transition-colors {screencastEnabled
-                ? 'bg-[var(--dash-primary)] text-white'
-                : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
-              "
-              title={screencastEnabled
-                ? "Disable live view (reduces latency)"
-                : "Enable live view (streams from desktop browser)"}
-            >
-              <FontAwesomeIcon icon={faEye} class="w-3 h-3 mr-1" />
-              {screencastEnabled ? "Live" : "View"}
-            </button>
-          {/if}
-          {#if isCloudMode && liveUrl}
-            <a
-              href={liveUrl}
-              target="_blank"
-              rel="noopener"
-              class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-              title="Open in new tab"
-            >
-              <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-            </a>
-          {/if}
-          <button
-            onclick={() => {
-              showBrowser = false;
-              if (screencastEnabled) toggleScreencast();
-            }}
-            class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-          >
-            <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-      <div class="relative" style="padding-bottom: 56.25%">
-        {#if screencastEnabled && screencastSrc}
-          <img
-            src={screencastSrc}
-            alt="Live browser view"
-            class="absolute inset-0 w-full h-full object-contain bg-black"
-          />
-        {:else if screencastEnabled}
-          <div
-            class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
-          >
-            <div class="text-center">
-              <FontAwesomeIcon
-                icon={faSpinner}
-                class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2"
-              />
-              <p class="text-sm text-[var(--dash-text-muted)]">
-                Starting live view...
-              </p>
-            </div>
-          </div>
-        {:else if browserViewUrl}
-          <iframe
-            src={browserViewUrl}
-            class="absolute inset-0 w-full h-full border-0"
-            title="Browser view for manual intervention"
-          ></iframe>
-        {:else if isTunnelMode}
-          <div
-            class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
-          >
-            <div class="text-center">
-              <FontAwesomeIcon
-                icon={faDesktop}
-                class="w-6 h-6 text-[var(--dash-text-muted)] mb-2"
-              />
-              {#if screencastError}
-                <p class="text-sm text-[var(--dash-error)]">
-                  {screencastError}
-                </p>
-                <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                  Check that the desktop app is connected
-                </p>
-              {:else}
-                <p class="text-sm text-[var(--dash-text-muted)]">
-                  Browser running on your desktop
-                </p>
-                <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                  Click "View" to enable live streaming
-                </p>
-              {/if}
-            </div>
-          </div>
-        {:else}
-          <div
-            class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
-          >
-            <div class="text-center">
-              <FontAwesomeIcon
-                icon={faSpinner}
-                class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2"
-              />
-              <p class="text-sm text-[var(--dash-text-muted)]">
-                Starting cloud browser...
-              </p>
-            </div>
-          </div>
-        {/if}
-      </div>
-      <div class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]">
-        {#if isBlocked}
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-[var(--dash-text-secondary)]">
-              {#if isMagicLink}
-                Paste the login link from your email below and click Navigate,
-                then click Continue.
-              {:else}
-                Complete the required action (login, CAPTCHA, or verification)
-                in the browser above, then click Continue.
-              {/if}
-            </p>
-            <div class="flex items-center gap-2 ml-4">
-              <button
-                onclick={() => sendFeedback("continue")}
-                disabled={isSendingFeedback}
-                class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+        <div
+          class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]"
+        >
+          <div class="flex items-center gap-2">
+            <FontAwesomeIcon
+              icon={isCloudMode ? faCloud : faDesktop}
+              class="w-4 h-4 text-[var(--dash-text-secondary)]"
+            />
+            <h2 class="font-medium text-[var(--dash-text)]">Browser View</h2>
+            {#if isCloudMode}
+              <span
+                class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
               >
-                {#if isSendingFeedback}
+                Cloud
+              </span>
+            {/if}
+            {#if isTunnelMode}
+              <span
+                class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
+              >
+                Desktop
+              </span>
+            {/if}
+          </div>
+          <div class="flex items-center gap-2">
+            {#if isBlocked}
+              <span
+                class="text-sm text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-2 py-1 rounded"
+              >
+                Action needed
+              </span>
+            {/if}
+            {#if isTunnelMode}
+              <button
+                onclick={toggleScreencast}
+                class="
+                  px-2 py-1 text-xs rounded transition-colors {screencastEnabled
+                  ? 'bg-[var(--dash-primary)] text-white'
+                  : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
+                "
+                title={screencastEnabled
+                  ? "Disable live view (reduces latency)"
+                  : "Enable live view (streams from desktop browser)"}
+              >
+                <FontAwesomeIcon icon={faEye} class="w-3 h-3 mr-1" />
+                {screencastEnabled ? "Live" : "View"}
+              </button>
+            {/if}
+            {#if isCloudMode && liveUrl}
+              <a
+                href={liveUrl}
+                target="_blank"
+                rel="noopener"
+                class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                title="Open in new tab"
+              >
+                <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
+              </a>
+            {/if}
+            <button
+              onclick={() => {
+                showBrowser = false;
+                if (screencastEnabled) toggleScreencast();
+              }}
+              class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+            >
+              <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div class="relative w-full" style="padding-bottom: 56.25%">
+          {#if screencastEnabled && screencastSrc}
+            <img
+              src={screencastSrc}
+              alt="Live browser view"
+              class="absolute inset-0 w-full h-full object-contain bg-black"
+            />
+          {:else if screencastEnabled}
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
+            >
+              <div class="text-center">
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2"
+                />
+                <p class="text-sm text-[var(--dash-text-muted)]">
+                  Starting live view...
+                </p>
+              </div>
+            </div>
+          {:else if browserViewUrl}
+            <iframe
+              src={browserViewUrl}
+              class="absolute inset-0 w-full h-full border-0"
+              title="Browser view for manual intervention"
+            ></iframe>
+          {:else if isTunnelMode}
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
+            >
+              <div class="text-center">
+                <FontAwesomeIcon
+                  icon={faDesktop}
+                  class="w-6 h-6 text-[var(--dash-text-muted)] mb-2"
+                />
+                {#if screencastError}
+                  <p class="text-sm text-[var(--dash-error)]">
+                    {screencastError}
+                  </p>
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                    Check that the desktop app is connected
+                  </p>
+                {:else}
+                  <p class="text-sm text-[var(--dash-text-muted)]">
+                    Browser running on your desktop
+                  </p>
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                    Click "View" to enable live streaming
+                  </p>
+                {/if}
+              </div>
+            </div>
+          {:else}
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
+            >
+              <div class="text-center">
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2"
+                />
+                <p class="text-sm text-[var(--dash-text-muted)]">
+                  Starting cloud browser...
+                </p>
+              </div>
+            </div>
+          {/if}
+        </div>
+        <div class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]">
+          {#if isBlocked}
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                {#if isMagicLink}
+                  Paste the login link from your email below and click Navigate,
+                  then click Continue.
+                {:else}
+                  Complete the required action (login, CAPTCHA, or verification)
+                  in the browser above, then click Continue.
+                {/if}
+              </p>
+              <div class="flex items-center gap-2 ml-4">
+                <button
+                  onclick={() => sendFeedback("continue")}
+                  disabled={isSendingFeedback}
+                  class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {#if isSendingFeedback}
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      class="w-3 h-3 animate-spin"
+                    />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  <span>Continue</span>
+                </button>
+                <button
+                  onclick={() => sendFeedback("skip")}
+                  disabled={isSendingFeedback}
+                  class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  title="Skip current action"
+                >
+                  <FontAwesomeIcon icon={faForward} class="w-3 h-3" />
+                  <span>Skip</span>
+                </button>
+              </div>
+            </div>
+          {:else if isRunning}
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Watch the scrape progress. You may need to intervene if a CAPTCHA or
+              login is required.
+            </p>
+          {:else}
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Browser session view. Start a scrape to see activity.
+            </p>
+          {/if}
+          {#if isRunning || isBlocked}
+            <!-- Navigate URL (for magic link login) -->
+            <div
+              class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]"
+            >
+              <input
+                type="url"
+                bind:value={navigateUrlValue}
+                placeholder="Paste login URL from email"
+                disabled={isNavigating}
+                onkeydown={(e) => {
+                  if (e.key === "Enter") sendNavigateUrl();
+                }}
+                class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50 {isMagicLink ? 'ring-1 ring-[var(--dash-warning)]' : ''}"
+              />
+              <button
+                onclick={() => sendNavigateUrl()}
+                disabled={isNavigating || !navigateUrlValue.trim()}
+                class="px-3 py-1.5 text-sm {isMagicLink ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)]'} rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Open URL in the scraper browser"
+              >
+                {#if isNavigating}
                   <FontAwesomeIcon
                     icon={faSpinner}
                     class="w-3 h-3 animate-spin"
                   />
                 {:else}
-                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  Navigate
                 {/if}
-                <span>Continue</span>
+              </button>
+              {#if navigateUrlMessage}
+                <span class="text-xs text-[var(--dash-text-muted)]">{
+                  navigateUrlMessage
+                }</span>
+              {/if}
+            </div>
+            <!-- Type text into browser (for 2FA codes on mobile) -->
+            <div
+              class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]"
+            >
+              <input
+                type="text"
+                bind:value={typeTextValue}
+                placeholder="Type text into browser (2FA code, etc.)"
+                disabled={isTypingText}
+                onkeydown={(e) => {
+                  if (e.key === "Enter") sendTypeText(true);
+                }}
+                class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+              />
+              <button
+                onclick={() => sendTypeText(false)}
+                disabled={isTypingText || !typeTextValue.trim()}
+                class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Type text without submitting"
+              >
+                {#if isTypingText}
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    class="w-3 h-3 animate-spin"
+                  />
+                {:else}
+                  Type
+                {/if}
               </button>
               <button
-                onclick={() => sendFeedback("skip")}
-                disabled={isSendingFeedback}
-                class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                title="Skip current action"
+                onclick={() => sendTypeText(true)}
+                disabled={isTypingText || !typeTextValue.trim()}
+                class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Type text and press Enter"
               >
-                <FontAwesomeIcon icon={faForward} class="w-3 h-3" />
-                <span>Skip</span>
+                Send
               </button>
+              {#if typeTextMessage}
+                <span class="text-xs text-[var(--dash-text-muted)]">{
+                  typeTextMessage
+                }</span>
+              {/if}
             </div>
-          </div>
-        {:else if isRunning}
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Watch the scrape progress. You may need to intervene if a CAPTCHA or
-            login is required.
-          </p>
-        {:else}
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Browser session view. Start a scrape to see activity.
-          </p>
-        {/if}
-        {#if isRunning || isBlocked}
-          <!-- Navigate URL (for magic link login) -->
-          <div
-            class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]"
-          >
-            <input
-              type="url"
-              bind:value={navigateUrlValue}
-              placeholder="Paste login URL from email"
-              disabled={isNavigating}
-              onkeydown={(e) => {
-                if (e.key === "Enter") sendNavigateUrl();
-              }}
-              class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50 {isMagicLink ? 'ring-1 ring-[var(--dash-warning)]' : ''}"
-            />
-            <button
-              onclick={() => sendNavigateUrl()}
-              disabled={isNavigating || !navigateUrlValue.trim()}
-              class="px-3 py-1.5 text-sm {isMagicLink ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)]'} rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Open URL in the scraper browser"
-            >
-              {#if isNavigating}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-3 h-3 animate-spin"
-                />
-              {:else}
-                Navigate
-              {/if}
-            </button>
-            {#if navigateUrlMessage}
-              <span class="text-xs text-[var(--dash-text-muted)]">{
-                navigateUrlMessage
-              }</span>
-            {/if}
-          </div>
-          <!-- Type text into browser (for 2FA codes on mobile) -->
-          <div
-            class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]"
-          >
-            <input
-              type="text"
-              bind:value={typeTextValue}
-              placeholder="Type text into browser (2FA code, etc.)"
-              disabled={isTypingText}
-              onkeydown={(e) => {
-                if (e.key === "Enter") sendTypeText(true);
-              }}
-              class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
-            />
-            <button
-              onclick={() => sendTypeText(false)}
-              disabled={isTypingText || !typeTextValue.trim()}
-              class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Type text without submitting"
-            >
-              {#if isTypingText}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-3 h-3 animate-spin"
-                />
-              {:else}
-                Type
-              {/if}
-            </button>
-            <button
-              onclick={() => sendTypeText(true)}
-              disabled={isTypingText || !typeTextValue.trim()}
-              class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Type text and press Enter"
-            >
-              Send
-            </button>
-            {#if typeTextMessage}
-              <span class="text-xs text-[var(--dash-text-muted)]">{
-                typeTextMessage
-              }</span>
-            {/if}
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </div>
-  {:else}
-    <button
-      onclick={() => (showBrowser = true)}
-      class="w-full p-4 border-2 border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-secondary)] transition-colors flex items-center justify-center gap-2"
-    >
-      <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
-      <span>Show Browser View</span>
-    </button>
   {/if}
 
   <!-- Runs History -->
