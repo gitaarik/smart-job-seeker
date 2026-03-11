@@ -71,6 +71,7 @@ export type Job_searchesMinAggregateOutputType = {
   skip_existing: boolean | null
   stop_after_duplicates: number | null
   skip_first: number | null
+  keep_minimized: boolean | null
 }
 
 export type Job_searchesMaxAggregateOutputType = {
@@ -96,6 +97,7 @@ export type Job_searchesMaxAggregateOutputType = {
   skip_existing: boolean | null
   stop_after_duplicates: number | null
   skip_first: number | null
+  keep_minimized: boolean | null
 }
 
 export type Job_searchesCountAggregateOutputType = {
@@ -121,6 +123,8 @@ export type Job_searchesCountAggregateOutputType = {
   skip_existing: number
   stop_after_duplicates: number
   skip_first: number
+  keep_minimized: number
+  ui_preferences: number
   _all: number
 }
 
@@ -170,6 +174,7 @@ export type Job_searchesMinAggregateInputType = {
   skip_existing?: true
   stop_after_duplicates?: true
   skip_first?: true
+  keep_minimized?: true
 }
 
 export type Job_searchesMaxAggregateInputType = {
@@ -195,6 +200,7 @@ export type Job_searchesMaxAggregateInputType = {
   skip_existing?: true
   stop_after_duplicates?: true
   skip_first?: true
+  keep_minimized?: true
 }
 
 export type Job_searchesCountAggregateInputType = {
@@ -220,6 +226,8 @@ export type Job_searchesCountAggregateInputType = {
   skip_existing?: true
   stop_after_duplicates?: true
   skip_first?: true
+  keep_minimized?: true
+  ui_preferences?: true
   _all?: true
 }
 
@@ -332,6 +340,8 @@ export type Job_searchesGroupByOutputType = {
   skip_existing: boolean
   stop_after_duplicates: number | null
   skip_first: number | null
+  keep_minimized: boolean | null
+  ui_preferences: runtime.JsonValue | null
   _count: Job_searchesCountAggregateOutputType | null
   _avg: Job_searchesAvgAggregateOutputType | null
   _sum: Job_searchesSumAggregateOutputType | null
@@ -380,6 +390,8 @@ export type job_searchesWhereInput = {
   skip_existing?: Prisma.BoolFilter<"job_searches"> | boolean
   stop_after_duplicates?: Prisma.IntNullableFilter<"job_searches"> | number | null
   skip_first?: Prisma.IntNullableFilter<"job_searches"> | number | null
+  keep_minimized?: Prisma.BoolNullableFilter<"job_searches"> | boolean | null
+  ui_preferences?: Prisma.JsonNullableFilter<"job_searches">
   runs?: Prisma.Job_search_runsListRelationFilter
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
   platform_profiles?: Prisma.XOR<Prisma.Platform_profilesNullableScalarRelationFilter, Prisma.platform_profilesWhereInput> | null
@@ -410,6 +422,8 @@ export type job_searchesOrderByWithRelationInput = {
   skip_existing?: Prisma.SortOrder
   stop_after_duplicates?: Prisma.SortOrderInput | Prisma.SortOrder
   skip_first?: Prisma.SortOrderInput | Prisma.SortOrder
+  keep_minimized?: Prisma.SortOrderInput | Prisma.SortOrder
+  ui_preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   runs?: Prisma.job_search_runsOrderByRelationAggregateInput
   job_platforms?: Prisma.job_platformsOrderByWithRelationInput
   platform_profiles?: Prisma.platform_profilesOrderByWithRelationInput
@@ -443,6 +457,8 @@ export type job_searchesWhereUniqueInput = Prisma.AtLeast<{
   skip_existing?: Prisma.BoolFilter<"job_searches"> | boolean
   stop_after_duplicates?: Prisma.IntNullableFilter<"job_searches"> | number | null
   skip_first?: Prisma.IntNullableFilter<"job_searches"> | number | null
+  keep_minimized?: Prisma.BoolNullableFilter<"job_searches"> | boolean | null
+  ui_preferences?: Prisma.JsonNullableFilter<"job_searches">
   runs?: Prisma.Job_search_runsListRelationFilter
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
   platform_profiles?: Prisma.XOR<Prisma.Platform_profilesNullableScalarRelationFilter, Prisma.platform_profilesWhereInput> | null
@@ -473,6 +489,8 @@ export type job_searchesOrderByWithAggregationInput = {
   skip_existing?: Prisma.SortOrder
   stop_after_duplicates?: Prisma.SortOrderInput | Prisma.SortOrder
   skip_first?: Prisma.SortOrderInput | Prisma.SortOrder
+  keep_minimized?: Prisma.SortOrderInput | Prisma.SortOrder
+  ui_preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.job_searchesCountOrderByAggregateInput
   _avg?: Prisma.job_searchesAvgOrderByAggregateInput
   _max?: Prisma.job_searchesMaxOrderByAggregateInput
@@ -506,6 +524,8 @@ export type job_searchesScalarWhereWithAggregatesInput = {
   skip_existing?: Prisma.BoolWithAggregatesFilter<"job_searches"> | boolean
   stop_after_duplicates?: Prisma.IntNullableWithAggregatesFilter<"job_searches"> | number | null
   skip_first?: Prisma.IntNullableWithAggregatesFilter<"job_searches"> | number | null
+  keep_minimized?: Prisma.BoolNullableWithAggregatesFilter<"job_searches"> | boolean | null
+  ui_preferences?: Prisma.JsonNullableWithAggregatesFilter<"job_searches">
 }
 
 export type job_searchesCreateInput = {
@@ -527,6 +547,8 @@ export type job_searchesCreateInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsCreateNestedManyWithoutJob_searchesInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutJob_searchesInput
@@ -557,6 +579,8 @@ export type job_searchesUncheckedCreateInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedCreateNestedManyWithoutJob_searchesInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
@@ -580,6 +604,8 @@ export type job_searchesUpdateInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUpdateManyWithoutJob_searchesNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutJob_searchesNestedInput
@@ -610,6 +636,8 @@ export type job_searchesUncheckedUpdateInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedUpdateManyWithoutJob_searchesNestedInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
 }
@@ -637,6 +665,8 @@ export type job_searchesCreateManyInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesUpdateManyMutationInput = {
@@ -658,6 +688,8 @@ export type job_searchesUpdateManyMutationInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesUncheckedUpdateManyInput = {
@@ -683,6 +715,8 @@ export type job_searchesUncheckedUpdateManyInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type Job_searchesListRelationFilter = {
@@ -718,6 +752,8 @@ export type job_searchesCountOrderByAggregateInput = {
   skip_existing?: Prisma.SortOrder
   stop_after_duplicates?: Prisma.SortOrder
   skip_first?: Prisma.SortOrder
+  keep_minimized?: Prisma.SortOrder
+  ui_preferences?: Prisma.SortOrder
 }
 
 export type job_searchesAvgOrderByAggregateInput = {
@@ -754,6 +790,7 @@ export type job_searchesMaxOrderByAggregateInput = {
   skip_existing?: Prisma.SortOrder
   stop_after_duplicates?: Prisma.SortOrder
   skip_first?: Prisma.SortOrder
+  keep_minimized?: Prisma.SortOrder
 }
 
 export type job_searchesMinOrderByAggregateInput = {
@@ -779,6 +816,7 @@ export type job_searchesMinOrderByAggregateInput = {
   skip_existing?: Prisma.SortOrder
   stop_after_duplicates?: Prisma.SortOrder
   skip_first?: Prisma.SortOrder
+  keep_minimized?: Prisma.SortOrder
 }
 
 export type job_searchesSumOrderByAggregateInput = {
@@ -977,6 +1015,8 @@ export type job_searchesCreateWithoutJob_platformsInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsCreateNestedManyWithoutJob_searchesInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutJob_searchesInput
   profiles: Prisma.profilesCreateNestedOneWithoutJob_searchesInput
@@ -1005,6 +1045,8 @@ export type job_searchesUncheckedCreateWithoutJob_platformsInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedCreateNestedManyWithoutJob_searchesInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
@@ -1061,6 +1103,8 @@ export type job_searchesScalarWhereInput = {
   skip_existing?: Prisma.BoolFilter<"job_searches"> | boolean
   stop_after_duplicates?: Prisma.IntNullableFilter<"job_searches"> | number | null
   skip_first?: Prisma.IntNullableFilter<"job_searches"> | number | null
+  keep_minimized?: Prisma.BoolNullableFilter<"job_searches"> | boolean | null
+  ui_preferences?: Prisma.JsonNullableFilter<"job_searches">
 }
 
 export type job_searchesCreateWithoutJob_searches_job_sitesInput = {
@@ -1082,6 +1126,8 @@ export type job_searchesCreateWithoutJob_searches_job_sitesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsCreateNestedManyWithoutJob_searchesInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutJob_searchesInput
@@ -1111,6 +1157,8 @@ export type job_searchesUncheckedCreateWithoutJob_searches_job_sitesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedCreateNestedManyWithoutJob_searchesInput
 }
 
@@ -1149,6 +1197,8 @@ export type job_searchesUpdateWithoutJob_searches_job_sitesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUpdateManyWithoutJob_searchesNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutJob_searchesNestedInput
@@ -1178,6 +1228,8 @@ export type job_searchesUncheckedUpdateWithoutJob_searches_job_sitesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedUpdateManyWithoutJob_searchesNestedInput
 }
 
@@ -1200,6 +1252,8 @@ export type job_searchesCreateWithoutRunsInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutJob_searchesInput
   profiles: Prisma.profilesCreateNestedOneWithoutJob_searchesInput
@@ -1229,6 +1283,8 @@ export type job_searchesUncheckedCreateWithoutRunsInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
 
@@ -1267,6 +1323,8 @@ export type job_searchesUpdateWithoutRunsInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutJob_searchesNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_searchesNestedInput
@@ -1296,6 +1354,8 @@ export type job_searchesUncheckedUpdateWithoutRunsInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
 }
 
@@ -1318,6 +1378,8 @@ export type job_searchesCreateWithoutPlatform_profilesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsCreateNestedManyWithoutJob_searchesInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
   profiles: Prisma.profilesCreateNestedOneWithoutJob_searchesInput
@@ -1346,6 +1408,8 @@ export type job_searchesUncheckedCreateWithoutPlatform_profilesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedCreateNestedManyWithoutJob_searchesInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
@@ -1395,6 +1459,8 @@ export type job_searchesCreateWithoutProfilesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsCreateNestedManyWithoutJob_searchesInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutJob_searchesInput
@@ -1423,6 +1489,8 @@ export type job_searchesUncheckedCreateWithoutProfilesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedCreateNestedManyWithoutJob_searchesInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
@@ -1475,6 +1543,8 @@ export type job_searchesCreateManyJob_platformsInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesUpdateWithoutJob_platformsInput = {
@@ -1496,6 +1566,8 @@ export type job_searchesUpdateWithoutJob_platformsInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUpdateManyWithoutJob_searchesNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutJob_searchesNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_searchesNestedInput
@@ -1524,6 +1596,8 @@ export type job_searchesUncheckedUpdateWithoutJob_platformsInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedUpdateManyWithoutJob_searchesNestedInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
 }
@@ -1550,6 +1624,8 @@ export type job_searchesUncheckedUpdateManyWithoutJob_platformsInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesCreateManyPlatform_profilesInput = {
@@ -1574,6 +1650,8 @@ export type job_searchesCreateManyPlatform_profilesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesUpdateWithoutPlatform_profilesInput = {
@@ -1595,6 +1673,8 @@ export type job_searchesUpdateWithoutPlatform_profilesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUpdateManyWithoutJob_searchesNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_searchesNestedInput
@@ -1623,6 +1703,8 @@ export type job_searchesUncheckedUpdateWithoutPlatform_profilesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedUpdateManyWithoutJob_searchesNestedInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
 }
@@ -1649,6 +1731,8 @@ export type job_searchesUncheckedUpdateManyWithoutPlatform_profilesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesCreateManyProfilesInput = {
@@ -1673,6 +1757,8 @@ export type job_searchesCreateManyProfilesInput = {
   skip_existing?: boolean
   stop_after_duplicates?: number | null
   skip_first?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type job_searchesUpdateWithoutProfilesInput = {
@@ -1694,6 +1780,8 @@ export type job_searchesUpdateWithoutProfilesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUpdateManyWithoutJob_searchesNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutJob_searchesNestedInput
@@ -1722,6 +1810,8 @@ export type job_searchesUncheckedUpdateWithoutProfilesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   runs?: Prisma.job_search_runsUncheckedUpdateManyWithoutJob_searchesNestedInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
 }
@@ -1748,6 +1838,8 @@ export type job_searchesUncheckedUpdateManyWithoutProfilesInput = {
   skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -1813,6 +1905,8 @@ export type job_searchesSelect<ExtArgs extends runtime.Types.Extensions.Internal
   skip_existing?: boolean
   stop_after_duplicates?: boolean
   skip_first?: boolean
+  keep_minimized?: boolean
+  ui_preferences?: boolean
   runs?: boolean | Prisma.job_searches$runsArgs<ExtArgs>
   job_platforms?: boolean | Prisma.job_searches$job_platformsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.job_searches$platform_profilesArgs<ExtArgs>
@@ -1844,6 +1938,8 @@ export type job_searchesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   skip_existing?: boolean
   stop_after_duplicates?: boolean
   skip_first?: boolean
+  keep_minimized?: boolean
+  ui_preferences?: boolean
   job_platforms?: boolean | Prisma.job_searches$job_platformsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.job_searches$platform_profilesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -1872,6 +1968,8 @@ export type job_searchesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   skip_existing?: boolean
   stop_after_duplicates?: boolean
   skip_first?: boolean
+  keep_minimized?: boolean
+  ui_preferences?: boolean
   job_platforms?: boolean | Prisma.job_searches$job_platformsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.job_searches$platform_profilesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -1900,9 +1998,11 @@ export type job_searchesSelectScalar = {
   skip_existing?: boolean
   stop_after_duplicates?: boolean
   skip_first?: boolean
+  keep_minimized?: boolean
+  ui_preferences?: boolean
 }
 
-export type job_searchesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "name" | "profile" | "last_run" | "search_url" | "platform" | "navigation_type" | "stripped_html" | "last_run_jobs_found" | "live_url" | "is_active" | "status_message" | "platform_profile_id" | "max_jobs" | "search_term" | "browser_provider" | "skip_existing" | "stop_after_duplicates" | "skip_first", ExtArgs["result"]["job_searches"]>
+export type job_searchesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "name" | "profile" | "last_run" | "search_url" | "platform" | "navigation_type" | "stripped_html" | "last_run_jobs_found" | "live_url" | "is_active" | "status_message" | "platform_profile_id" | "max_jobs" | "search_term" | "browser_provider" | "skip_existing" | "stop_after_duplicates" | "skip_first" | "keep_minimized" | "ui_preferences", ExtArgs["result"]["job_searches"]>
 export type job_searchesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   runs?: boolean | Prisma.job_searches$runsArgs<ExtArgs>
   job_platforms?: boolean | Prisma.job_searches$job_platformsArgs<ExtArgs>
@@ -1954,6 +2054,8 @@ export type $job_searchesPayload<ExtArgs extends runtime.Types.Extensions.Intern
     skip_existing: boolean
     stop_after_duplicates: number | null
     skip_first: number | null
+    keep_minimized: boolean | null
+    ui_preferences: runtime.JsonValue | null
   }, ExtArgs["result"]["job_searches"]>
   composites: {}
 }
@@ -2404,6 +2506,8 @@ export interface job_searchesFieldRefs {
   readonly skip_existing: Prisma.FieldRef<"job_searches", 'Boolean'>
   readonly stop_after_duplicates: Prisma.FieldRef<"job_searches", 'Int'>
   readonly skip_first: Prisma.FieldRef<"job_searches", 'Int'>
+  readonly keep_minimized: Prisma.FieldRef<"job_searches", 'Boolean'>
+  readonly ui_preferences: Prisma.FieldRef<"job_searches", 'Json'>
 }
     
 

@@ -28,8 +28,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(jobSearchUpdateSchema, await request.json());
 
-  const data: { max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null } = {};
+  const data: { name?: string; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; keep_minimized?: boolean } = {};
 
+  if (body.name !== undefined) data.name = body.name;
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
   if (body.search_term !== undefined) data.search_term = body.search_term?.trim() || null;
   if (body.max_jobs !== undefined) data.max_jobs = body.max_jobs;
@@ -37,6 +38,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (body.stop_after_duplicates !== undefined) data.stop_after_duplicates = body.stop_after_duplicates;
   if (body.skip_first !== undefined) data.skip_first = body.skip_first;
   if (body.browser_provider !== undefined) data.browser_provider = body.browser_provider;
+  if (body.keep_minimized !== undefined) data.keep_minimized = body.keep_minimized;
 
   // Create new credential and assign it
   if (body.new_credential && jobSearch.platform) {
@@ -75,6 +77,35 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   await db.job_searches.update({
     where: { id: jobSearchId },
     data,
+  });
+
+  return json({ ok: true });
+};
+
+/**
+ * DELETE /api/job-searches/[id]
+ *
+ * Delete a job search task.
+ */
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
+
+  const jobSearch = await db.job_searches.findFirst({
+    where: { id: jobSearchId },
+    include: { profiles: { select: { user_id: true } } },
+  });
+
+  if (!jobSearch) {
+    throw error(404, "Job search not found");
+  }
+
+  if (jobSearch.profiles.user_id !== user.id) {
+    throw error(403, "Not authorized");
+  }
+
+  await db.job_searches.delete({
+    where: { id: jobSearchId },
   });
 
   return json({ ok: true });

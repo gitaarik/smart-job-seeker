@@ -4,32 +4,22 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
-    faChevronDown,
-    faChevronUp,
     faExclamationTriangle,
-    faExternalLinkAlt,
     faEye,
     faEyeSlash,
     faKey,
-    faPencil,
-    faPlay,
     faPlus,
     faSearch,
     faSpinner,
     faTimes,
-    faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
-  import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let jobSearches = $derived(data.jobSearches);
-  let expandedId = $state<number | null>(null);
-  let editingId = $state<number | null>(null);
   let showAddForm = $state(false);
-  let deleteId = $state<number | null>(null);
 
   // Form states for new entry
   let newName = $state("");
@@ -62,32 +52,6 @@
   let newCredPassword = $state("");
   let showPassword = $state(false);
 
-  // Form states for editing
-  let editName = $state("");
-  let editSearchUrl = $state("");
-  let editSearchTerm = $state("");
-  let editStatus = $state("");
-  let editLoginPageUrl = $state("");
-  let editCredentialId = $state<string>("none");
-  let editShowNewCredentials = $state(false);
-  let editNewCredUsername = $state("");
-  let editNewCredPassword = $state("");
-  let editShowPassword = $state(false);
-  let editDetectedPlatform = $state<{
-    id: number;
-    name: string;
-    url: string;
-    loginPageUrl: string | null;
-    isNew: boolean;
-  } | null>(null);
-  let editExistingCredentials = $state<
-    Array<{
-      id: number;
-      username: string | null;
-      status: string;
-    }>
-  >([]);
-
   // Debounce timer
   let urlDebounce: ReturnType<typeof setTimeout> | null = null;
 
@@ -103,20 +67,10 @@
     });
   }
 
-  function toggleExpand(id: number) {
-    if (editingId === id) return;
-    expandedId = expandedId === id ? null : id;
-  }
-
-  async function detectPlatformFromUrl(searchUrl: string, isEdit = false) {
+  async function detectPlatformFromUrl(searchUrl: string) {
     if (!searchUrl) {
-      if (isEdit) {
-        editDetectedPlatform = null;
-        editExistingCredentials = [];
-      } else {
-        detectedPlatform = null;
-        existingCredentials = [];
-      }
+      detectedPlatform = null;
+      existingCredentials = [];
       return;
     }
 
@@ -134,27 +88,15 @@
     detectingPlatform = true;
 
     try {
-      // Check if platform exists or get metadata for new one
       const response = await fetch(
         `/api/platforms/detect?url=${encodeURIComponent(baseUrl)}&profileId=${data.profileId}`,
       );
       if (response.ok) {
         const result = await response.json();
-        if (isEdit) {
-          editDetectedPlatform = result.platform;
-          editExistingCredentials = result.credentials || [];
-          if (result.platform.loginPageUrl && !editLoginPageUrl) {
-            editLoginPageUrl = result.platform.loginPageUrl;
-          }
-          if (result.credentials?.length > 0 && editCredentialId === "none") {
-            // Don't auto-select, let user choose
-          }
-        } else {
-          detectedPlatform = result.platform;
-          existingCredentials = result.credentials || [];
-          if (result.platform.loginPageUrl) {
-            newLoginPageUrl = result.platform.loginPageUrl;
-          }
+        detectedPlatform = result.platform;
+        existingCredentials = result.credentials || [];
+        if (result.platform.loginPageUrl) {
+          newLoginPageUrl = result.platform.loginPageUrl;
         }
       }
     } catch {
@@ -164,53 +106,18 @@
     }
   }
 
-  function handleSearchUrlInput(e: Event, isEdit = false) {
+  function handleSearchUrlInput(e: Event) {
     const value = (e.target as HTMLInputElement).value;
-    if (isEdit) {
-      editSearchUrl = value;
-    } else {
-      newSearchUrl = value;
-    }
+    newSearchUrl = value;
 
     // Debounce platform detection
     if (urlDebounce) clearTimeout(urlDebounce);
-    urlDebounce = setTimeout(() => detectPlatformFromUrl(value, isEdit), 500);
+    urlDebounce = setTimeout(() => detectPlatformFromUrl(value), 500);
   }
 
-  function handleCredentialSelection(value: string, isEdit = false) {
-    if (isEdit) {
-      editCredentialId = value;
-      editShowNewCredentials = value === "new";
-    } else {
-      selectedCredentialId = value;
-      showNewCredentials = value === "new";
-    }
-  }
-
-  function startEdit(search: (typeof jobSearches)[0]) {
-    editingId = search.id;
-    expandedId = search.id;
-    editName = search.name || "";
-    editSearchUrl = search.search_url || "";
-    editSearchTerm = search.search_term || "";
-    editStatus = search.status || "active";
-    editLoginPageUrl = search.job_platforms?.login_page_url || "";
-    editCredentialId = search.platform_profile_id?.toString() || "none";
-    editShowNewCredentials = false;
-    editNewCredUsername = "";
-    editNewCredPassword = "";
-    editShowPassword = false;
-
-    // Detect platform from existing URL
-    if (search.search_url) {
-      detectPlatformFromUrl(search.search_url, true);
-    }
-  }
-
-  function cancelEdit() {
-    editingId = null;
-    editDetectedPlatform = null;
-    editExistingCredentials = [];
+  function handleCredentialSelection(value: string) {
+    selectedCredentialId = value;
+    showNewCredentials = value === "new";
   }
 
   function resetAddForm() {
@@ -240,23 +147,6 @@
       await update();
       if (result.type === "success") {
         resetAddForm();
-      }
-    };
-  }
-
-  function handleEditSubmit() {
-    return async ({
-      result,
-      update,
-    }: {
-      result: { type: string };
-      update: () => Promise<void>;
-    }) => {
-      await update();
-      if (result.type === "success") {
-        editingId = null;
-        editDetectedPlatform = null;
-        editExistingCredentials = [];
       }
     };
   }
@@ -560,545 +450,131 @@
   {:else}
     <div class="space-y-3">
       {#each jobSearches as search (search.id)}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all"
+        <a
+          href="/dashboard/jobs/settings/{search.id}"
+          class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
         >
-          <!-- Chevron in top right corner -->
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              toggleExpand(search.id);
-            }}
-            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
-            aria-label={expandedId === search.id ? "Collapse" : "Expand"}
-          >
-            <FontAwesomeIcon
-              icon={expandedId === search.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
-          </button>
-
-          <!-- Header (clickable to expand/collapse) -->
-          <button
-            type="button"
-            onclick={() => toggleExpand(search.id)}
-            class="w-full p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
-          >
-            <div class="flex items-start gap-3">
-              <!-- Desktop: Icon on the left -->
-              <div class="hidden md:flex flex-shrink-0">
-                <div
-                  class="w-12 h-12 rounded-lg {getStatusBgColor(
-                    search,
-                  )} flex items-center justify-center"
-                >
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    class="w-6 h-6 {getStatusColor(search)}"
-                  />
-                </div>
+          <div class="flex items-start gap-3">
+            <!-- Desktop: Icon on the left -->
+            <div class="hidden md:flex flex-shrink-0">
+              <div
+                class="w-12 h-12 rounded-lg {getStatusBgColor(
+                  search,
+                )} flex items-center justify-center"
+              >
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  class="w-6 h-6 {getStatusColor(search)}"
+                />
               </div>
+            </div>
 
-              <div class="flex-1 min-w-0">
-                <!-- Title -->
-                <div class="flex items-center gap-2 pr-8 flex-wrap">
-                  <h3
-                    class="font-medium text-[var(--dash-text)] text-sm sm:text-base truncate"
-                  >
-                    {search.name}
-                  </h3>
-                  {#if search.status === "running" || search.status === "queued" || search.status === "blocked"}
-                    <span
-                      class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 {search.status === 'blocked' ? 'bg-yellow-500/20 text-yellow-600 animate-pulse' : 'bg-blue-500/20 text-blue-600'}"
-                    >
-                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 {search.status !== 'blocked' ? 'animate-spin' : ''}" />
-                      {search.status === "queued" ? "Queued" : search.status === "blocked" ? "Action needed" : "Running"}
-                    </span>
-                  {:else if !search.is_active}
-                    <span
-                      class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] whitespace-nowrap"
-                    >
-                      Inactive
-                    </span>
-                  {/if}
-                  {#if search.platform_profiles}
-                    <span
-                      class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] whitespace-nowrap flex items-center gap-1"
-                    >
-                      <FontAwesomeIcon icon={faKey} class="w-3 h-3" />
-                      Auto-login
-                    </span>
-                  {/if}
-                </div>
-
-                <!-- Status info -->
-                <div
-                  class="flex items-center gap-1 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap"
+            <div class="flex-1 min-w-0">
+              <!-- Title: name @ platform -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3
+                  class="font-medium text-[var(--dash-text)] text-sm sm:text-base"
                 >
+                  {search.name}
                   {#if search.job_platforms}
-                    <span>{search.job_platforms.name}</span>
-                    <span>•</span>
+                    <span class="text-[var(--dash-text-secondary)] font-normal">@</span>
+                    <span
+                      class="bg-[var(--dash-bg-inset)] px-2 py-0.5 rounded text-sm font-normal inline-block"
+                    >{search.job_platforms.name}</span>
                   {/if}
-                  {#if search.status === "queued"}
-                    <span class="text-[var(--dash-text-muted)]">{search.status_message || "Waiting in queue..."}</span>
-                  {:else if search.status === "running"}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 text-[var(--dash-primary)] animate-spin"
-                    />
-                    <span>Running...</span>
-                  {:else if search.status === "success"}
-                    <FontAwesomeIcon
-                      icon={faCheck}
-                      class="w-3 h-3 text-[var(--dash-success)]"
-                    />
-                    <span>{formatDate(search.last_run)}</span>
-                    {#if search.last_run_jobs_found}
-                      <span class="text-[var(--dash-text-muted)]"
-                        >({search.last_run_jobs_found} jobs)</span
-                      >
-                    {/if}
-                  {:else if search.status === "blocked"}
-                    <FontAwesomeIcon
-                      icon={faExclamationTriangle}
-                      class="w-3 h-3 text-[var(--dash-warning)]"
-                    />
-                    <span class="text-[var(--dash-warning)]"
-                      >{search.status_message}</span
-                    >
-                  {:else if search.status === "partial"}
-                    <FontAwesomeIcon
-                      icon={faExclamationTriangle}
-                      class="w-3 h-3 text-[var(--dash-warning)]"
-                    />
-                    <span>{formatDate(search.last_run)}</span>
-                    <span class="text-[var(--dash-text-muted)]"
-                      >— {search.status_message}</span
-                    >
-                  {:else if search.status === "error"}
-                    <FontAwesomeIcon
-                      icon={faTimes}
-                      class="w-3 h-3 text-[var(--dash-error)]"
-                    />
-                    <span class="text-[var(--dash-error)]"
-                      >{search.status_message}</span
-                    >
-                  {:else if search.last_run}
-                    <FontAwesomeIcon
-                      icon={faCheck}
-                      class="w-3 h-3 text-[var(--dash-success)]"
-                    />
-                    <span>{formatDate(search.last_run)}</span>
-                  {:else}
-                    <span class="text-[var(--dash-text-muted)]">Never run</span>
-                  {/if}
-                </div>
+                </h3>
+                {#if search.status === "running" || search.status === "queued" || search.status === "blocked"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 {search.status === 'blocked' ? 'bg-yellow-500/20 text-yellow-600 animate-pulse' : 'bg-blue-500/20 text-blue-600'}"
+                  >
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 {search.status !== 'blocked' ? 'animate-spin' : ''}" />
+                    {search.status === "queued" ? "Queued" : search.status === "blocked" ? "Action needed" : "Running"}
+                  </span>
+                {:else if !search.is_active}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] whitespace-nowrap"
+                  >
+                    Inactive
+                  </span>
+                {/if}
               </div>
 
-              <!-- Mobile: Icon on the right, below chevron -->
-              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
-                <div class="h-6 mb-1"></div>
-                <!-- Spacer for chevron -->
-                <div
-                  class="w-12 h-12 rounded-lg {getStatusBgColor(
-                    search,
-                  )} flex items-center justify-center"
-                >
+              <!-- Status info -->
+              <div
+                class="flex items-center gap-1 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap"
+              >
+                {#if search.status === "queued"}
+                  <span class="text-[var(--dash-text-muted)]">{search.status_message || "Waiting in queue..."}</span>
+                {:else if search.status === "running"}
                   <FontAwesomeIcon
-                    icon={faSearch}
-                    class="w-6 h-6 {getStatusColor(search)}"
+                    icon={faSpinner}
+                    class="w-3 h-3 text-[var(--dash-primary)] animate-spin"
                   />
-                </div>
+                  <span>Running...</span>
+                {:else if search.status === "success"}
+                  <FontAwesomeIcon
+                    icon={faCheck}
+                    class="w-3 h-3 text-[var(--dash-success)]"
+                  />
+                  <span>{formatDate(search.last_run)}</span>
+                  {#if search.last_run_jobs_found}
+                    <span class="text-[var(--dash-text-muted)]"
+                      >({search.last_run_jobs_found} jobs)</span
+                    >
+                  {/if}
+                {:else if search.status === "blocked"}
+                  <FontAwesomeIcon
+                    icon={faExclamationTriangle}
+                    class="w-3 h-3 text-[var(--dash-warning)]"
+                  />
+                  <span class="text-[var(--dash-warning)]"
+                    >{search.status_message}</span
+                  >
+                {:else if search.status === "partial"}
+                  <FontAwesomeIcon
+                    icon={faExclamationTriangle}
+                    class="w-3 h-3 text-[var(--dash-warning)]"
+                  />
+                  <span>{formatDate(search.last_run)}</span>
+                  <span class="text-[var(--dash-text-muted)]"
+                    >— {search.status_message}</span
+                  >
+                {:else if search.status === "error"}
+                  <FontAwesomeIcon
+                    icon={faTimes}
+                    class="w-3 h-3 text-[var(--dash-error)]"
+                  />
+                  <span class="text-[var(--dash-error)]"
+                    >{search.status_message}</span
+                  >
+                {:else if search.last_run}
+                  <FontAwesomeIcon
+                    icon={faCheck}
+                    class="w-3 h-3 text-[var(--dash-success)]"
+                  />
+                  <span>{formatDate(search.last_run)}</span>
+                {:else}
+                  <span class="text-[var(--dash-text-muted)]">Never run</span>
+                {/if}
               </div>
             </div>
-          </button>
 
-          <!-- Expanded Content -->
-          {#if expandedId === search.id}
-            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
-              {#if editingId === search.id}
-                <!-- Edit Mode -->
-                <form method="POST" action="?/update" use:enhance={handleEditSubmit}>
-                  <input type="hidden" name="id" value={search.id} />
-                  <div class="space-y-4">
-                    <!-- Search URL -->
-                    <div>
-                      <label
-                        for="edit-search-url-{search.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Search URL
-                      </label>
-                      <input
-                        type="url"
-                        id="edit-search-url-{search.id}"
-                        name="search_url"
-                        value={editSearchUrl}
-                        oninput={(e) => handleSearchUrlInput(e, true)}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                    </div>
-
-                    <!-- Detected Platform -->
-                    {#if editDetectedPlatform}
-                      <div
-                        class="p-3 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]"
-                      >
-                        <div class="flex items-center gap-2 text-sm">
-                          <FontAwesomeIcon
-                            icon={faCheck}
-                            class="w-4 h-4 text-[var(--dash-success)]"
-                          />
-                          <span class="text-[var(--dash-text)]"
-                            >Platform: <strong>{editDetectedPlatform.name}</strong
-                            ></span
-                          >
-                        </div>
-                        <input
-                          type="hidden"
-                          name="platform_id"
-                          value={editDetectedPlatform.id || ""}
-                        />
-                        <input
-                          type="hidden"
-                          name="platform_url"
-                          value={editDetectedPlatform.url}
-                        />
-                        <input
-                          type="hidden"
-                          name="platform_name"
-                          value={editDetectedPlatform.name}
-                        />
-                        <input
-                          type="hidden"
-                          name="platform_is_new"
-                          value={editDetectedPlatform.isNew}
-                        />
-                      </div>
-
-                      <!-- Login Page URL -->
-                      <div>
-                        <label
-                          for="edit-login-url-{search.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          Login Page URL
-                          <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
-                        </label>
-                        <input
-                          type="url"
-                          id="edit-login-url-{search.id}"
-                          name="login_page_url"
-                          bind:value={editLoginPageUrl}
-                          placeholder="https://linkedin.com/login"
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-                          URL of the login page. Used to auto-fill credentials before scraping.
-                        </p>
-                      </div>
-                    {/if}
-
-                    <!-- Search Term -->
-                    <div>
-                      <label
-                        for="edit-search-term-{search.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Search Term
-                        <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="edit-search-term-{search.id}"
-                        name="search_term"
-                        bind:value={editSearchTerm}
-                        placeholder="e.g., frontend developer amsterdam"
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                      <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-                        If this site doesn't support search keywords in the URL, enter them here. The scraper will type them into the search field.
-                      </p>
-                    </div>
-
-                    <!-- Name -->
-                    <div>
-                      <label
-                        for="edit-name-{search.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Search Name
-                        <span class="text-[var(--dash-error)]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="edit-name-{search.id}"
-                        name="name"
-                        bind:value={editName}
-                        required
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                    </div>
-
-                    <!-- Credentials -->
-                    {#if editDetectedPlatform}
-                      <div class="border-t border-[var(--dash-border)] pt-4">
-                        <label
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-2"
-                        >
-                          <FontAwesomeIcon icon={faKey} class="w-4 h-4 mr-1" />
-                          Login Credentials
-                        </label>
-
-                        <select
-                          name="credential_id"
-                          value={editCredentialId}
-                          onchange={(e) =>
-                            handleCredentialSelection(
-                              (e.target as HTMLSelectElement).value,
-                              true,
-                            )}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        >
-                          <option value="none">No auto-login</option
-                          >
-                          {#each editExistingCredentials as cred}
-                            <option value={String(cred.id)}>{cred.username}</option>
-                          {/each}
-                          <option value="new">+ Add new credentials</option>
-                        </select>
-
-                        {#if editShowNewCredentials}
-                          <div
-                            class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3"
-                          >
-                            <div>
-                              <label
-                                for="edit-cred-username-{search.id}"
-                                class="block text-sm text-[var(--dash-text)] mb-1"
-                              >
-                                Username / Email
-                              </label>
-                              <input
-                                type="text"
-                                id="edit-cred-username-{search.id}"
-                                name="new_credential_username"
-                                bind:value={editNewCredUsername}
-                                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                              />
-                            </div>
-                            <div>
-                              <label
-                                for="edit-cred-password-{search.id}"
-                                class="block text-sm text-[var(--dash-text)] mb-1"
-                              >
-                                Password
-                              </label>
-                              <div class="relative">
-                                <input
-                                  type={editShowPassword ? "text" : "password"}
-                                  id="edit-cred-password-{search.id}"
-                                  name="new_credential_password"
-                                  bind:value={editNewCredPassword}
-                                  class="w-full px-3 py-2 pr-10 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                                />
-                                <button
-                                  type="button"
-                                  onclick={() =>
-                                    (editShowPassword = !editShowPassword)}
-                                  class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={editShowPassword ? faEyeSlash : faEye}
-                                    class="w-4 h-4"
-                                  />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        {/if}
-                      </div>
-                    {/if}
-
-                    <!-- Status -->
-                    <div>
-                      <label
-                        for="edit-status-{search.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Status
-                      </label>
-                      <select
-                        id="edit-status-{search.id}"
-                        name="status"
-                        bind:value={editStatus}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      >
-                        <option value="active">Active</option>
-                        <option value="paused">Paused</option>
-                        <option value="archived">Archived</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="flex justify-end gap-2 mt-4">
-                    <button
-                      type="button"
-                      onclick={cancelEdit}
-                      class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
-              {:else}
-                <!-- View Mode - Details -->
-                <div class="space-y-3">
-                  {#if search.search_url}
-                    <div>
-                      <p
-                        class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                      >
-                        Search URL
-                      </p>
-                      <a
-                        href={search.search_url}
-                        target="_blank"
-                        rel="noopener"
-                        class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                      >
-                        {search.search_url}
-                        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
-                      </a>
-                    </div>
-                  {/if}
-
-                  {#if search.search_term}
-                    <div>
-                      <p
-                        class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                      >
-                        Search Term
-                      </p>
-                      <p class="text-sm text-[var(--dash-text)]">
-                        {search.search_term}
-                      </p>
-                    </div>
-                  {/if}
-
-                  {#if search.platform_profiles}
-                    <div>
-                      <p
-                        class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                      >
-                        Login Account
-                      </p>
-                      <p class="text-sm text-[var(--dash-text)] flex items-center gap-2">
-                        <FontAwesomeIcon
-                          icon={faKey}
-                          class="w-3 h-3 text-[var(--dash-success)]"
-                        />
-                        {search.platform_profiles.username}
-                      </p>
-                    </div>
-                  {/if}
-
-                  {#if search.last_run}
-                    <div>
-                      <p
-                        class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                      >
-                        Last Run
-                      </p>
-                      <p class="text-sm text-[var(--dash-text)]">
-                        {formatDate(search.last_run)}
-                        {#if search.last_run_jobs_found}
-                          <span class="text-[var(--dash-text-muted)]"
-                            >({search.last_run_jobs_found} jobs found)</span
-                          >
-                        {/if}
-                      </p>
-                    </div>
-                  {/if}
-
-                  {#if search.status_message}
-                    <div>
-                      <p
-                        class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                      >
-                        Status Message
-                      </p>
-                      <p class="text-sm text-[var(--dash-text)]">
-                        {search.status_message}
-                      </p>
-                    </div>
-                  {/if}
-                </div>
-              {/if}
+            <!-- Mobile: Icon on the right -->
+            <div class="flex-shrink-0 md:hidden">
+              <div
+                class="w-10 h-10 rounded-lg {getStatusBgColor(
+                  search,
+                )} flex items-center justify-center"
+              >
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  class="w-5 h-5 {getStatusColor(search)}"
+                />
+              </div>
             </div>
-          {/if}
-
-          <!-- Footer with action buttons (hidden in edit mode) -->
-          {#if editingId !== search.id}
-            <div
-              class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2"
-            >
-              <button
-                type="button"
-                onclick={() => (deleteId = search.id)}
-                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                Delete
-              </button>
-              <button
-                type="button"
-                onclick={() => startEdit(search)}
-                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-                Edit
-              </button>
-              <a
-                href="/dashboard/jobs/settings/{search.id}"
-                class="px-3 py-1.5 text-xs bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 hover:bg-green-500/20 hover:border-green-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faPlay} class="w-3 h-3" />
-                Run
-              </a>
-            </div>
-          {/if}
-        </div>
+          </div>
+        </a>
       {/each}
     </div>
   {/if}
 </div>
-
-<!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
-  isOpen={deleteId !== null}
-  title="Delete Job Search"
-  message="Are you sure you want to delete this job search configuration? This action cannot be undone."
-  onCancel={() => (deleteId = null)}
-  onConfirm={() => {
-    if (deleteId !== null) {
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "?/delete";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "id";
-      input.value = String(deleteId);
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-    }
-  }}
-/>

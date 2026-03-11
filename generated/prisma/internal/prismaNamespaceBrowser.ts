@@ -869,7 +869,9 @@ export const Job_searchesScalarFieldEnum = {
   browser_provider: 'browser_provider',
   skip_existing: 'skip_existing',
   stop_after_duplicates: 'stop_after_duplicates',
-  skip_first: 'skip_first'
+  skip_first: 'skip_first',
+  keep_minimized: 'keep_minimized',
+  ui_preferences: 'ui_preferences'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -1121,7 +1123,8 @@ export const ProfilesScalarFieldEnum = {
   browser_language: 'browser_language',
   browser_timezone: 'browser_timezone',
   browser_profile_id: 'browser_profile_id',
-  browser_country_code: 'browser_country_code'
+  browser_country_code: 'browser_country_code',
+  ui_preferences: 'ui_preferences'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

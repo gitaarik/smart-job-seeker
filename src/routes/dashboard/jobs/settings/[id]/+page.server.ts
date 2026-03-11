@@ -101,5 +101,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       language: geoDefaults.language,
       timezone: geoDefaults.timezone,
     },
+    uiPreferences: ((jobSearch as any).ui_preferences ?? {}) as Record<string, unknown>,
   };
 };
