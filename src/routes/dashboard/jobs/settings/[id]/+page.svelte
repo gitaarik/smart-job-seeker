@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { onDestroy, onMount } from "svelte";
-  import { invalidateAll, goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import CountrySelect from "../../components/CountrySelect.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
@@ -167,6 +167,7 @@
     search: loadSectionOpen("search"),
     auth: loadSectionOpen("auth"),
     options: loadSectionOpen("options"),
+    browser: loadSectionOpen("browser"),
     settings: loadSectionOpen("settings", false),
   });
 
@@ -1486,19 +1487,29 @@
       {#if isEditingHeader}
         <div class="space-y-3">
           <div>
-            <label for="edit-task-name" class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Task Name</label>
+            <label
+              for="edit-task-name"
+              class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+            >Task Name</label>
             <input
               id="edit-task-name"
               type="text"
               bind:value={editNameInput}
               class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              onkeydown={(e) => { if (e.key === 'Enter') saveHeader(); if (e.key === 'Escape') cancelEditHeader(); }}
+              onkeydown={(e) => {
+                if (e.key === "Enter") saveHeader();
+                if (e.key === "Escape") cancelEditHeader();
+              }}
             />
           </div>
           {#if jobSearch.job_platforms}
             <div>
-              <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Platform</label>
-              <p class="text-sm text-[var(--dash-text)]">{jobSearch.job_platforms.name}</p>
+              <label
+                class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+              >Platform</label>
+              <p class="text-sm text-[var(--dash-text)]">
+                {jobSearch.job_platforms.name}
+              </p>
             </div>
           {/if}
           <div class="flex items-center gap-2">
@@ -1508,7 +1519,10 @@
               class="flex items-center gap-2 px-3 py-1.5 bg-[var(--dash-primary)] text-white rounded-lg text-sm hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
             >
               {#if isSavingHeader}
-                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  class="w-3 h-3 animate-spin"
+                />
               {/if}
               Save
             </button>
@@ -1527,14 +1541,17 @@
           >
             {jobSearch.name}
             {#if jobSearch.job_platforms}
-              <span class="text-[var(--dash-text-secondary)] font-normal">@</span>
+              <span class="text-[var(--dash-text-secondary)] font-normal"
+              >@</span>
               <span
                 class="bg-[var(--dash-bg-inset)] px-2 py-0.5 rounded inline-block"
               >{jobSearch.job_platforms.name}</span>
             {/if}
           </h2>
           <button
-            onclick={() => { isEditingHeader = true; }}
+            onclick={() => {
+              isEditingHeader = true;
+            }}
             class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
             title="Edit name"
           >
@@ -1562,7 +1579,7 @@
       {/if}
 
       <!-- Status Display -->
-      <div class="flex flex-wrap items-center gap-3 p-4 bg-[var(--dash-bg-inset)] rounded-lg">
+      <div class="p-4 bg-[var(--dash-bg-inset)] rounded-lg space-y-3">
         <div class="flex items-center gap-3 min-w-0">
           {#if jobSearch.status === "queued"}
             <div
@@ -1679,7 +1696,10 @@
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                {jobSearch.status_message || "Cancelled by user"}
+                {
+                  jobSearch.status_message ||
+                    "Cancelled by user"
+                }
               </p>
             </div>
           {:else if jobSearch.last_run}
@@ -1719,8 +1739,8 @@
           {/if}
         </div>
 
-        {#if jobSearch.status === "blocked"}
-          <div class="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+        <div class="flex flex-wrap items-center gap-2">
+          {#if jobSearch.status === "blocked"}
             <button
               onclick={() => sendFeedback("continue")}
               disabled={isSendingFeedback}
@@ -1745,38 +1765,57 @@
               <FontAwesomeIcon icon={faForward} class="w-4 h-4" />
               <span>Skip</span>
             </button>
-          </div>
-        {/if}
+          {/if}
 
-        {#if isRunning || isBlocked || isQueued}
+          {#if isRunning || isBlocked || isQueued}
+            <button
+              onclick={stopScrape}
+              disabled={isStopping}
+              class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if isStopping}
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  class="w-4 h-4 animate-spin"
+                />
+                <span>Stopping...</span>
+              {:else}
+                <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
+                <span>Stop Scrape</span>
+              {/if}
+            </button>
+          {:else}
+            <button
+              onclick={startScrape}
+              disabled={isStarting || !jobSearch.search_url ||
+                !jobSearch.platform}
+              class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if isStarting}
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  class="w-4 h-4 animate-spin"
+                />
+                <span>Starting...</span>
+              {:else}
+                <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
+                <span>Run Scrape</span>
+              {/if}
+            </button>
+          {/if}
+
           <button
-            onclick={stopScrape}
-            disabled={isStopping}
-            class="w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            onclick={() => (showBrowser = !showBrowser)}
+            class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors"
+            title="{showBrowser ? 'Hide' : 'Show'} browser view"
           >
-            {#if isStopping}
-              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-              <span>Stopping...</span>
-            {:else}
-              <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
-              <span>Stop Scrape</span>
-            {/if}
+            <FontAwesomeIcon
+              icon={showBrowser ? faEyeSlash : faEye}
+              class="w-4 h-4"
+            />
+            <span class="text-sm">Browser View</span>
           </button>
-        {:else}
-          <button
-            onclick={startScrape}
-            disabled={isStarting || !jobSearch.search_url || !jobSearch.platform}
-            class="w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-          >
-            {#if isStarting}
-              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-              <span>Starting...</span>
-            {:else}
-              <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
-              <span>Run Scrape</span>
-            {/if}
-          </button>
-        {/if}
+        </div>
       </div>
 
       <!-- Missing config warnings -->
@@ -1802,9 +1841,15 @@
             class="flex items-center gap-2 w-full text-left"
           >
             {#if sectionOpen.search}
-              <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+              <FontAwesomeIcon
+                icon={faChevronDown}
+                class="w-3 h-3 text-[var(--dash-text-muted)]"
+              />
             {:else}
-              <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+              <FontAwesomeIcon
+                icon={faChevronRight}
+                class="w-3 h-3 text-[var(--dash-text-muted)]"
+              />
             {/if}
             <h3
               class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
@@ -1814,42 +1859,363 @@
           </button>
 
           {#if sectionOpen.search}
-          <!-- URLs -->
-          <div class="space-y-3">
-            <div>
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >
-                Search URL
-              </h3>
-              <div class="flex items-center gap-2">
-                <input
-                  type="url"
-                  bind:value={searchUrlInput}
-                  placeholder="https://..."
-                  class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                />
-                {#if jobSearch.search_url}
-                  <a
-                    href={jobSearch.search_url}
-                    target="_blank"
-                    rel="noopener"
-                    class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                    title="Open search URL"
-                  >
-                    <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
-                  </a>
+            <!-- URLs -->
+            <div class="space-y-3">
+              <div>
+                <h3
+                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                >
+                  Search URL
+                </h3>
+                <div class="flex items-center gap-2">
+                  <input
+                    type="url"
+                    bind:value={searchUrlInput}
+                    placeholder="https://..."
+                    class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                  />
+                  {#if jobSearch.search_url}
+                    <a
+                      href={jobSearch.search_url}
+                      target="_blank"
+                      rel="noopener"
+                      class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                      title="Open search URL"
+                    >
+                      <FontAwesomeIcon
+                        icon={faExternalLinkAlt}
+                        class="w-3 h-3"
+                      />
+                    </a>
+                  {/if}
+                </div>
+                {#if searchUrlDirty}
+                  <div class="flex items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onclick={saveSearchUrl}
+                      disabled={isSavingSearchUrl}
+                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {#if isSavingSearchUrl}
+                        <FontAwesomeIcon
+                          icon={faSpinner}
+                          class="w-3 h-3 animate-spin"
+                        />
+                      {:else}
+                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {/if}
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (searchUrlInput = jobSearch.search_url ??
+                        "")}
+                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 {/if}
               </div>
-              {#if searchUrlDirty}
-                <div class="flex items-center gap-2 mt-2">
+
+              <button
+                type="button"
+                onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
+                class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+              >
+                {#if showAdvancedSearch}
+                  <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
+                {:else}
+                  <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
+                {/if}
+                Advanced
+              </button>
+
+              {#if showAdvancedSearch}
+                <div>
+                  <h3
+                    class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                  >
+                    Search Term <span class="font-normal">(optional)</span>
+                  </h3>
+                  <input
+                    type="text"
+                    bind:value={searchTermInput}
+                    placeholder="e.g., frontend developer amsterdam"
+                    class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                  />
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                    For sites that don't support search in the URL. The scraper
+                    will type this into the search field.
+                  </p>
+                  {#if searchTermDirty}
+                    <div class="flex items-center gap-2 mt-2">
+                      <button
+                        type="button"
+                        onclick={saveSearchTerm}
+                        disabled={isSavingSearchTerm}
+                        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {#if isSavingSearchTerm}
+                          <FontAwesomeIcon
+                            icon={faSpinner}
+                            class="w-3 h-3 animate-spin"
+                          />
+                        {:else}
+                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                        {/if}
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => (searchTermInput =
+                          jobSearch.search_term ?? "")}
+                        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          {/if}
+
+          <!-- Authentication -->
+          <div class="pt-4 border-t border-[var(--dash-border)] space-y-3">
+            <button
+              type="button"
+              onclick={() => toggleSection("auth")}
+              class="flex items-center gap-2 w-full text-left"
+            >
+              {#if sectionOpen.auth}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-3 h-3 text-[var(--dash-text-muted)]"
+                />
+              {:else}
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  class="w-3 h-3 text-[var(--dash-text-muted)]"
+                />
+              {/if}
+              <h3
+                class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+              >
+                Authentication
+              </h3>
+            </button>
+
+            {#if sectionOpen.auth}
+              <!-- Login URL -->
+              <div>
+                <h3
+                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                >
+                  Login URL
+                </h3>
+                {#if canEditPlatformUrls}
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="url"
+                      bind:value={loginUrlInput}
+                      placeholder="https://..."
+                      class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                    />
+                    {#if jobSearch.job_platforms?.login_page_url}
+                      <a
+                        href={jobSearch.job_platforms.login_page_url}
+                        target="_blank"
+                        rel="noopener"
+                        class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                        title="Open login URL"
+                      >
+                        <FontAwesomeIcon
+                          icon={faExternalLinkAlt}
+                          class="w-3 h-3"
+                        />
+                      </a>
+                    {/if}
+                  </div>
+                  {#if loginUrlDirty}
+                    <div class="flex items-center gap-2 mt-2">
+                      <button
+                        type="button"
+                        onclick={saveLoginUrl}
+                        disabled={isSavingLoginUrl}
+                        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {#if isSavingLoginUrl}
+                          <FontAwesomeIcon
+                            icon={faSpinner}
+                            class="w-3 h-3 animate-spin"
+                          />
+                        {:else}
+                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                        {/if}
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => (loginUrlInput =
+                          jobSearch.job_platforms?.login_page_url ??
+                            "")}
+                        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  {/if}
+                {:else if jobSearch.job_platforms?.login_page_url}
+                  <a
+                    href={jobSearch.job_platforms.login_page_url}
+                    target="_blank"
+                    rel="noopener"
+                    class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                  >
+                    {jobSearch.job_platforms.login_page_url}
+                    <FontAwesomeIcon
+                      icon={faExternalLinkAlt}
+                      class="w-3 h-3 flex-shrink-0"
+                    />
+                  </a>
+                {:else}
+                  <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
+                {/if}
+              </div>
+
+              <!-- Credentials -->
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <FontAwesomeIcon
+                    icon={faKey}
+                    class="w-4 h-4 text-[var(--dash-text-secondary)]"
+                  />
+                  <h2 class="font-medium text-[var(--dash-text)] text-sm">
+                    Credentials
+                  </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                  {#if isSavingCredential}
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                    />
+                  {/if}
                   <button
                     type="button"
-                    onclick={saveSearchUrl}
-                    disabled={isSavingSearchUrl}
+                    onclick={() => (showAddCredential = !showAddCredential)}
+                    class="flex items-center gap-1 px-2 py-1 text-xs text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] rounded transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <!-- Credential list -->
+              <div class="space-y-1.5">
+                <!-- No credentials option -->
+                <button
+                  type="button"
+                  onclick={() => {
+                    showAddCredential = false;
+                    selectedCredentialId = "none";
+                  }}
+                  class="
+                    w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
+                    ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
+                    : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}
+                  "
+                >
+                  <span
+                    class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === 'none' ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
+                  >
+                    {#if selectedCredentialId === "none"}
+                      <span
+                        class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                      ></span>
+                    {/if}
+                  </span>
+                  <span class="flex-1 text-left"
+                  >No credentials (public search)</span>
+                  {#if savedCredentialId === "none"}
+                    <span
+                      class="text-xs text-[var(--dash-text-muted)] font-medium"
+                    >Current</span>
+                  {/if}
+                </button>
+
+                {#each platformCredentials as cred}
+                  <div
+                    class="
+                      flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
+                      ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
+                      : 'bg-[var(--dash-bg)] border border-transparent hover:border-[var(--dash-border)]'}
+                    "
+                  >
+                    <button
+                      type="button"
+                      onclick={() => {
+                        showAddCredential = false;
+                        selectedCredentialId = String(cred.id);
+                      }}
+                      class="flex-1 text-left flex items-center gap-2.5 text-[var(--dash-text)]"
+                    >
+                      <span
+                        class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === String(cred.id) ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
+                      >
+                        {#if                     selectedCredentialId ===
+                      String(cred.id)}
+                          <span
+                            class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                          ></span>
+                        {/if}
+                      </span>
+                      <span>{cred.username || "No username"}</span>
+                      {#if savedCredentialId === String(cred.id)}
+                        <span
+                          class="text-xs text-[var(--dash-text-muted)] font-medium"
+                        >Current</span>
+                      {/if}
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => deleteCredential(cred.id)}
+                      disabled={isDeletingCredential === cred.id}
+                      class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
+                      title="Delete credential"
+                    >
+                      {#if isDeletingCredential === cred.id}
+                        <FontAwesomeIcon
+                          icon={faSpinner}
+                          class="w-3 h-3 animate-spin"
+                        />
+                      {:else}
+                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                      {/if}
+                    </button>
+                  </div>
+                {/each}
+              </div>
+
+              {#if             platformCredentials.length === 0 && !showAddCredential}
+                <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+                  No credentials configured. Add credentials to enable
+                  authenticated scraping.
+                </p>
+              {/if}
+
+              {#if credentialDirty}
+                <div class="flex items-center gap-2 mt-3">
+                  <button
+                    type="button"
+                    onclick={saveCredential}
+                    disabled={isSavingCredential}
                     class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    {#if isSavingSearchUrl}
+                    {#if isSavingCredential}
                       <FontAwesomeIcon
                         icon={faSpinner}
                         class="w-3 h-3 animate-spin"
@@ -1861,401 +2227,89 @@
                   </button>
                   <button
                     type="button"
-                    onclick={() => (searchUrlInput = jobSearch.search_url ??
-                      "")}
+                    onclick={() => (selectedCredentialId = savedCredentialId)}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               {/if}
-            </div>
 
-            <button
-              type="button"
-              onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
-              class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-            >
-              {#if showAdvancedSearch}
-                <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-              {:else}
-                <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
-              {/if}
-              Advanced
-            </button>
-
-            {#if showAdvancedSearch}
-              <div>
-                <h3
-                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                >
-                  Search Term <span class="font-normal">(optional)</span>
-                </h3>
-                <input
-                  type="text"
-                  bind:value={searchTermInput}
-                  placeholder="e.g., frontend developer amsterdam"
-                  class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                />
-                <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                  For sites that don't support search in the URL. The scraper
-                  will type this into the search field.
-                </p>
-                {#if searchTermDirty}
-                  <div class="flex items-center gap-2 mt-2">
-                    <button
-                      type="button"
-                      onclick={saveSearchTerm}
-                      disabled={isSavingSearchTerm}
-                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+              {#if showAddCredential}
+                <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
+                  <div>
+                    <label
+                      for="new-cred-username"
+                      class="block text-sm text-[var(--dash-text)] mb-1"
                     >
-                      {#if isSavingSearchTerm}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {/if}
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => (searchTermInput =
-                        jobSearch.search_term ?? "")}
-                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                {/if}
-              </div>
-            {/if}
-          </div>
-          {/if}
-
-          <!-- Authentication -->
-          <div class="pt-4 border-t border-[var(--dash-border)] space-y-3">
-            <button
-              type="button"
-              onclick={() => toggleSection("auth")}
-              class="flex items-center gap-2 w-full text-left"
-            >
-              {#if sectionOpen.auth}
-                <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3 text-[var(--dash-text-muted)]" />
-              {:else}
-                <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3 text-[var(--dash-text-muted)]" />
-              {/if}
-              <h3
-                class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-              >
-                Authentication
-              </h3>
-            </button>
-
-            {#if sectionOpen.auth}
-            <!-- Login URL -->
-            <div>
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >
-                Login URL
-              </h3>
-              {#if canEditPlatformUrls}
-                <div class="flex items-center gap-2">
-                  <input
-                    type="url"
-                    bind:value={loginUrlInput}
-                    placeholder="https://..."
-                    class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                  />
-                  {#if jobSearch.job_platforms?.login_page_url}
-                    <a
-                      href={jobSearch.job_platforms.login_page_url}
-                      target="_blank"
-                      rel="noopener"
-                      class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                      title="Open login URL"
-                    >
-                      <FontAwesomeIcon
-                        icon={faExternalLinkAlt}
-                        class="w-3 h-3"
-                      />
-                    </a>
-                  {/if}
-                </div>
-                {#if loginUrlDirty}
-                  <div class="flex items-center gap-2 mt-2">
-                    <button
-                      type="button"
-                      onclick={saveLoginUrl}
-                      disabled={isSavingLoginUrl}
-                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                    >
-                      {#if isSavingLoginUrl}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {/if}
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => (loginUrlInput =
-                        jobSearch.job_platforms?.login_page_url ??
-                          "")}
-                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                {/if}
-              {:else if jobSearch.job_platforms?.login_page_url}
-                <a
-                  href={jobSearch.job_platforms.login_page_url}
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                >
-                  {jobSearch.job_platforms.login_page_url}
-                  <FontAwesomeIcon
-                    icon={faExternalLinkAlt}
-                    class="w-3 h-3 flex-shrink-0"
-                  />
-                </a>
-              {:else}
-                <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
-              {/if}
-            </div>
-
-            <!-- Credentials -->
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2">
-                <FontAwesomeIcon
-                  icon={faKey}
-                  class="w-4 h-4 text-[var(--dash-text-secondary)]"
-                />
-                <h2 class="font-medium text-[var(--dash-text)] text-sm">
-                  Credentials
-                </h2>
-              </div>
-              <div class="flex items-center gap-2">
-                {#if isSavingCredential}
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
-                  />
-                {/if}
-                <button
-                  type="button"
-                  onclick={() => (showAddCredential = !showAddCredential)}
-                  class="flex items-center gap-1 px-2 py-1 text-xs text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] rounded transition-colors"
-                >
-                  <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                  Add
-                </button>
-              </div>
-            </div>
-
-            <!-- Credential list -->
-            <div class="space-y-1.5">
-              <!-- No credentials option -->
-              <button
-                type="button"
-                onclick={() => {
-                  showAddCredential = false;
-                  selectedCredentialId = "none";
-                }}
-                class="
-                  w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
-                  ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
-                  : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}
-                "
-              >
-                <span
-                  class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === 'none' ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
-                >
-                  {#if selectedCredentialId === "none"}
-                    <span
-                      class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
-                    ></span>
-                  {/if}
-                </span>
-                <span class="flex-1 text-left"
-                >No credentials (public search)</span>
-                {#if savedCredentialId === "none"}
-                  <span
-                    class="text-xs text-[var(--dash-text-muted)] font-medium"
-                  >Current</span>
-                {/if}
-              </button>
-
-              {#each platformCredentials as cred}
-                <div
-                  class="
-                    flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
-                    ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
-                    : 'bg-[var(--dash-bg)] border border-transparent hover:border-[var(--dash-border)]'}
-                  "
-                >
-                  <button
-                    type="button"
-                    onclick={() => {
-                      showAddCredential = false;
-                      selectedCredentialId = String(cred.id);
-                    }}
-                    class="flex-1 text-left flex items-center gap-2.5 text-[var(--dash-text)]"
-                  >
-                    <span
-                      class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === String(cred.id) ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
-                    >
-                      {#if                     selectedCredentialId ===
-                      String(cred.id)}
-                        <span
-                          class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
-                        ></span>
-                      {/if}
-                    </span>
-                    <span>{cred.username || "No username"}</span>
-                    {#if savedCredentialId === String(cred.id)}
-                      <span
-                        class="text-xs text-[var(--dash-text-muted)] font-medium"
-                      >Current</span>
-                    {/if}
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => deleteCredential(cred.id)}
-                    disabled={isDeletingCredential === cred.id}
-                    class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-                    title="Delete credential"
-                  >
-                    {#if isDeletingCredential === cred.id}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                    {/if}
-                  </button>
-                </div>
-              {/each}
-            </div>
-
-            {#if             platformCredentials.length === 0 && !showAddCredential}
-              <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-                No credentials configured. Add credentials to enable
-                authenticated scraping.
-              </p>
-            {/if}
-
-            {#if credentialDirty}
-              <div class="flex items-center gap-2 mt-3">
-                <button
-                  type="button"
-                  onclick={saveCredential}
-                  disabled={isSavingCredential}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingCredential}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (selectedCredentialId = savedCredentialId)}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
-
-            {#if showAddCredential}
-              <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
-                <div>
-                  <label
-                    for="new-cred-username"
-                    class="block text-sm text-[var(--dash-text)] mb-1"
-                  >
-                    Username / Email
-                  </label>
-                  <input
-                    type="text"
-                    id="new-cred-username"
-                    bind:value={newCredUsername}
-                    placeholder="your@email.com"
-                    class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label
-                    for="new-cred-password"
-                    class="block text-sm text-[var(--dash-text)] mb-1"
-                  >
-                    Password
-                  </label>
-                  <div class="relative">
+                      Username / Email
+                    </label>
                     <input
-                      type={showPassword ? "text" : "password"}
-                      id="new-cred-password"
-                      bind:value={newCredPassword}
-                      placeholder="Enter password"
-                      class="w-full px-3 py-2 pr-10 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      type="text"
+                      id="new-cred-username"
+                      bind:value={newCredUsername}
+                      placeholder="your@email.com"
+                      class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                     />
+                  </div>
+                  <div>
+                    <label
+                      for="new-cred-password"
+                      class="block text-sm text-[var(--dash-text)] mb-1"
+                    >
+                      Password
+                    </label>
+                    <div class="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        id="new-cred-password"
+                        bind:value={newCredPassword}
+                        placeholder="Enter password"
+                        class="w-full px-3 py-2 pr-10 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onclick={() => (showPassword = !showPassword)}
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+                      >
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          class="w-4 h-4"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                  <div class="flex justify-end gap-2">
                     <button
                       type="button"
-                      onclick={() => (showPassword = !showPassword)}
-                      class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+                      onclick={() => {
+                        showAddCredential = false;
+                        newCredUsername = "";
+                        newCredPassword = "";
+                      }}
+                      class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
                     >
-                      <FontAwesomeIcon
-                        icon={showPassword ? faEyeSlash : faEye}
-                        class="w-4 h-4"
-                      />
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onclick={addNewCredential}
+                      disabled={!newCredUsername.trim() || isSavingCredential}
+                      class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {#if isSavingCredential}
+                        <FontAwesomeIcon
+                          icon={faSpinner}
+                          class="w-3 h-3 animate-spin"
+                        />
+                      {:else}
+                        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                      {/if}
+                      Add & Select
                     </button>
                   </div>
                 </div>
-                <div class="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onclick={() => {
-                      showAddCredential = false;
-                      newCredUsername = "";
-                      newCredPassword = "";
-                    }}
-                    class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onclick={addNewCredential}
-                    disabled={!newCredUsername.trim() || isSavingCredential}
-                    class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  >
-                    {#if isSavingCredential}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                    {/if}
-                    Add & Select
-                  </button>
-                </div>
-              </div>
-            {/if}
+              {/if}
             {/if}
           </div>
         {/if}
@@ -2270,9 +2324,15 @@
           class="flex items-center gap-2 w-full text-left"
         >
           {#if sectionOpen.options}
-            <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+            <FontAwesomeIcon
+              icon={faChevronDown}
+              class="w-3 h-3 text-[var(--dash-text-muted)]"
+            />
           {:else}
-            <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+            <FontAwesomeIcon
+              icon={faChevronRight}
+              class="w-3 h-3 text-[var(--dash-text-muted)]"
+            />
           {/if}
           <h3
             class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
@@ -2282,538 +2342,36 @@
         </button>
 
         {#if sectionOpen.options}
-        <div class="space-y-3">
-          <div class="flex items-center flex-wrap gap-3">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                bind:checked={maxJobsEnabled}
-                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-              />
-              <span
-                class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-              >Max jobs to import</span>
-            </label>
-            <input
-              id="max-jobs"
-              type="number"
-              min="1"
-              placeholder="No limit"
-              bind:value={maxJobsInput}
-              disabled={!maxJobsEnabled}
-              class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-            />
-            {#if maxJobsDirty}
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onclick={saveMaxJobs}
-                  disabled={isSavingMaxJobs}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingMaxJobs}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => {
-                    maxJobsInput =
-                      (jobSearch as any).max_jobs?.toString() ??
-                        "";
-                    maxJobsEnabled =
-                      (jobSearch as any).max_jobs != null;
-                  }}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
-          </div>
-
-          <div class="flex items-center flex-wrap gap-3">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                bind:checked={skipFirstEnabled}
-                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-              />
-              <span
-                class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-              >Skip first</span>
-            </label>
-            <input
-              id="skip-first"
-              type="number"
-              min="1"
-              placeholder="Off"
-              bind:value={skipFirstInput}
-              disabled={!skipFirstEnabled}
-              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-            />
-            <span
-              class="text-sm text-[var(--dash-text-secondary)]"
-              class:opacity-40={!skipFirstEnabled}
-            >jobs</span>
-            {#if skipFirstDirty}
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onclick={saveSkipFirst}
-                  disabled={isSavingSkipFirst}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingSkipFirst}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => {
-                    skipFirstInput =
-                      (jobSearch as any).skip_first?.toString() ??
-                        "";
-                    skipFirstEnabled =
-                      (jobSearch as any).skip_first != null;
-                  }}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
-          </div>
-
-          <div class="flex items-center flex-wrap gap-3">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                bind:checked={stopAfterDuplicatesEnabled}
-                class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-              />
-              <span
-                class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-              >Stop after</span>
-            </label>
-            <input
-              id="stop-after-duplicates"
-              type="number"
-              min="1"
-              placeholder="Off"
-              bind:value={stopAfterDuplicatesInput}
-              disabled={!stopAfterDuplicatesEnabled}
-              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-            />
-            <span
-              class="text-sm text-[var(--dash-text-secondary)]"
-              class:opacity-40={!stopAfterDuplicatesEnabled}
-            >already imported jobs in a row</span>
-            {#if stopAfterDuplicatesDirty}
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onclick={saveStopAfterDuplicates}
-                  disabled={isSavingStopAfterDuplicates}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingStopAfterDuplicates}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => {
-                    stopAfterDuplicatesInput =
-                      (jobSearch as any).stop_after_duplicates
-                        ?.toString() ?? "";
-                    stopAfterDuplicatesEnabled =
-                      (jobSearch as any).stop_after_duplicates !=
-                        null;
-                  }}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
-          </div>
-
-          <div class="flex items-center flex-wrap gap-3">
-            <span
-              class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-            >Already imported jobs</span>
-            <div
-              class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
-            >
-              <button
-                type="button"
-                onclick={() => (skipExisting = false)}
-                class={`px-3 py-1 text-xs font-medium transition-colors ${
-                  !skipExisting
-                    ? "bg-[var(--dash-primary)] text-white"
-                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                }`}
-              >
-                Update
-              </button>
-              <button
-                type="button"
-                onclick={() => (skipExisting = true)}
-                class={`px-3 py-1 text-xs font-medium transition-colors ${
-                  skipExisting
-                    ? "bg-[var(--dash-primary)] text-white"
-                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                }`}
-              >
-                Skip
-              </button>
-            </div>
-            {#if skipExistingDirty}
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onclick={saveSkipExisting}
-                  disabled={isSavingSkipExisting}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingSkipExisting}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (skipExisting =
-                    (jobSearch as any).skip_existing ?? false)}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
-          </div>
-        </div>
-
-        <!-- Browser Mode (Hosted vs Local) -->
-        <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
-          <div class="flex items-center gap-2 mb-2">
-            <FontAwesomeIcon
-              icon={faDesktop}
-              class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]"
-            />
-            <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">
-              Browser Mode
-            </h3>
-          </div>
-          <div class="flex items-center gap-2">
-            <div
-              class="flex rounded-md overflow-hidden border border-[var(--dash-border)]"
-            >
-              <button
-                type="button"
-                onclick={() => (browserProvider = null)}
-                class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {browserProvider === null ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-              >
-                <FontAwesomeIcon icon={faCog} class="w-3 h-3" />
-                Default
-              </button>
-              <button
-                type="button"
-                onclick={() => (browserProvider = "hosted")}
-                class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {browserProvider === 'hosted' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-              >
-                <FontAwesomeIcon icon={faCloud} class="w-3 h-3" />
-                Hosted
-              </button>
-              <button
-                type="button"
-                onclick={() => (browserProvider = "local")}
-                class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {browserProvider === 'local' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-              >
-                <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-                Local
-              </button>
-            </div>
-            {#if browserProviderDirty}
-              <button
-                type="button"
-                onclick={saveBrowserProvider}
-                disabled={isSavingBrowserProvider}
-                class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-              >
-                {#if isSavingBrowserProvider}
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 animate-spin"
-                  />
-                {:else}
-                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                {/if}
-                Save
-              </button>
-              <button
-                type="button"
-                onclick={() => (browserProvider = savedBrowserProvider)}
-                class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                Cancel
-              </button>
-            {/if}
-          </div>
-          <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-            {#if browserProvider === "hosted"}
-              Uses a cloud-hosted anti-detect browser (datacenter IP). Fast and
-              reliable, but may trigger bot detection on some platforms.
-            {:else if browserProvider === "local"}
-              Uses your own computer's browser via the desktop app (residential
-              IP). Less likely to be detected, but requires the desktop app to
-              be running.
-            {:else}
-              Uses the server default ({
-                data.browserProvider === "goLogin"
-                  ? "Hosted"
-                  : data.browserProvider === "tunnel"
-                  ? "Local"
-                  : data.browserProvider
-              }).
-            {/if}
-          </p>
-        </div>
-
-        <!-- Browser Location (hosted mode only) -->
-        {#if           savedBrowserProvider === "hosted" ||
-            (!savedBrowserProvider &&
-              data.browserProvider === "goLogin")}
-          <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
-            <div class="flex items-center gap-2 mb-2">
-              <FontAwesomeIcon
-                icon={faGlobe}
-                class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]"
-              />
-              <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">
-                Browser Location
-              </h3>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex-1">
-                <CountrySelect
-                  bind:value={browserCountryCode}
-                  fallback={defaultCountryCode}
-                />
-              </div>
-              {#if browserCountryDirty}
-                <button
-                  type="button"
-                  onclick={saveBrowserCountryCode}
-                  disabled={isSavingBrowserCountry}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingBrowserCountry}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (browserCountryCode =
-                    savedBrowserCountryCode)}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              {/if}
-              {#if isSavingBrowserCountry && !browserCountryDirty}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
-                />
-              {/if}
-            </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              The country the scraper will appear to browse from. Set this to
-              match your actual location to avoid your account being flagged for
-              logging in from unusual locations. If empty, your profile's
-              country is used.
-            </p>
-
-            <!-- Advanced: browser fingerprint toggle -->
-            <button
-              type="button"
-              onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
-              class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-            >
-              {#if showAdvancedBrowser}
-                <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-              {:else}
-                <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
-              {/if}
-              Advanced
-            </button>
-
-            {#if showAdvancedBrowser}
-              <div
-                class="mt-3 pt-3 border-t border-[var(--dash-border)] space-y-3"
-              >
-                <div>
-                  <label
-                    for="browser_language"
-                    class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                  >
-                    Language
-                  </label>
-                  <input
-                    type="text"
-                    id="browser_language"
-                    bind:value={browserLanguage}
-                    placeholder={defaultBrowserLanguage}
-                    class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                  />
-                  {#if !browserLanguage}
-                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                      Defaults to <span class="font-mono">{
-                        defaultBrowserLanguage
-                      }</span> based on selected country
-                    </p>
-                  {/if}
-                </div>
-
-                <div>
-                  <label
-                    for="browser_timezone"
-                    class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                  >
-                    Timezone
-                  </label>
-                  <input
-                    type="text"
-                    id="browser_timezone"
-                    bind:value={browserTimezone}
-                    placeholder={defaultBrowserTimezone}
-                    class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                  />
-                  {#if !browserTimezone}
-                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                      Defaults to <span class="font-mono">{
-                        defaultBrowserTimezone
-                      }</span> based on selected country
-                    </p>
-                  {/if}
-                </div>
-
-                <div>
-                  <label
-                    for="browser_user_agent"
-                    class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                  >
-                    User Agent
-                  </label>
-                  <input
-                    type="text"
-                    id="browser_user_agent"
-                    bind:value={browserUserAgent}
-                    placeholder="Auto-detected or random"
-                    class="w-full px-2.5 py-1.5 text-xs font-mono border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                  />
-                  {#if !browserUserAgent}
-                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                      Auto-detected from your browser, or GoLogin generates a
-                      random one
-                    </p>
-                  {/if}
-                </div>
-
-                {#if browserFingerprintDirty}
-                  <div class="flex items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onclick={saveBrowserFingerprint}
-                      disabled={isSavingBrowserFingerprint}
-                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                    >
-                      {#if isSavingBrowserFingerprint}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {/if}
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onclick={resetBrowserFingerprint}
-                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                {/if}
-                {#if               isSavingBrowserFingerprint &&
-                !browserFingerprintDirty}
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
-                  />
-                {/if}
-              </div>
-            {/if}
-          </div>
-        {/if}
-
-        <!-- Keep Minimized (local/tunnel mode only) -->
-        {#if           savedBrowserProvider === "local" ||
-            (!savedBrowserProvider &&
-              data.browserProvider === "tunnel")}
-          <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
+          <div class="space-y-3">
             <div class="flex items-center flex-wrap gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  bind:checked={keepMinimized}
+                  bind:checked={maxJobsEnabled}
                   class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
                 />
-                <span class="text-sm text-[var(--dash-text-secondary)]"
-                >Keep Chrome minimized during scraping</span>
+                <span
+                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+                >Max jobs to import</span>
               </label>
-              {#if keepMinimizedDirty}
+              <input
+                id="max-jobs"
+                type="number"
+                min="1"
+                placeholder="No limit"
+                bind:value={maxJobsInput}
+                disabled={!maxJobsEnabled}
+                class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+              />
+              {#if maxJobsDirty}
                 <div class="flex items-center gap-2">
                   <button
                     type="button"
-                    onclick={saveKeepMinimized}
-                    disabled={isSavingKeepMinimized}
+                    onclick={saveMaxJobs}
+                    disabled={isSavingMaxJobs}
                     class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    {#if isSavingKeepMinimized}
+                    {#if isSavingMaxJobs}
                       <FontAwesomeIcon
                         icon={faSpinner}
                         class="w-3 h-3 animate-spin"
@@ -2825,7 +2383,13 @@
                   </button>
                   <button
                     type="button"
-                    onclick={() => (keepMinimized = savedKeepMinimized)}
+                    onclick={() => {
+                      maxJobsInput =
+                        (jobSearch as any).max_jobs?.toString() ??
+                          "";
+                      maxJobsEnabled =
+                        (jobSearch as any).max_jobs != null;
+                    }}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
                     Cancel
@@ -2833,25 +2397,536 @@
                 </div>
               {/if}
             </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              When enabled, Chrome is automatically minimized while the scraper
-              runs. Disable to watch the browser in real-time.
-            </p>
+
+            <div class="flex items-center flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  bind:checked={skipFirstEnabled}
+                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                />
+                <span
+                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+                >Skip first</span>
+              </label>
+              <input
+                id="skip-first"
+                type="number"
+                min="1"
+                placeholder="Off"
+                bind:value={skipFirstInput}
+                disabled={!skipFirstEnabled}
+                class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+              />
+              <span
+                class="text-sm text-[var(--dash-text-secondary)]"
+                class:opacity-40={!skipFirstEnabled}
+              >jobs</span>
+              {#if skipFirstDirty}
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick={saveSkipFirst}
+                    disabled={isSavingSkipFirst}
+                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {#if isSavingSkipFirst}
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        class="w-3 h-3 animate-spin"
+                      />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => {
+                      skipFirstInput =
+                        (jobSearch as any).skip_first?.toString() ??
+                          "";
+                      skipFirstEnabled =
+                        (jobSearch as any).skip_first != null;
+                    }}
+                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              {/if}
+            </div>
+
+            <div class="flex items-center flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  bind:checked={stopAfterDuplicatesEnabled}
+                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                />
+                <span
+                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+                >Stop after</span>
+              </label>
+              <input
+                id="stop-after-duplicates"
+                type="number"
+                min="1"
+                placeholder="Off"
+                bind:value={stopAfterDuplicatesInput}
+                disabled={!stopAfterDuplicatesEnabled}
+                class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+              />
+              <span
+                class="text-sm text-[var(--dash-text-secondary)]"
+                class:opacity-40={!stopAfterDuplicatesEnabled}
+              >already imported jobs in a row</span>
+              {#if stopAfterDuplicatesDirty}
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick={saveStopAfterDuplicates}
+                    disabled={isSavingStopAfterDuplicates}
+                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {#if isSavingStopAfterDuplicates}
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        class="w-3 h-3 animate-spin"
+                      />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => {
+                      stopAfterDuplicatesInput =
+                        (jobSearch as any).stop_after_duplicates
+                          ?.toString() ?? "";
+                      stopAfterDuplicatesEnabled =
+                        (jobSearch as any).stop_after_duplicates !=
+                          null;
+                    }}
+                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              {/if}
+            </div>
+
+            <div class="flex items-center flex-wrap gap-3">
+              <span
+                class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+              >Already imported jobs</span>
+              <div
+                class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onclick={() => (skipExisting = false)}
+                  class={`px-3 py-1 text-xs font-medium transition-colors ${
+                    !skipExisting
+                      ? "bg-[var(--dash-primary)] text-white"
+                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                  }`}
+                >
+                  Update
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (skipExisting = true)}
+                  class={`px-3 py-1 text-xs font-medium transition-colors ${
+                    skipExisting
+                      ? "bg-[var(--dash-primary)] text-white"
+                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                  }`}
+                >
+                  Skip
+                </button>
+              </div>
+              {#if skipExistingDirty}
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick={saveSkipExisting}
+                    disabled={isSavingSkipExisting}
+                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {#if isSavingSkipExisting}
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        class="w-3 h-3 animate-spin"
+                      />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => (skipExisting =
+                      (jobSearch as any).skip_existing ?? false)}
+                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              {/if}
+            </div>
           </div>
         {/if}
+
+        <!-- Browser Control -->
+        <hr class="border-[var(--dash-border)] mt-4" />
+        <button
+          type="button"
+          onclick={() => toggleSection("browser")}
+          class="flex items-center gap-2 w-full text-left"
+        >
+          {#if sectionOpen.browser}
+            <FontAwesomeIcon
+              icon={faChevronDown}
+              class="w-3 h-3 text-[var(--dash-text-muted)]"
+            />
+          {:else}
+            <FontAwesomeIcon
+              icon={faChevronRight}
+              class="w-3 h-3 text-[var(--dash-text-muted)]"
+            />
+          {/if}
+          <h3
+            class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+          >
+            Browser Control
+          </h3>
+        </button>
+
+        {#if sectionOpen.browser}
+          <div class="space-y-3">
+            <div class="flex items-center gap-2">
+              <div
+                class="flex rounded-md overflow-hidden border border-[var(--dash-border)]"
+              >
+                {#if data.localBrowserAllowed}
+                  <button
+                    type="button"
+                    onclick={() => (browserProvider = null)}
+                    class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {browserProvider === null ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+                  >
+                    <FontAwesomeIcon icon={faCog} class="w-3 h-3" />
+                    Local
+                  </button>
+                {/if}
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = "hosted")}
+                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 {data.localBrowserAllowed ? 'border-l border-[var(--dash-border)]' : ''} transition-colors {browserProvider === 'hosted' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+                >
+                  <FontAwesomeIcon icon={faCloud} class="w-3 h-3" />
+                  Hosted
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = "local")}
+                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {browserProvider === 'local' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+                >
+                  <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                  Desktop
+                </button>
+              </div>
+              {#if browserProviderDirty}
+                <button
+                  type="button"
+                  onclick={saveBrowserProvider}
+                  disabled={isSavingBrowserProvider}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingBrowserProvider}
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      class="w-3 h-3 animate-spin"
+                    />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (browserProvider = savedBrowserProvider)}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              {/if}
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)]">
+              {#if browserProvider === "hosted"}
+                Uses a cloud-hosted anti-detect browser (datacenter IP). Fast
+                and reliable, but may trigger bot detection on some platforms.
+              {:else if browserProvider === "local"}
+                Uses your own computer's browser via the desktop app
+                (residential IP). Less likely to be detected, but requires the
+                desktop app to be running.
+              {:else}
+                Uses the server's local browser ({
+                  data.browserProvider === "goLogin"
+                    ? "Hosted"
+                    : data.browserProvider === "tunnel"
+                    ? "Desktop"
+                    : data.browserProvider
+                }).
+              {/if}
+            </p>
+
+            <!-- Browser Location (hosted mode only) -->
+            {#if             savedBrowserProvider === "hosted" ||
+              (!savedBrowserProvider &&
+                data.browserProvider === "goLogin")}
+              <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
+                <div class="flex items-center gap-2 mb-2">
+                  <FontAwesomeIcon
+                    icon={faGlobe}
+                    class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]"
+                  />
+                  <h3
+                    class="text-xs font-medium text-[var(--dash-text-secondary)]"
+                  >
+                    Browser Location
+                  </h3>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="flex-1">
+                    <CountrySelect
+                      bind:value={browserCountryCode}
+                      fallback={defaultCountryCode}
+                    />
+                  </div>
+                  {#if browserCountryDirty}
+                    <button
+                      type="button"
+                      onclick={saveBrowserCountryCode}
+                      disabled={isSavingBrowserCountry}
+                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {#if isSavingBrowserCountry}
+                        <FontAwesomeIcon
+                          icon={faSpinner}
+                          class="w-3 h-3 animate-spin"
+                        />
+                      {:else}
+                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {/if}
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (browserCountryCode =
+                        savedBrowserCountryCode)}
+                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  {/if}
+                  {#if                 isSavingBrowserCountry && !browserCountryDirty}
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                    />
+                  {/if}
+                </div>
+                <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+                  The country the scraper will appear to browse from. Set this
+                  to match your actual location to avoid your account being
+                  flagged for logging in from unusual locations. If empty, your
+                  profile's country is used.
+                </p>
+
+                <!-- Advanced: browser fingerprint toggle -->
+                <button
+                  type="button"
+                  onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
+                  class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+                >
+                  {#if showAdvancedBrowser}
+                    <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
+                  {:else}
+                    <FontAwesomeIcon
+                      icon={faChevronRight}
+                      class="w-2.5 h-2.5"
+                    />
+                  {/if}
+                  Advanced
+                </button>
+
+                {#if showAdvancedBrowser}
+                  <div
+                    class="mt-3 pt-3 border-t border-[var(--dash-border)] space-y-3"
+                  >
+                    <div>
+                      <label
+                        for="browser_language"
+                        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                      >
+                        Language
+                      </label>
+                      <input
+                        type="text"
+                        id="browser_language"
+                        bind:value={browserLanguage}
+                        placeholder={defaultBrowserLanguage}
+                        class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                      {#if !browserLanguage}
+                        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                          Defaults to <span class="font-mono">{
+                            defaultBrowserLanguage
+                          }</span> based on selected country
+                        </p>
+                      {/if}
+                    </div>
+
+                    <div>
+                      <label
+                        for="browser_timezone"
+                        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                      >
+                        Timezone
+                      </label>
+                      <input
+                        type="text"
+                        id="browser_timezone"
+                        bind:value={browserTimezone}
+                        placeholder={defaultBrowserTimezone}
+                        class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                      {#if !browserTimezone}
+                        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                          Defaults to <span class="font-mono">{
+                            defaultBrowserTimezone
+                          }</span> based on selected country
+                        </p>
+                      {/if}
+                    </div>
+
+                    <div>
+                      <label
+                        for="browser_user_agent"
+                        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                      >
+                        User Agent
+                      </label>
+                      <input
+                        type="text"
+                        id="browser_user_agent"
+                        bind:value={browserUserAgent}
+                        placeholder="Auto-detected or random"
+                        class="w-full px-2.5 py-1.5 text-xs font-mono border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                      {#if !browserUserAgent}
+                        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                          Auto-detected from your browser, or GoLogin generates
+                          a random one
+                        </p>
+                      {/if}
+                    </div>
+
+                    {#if browserFingerprintDirty}
+                      <div class="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onclick={saveBrowserFingerprint}
+                          disabled={isSavingBrowserFingerprint}
+                          class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                        >
+                          {#if isSavingBrowserFingerprint}
+                            <FontAwesomeIcon
+                              icon={faSpinner}
+                              class="w-3 h-3 animate-spin"
+                            />
+                          {:else}
+                            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                          {/if}
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onclick={resetBrowserFingerprint}
+                          class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    {/if}
+                    {#if                 isSavingBrowserFingerprint &&
+                  !browserFingerprintDirty}
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                      />
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+
+            <!-- Keep Minimized (desktop/tunnel mode only) -->
+            {#if             savedBrowserProvider === "local" ||
+              (!savedBrowserProvider &&
+                data.browserProvider === "tunnel")}
+              <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
+                <div class="flex items-center flex-wrap gap-3">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      bind:checked={keepMinimized}
+                      class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                    />
+                    <span class="text-sm text-[var(--dash-text-secondary)]"
+                    >Keep Chrome minimized during scraping</span>
+                  </label>
+                  {#if keepMinimizedDirty}
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onclick={saveKeepMinimized}
+                        disabled={isSavingKeepMinimized}
+                        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {#if isSavingKeepMinimized}
+                          <FontAwesomeIcon
+                            icon={faSpinner}
+                            class="w-3 h-3 animate-spin"
+                          />
+                        {:else}
+                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                        {/if}
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => (keepMinimized = savedKeepMinimized)}
+                        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  {/if}
+                </div>
+                <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+                  When enabled, Chrome is automatically minimized while the
+                  scraper runs. Disable to watch the browser in real-time.
+                </p>
+              </div>
+            {/if}
+          </div>
         {/if}
       </div>
     </div>
   </div>
-
-  <!-- Browser View toggle button -->
-  <button
-    onclick={() => (showBrowser = !showBrowser)}
-    class="w-full p-4 border-2 border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-secondary)] transition-colors flex items-center justify-center gap-2"
-  >
-    <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
-    <span>{showBrowser ? "Hide" : "Show"} Browser View</span>
-  </button>
 
   <!-- Browser View popup -->
   {#if showBrowser}
@@ -2873,7 +2948,8 @@
           if (screencastEnabled) toggleScreencast();
         }}
         role="presentation"
-      ></div>
+      >
+      </div>
       <!-- Popup content -->
       <div
         class="relative bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
@@ -3017,7 +3093,9 @@
             </div>
           {/if}
         </div>
-        <div class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]">
+        <div
+          class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]"
+        >
           {#if isBlocked}
             <div class="flex items-center justify-between">
               <p class="text-sm text-[var(--dash-text-secondary)]">
@@ -3058,8 +3136,8 @@
             </div>
           {:else if isRunning}
             <p class="text-sm text-[var(--dash-text-secondary)]">
-              Watch the scrape progress. You may need to intervene if a CAPTCHA or
-              login is required.
+              Watch the scrape progress. You may need to intervene if a CAPTCHA
+              or login is required.
             </p>
           {:else}
             <p class="text-sm text-[var(--dash-text-secondary)]">
@@ -3820,19 +3898,32 @@
   </div>
 
   <!-- Settings -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]">
+  <div
+    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]"
+  >
     <button
       type="button"
       onclick={() => toggleSection("settings")}
       class="flex items-center gap-2 w-full text-left p-4"
     >
       {#if sectionOpen.settings}
-        <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          class="w-3 h-3 text-[var(--dash-text-muted)]"
+        />
       {:else}
-        <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+        <FontAwesomeIcon
+          icon={faChevronRight}
+          class="w-3 h-3 text-[var(--dash-text-muted)]"
+        />
       {/if}
-      <FontAwesomeIcon icon={faCog} class="w-4 h-4 text-[var(--dash-text-muted)]" />
-      <h3 class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide">
+      <FontAwesomeIcon
+        icon={faCog}
+        class="w-4 h-4 text-[var(--dash-text-muted)]"
+      />
+      <h3
+        class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+      >
         Settings
       </h3>
     </button>
@@ -3844,7 +3935,8 @@
           {#if showDeleteConfirm}
             <div class="flex items-center gap-3 flex-wrap">
               <span class="text-sm text-[var(--dash-text)]">
-                Are you sure? This will permanently delete this task and all its run history.
+                Are you sure? This will permanently delete this task and all its
+                run history.
               </span>
               <div class="flex items-center gap-2">
                 <button
@@ -3853,7 +3945,10 @@
                   class="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
                 >
                   {#if isDeleting}
-                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin mr-1" />
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      class="w-3 h-3 animate-spin mr-1"
+                    />
                   {/if}
                   Yes, delete
                 </button>

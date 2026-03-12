@@ -91,6 +91,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     browserCountryCode: profileData?.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
     browserProvider: config.browserProvider,
+    localBrowserAllowed: config.localBrowserAllowed,
     // Browser fingerprint: saved values + geo-derived defaults
     browserFingerprint: {
       userAgent: profileData?.browser_user_agent || "",
