@@ -1,4 +1,6 @@
 <script lang="ts">
+  import "../dashboard/dashboard.css";
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
   import { authClient } from "$lib/auth-client";
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
@@ -28,8 +30,8 @@
         return;
       }
 
-      // Redirect to the intended page or home
-      goto(data.redirectTo || "/");
+      // Redirect to the intended page or dashboard
+      goto(data.redirectTo || "/dashboard");
     } catch (err) {
       error = err instanceof Error ? err.message : "An error occurred";
     } finally {
@@ -42,15 +44,26 @@
   <title>Sign In - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="fixed top-0 right-0 z-50 p-4">
+  <ThemeSwitcher />
+</div>
+
+<div
+  class="min-h-screen flex items-center justify-center bg-[var(--dash-bg)] py-12 px-4 sm:px-6 lg:px-8 transition-colors"
+>
   <div class="max-w-md w-full space-y-8">
     <div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+      <h2
+        class="mt-6 text-center text-3xl font-extrabold text-[var(--dash-text)]"
+      >
         Sign in to your account
       </h2>
-      <p class="mt-2 text-center text-sm text-gray-600">
+      <p class="mt-2 text-center text-sm text-[var(--dash-text-secondary)]">
         Or
-        <a href="/signup" class="font-medium text-indigo-600 hover:text-indigo-500">
+        <a
+          href="/signup"
+          class="font-medium text-[var(--dash-primary)] hover:opacity-80"
+        >
           create a new account
         </a>
       </p>
@@ -73,7 +86,7 @@
             autocomplete="email"
             bind:value={email}
             required
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-[var(--dash-border)] placeholder-[var(--dash-text-muted)] text-[var(--dash-text)] bg-[var(--dash-card)] rounded-t-md focus:outline-none focus:ring-[var(--dash-primary)] focus:border-[var(--dash-primary)] focus:z-10 sm:text-sm transition-colors"
             placeholder="Email address"
           />
         </div>
@@ -86,7 +99,7 @@
             autocomplete="current-password"
             bind:value={password}
             required
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-[var(--dash-border)] placeholder-[var(--dash-text-muted)] text-[var(--dash-text)] bg-[var(--dash-card)] rounded-b-md focus:outline-none focus:ring-[var(--dash-primary)] focus:border-[var(--dash-primary)] focus:z-10 sm:text-sm transition-colors"
             placeholder="Password"
           />
         </div>
@@ -94,7 +107,10 @@
 
       <div class="flex items-center justify-between">
         <div class="text-sm">
-          <a href="/forgot-password" class="font-medium text-indigo-600 hover:text-indigo-500">
+          <a
+            href="/forgot-password"
+            class="font-medium text-[var(--dash-primary)] hover:opacity-80"
+          >
             Forgot your password?
           </a>
         </div>
@@ -104,10 +120,13 @@
         <button
           type="submit"
           disabled={loading}
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[var(--dash-primary)] hover:bg-[var(--dash-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--dash-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-  {#if loading}
-            <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin mr-2" />
+          {#if loading}
+            <FontAwesomeIcon
+              icon={faSpinner}
+              class="w-4 h-4 animate-spin mr-2"
+            />
             Signing in...
           {:else}
             Sign in

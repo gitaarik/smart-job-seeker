@@ -78,12 +78,8 @@
   <!-- CTA -->
   <div class="mt-12 flex gap-4">
     <a
-      href="/signup"
-      class="inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[var(--dash-primary-hover)] transition-colors"
-    >Join</a>
-    <a
       href="/login"
-      class="inline-flex items-center justify-center rounded-lg border border-[var(--dash-border)] px-8 py-3 text-sm font-semibold text-[var(--dash-text-secondary)] hover:bg-[var(--dash-card)] transition-colors"
+      class="inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[var(--dash-primary-hover)] transition-colors"
     >Sign in</a>
   </div>
 
