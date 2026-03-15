@@ -4,6 +4,7 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import CountrySelect from "../../components/CountrySelect.svelte";
+  import Card from "../../../components/Card.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
   import {
     faArrowLeft,
@@ -1479,9 +1480,7 @@
   </div>
 
   <!-- Scrape Configuration -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6"
-  >
+  <Card padding="lg">
     <!-- Scrape Status (full-width) -->
     <div class="space-y-4 pb-6 mb-6 border-b border-[var(--dash-border)]">
       {#if isEditingHeader}
@@ -2926,7 +2925,7 @@
         {/if}
       </div>
     </div>
-  </div>
+  </Card>
 
   <!-- Browser View popup -->
   {#if showBrowser}
@@ -2951,9 +2950,7 @@
       >
       </div>
       <!-- Popup content -->
-      <div
-        class="relative bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
-      >
+      <Card class="relative overflow-hidden shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
         <div
           class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]"
         >
@@ -3225,14 +3222,12 @@
             </div>
           {/if}
         </div>
-      </div>
+      </Card>
     </div>
   {/if}
 
   <!-- Runs History -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]"
-  >
+  <Card>
     <div
       class="flex items-center gap-2 p-4 border-b border-[var(--dash-border)]"
     >
@@ -3895,12 +3890,10 @@
         {/each}
       </div>
     {/if}
-  </div>
+  </Card>
 
   <!-- Settings -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]"
-  >
+  <Card>
     <button
       type="button"
       onclick={() => toggleSection("settings")}
@@ -3972,5 +3965,5 @@
         </div>
       </div>
     {/if}
-  </div>
+  </Card>
 </div>

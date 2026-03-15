@@ -15,6 +15,7 @@
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import Card from "../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -305,9 +306,7 @@
   {:else}
     <div class="space-y-3">
       {#each users as user (user.id)}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all"
-        >
+        <Card class="overflow-hidden relative transition-all">
           {#if editingId === user.id}
             <!-- Edit Mode -->
             <div class="p-3 sm:p-4">
@@ -518,7 +517,7 @@
               </form>
             </div>
           {/if}
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

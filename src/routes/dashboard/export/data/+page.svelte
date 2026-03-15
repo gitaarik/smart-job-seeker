@@ -9,6 +9,7 @@
     faUser,
     faLayerGroup,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
 
@@ -111,9 +112,7 @@
   {/if}
 
   <!-- Export Options -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6"
-  >
+  <Card padding="lg">
     <div class="flex items-start gap-4">
       <div
         class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
@@ -248,7 +247,7 @@
         </form>
       </div>
     </div>
-  </div>
+  </Card>
 
   <!-- Existing Exports -->
   {#if exports.length > 0}

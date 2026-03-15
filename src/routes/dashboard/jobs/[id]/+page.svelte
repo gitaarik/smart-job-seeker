@@ -22,6 +22,7 @@
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
   import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
+  import Card from "../../components/Card.svelte";
   import { formatJobType, formatJobStatus, formatWorkLocation } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -170,7 +171,7 @@
     <!-- Left Column - Job Details -->
     <div class="lg:col-span-2 space-y-6">
       <!-- Job Header Card -->
-      <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <Card padding="lg">
         <!-- Title -->
         <h1 class="text-2xl font-bold text-[var(--dash-text)]">
           {job.title || "Untitled Job"}
@@ -272,10 +273,10 @@
 
         </div>
 
-      </div>
+      </Card>
 
       <!-- Salary & Details -->
-      <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <Card padding="lg">
         <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Details</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -309,12 +310,12 @@
             </div>
           {/if}
         </div>
-      </div>
+      </Card>
 
       <!-- Skills -->
       {#if (job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0) ||
            (job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+        <Card padding="lg">
           <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Skills</h2>
 
           {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
@@ -368,27 +369,27 @@
               </div>
             </div>
           {/if}
-        </div>
+        </Card>
       {/if}
 
       <!-- Job Description -->
       {#if job.job_description}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+        <Card padding="lg">
           <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Job Description</h2>
           <div class="prose prose-sm max-w-none text-[var(--dash-text)] whitespace-pre-wrap">
             {job.job_description}
           </div>
-        </div>
+        </Card>
       {/if}
 
       <!-- Company Description -->
       {#if job.company_description}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+        <Card padding="lg">
           <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">About {job.company || "the Company"}</h2>
           <div class="prose prose-sm max-w-none text-[var(--dash-text)] whitespace-pre-wrap">
             {job.company_description}
           </div>
-        </div>
+        </Card>
       {/if}
     </div>
 
@@ -396,7 +397,7 @@
     <div class="space-y-6">
       <!-- Staff: Metadata + Actions -->
       {#if data.isStaff}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+        <Card padding="lg">
           <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Staff Tools</h2>
 
           <!-- Action buttons -->
@@ -483,11 +484,11 @@
               </ul>
             </div>
           {/if}
-        </div>
+        </Card>
       {/if}
 
       <!-- Match Analysis Card -->
-      <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <Card padding="lg">
         <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Match Analysis</h2>
 
         {#if match && match.reasoning && match.recommendation === "filtered_out"}
@@ -554,11 +555,11 @@
             This job hasn't been matched against your profile yet.
           </p>
         {/if}
-      </div>
+      </Card>
 
       <!-- Status Card -->
       {#if match}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+        <Card padding="lg">
           <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Status</h2>
           <div class="flex flex-wrap gap-2">
             {#each statusOptions as option}
@@ -584,7 +585,7 @@
               </form>
             {/each}
           </div>
-        </div>
+        </Card>
       {/if}
     </div>
   </div>

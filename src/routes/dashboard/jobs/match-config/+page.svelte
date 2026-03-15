@@ -4,6 +4,7 @@
   import { faInfoCircle, faSliders } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import Card from "../../components/Card.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -138,9 +139,7 @@
   {/if}
 
   <!-- Job Types -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
-  >
+  <Card padding="responsive">
     <div class="flex items-start gap-2 mb-4">
       <div>
         <h3 class="font-medium text-[var(--dash-text)]">
@@ -172,12 +171,10 @@
         </label>
       {/each}
     </div>
-  </div>
+  </Card>
 
   <!-- Work Location -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
-  >
+  <Card padding="responsive">
     <div class="flex items-start gap-2 mb-4">
       <div>
         <h3 class="font-medium text-[var(--dash-text)]">
@@ -210,12 +207,10 @@
         </label>
       {/each}
     </div>
-  </div>
+  </Card>
 
   <!-- Experience Levels -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
-  >
+  <Card padding="responsive">
     <div class="flex items-start gap-2 mb-4">
       <div>
         <h3 class="font-medium text-[var(--dash-text)]">Experience Levels</h3>
@@ -246,12 +241,10 @@
         </label>
       {/each}
     </div>
-  </div>
+  </Card>
 
   <!-- Preferred Locations -->
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
-  >
+  <Card padding="responsive">
     <div class="flex items-start gap-2 mb-4">
       <div>
         <h3 class="font-medium text-[var(--dash-text)]">Preferred Locations</h3>
@@ -301,7 +294,7 @@
       </button>
     </div>
 
-  </div>
+  </Card>
 
   <!-- Save Button -->
   <div class="flex justify-end">

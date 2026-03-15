@@ -16,6 +16,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import Card from "../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -289,7 +290,7 @@
   {:else}
     <div class="space-y-4">
       {#each categories as category (category.id)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
+        <Card class="overflow-hidden relative transition-all">
           <!-- Chevron in top right corner -->
           {#if editingCategoryId !== category.id}
             <button
@@ -608,7 +609,7 @@
               Edit
             </button>
           </div>
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

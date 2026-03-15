@@ -11,6 +11,7 @@
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import AchievementsList from "$lib/components/AchievementsList.svelte";
+  import Card from "../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -230,7 +231,7 @@
   </div>
 
   <!-- Basic Info -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -345,10 +346,10 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
     </div>
-  </div>
+  </Card>
 
   <!-- Technologies -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Technologies</h2>
 
     <div class="flex flex-wrap gap-2">
@@ -404,10 +405,10 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={techSaveState} onClick={saveTechnologies} />
     </div>
-  </div>
+  </Card>
 
   <!-- Achievements -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Achievements</h2>
 
     <AchievementsList
@@ -422,10 +423,10 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />
     </div>
-  </div>
+  </Card>
 
   <!-- Portfolio Images -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
     <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
       These images are used for your portfolio display. They are not required for job search or matching.
@@ -459,5 +460,5 @@
     <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
       JPEG, PNG, WebP, or GIF. Max 5MB.
     </p>
-  </div>
+  </Card>
 </div>

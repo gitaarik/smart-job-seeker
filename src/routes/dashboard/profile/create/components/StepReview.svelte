@@ -10,6 +10,7 @@
   import LanguagesSection from "./sections/LanguagesSection.svelte";
   import ProjectsSection from "./sections/ProjectsSection.svelte";
   import ReferencesSection from "./sections/ReferencesSection.svelte";
+  import Card from "../../../components/Card.svelte";
 
   interface Props {
     parsedData: ResumeData;
@@ -51,9 +52,7 @@
 </script>
 
 <div class="space-y-4">
-  <div
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
-  >
+  <Card padding="responsive">
     <h3 class="font-medium text-[var(--dash-text)] mb-1">
       Review Your Profile
     </h3>
@@ -131,7 +130,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </Card>
 
   {#if error}
     <div

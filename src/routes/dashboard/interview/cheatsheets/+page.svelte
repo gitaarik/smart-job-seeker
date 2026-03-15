@@ -11,6 +11,7 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
@@ -182,7 +183,7 @@
   {:else}
     <div class="space-y-3">
       {#each cheatsheets as sheet (sheet.id)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
+        <Card class="overflow-hidden relative transition-all">
           <!-- Chevron in top right corner -->
           <button
             type="button"
@@ -327,7 +328,7 @@
               Edit
             </button>
           </div>
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

@@ -20,7 +20,7 @@
   --dash-card: #ffffff;              /* white */
 
   /* Borders */
-  --dash-border: #e5e7eb;            /* gray-200 */
+  --dash-border: #d1d5db;            /* gray-300 */
   --dash-border-input: #d1d5db;      /* gray-300 */
 
   /* Text */
@@ -56,7 +56,7 @@
   --dash-bg-inset: #1a2332;          /* between gray-900 and gray-800 */
   --dash-card: #1f2937;              /* gray-800 */
 
-  --dash-border: #374151;            /* gray-700 */
+  --dash-border: #4b5563;            /* gray-600 */
   --dash-border-input: #4b5563;      /* gray-600 */
 
   --dash-text: #f9fafb;              /* gray-50 */

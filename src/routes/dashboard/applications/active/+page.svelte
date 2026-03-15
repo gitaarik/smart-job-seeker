@@ -12,6 +12,7 @@
     faPaperPlane,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
@@ -133,9 +134,7 @@
     <div class="space-y-3">
       {#each applications as app (app.id)}
         {@const job = app.jobs}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
-        >
+        <Card class="overflow-hidden">
           <!-- Header -->
           <button
             type="button"
@@ -326,7 +325,7 @@
               </div>
             </div>
           {/if}
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

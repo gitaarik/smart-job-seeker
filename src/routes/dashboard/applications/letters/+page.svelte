@@ -14,6 +14,7 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
@@ -238,9 +239,7 @@
         {@const isLetter = item.itemType === "letter"}
         {@const hasAiChat = !!item.ai_chat}
         {@const hasContent = isLetter ? !!item.content : !!item.answer}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
-        >
+        <Card class="overflow-hidden">
           <!-- Header -->
           <button
             type="button"
@@ -546,7 +545,7 @@
               {/if}
             </div>
           {/if}
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

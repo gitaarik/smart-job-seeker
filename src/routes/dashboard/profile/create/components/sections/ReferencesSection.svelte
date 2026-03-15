@@ -7,6 +7,7 @@
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import type { Reference } from "$lib/server/resume/types";
+  import Card from "../../../../components/Card.svelte";
 
   interface Props {
     references: Reference[];
@@ -21,9 +22,7 @@
   }
 </script>
 
-<div
-  class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
->
+<Card class="overflow-hidden">
   <button
     type="button"
     onclick={() => (isExpanded = !isExpanded)}
@@ -109,4 +108,4 @@
       {/each}
     </div>
   {/if}
-</div>
+</Card>

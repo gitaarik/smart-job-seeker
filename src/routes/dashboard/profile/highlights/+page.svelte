@@ -14,6 +14,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import Card from "../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -179,7 +180,7 @@
   {:else}
     <div class="space-y-3">
       {#each highlights as highlight (highlight.id)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+        <Card padding="md">
           {#if editingId === highlight.id}
             <!-- Edit Mode -->
             <form
@@ -280,7 +281,7 @@
               </div>
             </div>
           {/if}
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

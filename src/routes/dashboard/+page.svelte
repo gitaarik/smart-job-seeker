@@ -12,6 +12,7 @@
     faSearch,
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "./components/Card.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -40,7 +41,7 @@
   </div>
 
   <!-- Profile summary card -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+  <Card padding="md">
     <div class="flex items-start gap-3">
       <div
         class="w-12 h-12 rounded-full bg-[var(--dash-primary)] flex items-center justify-center shrink-0"
@@ -57,11 +58,11 @@
         {/if}
       </div>
     </div>
-  </div>
+  </Card>
 
   <!-- Quick stats -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
+    <Card padding="sm">
       <div class="flex items-center gap-2.5">
         <div
           class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
@@ -75,9 +76,9 @@
           <p class="text-xs text-[var(--dash-text-secondary)] truncate">Work Experiences</p>
         </div>
       </div>
-    </div>
+    </Card>
 
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
+    <Card padding="sm">
       <div class="flex items-center gap-2.5">
         <div
           class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
@@ -91,9 +92,9 @@
           <p class="text-xs text-[var(--dash-text-secondary)] truncate">Education</p>
         </div>
       </div>
-    </div>
+    </Card>
 
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
+    <Card padding="sm">
       <div class="flex items-center gap-2.5">
         <div
           class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
@@ -107,9 +108,9 @@
           <p class="text-xs text-[var(--dash-text-secondary)] truncate">Side Projects</p>
         </div>
       </div>
-    </div>
+    </Card>
 
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
+    <Card padding="sm">
       <div class="flex items-center gap-2.5">
         <div
           class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
@@ -123,11 +124,11 @@
           <p class="text-xs text-[var(--dash-text-secondary)] truncate">Skill Categories</p>
         </div>
       </div>
-    </div>
+    </Card>
   </div>
 
   <!-- Quick links (placeholders for future features) -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+  <Card padding="md">
     <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Quick Actions</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <a
@@ -164,5 +165,5 @@
         <p class="text-sm text-[var(--dash-text-secondary)]">Track your applications</p>
       </a>
     </div>
-  </div>
+  </Card>
 </div>

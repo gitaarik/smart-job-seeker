@@ -2,6 +2,7 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../../components/Card.svelte";
 
   interface Props {
     isLoading: boolean;
@@ -18,9 +19,7 @@
   let phone = $state("");
 </script>
 
-<div
-  class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
->
+<Card padding="responsive">
   <h3 class="font-medium text-[var(--dash-text)] mb-1">
     Create Your Profile
   </h3>
@@ -145,4 +144,4 @@
       </button>
     </div>
   </form>
-</div>
+</Card>

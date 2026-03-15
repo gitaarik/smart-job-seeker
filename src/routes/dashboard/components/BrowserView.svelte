@@ -6,6 +6,7 @@
     faExternalLinkAlt,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "./Card.svelte";
 
   interface Props {
     liveUrl: string | null;
@@ -19,7 +20,7 @@
   let browserViewUrl = $derived(liveUrl || "/vnc/vnc.html?autoconnect=true&resize=scale");
 </script>
 
-<div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
+<Card class="overflow-hidden">
   <div class="flex items-center justify-between p-3 border-b border-[var(--dash-border)]">
     <div class="flex items-center gap-2">
       <FontAwesomeIcon icon={isCloudMode ? faCloud : faDesktop} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
@@ -64,4 +65,4 @@
       <p class="text-sm text-[var(--dash-text-secondary)]">{statusMessage}</p>
     </div>
   {/if}
-</div>
+</Card>

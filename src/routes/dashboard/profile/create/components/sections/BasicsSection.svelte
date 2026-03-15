@@ -6,6 +6,7 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import type { ResumeBasics } from "$lib/server/resume/types";
+  import Card from "../../../../components/Card.svelte";
 
   interface Props {
     basics: ResumeBasics;
@@ -16,9 +17,7 @@
   let isExpanded = $state(true);
 </script>
 
-<div
-  class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
->
+<Card class="overflow-hidden">
   <button
     type="button"
     onclick={() => (isExpanded = !isExpanded)}
@@ -148,4 +147,4 @@
       </div>
     </div>
   {/if}
-</div>
+</Card>

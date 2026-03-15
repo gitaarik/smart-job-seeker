@@ -15,6 +15,8 @@
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
 
+  import Card from "../../components/Card.svelte";
+
   let { data }: { data: PageData } = $props();
 
   let apiKeys = $state(data.apiKeys);
@@ -149,7 +151,7 @@
   </p>
 
   <!-- Connection Status -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+  <Card padding="md">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class={`w-3 h-3 rounded-full ${tunnelConnected ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-text-muted)]'}`}></div>
@@ -181,10 +183,10 @@
         <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 text-[var(--dash-text-muted)] animate-spin" />
       {/if}
     </div>
-  </div>
+  </Card>
 
   <!-- Setup Instructions -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+  <Card padding="lg">
     <h2 class="font-medium text-[var(--dash-text)] mb-4">Setup Instructions</h2>
     <ol class="space-y-4 text-sm text-[var(--dash-text-secondary)]">
       <li class="flex gap-3">
@@ -229,7 +231,7 @@
         </div>
       </li>
     </ol>
-  </div>
+  </Card>
 
   <!-- Newly Created Key Banner -->
   {#if newlyCreatedKey}
@@ -272,7 +274,7 @@
   {/if}
 
   <!-- API Keys -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]">
+  <Card>
     <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
       <div class="flex items-center gap-2">
         <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
@@ -371,5 +373,5 @@
         {/each}
       </div>
     {/if}
-  </div>
+  </Card>
 </div>

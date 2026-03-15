@@ -13,6 +13,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import Card from "../../components/Card.svelte";
   import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -232,7 +233,7 @@
   {:else}
     <div class="space-y-3">
       {#each projects as project (project.id)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
+        <Card class="overflow-hidden relative transition-all">
           <!-- Chevron in top right corner -->
           <button
             type="button"
@@ -379,7 +380,7 @@
               Edit
             </a>
           </div>
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

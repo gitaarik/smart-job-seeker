@@ -8,6 +8,7 @@
     faSpinner,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../../components/Card.svelte";
 
   interface Props {
     isLoading: boolean;
@@ -67,9 +68,7 @@
   }
 </script>
 
-<div
-  class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
->
+<Card padding="responsive">
   <h3 class="font-medium text-[var(--dash-text)] mb-1">
     Upload Your CV/Resume
   </h3>
@@ -219,4 +218,4 @@
       </button>
     </div>
   </form>
-</div>
+</Card>

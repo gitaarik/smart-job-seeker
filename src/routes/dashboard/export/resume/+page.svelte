@@ -12,6 +12,7 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
@@ -245,9 +246,7 @@
   {:else}
     <div class="space-y-3">
       {#each versions as version (version.id)}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
-        >
+        <Card class="overflow-hidden">
           <!-- Header -->
           <button
             type="button"
@@ -502,7 +501,7 @@
               {/if}
             </div>
           {/if}
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}

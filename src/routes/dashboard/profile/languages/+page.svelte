@@ -13,6 +13,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import Card from "../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -194,7 +195,7 @@
   {:else}
     <div class="space-y-3">
       {#each languages as lang (lang.id)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
+        <Card class="overflow-hidden relative transition-all">
           {#if editingId === lang.id}
             <!-- Edit Mode -->
             <div class="p-3 sm:p-4">
@@ -316,7 +317,7 @@
               </button>
             </div>
           {/if}
-        </div>
+        </Card>
       {/each}
     </div>
   {/if}
