@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faInfoCircle, faSliders } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faChartBar,
+    faInfoCircle,
+    faSliders,
+  } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import Card from "../../components/Card.svelte";
@@ -316,6 +320,13 @@
         AI. Jobs must have at least one matching skill and meet your job type
         and work location criteria to be considered.
       </p>
+      <a
+        href="/dashboard/jobs/match-progress"
+        class="mt-2 inline-flex items-center gap-1.5 text-[var(--dash-info)] font-medium hover:underline"
+      >
+        <FontAwesomeIcon icon={faChartBar} class="w-3.5 h-3.5" />
+        View match progress
+      </a>
     </div>
   </div>
 </div>
