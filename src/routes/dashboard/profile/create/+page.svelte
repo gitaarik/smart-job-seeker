@@ -64,8 +64,6 @@
   <SectionHeader
     title="Create Your Profile"
     icon={faUser}
-    backHref="/dashboard"
-    backLabel="Dashboard"
   />
 
   {#if showReview && parsedData}
