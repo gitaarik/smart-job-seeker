@@ -1,25 +1,28 @@
 <script lang="ts">
-  import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowRight,
     faCloudUploadAlt,
     faFile,
-    faSpinner,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
+  import type { ResumeData } from "$lib/server/resume/types";
+  import { convertExportToResumeData } from "../lib/convert-export";
   import Card from "../../../components/Card.svelte";
 
   interface Props {
-    isLoading: boolean;
     error: string | null;
     onBack: () => void;
-    onLoadingChange: (loading: boolean) => void;
+    onImportComplete: (data: ResumeData) => void;
+    onError: (error: string) => void;
   }
 
-  let { isLoading, error, onBack, onLoadingChange }: Props = $props();
+  let { error, onBack, onImportComplete, onError }: Props = $props();
 
   let selectedFile = $state<File | null>(null);
   let isDragging = $state(false);
+  let parsedExport = $state<ExportedProfile | null>(null);
   let preview = $state<{
     name: string;
     title?: string;
@@ -35,8 +38,11 @@
       if (!p) {
         parseError = "Invalid export format: missing profile data";
         preview = null;
+        parsedExport = null;
         return;
       }
+
+      parsedExport = fileData as ExportedProfile;
 
       const counts: { label: string; count: number }[] = [];
       const add = (label: string, arr: unknown[] | undefined | null) => {
@@ -65,12 +71,14 @@
     } catch {
       parseError = "Could not read JSON file";
       preview = null;
+      parsedExport = null;
     }
   }
 
   function setFile(file: File) {
     parseError = null;
     preview = null;
+    parsedExport = null;
     selectedFile = file;
     parsePreview(file);
   }
@@ -103,7 +111,21 @@
   function clearFile() {
     selectedFile = null;
     preview = null;
+    parsedExport = null;
     parseError = null;
+  }
+
+  function handleContinue() {
+    if (!parsedExport) {
+      onError("No valid export data found");
+      return;
+    }
+    try {
+      const resumeData = convertExportToResumeData(parsedExport);
+      onImportComplete(resumeData);
+    } catch {
+      onError("Failed to convert export data");
+    }
   }
 
   const displayError = $derived(error || parseError);
@@ -115,23 +137,7 @@
     Upload a previously exported profile JSON file
   </p>
 
-  <form
-    method="POST"
-    action="?/import"
-    enctype="multipart/form-data"
-    use:enhance={() => {
-      onLoadingChange(true);
-      return async ({ result, update }) => {
-        onLoadingChange(false);
-        if (result.type === "redirect") {
-          window.location.href = result.location;
-        } else {
-          await update();
-        }
-      };
-    }}
-    class="space-y-4"
-  >
+  <div class="space-y-4">
     {#if displayError}
       <div
         class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
@@ -202,7 +208,6 @@
       <input
         id="import-file-input"
         type="file"
-        name="file"
         accept=".json,application/json"
         onchange={handleFileSelect}
         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -258,17 +263,14 @@
       </button>
 
       <button
-        type="submit"
-        disabled={!selectedFile || !preview || isLoading}
+        type="button"
+        onclick={handleContinue}
+        disabled={!selectedFile || !preview}
         class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
-        {#if isLoading}
-          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-          Importing...
-        {:else}
-          Import Profile
-        {/if}
+        <FontAwesomeIcon icon={faArrowRight} class="w-4 h-4" />
+        Continue
       </button>
     </div>
-  </form>
+  </div>
 </Card>

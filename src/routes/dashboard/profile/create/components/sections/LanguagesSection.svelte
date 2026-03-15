@@ -4,6 +4,7 @@
     faChevronDown,
     faChevronUp,
     faLanguage,
+    faPlus,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import type { Language } from "$lib/server/resume/types";
@@ -20,6 +21,11 @@
   function removeItem(index: number) {
     if (!confirm("Remove this language?")) return;
     languages = languages.filter((_, i) => i !== index);
+  }
+
+  function addLanguage() {
+    languages = [...languages, { name: "" }];
+    isExpanded = true;
   }
 
   const proficiencyOptions = [
@@ -88,6 +94,15 @@
           </button>
         </div>
       {/each}
+
+      <button
+        type="button"
+        onclick={addLanguage}
+        class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add language
+      </button>
     </div>
   {/if}
 </Card>

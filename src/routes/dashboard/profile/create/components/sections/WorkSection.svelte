@@ -47,6 +47,18 @@
     }
     work[workIndex].achievements = [...work[workIndex].achievements!, ""];
   }
+
+  function addWork() {
+    work = [...work, {
+      name: "",
+      position: "",
+      achievements: [],
+      technologies: [],
+    }];
+    expandedItems.add(work.length - 1);
+    expandedItems = new Set(expandedItems);
+    isExpanded = true;
+  }
 </script>
 
 <Card class="overflow-hidden">
@@ -182,9 +194,8 @@
                     Start Date
                   </label>
                   <input
-                    type="text"
+                    type="date"
                     bind:value={work[index].startDate}
-                    placeholder="YYYY-MM-DD"
                     class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
@@ -196,9 +207,8 @@
                     End Date
                   </label>
                   <input
-                    type="text"
+                    type="date"
                     bind:value={work[index].endDate}
-                    placeholder="YYYY-MM-DD or Present"
                     class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
@@ -256,6 +266,17 @@
           {/if}
         </div>
       {/each}
+
+      <div class="p-3 sm:p-4">
+        <button
+          type="button"
+          onclick={addWork}
+          class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add work experience
+        </button>
+      </div>
     </div>
   {/if}
 </Card>

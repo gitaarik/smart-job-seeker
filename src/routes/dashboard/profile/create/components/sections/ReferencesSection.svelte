@@ -3,6 +3,7 @@
   import {
     faChevronDown,
     faChevronUp,
+    faPlus,
     faQuoteLeft,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -20,6 +21,11 @@
   function removeItem(index: number) {
     if (!confirm("Remove this reference?")) return;
     references = references.filter((_, i) => i !== index);
+  }
+
+  function addReference() {
+    references = [...references, { author: "", text: "" }];
+    isExpanded = true;
   }
 </script>
 
@@ -107,6 +113,15 @@
           </div>
         </div>
       {/each}
+
+      <button
+        type="button"
+        onclick={addReference}
+        class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add reference
+      </button>
     </div>
   {/if}
 </Card>

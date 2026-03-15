@@ -52,14 +52,6 @@ export const actions: Actions = {
         const text = await file.text();
         const jsonData = JSON.parse(text);
 
-        // Check if this is an SJS export (has .profile) — let the import action handle those
-        if (jsonData.profile) {
-          return fail(400, {
-            error:
-              "This looks like an SJS export file. Please use the 'Import from a previous export' option instead.",
-          });
-        }
-
         validateJsonResume(jsonData);
         const parsedData = mapJsonResumeToInternal(jsonData);
 
@@ -159,11 +151,18 @@ export const actions: Actions = {
       return fail(400, { error: "Name is required" });
     }
 
-    const result = await createProfileFromResume(
-      data,
-      user.id,
-      fileId || undefined,
-    );
+    let result;
+    try {
+      result = await createProfileFromResume(
+        data,
+        user.id,
+        fileId || undefined,
+      );
+    } catch (e) {
+      console.error("[create] error:", e);
+      const message = e instanceof Error ? e.message : "Profile creation failed";
+      return fail(500, { error: message });
+    }
 
     if (!result.success) {
       return fail(400, { error: result.message });

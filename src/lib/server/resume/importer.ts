@@ -15,6 +15,12 @@ import type {
   WorkExperience,
 } from "./types";
 
+function parseDate(value: string | undefined | null): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 /**
  * Create a new profile from resume data
  * @param data - Parsed resume data
@@ -155,8 +161,8 @@ async function createWorkExperience(
       description: "", // Field deprecated
       summary: work.summary || "",
       website: work.website || null,
-      start_date: work.startDate ? new Date(work.startDate) : null,
-      end_date: work.endDate ? new Date(work.endDate) : null,
+      start_date: parseDate(work.startDate),
+      end_date: parseDate(work.endDate),
       status: "draft",
       profiles: {
         connect: { id: profileId },
@@ -211,8 +217,8 @@ async function createEducation(
       study_type: edu.studyType || null,
       location: edu.location || null,
       url: edu.url || null,
-      start_date: edu.startDate ? new Date(edu.startDate) : null,
-      end_date: edu.endDate ? new Date(edu.endDate) : null,
+      start_date: parseDate(edu.startDate),
+      end_date: parseDate(edu.endDate),
       graduation_year: edu.graduationYear || null,
       summary: edu.summary || null,
       status: "draft",
@@ -288,8 +294,8 @@ async function createSideProject(
       url: project.url || null,
       url_label: project.urlLabel || null,
       summary: project.summary || null,
-      start_date: project.startDate ? new Date(project.startDate) : null,
-      end_date: project.endDate ? new Date(project.endDate) : null,
+      start_date: parseDate(project.startDate),
+      end_date: parseDate(project.endDate),
       stars: project.stars || null,
       status: "draft",
       profiles: {

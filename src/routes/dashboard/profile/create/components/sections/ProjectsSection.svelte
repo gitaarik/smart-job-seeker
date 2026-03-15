@@ -4,6 +4,7 @@
     faChevronDown,
     faChevronUp,
     faLaptopCode,
+    faPlus,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import type { SideProject } from "$lib/server/resume/types";
@@ -30,6 +31,17 @@
   function removeItem(index: number) {
     if (!confirm("Remove this project?")) return;
     projects = projects.filter((_, i) => i !== index);
+  }
+
+  function addProject() {
+    projects = [...projects, {
+      name: "",
+      achievements: [],
+      technologies: [],
+    }];
+    expandedItems.add(projects.length - 1);
+    expandedItems = new Set(expandedItems);
+    isExpanded = true;
   }
 </script>
 
@@ -179,6 +191,17 @@
           {/if}
         </div>
       {/each}
+
+      <div class="p-3 sm:p-4">
+        <button
+          type="button"
+          onclick={addProject}
+          class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add project
+        </button>
+      </div>
     </div>
   {/if}
 </Card>

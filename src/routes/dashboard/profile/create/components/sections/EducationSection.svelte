@@ -4,6 +4,7 @@
     faChevronDown,
     faChevronUp,
     faGraduationCap,
+    faPlus,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import type { Education } from "$lib/server/resume/types";
@@ -30,6 +31,15 @@
   function removeItem(index: number) {
     if (!confirm("Remove this education entry?")) return;
     education = education.filter((_, i) => i !== index);
+  }
+
+  function addEducation() {
+    education = [...education, {
+      institution: "",
+    }];
+    expandedItems.add(education.length - 1);
+    expandedItems = new Set(expandedItems);
+    isExpanded = true;
   }
 </script>
 
@@ -183,9 +193,8 @@
                     Start Date
                   </label>
                   <input
-                    type="text"
+                    type="date"
                     bind:value={education[index].startDate}
-                    placeholder="YYYY-MM-DD"
                     class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
@@ -197,9 +206,8 @@
                     End Date
                   </label>
                   <input
-                    type="text"
+                    type="date"
                     bind:value={education[index].endDate}
-                    placeholder="YYYY-MM-DD"
                     class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
@@ -221,6 +229,17 @@
           {/if}
         </div>
       {/each}
+
+      <div class="p-3 sm:p-4">
+        <button
+          type="button"
+          onclick={addEducation}
+          class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add education
+        </button>
+      </div>
     </div>
   {/if}
 </Card>

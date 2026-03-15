@@ -16,6 +16,7 @@
     parsedData: ResumeData;
     fileId: string | null;
     fileName: string | null;
+    source?: "upload" | "import" | "manual";
     isLoading: boolean;
     error: string | null;
     onBack: () => void;
@@ -26,6 +27,7 @@
     parsedData,
     fileId,
     fileName,
+    source = "upload",
     isLoading,
     error,
     onBack,
@@ -33,18 +35,26 @@
   }: Props = $props();
 
   // Editable copy of the parsed data
-  let editableData = $state<ResumeData>($state.snapshot(parsedData) as ResumeData);
+  const snapshot = $state.snapshot(parsedData) as ResumeData;
+  let editableData = $state({
+    basics: snapshot.basics,
+    work: snapshot.work ?? [],
+    education: snapshot.education ?? [],
+    skills: snapshot.skills ?? [],
+    languages: snapshot.languages ?? [],
+    projects: snapshot.projects ?? [],
+    references: snapshot.references ?? [],
+  });
 
   // Stats for display
   let stats = $derived({
-    work: editableData.work?.length || 0,
-    education: editableData.education?.length || 0,
-    skills: editableData.skills?.reduce((sum, cat) =>
-      sum + cat.skills.length, 0) ||
-      0,
-    languages: editableData.languages?.length || 0,
-    projects: editableData.projects?.length || 0,
-    references: editableData.references?.length || 0,
+    work: editableData.work.length,
+    education: editableData.education.length,
+    skills: editableData.skills.reduce((sum, cat) =>
+      sum + cat.skills.length, 0),
+    languages: editableData.languages.length,
+    projects: editableData.projects.length,
+    references: editableData.references.length,
   });
 
   // Validation
@@ -54,18 +64,27 @@
 <div class="space-y-4">
   <Card padding="responsive">
     <h3 class="font-medium text-[var(--dash-text)] mb-1">
-      Review Your Profile
+      {#if source === "manual"}
+        Create Your Profile
+      {:else}
+        Review Your Profile
+      {/if}
     </h3>
     <p class="text-sm text-[var(--dash-text-secondary)]">
-      We extracted the following information from
-      {#if fileName}
+      {#if source === "manual"}
+        Fill in your information to get started. You can add more details later.
+      {:else if source === "import"}
+        We imported the following information from your export file
+      {:else if fileName}
+        We extracted the following information from
         <span class="font-medium">{fileName}</span>
       {:else}
-        your resume
+        We extracted the following information from your resume
       {/if}
     </p>
 
     <!-- Stats summary -->
+    {#if source !== "manual"}
     <div
       class="grid grid-cols-3 md:grid-cols-6 gap-2 p-3 sm:p-4 bg-[var(--dash-bg)] rounded-lg mt-4"
     >
@@ -130,6 +149,7 @@
         </div>
       </div>
     </div>
+    {/if}
   </Card>
 
   {#if error}
@@ -142,45 +162,32 @@
 
   <!-- Editable sections -->
   <BasicsSection bind:basics={editableData.basics} />
-
-  {#if editableData.work && editableData.work.length > 0}
-    <WorkSection bind:work={editableData.work} />
-  {/if}
-
-  {#if editableData.education && editableData.education.length > 0}
-    <EducationSection bind:education={editableData.education} />
-  {/if}
-
-  {#if editableData.skills && editableData.skills.length > 0}
-    <SkillsSection bind:skills={editableData.skills} />
-  {/if}
-
-  {#if editableData.languages && editableData.languages.length > 0}
-    <LanguagesSection bind:languages={editableData.languages} />
-  {/if}
-
-  {#if editableData.projects && editableData.projects.length > 0}
-    <ProjectsSection bind:projects={editableData.projects} />
-  {/if}
-
-  {#if editableData.references && editableData.references.length > 0}
-    <ReferencesSection bind:references={editableData.references} />
-  {/if}
+  <WorkSection bind:work={editableData.work} />
+  <EducationSection bind:education={editableData.education} />
+  <SkillsSection bind:skills={editableData.skills} />
+  <LanguagesSection bind:languages={editableData.languages} />
+  <ProjectsSection bind:projects={editableData.projects} />
+  <ReferencesSection bind:references={editableData.references} />
 
   <!-- Submit form -->
   <form
     method="POST"
     action="?/create"
-    use:enhance={() => {
+    use:enhance={({ formData }) => {
+      formData.set("data", JSON.stringify($state.snapshot(editableData)));
       onLoadingChange(true);
-      return async ({ update }) => {
+      return async ({ result, update }) => {
         onLoadingChange(false);
-        await update();
+        if (result.type === "redirect") {
+          window.location.href = result.location;
+        } else {
+          await update();
+        }
       };
     }}
     class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
   >
-    <input type="hidden" name="data" value={JSON.stringify(editableData)} />
+    <input type="hidden" name="data" value="" />
     {#if fileId}
       <input type="hidden" name="fileId" value={fileId} />
     {/if}
