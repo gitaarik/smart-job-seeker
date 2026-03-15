@@ -80,12 +80,12 @@
             : ""}
         >
           <div
-            class="flex items-center justify-between p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
+            class="flex items-center justify-between hover:bg-[var(--dash-bg)] transition-colors"
           >
             <button
               type="button"
               onclick={() => toggleItem(index)}
-              class="flex-1 text-left"
+              class="flex-1 self-stretch text-left p-3 sm:p-4"
             >
               <div class="font-semibold text-[var(--dash-text)] text-sm">
                 {edu.studyType || "Degree"}
@@ -127,7 +127,7 @@
           </div>
 
           {#if expandedItems.has(index)}
-            <div class="px-3 sm:px-4 pb-4 space-y-4">
+            <div class="px-3 sm:px-4 py-4 space-y-4">
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
                   <label

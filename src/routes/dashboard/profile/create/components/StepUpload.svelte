@@ -255,7 +255,7 @@
       {:else}
         <FontAwesomeIcon
           icon={faCloudUploadAlt}
-          class="w-10 h-10 sm:w-12 sm:h-12 text-[var(--dash-text-muted)] mx-auto mb-3 sm:mb-4"
+          class="w-12 h-12 sm:w-16 sm:h-16 text-[var(--dash-text-muted)] mx-auto mb-3 sm:mb-4"
         />
         <p
           class="text-[var(--dash-text)] font-medium mb-1 text-sm sm:text-base"

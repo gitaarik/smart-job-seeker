@@ -43,7 +43,8 @@ Return a JSON object with this exact structure:
       "studyType": "Bachelor's/Master's/etc.",
       "location": "City, Country",
       "startDate": "YYYY-MM-DD",
-      "endDate": "YYYY-MM-DD"
+      "endDate": "YYYY-MM-DD",
+      "graduationYear": 2020
     }
   ],
   "skills": [
@@ -76,7 +77,8 @@ Guidelines:
 - Use ISO 8601 dates (YYYY-MM-DD) when possible
 - Categorize skills into logical groups (e.g., "Frontend", "Backend", "Databases")
 - Be thorough - extract all relevant details
-- For work experience: "summary" is a brief 1-2 sentence overview of the role. All bullet points, accomplishments, metrics, and specific results go in "achievements". Do NOT put bullet-point content in summary.`;
+- For work experience: "summary" is a brief 1-2 sentence overview of the role. All bullet points, accomplishments, metrics, and specific results go in "achievements". Do NOT put bullet-point content in summary.
+- For education: if the resume only shows a single year (e.g. "MSc Computer Science, 2020"), treat it as the graduation year, NOT as a start or end date. Only use startDate/endDate when the resume explicitly provides date ranges for the education period.`;
 
 // Zod schema for resume data
 const ResumeBasicsSchema = z.object({

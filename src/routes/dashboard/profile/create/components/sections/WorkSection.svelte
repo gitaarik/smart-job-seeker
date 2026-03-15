@@ -9,6 +9,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import type { WorkExperience } from "$lib/server/resume/types";
   import Card from "../../../../components/Card.svelte";
+  import AchievementsList from "$lib/components/AchievementsList.svelte";
 
   interface Props {
     work: WorkExperience[];
@@ -23,6 +24,7 @@
     if (expandedItems.has(index)) {
       expandedItems.delete(index);
     } else {
+      if (!work[index].achievements) work[index].achievements = [];
       expandedItems.add(index);
     }
     expandedItems = new Set(expandedItems);
@@ -31,21 +33,6 @@
   function removeItem(index: number) {
     if (!confirm("Remove this work experience?")) return;
     work = work.filter((_, i) => i !== index);
-  }
-
-  function removeAchievement(workIndex: number, achievementIndex: number) {
-    if (work[workIndex].achievements) {
-      work[workIndex].achievements = work[workIndex].achievements!.filter(
-        (_, i) => i !== achievementIndex,
-      );
-    }
-  }
-
-  function addAchievement(workIndex: number) {
-    if (!work[workIndex].achievements) {
-      work[workIndex].achievements = [];
-    }
-    work[workIndex].achievements = [...work[workIndex].achievements!, ""];
   }
 
   function addWork() {
@@ -98,12 +85,12 @@
             : ""}
         >
           <div
-            class="flex items-center justify-between p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
+            class="flex items-center justify-between hover:bg-[var(--dash-bg)] transition-colors"
           >
             <button
               type="button"
               onclick={() => toggleItem(index)}
-              class="flex-1 text-left"
+              class="flex-1 self-stretch text-left p-3 sm:p-4"
             >
               <div class="font-semibold text-[var(--dash-text)] text-sm">
                 {job.position || "Position"}
@@ -144,7 +131,7 @@
           </div>
 
           {#if expandedItems.has(index)}
-            <div class="px-3 sm:px-4 pb-4 space-y-4">
+            <div class="px-3 sm:px-4 py-4 space-y-4">
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
                   <label
@@ -233,34 +220,9 @@
                 >
                   Achievements
                 </label>
-                <div class="space-y-2">
-                  {#each work[index].achievements || [] as _, achievementIndex}
-                    <div class="flex gap-2">
-                      <input
-                        type="text"
-                        bind:value={work[index].achievements![achievementIndex]}
-                        class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                      <button
-                        type="button"
-                        onclick={() =>
-                          removeAchievement(index, achievementIndex)}
-                        class="p-2 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-                        aria-label="Remove achievement"
-                      >
-                        <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                      </button>
-                    </div>
-                  {/each}
-                </div>
-                <button
-                  type="button"
-                  onclick={() => addAchievement(index)}
-                  class="mt-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] flex items-center gap-1"
-                >
-                  <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                  Add
-                </button>
+                <AchievementsList
+                  bind:achievements={work[index].achievements}
+                />
               </div>
             </div>
           {/if}

@@ -50,8 +50,8 @@
   </button>
 
   {#if isExpanded}
-    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-4">
-      <SkillCategoriesEditor bind:categories={skills} />
+    <div class="border-t border-[var(--dash-border)]">
+      <SkillCategoriesEditor bind:categories={skills} compact />
     </div>
   {/if}
 </Card>

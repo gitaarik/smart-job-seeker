@@ -2,6 +2,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
+    faChevronDown,
+    faChevronUp,
     faPencil,
     faPlus,
     faTimes,
@@ -19,6 +21,7 @@
   interface Props {
     categories: CategoryItem[];
     levelOptions?: LevelOption[];
+    compact?: boolean;
     oncreate?: (category: CategoryItem) => void;
     onrename?: (category: CategoryItem) => void;
     onremove?: (category: CategoryItem) => void;
@@ -31,6 +34,7 @@
   let {
     categories = $bindable(),
     levelOptions,
+    compact = false,
     oncreate,
     onrename,
     onremove,
@@ -39,6 +43,18 @@
     onskillremove,
     onskillreorder,
   }: Props = $props();
+
+  // Compact mode: track expanded items
+  let expandedItems = $state<Set<number>>(new Set());
+
+  function toggleItem(index: number) {
+    if (expandedItems.has(index)) {
+      expandedItems.delete(index);
+    } else {
+      expandedItems.add(index);
+    }
+    expandedItems = new Set(expandedItems);
+  }
 
   // Track which categories are newly added (not yet persisted)
   let newIndices = $state(new Set<number>());
@@ -53,6 +69,7 @@
     const idx = categories.length - 1;
     newIndices = new Set([...newIndices, idx]);
     editingNameIndex = idx;
+    if (compact) expandedItems = new Set([...expandedItems, idx]);
   }
 
   function startEditingName(index: number) {
@@ -141,89 +158,166 @@
   }
 </script>
 
-{#each categories as category, categoryIndex}
-  <Card class="p-3 sm:p-4">
-    <div class="flex items-center justify-between mb-3 gap-2">
-      {#if editingNameIndex === categoryIndex}
-        <div class="flex items-center gap-1">
-          <input
-            type="text"
-            bind:value={categories[categoryIndex].name}
-            onkeydown={(e) => {
-              if (e.key === "Enter") saveEditingName(categoryIndex);
-              if (e.key === "Escape") cancelEditingName(categoryIndex);
-            }}
-            placeholder="Category name"
-            class="px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-36 sm:w-auto"
-            use:autofocus
-          />
-          <button
-            type="button"
-            onclick={() => cancelEditingName(categoryIndex)}
-            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-            aria-label="Cancel"
-          >
-            <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onclick={() => saveEditingName(categoryIndex)}
-            class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-            aria-label="Save"
-          >
-            <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-          </button>
-        </div>
-      {:else}
-        <div class="flex items-center gap-2 min-w-0">
-          <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
-            {categories[categoryIndex].name || "Untitled category"}
-          </h3>
-          <button
-            type="button"
-            onclick={() => startEditingName(categoryIndex)}
-            class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0"
-            aria-label="Edit category name"
-          >
-            <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-          </button>
-        </div>
-      {/if}
+{#snippet categoryHeader(categoryIndex: number)}
+  {#if editingNameIndex === categoryIndex}
+    <div class="flex items-center gap-1">
+      <input
+        type="text"
+        bind:value={categories[categoryIndex].name}
+        onkeydown={(e) => {
+          if (e.key === "Enter") saveEditingName(categoryIndex);
+          if (e.key === "Escape") cancelEditingName(categoryIndex);
+        }}
+        placeholder="Category name"
+        class="px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-36 sm:w-auto"
+        use:autofocus
+      />
       <button
         type="button"
-        onclick={() => removeCategory(categoryIndex)}
-        class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 flex-shrink-0"
-        aria-label="Remove category"
+        onclick={() => cancelEditingName(categoryIndex)}
+        class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+        aria-label="Cancel"
       >
-        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-        <span class="hidden sm:inline">Remove</span>
+        <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        onclick={() => saveEditingName(categoryIndex)}
+        class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+        aria-label="Save"
+      >
+        <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
       </button>
     </div>
+  {:else}
+    <div class="flex items-center gap-2 min-w-0">
+      <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+        {categories[categoryIndex].name || "Untitled category"}
+      </h3>
+      {#if !compact}
+        <button
+          type="button"
+          onclick={() => startEditingName(categoryIndex)}
+          class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0"
+          aria-label="Edit category name"
+        >
+          <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+        </button>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
 
-    <SkillTagsEditor
-      bind:skills={categories[categoryIndex].skills}
-      {levelOptions}
-      oncreate={onskillcreate
-        ? (skill) => onskillcreate(categories[categoryIndex], skill)
-        : undefined}
-      onupdate={onskillupdate
-        ? (skill) => onskillupdate(categories[categoryIndex], skill)
-        : undefined}
-      onremove={onskillremove
-        ? (skill) => onskillremove(categories[categoryIndex], skill)
-        : undefined}
-      onreorder={onskillreorder
-        ? (skills) => onskillreorder(categories[categoryIndex], skills)
-        : undefined}
-    />
-  </Card>
-{/each}
+{#snippet categorySkills(categoryIndex: number)}
+  <SkillTagsEditor
+    bind:skills={categories[categoryIndex].skills}
+    {levelOptions}
+    oncreate={onskillcreate
+      ? (skill) => onskillcreate(categories[categoryIndex], skill)
+      : undefined}
+    onupdate={onskillupdate
+      ? (skill) => onskillupdate(categories[categoryIndex], skill)
+      : undefined}
+    onremove={onskillremove
+      ? (skill) => onskillremove(categories[categoryIndex], skill)
+      : undefined}
+    onreorder={onskillreorder
+      ? (skills) => onskillreorder(categories[categoryIndex], skills)
+      : undefined}
+  />
+{/snippet}
 
-<button
-  type="button"
-  onclick={() => addCategory()}
-  class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
->
-  <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-  Add category
-</button>
+{#if compact}
+  <div class="divide-y divide-[var(--dash-border)]">
+    {#each categories as category, categoryIndex}
+      <div
+        class={expandedItems.has(categoryIndex)
+          ? "border-l-2 border-l-[var(--dash-primary)]"
+          : ""}
+      >
+        <div
+          class="flex items-center justify-between hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          <button
+            type="button"
+            onclick={() => {
+              if (editingNameIndex !== categoryIndex) toggleItem(categoryIndex);
+            }}
+            class="flex-1 self-stretch text-left p-3 sm:p-4"
+          >
+            {@render categoryHeader(categoryIndex)}
+          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              onclick={() => removeCategory(categoryIndex)}
+              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 flex-shrink-0"
+              aria-label="Remove category"
+            >
+              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              <span class="hidden sm:inline">Remove</span>
+            </button>
+            <button
+              type="button"
+              onclick={() => toggleItem(categoryIndex)}
+              class="p-1"
+              aria-label={expandedItems.has(categoryIndex) ? "Collapse" : "Expand"}
+            >
+              <FontAwesomeIcon
+                icon={expandedItems.has(categoryIndex)
+                  ? faChevronUp
+                  : faChevronDown}
+                class="w-4 h-4 text-[var(--dash-text-muted)]"
+              />
+            </button>
+          </div>
+        </div>
+
+        {#if expandedItems.has(categoryIndex)}
+          <div class="px-3 sm:px-4 py-4">
+            {@render categorySkills(categoryIndex)}
+          </div>
+        {/if}
+      </div>
+    {/each}
+
+    <div class="p-3 sm:p-4">
+      <button
+        type="button"
+        onclick={() => addCategory()}
+        class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add category
+      </button>
+    </div>
+  </div>
+{:else}
+  {#each categories as category, categoryIndex}
+    <Card class="p-3 sm:p-4">
+      <div class="flex items-center justify-between mb-3 gap-2">
+        {@render categoryHeader(categoryIndex)}
+        <button
+          type="button"
+          onclick={() => removeCategory(categoryIndex)}
+          class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          aria-label="Remove category"
+        >
+          <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+          <span class="hidden sm:inline">Remove</span>
+        </button>
+      </div>
+
+      {@render categorySkills(categoryIndex)}
+    </Card>
+  {/each}
+
+  <button
+    type="button"
+    onclick={() => addCategory()}
+    class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+  >
+    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+    Add category
+  </button>
+{/if}

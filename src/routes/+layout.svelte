@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { config } from "@fortawesome/fontawesome-svg-core";
+  config.autoAddCss = false;
+
   import "../app.css";
   import { initializeTheme } from "$lib/stores/theme.svelte";
   import type { LayoutData } from "./$types";

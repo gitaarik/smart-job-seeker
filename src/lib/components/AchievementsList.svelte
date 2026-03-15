@@ -4,28 +4,50 @@
 
   interface Props {
     achievements: string[];
-    deletedIndices: Set<number>;
-    lastAddedIndex: number | null;
-    onAdd: () => void;
-    onRemove: (index: number) => void;
-    onUndoRemove: (index: number) => void;
-    onFocused: () => void;
+    deletedIndices?: Set<number>;
+    lastAddedIndex?: number | null;
+    onAdd?: () => void;
+    onRemove?: (index: number) => void;
+    onUndoRemove?: (index: number) => void;
+    onFocused?: () => void;
   }
 
   let {
     achievements = $bindable(),
-    deletedIndices,
-    lastAddedIndex,
+    deletedIndices = new Set(),
+    lastAddedIndex = null,
     onAdd,
     onRemove,
     onUndoRemove,
     onFocused,
   }: Props = $props();
 
+  // Simple mode: component manages its own add/remove when callbacks not provided
+  let internalLastAdded = $state<number | null>(null);
+  let effectiveLastAdded = $derived(onAdd ? lastAddedIndex : internalLastAdded);
+
   function focusIfNew(node: HTMLInputElement, isNew: boolean) {
     if (isNew) {
       node.focus();
-      onFocused();
+      if (onFocused) onFocused();
+      else internalLastAdded = null;
+    }
+  }
+
+  function handleAdd() {
+    if (onAdd) {
+      onAdd();
+    } else {
+      achievements = [...achievements, ""];
+      internalLastAdded = achievements.length - 1;
+    }
+  }
+
+  function handleRemove(index: number) {
+    if (onRemove) {
+      onRemove(index);
+    } else {
+      achievements = achievements.filter((_, i) => i !== index);
     }
   }
 </script>
@@ -52,12 +74,12 @@
             type="text"
             bind:value={achievements[index]}
             placeholder="Achievement description"
-            use:focusIfNew={index === lastAddedIndex}
+            use:focusIfNew={index === effectiveLastAdded}
             class="flex-1 px-4 py-3 border-none focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-inset"
           />
           <button
             type="button"
-            onclick={() => onRemove(index)}
+            onclick={() => handleRemove(index)}
             class="p-3 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
             aria-label="Remove"
           >
@@ -70,7 +92,7 @@
 {/if}
 <button
   type="button"
-  onclick={onAdd}
+  onclick={handleAdd}
   class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1 mt-3"
 >
   <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />

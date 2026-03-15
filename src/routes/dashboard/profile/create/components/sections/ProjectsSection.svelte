@@ -9,6 +9,8 @@
   } from "@fortawesome/free-solid-svg-icons";
   import type { SideProject } from "$lib/server/resume/types";
   import Card from "../../../../components/Card.svelte";
+  import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
+  import AchievementsList from "$lib/components/AchievementsList.svelte";
 
   interface Props {
     projects: SideProject[];
@@ -23,6 +25,8 @@
     if (expandedItems.has(index)) {
       expandedItems.delete(index);
     } else {
+      if (!projects[index].technologies) projects[index].technologies = [];
+      if (!projects[index].achievements) projects[index].achievements = [];
       expandedItems.add(index);
     }
     expandedItems = new Set(expandedItems);
@@ -60,7 +64,7 @@
           class="w-5 h-5 text-[var(--dash-primary)]"
         />
       </div>
-      <span class="font-semibold text-base text-[var(--dash-text)]">Projects</span>
+      <span class="font-semibold text-base text-[var(--dash-text)]">Side Projects</span>
       <span class="text-sm text-[var(--dash-text-secondary)]"
         >({projects.length})</span
       >
@@ -82,12 +86,12 @@
             : ""}
         >
           <div
-            class="flex items-center justify-between p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
+            class="flex items-center justify-between hover:bg-[var(--dash-bg)] transition-colors"
           >
             <button
               type="button"
               onclick={() => toggleItem(index)}
-              class="flex-1 text-left"
+              class="flex-1 self-stretch text-left p-3 sm:p-4"
             >
               <div class="font-semibold text-[var(--dash-text)] text-sm">
                 {project.name || "Project"}
@@ -127,7 +131,7 @@
           </div>
 
           {#if expandedItems.has(index)}
-            <div class="px-3 sm:px-4 pb-4 space-y-4">
+            <div class="px-3 sm:px-4 py-4 space-y-4">
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
                   <label
@@ -169,24 +173,27 @@
                 ></textarea>
               </div>
 
-              {#if projects[index].technologies && projects[index].technologies.length > 0}
-                <div>
-                  <label
-                    class="block text-sm font-medium text-[var(--dash-text)] mb-2"
-                  >
-                    Technologies
-                  </label>
-                  <div class="flex flex-wrap gap-2">
-                    {#each projects[index].technologies || [] as tech}
-                      <span
-                        class="px-2 py-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded text-sm text-[var(--dash-text)]"
-                      >
-                        {tech}
-                      </span>
-                    {/each}
-                  </div>
-                </div>
-              {/if}
+              <div>
+                <label
+                  class="block text-sm font-medium text-[var(--dash-text)] mb-2"
+                >
+                  Technologies
+                </label>
+                <TechnologyTagsEditor
+                  bind:technologies={projects[index].technologies}
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium text-[var(--dash-text)] mb-2"
+                >
+                  Achievements
+                </label>
+                <AchievementsList
+                  bind:achievements={projects[index].achievements}
+                />
+              </div>
             </div>
           {/if}
         </div>

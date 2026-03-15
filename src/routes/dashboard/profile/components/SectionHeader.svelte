@@ -38,11 +38,11 @@
     <div class="flex items-center gap-3">
       {#if icon}
         <div
-          class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center"
+          class="w-12 h-12 rounded-full bg-[var(--dash-bg)] flex items-center justify-center"
         >
           <FontAwesomeIcon
             {icon}
-            class="w-5 h-5 text-[var(--dash-text-muted)]"
+            class="w-6 h-6 text-[var(--dash-text-muted)]"
           />
         </div>
       {/if}

@@ -24,7 +24,6 @@
     faListCheck,
     faMoneyBillWave,
     faPaperPlane,
-    faRobot,
     faSearch,
     faShieldAlt,
     faSliders,
@@ -201,11 +200,6 @@
           icon: faTrash,
         },
       ],
-    },
-    {
-      label: "AI Assistant",
-      href: "/dashboard/ai",
-      icon: faRobot,
     },
   ];
 

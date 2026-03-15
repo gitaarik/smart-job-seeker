@@ -64,45 +64,47 @@
   </button>
 
   {#if isExpanded}
-    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3">
-      {#each languages as lang, index}
-        <div class="flex items-center gap-3">
-          <input
-            type="text"
-            bind:value={languages[index].name}
-            placeholder="Language"
-            class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
+    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
+      <div class="inline-flex flex-col gap-3">
+        {#each languages as lang, index}
+          <div class="flex items-center gap-3">
+            <input
+              type="text"
+              bind:value={languages[index].name}
+              placeholder="Language"
+              class="w-48 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            />
 
-          <select
-            bind:value={languages[index].proficiency}
-            class="px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          >
-            <option value="">Proficiency</option>
-            {#each proficiencyOptions as option}
-              <option value={option.value}>{option.label}</option>
-            {/each}
-          </select>
+            <select
+              bind:value={languages[index].proficiency}
+              class="px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            >
+              <option value="">Proficiency</option>
+              {#each proficiencyOptions as option}
+                <option value={option.value}>{option.label}</option>
+              {/each}
+            </select>
 
-          <button
-            type="button"
-            onclick={() => removeItem(index)}
-            class="p-2 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-            aria-label="Remove language"
-          >
-            <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-          </button>
-        </div>
-      {/each}
+            <button
+              type="button"
+              onclick={() => removeItem(index)}
+              class="p-2 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
+              aria-label="Remove language"
+            >
+              <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+            </button>
+          </div>
+        {/each}
 
-      <button
-        type="button"
-        onclick={addLanguage}
-        class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Add language
-      </button>
+        <button
+          type="button"
+          onclick={addLanguage}
+          class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add language
+        </button>
+      </div>
     </div>
   {/if}
 </Card>
