@@ -4,12 +4,10 @@
     faChevronDown,
     faChevronUp,
     faCode,
-    faPlus,
-    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import type { SkillCategory } from "$lib/server/resume/types";
   import Card from "../../../../components/Card.svelte";
-  import SkillTagsEditor from "../../../../components/SkillTagsEditor.svelte";
+  import SkillCategoriesEditor from "../../../../components/SkillCategoriesEditor.svelte";
 
   interface Props {
     skills: SkillCategory[];
@@ -18,15 +16,6 @@
   let { skills = $bindable() }: Props = $props();
 
   let isExpanded = $state(false);
-
-  function removeCategory(index: number) {
-    if (!confirm("Remove this skill category?")) return;
-    skills = skills.filter((_, i) => i !== index);
-  }
-
-  function addCategory() {
-    skills = [...skills, { name: "", skills: [] }];
-  }
 
   let totalSkills = $derived(
     skills.reduce((sum, cat) => sum + cat.skills.length, 0),
@@ -62,38 +51,7 @@
 
   {#if isExpanded}
     <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-4">
-      {#each skills as category, categoryIndex}
-        <div class="border border-[var(--dash-border)] rounded-lg p-3 sm:p-4">
-          <div class="flex items-center justify-between mb-3">
-            <input
-              type="text"
-              bind:value={skills[categoryIndex].name}
-              placeholder="Category name"
-              class="font-medium text-[var(--dash-text)] bg-transparent border-none focus:outline-none focus:ring-0 p-0"
-            />
-            <button
-              type="button"
-              onclick={() => removeCategory(categoryIndex)}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5"
-              aria-label="Remove category"
-            >
-              <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
-              <span class="hidden sm:inline">Remove</span>
-            </button>
-          </div>
-
-          <SkillTagsEditor bind:skills={skills[categoryIndex].skills} />
-        </div>
-      {/each}
-
-      <button
-        type="button"
-        onclick={() => addCategory()}
-        class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Add category
-      </button>
+      <SkillCategoriesEditor bind:categories={skills} />
     </div>
   {/if}
 </Card>
