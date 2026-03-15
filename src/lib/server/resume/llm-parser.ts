@@ -31,8 +31,8 @@ Return a JSON object with this exact structure:
       "location": "City, Country",
       "startDate": "YYYY-MM-DD",
       "endDate": "YYYY-MM-DD",
-      "summary": "Role description",
-      "achievements": ["Achievement 1", "Achievement 2"],
+      "summary": "Brief 1-2 sentence role description",
+      "achievements": ["Specific accomplishment or bullet point 1", "Specific accomplishment or bullet point 2"],
       "technologies": ["Tech1", "Tech2"]
     }
   ],
@@ -75,7 +75,8 @@ Guidelines:
 - Omit optional fields/sections if not found in the resume
 - Use ISO 8601 dates (YYYY-MM-DD) when possible
 - Categorize skills into logical groups (e.g., "Frontend", "Backend", "Databases")
-- Be thorough - extract all relevant details`;
+- Be thorough - extract all relevant details
+- For work experience: "summary" is a brief 1-2 sentence overview of the role. All bullet points, accomplishments, metrics, and specific results go in "achievements". Do NOT put bullet-point content in summary.`;
 
 // Zod schema for resume data
 const ResumeBasicsSchema = z.object({

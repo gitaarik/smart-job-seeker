@@ -97,9 +97,7 @@ describe("createProfileFromResume", () => {
       basics: {
         name: "John Doe",
         title: "Senior Developer",
-        locationCity: "San Francisco",
-        locationRegion: "CA",
-        locationCountryCode: "US",
+        location: "San Francisco, CA, US",
         phone: "555-1234",
         email: "john@example.com",
         website: "https://johndoe.com",
@@ -123,9 +121,7 @@ describe("createProfileFromResume", () => {
       data: expect.objectContaining({
         name: "John Doe",
         title: "Senior Developer",
-        location_city: "San Francisco",
-        location_region: "CA",
-        location_country_code: "US",
+        location: "San Francisco, CA, US",
         phone_number: "555-1234",
         email_address: "john@example.com",
         personal_website: "https://johndoe.com",

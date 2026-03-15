@@ -1,15 +1,13 @@
 import type { RequestHandler } from "./$types";
 import { error, json } from "@sveltejs/kit";
 import { dbDirect } from "$lib/server/db";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 
 interface ExportedProfile {
   profile: {
     name?: string;
     title?: string;
-    location_city?: string;
-    location_region?: string;
-    location_country_code?: string;
+    location?: string;
     phone_number?: string;
     email_address?: string;
     personal_website?: string;
@@ -258,9 +256,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     profile: {
       name: baseProfile.name || undefined,
       title: baseProfile.title || undefined,
-      location_city: baseProfile.location_city || undefined,
-      location_region: baseProfile.location_region || undefined,
-      location_country_code: baseProfile.location_country_code || undefined,
+      location: baseProfile.location || undefined,
       phone_number: baseProfile.phone_number || undefined,
       email_address: baseProfile.email_address || undefined,
       personal_website: baseProfile.personal_website || undefined,

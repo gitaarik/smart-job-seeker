@@ -29,6 +29,7 @@
   }
 
   function removeItem(index: number) {
+    if (!confirm("Remove this work experience?")) return;
     work = work.filter((_, i) => i !== index);
   }
 
@@ -211,27 +212,17 @@
                 </label>
                 <textarea
                   bind:value={work[index].summary}
-                  rows="2"
+                  rows="3"
                   class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-none"
                 ></textarea>
               </div>
 
               <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label
-                    class="block text-sm font-medium text-[var(--dash-text)]"
-                  >
-                    Achievements
-                  </label>
-                  <button
-                    type="button"
-                    onclick={() => addAchievement(index)}
-                    class="text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] flex items-center gap-1"
-                  >
-                    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                    Add
-                  </button>
-                </div>
+                <label
+                  class="block text-sm font-medium text-[var(--dash-text)] mb-2"
+                >
+                  Achievements
+                </label>
                 <div class="space-y-2">
                   {#each work[index].achievements || [] as _, achievementIndex}
                     <div class="flex gap-2">
@@ -252,6 +243,14 @@
                     </div>
                   {/each}
                 </div>
+                <button
+                  type="button"
+                  onclick={() => addAchievement(index)}
+                  class="mt-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] flex items-center gap-1"
+                >
+                  <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                  Add
+                </button>
               </div>
             </div>
           {/if}

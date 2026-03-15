@@ -28,6 +28,7 @@
   }
 
   function removeItem(index: number) {
+    if (!confirm("Remove this project?")) return;
     projects = projects.filter((_, i) => i !== index);
   }
 </script>
@@ -151,7 +152,7 @@
                 </label>
                 <textarea
                   bind:value={projects[index].summary}
-                  rows="2"
+                  rows="3"
                   class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-none"
                 ></textarea>
               </div>

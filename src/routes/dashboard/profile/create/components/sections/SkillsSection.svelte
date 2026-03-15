@@ -4,10 +4,12 @@
     faChevronDown,
     faChevronUp,
     faCode,
-    faTrash,
+    faPlus,
+    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import type { SkillCategory } from "$lib/server/resume/types";
   import Card from "../../../../components/Card.svelte";
+  import SkillTagsEditor from "../../../../components/SkillTagsEditor.svelte";
 
   interface Props {
     skills: SkillCategory[];
@@ -18,16 +20,14 @@
   let isExpanded = $state(false);
 
   function removeCategory(index: number) {
+    if (!confirm("Remove this skill category?")) return;
     skills = skills.filter((_, i) => i !== index);
   }
 
-  function removeSkill(categoryIndex: number, skillIndex: number) {
-    skills[categoryIndex].skills = skills[categoryIndex].skills.filter(
-      (_, i) => i !== skillIndex,
-    );
+  function addCategory() {
+    skills = [...skills, { name: "", skills: [] }];
   }
 
-  // Count total skills
   let totalSkills = $derived(
     skills.reduce((sum, cat) => sum + cat.skills.length, 0),
   );
@@ -48,7 +48,8 @@
           class="w-5 h-5 text-[var(--dash-primary)]"
         />
       </div>
-      <span class="font-semibold text-base text-[var(--dash-text)]">Skills</span>
+      <span class="font-semibold text-base text-[var(--dash-text)]"
+      >Skills</span>
       <span class="text-sm text-[var(--dash-text-secondary)]">
         ({skills.length} categories, {totalSkills} skills)
       </span>
@@ -67,6 +68,7 @@
             <input
               type="text"
               bind:value={skills[categoryIndex].name}
+              placeholder="Category name"
               class="font-medium text-[var(--dash-text)] bg-transparent border-none focus:outline-none focus:ring-0 p-0"
             />
             <button
@@ -75,35 +77,23 @@
               class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5"
               aria-label="Remove category"
             >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
               <span class="hidden sm:inline">Remove</span>
             </button>
           </div>
 
-          <div class="flex flex-wrap gap-2">
-            {#each category.skills as skill, skillIndex}
-              <div
-                class="flex items-center gap-1 px-3 py-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-full text-sm"
-              >
-                <span class="text-[var(--dash-text)]">{skill.name}</span>
-                {#if skill.level}
-                  <span class="text-[var(--dash-text-secondary)]"
-                    >({skill.level})</span
-                  >
-                {/if}
-                <button
-                  type="button"
-                  onclick={() => removeSkill(categoryIndex, skillIndex)}
-                  class="ml-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-                  aria-label="Remove skill"
-                >
-                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                </button>
-              </div>
-            {/each}
-          </div>
+          <SkillTagsEditor bind:skills={skills[categoryIndex].skills} />
         </div>
       {/each}
+
+      <button
+        type="button"
+        onclick={() => addCategory()}
+        class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add category
+      </button>
     </div>
   {/if}
 </Card>

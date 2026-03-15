@@ -35,9 +35,7 @@ export async function createProfileFromResume(
       data: {
         name: data.basics.name,
         title: data.basics.title || null,
-        location_city: data.basics.locationCity || null,
-        location_region: data.basics.locationRegion || null,
-        location_country_code: data.basics.locationCountryCode || null,
+        location: data.basics.location || null,
         phone_number: data.basics.phone || null,
         email_address: data.basics.email || null,
         personal_website: data.basics.website || null,

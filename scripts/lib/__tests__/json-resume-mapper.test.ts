@@ -126,9 +126,7 @@ describe("mapJsonResumeToInternal", () => {
     expect(result.basics.summary).toBe(
       "Experienced software engineer with 10 years in web development",
     );
-    expect(result.basics.locationCity).toBe("San Francisco");
-    expect(result.basics.locationRegion).toBe("California");
-    expect(result.basics.locationCountryCode).toBe("US");
+    expect(result.basics.location).toBe("San Francisco, California, US");
     expect(result.basics.linkedin).toBe("https://linkedin.com/in/johndoe");
     expect(result.basics.github).toBe("https://github.com/johndoe");
     expect(result.basics.stackoverflow).toBe(
@@ -147,9 +145,7 @@ describe("mapJsonResumeToInternal", () => {
     };
 
     const result = await mapJsonResumeToInternal(jsonResume);
-    expect(result.basics.locationCity).toBe("Amsterdam");
-    expect(result.basics.locationRegion).toBeUndefined();
-    expect(result.basics.locationCountryCode).toBeUndefined();
+    expect(result.basics.location).toBe("Amsterdam");
   });
 
   it("should handle location with city and country", async () => {
@@ -164,9 +160,7 @@ describe("mapJsonResumeToInternal", () => {
     };
 
     const result = await mapJsonResumeToInternal(jsonResume);
-    expect(result.basics.locationCity).toBe("London");
-    expect(result.basics.locationRegion).toBeUndefined();
-    expect(result.basics.locationCountryCode).toBe("UK");
+    expect(result.basics.location).toBe("London, UK");
   });
 
   it("should map work experience correctly", async () => {

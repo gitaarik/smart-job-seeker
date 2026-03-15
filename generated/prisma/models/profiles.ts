@@ -70,9 +70,6 @@ export type ProfilesMinAggregateOutputType = {
   city: string | null
   region: string | null
   country_code: string | null
-  location_city: string | null
-  location_region: string | null
-  location_country_code: string | null
   is_default: boolean | null
   slug: string | null
   npm_profile: string | null
@@ -127,9 +124,6 @@ export type ProfilesMaxAggregateOutputType = {
   city: string | null
   region: string | null
   country_code: string | null
-  location_city: string | null
-  location_region: string | null
-  location_country_code: string | null
   is_default: boolean | null
   slug: string | null
   npm_profile: string | null
@@ -184,9 +178,6 @@ export type ProfilesCountAggregateOutputType = {
   city: number
   region: number
   country_code: number
-  location_city: number
-  location_region: number
-  location_country_code: number
   is_default: number
   slug: number
   npm_profile: number
@@ -264,9 +255,6 @@ export type ProfilesMinAggregateInputType = {
   city?: true
   region?: true
   country_code?: true
-  location_city?: true
-  location_region?: true
-  location_country_code?: true
   is_default?: true
   slug?: true
   npm_profile?: true
@@ -321,9 +309,6 @@ export type ProfilesMaxAggregateInputType = {
   city?: true
   region?: true
   country_code?: true
-  location_city?: true
-  location_region?: true
-  location_country_code?: true
   is_default?: true
   slug?: true
   npm_profile?: true
@@ -378,9 +363,6 @@ export type ProfilesCountAggregateInputType = {
   city?: true
   region?: true
   country_code?: true
-  location_city?: true
-  location_region?: true
-  location_country_code?: true
   is_default?: true
   slug?: true
   npm_profile?: true
@@ -523,9 +505,6 @@ export type ProfilesGroupByOutputType = {
   city: string | null
   region: string | null
   country_code: string | null
-  location_city: string | null
-  location_region: string | null
-  location_country_code: string | null
   is_default: boolean | null
   slug: string | null
   npm_profile: string | null
@@ -604,9 +583,6 @@ export type profilesWhereInput = {
   city?: Prisma.StringNullableFilter<"profiles"> | string | null
   region?: Prisma.StringNullableFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_city?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableFilter<"profiles"> | boolean | null
   slug?: Prisma.StringNullableFilter<"profiles"> | string | null
   npm_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -687,9 +663,6 @@ export type profilesOrderByWithRelationInput = {
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   region?: Prisma.SortOrderInput | Prisma.SortOrder
   country_code?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_city?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_region?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   is_default?: Prisma.SortOrderInput | Prisma.SortOrder
   slug?: Prisma.SortOrderInput | Prisma.SortOrder
   npm_profile?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -774,9 +747,6 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   city?: Prisma.StringNullableFilter<"profiles"> | string | null
   region?: Prisma.StringNullableFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_city?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableFilter<"profiles"> | boolean | null
   npm_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   pypi_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -856,9 +826,6 @@ export type profilesOrderByWithAggregationInput = {
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   region?: Prisma.SortOrderInput | Prisma.SortOrder
   country_code?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_city?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_region?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   is_default?: Prisma.SortOrderInput | Prisma.SortOrder
   slug?: Prisma.SortOrderInput | Prisma.SortOrder
   npm_profile?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -922,9 +889,6 @@ export type profilesScalarWhereWithAggregatesInput = {
   city?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   region?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
-  location_city?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
-  location_region?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
-  location_country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableWithAggregatesFilter<"profiles"> | boolean | null
   slug?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   npm_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
@@ -978,9 +942,6 @@ export type profilesCreateInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -1059,9 +1020,6 @@ export type profilesUncheckedCreateInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -1137,9 +1095,6 @@ export type profilesUpdateInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1218,9 +1173,6 @@ export type profilesUncheckedUpdateInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1298,9 +1250,6 @@ export type profilesCreateManyInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -1354,9 +1303,6 @@ export type profilesUpdateManyMutationInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1410,9 +1356,6 @@ export type profilesUncheckedUpdateManyInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1488,9 +1431,6 @@ export type profilesCountOrderByAggregateInput = {
   city?: Prisma.SortOrder
   region?: Prisma.SortOrder
   country_code?: Prisma.SortOrder
-  location_city?: Prisma.SortOrder
-  location_region?: Prisma.SortOrder
-  location_country_code?: Prisma.SortOrder
   is_default?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   npm_profile?: Prisma.SortOrder
@@ -1556,9 +1496,6 @@ export type profilesMaxOrderByAggregateInput = {
   city?: Prisma.SortOrder
   region?: Prisma.SortOrder
   country_code?: Prisma.SortOrder
-  location_city?: Prisma.SortOrder
-  location_region?: Prisma.SortOrder
-  location_country_code?: Prisma.SortOrder
   is_default?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   npm_profile?: Prisma.SortOrder
@@ -1613,9 +1550,6 @@ export type profilesMinOrderByAggregateInput = {
   city?: Prisma.SortOrder
   region?: Prisma.SortOrder
   country_code?: Prisma.SortOrder
-  location_city?: Prisma.SortOrder
-  location_region?: Prisma.SortOrder
-  location_country_code?: Prisma.SortOrder
   is_default?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   npm_profile?: Prisma.SortOrder
@@ -2118,9 +2052,6 @@ export type profilesCreateWithoutApplicationsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -2198,9 +2129,6 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -2291,9 +2219,6 @@ export type profilesUpdateWithoutApplicationsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2371,9 +2296,6 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2448,9 +2370,6 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -2528,9 +2447,6 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -2621,9 +2537,6 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2701,9 +2614,6 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2778,9 +2688,6 @@ export type profilesCreateWithoutCollected_dataInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -2858,9 +2765,6 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -2951,9 +2855,6 @@ export type profilesUpdateWithoutCollected_dataInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3031,9 +2932,6 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3108,9 +3006,6 @@ export type profilesCreateWithoutConfigInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -3188,9 +3083,6 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -3281,9 +3173,6 @@ export type profilesUpdateWithoutConfigInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3361,9 +3250,6 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3438,9 +3324,6 @@ export type profilesCreateWithoutDirectus_filesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -3517,9 +3400,6 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -3626,9 +3506,6 @@ export type profilesScalarWhereInput = {
   city?: Prisma.StringNullableFilter<"profiles"> | string | null
   region?: Prisma.StringNullableFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_city?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableFilter<"profiles"> | boolean | null
   slug?: Prisma.StringNullableFilter<"profiles"> | string | null
   npm_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -3682,9 +3559,6 @@ export type profilesCreateWithoutEducationInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -3762,9 +3636,6 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -3855,9 +3726,6 @@ export type profilesUpdateWithoutEducationInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3935,9 +3803,6 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4012,9 +3877,6 @@ export type profilesCreateWithoutHighlightsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -4092,9 +3954,6 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -4185,9 +4044,6 @@ export type profilesUpdateWithoutHighlightsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4265,9 +4121,6 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4342,9 +4195,6 @@ export type profilesCreateWithoutJob_matchesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -4422,9 +4272,6 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -4515,9 +4362,6 @@ export type profilesUpdateWithoutJob_matchesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4595,9 +4439,6 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4672,9 +4513,6 @@ export type profilesCreateWithoutJob_searchesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -4752,9 +4590,6 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -4845,9 +4680,6 @@ export type profilesUpdateWithoutJob_searchesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4925,9 +4757,6 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5002,9 +4831,6 @@ export type profilesCreateWithoutLanguagesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -5082,9 +4908,6 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -5175,9 +4998,6 @@ export type profilesUpdateWithoutLanguagesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5255,9 +5075,6 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5332,9 +5149,6 @@ export type profilesCreateWithoutOs_contributionsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -5412,9 +5226,6 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -5505,9 +5316,6 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5585,9 +5393,6 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5662,9 +5467,6 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -5742,9 +5544,6 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -5835,9 +5634,6 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5915,9 +5711,6 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5992,9 +5785,6 @@ export type profilesCreateWithoutProfile_exportsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6072,9 +5862,6 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6165,9 +5952,6 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6245,9 +6029,6 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6322,9 +6103,6 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6402,9 +6180,6 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6484,9 +6259,6 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6564,9 +6336,6 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6651,9 +6420,6 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6731,9 +6497,6 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -6829,9 +6592,6 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6909,9 +6669,6 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7018,9 +6775,6 @@ export type profilesCreateWithoutApi_keysInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -7098,9 +6852,6 @@ export type profilesUncheckedCreateWithoutApi_keysInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -7191,9 +6942,6 @@ export type profilesUpdateWithoutApi_keysInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7271,9 +7019,6 @@ export type profilesUncheckedUpdateWithoutApi_keysInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7348,9 +7093,6 @@ export type profilesCreateWithoutProject_storiesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -7428,9 +7170,6 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -7521,9 +7260,6 @@ export type profilesUpdateWithoutProject_storiesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7601,9 +7337,6 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7678,9 +7411,6 @@ export type profilesCreateWithoutReferencesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -7758,9 +7488,6 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -7851,9 +7578,6 @@ export type profilesUpdateWithoutReferencesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7931,9 +7655,6 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8008,9 +7729,6 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -8088,9 +7806,6 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -8181,9 +7896,6 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8261,9 +7973,6 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8338,9 +8047,6 @@ export type profilesCreateWithoutSide_projectsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -8418,9 +8124,6 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -8511,9 +8214,6 @@ export type profilesUpdateWithoutSide_projectsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8591,9 +8291,6 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8668,9 +8365,6 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -8748,9 +8442,6 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -8841,9 +8532,6 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8921,9 +8609,6 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8998,9 +8683,6 @@ export type profilesCreateWithoutWork_experiencesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -9078,9 +8760,6 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -9171,9 +8850,6 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9251,9 +8927,6 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9328,9 +9001,6 @@ export type profilesCreateWithoutAi_chatsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -9408,9 +9078,6 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -9501,9 +9168,6 @@ export type profilesUpdateWithoutAi_chatsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9581,9 +9245,6 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9658,9 +9319,6 @@ export type profilesCreateWithoutJob_match_configInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -9738,9 +9396,6 @@ export type profilesUncheckedCreateWithoutJob_match_configInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -9831,9 +9486,6 @@ export type profilesUpdateWithoutJob_match_configInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9911,9 +9563,6 @@ export type profilesUncheckedUpdateWithoutJob_match_configInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9989,9 +9638,6 @@ export type profilesCreateManyDirectus_filesInput = {
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -10045,9 +9691,6 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10124,9 +9767,6 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10203,9 +9843,6 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10261,9 +9898,6 @@ export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofi
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -10318,9 +9952,6 @@ export type profilesCreateManyProfile_versions_profiles_public_resume_versionTop
   city?: string | null
   region?: string | null
   country_code?: string | null
-  location_city?: string | null
-  location_region?: string | null
-  location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
   npm_profile?: string | null
@@ -10373,9 +10004,6 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10453,9 +10081,6 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10532,9 +10157,6 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_c
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10587,9 +10209,6 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10667,9 +10286,6 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10746,9 +10362,6 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_r
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11023,9 +10636,6 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   city?: boolean
   region?: boolean
   country_code?: boolean
-  location_city?: boolean
-  location_region?: boolean
-  location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
   npm_profile?: boolean
@@ -11107,9 +10717,6 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   city?: boolean
   region?: boolean
   country_code?: boolean
-  location_city?: boolean
-  location_region?: boolean
-  location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
   npm_profile?: boolean
@@ -11168,9 +10775,6 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   city?: boolean
   region?: boolean
   country_code?: boolean
-  location_city?: boolean
-  location_region?: boolean
-  location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
   npm_profile?: boolean
@@ -11229,9 +10833,6 @@ export type profilesSelectScalar = {
   city?: boolean
   region?: boolean
   country_code?: boolean
-  location_city?: boolean
-  location_region?: boolean
-  location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
   npm_profile?: boolean
@@ -11263,7 +10864,7 @@ export type profilesSelectScalar = {
   ui_preferences?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path" | "browser_user_agent" | "browser_language" | "browser_timezone" | "browser_profile_id" | "browser_country_code" | "ui_preferences", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path" | "browser_user_agent" | "browser_language" | "browser_timezone" | "browser_profile_id" | "browser_country_code" | "ui_preferences", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   api_keys?: boolean | Prisma.profiles$api_keysArgs<ExtArgs>
@@ -11356,9 +10957,6 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     city: string | null
     region: string | null
     country_code: string | null
-    location_city: string | null
-    location_region: string | null
-    location_country_code: string | null
     is_default: boolean | null
     slug: string | null
     npm_profile: string | null
@@ -11859,9 +11457,6 @@ export interface profilesFieldRefs {
   readonly city: Prisma.FieldRef<"profiles", 'String'>
   readonly region: Prisma.FieldRef<"profiles", 'String'>
   readonly country_code: Prisma.FieldRef<"profiles", 'String'>
-  readonly location_city: Prisma.FieldRef<"profiles", 'String'>
-  readonly location_region: Prisma.FieldRef<"profiles", 'String'>
-  readonly location_country_code: Prisma.FieldRef<"profiles", 'String'>
   readonly is_default: Prisma.FieldRef<"profiles", 'Boolean'>
   readonly slug: Prisma.FieldRef<"profiles", 'String'>
   readonly npm_profile: Prisma.FieldRef<"profiles", 'String'>

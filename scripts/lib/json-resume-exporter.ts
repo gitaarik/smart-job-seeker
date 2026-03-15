@@ -17,9 +17,7 @@ type ProfileWithRelations = Prisma.profilesGetPayload<{
     phone_number: true;
     personal_website: true;
     summary: true;
-    location_city: true;
-    location_region: true;
-    location_country_code: true;
+    location: true;
     linkedin_profile: true;
     github_profile: true;
     stackoverflow_profile: true;
@@ -119,13 +117,9 @@ export function exportProfileToJsonResume(
     });
   }
 
-  // Build location object from separate fields with location_ prefix
+  // Build location object from unified location string
   const location: JsonResumeSchema["basics"]["location"] = {};
-  if (profile.location_city) location.city = profile.location_city;
-  if (profile.location_region) location.region = profile.location_region;
-  if (profile.location_country_code) {
-    location.countryCode = profile.location_country_code;
-  }
+  if (profile.location) location.address = profile.location;
 
   // Build JSON Resume object
   const jsonResume: JsonResumeSchema = {

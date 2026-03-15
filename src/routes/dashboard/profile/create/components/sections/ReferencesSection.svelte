@@ -18,6 +18,7 @@
   let isExpanded = $state(false);
 
   function removeItem(index: number) {
+    if (!confirm("Remove this reference?")) return;
     references = references.filter((_, i) => i !== index);
   }
 </script>

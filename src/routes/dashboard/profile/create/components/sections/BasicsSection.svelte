@@ -32,8 +32,8 @@
           class="w-5 h-5 text-[var(--dash-primary)]"
         />
       </div>
-      <span class="font-semibold text-base text-[var(--dash-text)]">Basic Information</span
-      >
+      <span class="font-semibold text-base text-[var(--dash-text)]"
+      >Basic Information</span>
     </div>
     <FontAwesomeIcon
       icon={isExpanded ? faChevronUp : faChevronDown}
@@ -71,12 +71,11 @@
         </div>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
+      <div class="grid gap-4 md:grid-cols-3">
         <div>
           <label
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >Email</label
-          >
+          >Email</label>
           <input
             type="email"
             bind:value={basics.email}
@@ -87,11 +86,22 @@
         <div>
           <label
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >Phone</label
-          >
+          >Phone</label>
           <input
             type="tel"
             bind:value={basics.phone}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >Location</label>
+          <input
+            type="text"
+            bind:value={basics.location}
+            placeholder="City, Country"
             class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
@@ -99,8 +109,7 @@
 
       <div>
         <label class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >Summary</label
-        >
+        >Summary</label>
         <textarea
           bind:value={basics.summary}
           rows="3"
@@ -112,8 +121,7 @@
         <div>
           <label
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >Website</label
-          >
+          >Website</label>
           <input
             type="url"
             bind:value={basics.website}
@@ -124,8 +132,7 @@
         <div>
           <label
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >LinkedIn</label
-          >
+          >LinkedIn</label>
           <input
             type="text"
             bind:value={basics.linkedin}
@@ -136,8 +143,7 @@
         <div>
           <label
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >GitHub</label
-          >
+          >GitHub</label>
           <input
             type="text"
             bind:value={basics.github}

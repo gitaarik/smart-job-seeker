@@ -11,13 +11,6 @@ interface ImportedProfile {
     name?: string;
     title?: string;
     slug?: string;
-    // Location fields
-    location_city?: string;
-    location_region?: string;
-    location_country_code?: string;
-    city?: string;
-    region?: string;
-    country_code?: string;
     // Contact fields
     phone_number?: string;
     email_address?: string;
@@ -311,13 +304,6 @@ async function importProfile(
           name: data.name,
           title: data.title,
           slug: data.slug,
-          // Location fields
-          location_city: data.location_city,
-          location_region: data.location_region,
-          location_country_code: data.location_country_code,
-          city: data.city,
-          region: data.region,
-          country_code: data.country_code,
           // Contact fields
           phone_number: data.phone_number,
           email_address: data.email_address,
@@ -362,13 +348,6 @@ async function importProfile(
           name: data.name,
           title: data.title,
           slug: data.slug,
-          // Location fields
-          location_city: data.location_city,
-          location_region: data.location_region,
-          location_country_code: data.location_country_code,
-          city: data.city,
-          region: data.region,
-          country_code: data.country_code,
           // Contact fields
           phone_number: data.phone_number,
           email_address: data.email_address,

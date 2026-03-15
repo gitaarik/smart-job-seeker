@@ -25,12 +25,7 @@
 
   const linkedInProfile = profile.linkedin_profile;
 
-  // Use single location field, fall back to legacy fields
-  const locationText = profile.location || [
-    profile.location_city,
-    profile.location_region,
-    profile.location_country_code,
-  ].filter(Boolean).join(", ");
+  const locationText = profile.location;
 
   const profileData = [
     {

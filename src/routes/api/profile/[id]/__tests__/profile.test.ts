@@ -13,7 +13,10 @@ const mockUpdate = vi.fn();
 
 vi.mock("$lib/server/db", () => ({
   db: {
-    profiles: { findFirst: (...a: any[]) => mockFindFirst(...a), update: (...a: any[]) => mockUpdate(...a) },
+    profiles: {
+      findFirst: (...a: any[]) => mockFindFirst(...a),
+      update: (...a: any[]) => mockUpdate(...a),
+    },
   },
   dbDirect: {
     profiles: {
@@ -57,7 +60,9 @@ describe("PATCH /api/profile/[id]", () => {
   });
 
   it("rejects unauthenticated", async () => {
-    await expect(PATCH(createEvent({ user: null }))).rejects.toMatchObject({ status: 401 });
+    await expect(PATCH(createEvent({ user: null }))).rejects.toMatchObject({
+      status: 401,
+    });
   });
 
   it("rejects invalid profile ID", async () => {
@@ -104,7 +109,11 @@ describe("PATCH /api/profile/[id]", () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 1 },
-        data: expect.objectContaining({ name: "New Name", slug: "new-slug", title: "Dev" }),
+        data: expect.objectContaining({
+          name: "New Name",
+          slug: "new-slug",
+          title: "Dev",
+        }),
       }),
     );
   });
@@ -127,7 +136,9 @@ describe("GET /api/profile/[id]/export.json", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("rejects unauthenticated", async () => {
-    await expect(GET(createEvent({ user: null }))).rejects.toMatchObject({ status: 401 });
+    await expect(GET(createEvent({ user: null }))).rejects.toMatchObject({
+      status: 401,
+    });
   });
 
   it("rejects when user doesn't own profile", async () => {
@@ -148,9 +159,7 @@ describe("GET /api/profile/[id]/export.json", () => {
     mockFindUnique.mockResolvedValueOnce({
       name: "Alice",
       title: "Developer",
-      location_city: null,
-      location_region: null,
-      location_country_code: null,
+      location: null,
       phone_number: null,
       email_address: "alice@example.com",
       personal_website: null,

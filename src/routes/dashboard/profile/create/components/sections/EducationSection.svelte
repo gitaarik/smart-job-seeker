@@ -28,6 +28,7 @@
   }
 
   function removeItem(index: number) {
+    if (!confirm("Remove this education entry?")) return;
     education = education.filter((_, i) => i !== index);
   }
 </script>
