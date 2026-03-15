@@ -54,7 +54,7 @@
       </h2>
     </div>
 
-    <form class="mt-8 space-y-6" onsubmit={handleSubmit}>
+    <form method="POST" class="mt-8 space-y-6" onsubmit={handleSubmit}>
       {#if error}
         <div class="rounded-md bg-red-50 p-4">
           <p class="text-sm text-red-700">{error}</p>
@@ -66,7 +66,6 @@
           <label for="email" class="sr-only">Email address</label>
           <input
             id="email"
-            name="email"
             type="email"
             autocomplete="email"
             bind:value={email}
@@ -79,7 +78,6 @@
           <label for="password" class="sr-only">Password</label>
           <input
             id="password"
-            name="password"
             type="password"
             autocomplete="current-password"
             bind:value={password}
