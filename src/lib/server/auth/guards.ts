@@ -25,6 +25,17 @@ export function requireAuth(event: RequestEvent) {
 }
 
 /**
+ * Require admin access. Redirects to /dashboard if user is not an admin.
+ */
+export function requireAdmin(event: RequestEvent) {
+  const user = requireAuth(event);
+  if (!(user as { is_admin?: boolean }).is_admin) {
+    redirect(302, "/dashboard");
+  }
+  return user;
+}
+
+/**
  * Redirect if already authenticated. Use in login/signup pages.
  */
 export function redirectIfAuthenticated(event: RequestEvent, to = "/") {

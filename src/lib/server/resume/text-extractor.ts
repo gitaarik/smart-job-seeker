@@ -39,7 +39,8 @@ export function getFormatName(mimeType: string): string {
  * Uses dynamic import to avoid pdf-parse loading test files at import time
  */
 async function extractFromPdf(buffer: Buffer): Promise<string> {
-  const pdf = (await import("pdf-parse")).default;
+  // Import from lib/ directly to avoid pdf-parse/index.js loading a test PDF file
+  const pdf = (await import("pdf-parse/lib/pdf-parse.js")).default;
   const pdfData = await pdf(buffer);
   return pdfData.text;
 }

@@ -18,11 +18,15 @@
   let phone = $state("");
 </script>
 
-<div class="space-y-4 sm:space-y-6">
-  <div class="text-center">
-    <h2 class="text-lg sm:text-xl font-semibold text-slate mb-1 sm:mb-2">Create Your Profile</h2>
-    <p class="text-sm sm:text-base text-pearl">Enter your basic information to get started</p>
-  </div>
+<div
+  class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
+>
+  <h3 class="font-medium text-[var(--dash-text)] mb-1">
+    Create Your Profile
+  </h3>
+  <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+    Enter your basic information to get started
+  </p>
 
   <form
     method="POST"
@@ -37,14 +41,19 @@
     class="space-y-4"
   >
     {#if error}
-      <div class="rounded-md bg-[var(--dash-error-light)] p-4">
+      <div
+        class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
+      >
         <p class="text-sm text-[var(--dash-error)]">{error}</p>
       </div>
     {/if}
 
     <div>
-      <label for="name" class="block text-sm font-medium text-slate mb-1">
-        Full Name <span class="text-crimson">*</span>
+      <label
+        for="name"
+        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+      >
+        Full Name <span class="text-[var(--dash-error)]">*</span>
       </label>
       <input
         id="name"
@@ -52,13 +61,16 @@
         type="text"
         bind:value={name}
         required
-        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-ocean bg-snow text-slate"
+        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
         placeholder="John Doe"
       />
     </div>
 
     <div>
-      <label for="title" class="block text-sm font-medium text-slate mb-1">
+      <label
+        for="title"
+        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+      >
         Professional Title
       </label>
       <input
@@ -66,17 +78,20 @@
         name="title"
         type="text"
         bind:value={title}
-        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-ocean bg-snow text-slate"
+        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
         placeholder="Software Engineer"
       />
-      <p class="text-xs text-pearl mt-1">
+      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
         This will appear below your name on your profile.
       </p>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
       <div>
-        <label for="email" class="block text-sm font-medium text-slate mb-1">
+        <label
+          for="email"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Email
         </label>
         <input
@@ -84,13 +99,16 @@
           name="email"
           type="email"
           bind:value={email}
-          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-ocean bg-snow text-slate"
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           placeholder="john@example.com"
         />
       </div>
 
       <div>
-        <label for="phone" class="block text-sm font-medium text-slate mb-1">
+        <label
+          for="phone"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Phone
         </label>
         <input
@@ -98,17 +116,17 @@
           name="phone"
           type="tel"
           bind:value={phone}
-          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-ocean bg-snow text-slate"
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           placeholder="+1 (555) 123-4567"
         />
       </div>
     </div>
 
-    <div class="flex gap-3 pt-2 sm:pt-4">
+    <div class="flex justify-end gap-2 pt-2">
       <button
         type="button"
         onclick={onBack}
-        class="flex-1 py-2 px-4 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
       >
         Back
       </button>
@@ -116,7 +134,7 @@
       <button
         type="submit"
         disabled={!name.trim() || isLoading}
-        class="flex-1 py-2 px-4 bg-ocean text-pearl font-medium rounded-lg hover:bg-aqua transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         {#if isLoading}
           <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />

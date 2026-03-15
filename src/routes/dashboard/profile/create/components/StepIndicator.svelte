@@ -22,8 +22,8 @@
           <div
             class="
               h-0.5 w-4 sm:w-8 mx-1 sm:mx-2 {isCompleted || isCurrent
-              ? 'bg-ocean'
-              : 'bg-light'}
+              ? 'bg-[var(--dash-primary)]'
+              : 'bg-[var(--dash-border)]'}
             "
           >
           </div>
@@ -34,14 +34,17 @@
             class="
               flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium transition-colors
               {isCompleted
-              ? 'bg-ocean text-pearl'
+              ? 'bg-[var(--dash-primary)] text-white'
               : isCurrent
-              ? 'bg-ocean text-pearl'
-              : 'bg-light text-pearl'}
+              ? 'bg-[var(--dash-primary)] text-white'
+              : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
             "
           >
             {#if isCompleted}
-              <FontAwesomeIcon icon={faCheck} class="w-3 h-3 sm:w-4 sm:h-4" />
+              <FontAwesomeIcon
+                icon={faCheck}
+                class="w-3 h-3 sm:w-4 sm:h-4"
+              />
             {:else}
               {stepNum}
             {/if}
@@ -49,8 +52,8 @@
           <span
             class="
               text-[10px] sm:text-xs whitespace-nowrap {isCurrent
-              ? 'text-slate font-medium'
-              : 'text-pearl'}
+              ? 'text-[var(--dash-text)] font-medium'
+              : 'text-[var(--dash-text-muted)]'}
             "
           >
             {step}

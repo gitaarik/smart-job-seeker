@@ -1,6 +1,4 @@
 <script lang="ts">
-  import "../dashboard/dashboard.css";
-  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
   import { authClient } from "$lib/auth-client";
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
@@ -44,10 +42,6 @@
   <title>Sign In - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="fixed top-0 right-0 z-50 p-4">
-  <ThemeSwitcher />
-</div>
-
 <div
   class="min-h-screen flex items-center justify-center bg-[var(--dash-bg)] py-12 px-4 sm:px-6 lg:px-8 transition-colors"
 >
@@ -58,18 +52,9 @@
       >
         Sign in to your account
       </h2>
-      <p class="mt-2 text-center text-sm text-[var(--dash-text-secondary)]">
-        Or
-        <a
-          href="/signup"
-          class="font-medium text-[var(--dash-primary)] hover:opacity-80"
-        >
-          create a new account
-        </a>
-      </p>
     </div>
 
-    <form method="POST" class="mt-8 space-y-6" onsubmit={handleSubmit}>
+    <form class="mt-8 space-y-6" onsubmit={handleSubmit}>
       {#if error}
         <div class="rounded-md bg-red-50 p-4">
           <p class="text-sm text-red-700">{error}</p>

@@ -9,22 +9,77 @@ import type { ChatMessage } from "$lib/server/llm";
 import type { ResumeData } from "./types";
 
 const SYSTEM_PROMPT =
-  `You are a resume parser that extracts structured information from resume text. Extract all available information and return it in the specified JSON format.
+  `You are a resume parser that extracts structured information from resume text.
+
+Return a JSON object with this exact structure:
+{
+  "basics": {
+    "name": "Full Name",
+    "email": "email@example.com",
+    "phone": "+1234567890",
+    "title": "Job Title",
+    "summary": "Professional summary",
+    "location": "City, Country",
+    "website": "https://...",
+    "linkedin": "https://linkedin.com/in/...",
+    "github": "https://github.com/..."
+  },
+  "work": [
+    {
+      "name": "Company Name",
+      "position": "Job Title",
+      "location": "City, Country",
+      "startDate": "YYYY-MM-DD",
+      "endDate": "YYYY-MM-DD",
+      "summary": "Role description",
+      "achievements": ["Achievement 1", "Achievement 2"],
+      "technologies": ["Tech1", "Tech2"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University Name",
+      "area": "Field of Study",
+      "studyType": "Bachelor's/Master's/etc.",
+      "location": "City, Country",
+      "startDate": "YYYY-MM-DD",
+      "endDate": "YYYY-MM-DD"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Category Name",
+      "skills": [
+        { "name": "Skill Name", "level": "expert|proficient|intermediate|beginner" }
+      ]
+    }
+  ],
+  "languages": [
+    { "name": "Language", "proficiency": "native|fluent|proficient|conversational|basic" }
+  ],
+  "projects": [
+    {
+      "name": "Project Name",
+      "url": "https://...",
+      "summary": "Description",
+      "technologies": ["Tech1"]
+    }
+  ],
+  "references": [
+    { "author": "Name", "authorPosition": "Their Title", "text": "Reference text" }
+  ]
+}
 
 Guidelines:
-- Extract all work experience, including company name, position, dates, and accomplishments
-- Identify education history with institution names, degrees, and dates
-- Categorize technical skills into logical groups (e.g., "Frontend", "Backend", "Databases")
-- Extract language proficiencies if mentioned
-- Find personal projects or side projects
-- Include contact information (email, phone, location, social profiles)
-- For dates, use ISO 8601 format (YYYY-MM-DD) when possible
-- If information is not available, omit those fields rather than guessing
-- Be thorough - extract all relevant details from the resume text`;
+- The "basics" object is REQUIRED and must contain at least "name"
+- Omit optional fields/sections if not found in the resume
+- Use ISO 8601 dates (YYYY-MM-DD) when possible
+- Categorize skills into logical groups (e.g., "Frontend", "Backend", "Databases")
+- Be thorough - extract all relevant details`;
 
 // Zod schema for resume data
 const ResumeBasicsSchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   email: z.string().optional(),
   phone: z.string().optional(),
   title: z.string().optional(),
@@ -122,7 +177,7 @@ export async function parseResumeWithLLM(
 
   const resumeData = await generateChatCompletion<ResumeData>(messages, {
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
-    maxTokens: 4096,
+    maxTokens: 8192,
     temperature: 0.1,
     structuredOutput: {
       name: "resume_data",
@@ -131,6 +186,12 @@ export async function parseResumeWithLLM(
   });
 
   if (!resumeData.basics || !resumeData.basics.name) {
+    console.error(
+      "[Resume Parser] Missing basics.name. Response keys:",
+      Object.keys(resumeData),
+      "basics:",
+      JSON.stringify(resumeData.basics)?.substring(0, 200),
+    );
     throw new Error("Failed to extract profile name from resume");
   }
 

@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { ActionData } from "./$types";
   import type { ResumeData } from "$lib/server/resume/types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faArrowLeft, faUser } from "@fortawesome/free-solid-svg-icons";
+  import { faUser } from "@fortawesome/free-solid-svg-icons";
+  import SectionHeader from "../components/SectionHeader.svelte";
 
   import StepUpload from "./components/StepUpload.svelte";
   import StepManual from "./components/StepManual.svelte";
@@ -60,64 +60,47 @@
   <title>Create Profile - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="max-w-2xl mx-auto">
-  <a
-    href="/dashboard"
-    class="inline-flex items-center gap-2 text-pearl hover:text-slate transition-colors mb-6"
-  >
-    <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-    <span>Back to Dashboard</span>
-  </a>
+<div class="space-y-6">
+  <SectionHeader
+    title="Create Your Profile"
+    icon={faUser}
+    backHref="/dashboard"
+    backLabel="Dashboard"
+  />
 
-  <div class="bg-snow rounded-lg border border-light p-4 sm:p-6 md:p-8">
-    <div class="flex items-center gap-3 mb-4 sm:mb-6">
-      <div
-        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-ocean flex items-center justify-center flex-shrink-0"
-      >
-        <FontAwesomeIcon icon={faUser} class="w-5 h-5 sm:w-6 sm:h-6 text-pearl" />
-      </div>
-      <div>
-        <h1 class="text-xl sm:text-2xl font-semibold text-slate">Create Your Profile</h1>
-        <p class="text-sm sm:text-base text-pearl">
-          Set up your professional profile to get started.
-        </p>
-      </div>
-    </div>
-
-    {#if showReview && parsedData}
-      <StepReview
-        {parsedData}
-        fileId={uploadedFileId}
-        fileName={uploadedFileName}
-        {isLoading}
-        {error}
-        onBack={handleBackFromReview}
-        onLoadingChange={handleLoadingChange}
-      />
-    {:else if importMethod === "upload"}
-      <StepUpload
-        {isLoading}
-        {error}
-        onSkipToManual={() => handleSwitchMethod("manual")}
-        onImportExport={() => handleSwitchMethod("import")}
-        onUploadComplete={handleUploadComplete}
-        onError={handleError}
-        onLoadingChange={handleLoadingChange}
-      />
-    {:else if importMethod === "import"}
-      <StepImport
-        {isLoading}
-        {error}
-        onBack={() => handleSwitchMethod("upload")}
-        onLoadingChange={handleLoadingChange}
-      />
-    {:else}
-      <StepManual
-        {isLoading}
-        {error}
-        onBack={() => handleSwitchMethod("upload")}
-        onLoadingChange={handleLoadingChange}
-      />
-    {/if}
-  </div>
+  {#if showReview && parsedData}
+    <StepReview
+      {parsedData}
+      fileId={uploadedFileId}
+      fileName={uploadedFileName}
+      {isLoading}
+      {error}
+      onBack={handleBackFromReview}
+      onLoadingChange={handleLoadingChange}
+    />
+  {:else if importMethod === "upload"}
+    <StepUpload
+      {isLoading}
+      {error}
+      onSkipToManual={() => handleSwitchMethod("manual")}
+      onImportExport={() => handleSwitchMethod("import")}
+      onUploadComplete={handleUploadComplete}
+      onError={handleError}
+      onLoadingChange={handleLoadingChange}
+    />
+  {:else if importMethod === "import"}
+    <StepImport
+      {isLoading}
+      {error}
+      onBack={() => handleSwitchMethod("upload")}
+      onLoadingChange={handleLoadingChange}
+    />
+  {:else}
+    <StepManual
+      {isLoading}
+      {error}
+      onBack={() => handleSwitchMethod("upload")}
+      onLoadingChange={handleLoadingChange}
+    />
+  {/if}
 </div>

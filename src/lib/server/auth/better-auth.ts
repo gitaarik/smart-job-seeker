@@ -63,6 +63,12 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
+          // Skip welcome/admin emails for invited users (they already got an invite email)
+          const invite = await db.verifications.findFirst({
+            where: { identifier: `invite:${user.email}` },
+          });
+          if (invite) return;
+
           const adminEmail = getEnv("SJS_ADMIN_EMAIL", "");
           const appName = "Smart Job Seeker";
 

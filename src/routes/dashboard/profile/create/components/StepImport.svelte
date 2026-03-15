@@ -108,13 +108,13 @@
   const displayError = $derived(error || parseError);
 </script>
 
-<div class="space-y-4 sm:space-y-6">
-  <div class="text-center">
-    <h2 class="text-lg sm:text-xl font-semibold text-[var(--dash-text)] mb-1 sm:mb-2">Import from Export</h2>
-    <p class="text-sm sm:text-base text-[var(--dash-text-secondary)]">
-      Upload a previously exported profile JSON file
-    </p>
-  </div>
+<div
+  class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
+>
+  <h3 class="font-medium text-[var(--dash-text)] mb-1">Import from Export</h3>
+  <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+    Upload a previously exported profile JSON file
+  </p>
 
   <form
     method="POST"
@@ -134,7 +134,9 @@
     class="space-y-4"
   >
     {#if displayError}
-      <div class="rounded-md bg-[var(--dash-error-light)] p-3 sm:p-4">
+      <div
+        class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
+      >
         <p class="text-sm text-[var(--dash-error)]">{displayError}</p>
       </div>
     {/if}
@@ -159,9 +161,14 @@
     >
       {#if selectedFile}
         <div class="flex items-center justify-center gap-2 sm:gap-3">
-          <FontAwesomeIcon icon={faFile} class="w-6 h-6 sm:w-8 sm:h-8 text-[var(--dash-primary)]" />
+          <FontAwesomeIcon
+            icon={faFile}
+            class="w-6 h-6 sm:w-8 sm:h-8 text-[var(--dash-primary)]"
+          />
           <div class="text-left">
-            <p class="font-medium text-[var(--dash-text)] text-sm sm:text-base">{selectedFile.name}</p>
+            <p class="font-medium text-[var(--dash-text)] text-sm sm:text-base">
+              {selectedFile.name}
+            </p>
             <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">
               {(selectedFile.size / 1024).toFixed(1)} KB
             </p>
@@ -172,7 +179,10 @@
             class="p-1 rounded hover:bg-[var(--dash-bg)] transition-colors"
             aria-label="Remove file"
           >
-            <FontAwesomeIcon icon={faTimes} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
+            <FontAwesomeIcon
+              icon={faTimes}
+              class="w-4 h-4 text-[var(--dash-text-secondary)]"
+            />
           </button>
         </div>
       {:else}
@@ -180,10 +190,14 @@
           icon={faCloudUploadAlt}
           class="w-10 h-10 sm:w-12 sm:h-12 text-[var(--dash-text-muted)] mx-auto mb-3 sm:mb-4"
         />
-        <p class="text-[var(--dash-text)] font-medium mb-1 text-sm sm:text-base">
+        <p
+          class="text-[var(--dash-text)] font-medium mb-1 text-sm sm:text-base"
+        >
           Drag and drop your JSON file here, or click to browse
         </p>
-        <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">JSON export file (max 10MB)</p>
+        <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">
+          JSON export file (max 10MB)
+        </p>
       {/if}
 
       <input
@@ -197,11 +211,19 @@
     </div>
 
     {#if preview}
-      <div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg-secondary)] p-3 sm:p-4 space-y-2 sm:space-y-3">
+      <div
+        class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3 sm:p-4 space-y-2 sm:space-y-3"
+      >
         <div>
-          <h3 class="font-semibold text-[var(--dash-text)] text-sm sm:text-base">{preview.name}</h3>
+          <h3
+            class="font-semibold text-[var(--dash-text)] text-sm sm:text-base"
+          >
+            {preview.name}
+          </h3>
           {#if preview.title}
-            <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">{preview.title}</p>
+            <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">
+              {preview.title}
+            </p>
           {/if}
         </div>
 
@@ -209,26 +231,29 @@
           <div class="flex flex-wrap gap-1.5 sm:gap-2">
             {#each preview.counts as { label, count }}
               <span
-                class="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium bg-[var(--dash-bg)] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
+                class="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
               >
                 {label}
-                <span class="bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] px-1 sm:px-1.5 rounded-full font-semibold"
+                <span
+                  class="bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] px-1 sm:px-1.5 rounded-full font-semibold"
                   >{count}</span
                 >
               </span>
             {/each}
           </div>
         {:else}
-          <p class="text-xs sm:text-sm text-[var(--dash-text-muted)]">No data found in export</p>
+          <p class="text-xs sm:text-sm text-[var(--dash-text-muted)]">
+            No data found in export
+          </p>
         {/if}
       </div>
     {/if}
 
-    <div class="flex gap-3 pt-2 sm:pt-4">
+    <div class="flex justify-end gap-2 pt-2">
       <button
         type="button"
         onclick={onBack}
-        class="flex-1 py-2 px-4 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
       >
         Back
       </button>
@@ -236,7 +261,7 @@
       <button
         type="submit"
         disabled={!selectedFile || !preview || isLoading}
-        class="flex-1 py-2 px-4 bg-[var(--dash-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         {#if isLoading}
           <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />

@@ -1,7 +1,3 @@
-<script lang="ts">
-  import "../../dashboard/dashboard.css";
-</script>
-
 <svelte:head>
   <title>Pending Approval - Smart Job Seeker</title>
 </svelte:head>

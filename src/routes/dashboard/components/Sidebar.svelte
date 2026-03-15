@@ -12,10 +12,10 @@
     faCode,
     faCog,
     faComments,
-    faEnvelope,
     faDatabase,
     faDesktop,
     faDownload,
+    faEnvelope,
     faFileAlt,
     faFileImport,
     faGlobe,
@@ -27,17 +27,18 @@
     faPaperPlane,
     faRobot,
     faSearch,
+    faShieldAlt,
     faSliders,
     faStickyNote,
     faTimes,
     faTrash,
     faUser,
     faUserFriends,
+    faUsers,
     faUserTie,
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-
 
   interface MenuItem {
     label: string;
@@ -46,7 +47,7 @@
     children?: MenuItem[];
   }
 
-  const menuItems: MenuItem[] = [
+  const baseMenuItems: MenuItem[] = [
     {
       label: "Overview",
       href: "/dashboard",
@@ -214,12 +215,36 @@
     },
   ];
 
+  const adminMenuItems: MenuItem[] = [
+    {
+      label: "Admin",
+      href: "/dashboard/admin",
+      icon: faShieldAlt,
+      children: [
+        {
+          label: "Users",
+          href: "/dashboard/admin/users",
+          icon: faUsers,
+        },
+      ],
+    },
+  ];
+
+  let menuItems = $derived(
+    ($page.data.user as { is_admin?: boolean })?.is_admin
+      ? [...baseMenuItems, ...adminMenuItems]
+      : baseMenuItems,
+  );
 
   let mobileMenuOpen = $derived(sidebarState.mobileOpen);
   let expandedSections = $state<Set<string>>(new Set());
 
   // Check if a child menu item should be considered active
-  function isChildHrefActive(href: string, currentPath: string, currentSearch: string): boolean {
+  function isChildHrefActive(
+    href: string,
+    currentPath: string,
+    currentSearch: string,
+  ): boolean {
     // Handle hrefs with query params (e.g., /dashboard/jobs?filter=matches)
     const [hrefPath, hrefSearch] = href.split("?");
 
@@ -228,13 +253,21 @@
     if (jobDetailMatch) {
       const jobCategory = $page.data?.jobCategory;
       // Match the appropriate sidebar item based on job category
-      if (href === "/dashboard/jobs?filter=saved" && jobCategory === "saved") {
+      if (
+        href === "/dashboard/jobs?filter=saved" && jobCategory === "saved"
+      ) {
         return true;
       }
-      if (href === "/dashboard/jobs?filter=matches" && jobCategory === "matches") {
+      if (
+        href === "/dashboard/jobs?filter=matches" &&
+        jobCategory === "matches"
+      ) {
         return true;
       }
-      if (href === "/dashboard/jobs" && (jobCategory === "all" || !jobCategory)) {
+      if (
+        href === "/dashboard/jobs" &&
+        (jobCategory === "all" || !jobCategory)
+      ) {
         return true;
       }
       return false;
@@ -280,7 +313,7 @@
     for (const item of menuItems) {
       if (item.children) {
         const hasActiveChild = item.children.some((child) =>
-          isChildHrefActive(child.href, currentPath, currentSearch),
+          isChildHrefActive(child.href, currentPath, currentSearch)
         );
         if (hasActiveChild) {
           sectionsToExpand.add(item.label);
@@ -291,7 +324,10 @@
     // Only update if there are sections to expand that aren't already expanded
     for (const section of sectionsToExpand) {
       if (!expandedSections.has(section)) {
-        expandedSections = new Set([...expandedSections, ...sectionsToExpand]);
+        expandedSections = new Set([
+          ...expandedSections,
+          ...sectionsToExpand,
+        ]);
         break;
       }
     }
@@ -432,6 +468,5 @@
         {/if}
       {/each}
     </ul>
-
   </nav>
 </aside>

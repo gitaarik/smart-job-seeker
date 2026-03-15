@@ -3,8 +3,6 @@
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-  import "../dashboard/dashboard.css";
-
   let name = $state("");
   let email = $state("");
   let password = $state("");

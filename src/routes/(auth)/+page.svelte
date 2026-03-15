@@ -1,8 +1,3 @@
-<script lang="ts">
-  import "./dashboard/dashboard.css";
-  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
-</script>
-
 <svelte:head>
   <title>Smart Job Seeker</title>
   <meta
@@ -10,10 +5,6 @@
     content="What if you didn't have to hunt for a job, but the jobs were hunting you?"
   />
 </svelte:head>
-
-<div class="fixed top-0 right-0 z-50 p-4">
-  <ThemeSwitcher />
-</div>
 
 <main
   class="min-h-screen flex flex-col items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text)] transition-colors px-6 text-center"

@@ -629,6 +629,9 @@ export async function generateChatCompletion(
   const cachedResponse = llmCache.get(cacheKey, model);
 
   if (cachedResponse) {
+    if (structuredOutput) {
+      return JSON.parse(cachedResponse);
+    }
     return cachedResponse;
   }
 
