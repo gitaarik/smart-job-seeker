@@ -10,8 +10,10 @@ import {
   extractTextFromFile,
   getFormatName,
   isSupportedMimeType,
+  mapJsonResumeToInternal,
   parseResumeWithLLM,
   type ResumeData,
+  validateJsonResume,
 } from "$lib/server/resume";
 import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
@@ -42,6 +44,37 @@ export const actions: Actions = {
     const MAX_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return fail(400, { error: "File is too large. Maximum size is 10MB." });
+    }
+
+    // Handle JSON Resume files
+    if (file.type === "application/json" || file.name.endsWith(".json")) {
+      try {
+        const text = await file.text();
+        const jsonData = JSON.parse(text);
+
+        // Check if this is an SJS export (has .profile) — let the import action handle those
+        if (jsonData.profile) {
+          return fail(400, {
+            error:
+              "This looks like an SJS export file. Please use the 'Import from a previous export' option instead.",
+          });
+        }
+
+        validateJsonResume(jsonData);
+        const parsedData = mapJsonResumeToInternal(jsonData);
+
+        return {
+          success: true,
+          parsedData,
+          fileName: file.name,
+          fileFormat: "JSON Resume",
+        };
+      } catch (error) {
+        const message = error instanceof Error
+          ? error.message
+          : "Failed to parse JSON Resume file";
+        return fail(400, { error: message });
+      }
     }
 
     // Validate file type

@@ -10,3 +10,8 @@ export {
 } from "./text-extractor";
 export { parseResumeWithLLM } from "./llm-parser";
 export { createProfileFromResume } from "./importer";
+export {
+  type JsonResumeSchema,
+  mapJsonResumeToInternal,
+  validateJsonResume,
+} from "./json-resume-mapper";

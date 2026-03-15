@@ -72,14 +72,14 @@ describe("mapJsonResumeToInternal", () => {
     expect(result.basics.phone).toBeUndefined();
   });
 
-  it("should throw error if basics.name is missing", async () => {
+  it("should throw error if basics.name is missing", () => {
     const jsonResume: JsonResumeSchema = {
       basics: {
         email: "john@example.com",
       },
     };
 
-    await expect(mapJsonResumeToInternal(jsonResume)).rejects.toThrow(
+    expect(() => mapJsonResumeToInternal(jsonResume)).toThrow(
       "JSON Resume must include basics.name field",
     );
   });

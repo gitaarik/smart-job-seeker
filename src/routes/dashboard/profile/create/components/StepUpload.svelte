@@ -170,7 +170,7 @@
           Drag and drop your file here, or click to browse
         </p>
         <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">
-          PDF, DOCX, or HTML (max 10MB)
+          PDF, DOCX, HTML, or JSON Resume (max 10MB)
         </p>
       {/if}
 
@@ -178,7 +178,7 @@
         id="file-input"
         type="file"
         name="file"
-        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/html"
+        accept=".pdf,.docx,.json,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/html,application/json"
         onchange={handleFileSelect}
         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
