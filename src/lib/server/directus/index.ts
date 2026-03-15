@@ -11,7 +11,11 @@ export {
 } from "./client";
 
 // Field labels and choices
-export { clearChoicesCache, getFieldChoiceLabel } from "./field-labels";
+export {
+  clearChoicesCache,
+  getFieldChoiceLabel,
+  getFieldChoices,
+} from "./field-labels";
 
 // File operations
 export {

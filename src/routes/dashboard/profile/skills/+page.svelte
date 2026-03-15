@@ -103,6 +103,18 @@
     if (!dbSkill.id) return;
     postAction("deleteSkill", { id: String(dbSkill.id) });
   }
+
+  function handleSkillReorder(category: CategoryItem, skills: SkillItem[]) {
+    const dbCat = category as DbCategoryItem;
+    if (!dbCat.id) return;
+    const ids = skills
+      .map((s) => (s as DbSkillItem).id)
+      .filter(Boolean);
+    postAction("reorderSkills", {
+      categoryId: String(dbCat.id),
+      order: JSON.stringify(ids),
+    });
+  }
 </script>
 
 <div class="space-y-6">
@@ -119,12 +131,14 @@
   <div class="space-y-4">
     <SkillCategoriesEditor
       bind:categories={mappedCategories}
+      levelOptions={data.levelOptions}
       oncreate={handleCategoryCreate}
       onrename={handleCategoryRename}
       onremove={handleCategoryRemove}
       onskillcreate={handleSkillCreate}
       onskillupdate={handleSkillUpdate}
       onskillremove={handleSkillRemove}
+      onskillreorder={handleSkillReorder}
     />
   </div>
 </div>

@@ -1,8 +1,15 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCheck,
+    faPencil,
+    faPlus,
+    faTimes,
+    faTrash,
+  } from "@fortawesome/free-solid-svg-icons";
+  import Card from "./Card.svelte";
   import SkillTagsEditor from "./SkillTagsEditor.svelte";
-  import type { SkillItem } from "./SkillTagsEditor.svelte";
+  import type { LevelOption, SkillItem } from "./SkillTagsEditor.svelte";
 
   export interface CategoryItem {
     name: string;
@@ -11,34 +18,75 @@
 
   interface Props {
     categories: CategoryItem[];
+    levelOptions?: LevelOption[];
     oncreate?: (category: CategoryItem) => void;
     onrename?: (category: CategoryItem) => void;
     onremove?: (category: CategoryItem) => void;
     onskillcreate?: (category: CategoryItem, skill: SkillItem) => void;
     onskillupdate?: (category: CategoryItem, skill: SkillItem) => void;
     onskillremove?: (category: CategoryItem, skill: SkillItem) => void;
+    onskillreorder?: (category: CategoryItem, skills: SkillItem[]) => void;
   }
 
   let {
     categories = $bindable(),
+    levelOptions,
     oncreate,
     onrename,
     onremove,
     onskillcreate,
     onskillupdate,
     onskillremove,
+    onskillreorder,
   }: Props = $props();
 
   // Track which categories are newly added (not yet persisted)
   let newIndices = $state(new Set<number>());
   // Track original names for rename detection
   let originalNames = $state(new Map<number, string>());
+  // Track which category name is being edited
+  let editingNameIndex = $state<number | null>(null);
 
   function addCategory() {
     const newCat: CategoryItem = { name: "", skills: [] };
     categories = [...categories, newCat];
     const idx = categories.length - 1;
     newIndices = new Set([...newIndices, idx]);
+    editingNameIndex = idx;
+  }
+
+  function startEditingName(index: number) {
+    handleNameFocus(index);
+    editingNameIndex = index;
+  }
+
+  function saveEditingName(index: number) {
+    handleNameBlur(index);
+    editingNameIndex = null;
+  }
+
+  function cancelEditingName(index: number) {
+    if (newIndices.has(index)) {
+      // New unsaved category — remove it
+      categories = categories.filter((_, i) => i !== index);
+      const updatedNew = new Set<number>();
+      for (const ni of newIndices) {
+        if (ni < index) updatedNew.add(ni);
+        else if (ni > index) updatedNew.add(ni - 1);
+      }
+      newIndices = updatedNew;
+    } else if (originalNames.has(index)) {
+      // Revert to original name
+      categories[index].name = originalNames.get(index)!;
+      const updated = new Map(originalNames);
+      updated.delete(index);
+      originalNames = updated;
+    }
+    editingNameIndex = null;
+  }
+
+  function autofocus(node: HTMLElement) {
+    node.focus();
   }
 
   function removeCategory(index: number) {
@@ -94,29 +142,67 @@
 </script>
 
 {#each categories as category, categoryIndex}
-  <div class="border border-[var(--dash-border)] rounded-lg p-3 sm:p-4">
-    <div class="flex items-center justify-between mb-3">
-      <input
-        type="text"
-        bind:value={categories[categoryIndex].name}
-        onfocus={() => handleNameFocus(categoryIndex)}
-        onblur={() => handleNameBlur(categoryIndex)}
-        placeholder="Category name"
-        class="font-medium text-[var(--dash-text)] bg-transparent border-none focus:outline-none focus:ring-0 p-0"
-      />
+  <Card class="p-3 sm:p-4">
+    <div class="flex items-center justify-between mb-3 gap-2">
+      {#if editingNameIndex === categoryIndex}
+        <div class="flex items-center gap-1">
+          <input
+            type="text"
+            bind:value={categories[categoryIndex].name}
+            onkeydown={(e) => {
+              if (e.key === "Enter") saveEditingName(categoryIndex);
+              if (e.key === "Escape") cancelEditingName(categoryIndex);
+            }}
+            placeholder="Category name"
+            class="px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-36 sm:w-auto"
+            use:autofocus
+          />
+          <button
+            type="button"
+            onclick={() => cancelEditingName(categoryIndex)}
+            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+            aria-label="Cancel"
+          >
+            <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onclick={() => saveEditingName(categoryIndex)}
+            class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+            aria-label="Save"
+          >
+            <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+          </button>
+        </div>
+      {:else}
+        <div class="flex items-center gap-2 min-w-0">
+          <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+            {categories[categoryIndex].name || "Untitled category"}
+          </h3>
+          <button
+            type="button"
+            onclick={() => startEditingName(categoryIndex)}
+            class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0"
+            aria-label="Edit category name"
+          >
+            <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+          </button>
+        </div>
+      {/if}
       <button
         type="button"
         onclick={() => removeCategory(categoryIndex)}
-        class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5"
+        class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 flex-shrink-0"
         aria-label="Remove category"
       >
-        <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
+        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
         <span class="hidden sm:inline">Remove</span>
       </button>
     </div>
 
     <SkillTagsEditor
       bind:skills={categories[categoryIndex].skills}
+      {levelOptions}
       oncreate={onskillcreate
         ? (skill) => onskillcreate(categories[categoryIndex], skill)
         : undefined}
@@ -126,8 +212,11 @@
       onremove={onskillremove
         ? (skill) => onskillremove(categories[categoryIndex], skill)
         : undefined}
+      onreorder={onskillreorder
+        ? (skills) => onskillreorder(categories[categoryIndex], skills)
+        : undefined}
     />
-  </div>
+  </Card>
 {/each}
 
 <button

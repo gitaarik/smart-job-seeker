@@ -83,6 +83,45 @@ export async function getFieldChoiceLabel(
 }
 
 /**
+ * Get all choices for a dropdown field
+ *
+ * @param collection - The Directus collection name (e.g., "tech_skills")
+ * @param field - The field name (e.g., "level")
+ * @returns Array of { value, label } objects, or empty array if not found
+ */
+export async function getFieldChoices(
+  collection: string,
+  field: string,
+): Promise<Array<{ value: string; label: string }>> {
+  const cacheKey = `${collection}:${field}`;
+
+  let choices = choicesCache.get(cacheKey);
+
+  if (!choices) {
+    try {
+      const response = await directusRequest(
+        "GET",
+        `/fields/${collection}/${field}`,
+      ) as DirectusFieldResponse;
+
+      choices = response?.data?.meta?.options?.choices;
+    } catch (error) {
+      console.error(
+        `Failed to fetch choices for ${collection}.${field} from Directus:`,
+        error,
+      );
+      return [];
+    }
+
+    if (choices) {
+      choicesCache.set(cacheKey, choices);
+    }
+  }
+
+  return (choices || []).map((c) => ({ value: c.value, label: c.text }));
+}
+
+/**
  * Clear the choices cache (useful for testing or forcing refresh)
  */
 export function clearChoicesCache(): void {

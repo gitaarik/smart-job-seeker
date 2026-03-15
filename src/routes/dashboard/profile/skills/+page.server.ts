@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getFieldChoices } from "$lib/server/directus";
 import { getSelectedProfileId } from "../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -20,7 +21,9 @@ export const load: PageServerLoad = async ({ parent }) => {
     },
   });
 
-  return { categories, profileId: layoutData.selectedProfile.id };
+  const levelOptions = await getFieldChoices("tech_skills", "level");
+
+  return { categories, profileId: layoutData.selectedProfile.id, levelOptions };
 };
 
 export const actions: Actions = {
@@ -241,6 +244,54 @@ export const actions: Actions = {
         date_updated: new Date(),
       },
     });
+
+    return { success: true };
+  },
+
+  reorderSkills: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const categoryId = parseInt(formData.get("categoryId") as string);
+    const orderJson = formData.get("order") as string;
+
+    if (isNaN(categoryId)) {
+      return fail(400, { error: "Invalid category ID" });
+    }
+
+    let order: number[];
+    try {
+      order = JSON.parse(orderJson);
+    } catch {
+      return fail(400, { error: "Invalid order data" });
+    }
+
+    // Verify category ownership
+    const category = await db.tech_skill_categories.findFirst({
+      where: { id: categoryId, profile: profileId },
+    });
+
+    if (!category) {
+      return fail(404, { error: "Category not found" });
+    }
+
+    // Update sort field for each skill
+    await Promise.all(
+      order.map((skillId, index) =>
+        db.tech_skills.updateMany({
+          where: { id: skillId, category: categoryId },
+          data: { sort: index, date_updated: new Date() },
+        })
+      ),
+    );
 
     return { success: true };
   },
