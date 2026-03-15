@@ -72,8 +72,14 @@ export function buildEligibilityFilter(
   }
 
   return Prisma.sql`
-    -- Work location overlap (NULL/json-null = any)
+    -- Minimum data: job must have a description OR at least one skill
     (
+      (j.job_description IS NOT NULL AND TRIM(j.job_description) != '')
+      OR (j.skills_required IS NOT NULL AND j.skills_required::text != 'null' AND jsonb_array_length(j.skills_required::jsonb) > 0)
+      OR (j.skills_preferred IS NOT NULL AND j.skills_preferred::text != 'null' AND jsonb_array_length(j.skills_preferred::jsonb) > 0)
+    )
+    -- Work location overlap (NULL/json-null = any)
+    AND (
       j.work_location IS NULL
       OR j.work_location::text = 'null'
       OR j.work_location::jsonb ?| array[${Prisma.join(config.work_location)}]::text[]
