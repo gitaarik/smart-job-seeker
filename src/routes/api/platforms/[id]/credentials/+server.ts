@@ -1,8 +1,41 @@
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { platformCredentialsSchema, parseBody } from "$lib/server/validation/api-schemas";
+import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
+import {
+  parseBody,
+  platformCredentialsSchema,
+} from "$lib/server/validation/api-schemas";
+
+/**
+ * GET /api/platforms/[id]/credentials?profileId=X
+ *
+ * List all credentials for a platform and profile.
+ */
+export const GET: RequestHandler = async ({ params, locals, url }) => {
+  const user = requireAuth(locals);
+  const platformId = parseIntParam(params.id, "platform");
+
+  const profileId = url.searchParams.get("profileId");
+  if (!profileId) {
+    throw error(400, "Profile ID required");
+  }
+
+  // Verify user owns this profile
+  const profile = await db.profiles.findFirst({
+    where: { id: parseInt(profileId), user_id: user.id },
+  });
+  if (!profile) {
+    throw error(403, "Not authorized");
+  }
+
+  const credentials = await db.platform_profiles.findMany({
+    where: { profile: profile.id, platform: platformId },
+    select: { id: true, username: true },
+  });
+
+  return json(credentials);
+};
 
 /**
  * PUT /api/platforms/[id]/credentials
@@ -13,7 +46,10 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
   const platformId = parseIntParam(params.id, "platform");
 
-  const { profileId, username, password } = parseBody(platformCredentialsSchema, await request.json());
+  const { profileId, username, password } = parseBody(
+    platformCredentialsSchema,
+    await request.json(),
+  );
 
   // Verify user owns this profile
   const profile = await db.profiles.findFirst({

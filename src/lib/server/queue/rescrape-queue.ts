@@ -22,6 +22,10 @@ export interface RescrapeJobData {
   browserLanguage?: string;
   browserTimezone?: string;
   browserUserAgent?: string;
+  credentialId?: number;
+  browserProvider?: string;
+  keepMinimized?: boolean;
+  rescrapeRunId?: number;
 }
 
 export interface RescrapeJobResult {

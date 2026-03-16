@@ -41,6 +41,29 @@ export function formatWorkLocation(location: string): string {
   return WORK_LOCATION_LABELS[location.toLowerCase()] ?? titleCase(location);
 }
 
+const EXPERIENCE_LEVEL_LABELS: Record<string, string> = {
+  entry: "Entry Level",
+  entry_level: "Entry Level",
+  "entry-level": "Entry Level",
+  junior: "Junior",
+  mid: "Mid Level",
+  mid_level: "Mid Level",
+  "mid-level": "Mid Level",
+  mid_senior: "Mid-Senior",
+  "mid-senior": "Mid-Senior",
+  senior: "Senior",
+  lead: "Lead",
+  principal: "Principal",
+  staff: "Staff",
+  director: "Director",
+  executive: "Executive",
+  internship: "Internship",
+};
+
+export function formatExperienceLevel(level: string): string {
+  return EXPERIENCE_LEVEL_LABELS[level.toLowerCase()] ?? titleCase(level);
+}
+
 function titleCase(str: string): string {
   return str
     .replace(/[_-]/g, " ")

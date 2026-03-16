@@ -827,6 +827,7 @@ model jobs {
   rescrape_live_url    String?
   applications         applications[]
   job_matches          job_matches[]
+  rescrape_runs        rescrape_runs[]
   job_resources        job_resources[]
   job_search_run_items job_search_run_items[]
   ai_chat              ai_chats?              @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
@@ -1410,6 +1411,20 @@ model job_match_config {
   profile           Int
   name              String?   @db.VarChar(255)
   profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model rescrape_runs {
+  id            Int       @id @default(autoincrement())
+  job           Int
+  status        String?   @default("queued") @db.VarChar(50)
+  started_at    DateTime? @default(now()) @db.Timestamptz(6)
+  finished_at   DateTime? @db.Timestamptz(6)
+  message       String?
+  triggered_by  String?   @default("user") @db.VarChar(20)
+  bullmq_job_id String?   @db.VarChar(100)
+  jobs          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([job])
 }
 
 enum Role {

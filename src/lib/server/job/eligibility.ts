@@ -15,7 +15,6 @@ import { Prisma } from "../../../../generated/prisma/client";
 export interface EligibilityConfig {
   work_location: string[];
   job_types: string[];
-  locations?: string[] | null;
 }
 
 /**
@@ -27,7 +26,6 @@ export interface EligibilityConfig {
  * - work_location overlap (NULL/json-null = any)
  * - job_types overlap (NULL/json-null = any)
  * - skills overlap in required OR preferred (NULL/json-null = any)
- * - office_location matching (NULL/empty = pass, otherwise fuzzy match)
  */
 export function buildEligibilityFilter(
   config: EligibilityConfig,
@@ -43,34 +41,6 @@ export function buildEligibilityFilter(
     throw new Error("Profile must have at least one skill for job matching");
   }
 
-  // Build location filter (mirrors matchesLocation() in match-utils.ts)
-  let locationFilter = Prisma.sql`TRUE`;
-  if (config.locations && config.locations.length > 0) {
-    const locationClauses = config.locations.map((loc) => {
-      const lower = loc.toLowerCase().trim();
-      if (lower === "remote") {
-        return Prisma.sql`(
-          LOWER(j.office_location) LIKE '%remote%'
-          OR LOWER(j.office_location) LIKE '%anywhere%'
-          OR LOWER(j.office_location) LIKE '%worldwide%'
-        )`;
-      }
-      // Contains match (job loc contains pref) + reverse contains (pref contains job loc)
-      return Prisma.sql`(
-        LOWER(j.office_location) LIKE ${"%" + lower + "%"}
-        OR LOWER(${loc}) LIKE '%' || LOWER(j.office_location) || '%'
-      )`;
-    });
-
-    locationFilter = Prisma.sql`(
-      j.office_location IS NULL
-      OR TRIM(j.office_location) = ''
-      OR ${locationClauses.reduce(
-        (acc, clause) => Prisma.sql`${acc} OR ${clause}`,
-      )}
-    )`;
-  }
-
   return Prisma.sql`
     -- Minimum data: job must have a description OR at least one skill
     (
@@ -82,7 +52,9 @@ export function buildEligibilityFilter(
     AND (
       j.work_location IS NULL
       OR j.work_location::text = 'null'
-      OR j.work_location::jsonb ?| array[${Prisma.join(config.work_location)}]::text[]
+      OR j.work_location::jsonb ?| array[${
+    Prisma.join(config.work_location)
+  }]::text[]
     )
     -- Job types overlap
     AND (
@@ -95,10 +67,12 @@ export function buildEligibilityFilter(
       (j.skills_required IS NULL AND j.skills_preferred IS NULL)
       OR j.skills_required::text = 'null'
       OR j.skills_preferred::text = 'null'
-      OR j.skills_required::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
-      OR j.skills_preferred::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
+      OR j.skills_required::jsonb ?| array[${
+    Prisma.join(profileSkills)
+  }]::text[]
+      OR j.skills_preferred::jsonb ?| array[${
+    Prisma.join(profileSkills)
+  }]::text[]
     )
-    -- Location filter (mirrors matchesLocation())
-    AND ${locationFilter}
   `;
 }

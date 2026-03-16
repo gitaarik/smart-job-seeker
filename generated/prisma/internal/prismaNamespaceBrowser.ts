@@ -129,7 +129,8 @@ export const ModelName = {
   users: 'users',
   verifications: 'verifications',
   job_search_run_items: 'job_search_run_items',
-  job_match_config: 'job_match_config'
+  job_match_config: 'job_match_config',
+  rescrape_runs: 'rescrape_runs'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1530,6 +1531,20 @@ export const Job_match_configScalarFieldEnum = {
 } as const
 
 export type Job_match_configScalarFieldEnum = (typeof Job_match_configScalarFieldEnum)[keyof typeof Job_match_configScalarFieldEnum]
+
+
+export const Rescrape_runsScalarFieldEnum = {
+  id: 'id',
+  job: 'job',
+  status: 'status',
+  started_at: 'started_at',
+  finished_at: 'finished_at',
+  message: 'message',
+  triggered_by: 'triggered_by',
+  bullmq_job_id: 'bullmq_job_id'
+} as const
+
+export type Rescrape_runsScalarFieldEnum = (typeof Rescrape_runsScalarFieldEnum)[keyof typeof Rescrape_runsScalarFieldEnum]
 
 
 export const SortOrder = {

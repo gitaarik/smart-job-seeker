@@ -2,168 +2,130 @@
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faBriefcase,
-    faCode,
-    faEdit,
-    faExternalLinkAlt,
+    faArrowRight,
     faFileAlt,
-    faGraduationCap,
-    faPaperPlane,
     faSearch,
-    faUser,
+    faSliders,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "./components/Card.svelte";
+  import MatchStatsGrid from "./components/MatchStatsGrid.svelte";
+  import SearchTasksSummary from "./components/SearchTasksSummary.svelte";
+  import GettingStartedFlow from "./components/GettingStartedFlow.svelte";
+  import JobCardList from "./jobs/components/JobCardList.svelte";
 
   let { data }: { data: PageData } = $props();
 
-  const profile = $derived(data.fullProfile);
+  const completeness = $derived(data.profileCompleteness);
+  const matchStats = $derived(data.matchStats);
+  const searchTasks = $derived(data.searchTasks);
+  const topMatches = $derived(data.topMatches);
+  const profileSkillLevels = $derived(data.profileSkillLevels);
+
+  const hasMatches = $derived((matchStats?.total ?? 0) > 0);
 </script>
 
 <div class="space-y-5">
-  <!-- Page header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <!-- Header -->
+  <div
+    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+  >
     <div>
       <h1 class="text-lg font-semibold text-[var(--dash-text)]">Dashboard</h1>
       <p class="text-[var(--dash-text-secondary)] mt-1">
-        Welcome back! Here's an overview of your profile.
+        {#if hasMatches}
+          Your job search overview
+        {:else}
+          Get started with your job search
+        {/if}
       </p>
     </div>
-    {#if profile?.slug}
-      <a
-        href="/p/{profile.slug}/portfolio"
-        target="_blank"
-        class="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-      >
-        <span>View Public Profile</span>
-        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-      </a>
-    {/if}
   </div>
 
-  <!-- Profile summary card -->
-  <Card padding="md">
-    <div class="flex items-start gap-3">
-      <div
-        class="w-12 h-12 rounded-full bg-[var(--dash-primary)] flex items-center justify-center shrink-0"
-      >
-        <FontAwesomeIcon icon={faUser} class="w-6 h-6 text-white" />
+  <!-- Getting Started (shown when not fully set up yet) -->
+  {#if completeness && !hasMatches}
+    <GettingStartedFlow
+      {completeness}
+      hasSearchTasks={(searchTasks?.totalCount ?? 0) > 0}
+      {hasMatches}
+    />
+  {/if}
+
+  <!-- Match Stats Grid -->
+  {#if matchStats}
+    <MatchStatsGrid stats={matchStats} />
+  {/if}
+
+  <!-- Search Tasks Summary -->
+  {#if searchTasks}
+    <SearchTasksSummary {searchTasks} />
+  {/if}
+
+  <!-- Top Matches -->
+  {#if hasMatches && topMatches && topMatches.length > 0}
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-semibold text-[var(--dash-text)]">
+          Top Matches
+        </h3>
+        <a
+          href="/dashboard/jobs?filter=matches"
+          class="text-sm text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+        >
+          View all
+          <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+        </a>
       </div>
-      <div class="flex-1 min-w-0">
-        <h2 class="text-base font-semibold text-[var(--dash-text)]">
-          {profile?.name || "Unnamed Profile"}
-        </h2>
-        <p class="text-[var(--dash-text-secondary)]">{profile?.title || "No title set"}</p>
-        {#if profile?.headline}
-          <p class="text-sm text-[var(--dash-text-secondary)] mt-2 line-clamp-2">{profile.headline}</p>
-        {/if}
-      </div>
+      <JobCardList items={topMatches} {profileSkillLevels} />
     </div>
-  </Card>
+  {/if}
 
-  <!-- Quick stats -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <Card padding="sm">
-      <div class="flex items-center gap-2.5">
-        <div
-          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
+  <!-- Quick Actions -->
+  {#if hasMatches}
+    <Card padding="md">
+      <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">
+        Quick Actions
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <a
+          href="/dashboard/jobs"
+          class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
         >
-          <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 text-[var(--dash-text-muted)]" />
-        </div>
-        <div class="min-w-0">
-          <p class="text-lg font-semibold text-[var(--dash-text)]">
-            {profile?.work_experiences?.length || 0}
+          <FontAwesomeIcon
+            icon={faSearch}
+            class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
+          />
+          <p class="font-medium text-[var(--dash-text)]">Browse Jobs</p>
+          <p class="text-sm text-[var(--dash-text-secondary)]">
+            View all matched jobs
           </p>
-          <p class="text-xs text-[var(--dash-text-secondary)] truncate">Work Experiences</p>
-        </div>
+        </a>
+        <a
+          href="/dashboard/jobs/match-config"
+          class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
+        >
+          <FontAwesomeIcon
+            icon={faSliders}
+            class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
+          />
+          <p class="font-medium text-[var(--dash-text)]">Match Config</p>
+          <p class="text-sm text-[var(--dash-text-secondary)]">
+            Tune match preferences
+          </p>
+        </a>
+        <a
+          href="/dashboard/profile/edit"
+          class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
+        >
+          <FontAwesomeIcon
+            icon={faFileAlt}
+            class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
+          />
+          <p class="font-medium text-[var(--dash-text)]">Edit Profile</p>
+          <p class="text-sm text-[var(--dash-text-secondary)]">
+            Update your information
+          </p>
+        </a>
       </div>
     </Card>
-
-    <Card padding="sm">
-      <div class="flex items-center gap-2.5">
-        <div
-          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
-        >
-          <FontAwesomeIcon icon={faGraduationCap} class="w-4 h-4 text-[var(--dash-text-muted)]" />
-        </div>
-        <div class="min-w-0">
-          <p class="text-lg font-semibold text-[var(--dash-text)]">
-            {profile?.education?.length || 0}
-          </p>
-          <p class="text-xs text-[var(--dash-text-secondary)] truncate">Education</p>
-        </div>
-      </div>
-    </Card>
-
-    <Card padding="sm">
-      <div class="flex items-center gap-2.5">
-        <div
-          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
-        >
-          <FontAwesomeIcon icon={faCode} class="w-4 h-4 text-[var(--dash-text-muted)]" />
-        </div>
-        <div class="min-w-0">
-          <p class="text-lg font-semibold text-[var(--dash-text)]">
-            {profile?.side_projects?.length || 0}
-          </p>
-          <p class="text-xs text-[var(--dash-text-secondary)] truncate">Side Projects</p>
-        </div>
-      </div>
-    </Card>
-
-    <Card padding="sm">
-      <div class="flex items-center gap-2.5">
-        <div
-          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
-        >
-          <FontAwesomeIcon icon={faEdit} class="w-4 h-4 text-[var(--dash-text-muted)]" />
-        </div>
-        <div class="min-w-0">
-          <p class="text-lg font-semibold text-[var(--dash-text)]">
-            {profile?.tech_skill_categories?.length || 0}
-          </p>
-          <p class="text-xs text-[var(--dash-text-secondary)] truncate">Skill Categories</p>
-        </div>
-      </div>
-    </Card>
-  </div>
-
-  <!-- Quick links (placeholders for future features) -->
-  <Card padding="md">
-    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Quick Actions</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      <a
-        href="/dashboard/profile/edit"
-        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
-      >
-        <FontAwesomeIcon
-          icon={faFileAlt}
-          class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
-        />
-        <p class="font-medium text-[var(--dash-text)]">Edit Profile</p>
-        <p class="text-sm text-[var(--dash-text-secondary)]">Update your information</p>
-      </a>
-      <a
-        href="/dashboard/jobs"
-        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
-      >
-        <FontAwesomeIcon
-          icon={faSearch}
-          class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
-        />
-        <p class="font-medium text-[var(--dash-text)]">Job Matches</p>
-        <p class="text-sm text-[var(--dash-text-secondary)]">View matched jobs</p>
-      </a>
-      <a
-        href="/dashboard/applications"
-        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
-      >
-        <FontAwesomeIcon
-          icon={faPaperPlane}
-          class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
-        />
-        <p class="font-medium text-[var(--dash-text)]">Applications</p>
-        <p class="text-sm text-[var(--dash-text-secondary)]">Track your applications</p>
-      </a>
-    </div>
-  </Card>
+  {/if}
 </div>

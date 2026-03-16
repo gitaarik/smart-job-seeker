@@ -4,6 +4,12 @@ import { Prisma } from "../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { getSelectedProfileId } from "../profile/utils";
+import {
+  saveJob,
+  unsaveJob,
+  rejectJob,
+  unrejectJob,
+} from "$lib/server/job/job-actions";
 
 /**
  * Build SQL WHERE fragments for JSON array column filters.
@@ -253,208 +259,51 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   };
 };
 
+function parseJobId(formData: FormData) {
+  const jobId = parseInt(formData.get("jobId") as string);
+  if (isNaN(jobId)) return null;
+  return jobId;
+}
+
+async function getAuthProfileId(
+  locals: App.Locals,
+  cookies: import("@sveltejs/kit").Cookies,
+) {
+  const user = locals.user;
+  if (!user) return null;
+  return getSelectedProfileId(cookies, user.id);
+}
+
 export const actions: Actions = {
   saveJob: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const jobId = parseInt(formData.get("jobId") as string);
-
-    if (isNaN(jobId)) {
-      return fail(400, { error: "Invalid job ID" });
-    }
-
-    // Check if job exists
-    const job = await db.jobs.findUnique({
-      where: { id: jobId },
-    });
-
-    if (!job) {
-      return fail(404, { error: "Job not found" });
-    }
-
-    // Check if match already exists
-    const existingMatch = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (existingMatch) {
-      // Update existing match to saved
-      await db.job_matches.update({
-        where: { id: existingMatch.id },
-        data: {
-          status: "saved",
-          date_updated: new Date(),
-        },
-      });
-    } else {
-      // Create new match with saved status (no AI scoring)
-      await db.job_matches.create({
-        data: {
-          profile: profileId,
-          job: jobId,
-          status: "saved",
-          score: 0, // No AI score for manually saved jobs
-          date_created: new Date(),
-          date_updated: new Date(),
-        },
-      });
-    }
-
-    return { success: true, action: "saved", jobId };
+    const profileId = await getAuthProfileId(locals, cookies);
+    if (!profileId) return fail(401, { error: "Not authenticated" });
+    const jobId = parseJobId(await request.formData());
+    if (!jobId) return fail(400, { error: "Invalid job ID" });
+    return saveJob(profileId, jobId);
   },
 
   unsaveJob: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const jobId = parseInt(formData.get("jobId") as string);
-
-    if (isNaN(jobId)) {
-      return fail(400, { error: "Invalid job ID" });
-    }
-
-    // Find the match
-    const match = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (match) {
-      // If the match has AI scoring data, just update status to "new"
-      // If it was manually saved (score=0), delete it
-      if (match.score === 0 && !match.reasoning) {
-        await db.job_matches.delete({
-          where: { id: match.id },
-        });
-      } else {
-        await db.job_matches.update({
-          where: { id: match.id },
-          data: {
-            status: "new",
-            date_updated: new Date(),
-          },
-        });
-      }
-    }
-
-    return { success: true, action: "unsaved", jobId };
+    const profileId = await getAuthProfileId(locals, cookies);
+    if (!profileId) return fail(401, { error: "Not authenticated" });
+    const jobId = parseJobId(await request.formData());
+    if (!jobId) return fail(400, { error: "Invalid job ID" });
+    return unsaveJob(profileId, jobId);
   },
 
   rejectJob: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const jobId = parseInt(formData.get("jobId") as string);
-
-    if (isNaN(jobId)) {
-      return fail(400, { error: "Invalid job ID" });
-    }
-
-    // Check if job exists
-    const job = await db.jobs.findUnique({
-      where: { id: jobId },
-    });
-
-    if (!job) {
-      return fail(404, { error: "Job not found" });
-    }
-
-    // Check if match already exists
-    const existingMatch = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (existingMatch) {
-      // Update existing match to rejected
-      await db.job_matches.update({
-        where: { id: existingMatch.id },
-        data: {
-          status: "rejected",
-          date_updated: new Date(),
-        },
-      });
-    } else {
-      // Create new match with rejected status
-      await db.job_matches.create({
-        data: {
-          profile: profileId,
-          job: jobId,
-          status: "rejected",
-          score: 0,
-          date_created: new Date(),
-          date_updated: new Date(),
-        },
-      });
-    }
-
-    return { success: true, action: "rejected", jobId };
+    const profileId = await getAuthProfileId(locals, cookies);
+    if (!profileId) return fail(401, { error: "Not authenticated" });
+    const jobId = parseJobId(await request.formData());
+    if (!jobId) return fail(400, { error: "Invalid job ID" });
+    return rejectJob(profileId, jobId);
   },
 
   unrejectJob: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const jobId = parseInt(formData.get("jobId") as string);
-
-    if (isNaN(jobId)) {
-      return fail(400, { error: "Invalid job ID" });
-    }
-
-    // Find the match
-    const match = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (match) {
-      // If the match has AI scoring data, update status to "new"
-      // If it was manually rejected (score=0), delete it
-      if (match.score === 0 && !match.reasoning) {
-        await db.job_matches.delete({
-          where: { id: match.id },
-        });
-      } else {
-        await db.job_matches.update({
-          where: { id: match.id },
-          data: {
-            status: "new",
-            date_updated: new Date(),
-          },
-        });
-      }
-    }
-
-    return { success: true, action: "unrejected", jobId };
+    const profileId = await getAuthProfileId(locals, cookies);
+    if (!profileId) return fail(401, { error: "Not authenticated" });
+    const jobId = parseJobId(await request.formData());
+    if (!jobId) return fail(400, { error: "Invalid job ID" });
+    return unrejectJob(profileId, jobId);
   },
 };

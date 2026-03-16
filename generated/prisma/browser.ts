@@ -412,3 +412,8 @@ export type job_search_run_items = Prisma.job_search_run_itemsModel
  * 
  */
 export type job_match_config = Prisma.job_match_configModel
+/**
+ * Model rescrape_runs
+ * 
+ */
+export type rescrape_runs = Prisma.rescrape_runsModel

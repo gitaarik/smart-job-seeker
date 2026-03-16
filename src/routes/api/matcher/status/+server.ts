@@ -8,7 +8,7 @@
  * single source of truth used by the matcher itself.
  */
 
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { getMatcherState } from "$lib/server/job/matcher-state";
@@ -44,47 +44,48 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const profileSkills = await getProfileSkills(profileId);
 
   // Get counts in parallel
-  const [totalJobs, matchedCount, matcherState, recentMatches] = await Promise.all([
-    // Total non-archived jobs
-    db.jobs.count({
-      where: { status: { not: "archived" } },
-    }),
+  const [totalJobs, matchedCount, matcherState, recentMatches] = await Promise
+    .all([
+      // Total non-archived jobs
+      db.jobs.count({
+        where: { status: { not: "archived" } },
+      }),
 
-    // Jobs with a match record for this profile
-    db.job_matches.count({
-      where: { profile: profileId },
-    }),
+      // Jobs with a match record for this profile
+      db.job_matches.count({
+        where: { profile: profileId },
+      }),
 
-    // Current matcher state from Redis
-    getMatcherState(),
+      // Current matcher state from Redis
+      getMatcherState(),
 
-    // Recently matched jobs (last 20)
-    db.job_matches.findMany({
-      where: { profile: profileId },
-      orderBy: { date_created: "desc" },
-      take: 20,
-      select: {
-        id: true,
-        job: true,
-        score: true,
-        recommendation: true,
-        status: true,
-        date_created: true,
-        skill_match_percentage: true,
-        match_summary: true,
-        jobs: {
-          select: {
-            id: true,
-            title: true,
-            company: true,
-            office_location: true,
-            job_types: true,
-            work_location: true,
+      // Recently matched jobs (last 20)
+      db.job_matches.findMany({
+        where: { profile: profileId },
+        orderBy: { date_created: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          job: true,
+          score: true,
+          recommendation: true,
+          status: true,
+          date_created: true,
+          skill_match_percentage: true,
+          match_summary: true,
+          jobs: {
+            select: {
+              id: true,
+              title: true,
+              company: true,
+              office_location: true,
+              job_types: true,
+              work_location: true,
+            },
           },
         },
-      },
-    }),
-  ]);
+      }),
+    ]);
 
   const unmatchedCount = totalJobs - matchedCount;
 
@@ -92,11 +93,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   let eligibleUnmatched = 0;
   const workLocations = matchConfig?.work_location as string[] | null;
   const jobTypes = matchConfig?.job_types as string[] | null;
-  const locations = matchConfig?.locations as string[] | null;
 
   if (workLocations?.length && jobTypes?.length && profileSkills.length > 0) {
     const eligibilityFilter = buildEligibilityFilter(
-      { work_location: workLocations, job_types: jobTypes, locations },
+      { work_location: workLocations, job_types: jobTypes },
       profileSkills,
     );
 

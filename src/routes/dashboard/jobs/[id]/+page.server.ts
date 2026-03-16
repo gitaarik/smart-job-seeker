@@ -46,14 +46,19 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   });
 
   // Determine job category for sidebar highlighting
-  const jobCategory = match?.status === "saved" ? "saved" : match && match.score > 0 ? "matches" : "all";
+  const jobCategory = match?.status === "saved"
+    ? "saved"
+    : match && match.score > 0
+    ? "matches"
+    : "all";
 
   // Load user's skill proficiency levels for highlighting
   const profileSkillLevels = await getProfileSkillLevels(profileId);
 
   // Check staff status
   const user = layoutData.user;
-  const isStaff = !!(user as { is_staff?: boolean })?.is_staff || !!(user as { is_admin?: boolean })?.is_admin;
+  const isStaff = !!(user as { is_staff?: boolean })?.is_staff ||
+    !!(user as { is_admin?: boolean })?.is_admin;
 
   // Load scrape history for staff (only if scraped more than once)
   let scrapeHistory: { processed_at: Date }[] = [];
@@ -68,17 +73,38 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     }) as { processed_at: Date }[];
   }
 
-  // Load rescrape config data: credentials, country, and browser fingerprint defaults
+  // Load rescrape config data: credentials, country, browser fingerprint, browser provider, etc.
   let rescrapeConfig: {
-    credentials: { username: string | null }[];
+    platformCredentials: { id: number; username: string | null }[];
+    platformId: number;
+    selectedCredentialId: string;
+    loginUrl: string | null;
+    browserProvider: string | null;
+    keepMinimized: boolean;
     defaultCountryCode: string;
-    browserFingerprint: { language: string; timezone: string; userAgent: string };
+    browserFingerprint: {
+      language: string;
+      timezone: string;
+      userAgent: string;
+    };
     browserFingerprintDefaults: { language: string; timezone: string };
   } | null = null;
   if (isStaff && job.job_platform) {
-    const platformProfile = await db.platform_profiles.findFirst({
+    // Fetch all credentials for this platform
+    const platformCredentials = await db.platform_profiles.findMany({
       where: { profile: profileId, platform: job.job_platform },
-      select: { username: true },
+      select: { id: true, username: true },
+    });
+
+    // Fetch job search settings for this platform + profile
+    const jobSearch = await db.job_searches.findFirst({
+      where: { platform: job.job_platform, profile: profileId },
+      select: {
+        browser_provider: true,
+        keep_minimized: true,
+        platform_profile_id: true,
+        job_platforms: { select: { login_page_url: true } },
+      },
     });
 
     const profile = await db.profiles.findUnique({
@@ -95,7 +121,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     const geoDefaults = getGeoConfig(defaultCountryCode || "US");
 
     rescrapeConfig = {
-      credentials: platformProfile ? [{ username: platformProfile.username }] : [],
+      platformCredentials,
+      platformId: job.job_platform,
+      selectedCredentialId: jobSearch?.platform_profile_id?.toString() ??
+        "none",
+      loginUrl: jobSearch?.job_platforms?.login_page_url ?? null,
+      browserProvider: (jobSearch as any)?.browser_provider ?? null,
+      keepMinimized: (jobSearch as any)?.keep_minimized ?? true,
       defaultCountryCode,
       browserFingerprint: {
         language: profile?.browser_language || "",
@@ -260,7 +292,8 @@ export const actions: Actions = {
     }
 
     // Staff-only action
-    const isStaff = !!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
     if (!isStaff) {
       return fail(403, { error: "Staff access required" });
     }
@@ -285,7 +318,9 @@ export const actions: Actions = {
       return { success: true, action: "rematched", score: result.score };
     } catch (err) {
       return fail(500, {
-        error: `Re-match failed: ${err instanceof Error ? err.message : String(err)}`,
+        error: `Re-match failed: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
       });
     }
   },

@@ -4,6 +4,8 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import CountrySelect from "../../components/CountrySelect.svelte";
+  import CredentialSelector from "../../components/CredentialSelector.svelte";
+  import BrowserProviderToggle from "../../components/BrowserProviderToggle.svelte";
   import Card from "../../../components/Card.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
   import {
@@ -2085,126 +2087,19 @@
               </div>
 
               <!-- Credentials -->
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                  <FontAwesomeIcon
-                    icon={faKey}
-                    class="w-4 h-4 text-[var(--dash-text-secondary)]"
-                  />
-                  <h2 class="font-medium text-[var(--dash-text)] text-sm">
-                    Credentials
-                  </h2>
-                </div>
-                <div class="flex items-center gap-2">
-                  {#if isSavingCredential}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
-                    />
-                  {/if}
-                  <button
-                    type="button"
-                    onclick={() => (showAddCredential = !showAddCredential)}
-                    class="flex items-center gap-1 px-2 py-1 text-xs text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] rounded transition-colors"
-                  >
-                    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                    Add
-                  </button>
-                </div>
-              </div>
-
-              <!-- Credential list -->
-              <div class="space-y-1.5">
-                <!-- No credentials option -->
-                <button
-                  type="button"
-                  onclick={() => {
-                    showAddCredential = false;
-                    selectedCredentialId = "none";
-                  }}
-                  class="
-                    w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
-                    ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
-                    : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}
-                  "
-                >
-                  <span
-                    class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === 'none' ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
-                  >
-                    {#if selectedCredentialId === "none"}
-                      <span
-                        class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
-                      ></span>
-                    {/if}
-                  </span>
-                  <span class="flex-1 text-left"
-                  >No credentials (public search)</span>
-                  {#if savedCredentialId === "none"}
-                    <span
-                      class="text-xs text-[var(--dash-text-muted)] font-medium"
-                    >Current</span>
-                  {/if}
-                </button>
-
-                {#each platformCredentials as cred}
-                  <div
-                    class="
-                      flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
-                      ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
-                      : 'bg-[var(--dash-bg)] border border-transparent hover:border-[var(--dash-border)]'}
-                    "
-                  >
-                    <button
-                      type="button"
-                      onclick={() => {
-                        showAddCredential = false;
-                        selectedCredentialId = String(cred.id);
-                      }}
-                      class="flex-1 text-left flex items-center gap-2.5 text-[var(--dash-text)]"
-                    >
-                      <span
-                        class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === String(cred.id) ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
-                      >
-                        {#if                     selectedCredentialId ===
-                      String(cred.id)}
-                          <span
-                            class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
-                          ></span>
-                        {/if}
-                      </span>
-                      <span>{cred.username || "No username"}</span>
-                      {#if savedCredentialId === String(cred.id)}
-                        <span
-                          class="text-xs text-[var(--dash-text-muted)] font-medium"
-                        >Current</span>
-                      {/if}
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => deleteCredential(cred.id)}
-                      disabled={isDeletingCredential === cred.id}
-                      class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-                      title="Delete credential"
-                    >
-                      {#if isDeletingCredential === cred.id}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                      {/if}
-                    </button>
-                  </div>
-                {/each}
-              </div>
-
-              {#if             platformCredentials.length === 0 && !showAddCredential}
-                <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-                  No credentials configured. Add credentials to enable
-                  authenticated scraping.
-                </p>
-              {/if}
+              <CredentialSelector
+                bind:credentials={platformCredentials}
+                bind:selectedId={selectedCredentialId}
+                platformId={(jobSearch as any).platform}
+                profileId={data.profileId}
+                platformName={jobSearch.job_platforms?.name}
+                oncredentialdeleted={(credId) => {
+                  if ((jobSearch as any).platform_profile_id === credId) {
+                    (jobSearch as any).platform_profile_id = null;
+                    savedCredentialId = "none";
+                  }
+                }}
+              />
 
               {#if credentialDirty}
                 <div class="flex items-center gap-2 mt-3">
@@ -2231,82 +2126,6 @@
                   >
                     Cancel
                   </button>
-                </div>
-              {/if}
-
-              {#if showAddCredential}
-                <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
-                  <div>
-                    <label
-                      for="new-cred-username"
-                      class="block text-sm text-[var(--dash-text)] mb-1"
-                    >
-                      Username / Email
-                    </label>
-                    <input
-                      type="text"
-                      id="new-cred-username"
-                      bind:value={newCredUsername}
-                      placeholder="your@email.com"
-                      class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="new-cred-password"
-                      class="block text-sm text-[var(--dash-text)] mb-1"
-                    >
-                      Password
-                    </label>
-                    <div class="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        id="new-cred-password"
-                        bind:value={newCredPassword}
-                        placeholder="Enter password"
-                        class="w-full px-3 py-2 pr-10 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                      <button
-                        type="button"
-                        onclick={() => (showPassword = !showPassword)}
-                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-                      >
-                        <FontAwesomeIcon
-                          icon={showPassword ? faEyeSlash : faEye}
-                          class="w-4 h-4"
-                        />
-                      </button>
-                    </div>
-                  </div>
-                  <div class="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onclick={() => {
-                        showAddCredential = false;
-                        newCredUsername = "";
-                        newCredPassword = "";
-                      }}
-                      class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onclick={addNewCredential}
-                      disabled={!newCredUsername.trim() || isSavingCredential}
-                      class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                    >
-                      {#if isSavingCredential}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                      {/if}
-                      Add & Select
-                    </button>
-                  </div>
                 </div>
               {/if}
             {/if}
@@ -2605,38 +2424,12 @@
 
         {#if sectionOpen.browser}
           <div class="space-y-3">
-            <div class="flex items-center gap-2">
-              <div
-                class="flex rounded-md overflow-hidden border border-[var(--dash-border)]"
-              >
-                {#if data.localBrowserAllowed}
-                  <button
-                    type="button"
-                    onclick={() => (browserProvider = null)}
-                    class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {browserProvider === null ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-                  >
-                    <FontAwesomeIcon icon={faCog} class="w-3 h-3" />
-                    Local
-                  </button>
-                {/if}
-                <button
-                  type="button"
-                  onclick={() => (browserProvider = "hosted")}
-                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 {data.localBrowserAllowed ? 'border-l border-[var(--dash-border)]' : ''} transition-colors {browserProvider === 'hosted' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-                >
-                  <FontAwesomeIcon icon={faCloud} class="w-3 h-3" />
-                  Hosted
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (browserProvider = "local")}
-                  class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {browserProvider === 'local' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-                >
-                  <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-                  Desktop
-                </button>
-              </div>
-              {#if browserProviderDirty}
+            <BrowserProviderToggle
+              bind:value={browserProvider}
+              localBrowserAllowed={data.localBrowserAllowed}
+            />
+            {#if browserProviderDirty}
+              <div class="flex items-center gap-2">
                 <button
                   type="button"
                   onclick={saveBrowserProvider}
@@ -2660,26 +2453,8 @@
                 >
                   Cancel
                 </button>
-              {/if}
-            </div>
-            <p class="text-xs text-[var(--dash-text-muted)]">
-              {#if browserProvider === "hosted"}
-                Uses a cloud-hosted anti-detect browser (datacenter IP). Fast
-                and reliable, but may trigger bot detection on some platforms.
-              {:else if browserProvider === "local"}
-                Uses your own computer's browser via the desktop app
-                (residential IP). Less likely to be detected, but requires the
-                desktop app to be running.
-              {:else}
-                Uses the server's local browser ({
-                  data.browserProvider === "goLogin"
-                    ? "Hosted"
-                    : data.browserProvider === "tunnel"
-                    ? "Desktop"
-                    : data.browserProvider
-                }).
-              {/if}
-            </p>
+              </div>
+            {/if}
 
             <!-- Browser Location (hosted mode only) -->
             {#if             savedBrowserProvider === "hosted" ||

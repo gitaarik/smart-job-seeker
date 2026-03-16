@@ -10,12 +10,14 @@
     faChevronDown,
     faChevronUp,
     faExternalLinkAlt,
+    faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
     faStar as faStarSolid,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import type { Snippet } from "svelte";
+  import { formatExperienceLevel, formatJobType, formatWorkLocation } from "$lib/format";
   import ScoreBadge from "./ScoreBadge.svelte";
 
   interface Job {
@@ -30,6 +32,9 @@
     salary_currency: string | null;
     salary_period: string | null;
     skills_required: unknown; // JsonValue from Prisma
+    work_location?: unknown; // JsonValue - string[]
+    job_types?: unknown; // JsonValue - string[]
+    experience_levels?: unknown; // JsonValue - string[]
     date_posted: Date | string | null;
     date_created: Date | string | null;
     job_platforms?: { name: string } | null;
@@ -61,6 +66,7 @@
     unrejectAction?: string;
     showSaveButton?: boolean;
     expandedContent?: Snippet;
+    borderless?: boolean;
   }
 
   let {
@@ -80,6 +86,7 @@
     unrejectAction = "?/unrejectJob",
     showSaveButton = true,
     expandedContent,
+    borderless = false,
   }: Props = $props();
 
   let saving = $state(false);
@@ -134,6 +141,9 @@
 
   const salaryText = $derived(formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period));
   const skillsRequired = $derived(asStringArray(job.skills_required));
+  const workLocations = $derived(asStringArray(job.work_location));
+  const jobTypes = $derived(asStringArray(job.job_types));
+  const experienceLevels = $derived(asStringArray(job.experience_levels));
   const matchedSkillsSet = $derived(new Set(match?.matched_skills || []));
 
   /**
@@ -150,7 +160,8 @@
   }
 </script>
 
-<div class="bg-[var(--dash-card)] rounded-lg border overflow-hidden relative transition-all {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved ? 'border-green-500 ring-2 ring-green-500/30' : 'border-[var(--dash-border)]'}">
+<div class="bg-[var(--dash-card)] overflow-hidden relative transition-all {borderless ? '' : 'rounded-lg border'} {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved && !borderless ? 'border-green-500 ring-2 ring-green-500/30' : 'border-[var(--dash-border)]'}"
+>
   <!-- Chevron in top right corner -->
   {#if onToggleExpand}
     <button
@@ -204,11 +215,33 @@
               </span>
             {/if}
             {#if job.job_platforms}
-              <span class="text-[var(--dash-text-muted)]">
+              <span class="flex items-center gap-1">
+                <FontAwesomeIcon icon={faGlobe} class="w-3 h-3" />
                 {job.job_platforms.name}
               </span>
             {/if}
           </div>
+
+          <!-- Tags: work location, job type, experience level -->
+          {#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
+            <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {#each workLocations as loc}
+                <span class="text-xs px-2 py-0.5 rounded border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
+                  {formatWorkLocation(loc)}
+                </span>
+              {/each}
+              {#each jobTypes as type}
+                <span class="text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg-inset)] text-[var(--dash-text)]">
+                  {formatJobType(type)}
+                </span>
+              {/each}
+              {#each experienceLevels as level}
+                <span class="text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg-inset)] text-[var(--dash-text)]">
+                  {formatExperienceLevel(level)}
+                </span>
+              {/each}
+            </div>
+          {/if}
 
           <!-- Salary and Date row -->
           <div class="flex items-center justify-between mt-1.5 sm:mt-2">

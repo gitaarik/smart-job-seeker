@@ -17,6 +17,22 @@
 
   let { logs, loading = false, maxHeight = "max-h-64" }: Props = $props();
 
+  const LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
+  const LOG_LEVEL_RANK: Record<string, number> = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3,
+  };
+
+  let minLevel = $state<string>("debug");
+  let filteredLogs = $derived(
+    logs.filter(
+      (log) =>
+        (LOG_LEVEL_RANK[log.level] ?? 0) >= (LOG_LEVEL_RANK[minLevel] ?? 0),
+    ),
+  );
+
   let containerRef = $state<HTMLElement | null>(null);
   let autoScroll = $state(true);
 
@@ -49,7 +65,7 @@
 
   // Auto-scroll when logs change
   $effect(() => {
-    if (logs.length > 0) {
+    if (filteredLogs.length > 0) {
       scrollToBottom();
     }
   });
@@ -57,9 +73,22 @@
 
 <div class="flex items-center justify-between mb-2">
   <span class="text-sm font-medium text-[var(--dash-text)]">Logs</span>
-  {#if loading}
-    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-  {/if}
+  <div class="flex items-center gap-2">
+    <select
+      bind:value={minLevel}
+      class="text-xs px-1.5 py-0.5 border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)]"
+    >
+      {#each LOG_LEVELS as level}
+        <option value={level}>{level.toUpperCase()}+</option>
+      {/each}
+    </select>
+    {#if loading}
+      <FontAwesomeIcon
+        icon={faSpinner}
+        class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+      />
+    {/if}
+  </div>
 </div>
 
 <div
@@ -67,17 +96,19 @@
   onscroll={handleScroll}
   class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] {maxHeight} overflow-y-auto"
 >
-  {#if logs.length === 0}
+  {#if filteredLogs.length === 0}
     <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
       {#if loading}
         Loading logs...
+      {:else if logs.length > 0}
+        No logs at this level
       {:else}
         No logs yet
       {/if}
     </div>
   {:else}
     <div class="p-2 space-y-0.5 font-mono text-xs">
-      {#each logs as log (log.id)}
+      {#each filteredLogs as log (log.id)}
         <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
           <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
             {new Date(log.timestamp).toLocaleTimeString()}
