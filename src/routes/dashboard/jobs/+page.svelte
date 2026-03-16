@@ -5,19 +5,24 @@
   import { navigating } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faArrowRight,
     faBan,
     faBriefcase,
     faBookmark,
+    faCalendarDays,
     faCheck,
+    faChevronDown,
+    faGauge,
+    faGlobe,
     faListCheck,
     faChevronLeft,
     faChevronRight,
-    faFilter,
+    faLocationDot,
     faMoneyBillWave,
     faSearch,
+    faSitemap,
     faSpinner,
     faStar as faStarSolid,
+    faTag,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
@@ -110,53 +115,58 @@
   }
 
   // Local state for form inputs
-  let filterType = $state(filters.filter);
+  let selectedStatuses = $state<Set<string>>(
+    new Set(filters.status ? filters.status.split(",") : [])
+  );
   let searchInput = $state(filters.search);
-  let platformFilter = $state(filters.platform);
-  let workLocationFilter = $state(filters.workLocation);
-  let jobTypeFilter = $state(filters.jobType);
+  let selectedPlatforms = $state<Set<string>>(
+    new Set(filters.platform ? filters.platform.split(",") : [])
+  );
+  let selectedWorkLocations = $state<Set<string>>(
+    new Set(filters.workLocation ? filters.workLocation.split(",") : [])
+  );
+  let selectedJobTypes = $state<Set<string>>(
+    new Set(filters.jobType ? filters.jobType.split(",") : [])
+  );
   let minScoreFilter = $state(filters.minScore);
   let datePostedFilter = $state(filters.datePosted);
-  let showFilters = $state(false);
   let expandedId = $state<number | null>(null);
   let searchInputEl: HTMLInputElement;
+  let openDropdown = $state<string | null>(null);
 
-  // Filter type options (tabs)
-  const filterTabs = [
-    { value: "all", label: "All Jobs", mobileLabel: "All", icon: faBriefcase },
-    { value: "matches", label: "Matches", mobileLabel: "Matches", icon: faListCheck },
-    { value: "saved", label: "Saved", mobileLabel: "Saved", icon: faBookmark },
-  ];
-
-  // Get page title based on filter
   let pageTitle = $derived(
-    filterType === "matches"
-      ? "Job Matches"
-      : filterType === "saved"
-        ? "Saved Jobs"
+    selectedStatuses.has("saved")
+      ? "Saved Jobs"
+      : minScoreFilter
+        ? "Job Matches"
         : "All Jobs"
   );
 
   let pageIcon = $derived(
-    filterType === "matches"
-      ? faListCheck
-      : filterType === "saved"
-        ? faBookmark
+    selectedStatuses.has("saved")
+      ? faBookmark
+      : minScoreFilter
+        ? faListCheck
         : faBriefcase
   );
 
+  let platformString = $derived([...selectedPlatforms].join(","));
+  let workLocationString = $derived([...selectedWorkLocations].join(","));
+  let jobTypeString = $derived([...selectedJobTypes].join(","));
+  let statusString = $derived([...selectedStatuses].join(","));
+
   function buildUrl(overrides: Record<string, string | undefined> = {}) {
     const params = new URLSearchParams();
-    const f = overrides.filter ?? filterType;
+    const st = overrides.status ?? statusString;
     const q = overrides.search ?? searchInput;
-    const p = overrides.platform ?? platformFilter;
-    const wl = overrides.workLocation ?? workLocationFilter;
-    const jt = overrides.jobType ?? jobTypeFilter;
+    const p = overrides.platform ?? platformString;
+    const wl = overrides.workLocation ?? workLocationString;
+    const jt = overrides.jobType ?? jobTypeString;
     const ms = overrides.minScore ?? minScoreFilter;
     const dp = overrides.datePosted ?? datePostedFilter;
     const pg = overrides.page ?? "1";
 
-    if (f !== "all") params.set("filter", f);
+    if (st) params.set("status", st);
     if (q) params.set("q", q);
     if (p) params.set("platform", p);
     if (wl) params.set("workLocation", wl);
@@ -168,23 +178,75 @@
     return `?${params.toString()}`;
   }
 
-  function switchFilter(filter: string) {
-    filterType = filter;
-    goto(buildUrl({ filter, page: "1" }));
+  function toggleStatus(value: string) {
+    selectedStatuses = toggleSetValue(selectedStatuses, value);
+    goto(buildUrl({ status: [...selectedStatuses].join(","), page: "1" }));
   }
 
-  function applyFilters() {
+  function applySearch() {
     goto(buildUrl({ page: "1" }));
   }
 
+  function applyFilter(overrides: Record<string, string | undefined> = {}) {
+    goto(buildUrl({ ...overrides, page: "1" }));
+  }
+
+  function toggleSetValue(set: Set<string>, value: string): Set<string> {
+    const next = new Set(set);
+    if (next.has(value)) {
+      next.delete(value);
+    } else {
+      next.add(value);
+    }
+    return next;
+  }
+
+  function togglePlatform(platformId: string) {
+    selectedPlatforms = toggleSetValue(selectedPlatforms, platformId);
+    goto(buildUrl({ platform: [...selectedPlatforms].join(","), page: "1" }));
+  }
+
+  function toggleWorkLocation(value: string) {
+    selectedWorkLocations = toggleSetValue(selectedWorkLocations, value);
+    goto(buildUrl({ workLocation: [...selectedWorkLocations].join(","), page: "1" }));
+  }
+
+  function toggleJobType(value: string) {
+    selectedJobTypes = toggleSetValue(selectedJobTypes, value);
+    goto(buildUrl({ jobType: [...selectedJobTypes].join(","), page: "1" }));
+  }
+
+  function setMinScore(value: string) {
+    minScoreFilter = value;
+    applyFilter({ minScore: value });
+  }
+
+  function setDatePosted(value: string) {
+    datePostedFilter = value;
+    applyFilter({ datePosted: value });
+  }
+
+  function toggleDropdown(name: string) {
+    openDropdown = openDropdown === name ? null : name;
+  }
+
+  function handleWindowClick(e: MouseEvent) {
+    if (!openDropdown) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-dropdown]")) return;
+    openDropdown = null;
+  }
+
   function clearFilters() {
+    selectedStatuses = new Set();
     searchInput = "";
-    platformFilter = "";
-    workLocationFilter = "";
-    jobTypeFilter = "";
+    selectedPlatforms = new Set();
+    selectedWorkLocations = new Set();
+    selectedJobTypes = new Set();
     minScoreFilter = "";
     datePostedFilter = "";
     goto(buildUrl({
+      status: "",
       search: "",
       platform: "",
       workLocation: "",
@@ -246,37 +308,30 @@
     return text.substring(0, maxLength) + "...";
   }
 
-  // Check if any filters are active (excluding filter type)
+  // Check if any filters are active
   let hasActiveFilters = $derived(
-    filters.search || filters.platform || filters.workLocation ||
-    filters.jobType || filters.minScore || filters.datePosted
-  );
-
-  // Count active filters for badge
-  let activeFilterCount = $derived(
-    [filters.platform, filters.workLocation, filters.jobType, filters.minScore, filters.datePosted]
-      .filter(Boolean).length
+    filters.status || filters.search || filters.platform ||
+    filters.workLocation || filters.jobType ||
+    filters.minScore || filters.datePosted
   );
 
   // Empty state messages
   let emptyTitle = $derived(
-    filterType === "matches"
-      ? "No job matches yet"
-      : filterType === "saved"
-        ? "No saved jobs yet"
+    selectedStatuses.has("saved")
+      ? "No saved jobs yet"
+      : minScoreFilter
+        ? "No job matches yet"
         : "No jobs found"
   );
 
   let emptyDescription = $derived(
     hasActiveFilters
       ? "Try adjusting your filters or search terms."
-      : filterType === "matches"
-        ? "Job matches will appear here once you set up job searches and run the matching process."
-        : filterType === "saved"
-          ? "Jobs you save will appear here for easy access."
-          : "No jobs have been imported yet. Set up job searches to start importing jobs."
+      : "No jobs have been imported yet. Set up job searches to start importing jobs."
   );
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 <div class="space-y-6">
   <SectionHeader title={pageTitle} icon={pageIcon} />
@@ -289,178 +344,257 @@
     </div>
   {/if}
 
-  <!-- Filter Tabs -->
-  <div class="flex flex-wrap gap-2">
-    {#each filterTabs as tab}
-      <button
-        type="button"
-        onclick={() => switchFilter(tab.value)}
-        class="px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 {filterType ===
-        tab.value
-          ? 'bg-[var(--dash-primary)] text-white'
-          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}"
-      >
-        <FontAwesomeIcon icon={tab.icon} class="w-4 h-4" />
-        <span class="sm:hidden">{tab.mobileLabel}</span>
-        <span class="hidden sm:inline">{tab.label}</span>
-      </button>
-    {/each}
-  </div>
+  <!-- Filters -->
+  <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-3 sm:p-4">
+    <div class="inline-flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Min Score dropdown -->
+      <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-[var(--dash-bg)] border-[var(--dash-border)]">
+        <FontAwesomeIcon icon={faGauge} class="w-3 h-3 text-[var(--dash-text-muted)] shrink-0" />
+        <select
+          value={minScoreFilter}
+          onchange={(e) => setMinScore(e.currentTarget.value)}
+          class="text-xs bg-transparent text-[var(--dash-text)] focus:outline-none"
+        >
+          <option value="">All jobs</option>
+          <option value="40">Score 40+</option>
+          <option value="50">Score 50+</option>
+          <option value="60">Score 60+</option>
+          <option value="70">Score 70+</option>
+          <option value="80">Score 80+</option>
+          <option value="90">Score 90+</option>
+        </select>
+      </div>
 
-  <!-- Search Bar -->
-  <div class="flex gap-2">
-    <div class="relative flex-1 flex">
-      <FontAwesomeIcon
-        icon={faSearch}
-        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]"
-      />
-      <input
-        type="text"
-        bind:value={searchInput}
-        bind:this={searchInputEl}
-        onkeydown={(e) => e.key === "Enter" && applyFilters()}
-        placeholder="Search jobs..."
-        class="w-full pl-10 pr-8 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] border-r-0 rounded-l-lg text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-      />
-      {#if searchInput}
+      <!-- Status multi-select -->
+      <div class="relative" data-dropdown="status">
         <button
           type="button"
-          onclick={() => {
-            searchInput = "";
-            applyFilters();
-            searchInputEl?.focus();
-          }}
-          class="absolute right-12 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
-          aria-label="Clear search"
+          onclick={() => toggleDropdown("status")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedStatuses.size > 0
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
         >
-          <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+          <FontAwesomeIcon icon={faTag} class="w-3 h-3 opacity-60" />
+          Status
+          {#if selectedStatuses.size > 0}
+            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedStatuses.size}</span>
+          {:else}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+          {/if}
         </button>
-      {/if}
-      <button
-        type="button"
-        onclick={applyFilters}
-        class="px-3 py-2 bg-[var(--dash-primary)] text-white rounded-r-lg hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center justify-center"
-        aria-label="Search"
-      >
-        <FontAwesomeIcon icon={faArrowRight} class="w-4 h-4" />
-      </button>
-    </div>
-    <button
-      type="button"
-      onclick={() => (showFilters = !showFilters)}
-      class="px-3 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center justify-center gap-2 relative"
-      aria-label="Filters"
-    >
-      <FontAwesomeIcon icon={faFilter} class="w-4 h-4" />
-      {#if activeFilterCount > 0}
-        <span class="text-xs font-medium bg-[var(--dash-primary)] text-white rounded-full w-5 h-5 flex items-center justify-center">
-          {activeFilterCount}
-        </span>
-      {/if}
-    </button>
-  </div>
-
-  <!-- Filters Panel -->
-  {#if showFilters}
-    <div
-      class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4 space-y-4"
-    >
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <!-- Platform Filter -->
-        <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Platform</label>
-          <select
-            bind:value={platformFilter}
-            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-          >
-            <option value="">All</option>
-            {#each platforms as platform}
-              <option value={platform.id.toString()}>{platform.name}</option>
+        {#if openDropdown === "status"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+            {#each [{ value: "saved", label: "Saved" }, { value: "rejected", label: "Not Interested" }] as opt}
+              <button
+                type="button"
+                onclick={() => toggleStatus(opt.value)}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedStatuses.has(opt.value)
+                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if selectedStatuses.has(opt.value)}
+                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
             {/each}
-          </select>
-        </div>
-
-        <!-- Work Location Filter -->
-        <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Work Location</label>
-          <select
-            bind:value={workLocationFilter}
-            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-          >
-            <option value="">All</option>
-            <option value="remote">Remote</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="onsite">On-site</option>
-          </select>
-        </div>
-
-        <!-- Job Type Filter -->
-        <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Job Type</label>
-          <select
-            bind:value={jobTypeFilter}
-            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-          >
-            <option value="">All</option>
-            <option value="full_time">Full-time</option>
-            <option value="contract">Contract</option>
-            <option value="part_time">Part-time</option>
-            <option value="freelance">Freelance</option>
-          </select>
-        </div>
-
-        <!-- Date Posted Filter -->
-        <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Date Posted</label>
-          <select
-            bind:value={datePostedFilter}
-            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-          >
-            <option value="">Any time</option>
-            <option value="1">Last 24 hours</option>
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-          </select>
-        </div>
-
-        <!-- Min Score Filter (only on Matches tab) -->
-        {#if filterType === "matches"}
-          <div>
-            <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Min Score</label>
-            <select
-              bind:value={minScoreFilter}
-              class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-            >
-              <option value="">Any</option>
-              <option value="40">40+</option>
-              <option value="60">60+</option>
-              <option value="80">80+</option>
-            </select>
           </div>
         {/if}
       </div>
 
-      <div class="flex gap-2">
-        <button
-          type="button"
-          onclick={applyFilters}
-          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+      <!-- Date Posted dropdown -->
+      <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-[var(--dash-bg)] border-[var(--dash-border)]">
+        <FontAwesomeIcon icon={faCalendarDays} class="w-3 h-3 text-[var(--dash-text-muted)] shrink-0" />
+        <select
+          value={datePostedFilter}
+          onchange={(e) => setDatePosted(e.currentTarget.value)}
+          class="text-xs bg-transparent text-[var(--dash-text)] focus:outline-none"
         >
-          Apply Filters
-        </button>
-        {#if hasActiveFilters}
+          <option value="">Date posted</option>
+          <option value="1">Last 24h</option>
+          <option value="3">Last 3 days</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 3 months</option>
+        </select>
+      </div>
+
+      <!-- Platform multi-select -->
+      {#if platforms.length > 0}
+        <div class="relative" data-dropdown="platform">
           <button
             type="button"
-            onclick={clearFilters}
-            class="px-4 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-2"
+            onclick={() => toggleDropdown("platform")}
+            class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedPlatforms.size > 0
+              ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+              : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
+          >
+            <FontAwesomeIcon icon={faGlobe} class="w-3 h-3 opacity-60" />
+            Platform
+            {#if selectedPlatforms.size > 0}
+              <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedPlatforms.size}</span>
+            {:else}
+              <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+            {/if}
+          </button>
+          {#if openDropdown === "platform"}
+            <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+              {#each platforms as platform}
+                <button
+                  type="button"
+                  onclick={() => togglePlatform(platform.id.toString())}
+                  class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedPlatforms.has(platform.id.toString())
+                    ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                    : 'border-[var(--dash-border)]'}">
+                    {#if selectedPlatforms.has(platform.id.toString())}
+                      <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                    {/if}
+                  </span>
+                  <span class="text-[var(--dash-text)]">{platform.name}</span>
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      <!-- Work Location multi-select -->
+      <div class="relative" data-dropdown="workLocation">
+        <button
+          type="button"
+          onclick={() => toggleDropdown("workLocation")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedWorkLocations.size > 0
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
+        >
+          <FontAwesomeIcon icon={faLocationDot} class="w-3 h-3 opacity-60" />
+          Work location
+          {#if selectedWorkLocations.size > 0}
+            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedWorkLocations.size}</span>
+          {:else}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+          {/if}
+        </button>
+        {#if openDropdown === "workLocation"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+            {#each [{ value: "remote", label: "Remote" }, { value: "hybrid", label: "Hybrid" }, { value: "onsite", label: "On-site" }] as opt}
+              <button
+                type="button"
+                onclick={() => toggleWorkLocation(opt.value)}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedWorkLocations.has(opt.value)
+                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if selectedWorkLocations.has(opt.value)}
+                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+
+      <!-- Job Type multi-select -->
+      <div class="relative" data-dropdown="jobType">
+        <button
+          type="button"
+          onclick={() => toggleDropdown("jobType")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedJobTypes.size > 0
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
+        >
+          <FontAwesomeIcon icon={faSitemap} class="w-3 h-3 opacity-60" />
+          Job type
+          {#if selectedJobTypes.size > 0}
+            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedJobTypes.size}</span>
+          {:else}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+          {/if}
+        </button>
+        {#if openDropdown === "jobType"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+            {#each [{ value: "full_time", label: "Full-time" }, { value: "contract", label: "Contract" }, { value: "part_time", label: "Part-time" }, { value: "freelance", label: "Freelance" }] as opt}
+              <button
+                type="button"
+                onclick={() => toggleJobType(opt.value)}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedJobTypes.has(opt.value)
+                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if selectedJobTypes.has(opt.value)}
+                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+
+      {#if hasActiveFilters}
+        <button
+          type="button"
+          onclick={clearFilters}
+          class="px-2.5 py-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+        >
+          <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+          Clear
+        </button>
+      {/if}
+    </div>
+
+    <!-- Search -->
+    <div class="flex">
+      <div class="relative flex-1">
+        <FontAwesomeIcon
+          icon={faSearch}
+          class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--dash-text-muted)]"
+        />
+        <input
+          type="text"
+          bind:value={searchInput}
+          bind:this={searchInputEl}
+          onkeydown={(e) => e.key === "Enter" && applySearch()}
+          onfocus={() => { openDropdown = null; }}
+          placeholder="Search..."
+          class="w-full pl-7 pr-7 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-l-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+        />
+        {#if searchInput}
+          <button
+            type="button"
+            onclick={() => {
+              searchInput = "";
+              applySearch();
+              searchInputEl?.focus();
+            }}
+            class="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+            aria-label="Clear search"
           >
             <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-            Clear Filters
           </button>
         {/if}
       </div>
+      <button
+        type="button"
+        onclick={applySearch}
+        class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-r-md hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5"
+      >
+        <FontAwesomeIcon icon={faSearch} class="w-3 h-3" />
+        Search
+      </button>
     </div>
-  {/if}
+    </div>
+  </div>
 
   <!-- Results Count -->
   <div class="text-sm text-[var(--dash-text-secondary)]">

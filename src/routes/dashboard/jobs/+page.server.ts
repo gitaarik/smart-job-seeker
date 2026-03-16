@@ -13,19 +13,29 @@ import {
 
 /**
  * Build SQL WHERE fragments for JSON array column filters.
- * Uses PostgreSQL's ? operator (cast to jsonb) for proper SQL-level filtering
- * instead of in-memory filtering after LIMIT.
+ * Uses PostgreSQL's ?| operator (cast to jsonb) for multi-value OR matching.
  * Assumes jobs table is aliased as `j`.
  */
 function buildJsonFilters(workLocation: string, jobType: string): Prisma.Sql {
   const fragments: Prisma.Sql[] = [];
 
   if (workLocation) {
-    fragments.push(Prisma.sql`j.work_location::jsonb ? ${workLocation}`);
+    const values = workLocation.split(",").map((v) => v.trim()).filter(Boolean);
+    if (values.length === 1) {
+      fragments.push(Prisma.sql`j.work_location::jsonb ? ${values[0]}`);
+    } else if (values.length > 1) {
+      // ?| checks if ANY of the values exist in the array
+      fragments.push(Prisma.sql`j.work_location::jsonb ?| array[${Prisma.join(values)}]`);
+    }
   }
 
   if (jobType) {
-    fragments.push(Prisma.sql`j.job_types::jsonb ? ${jobType}`);
+    const values = jobType.split(",").map((v) => v.trim()).filter(Boolean);
+    if (values.length === 1) {
+      fragments.push(Prisma.sql`j.job_types::jsonb ? ${values[0]}`);
+    } else if (values.length > 1) {
+      fragments.push(Prisma.sql`j.job_types::jsonb ?| array[${Prisma.join(values)}]`);
+    }
   }
 
   if (fragments.length === 0) {
@@ -45,13 +55,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const profileId = layoutData.selectedProfile.id;
 
   // Parse query parameters
-  const filter = url.searchParams.get("filter") || "all"; // "all" | "matches" | "saved"
+  const status = url.searchParams.get("status") || ""; // comma-separated: "saved", "rejected"
   const search = url.searchParams.get("q") || "";
-  const platform = url.searchParams.get("platform") || "";
+  const platform = url.searchParams.get("platform") || ""; // comma-separated IDs for multi-select
   const workLocation = url.searchParams.get("workLocation") || ""; // remote, hybrid, onsite
   const jobType = url.searchParams.get("jobType") || ""; // full_time, contract, part_time, freelance
-  const minScore = url.searchParams.get("minScore") || ""; // 40, 60, 80
-  const datePosted = url.searchParams.get("datePosted") || ""; // 1, 7, 30 (days)
+  const minScore = url.searchParams.get("minScore") || ""; // 40, 50, 60, 70, 80, 90
+  const datePosted = url.searchParams.get("datePosted") || ""; // 1, 3, 7, 30, 90 (days)
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = 20;
   const offset = (page - 1) * limit;
@@ -77,9 +87,15 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     )`;
   }
 
-  const platformFilter = platform
-    ? Prisma.sql`j.job_platform = ${parseInt(platform)}`
-    : Prisma.sql`TRUE`;
+  let platformFilter = Prisma.sql`TRUE`;
+  if (platform) {
+    const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
+    if (platformIds.length === 1) {
+      platformFilter = Prisma.sql`j.job_platform = ${platformIds[0]}`;
+    } else if (platformIds.length > 1) {
+      platformFilter = Prisma.sql`j.job_platform IN (${Prisma.join(platformIds)})`;
+    }
+  }
 
   let dateFilter = Prisma.sql`TRUE`;
   if (datePosted) {
@@ -89,16 +105,28 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
   }
 
-  if (filter === "matches" || filter === "saved") {
-    // Build match-specific conditions
+  // Parse status filter values
+  const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
+  const minScoreVal = minScore ? parseInt(minScore) : 0;
+
+  if (minScoreVal > 0 || statusValues.length > 0) {
+    // Query via job_matches table when filtering by score or status
     let statusFilter = Prisma.sql`TRUE`;
     let scoreFilter = Prisma.sql`TRUE`;
-    if (filter === "saved") {
-      statusFilter = Prisma.sql`jm.status = 'saved'`;
-    } else if (filter === "matches") {
-      const minScoreVal = minScore ? parseInt(minScore) : 0;
-      scoreFilter = Prisma.sql`jm.score > ${minScoreVal}`;
+
+    if (statusValues.length > 0) {
+      if (statusValues.length === 1) {
+        statusFilter = Prisma.sql`jm.status = ${statusValues[0]}`;
+      } else {
+        statusFilter = Prisma.sql`jm.status IN (${Prisma.join(statusValues)})`;
+      }
+    } else {
+      // When filtering by score only, exclude rejected
       statusFilter = Prisma.sql`jm.status != 'rejected'`;
+    }
+
+    if (minScoreVal > 0) {
+      scoreFilter = Prisma.sql`jm.score >= ${minScoreVal}`;
     }
 
     // Get filtered+paginated match IDs and count in one query
@@ -248,7 +276,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     matchesByJobId,
     profileSkillLevels,
     filters: {
-      filter,
+      status,
       search,
       platform,
       workLocation,
