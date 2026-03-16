@@ -275,9 +275,15 @@
 
     <!-- Recently Matched Jobs -->
     <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
-      <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">
-        Recently Matched Jobs
-      </h3>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-medium text-[var(--dash-text)]">
+          Recently Matched Jobs
+        </h3>
+        <a
+          href="/dashboard/jobs/matches"
+          class="text-xs text-[var(--dash-primary)] hover:underline"
+        >View all matches</a>
+      </div>
 
       {#if recentMatches.length === 0}
         <p class="text-sm text-[var(--dash-text-muted)] py-4 text-center">

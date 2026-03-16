@@ -189,6 +189,7 @@ export const actions: Actions = {
         platform_profile_id: resolvedCredentialId,
         is_active,
         profile: profileId,
+        status: "idle",
         date_created: new Date(),
       },
     });

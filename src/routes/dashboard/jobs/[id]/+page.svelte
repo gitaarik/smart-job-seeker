@@ -233,18 +233,27 @@
           {#if job.job_types && Array.isArray(job.job_types)}
             {#each job.job_types as type}
               <span
-                class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text)]"
+                class="text-xs px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
               >
                 {formatJobType(type)}
               </span>
             {/each}
           {/if}
-          {#if             job.work_location && Array.isArray(job.work_location)}
+          {#if job.work_location && Array.isArray(job.work_location)}
             {#each job.work_location as loc}
               <span
-                class="text-xs px-3 py-1 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]"
+                class="text-xs px-3 py-1 rounded-full border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]"
               >
                 {formatWorkLocation(loc)}
+              </span>
+            {/each}
+          {/if}
+          {#if job.experience_levels && Array.isArray(job.experience_levels)}
+            {#each job.experience_levels as level}
+              <span
+                class="text-xs px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/10 text-purple-700"
+              >
+                {formatExperienceLevel(level)}
               </span>
             {/each}
           {/if}
@@ -336,18 +345,6 @@
               }
             </p>
           </div>
-          {#if             job.experience_levels &&
-              Array.isArray(job.experience_levels) &&
-              job.experience_levels.length > 0}
-            <div>
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
-                Experience Level
-              </p>
-              <p class="font-medium text-[var(--dash-text)]">
-                {job.experience_levels.map(formatExperienceLevel).join(", ")}
-              </p>
-            </div>
-          {/if}
           {#if job.job_poster}
             <div>
               <p class="text-sm text-[var(--dash-text-secondary)] mb-1">

@@ -13,6 +13,7 @@
     faSpinner,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
 
@@ -153,15 +154,19 @@
 
   function getStatusColor(search: (typeof jobSearches)[0]): string {
     if (search.status === "running" || search.status === "queued") return "text-blue-500";
-    if (search.status === "blocked") return "text-yellow-600";
-    if (search.status === "active") return "text-[var(--dash-success)]";
+    if (search.status === "blocked" || search.status === "partial") return "text-yellow-600";
+    if (search.status === "error") return "text-red-500";
+    if (search.status === "success") return "text-[var(--dash-success)]";
+    if (search.last_run) return "text-[var(--dash-success)]";
     return "text-[var(--dash-text-muted)]";
   }
 
   function getStatusBgColor(search: (typeof jobSearches)[0]): string {
     if (search.status === "running" || search.status === "queued") return "bg-blue-500/10";
-    if (search.status === "blocked") return "bg-yellow-500/10";
-    if (search.status === "active") return "bg-green-500/10";
+    if (search.status === "blocked" || search.status === "partial") return "bg-yellow-500/10";
+    if (search.status === "error") return "bg-red-500/10";
+    if (search.status === "success") return "bg-green-500/10";
+    if (search.last_run) return "bg-green-500/10";
     return "bg-[var(--dash-bg)]";
   }
 </script>
@@ -450,6 +455,7 @@
   {:else}
     <div class="space-y-3">
       {#each jobSearches as search (search.id)}
+        {@const statusIcon = getSearchTaskStatusIcon(search)}
         <a
           href="/dashboard/jobs/settings/{search.id}"
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
@@ -483,12 +489,26 @@
                     >{search.job_platforms.name}</span>
                   {/if}
                 </h3>
-                {#if search.status === "running" || search.status === "queued" || search.status === "blocked"}
+                {#if search.status === "running" || search.status === "queued"}
                   <span
-                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 {search.status === 'blocked' ? 'bg-yellow-500/20 text-yellow-600 animate-pulse' : 'bg-blue-500/20 text-blue-600'}"
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-blue-500/20 text-blue-600"
                   >
-                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 {search.status !== 'blocked' ? 'animate-spin' : ''}" />
-                    {search.status === "queued" ? "Queued" : search.status === "blocked" ? "Action needed" : "Running"}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                    {search.status === "queued" ? "Queued" : "Running"}
+                  </span>
+                {:else if search.status === "blocked"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-yellow-500/20 text-yellow-600 animate-pulse"
+                  >
+                    <FontAwesomeIcon icon={faExclamationTriangle} class="w-3 h-3" />
+                    Action needed
+                  </span>
+                {:else if search.status === "error"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-red-500/20 text-red-600"
+                  >
+                    <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+                    Error
                   </span>
                 {:else if !search.is_active}
                   <span
@@ -507,14 +527,14 @@
                   <span class="text-[var(--dash-text-muted)]">{search.status_message || "Waiting in queue..."}</span>
                 {:else if search.status === "running"}
                   <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 text-[var(--dash-primary)] animate-spin"
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'animate-spin' : ''}"
                   />
                   <span>Running...</span>
                 {:else if search.status === "success"}
                   <FontAwesomeIcon
-                    icon={faCheck}
-                    class="w-3 h-3 text-[var(--dash-success)]"
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
                   />
                   <span>{formatDate(search.last_run)}</span>
                   {#if search.last_run_jobs_found}
@@ -524,16 +544,16 @@
                   {/if}
                 {:else if search.status === "blocked"}
                   <FontAwesomeIcon
-                    icon={faExclamationTriangle}
-                    class="w-3 h-3 text-[var(--dash-warning)]"
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
                   />
                   <span class="text-[var(--dash-warning)]"
                     >{search.status_message}</span
                   >
                 {:else if search.status === "partial"}
                   <FontAwesomeIcon
-                    icon={faExclamationTriangle}
-                    class="w-3 h-3 text-[var(--dash-warning)]"
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
                   />
                   <span>{formatDate(search.last_run)}</span>
                   <span class="text-[var(--dash-text-muted)]"
@@ -541,16 +561,24 @@
                   >
                 {:else if search.status === "error"}
                   <FontAwesomeIcon
-                    icon={faTimes}
-                    class="w-3 h-3 text-[var(--dash-error)]"
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
                   />
                   <span class="text-[var(--dash-error)]"
                     >{search.status_message}</span
                   >
+                {:else if search.status === "cancelled"}
+                  <FontAwesomeIcon
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
+                  />
+                  <span class="text-[var(--dash-text-muted)]"
+                    >{search.status_message || "Cancelled"}</span
+                  >
                 {:else if search.last_run}
                   <FontAwesomeIcon
-                    icon={faCheck}
-                    class="w-3 h-3 text-[var(--dash-success)]"
+                    icon={statusIcon.icon}
+                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
                   />
                   <span>{formatDate(search.last_run)}</span>
                 {:else}

@@ -10,12 +10,14 @@
   import Card from "./components/Card.svelte";
   import MatchStatsGrid from "./components/MatchStatsGrid.svelte";
   import SearchTasksSummary from "./components/SearchTasksSummary.svelte";
+  import MatchConfigSummary from "./components/MatchConfigSummary.svelte";
   import GettingStartedFlow from "./components/GettingStartedFlow.svelte";
   import JobCardList from "./jobs/components/JobCardList.svelte";
 
   let { data }: { data: PageData } = $props();
 
   const completeness = $derived(data.profileCompleteness);
+  const matchConfig = $derived(data.matchConfig);
   const matchStats = $derived(data.matchStats);
   const searchTasks = $derived(data.searchTasks);
   const topMatches = $derived(data.topMatches);
@@ -55,10 +57,13 @@
     <MatchStatsGrid stats={matchStats} />
   {/if}
 
-  <!-- Search Tasks Summary -->
-  {#if searchTasks}
-    <SearchTasksSummary {searchTasks} />
-  {/if}
+  <!-- Search Tasks & Match Config -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {#if searchTasks}
+      <SearchTasksSummary {searchTasks} />
+    {/if}
+    <MatchConfigSummary {matchConfig} />
+  </div>
 
   <!-- Top Matches -->
   {#if hasMatches && topMatches && topMatches.length > 0}

@@ -231,12 +231,12 @@
                 </span>
               {/each}
               {#each jobTypes as type}
-                <span class="text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg-inset)] text-[var(--dash-text)]">
+                <span class="text-xs px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-700">
                   {formatJobType(type)}
                 </span>
               {/each}
               {#each experienceLevels as level}
-                <span class="text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg-inset)] text-[var(--dash-text)]">
+                <span class="text-xs px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/10 text-purple-700">
                   {formatExperienceLevel(level)}
                 </span>
               {/each}

@@ -724,7 +724,7 @@ model job_resources {
 
 model job_searches {
   id                     Int                      @id @default(autoincrement())
-  status                 String?                  @db.VarChar(50)
+  status                 String?                  @default("idle") @db.VarChar(50)
   date_created           DateTime?                @db.Timestamptz(6)
   date_updated           DateTime?                @db.Timestamptz(6)
   name                   String                   @db.VarChar(255)

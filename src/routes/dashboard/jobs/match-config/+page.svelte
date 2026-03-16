@@ -1,11 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { faChartBar, faSliders } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faChartBar,
-    faInfoCircle,
-    faSliders,
-  } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import Card from "../../components/Card.svelte";
@@ -129,10 +125,20 @@
 <div class="space-y-6">
   <SectionHeader title="Match Config" icon={faSliders} />
 
-  <p class="text-sm text-[var(--dash-text-secondary)]">
-    Configure your job matching preferences. The AI matcher uses these settings
-    to filter and score jobs based on your criteria.
-  </p>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <p class="text-sm text-[var(--dash-text-secondary)]">
+      Configure your job matching preferences. Jobs are filtered based on these settings before being scored by the
+      AI. Jobs must have at least one matching skill and meet your job type
+      and work location criteria to be considered.
+    </p>
+    <a
+      href="/dashboard/jobs/match-progress"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap shrink-0"
+    >
+      <FontAwesomeIcon icon={faChartBar} class="w-4 h-4" />
+      Match Progress
+    </a>
+  </div>
 
   {#if errorMessage && saveState === "error"}
     <div
@@ -305,28 +311,4 @@
     <SectionSaveButton state={saveState} onClick={saveConfig} />
   </div>
 
-  <!-- Info Box -->
-  <div
-    class="bg-[var(--dash-info-light)] border border-[var(--dash-info)] rounded-lg p-4 flex gap-3"
-  >
-    <FontAwesomeIcon
-      icon={faInfoCircle}
-      class="w-5 h-5 text-[var(--dash-info)] flex-shrink-0 mt-0.5"
-    />
-    <div class="text-sm text-[var(--dash-info)]">
-      <p class="font-medium">How matching works</p>
-      <p class="mt-1">
-        Jobs are filtered based on your preferences before being scored by the
-        AI. Jobs must have at least one matching skill and meet your job type
-        and work location criteria to be considered.
-      </p>
-      <a
-        href="/dashboard/jobs/match-progress"
-        class="mt-2 inline-flex items-center gap-1.5 text-[var(--dash-info)] font-medium hover:underline"
-      >
-        <FontAwesomeIcon icon={faChartBar} class="w-3.5 h-3.5" />
-        View match progress
-      </a>
-    </div>
-  </div>
 </div>

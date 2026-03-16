@@ -1,11 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faArrowRight,
-    faClock,
-    faPlay,
-    faSearch,
-  } from "@fortawesome/free-solid-svg-icons";
+  import { faPlay, faSearch } from "@fortawesome/free-solid-svg-icons";
+  import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import Card from "./Card.svelte";
 
   interface SearchTask {
@@ -13,6 +9,7 @@
     name: string;
     is_active: boolean;
     status: string | null;
+    status_message: string | null;
     last_run: Date | string | null;
     last_run_jobs_found: number | null;
     job_platforms: { name: string } | null;
@@ -51,79 +48,93 @@
   const hasRunning = $derived(
     searchTasks.tasks.some((t) => t.status === "running"),
   );
+
+  // Show the 5 most recently run tasks
+  const recentTasks = $derived(
+    [...searchTasks.tasks]
+      .sort((a, b) => {
+        const aTime = a.last_run ? new Date(a.last_run).getTime() : 0;
+        const bTime = b.last_run ? new Date(b.last_run).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, 4),
+  );
 </script>
 
-{#if searchTasks.totalCount === 0}
-  <!-- No search tasks -->
-  <Card padding="md">
-    <div class="flex items-center gap-4">
+<Card padding="md">
+  <div class="flex items-start justify-between gap-3 mb-3">
+    <div class="flex items-center gap-2.5">
       <div
-        class="w-10 h-10 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
+        class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
       >
         <FontAwesomeIcon
-          icon={faSearch}
-          class="w-5 h-5 text-[var(--dash-text-muted)]"
+          icon={hasRunning ? faPlay : faSearch}
+          class="w-4 h-4 {hasRunning
+            ? 'text-green-500 animate-pulse'
+            : 'text-[var(--dash-text-muted)]'}"
         />
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium text-[var(--dash-text)]">
-          No search tasks configured
-        </p>
-        <p class="text-xs text-[var(--dash-text-secondary)] mt-0.5">
-          Set up automated job searches to find matching positions
+      <div>
+        <p class="text-sm font-medium text-[var(--dash-text)]">Search Tasks</p>
+        <p class="text-xs text-[var(--dash-text-secondary)]">
+          {searchTasks.activeCount} active / {searchTasks.totalCount} total
         </p>
       </div>
-      <a
-        href="/dashboard/jobs/settings"
-        class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap flex items-center gap-1.5 shrink-0"
-      >
-        Add Search
-        <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-      </a>
     </div>
-  </Card>
-{:else}
-  <!-- Search tasks summary -->
-  <Card padding="md">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4 flex-1 min-w-0">
-        <div
-          class="w-10 h-10 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
-        >
+    <a
+      href="/dashboard/jobs/settings"
+      class="px-2.5 py-1 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0"
+    >
+      {searchTasks.totalCount === 0 ? "Add" : "Manage"}
+    </a>
+  </div>
+
+  {#if searchTasks.totalCount === 0}
+    <p class="text-xs text-[var(--dash-text-secondary)]">
+      No search tasks configured yet. Set up automated job searches to find matching positions.
+    </p>
+  {:else}
+    <div class="space-y-2">
+      {#each recentTasks as task (task.id)}
+        {@const statusIcon = getSearchTaskStatusIcon(task)}
+        <div class="flex items-center gap-2 text-xs">
           <FontAwesomeIcon
-            icon={hasRunning ? faPlay : faSearch}
-            class="w-5 h-5 {hasRunning
-              ? 'text-green-500 animate-pulse'
-              : 'text-[var(--dash-text-muted)]'}"
+            icon={statusIcon.icon}
+            class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'animate-spin' : ''} shrink-0"
           />
-        </div>
-        <div>
-          <p class="text-sm font-medium text-[var(--dash-text)]">Search Tasks</p>
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--dash-text-secondary)] mt-0.5">
-            <span>
-              <span class="font-semibold text-[var(--dash-text)]">{searchTasks.activeCount}</span>
-              active / {searchTasks.totalCount} total
+
+          <!-- Name @ platform -->
+          <span class="text-[var(--dash-text)] truncate flex-1 min-w-0">
+            {task.name || "Search task"}{#if task.job_platforms}<span class="text-[var(--dash-text-secondary)] ml-1">@ {task.job_platforms.name}</span>{/if}
+          </span>
+
+          <!-- Jobs found -->
+          {#if task.last_run_jobs_found != null && task.last_run_jobs_found > 0}
+            <span class="text-[var(--dash-text-secondary)] whitespace-nowrap shrink-0">
+              {task.last_run_jobs_found} jobs
             </span>
-            {#if searchTasks.lastRun}
-              <span class="flex items-center gap-1">
-                <FontAwesomeIcon icon={faClock} class="w-3 h-3" />
-                Last run {timeAgo(searchTasks.lastRun)}
-              </span>
-            {/if}
-            {#if searchTasks.totalJobsFound > 0}
-              <span>
-                {searchTasks.totalJobsFound} jobs found
-              </span>
-            {/if}
-          </div>
+          {/if}
+
+          <!-- Time -->
+          {#if task.last_run}
+            <span class="text-[var(--dash-text-muted)] whitespace-nowrap shrink-0">
+              {timeAgo(task.last_run)}
+            </span>
+          {:else}
+            <span class="text-[var(--dash-text-muted)] whitespace-nowrap shrink-0">
+              Not run yet
+            </span>
+          {/if}
         </div>
-      </div>
-      <a
-        href="/dashboard/jobs/settings"
-        class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0 ml-3"
-      >
-        Manage
-      </a>
+      {/each}
+      {#if searchTasks.totalCount > 4}
+        <a
+          href="/dashboard/jobs/settings"
+          class="text-xs text-[var(--dash-primary)] hover:underline"
+        >
+          +{searchTasks.totalCount - 4} more
+        </a>
+      {/if}
     </div>
-  </Card>
-{/if}
+  {/if}
+</Card>

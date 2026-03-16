@@ -59,9 +59,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       // Current matcher state from Redis
       getMatcherState(),
 
-      // Recently matched jobs (last 20)
+      // Recently matched jobs (last 20, excluding ineligible)
       db.job_matches.findMany({
-        where: { profile: profileId },
+        where: { profile: profileId, recommendation: { not: "ineligible" } },
         orderBy: { date_created: "desc" },
         take: 20,
         select: {

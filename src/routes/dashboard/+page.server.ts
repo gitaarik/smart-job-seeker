@@ -16,6 +16,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   if (!layoutData.selectedProfile) {
     return {
       profileCompleteness: null,
+      matchConfig: null,
       searchTasks: null,
       matchStats: null,
       topMatches: null,
@@ -51,10 +52,16 @@ export const load: PageServerLoad = async ({ parent }) => {
       },
     }),
 
-    // Check if job_match_config exists (needed for matcher filtering)
+    // Load match config preferences
     db.job_match_config.findFirst({
       where: { profile: profileId },
-      select: { id: true },
+      select: {
+        id: true,
+        job_types: true,
+        experience_levels: true,
+        work_location: true,
+        locations: true,
+      },
     }),
 
     // Search tasks for this profile
@@ -65,6 +72,7 @@ export const load: PageServerLoad = async ({ parent }) => {
         name: true,
         is_active: true,
         status: true,
+        status_message: true,
         last_run: true,
         last_run_jobs_found: true,
         job_platforms: { select: { name: true } },
@@ -174,6 +182,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   return {
     profileCompleteness,
+    matchConfig,
     searchTasks,
     matchStats,
     topMatches,
