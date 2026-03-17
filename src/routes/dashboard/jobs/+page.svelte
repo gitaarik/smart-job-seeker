@@ -114,25 +114,28 @@
     return "strong";
   }
 
-  // Local state for form inputs
-  let selectedStatuses = $state<Set<string>>(
-    new Set(filters.status ? filters.status.split(",") : [])
-  );
-  let searchInput = $state(filters.search);
-  let selectedPlatforms = $state<Set<string>>(
-    new Set(filters.platform ? filters.platform.split(",") : [])
-  );
-  let selectedWorkLocations = $state<Set<string>>(
-    new Set(filters.workLocation ? filters.workLocation.split(",") : [])
-  );
-  let selectedJobTypes = $state<Set<string>>(
-    new Set(filters.jobType ? filters.jobType.split(",") : [])
-  );
-  let minScoreFilter = $state(filters.minScore);
-  let datePostedFilter = $state(filters.datePosted);
+  // Local state for form inputs — synced from server data on navigation
+  let selectedStatuses = $state<Set<string>>(new Set());
+  let searchInput = $state("");
+  let selectedPlatforms = $state<Set<string>>(new Set());
+  let selectedWorkLocations = $state<Set<string>>(new Set());
+  let selectedJobTypes = $state<Set<string>>(new Set());
+  let minScoreFilter = $state("");
+  let datePostedFilter = $state("");
   let expandedId = $state<number | null>(null);
   let searchInputEl: HTMLInputElement;
   let openDropdown = $state<string | null>(null);
+
+  // Re-sync local state when server filters change (e.g. sidebar navigation)
+  $effect(() => {
+    selectedStatuses = new Set(filters.status ? filters.status.split(",") : []);
+    searchInput = filters.search;
+    selectedPlatforms = new Set(filters.platform ? filters.platform.split(",") : []);
+    selectedWorkLocations = new Set(filters.workLocation ? filters.workLocation.split(",") : []);
+    selectedJobTypes = new Set(filters.jobType ? filters.jobType.split(",") : []);
+    minScoreFilter = filters.minScore;
+    datePostedFilter = filters.datePosted;
+  });
 
   let pageTitle = $derived(
     selectedStatuses.has("saved")
@@ -376,7 +379,7 @@
             : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
         >
           <FontAwesomeIcon icon={faTag} class="w-3 h-3 opacity-60" />
-          Status
+          Marked as
           {#if selectedStatuses.size > 0}
             <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedStatuses.size}</span>
           {:else}
@@ -422,46 +425,44 @@
         </select>
       </div>
 
-      <!-- Platform multi-select -->
-      {#if platforms.length > 0}
-        <div class="relative" data-dropdown="platform">
-          <button
-            type="button"
-            onclick={() => toggleDropdown("platform")}
-            class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedPlatforms.size > 0
-              ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-              : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-          >
-            <FontAwesomeIcon icon={faGlobe} class="w-3 h-3 opacity-60" />
-            Platform
-            {#if selectedPlatforms.size > 0}
-              <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedPlatforms.size}</span>
-            {:else}
-              <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-            {/if}
-          </button>
-          {#if openDropdown === "platform"}
-            <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-              {#each platforms as platform}
-                <button
-                  type="button"
-                  onclick={() => togglePlatform(platform.id.toString())}
-                  class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedPlatforms.has(platform.id.toString())
-                    ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                    : 'border-[var(--dash-border)]'}">
-                    {#if selectedPlatforms.has(platform.id.toString())}
-                      <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
-                    {/if}
-                  </span>
-                  <span class="text-[var(--dash-text)]">{platform.name}</span>
-                </button>
-              {/each}
-            </div>
+      <!-- Job Type multi-select -->
+      <div class="relative" data-dropdown="jobType">
+        <button
+          type="button"
+          onclick={() => toggleDropdown("jobType")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedJobTypes.size > 0
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
+        >
+          <FontAwesomeIcon icon={faSitemap} class="w-3 h-3 opacity-60" />
+          Job type
+          {#if selectedJobTypes.size > 0}
+            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedJobTypes.size}</span>
+          {:else}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
           {/if}
-        </div>
-      {/if}
+        </button>
+        {#if openDropdown === "jobType"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+            {#each [{ value: "full_time", label: "Full-time" }, { value: "contract", label: "Contract" }, { value: "part_time", label: "Part-time" }, { value: "freelance", label: "Freelance" }] as opt}
+              <button
+                type="button"
+                onclick={() => toggleJobType(opt.value)}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedJobTypes.has(opt.value)
+                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if selectedJobTypes.has(opt.value)}
+                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
 
       <!-- Work Location multi-select -->
       <div class="relative" data-dropdown="workLocation">
@@ -502,44 +503,46 @@
         {/if}
       </div>
 
-      <!-- Job Type multi-select -->
-      <div class="relative" data-dropdown="jobType">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("jobType")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedJobTypes.size > 0
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faSitemap} class="w-3 h-3 opacity-60" />
-          Job type
-          {#if selectedJobTypes.size > 0}
-            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedJobTypes.size}</span>
-          {:else}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+      <!-- Platform multi-select -->
+      {#if platforms.length > 0}
+        <div class="relative" data-dropdown="platform">
+          <button
+            type="button"
+            onclick={() => toggleDropdown("platform")}
+            class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedPlatforms.size > 0
+              ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+              : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
+          >
+            <FontAwesomeIcon icon={faGlobe} class="w-3 h-3 opacity-60" />
+            Platform
+            {#if selectedPlatforms.size > 0}
+              <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedPlatforms.size}</span>
+            {:else}
+              <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+            {/if}
+          </button>
+          {#if openDropdown === "platform"}
+            <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+              {#each platforms as platform}
+                <button
+                  type="button"
+                  onclick={() => togglePlatform(platform.id.toString())}
+                  class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedPlatforms.has(platform.id.toString())
+                    ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                    : 'border-[var(--dash-border)]'}">
+                    {#if selectedPlatforms.has(platform.id.toString())}
+                      <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                    {/if}
+                  </span>
+                  <span class="text-[var(--dash-text)]">{platform.name}</span>
+                </button>
+              {/each}
+            </div>
           {/if}
-        </button>
-        {#if openDropdown === "jobType"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-            {#each [{ value: "full_time", label: "Full-time" }, { value: "contract", label: "Contract" }, { value: "part_time", label: "Part-time" }, { value: "freelance", label: "Freelance" }] as opt}
-              <button
-                type="button"
-                onclick={() => toggleJobType(opt.value)}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedJobTypes.has(opt.value)
-                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if selectedJobTypes.has(opt.value)}
-                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
 
       {#if hasActiveFilters}
         <button

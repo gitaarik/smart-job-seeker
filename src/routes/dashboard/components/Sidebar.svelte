@@ -68,12 +68,12 @@
         },
         {
           label: "Job Matches",
-          href: "/dashboard/jobs?filter=matches",
+          href: "/dashboard/jobs?minScore=40",
           icon: faListCheck,
         },
         {
           label: "Saved Jobs",
-          href: "/dashboard/jobs?filter=saved",
+          href: "/dashboard/jobs?status=saved",
           icon: faBookmark,
         },
         {
@@ -233,58 +233,60 @@
     currentPath: string,
     currentSearch: string,
   ): boolean {
-    // Handle hrefs with query params (e.g., /dashboard/jobs?filter=matches)
     const [hrefPath, hrefSearch] = href.split("?");
+    const currentParams = new URLSearchParams(currentSearch);
 
-    // Job detail pages (/dashboard/jobs/123) - check jobCategory from page data first
+    // Job detail pages (/dashboard/jobs/123) - check jobCategory from page data
     const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
     if (jobDetailMatch) {
       const jobCategory = $page.data?.jobCategory;
-      // Match the appropriate sidebar item based on job category
-      if (
-        href === "/dashboard/jobs?filter=saved" && jobCategory === "saved"
-      ) {
+      if (href === "/dashboard/jobs?status=saved" && jobCategory === "saved") {
         return true;
       }
-      if (
-        href === "/dashboard/jobs?filter=matches" &&
-        jobCategory === "matches"
-      ) {
+      if (href === "/dashboard/jobs?minScore=40" && jobCategory === "matches") {
         return true;
       }
-      if (
-        href === "/dashboard/jobs" &&
-        (jobCategory === "all" || !jobCategory)
-      ) {
+      if (href === "/dashboard/jobs" && (jobCategory === "all" || !jobCategory)) {
         return true;
+      }
+      return false;
+    }
+
+    // Jobs list page - determine which sidebar item is active based on current params
+    if (currentPath === "/dashboard/jobs" && hrefPath === "/dashboard/jobs") {
+      const hasStatus = currentParams.has("status");
+      const hasMinScore = currentParams.has("minScore");
+
+      if (href === "/dashboard/jobs?status=saved") {
+        return hasStatus && currentParams.get("status")!.includes("saved");
+      }
+      if (href === "/dashboard/jobs?minScore=40") {
+        return hasMinScore && !hasStatus;
+      }
+      if (href === "/dashboard/jobs") {
+        return !hasMinScore && !hasStatus;
       }
       return false;
     }
 
     if (hrefSearch) {
-      // For hrefs with query params, match path and check if the filter param matches
+      // For other hrefs with query params, match path + all params
       if (currentPath === hrefPath) {
         const hrefParams = new URLSearchParams(hrefSearch);
-        const currentParams = new URLSearchParams(currentSearch);
-        const hrefFilter = hrefParams.get("filter");
-        const currentFilter = currentParams.get("filter");
-        return hrefFilter === currentFilter;
+        for (const [key, value] of hrefParams) {
+          if (currentParams.get(key) !== value) return false;
+        }
+        return true;
       }
       return false;
     }
 
-    // For plain paths
+    // For plain paths - exact match
     if (currentPath === href) {
-      // Exact match - but check for filter params
-      const currentParams = new URLSearchParams(currentSearch);
-      if (currentParams.get("filter") && !hrefSearch) {
-        return false;
-      }
       return true;
     }
 
     // Subpath matching - but NOT for /dashboard/jobs (All Jobs)
-    // This prevents "All Jobs" from matching /dashboard/jobs/settings, /dashboard/jobs/123, etc.
     if (href !== "/dashboard/jobs" && currentPath.startsWith(href + "/")) {
       return true;
     }

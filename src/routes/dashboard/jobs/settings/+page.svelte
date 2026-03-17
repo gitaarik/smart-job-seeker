@@ -2,8 +2,10 @@
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { onMount } from "svelte";
   import {
     faCheck,
+    faDesktop,
     faExclamationTriangle,
     faEye,
     faEyeSlash,
@@ -21,6 +23,29 @@
 
   let jobSearches = $derived(data.jobSearches);
   let showAddForm = $state(false);
+
+  // Desktop scraper connection status
+  let desktopConnected = $state<boolean | null>(null); // null = checking
+
+  let anyTaskUsesDesktop = $derived(
+    jobSearches.some((s) => s.browser_provider === "local")
+  );
+
+  async function checkDesktopStatus() {
+    try {
+      const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
+      const result = await res.json();
+      desktopConnected = result.connected === true;
+    } catch {
+      desktopConnected = false;
+    }
+  }
+
+  onMount(() => {
+    checkDesktopStatus();
+    const interval = setInterval(checkDesktopStatus, 15000);
+    return () => clearInterval(interval);
+  });
 
   // Form states for new entry
   let newName = $state("");
@@ -179,6 +204,14 @@
     addLabel="Add Search"
     onAdd={() => (showAddForm = true)}
   />
+
+  {#if desktopConnected !== null && (anyTaskUsesDesktop || desktopConnected)}
+    <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
+      <span class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : 'bg-[var(--dash-text-muted)]'}"></span>
+      <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+      Desktop app {desktopConnected ? "connected" : "not connected"}
+    </div>
+  {/if}
 
   {#if form?.error}
     <div
@@ -489,6 +522,19 @@
                     >{search.job_platforms.name}</span>
                   {/if}
                 </h3>
+                {#if search.browser_provider === "local"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 {desktopConnected
+                      ? 'bg-green-500/10 text-green-600'
+                      : desktopConnected === false
+                        ? 'bg-amber-500/10 text-amber-600'
+                        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
+                    title={desktopConnected ? "Desktop app connected" : "Desktop app not connected"}
+                  >
+                    <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                    {desktopConnected ? "Connected" : desktopConnected === false ? "Disconnected" : "..."}
+                  </span>
+                {/if}
                 {#if search.status === "running" || search.status === "queued"}
                   <span
                     class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-blue-500/20 text-blue-600"

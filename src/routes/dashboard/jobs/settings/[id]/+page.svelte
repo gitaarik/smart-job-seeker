@@ -225,6 +225,19 @@
   );
   let isSavingBrowserProvider = $state(false);
 
+  // Desktop scraper connection status
+  let desktopConnected = $state<boolean | null>(null);
+
+  async function checkDesktopStatus() {
+    try {
+      const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
+      const result = await res.json();
+      desktopConnected = result.connected === true;
+    } catch {
+      desktopConnected = false;
+    }
+  }
+
   // Keep minimized (for local/tunnel mode)
   let keepMinimized = $state<boolean>(
     (jobSearch as any).keep_minimized ?? true,
@@ -1443,6 +1456,8 @@
     }
   }
 
+  let desktopPollInterval: ReturnType<typeof setInterval> | null = null;
+
   onMount(() => {
     // Load runs history
     loadRuns();
@@ -1451,10 +1466,15 @@
     if (needsIntervention || isQueued) {
       startPolling();
     }
+
+    // Poll desktop connection status
+    checkDesktopStatus();
+    desktopPollInterval = setInterval(checkDesktopStatus, 15000);
   });
 
   onDestroy(() => {
     stopPolling();
+    if (desktopPollInterval) clearInterval(desktopPollInterval);
     // Clean up all log and item polling intervals
     Object.values(logPollIntervals).forEach((interval) =>
       clearInterval(interval)
@@ -1739,6 +1759,14 @@
             </div>
           {/if}
         </div>
+
+        {#if desktopConnected !== null && (isTunnelMode || desktopConnected)}
+          <div class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}">
+            <span class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"></span>
+            <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+            Desktop app {desktopConnected ? "connected" : "not connected"}
+          </div>
+        {/if}
 
         <div class="flex flex-wrap items-center gap-2">
           {#if jobSearch.status === "blocked"}
@@ -2453,6 +2481,15 @@
                 >
                   Cancel
                 </button>
+              </div>
+            {/if}
+
+            <!-- Desktop connection status -->
+            {#if desktopConnected !== null && (isTunnelMode || desktopConnected)}
+              <div class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}">
+                <span class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"></span>
+                <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                Desktop app {desktopConnected ? "connected" : "not connected"}
               </div>
             {/if}
 
