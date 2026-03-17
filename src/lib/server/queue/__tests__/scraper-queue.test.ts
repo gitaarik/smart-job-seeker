@@ -51,7 +51,7 @@ import {
 } from "../scraper-queue";
 
 const jobData: ScrapeJobData = {
-  jobSearchId: 42,
+  searchTaskId: 42,
   runId: 7,
   searchUrl: "https://example.com/jobs",
   platformId: "linkedin",
@@ -83,12 +83,12 @@ describe("addScrapeJob", () => {
 describe("getActiveJobForSearch", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("finds active job by jobSearchId", async () => {
-    const job = { data: { jobSearchId: 42 } };
+  it("finds active job by searchTaskId", async () => {
+    const job = { data: { searchTaskId: 42 } };
     mockGetActive.mockResolvedValueOnce([
-      { data: { jobSearchId: 10 } },
+      { data: { searchTaskId: 10 } },
       job,
-      { data: { jobSearchId: 99 } },
+      { data: { searchTaskId: 99 } },
     ]);
     const result = await getActiveJobForSearch(42);
     expect(result).toBe(job);
@@ -96,7 +96,7 @@ describe("getActiveJobForSearch", () => {
 
   it("returns undefined when no match", async () => {
     mockGetActive.mockResolvedValueOnce([
-      { data: { jobSearchId: 10 } },
+      { data: { searchTaskId: 10 } },
     ]);
     const result = await getActiveJobForSearch(42);
     expect(result).toBeUndefined();
@@ -112,8 +112,8 @@ describe("getActiveJobForSearch", () => {
 describe("getWaitingJobForSearch", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("finds waiting job by jobSearchId", async () => {
-    const job = { data: { jobSearchId: 42 } };
+  it("finds waiting job by searchTaskId", async () => {
+    const job = { data: { searchTaskId: 42 } };
     mockGetWaiting.mockResolvedValueOnce([job]);
     const result = await getWaitingJobForSearch(42);
     expect(result).toBe(job);
@@ -132,7 +132,7 @@ describe("removeWaitingJob", () => {
   it("removes waiting job and returns true", async () => {
     const mockRemove = vi.fn().mockResolvedValueOnce(undefined);
     mockGetWaiting.mockResolvedValueOnce([
-      { data: { jobSearchId: 42 }, remove: mockRemove },
+      { data: { searchTaskId: 42 }, remove: mockRemove },
     ]);
     const result = await removeWaitingJob(42);
     expect(result).toBe(true);
@@ -152,7 +152,7 @@ describe("removeActiveJob", () => {
   it("moves active job to failed and returns true", async () => {
     const mockMoveToFailed = vi.fn().mockResolvedValueOnce(undefined);
     mockGetActive.mockResolvedValueOnce([
-      { data: { jobSearchId: 42 }, moveToFailed: mockMoveToFailed },
+      { data: { searchTaskId: 42 }, moveToFailed: mockMoveToFailed },
     ]);
     const result = await removeActiveJob(42);
     expect(result).toBe(true);

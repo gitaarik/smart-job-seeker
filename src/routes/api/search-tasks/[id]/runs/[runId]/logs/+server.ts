@@ -4,24 +4,24 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
- * GET /api/job-searches/[id]/runs/[runId]/logs
+ * GET /api/search-tasks/[id]/runs/[runId]/logs
  *
  * Get logs for a specific run.
  * Supports pagination and filtering by timestamp for live updates.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
   const runId = parseIntParam(params.runId, "run");
 
   // Get the run and verify ownership through job search
-  const run = await db.job_search_runs.findFirst({
+  const run = await db.search_task_runs.findFirst({
     where: {
       id: runId,
-      job_search_id: jobSearchId,
+      search_task_id: searchTaskId,
     },
     include: {
-      job_searches: {
+      search_tasks: {
         include: {
           profiles: true,
         },
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
     throw error(404, "Run not found");
   }
 
-  if (run.job_searches.profiles.user_id !== user.id) {
+  if (run.search_tasks.profiles.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 

@@ -19,7 +19,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   // Check if config already exists
-  const existing = await db.job_match_config.findFirst({
+  const existing = await db.match_config.findFirst({
     where: { profile: profile_id },
   });
 
@@ -36,12 +36,12 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   let result;
   if (existing) {
-    result = await db.job_match_config.update({
+    result = await db.match_config.update({
       where: { id: existing.id },
       data,
     });
   } else {
-    result = await db.job_match_config.create({
+    result = await db.match_config.create({
       data: {
         ...data,
         profile: profile_id,

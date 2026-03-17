@@ -53,7 +53,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
 
     // Load match config preferences
-    db.job_match_config.findFirst({
+    db.match_config.findFirst({
       where: { profile: profileId },
       select: {
         id: true,
@@ -65,7 +65,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
 
     // Search tasks for this profile
-    db.job_searches.findMany({
+    db.search_tasks.findMany({
       where: { profile: profileId },
       select: {
         id: true,

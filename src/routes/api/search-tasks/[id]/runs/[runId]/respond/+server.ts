@@ -10,7 +10,7 @@ const VALID_RESPONSES = ["continue", "skip", "cancel"] as const;
 type UserResponse = (typeof VALID_RESPONSES)[number];
 
 /**
- * POST /api/job-searches/[id]/runs/[runId]/respond
+ * POST /api/search-tasks/[id]/runs/[runId]/respond
  *
  * Submit user feedback to a running scraper job.
  * The scraper polls for this response during intervention waits.
@@ -23,7 +23,7 @@ type UserResponse = (typeof VALID_RESPONSES)[number];
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
   const runId = parseIntParam(params.runId, "run");
 
   // Parse and validate request body
@@ -40,26 +40,26 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Get the job search and verify ownership
-  const jobSearch = await db.job_searches.findFirst({
-    where: { id: jobSearchId },
+  const searchTask = await db.search_tasks.findFirst({
+    where: { id: searchTaskId },
     include: {
       profiles: true,
     },
   });
 
-  if (!jobSearch) {
+  if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
-  if (jobSearch.profiles.user_id !== user.id) {
+  if (searchTask.profiles.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
   // Get the run and verify it belongs to this job search
-  const run = await db.job_search_runs.findFirst({
+  const run = await db.search_task_runs.findFirst({
     where: {
       id: runId,
-      job_search_id: jobSearchId,
+      search_task_id: searchTaskId,
     },
   });
 
@@ -73,7 +73,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Update the run with the user's response
-  await db.job_search_runs.update({
+  await db.search_task_runs.update({
     where: { id: runId },
     data: {
       user_response: response,
@@ -82,10 +82,10 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     },
   });
 
-  // If cancelling, also update the job_searches table
+  // If cancelling, also update the search_tasks table
   if (response === "cancel") {
-    await db.job_searches.update({
-      where: { id: jobSearchId },
+    await db.search_tasks.update({
+      where: { id: searchTaskId },
       data: {
         status: "cancelled",
         status_message: "Cancelled by user",

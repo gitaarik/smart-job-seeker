@@ -7,7 +7,7 @@ import { chromium } from "patchright";
 const CLOUD_BROWSER_BASE = "wss://cloudbrowser.gologin.com";
 
 /**
- * POST /api/job-searches/[id]/runs/[runId]/navigate-url
+ * POST /api/search-tasks/[id]/runs/[runId]/navigate-url
  *
  * Navigate the cloud browser to a URL via CDP.
  * Used for magic link login: the user receives a login link via email
@@ -17,7 +17,7 @@ const CLOUD_BROWSER_BASE = "wss://cloudbrowser.gologin.com";
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
   const runId = parseIntParam(params.runId, "run");
 
   // Parse request body
@@ -41,20 +41,20 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Verify ownership and get job search details
-  const jobSearch = await db.job_searches.findFirst({
-    where: { id: jobSearchId },
+  const searchTask = await db.search_tasks.findFirst({
+    where: { id: searchTaskId },
     select: {
       profile: true,
       profiles: { select: { user_id: true, browser_profile_id: true } },
     },
   });
 
-  if (!jobSearch) throw error(404, "Job search not found");
-  if (jobSearch.profiles.user_id !== user.id) throw error(403, "Not authorized");
+  if (!searchTask) throw error(404, "Job search not found");
+  if (searchTask.profiles.user_id !== user.id) throw error(403, "Not authorized");
 
   // Verify run is active
-  const run = await db.job_search_runs.findFirst({
-    where: { id: runId, job_search_id: jobSearchId },
+  const run = await db.search_task_runs.findFirst({
+    where: { id: runId, search_task_id: searchTaskId },
     select: { status: true },
   });
 
@@ -64,7 +64,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Get GoLogin profile ID from the user's profile
-  const providerProfileId = jobSearch.profiles.browser_profile_id;
+  const providerProfileId = searchTask.profiles.browser_profile_id;
 
   if (!providerProfileId) {
     throw error(400, "No browser profile associated with this profile");

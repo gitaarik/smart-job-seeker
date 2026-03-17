@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const jobSearches = await db.job_searches.findMany({
+  const searchTasks = await db.search_tasks.findMany({
     where: { profile: layoutData.selectedProfile.id },
     include: {
       job_platforms: true,
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   });
 
   return {
-    jobSearches,
+    searchTasks,
     profileId: layoutData.selectedProfile.id,
   };
 };
@@ -180,7 +180,7 @@ export const actions: Actions = {
       );
     }
 
-    await db.job_searches.create({
+    await db.search_tasks.create({
       data: {
         name: name.trim(),
         search_url: search_url.trim(),
@@ -235,7 +235,7 @@ export const actions: Actions = {
       return fail(400, { error: "Name is required" });
     }
 
-    const existing = await db.job_searches.findFirst({
+    const existing = await db.search_tasks.findFirst({
       where: { id, profile: profileId },
     });
 
@@ -264,7 +264,7 @@ export const actions: Actions = {
       );
     }
 
-    await db.job_searches.update({
+    await db.search_tasks.update({
       where: { id },
       data: {
         name: name.trim(),
@@ -298,7 +298,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid search ID" });
     }
 
-    const existing = await db.job_searches.findFirst({
+    const existing = await db.search_tasks.findFirst({
       where: { id, profile: profileId },
     });
 
@@ -306,7 +306,7 @@ export const actions: Actions = {
       return fail(404, { error: "Job search not found" });
     }
 
-    await db.job_searches.delete({
+    await db.search_tasks.delete({
       where: { id },
     });
 

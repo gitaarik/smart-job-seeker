@@ -30,7 +30,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   if (!isStaff) {
     // Normal user: check that no other user uses this platform
-    const otherUserUsage = await db.job_searches.findFirst({
+    const otherUserUsage = await db.search_tasks.findFirst({
       where: {
         platform: platformId,
         profiles: { user_id: { not: user.id } },
@@ -42,7 +42,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     }
 
     // Also verify the current user actually uses this platform
-    const ownUsage = await db.job_searches.findFirst({
+    const ownUsage = await db.search_tasks.findFirst({
       where: {
         platform: platformId,
         profiles: { user_id: user.id },

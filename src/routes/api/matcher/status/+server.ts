@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   }
 
   // Load matcher config for eligibility counting
-  const matchConfig = await db.job_match_config.findFirst({
+  const matchConfig = await db.match_config.findFirst({
     where: { profile: profileId },
   });
 

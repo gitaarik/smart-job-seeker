@@ -4,21 +4,21 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
- * PATCH /api/job-searches/[id]/ui-preferences
+ * PATCH /api/search-tasks/[id]/ui-preferences
  *
  * Merge key/value pairs into the job search's ui_preferences JSONB column.
  * Body: { [key: string]: any }
  */
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
 
-  const jobSearch = await db.job_searches.findFirst({
-    where: { id: jobSearchId },
+  const searchTask = await db.search_tasks.findFirst({
+    where: { id: searchTaskId },
     include: { profiles: { select: { user_id: true } } },
   });
 
-  if (!jobSearch || jobSearch.profiles.user_id !== user.id) {
+  if (!searchTask || searchTask.profiles.user_id !== user.id) {
     throw error(403, "Access denied");
   }
 
@@ -27,11 +27,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     throw error(400, "Body must be a JSON object");
   }
 
-  const existing = (jobSearch.ui_preferences as Record<string, unknown>) ?? {};
+  const existing = (searchTask.ui_preferences as Record<string, unknown>) ?? {};
   const merged = { ...existing, ...body };
 
-  await db.job_searches.update({
-    where: { id: jobSearchId },
+  await db.search_tasks.update({
+    where: { id: searchTaskId },
     data: { ui_preferences: merged },
   });
 

@@ -38,10 +38,10 @@
 
   let { data }: { data: PageData } = $props();
 
-  let jobSearch = $state(data.jobSearch);
-  let maxJobsEnabled = $state<boolean>((jobSearch as any).max_jobs != null);
+  let searchTask = $state(data.searchTask);
+  let maxJobsEnabled = $state<boolean>((searchTask as any).max_jobs != null);
   let maxJobsInput = $state<string>(
-    (jobSearch as any).max_jobs?.toString() ?? "",
+    (searchTask as any).max_jobs?.toString() ?? "",
   );
   let isSavingMaxJobs = $state(false);
 
@@ -52,22 +52,22 @@
   }
   let maxJobsDirty = $derived(
     (maxJobsEnabled ? parseMaxJobs(maxJobsInput) : null) !==
-      ((jobSearch as any).max_jobs ?? null),
+      ((searchTask as any).max_jobs ?? null),
   );
 
   let skipExisting = $state<boolean>(
-    (jobSearch as any).skip_existing ?? false,
+    (searchTask as any).skip_existing ?? false,
   );
   let isSavingSkipExisting = $state(false);
   let skipExistingDirty = $derived(
-    skipExisting !== ((jobSearch as any).skip_existing ?? false),
+    skipExisting !== ((searchTask as any).skip_existing ?? false),
   );
 
   let stopAfterDuplicatesEnabled = $state<boolean>(
-    (jobSearch as any).stop_after_duplicates != null,
+    (searchTask as any).stop_after_duplicates != null,
   );
   let stopAfterDuplicatesInput = $state<string>(
-    (jobSearch as any).stop_after_duplicates?.toString() ?? "",
+    (searchTask as any).stop_after_duplicates?.toString() ?? "",
   );
   let isSavingStopAfterDuplicates = $state(false);
 
@@ -79,14 +79,14 @@
   let stopAfterDuplicatesDirty = $derived(
     (stopAfterDuplicatesEnabled
       ? parseStopAfterDuplicates(stopAfterDuplicatesInput)
-      : null) !== ((jobSearch as any).stop_after_duplicates ?? null),
+      : null) !== ((searchTask as any).stop_after_duplicates ?? null),
   );
 
   let skipFirstEnabled = $state<boolean>(
-    (jobSearch as any).skip_first != null,
+    (searchTask as any).skip_first != null,
   );
   let skipFirstInput = $state<string>(
-    (jobSearch as any).skip_first?.toString() ?? "",
+    (searchTask as any).skip_first?.toString() ?? "",
   );
   let isSavingSkipFirst = $state(false);
 
@@ -97,13 +97,13 @@
   }
   let skipFirstDirty = $derived(
     (skipFirstEnabled ? parseSkipFirst(skipFirstInput) : null) !==
-      ((jobSearch as any).skip_first ?? null),
+      ((searchTask as any).skip_first ?? null),
   );
 
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
   const initialCredentialId =
-    (jobSearch as any).platform_profile_id?.toString() ?? "none";
+    (searchTask as any).platform_profile_id?.toString() ?? "none";
   let savedCredentialId = $state<string>(initialCredentialId);
   let selectedCredentialId = $state<string>(initialCredentialId);
   let credentialDirty = $derived(
@@ -117,7 +117,7 @@
 
   // Header editing state (name + platform name)
   let isEditingHeader = $state(false);
-  let editNameInput = $state(jobSearch.name ?? "");
+  let editNameInput = $state(searchTask.name ?? "");
   let isSavingHeader = $state(false);
 
   async function saveHeader() {
@@ -125,13 +125,13 @@
     try {
       const newName = editNameInput.trim();
 
-      if (newName && newName !== (jobSearch.name ?? "")) {
-        await fetch(`/api/job-searches/${jobSearch.id}`, {
+      if (newName && newName !== (searchTask.name ?? "")) {
+        await fetch(`/api/search-tasks/${searchTask.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: newName }),
         });
-        jobSearch.name = newName;
+        searchTask.name = newName;
       }
 
       isEditingHeader = false;
@@ -143,7 +143,7 @@
   }
 
   function cancelEditHeader() {
-    editNameInput = jobSearch.name ?? "";
+    editNameInput = searchTask.name ?? "";
     isEditingHeader = false;
   }
 
@@ -159,7 +159,7 @@
     sectionOpen[section] = !isOpen;
     // Persist to job search
     const key = `task_sections_${section}`;
-    fetch(`/api/job-searches/${data.jobSearch.id}/ui-preferences`, {
+    fetch(`/api/search-tasks/${data.searchTask.id}/ui-preferences`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [key]: !isOpen }),
@@ -181,7 +181,7 @@
   async function deleteTask() {
     isDeleting = true;
     try {
-      const res = await fetch(`/api/job-searches/${jobSearch.id}`, {
+      const res = await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -194,31 +194,31 @@
 
   // URL editing state
   let canEditPlatformUrls = $state(data.canEditPlatformUrls);
-  let searchUrlInput = $state<string>(jobSearch.search_url ?? "");
-  let searchTermInput = $state<string>(jobSearch.search_term ?? "");
+  let searchUrlInput = $state<string>(searchTask.search_url ?? "");
+  let searchTermInput = $state<string>(searchTask.search_term ?? "");
   let loginUrlInput = $state<string>(
-    jobSearch.job_platforms?.login_page_url ?? "",
+    searchTask.job_platforms?.login_page_url ?? "",
   );
   let isSavingSearchUrl = $state(false);
   let isSavingSearchTerm = $state(false);
   let isSavingLoginUrl = $state(false);
   let searchUrlDirty = $derived(
-    searchUrlInput.trim() !== (jobSearch.search_url ?? ""),
+    searchUrlInput.trim() !== (searchTask.search_url ?? ""),
   );
   let searchTermDirty = $derived(
-    searchTermInput.trim() !== (jobSearch.search_term ?? ""),
+    searchTermInput.trim() !== (searchTask.search_term ?? ""),
   );
   let loginUrlDirty = $derived(
     loginUrlInput.trim() !==
-      (jobSearch.job_platforms?.login_page_url ?? ""),
+      (searchTask.job_platforms?.login_page_url ?? ""),
   );
 
   // Browser provider (hosted vs local) state
   let browserProvider = $state<string | null>(
-    (jobSearch as any).browser_provider ?? null,
+    (searchTask as any).browser_provider ?? null,
   );
   let savedBrowserProvider = $state<string | null>(
-    (jobSearch as any).browser_provider ?? null,
+    (searchTask as any).browser_provider ?? null,
   );
   let browserProviderDirty = $derived(
     browserProvider !== savedBrowserProvider,
@@ -240,10 +240,10 @@
 
   // Keep minimized (for local/tunnel mode)
   let keepMinimized = $state<boolean>(
-    (jobSearch as any).keep_minimized ?? true,
+    (searchTask as any).keep_minimized ?? true,
   );
   let savedKeepMinimized = $state<boolean>(
-    (jobSearch as any).keep_minimized ?? true,
+    (searchTask as any).keep_minimized ?? true,
   );
   let keepMinimizedDirty = $derived(keepMinimized !== savedKeepMinimized);
   let isSavingKeepMinimized = $state(false);
@@ -377,34 +377,34 @@
   let logAutoScroll = $state<Record<number, boolean>>({});
 
   // Reset state when navigating between job searches
-  let prevJobSearchId = data.jobSearch.id;
+  let prevSearchTaskId = data.searchTask.id;
   $effect(() => {
-    if (data.jobSearch.id === prevJobSearchId) return;
-    prevJobSearchId = data.jobSearch.id;
+    if (data.searchTask.id === prevSearchTaskId) return;
+    prevSearchTaskId = data.searchTask.id;
     // Re-sync all data-derived state
-    jobSearch = data.jobSearch;
+    searchTask = data.searchTask;
     isEditingHeader = false;
-    editNameInput = data.jobSearch.name ?? "";
+    editNameInput = data.searchTask.name ?? "";
     platformCredentials = data.platformCredentials;
     canEditPlatformUrls = data.canEditPlatformUrls;
-    maxJobsEnabled = (data.jobSearch as any).max_jobs != null;
-    maxJobsInput = (data.jobSearch as any).max_jobs?.toString() ?? "";
-    skipFirstEnabled = (data.jobSearch as any).skip_first != null;
+    maxJobsEnabled = (data.searchTask as any).max_jobs != null;
+    maxJobsInput = (data.searchTask as any).max_jobs?.toString() ?? "";
+    skipFirstEnabled = (data.searchTask as any).skip_first != null;
     stopAfterDuplicatesEnabled =
-      (data.jobSearch as any).stop_after_duplicates != null;
+      (data.searchTask as any).stop_after_duplicates != null;
     sectionOpen = {
       search: loadSectionOpen("search"),
       auth: loadSectionOpen("auth"),
       options: loadSectionOpen("options"),
       settings: loadSectionOpen("settings", false),
     };
-    searchUrlInput = data.jobSearch.search_url ?? "";
-    searchTermInput = data.jobSearch.search_term ?? "";
-    loginUrlInput = data.jobSearch.job_platforms?.login_page_url ?? "";
-    browserProvider = (data.jobSearch as any).browser_provider ?? null;
-    savedBrowserProvider = (data.jobSearch as any).browser_provider ?? null;
-    keepMinimized = (data.jobSearch as any).keep_minimized ?? true;
-    savedKeepMinimized = (data.jobSearch as any).keep_minimized ?? true;
+    searchUrlInput = data.searchTask.search_url ?? "";
+    searchTermInput = data.searchTask.search_term ?? "";
+    loginUrlInput = data.searchTask.job_platforms?.login_page_url ?? "";
+    browserProvider = (data.searchTask as any).browser_provider ?? null;
+    savedBrowserProvider = (data.searchTask as any).browser_provider ?? null;
+    keepMinimized = (data.searchTask as any).keep_minimized ?? true;
+    savedKeepMinimized = (data.searchTask as any).keep_minimized ?? true;
     browserCountryCode = data.browserCountryCode || "";
     savedBrowserCountryCode = data.browserCountryCode || "";
     browserLanguage = data.browserFingerprint.language;
@@ -417,7 +417,7 @@
     defaultBrowserLanguage = data.browserFingerprintDefaults.language;
     defaultBrowserTimezone = data.browserFingerprintDefaults.timezone;
     const credId =
-      (data.jobSearch as any).platform_profile_id?.toString() ?? "none";
+      (data.searchTask as any).platform_profile_id?.toString() ?? "none";
     savedCredentialId = credId;
     selectedCredentialId = credId;
     // Reset transient input state
@@ -437,20 +437,20 @@
     // Restart polling if needed
     stopPolling();
     if (
-      ["running", "blocked", "queued"].includes(data.jobSearch.status ?? "")
+      ["running", "blocked", "queued"].includes(data.searchTask.status ?? "")
     ) {
       startPolling();
     }
   });
 
   // Computed states
-  let isRunning = $derived(jobSearch.status === "running");
-  let isBlocked = $derived(jobSearch.status === "blocked");
-  let isQueued = $derived(jobSearch.status === "queued");
+  let isRunning = $derived(searchTask.status === "running");
+  let isBlocked = $derived(searchTask.status === "blocked");
+  let isQueued = $derived(searchTask.status === "queued");
   let needsIntervention = $derived(isRunning || isBlocked);
   let isCloudMode = $derived(!!liveUrl);
   let isMagicLink = $derived(
-    isBlocked && jobSearch.status_message?.includes("login link"),
+    isBlocked && searchTask.status_message?.includes("login link"),
   );
   // Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
   let expectsCloudBrowser = $derived(
@@ -621,7 +621,7 @@
   async function loadRuns() {
     try {
       const response = await fetch(
-        `/api/job-searches/${jobSearch.id}/runs?limit=10`,
+        `/api/search-tasks/${searchTask.id}/runs?limit=10`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -640,7 +640,7 @@
 
     try {
       const response = await fetch(
-        `/api/job-searches/${jobSearch.id}/runs/${runId}/logs?level=${logLevelFilter}`,
+        `/api/search-tasks/${searchTask.id}/runs/${runId}/logs?level=${logLevelFilter}`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -660,7 +660,7 @@
 
     try {
       const response = await fetch(
-        `/api/job-searches/${jobSearch.id}/runs/${runId}/items`,
+        `/api/search-tasks/${searchTask.id}/runs/${runId}/items`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -845,7 +845,7 @@
 
       try {
         let url =
-          `/api/job-searches/${jobSearch.id}/runs/${runId}/logs?level=${logLevelFilter}`;
+          `/api/search-tasks/${searchTask.id}/runs/${runId}/logs?level=${logLevelFilter}`;
         if (lastTimestamp) {
           url += `&after=${encodeURIComponent(lastTimestamp)}`;
         }
@@ -876,12 +876,12 @@
     const maxJobs = maxJobsEnabled ? parseMaxJobs(maxJobsInput) : null;
     isSavingMaxJobs = true;
     try {
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ max_jobs: maxJobs }),
       });
-      (jobSearch as any).max_jobs = maxJobs;
+      (searchTask as any).max_jobs = maxJobs;
     } catch (err) {
       console.error("Failed to save max jobs:", err);
     } finally {
@@ -892,12 +892,12 @@
   async function saveSkipExisting() {
     isSavingSkipExisting = true;
     try {
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ skip_existing: skipExisting }),
       });
-      (jobSearch as any).skip_existing = skipExisting;
+      (searchTask as any).skip_existing = skipExisting;
     } catch (err) {
       console.error("Failed to save skip existing:", err);
     } finally {
@@ -911,14 +911,14 @@
       : null;
     isSavingStopAfterDuplicates = true;
     try {
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           stop_after_duplicates: stopAfterDuplicates,
         }),
       });
-      (jobSearch as any).stop_after_duplicates = stopAfterDuplicates;
+      (searchTask as any).stop_after_duplicates = stopAfterDuplicates;
     } catch (err) {
       console.error("Failed to save stop after duplicates:", err);
     } finally {
@@ -932,12 +932,12 @@
       : null;
     isSavingSkipFirst = true;
     try {
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ skip_first: skipFirst }),
       });
-      (jobSearch as any).skip_first = skipFirst;
+      (searchTask as any).skip_first = skipFirst;
     } catch (err) {
       console.error("Failed to save skip first:", err);
     } finally {
@@ -949,12 +949,12 @@
     isSavingSearchUrl = true;
     try {
       const url = searchUrlInput.trim() || null;
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ search_url: url }),
       });
-      jobSearch.search_url = url;
+      searchTask.search_url = url;
     } catch (err) {
       console.error("Failed to save search URL:", err);
     } finally {
@@ -966,12 +966,12 @@
     isSavingSearchTerm = true;
     try {
       const term = searchTermInput.trim() || null;
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ search_term: term }),
       });
-      jobSearch.search_term = term;
+      searchTask.search_term = term;
     } catch (err) {
       console.error("Failed to save search term:", err);
     } finally {
@@ -980,17 +980,17 @@
   }
 
   async function saveLoginUrl() {
-    if (!jobSearch.platform) return;
+    if (!searchTask.platform) return;
     isSavingLoginUrl = true;
     try {
       const url = loginUrlInput.trim() || null;
-      await fetch(`/api/platforms/${jobSearch.platform}`, {
+      await fetch(`/api/platforms/${searchTask.platform}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login_page_url: url }),
       });
-      if (jobSearch.job_platforms) {
-        jobSearch.job_platforms.login_page_url = url;
+      if (searchTask.job_platforms) {
+        searchTask.job_platforms.login_page_url = url;
       }
     } catch (err) {
       console.error("Failed to save login URL:", err);
@@ -1021,13 +1021,13 @@
   async function saveBrowserProvider() {
     isSavingBrowserProvider = true;
     try {
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ browser_provider: browserProvider }),
       });
       savedBrowserProvider = browserProvider;
-      (jobSearch as any).browser_provider = browserProvider;
+      (searchTask as any).browser_provider = browserProvider;
     } catch (err) {
       console.error("Failed to save browser provider:", err);
     } finally {
@@ -1038,13 +1038,13 @@
   async function saveKeepMinimized() {
     isSavingKeepMinimized = true;
     try {
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keep_minimized: keepMinimized }),
       });
       savedKeepMinimized = keepMinimized;
-      (jobSearch as any).keep_minimized = keepMinimized;
+      (searchTask as any).keep_minimized = keepMinimized;
     } catch (err) {
       console.error("Failed to save keep minimized:", err);
     } finally {
@@ -1087,12 +1087,12 @@
       const profileId = selectedCredentialId === "none"
         ? null
         : parseInt(selectedCredentialId);
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform_profile_id: profileId }),
       });
-      (jobSearch as any).platform_profile_id = profileId;
+      (searchTask as any).platform_profile_id = profileId;
       savedCredentialId = selectedCredentialId;
     } catch (err) {
       console.error("Failed to save credential:", err);
@@ -1105,7 +1105,7 @@
     if (!newCredUsername.trim()) return;
     isSavingCredential = true;
     try {
-      const response = await fetch(`/api/job-searches/${jobSearch.id}`, {
+      const response = await fetch(`/api/search-tasks/${searchTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1146,7 +1146,7 @@
     ) return;
     isDeletingCredential = credId;
     try {
-      const platform = (jobSearch as any).platform;
+      const platform = (searchTask as any).platform;
       const response = await fetch(
         `/api/platforms/${platform}/credentials?profileId=${data.profileId}&credentialId=${credId}`,
         { method: "DELETE" },
@@ -1157,8 +1157,8 @@
           c.id !== credId
         );
         // If this was the saved credential, clear it
-        if ((jobSearch as any).platform_profile_id === credId) {
-          (jobSearch as any).platform_profile_id = null;
+        if ((searchTask as any).platform_profile_id === credId) {
+          (searchTask as any).platform_profile_id = null;
           savedCredentialId = "none";
         }
         // If this was the pending selection, reset to saved
@@ -1180,7 +1180,7 @@
 
     try {
       const response = await fetch(
-        `/api/job-searches/${jobSearch.id}/run`,
+        `/api/search-tasks/${searchTask.id}/run`,
         {
           method: "POST",
         },
@@ -1220,8 +1220,8 @@
       }
 
       // Queued successfully
-      jobSearch.status = "queued";
-      jobSearch.status_message = "Waiting in queue";
+      searchTask.status = "queued";
+      searchTask.status_message = "Waiting in queue";
       currentRunId = result.runId;
 
       // Reload runs to show the new one
@@ -1250,14 +1250,14 @@
     pollInterval = setInterval(async () => {
       try {
         const response = await fetch(
-          `/api/job-searches/${jobSearch.id}/run`,
+          `/api/search-tasks/${searchTask.id}/run`,
         );
         const result = await response.json();
 
-        jobSearch.status = result.status;
-        jobSearch.status_message = result.statusMessage;
-        jobSearch.last_run = result.lastRun;
-        jobSearch.last_run_jobs_found = result.jobsFound;
+        searchTask.status = result.status;
+        searchTask.status_message = result.statusMessage;
+        searchTask.last_run = result.lastRun;
+        searchTask.last_run_jobs_found = result.jobsFound;
         liveUrl = result.liveUrl || null;
         currentRunId = result.currentRunId || null;
 
@@ -1299,7 +1299,7 @@
 
     try {
       const response = await fetch(
-        `/api/job-searches/${jobSearch.id}/run`,
+        `/api/search-tasks/${searchTask.id}/run`,
         {
           method: "DELETE",
         },
@@ -1317,8 +1317,8 @@
         result.status === "cancellation_requested" ||
         result.status === "cancelled"
       ) {
-        jobSearch.status = "idle";
-        jobSearch.status_message = "Cancelled by user";
+        searchTask.status = "idle";
+        searchTask.status_message = "Cancelled by user";
         stopPolling();
         showBrowser = false;
         liveUrl = null;
@@ -1347,7 +1347,7 @@
 
     try {
       const res = await fetch(
-        `/api/job-searches/${jobSearch.id}/runs/${currentRunId}/respond`,
+        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/respond`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1365,8 +1365,8 @@
 
       // If cancelled, update UI immediately
       if (response === "cancel") {
-        jobSearch.status = "cancelled";
-        jobSearch.status_message = "Cancelled by user";
+        searchTask.status = "cancelled";
+        searchTask.status_message = "Cancelled by user";
         stopPolling();
         showBrowser = false;
         liveUrl = null;
@@ -1389,7 +1389,7 @@
 
     try {
       const res = await fetch(
-        `/api/job-searches/${jobSearch.id}/runs/${currentRunId}/type-text`,
+        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1428,7 +1428,7 @@
 
     try {
       const res = await fetch(
-        `/api/job-searches/${jobSearch.id}/runs/${currentRunId}/navigate-url`,
+        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/navigate-url`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1523,13 +1523,13 @@
               }}
             />
           </div>
-          {#if jobSearch.job_platforms}
+          {#if searchTask.job_platforms}
             <div>
               <label
                 class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
               >Platform</label>
               <p class="text-sm text-[var(--dash-text)]">
-                {jobSearch.job_platforms.name}
+                {searchTask.job_platforms.name}
               </p>
             </div>
           {/if}
@@ -1560,13 +1560,13 @@
           <h2
             class="text-lg font-semibold text-[var(--dash-text)]"
           >
-            {jobSearch.name}
-            {#if jobSearch.job_platforms}
+            {searchTask.name}
+            {#if searchTask.job_platforms}
               <span class="text-[var(--dash-text-secondary)] font-normal"
               >@</span>
               <span
                 class="bg-[var(--dash-bg-inset)] px-2 py-0.5 rounded inline-block"
-              >{jobSearch.job_platforms.name}</span>
+              >{searchTask.job_platforms.name}</span>
             {/if}
           </h2>
           <button
@@ -1602,7 +1602,7 @@
       <!-- Status Display -->
       <div class="p-4 bg-[var(--dash-bg-inset)] rounded-lg space-y-3">
         <div class="flex items-center gap-3 min-w-0">
-          {#if jobSearch.status === "queued"}
+          {#if searchTask.status === "queued"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
             >
@@ -1617,7 +1617,7 @@
                 Waiting in queue to start...
               </p>
             </div>
-          {:else if jobSearch.status === "running"}
+          {:else if searchTask.status === "running"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
             >
@@ -1628,13 +1628,13 @@
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">
-                {jobSearch.status_message || "Running..."}
+                {searchTask.status_message || "Running..."}
               </p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                Scraping jobs from {jobSearch.job_platforms?.name || "platform"}
+                Scraping jobs from {searchTask.job_platforms?.name || "platform"}
               </p>
             </div>
-          {:else if jobSearch.status === "blocked"}
+          {:else if searchTask.status === "blocked"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
             >
@@ -1645,7 +1645,7 @@
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-warning)]">
-                {jobSearch.status_message}
+                {searchTask.status_message}
               </p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
                 {#if isMagicLink}
@@ -1655,7 +1655,7 @@
                 {/if}
               </p>
             </div>
-          {:else if jobSearch.status === "success"}
+          {:else if searchTask.status === "success"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center shrink-0"
             >
@@ -1667,13 +1667,13 @@
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Completed</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                {formatDate(jobSearch.last_run)}
-                {#if jobSearch.last_run_jobs_found}
-                  • {jobSearch.last_run_jobs_found} jobs found
+                {formatDate(searchTask.last_run)}
+                {#if searchTask.last_run_jobs_found}
+                  • {searchTask.last_run_jobs_found} jobs found
                 {/if}
               </p>
             </div>
-          {:else if jobSearch.status === "partial"}
+          {:else if searchTask.status === "partial"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
             >
@@ -1687,10 +1687,10 @@
                 Completed with issues
               </p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                {formatDate(jobSearch.last_run)} • {jobSearch.status_message}
+                {formatDate(searchTask.last_run)} • {searchTask.status_message}
               </p>
             </div>
-          {:else if jobSearch.status === "error"}
+          {:else if searchTask.status === "error"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
             >
@@ -1702,10 +1702,10 @@
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-error)]">Failed</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                {jobSearch.status_message}
+                {searchTask.status_message}
               </p>
             </div>
-          {:else if jobSearch.status === "cancelled"}
+          {:else if searchTask.status === "cancelled"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
             >
@@ -1718,12 +1718,12 @@
               <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
                 {
-                  jobSearch.status_message ||
+                  searchTask.status_message ||
                     "Cancelled by user"
                 }
               </p>
             </div>
-          {:else if jobSearch.last_run}
+          {:else if searchTask.last_run}
             <!-- Idle but has run before -->
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)] shrink-0"
@@ -1736,9 +1736,9 @@
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Idle</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                Last run: {formatDate(jobSearch.last_run)}
-                {#if jobSearch.last_run_jobs_found}
-                  • {jobSearch.last_run_jobs_found} jobs found
+                Last run: {formatDate(searchTask.last_run)}
+                {#if searchTask.last_run_jobs_found}
+                  • {searchTask.last_run_jobs_found} jobs found
                 {/if}
               </p>
             </div>
@@ -1769,7 +1769,7 @@
         {/if}
 
         <div class="flex flex-wrap items-center gap-2">
-          {#if jobSearch.status === "blocked"}
+          {#if searchTask.status === "blocked"}
             <button
               onclick={() => sendFeedback("continue")}
               disabled={isSendingFeedback}
@@ -1816,8 +1816,8 @@
           {:else}
             <button
               onclick={startScrape}
-              disabled={isStarting || !jobSearch.search_url ||
-                !jobSearch.platform}
+              disabled={isStarting || !searchTask.search_url ||
+                !searchTask.platform}
               class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {#if isStarting}
@@ -1848,12 +1848,12 @@
       </div>
 
       <!-- Missing config warnings -->
-      {#if !jobSearch.search_url}
+      {#if !searchTask.search_url}
         <p class="text-sm text-[var(--dash-warning)]">
           No search URL configured. Please add a search URL to run scrapes.
         </p>
       {/if}
-      {#if !jobSearch.platform}
+      {#if !searchTask.platform}
         <p class="text-sm text-[var(--dash-warning)]">
           No platform selected. Please select a platform to run scrapes.
         </p>
@@ -1863,7 +1863,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Left column: Search & Credentials -->
       <div class="space-y-4">
-        {#if jobSearch.platform}
+        {#if searchTask.platform}
           <button
             type="button"
             onclick={() => toggleSection("search")}
@@ -1903,9 +1903,9 @@
                     placeholder="https://..."
                     class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                   />
-                  {#if jobSearch.search_url}
+                  {#if searchTask.search_url}
                     <a
-                      href={jobSearch.search_url}
+                      href={searchTask.search_url}
                       target="_blank"
                       rel="noopener"
                       class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
@@ -1938,7 +1938,7 @@
                     </button>
                     <button
                       type="button"
-                      onclick={() => (searchUrlInput = jobSearch.search_url ??
+                      onclick={() => (searchUrlInput = searchTask.search_url ??
                         "")}
                       class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                     >
@@ -1999,7 +1999,7 @@
                       <button
                         type="button"
                         onclick={() => (searchTermInput =
-                          jobSearch.search_term ?? "")}
+                          searchTask.search_term ?? "")}
                         class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                       >
                         Cancel
@@ -2052,9 +2052,9 @@
                       placeholder="https://..."
                       class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                     />
-                    {#if jobSearch.job_platforms?.login_page_url}
+                    {#if searchTask.job_platforms?.login_page_url}
                       <a
-                        href={jobSearch.job_platforms.login_page_url}
+                        href={searchTask.job_platforms.login_page_url}
                         target="_blank"
                         rel="noopener"
                         class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
@@ -2088,7 +2088,7 @@
                       <button
                         type="button"
                         onclick={() => (loginUrlInput =
-                          jobSearch.job_platforms?.login_page_url ??
+                          searchTask.job_platforms?.login_page_url ??
                             "")}
                         class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                       >
@@ -2096,14 +2096,14 @@
                       </button>
                     </div>
                   {/if}
-                {:else if jobSearch.job_platforms?.login_page_url}
+                {:else if searchTask.job_platforms?.login_page_url}
                   <a
-                    href={jobSearch.job_platforms.login_page_url}
+                    href={searchTask.job_platforms.login_page_url}
                     target="_blank"
                     rel="noopener"
                     class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
                   >
-                    {jobSearch.job_platforms.login_page_url}
+                    {searchTask.job_platforms.login_page_url}
                     <FontAwesomeIcon
                       icon={faExternalLinkAlt}
                       class="w-3 h-3 flex-shrink-0"
@@ -2118,12 +2118,12 @@
               <CredentialSelector
                 bind:credentials={platformCredentials}
                 bind:selectedId={selectedCredentialId}
-                platformId={(jobSearch as any).platform}
+                platformId={(searchTask as any).platform}
                 profileId={data.profileId}
-                platformName={jobSearch.job_platforms?.name}
+                platformName={searchTask.job_platforms?.name}
                 oncredentialdeleted={(credId) => {
-                  if ((jobSearch as any).platform_profile_id === credId) {
-                    (jobSearch as any).platform_profile_id = null;
+                  if ((searchTask as any).platform_profile_id === credId) {
+                    (searchTask as any).platform_profile_id = null;
                     savedCredentialId = "none";
                   }
                 }}
@@ -2231,10 +2231,10 @@
                     type="button"
                     onclick={() => {
                       maxJobsInput =
-                        (jobSearch as any).max_jobs?.toString() ??
+                        (searchTask as any).max_jobs?.toString() ??
                           "";
                       maxJobsEnabled =
-                        (jobSearch as any).max_jobs != null;
+                        (searchTask as any).max_jobs != null;
                     }}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
@@ -2290,10 +2290,10 @@
                     type="button"
                     onclick={() => {
                       skipFirstInput =
-                        (jobSearch as any).skip_first?.toString() ??
+                        (searchTask as any).skip_first?.toString() ??
                           "";
                       skipFirstEnabled =
-                        (jobSearch as any).skip_first != null;
+                        (searchTask as any).skip_first != null;
                     }}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
@@ -2349,10 +2349,10 @@
                     type="button"
                     onclick={() => {
                       stopAfterDuplicatesInput =
-                        (jobSearch as any).stop_after_duplicates
+                        (searchTask as any).stop_after_duplicates
                           ?.toString() ?? "";
                       stopAfterDuplicatesEnabled =
-                        (jobSearch as any).stop_after_duplicates !=
+                        (searchTask as any).stop_after_duplicates !=
                           null;
                     }}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
@@ -2414,7 +2414,7 @@
                   <button
                     type="button"
                     onclick={() => (skipExisting =
-                      (jobSearch as any).skip_existing ?? false)}
+                      (searchTask as any).skip_existing ?? false)}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
                     Cancel

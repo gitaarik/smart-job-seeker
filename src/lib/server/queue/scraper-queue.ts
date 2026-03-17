@@ -15,7 +15,7 @@ import { redisConnection } from "./connection";
 // ============================================================================
 
 export interface ScrapeJobData {
-  jobSearchId: number;
+  searchTaskId: number;
   runId: number;
   searchUrl: string;
   platformId: string;
@@ -63,7 +63,7 @@ export async function addScrapeJob(
   data: ScrapeJobData,
   options?: { priority?: number },
 ) {
-  const jobId = `scrape-${data.jobSearchId}-${data.runId}`;
+  const jobId = `scrape-${data.searchTaskId}-${data.runId}`;
   return scraperQueue.add("scrape", data, {
     jobId,
     priority: options?.priority,
@@ -73,24 +73,24 @@ export async function addScrapeJob(
 /**
  * Get the active job for a job search (if any)
  */
-export async function getActiveJobForSearch(jobSearchId: number) {
+export async function getActiveJobForSearch(searchTaskId: number) {
   const activeJobs = await scraperQueue.getActive();
-  return activeJobs.find((j) => j.data.jobSearchId === jobSearchId);
+  return activeJobs.find((j) => j.data.searchTaskId === searchTaskId);
 }
 
 /**
  * Get waiting job for a job search (if any)
  */
-export async function getWaitingJobForSearch(jobSearchId: number) {
+export async function getWaitingJobForSearch(searchTaskId: number) {
   const waitingJobs = await scraperQueue.getWaiting();
-  return waitingJobs.find((j) => j.data.jobSearchId === jobSearchId);
+  return waitingJobs.find((j) => j.data.searchTaskId === searchTaskId);
 }
 
 /**
  * Remove a waiting job from the queue
  */
-export async function removeWaitingJob(jobSearchId: number): Promise<boolean> {
-  const waitingJob = await getWaitingJobForSearch(jobSearchId);
+export async function removeWaitingJob(searchTaskId: number): Promise<boolean> {
+  const waitingJob = await getWaitingJobForSearch(searchTaskId);
   if (waitingJob) {
     await waitingJob.remove();
     return true;
@@ -103,9 +103,9 @@ export async function removeWaitingJob(jobSearchId: number): Promise<boolean> {
  * Used when cancelling a running scrape or cleaning up stale jobs.
  */
 export async function removeActiveJob(
-  jobSearchId: number,
+  searchTaskId: number,
 ): Promise<boolean> {
-  const activeJob = await getActiveJobForSearch(jobSearchId);
+  const activeJob = await getActiveJobForSearch(searchTaskId);
   if (activeJob) {
     await activeJob.moveToFailed(
       new Error("Cancelled by user"),

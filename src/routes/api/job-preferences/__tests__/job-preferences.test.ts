@@ -13,7 +13,7 @@ const mockConfigUpdate = vi.fn();
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
     profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
-    job_match_config: {
+    match_config: {
       findFirst: (...a: any[]) => mockConfigFindFirst(...a),
       create: (...a: any[]) => mockConfigCreate(...a),
       update: (...a: any[]) => mockConfigUpdate(...a),

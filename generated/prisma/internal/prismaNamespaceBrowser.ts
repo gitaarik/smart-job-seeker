@@ -91,9 +91,6 @@ export const ModelName = {
   job_matches: 'job_matches',
   job_platforms: 'job_platforms',
   job_resources: 'job_resources',
-  job_searches: 'job_searches',
-  job_searches_job_sites: 'job_searches_job_sites',
-  job_search_runs: 'job_search_runs',
   scraper_logs: 'scraper_logs',
   jobs: 'jobs',
   languages: 'languages',
@@ -128,9 +125,11 @@ export const ModelName = {
   sessions: 'sessions',
   users: 'users',
   verifications: 'verifications',
-  job_search_run_items: 'job_search_run_items',
-  job_match_config: 'job_match_config',
-  rescrape_runs: 'rescrape_runs'
+  match_config: 'match_config',
+  search_task_run_items: 'search_task_run_items',
+  search_task_runs: 'search_task_runs',
+  search_tasks: 'search_tasks',
+  search_tasks_job_sites: 'search_tasks_job_sites'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -848,61 +847,6 @@ export const Job_resourcesScalarFieldEnum = {
 export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)[keyof typeof Job_resourcesScalarFieldEnum]
 
 
-export const Job_searchesScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  profile: 'profile',
-  last_run: 'last_run',
-  search_url: 'search_url',
-  platform: 'platform',
-  navigation_type: 'navigation_type',
-  stripped_html: 'stripped_html',
-  last_run_jobs_found: 'last_run_jobs_found',
-  live_url: 'live_url',
-  is_active: 'is_active',
-  status_message: 'status_message',
-  platform_profile_id: 'platform_profile_id',
-  max_jobs: 'max_jobs',
-  search_term: 'search_term',
-  browser_provider: 'browser_provider',
-  skip_existing: 'skip_existing',
-  stop_after_duplicates: 'stop_after_duplicates',
-  skip_first: 'skip_first',
-  keep_minimized: 'keep_minimized',
-  ui_preferences: 'ui_preferences'
-} as const
-
-export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
-
-
-export const Job_searches_job_sitesScalarFieldEnum = {
-  id: 'id',
-  job_searches_id: 'job_searches_id'
-} as const
-
-export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
-
-
-export const Job_search_runsScalarFieldEnum = {
-  id: 'id',
-  job_search_id: 'job_search_id',
-  status: 'status',
-  started_at: 'started_at',
-  finished_at: 'finished_at',
-  jobs_found: 'jobs_found',
-  error_message: 'error_message',
-  triggered_by: 'triggered_by',
-  bullmq_job_id: 'bullmq_job_id',
-  live_url: 'live_url',
-  user_response: 'user_response'
-} as const
-
-export type Job_search_runsScalarFieldEnum = (typeof Job_search_runsScalarFieldEnum)[keyof typeof Job_search_runsScalarFieldEnum]
-
-
 export const Scraper_logsScalarFieldEnum = {
   id: 'id',
   run_id: 'run_id',
@@ -1120,9 +1064,9 @@ export const ProfilesScalarFieldEnum = {
   browser_user_agent: 'browser_user_agent',
   browser_language: 'browser_language',
   browser_timezone: 'browser_timezone',
-  browser_profile_id: 'browser_profile_id',
+  ui_preferences: 'ui_preferences',
   browser_country_code: 'browser_country_code',
-  ui_preferences: 'ui_preferences'
+  browser_profile_id: 'browser_profile_id'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
@@ -1499,7 +1443,22 @@ export const VerificationsScalarFieldEnum = {
 export type VerificationsScalarFieldEnum = (typeof VerificationsScalarFieldEnum)[keyof typeof VerificationsScalarFieldEnum]
 
 
-export const Job_search_run_itemsScalarFieldEnum = {
+export const Match_configScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  work_location: 'work_location',
+  locations: 'locations',
+  profile: 'profile',
+  name: 'name'
+} as const
+
+export type Match_configScalarFieldEnum = (typeof Match_configScalarFieldEnum)[keyof typeof Match_configScalarFieldEnum]
+
+
+export const Search_task_run_itemsScalarFieldEnum = {
   id: 'id',
   run_id: 'run_id',
   position: 'position',
@@ -1515,36 +1474,62 @@ export const Job_search_run_itemsScalarFieldEnum = {
   processed_at: 'processed_at'
 } as const
 
-export type Job_search_run_itemsScalarFieldEnum = (typeof Job_search_run_itemsScalarFieldEnum)[keyof typeof Job_search_run_itemsScalarFieldEnum]
+export type Search_task_run_itemsScalarFieldEnum = (typeof Search_task_run_itemsScalarFieldEnum)[keyof typeof Search_task_run_itemsScalarFieldEnum]
 
 
-export const Job_match_configScalarFieldEnum = {
+export const Search_task_runsScalarFieldEnum = {
   id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  job_types: 'job_types',
-  experience_levels: 'experience_levels',
-  work_location: 'work_location',
-  locations: 'locations',
-  profile: 'profile',
-  name: 'name'
-} as const
-
-export type Job_match_configScalarFieldEnum = (typeof Job_match_configScalarFieldEnum)[keyof typeof Job_match_configScalarFieldEnum]
-
-
-export const Rescrape_runsScalarFieldEnum = {
-  id: 'id',
-  job: 'job',
+  search_task_id: 'search_task_id',
   status: 'status',
   started_at: 'started_at',
   finished_at: 'finished_at',
-  message: 'message',
+  jobs_found: 'jobs_found',
+  error_message: 'error_message',
   triggered_by: 'triggered_by',
-  bullmq_job_id: 'bullmq_job_id'
+  bullmq_job_id: 'bullmq_job_id',
+  live_url: 'live_url',
+  user_response: 'user_response'
 } as const
 
-export type Rescrape_runsScalarFieldEnum = (typeof Rescrape_runsScalarFieldEnum)[keyof typeof Rescrape_runsScalarFieldEnum]
+export type Search_task_runsScalarFieldEnum = (typeof Search_task_runsScalarFieldEnum)[keyof typeof Search_task_runsScalarFieldEnum]
+
+
+export const Search_tasksScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  name: 'name',
+  profile: 'profile',
+  last_run: 'last_run',
+  search_url: 'search_url',
+  platform: 'platform',
+  navigation_type: 'navigation_type',
+  stripped_html: 'stripped_html',
+  last_run_jobs_found: 'last_run_jobs_found',
+  live_url: 'live_url',
+  is_active: 'is_active',
+  status_message: 'status_message',
+  platform_profile_id: 'platform_profile_id',
+  max_jobs: 'max_jobs',
+  browser_provider: 'browser_provider',
+  search_term: 'search_term',
+  skip_existing: 'skip_existing',
+  skip_first: 'skip_first',
+  stop_after_duplicates: 'stop_after_duplicates',
+  keep_minimized: 'keep_minimized',
+  ui_preferences: 'ui_preferences'
+} as const
+
+export type Search_tasksScalarFieldEnum = (typeof Search_tasksScalarFieldEnum)[keyof typeof Search_tasksScalarFieldEnum]
+
+
+export const Search_tasks_job_sitesScalarFieldEnum = {
+  id: 'id',
+  search_tasks_id: 'search_tasks_id'
+} as const
+
+export type Search_tasks_job_sitesScalarFieldEnum = (typeof Search_tasks_job_sitesScalarFieldEnum)[keyof typeof Search_tasks_job_sitesScalarFieldEnum]
 
 
 export const SortOrder = {

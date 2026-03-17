@@ -28,7 +28,7 @@ vi.mock("$lib/server/db", () => ({
       delete: (...a: any[]) => mockPlatformProfilesDelete(...a),
       deleteMany: (...a: any[]) => mockPlatformProfilesDeleteMany(...a),
     },
-    job_searches: { updateMany: (...a: any[]) => mockJobSearchesUpdateMany(...a) },
+    search_tasks: { updateMany: (...a: any[]) => mockJobSearchesUpdateMany(...a) },
   },
 }));
 

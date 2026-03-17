@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const profileId = layoutData.selectedProfile.id;
 
   // Get existing config for this profile
-  const config = await db.job_match_config.findFirst({
+  const config = await db.match_config.findFirst({
     where: { profile: profileId },
   });
 

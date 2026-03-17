@@ -1,6 +1,6 @@
 /**
  * Tests for Scraper Respond API
- * POST /api/job-searches/[id]/runs/[runId]/respond
+ * POST /api/search-tasks/[id]/runs/[runId]/respond
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,11 +12,11 @@ const mockRunsUpdate = vi.fn();
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    job_searches: {
+    search_tasks: {
       findFirst: (...a: any[]) => mockJobSearchesFindFirst(...a),
       update: (...a: any[]) => mockJobSearchesUpdate(...a),
     },
-    job_search_runs: {
+    search_task_runs: {
       findFirst: (...a: any[]) => mockRunsFindFirst(...a),
       update: (...a: any[]) => mockRunsUpdate(...a),
     },
@@ -32,7 +32,7 @@ function createEvent(body: any, opts: {
   return {
     params: opts.params ?? { id: "1", runId: "10" },
     locals: { user: opts.user === undefined ? { id: "user-1" } : opts.user, session: null },
-    request: new Request("http://localhost/api/job-searches/1/runs/10/respond", {
+    request: new Request("http://localhost/api/search-tasks/1/runs/10/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -40,7 +40,7 @@ function createEvent(body: any, opts: {
   } as any;
 }
 
-describe("POST /api/job-searches/[id]/runs/[runId]/respond", () => {
+describe("POST /api/search-tasks/[id]/runs/[runId]/respond", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRunsUpdate.mockResolvedValue({});

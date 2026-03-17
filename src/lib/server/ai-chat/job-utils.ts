@@ -22,17 +22,17 @@ export interface JobScrapingAiChatResult<T> {
 /**
  * Create AI chat for job scraping operations
  *
- * Looks up the profile from the job_searches record. Automatically saves
+ * Looks up the profile from the search_tasks record. Automatically saves
  * prompts and responses to the database for debugging and audit purposes.
  *
- * @param jobSearchId - ID of the job search (used to lookup profile)
+ * @param searchTaskId - ID of the job search (used to lookup profile)
  * @param promptKey - Template identifier from ai_chat_templates table
  * @param customVariables - Variables to interpolate into the prompt template
  * @returns Result with parsed response and aiChatId for database linking
  *
  * @example
  * const result = await createJobScrapingAiChat<{ urls: string[] }>(
- *   jobSearchId,
+ *   searchTaskId,
  *   "extract_job_links",
  *   { html: strippedHtml }
  * );
@@ -43,38 +43,38 @@ export interface JobScrapingAiChatResult<T> {
  * }
  */
 export async function createJobScrapingAiChat<T>(
-  jobSearchId: number,
+  searchTaskId: number,
   promptKey: string,
   customVariables: Record<string, unknown>,
 ): Promise<JobScrapingAiChatResult<T>> {
-  // Look up profile from job_searches
-  const jobSearch = await dbDirect.job_searches.findUnique({
-    where: { id: jobSearchId },
+  // Look up profile from search_tasks
+  const searchTask = await dbDirect.search_tasks.findUnique({
+    where: { id: searchTaskId },
     select: { profile: true },
   });
 
-  if (!jobSearch) {
+  if (!searchTask) {
     return {
       success: false,
-      message: `Job search ${jobSearchId} not found`,
+      message: `Job search ${searchTaskId} not found`,
       response: null,
       aiChatId: null,
     };
   }
 
-  if (!jobSearch.profile) {
+  if (!searchTask.profile) {
     return {
       success: false,
-      message: `Job search ${jobSearchId} has no profile assigned`,
+      message: `Job search ${searchTaskId} has no profile assigned`,
       response: null,
       aiChatId: null,
     };
   }
 
   try {
-    // Call createAndGenerateAiChat with profile from job_searches
+    // Call createAndGenerateAiChat with profile from search_tasks
     const result = await createAndGenerateAiChat(
-      jobSearch.profile,
+      searchTask.profile,
       promptKey,
       customVariables,
     );

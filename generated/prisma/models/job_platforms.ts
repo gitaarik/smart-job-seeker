@@ -260,9 +260,9 @@ export type job_platformsWhereInput = {
   type?: Prisma.StringNullableFilter<"job_platforms"> | string | null
   key?: Prisma.StringFilter<"job_platforms"> | string
   login_page_url?: Prisma.StringNullableFilter<"job_platforms"> | string | null
-  job_searches?: Prisma.Job_searchesListRelationFilter
   jobs?: Prisma.JobsListRelationFilter
   platform_profiles?: Prisma.Platform_profilesListRelationFilter
+  search_tasks?: Prisma.Search_tasksListRelationFilter
 }
 
 export type job_platformsOrderByWithRelationInput = {
@@ -276,9 +276,9 @@ export type job_platformsOrderByWithRelationInput = {
   type?: Prisma.SortOrderInput | Prisma.SortOrder
   key?: Prisma.SortOrder
   login_page_url?: Prisma.SortOrderInput | Prisma.SortOrder
-  job_searches?: Prisma.job_searchesOrderByRelationAggregateInput
   jobs?: Prisma.jobsOrderByRelationAggregateInput
   platform_profiles?: Prisma.platform_profilesOrderByRelationAggregateInput
+  search_tasks?: Prisma.search_tasksOrderByRelationAggregateInput
 }
 
 export type job_platformsWhereUniqueInput = Prisma.AtLeast<{
@@ -295,9 +295,9 @@ export type job_platformsWhereUniqueInput = Prisma.AtLeast<{
   url?: Prisma.StringFilter<"job_platforms"> | string
   type?: Prisma.StringNullableFilter<"job_platforms"> | string | null
   login_page_url?: Prisma.StringNullableFilter<"job_platforms"> | string | null
-  job_searches?: Prisma.Job_searchesListRelationFilter
   jobs?: Prisma.JobsListRelationFilter
   platform_profiles?: Prisma.Platform_profilesListRelationFilter
+  search_tasks?: Prisma.Search_tasksListRelationFilter
 }, "id" | "key">
 
 export type job_platformsOrderByWithAggregationInput = {
@@ -344,9 +344,9 @@ export type job_platformsCreateInput = {
   type?: string | null
   key: string
   login_page_url?: string | null
-  job_searches?: Prisma.job_searchesCreateNestedManyWithoutJob_platformsInput
   jobs?: Prisma.jobsCreateNestedManyWithoutJob_platformsInput
   platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutJob_platformsInput
+  search_tasks?: Prisma.search_tasksCreateNestedManyWithoutJob_platformsInput
 }
 
 export type job_platformsUncheckedCreateInput = {
@@ -360,9 +360,9 @@ export type job_platformsUncheckedCreateInput = {
   type?: string | null
   key: string
   login_page_url?: string | null
-  job_searches?: Prisma.job_searchesUncheckedCreateNestedManyWithoutJob_platformsInput
   jobs?: Prisma.jobsUncheckedCreateNestedManyWithoutJob_platformsInput
   platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutJob_platformsInput
+  search_tasks?: Prisma.search_tasksUncheckedCreateNestedManyWithoutJob_platformsInput
 }
 
 export type job_platformsUpdateInput = {
@@ -375,9 +375,9 @@ export type job_platformsUpdateInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   key?: Prisma.StringFieldUpdateOperationsInput | string
   login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches?: Prisma.job_searchesUpdateManyWithoutJob_platformsNestedInput
   jobs?: Prisma.jobsUpdateManyWithoutJob_platformsNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateManyWithoutJob_platformsNestedInput
+  search_tasks?: Prisma.search_tasksUpdateManyWithoutJob_platformsNestedInput
 }
 
 export type job_platformsUncheckedUpdateInput = {
@@ -391,9 +391,9 @@ export type job_platformsUncheckedUpdateInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   key?: Prisma.StringFieldUpdateOperationsInput | string
   login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches?: Prisma.job_searchesUncheckedUpdateManyWithoutJob_platformsNestedInput
   jobs?: Prisma.jobsUncheckedUpdateManyWithoutJob_platformsNestedInput
   platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutJob_platformsNestedInput
+  search_tasks?: Prisma.search_tasksUncheckedUpdateManyWithoutJob_platformsNestedInput
 }
 
 export type job_platformsCreateManyInput = {
@@ -488,22 +488,6 @@ export type Job_platformsNullableScalarRelationFilter = {
   isNot?: Prisma.job_platformsWhereInput | null
 }
 
-export type job_platformsCreateNestedOneWithoutJob_searchesInput = {
-  create?: Prisma.XOR<Prisma.job_platformsCreateWithoutJob_searchesInput, Prisma.job_platformsUncheckedCreateWithoutJob_searchesInput>
-  connectOrCreate?: Prisma.job_platformsCreateOrConnectWithoutJob_searchesInput
-  connect?: Prisma.job_platformsWhereUniqueInput
-}
-
-export type job_platformsUpdateOneWithoutJob_searchesNestedInput = {
-  create?: Prisma.XOR<Prisma.job_platformsCreateWithoutJob_searchesInput, Prisma.job_platformsUncheckedCreateWithoutJob_searchesInput>
-  connectOrCreate?: Prisma.job_platformsCreateOrConnectWithoutJob_searchesInput
-  upsert?: Prisma.job_platformsUpsertWithoutJob_searchesInput
-  disconnect?: Prisma.job_platformsWhereInput | boolean
-  delete?: Prisma.job_platformsWhereInput | boolean
-  connect?: Prisma.job_platformsWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.job_platformsUpdateToOneWithWhereWithoutJob_searchesInput, Prisma.job_platformsUpdateWithoutJob_searchesInput>, Prisma.job_platformsUncheckedUpdateWithoutJob_searchesInput>
-}
-
 export type job_platformsCreateNestedOneWithoutJobsInput = {
   create?: Prisma.XOR<Prisma.job_platformsCreateWithoutJobsInput, Prisma.job_platformsUncheckedCreateWithoutJobsInput>
   connectOrCreate?: Prisma.job_platformsCreateOrConnectWithoutJobsInput
@@ -536,78 +520,20 @@ export type job_platformsUpdateOneWithoutPlatform_profilesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.job_platformsUpdateToOneWithWhereWithoutPlatform_profilesInput, Prisma.job_platformsUpdateWithoutPlatform_profilesInput>, Prisma.job_platformsUncheckedUpdateWithoutPlatform_profilesInput>
 }
 
-export type job_platformsCreateWithoutJob_searchesInput = {
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  name: string
-  url: string
-  type?: string | null
-  key: string
-  login_page_url?: string | null
-  jobs?: Prisma.jobsCreateNestedManyWithoutJob_platformsInput
-  platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutJob_platformsInput
+export type job_platformsCreateNestedOneWithoutSearch_tasksInput = {
+  create?: Prisma.XOR<Prisma.job_platformsCreateWithoutSearch_tasksInput, Prisma.job_platformsUncheckedCreateWithoutSearch_tasksInput>
+  connectOrCreate?: Prisma.job_platformsCreateOrConnectWithoutSearch_tasksInput
+  connect?: Prisma.job_platformsWhereUniqueInput
 }
 
-export type job_platformsUncheckedCreateWithoutJob_searchesInput = {
-  id?: number
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  name: string
-  url: string
-  type?: string | null
-  key: string
-  login_page_url?: string | null
-  jobs?: Prisma.jobsUncheckedCreateNestedManyWithoutJob_platformsInput
-  platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutJob_platformsInput
-}
-
-export type job_platformsCreateOrConnectWithoutJob_searchesInput = {
-  where: Prisma.job_platformsWhereUniqueInput
-  create: Prisma.XOR<Prisma.job_platformsCreateWithoutJob_searchesInput, Prisma.job_platformsUncheckedCreateWithoutJob_searchesInput>
-}
-
-export type job_platformsUpsertWithoutJob_searchesInput = {
-  update: Prisma.XOR<Prisma.job_platformsUpdateWithoutJob_searchesInput, Prisma.job_platformsUncheckedUpdateWithoutJob_searchesInput>
-  create: Prisma.XOR<Prisma.job_platformsCreateWithoutJob_searchesInput, Prisma.job_platformsUncheckedCreateWithoutJob_searchesInput>
-  where?: Prisma.job_platformsWhereInput
-}
-
-export type job_platformsUpdateToOneWithWhereWithoutJob_searchesInput = {
-  where?: Prisma.job_platformsWhereInput
-  data: Prisma.XOR<Prisma.job_platformsUpdateWithoutJob_searchesInput, Prisma.job_platformsUncheckedUpdateWithoutJob_searchesInput>
-}
-
-export type job_platformsUpdateWithoutJob_searchesInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  jobs?: Prisma.jobsUpdateManyWithoutJob_platformsNestedInput
-  platform_profiles?: Prisma.platform_profilesUpdateManyWithoutJob_platformsNestedInput
-}
-
-export type job_platformsUncheckedUpdateWithoutJob_searchesInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  url?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  key?: Prisma.StringFieldUpdateOperationsInput | string
-  login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  jobs?: Prisma.jobsUncheckedUpdateManyWithoutJob_platformsNestedInput
-  platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutJob_platformsNestedInput
+export type job_platformsUpdateOneWithoutSearch_tasksNestedInput = {
+  create?: Prisma.XOR<Prisma.job_platformsCreateWithoutSearch_tasksInput, Prisma.job_platformsUncheckedCreateWithoutSearch_tasksInput>
+  connectOrCreate?: Prisma.job_platformsCreateOrConnectWithoutSearch_tasksInput
+  upsert?: Prisma.job_platformsUpsertWithoutSearch_tasksInput
+  disconnect?: Prisma.job_platformsWhereInput | boolean
+  delete?: Prisma.job_platformsWhereInput | boolean
+  connect?: Prisma.job_platformsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.job_platformsUpdateToOneWithWhereWithoutSearch_tasksInput, Prisma.job_platformsUpdateWithoutSearch_tasksInput>, Prisma.job_platformsUncheckedUpdateWithoutSearch_tasksInput>
 }
 
 export type job_platformsCreateWithoutJobsInput = {
@@ -620,8 +546,8 @@ export type job_platformsCreateWithoutJobsInput = {
   type?: string | null
   key: string
   login_page_url?: string | null
-  job_searches?: Prisma.job_searchesCreateNestedManyWithoutJob_platformsInput
   platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutJob_platformsInput
+  search_tasks?: Prisma.search_tasksCreateNestedManyWithoutJob_platformsInput
 }
 
 export type job_platformsUncheckedCreateWithoutJobsInput = {
@@ -635,8 +561,8 @@ export type job_platformsUncheckedCreateWithoutJobsInput = {
   type?: string | null
   key: string
   login_page_url?: string | null
-  job_searches?: Prisma.job_searchesUncheckedCreateNestedManyWithoutJob_platformsInput
   platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutJob_platformsInput
+  search_tasks?: Prisma.search_tasksUncheckedCreateNestedManyWithoutJob_platformsInput
 }
 
 export type job_platformsCreateOrConnectWithoutJobsInput = {
@@ -665,8 +591,8 @@ export type job_platformsUpdateWithoutJobsInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   key?: Prisma.StringFieldUpdateOperationsInput | string
   login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches?: Prisma.job_searchesUpdateManyWithoutJob_platformsNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateManyWithoutJob_platformsNestedInput
+  search_tasks?: Prisma.search_tasksUpdateManyWithoutJob_platformsNestedInput
 }
 
 export type job_platformsUncheckedUpdateWithoutJobsInput = {
@@ -680,8 +606,8 @@ export type job_platformsUncheckedUpdateWithoutJobsInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   key?: Prisma.StringFieldUpdateOperationsInput | string
   login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches?: Prisma.job_searchesUncheckedUpdateManyWithoutJob_platformsNestedInput
   platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutJob_platformsNestedInput
+  search_tasks?: Prisma.search_tasksUncheckedUpdateManyWithoutJob_platformsNestedInput
 }
 
 export type job_platformsCreateWithoutPlatform_profilesInput = {
@@ -694,8 +620,8 @@ export type job_platformsCreateWithoutPlatform_profilesInput = {
   type?: string | null
   key: string
   login_page_url?: string | null
-  job_searches?: Prisma.job_searchesCreateNestedManyWithoutJob_platformsInput
   jobs?: Prisma.jobsCreateNestedManyWithoutJob_platformsInput
+  search_tasks?: Prisma.search_tasksCreateNestedManyWithoutJob_platformsInput
 }
 
 export type job_platformsUncheckedCreateWithoutPlatform_profilesInput = {
@@ -709,8 +635,8 @@ export type job_platformsUncheckedCreateWithoutPlatform_profilesInput = {
   type?: string | null
   key: string
   login_page_url?: string | null
-  job_searches?: Prisma.job_searchesUncheckedCreateNestedManyWithoutJob_platformsInput
   jobs?: Prisma.jobsUncheckedCreateNestedManyWithoutJob_platformsInput
+  search_tasks?: Prisma.search_tasksUncheckedCreateNestedManyWithoutJob_platformsInput
 }
 
 export type job_platformsCreateOrConnectWithoutPlatform_profilesInput = {
@@ -739,8 +665,8 @@ export type job_platformsUpdateWithoutPlatform_profilesInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   key?: Prisma.StringFieldUpdateOperationsInput | string
   login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches?: Prisma.job_searchesUpdateManyWithoutJob_platformsNestedInput
   jobs?: Prisma.jobsUpdateManyWithoutJob_platformsNestedInput
+  search_tasks?: Prisma.search_tasksUpdateManyWithoutJob_platformsNestedInput
 }
 
 export type job_platformsUncheckedUpdateWithoutPlatform_profilesInput = {
@@ -754,8 +680,82 @@ export type job_platformsUncheckedUpdateWithoutPlatform_profilesInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   key?: Prisma.StringFieldUpdateOperationsInput | string
   login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches?: Prisma.job_searchesUncheckedUpdateManyWithoutJob_platformsNestedInput
   jobs?: Prisma.jobsUncheckedUpdateManyWithoutJob_platformsNestedInput
+  search_tasks?: Prisma.search_tasksUncheckedUpdateManyWithoutJob_platformsNestedInput
+}
+
+export type job_platformsCreateWithoutSearch_tasksInput = {
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name: string
+  url: string
+  type?: string | null
+  key: string
+  login_page_url?: string | null
+  jobs?: Prisma.jobsCreateNestedManyWithoutJob_platformsInput
+  platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutJob_platformsInput
+}
+
+export type job_platformsUncheckedCreateWithoutSearch_tasksInput = {
+  id?: number
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name: string
+  url: string
+  type?: string | null
+  key: string
+  login_page_url?: string | null
+  jobs?: Prisma.jobsUncheckedCreateNestedManyWithoutJob_platformsInput
+  platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutJob_platformsInput
+}
+
+export type job_platformsCreateOrConnectWithoutSearch_tasksInput = {
+  where: Prisma.job_platformsWhereUniqueInput
+  create: Prisma.XOR<Prisma.job_platformsCreateWithoutSearch_tasksInput, Prisma.job_platformsUncheckedCreateWithoutSearch_tasksInput>
+}
+
+export type job_platformsUpsertWithoutSearch_tasksInput = {
+  update: Prisma.XOR<Prisma.job_platformsUpdateWithoutSearch_tasksInput, Prisma.job_platformsUncheckedUpdateWithoutSearch_tasksInput>
+  create: Prisma.XOR<Prisma.job_platformsCreateWithoutSearch_tasksInput, Prisma.job_platformsUncheckedCreateWithoutSearch_tasksInput>
+  where?: Prisma.job_platformsWhereInput
+}
+
+export type job_platformsUpdateToOneWithWhereWithoutSearch_tasksInput = {
+  where?: Prisma.job_platformsWhereInput
+  data: Prisma.XOR<Prisma.job_platformsUpdateWithoutSearch_tasksInput, Prisma.job_platformsUncheckedUpdateWithoutSearch_tasksInput>
+}
+
+export type job_platformsUpdateWithoutSearch_tasksInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  url?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobs?: Prisma.jobsUpdateManyWithoutJob_platformsNestedInput
+  platform_profiles?: Prisma.platform_profilesUpdateManyWithoutJob_platformsNestedInput
+}
+
+export type job_platformsUncheckedUpdateWithoutSearch_tasksInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  url?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  login_page_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobs?: Prisma.jobsUncheckedUpdateManyWithoutJob_platformsNestedInput
+  platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutJob_platformsNestedInput
 }
 
 
@@ -764,15 +764,15 @@ export type job_platformsUncheckedUpdateWithoutPlatform_profilesInput = {
  */
 
 export type Job_platformsCountOutputType = {
-  job_searches: number
   jobs: number
   platform_profiles: number
+  search_tasks: number
 }
 
 export type Job_platformsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  job_searches?: boolean | Job_platformsCountOutputTypeCountJob_searchesArgs
   jobs?: boolean | Job_platformsCountOutputTypeCountJobsArgs
   platform_profiles?: boolean | Job_platformsCountOutputTypeCountPlatform_profilesArgs
+  search_tasks?: boolean | Job_platformsCountOutputTypeCountSearch_tasksArgs
 }
 
 /**
@@ -783,13 +783,6 @@ export type Job_platformsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Type
    * Select specific fields to fetch from the Job_platformsCountOutputType
    */
   select?: Prisma.Job_platformsCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * Job_platformsCountOutputType without action
- */
-export type Job_platformsCountOutputTypeCountJob_searchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.job_searchesWhereInput
 }
 
 /**
@@ -806,6 +799,13 @@ export type Job_platformsCountOutputTypeCountPlatform_profilesArgs<ExtArgs exten
   where?: Prisma.platform_profilesWhereInput
 }
 
+/**
+ * Job_platformsCountOutputType without action
+ */
+export type Job_platformsCountOutputTypeCountSearch_tasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.search_tasksWhereInput
+}
+
 
 export type job_platformsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -818,9 +818,9 @@ export type job_platformsSelect<ExtArgs extends runtime.Types.Extensions.Interna
   type?: boolean
   key?: boolean
   login_page_url?: boolean
-  job_searches?: boolean | Prisma.job_platforms$job_searchesArgs<ExtArgs>
   jobs?: boolean | Prisma.job_platforms$jobsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.job_platforms$platform_profilesArgs<ExtArgs>
+  search_tasks?: boolean | Prisma.job_platforms$search_tasksArgs<ExtArgs>
   _count?: boolean | Prisma.Job_platformsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["job_platforms"]>
 
@@ -865,9 +865,9 @@ export type job_platformsSelectScalar = {
 
 export type job_platformsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "url" | "type" | "key" | "login_page_url", ExtArgs["result"]["job_platforms"]>
 export type job_platformsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  job_searches?: boolean | Prisma.job_platforms$job_searchesArgs<ExtArgs>
   jobs?: boolean | Prisma.job_platforms$jobsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.job_platforms$platform_profilesArgs<ExtArgs>
+  search_tasks?: boolean | Prisma.job_platforms$search_tasksArgs<ExtArgs>
   _count?: boolean | Prisma.Job_platformsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type job_platformsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -876,9 +876,9 @@ export type job_platformsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Type
 export type $job_platformsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "job_platforms"
   objects: {
-    job_searches: Prisma.$job_searchesPayload<ExtArgs>[]
     jobs: Prisma.$jobsPayload<ExtArgs>[]
     platform_profiles: Prisma.$platform_profilesPayload<ExtArgs>[]
+    search_tasks: Prisma.$search_tasksPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1285,9 +1285,9 @@ readonly fields: job_platformsFieldRefs;
  */
 export interface Prisma__job_platformsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  job_searches<T extends Prisma.job_platforms$job_searchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_platforms$job_searchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_searchesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   jobs<T extends Prisma.job_platforms$jobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_platforms$jobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$jobsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   platform_profiles<T extends Prisma.job_platforms$platform_profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_platforms$platform_profilesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$platform_profilesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  search_tasks<T extends Prisma.job_platforms$search_tasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_platforms$search_tasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$search_tasksPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1715,30 +1715,6 @@ export type job_platformsDeleteManyArgs<ExtArgs extends runtime.Types.Extensions
 }
 
 /**
- * job_platforms.job_searches
- */
-export type job_platforms$job_searchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the job_searches
-   */
-  select?: Prisma.job_searchesSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the job_searches
-   */
-  omit?: Prisma.job_searchesOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.job_searchesInclude<ExtArgs> | null
-  where?: Prisma.job_searchesWhereInput
-  orderBy?: Prisma.job_searchesOrderByWithRelationInput | Prisma.job_searchesOrderByWithRelationInput[]
-  cursor?: Prisma.job_searchesWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.Job_searchesScalarFieldEnum | Prisma.Job_searchesScalarFieldEnum[]
-}
-
-/**
  * job_platforms.jobs
  */
 export type job_platforms$jobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1784,6 +1760,30 @@ export type job_platforms$platform_profilesArgs<ExtArgs extends runtime.Types.Ex
   take?: number
   skip?: number
   distinct?: Prisma.Platform_profilesScalarFieldEnum | Prisma.Platform_profilesScalarFieldEnum[]
+}
+
+/**
+ * job_platforms.search_tasks
+ */
+export type job_platforms$search_tasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the search_tasks
+   */
+  select?: Prisma.search_tasksSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the search_tasks
+   */
+  omit?: Prisma.search_tasksOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.search_tasksInclude<ExtArgs> | null
+  where?: Prisma.search_tasksWhereInput
+  orderBy?: Prisma.search_tasksOrderByWithRelationInput | Prisma.search_tasksOrderByWithRelationInput[]
+  cursor?: Prisma.search_tasksWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Search_tasksScalarFieldEnum | Prisma.Search_tasksScalarFieldEnum[]
 }
 
 /**

@@ -4,27 +4,27 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
- * GET /api/job-searches/[id]/runs
+ * GET /api/search-tasks/[id]/runs
  *
  * List all runs for a job search, ordered by most recent first.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
 
   // Get the job search and verify ownership
-  const jobSearch = await db.job_searches.findFirst({
-    where: { id: jobSearchId },
+  const searchTask = await db.search_tasks.findFirst({
+    where: { id: searchTaskId },
     include: {
       profiles: true,
     },
   });
 
-  if (!jobSearch) {
+  if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
-  if (jobSearch.profiles.user_id !== user.id) {
+  if (searchTask.profiles.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
@@ -34,8 +34,8 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   // Get runs
   const [runs, total] = await Promise.all([
-    db.job_search_runs.findMany({
-      where: { job_search_id: jobSearchId },
+    db.search_task_runs.findMany({
+      where: { search_task_id: searchTaskId },
       orderBy: { started_at: "desc" },
       take: limit,
       skip: offset,
@@ -51,8 +51,8 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
         user_response: true,
       },
     }),
-    db.job_search_runs.count({
-      where: { job_search_id: jobSearchId },
+    db.search_task_runs.count({
+      where: { search_task_id: searchTaskId },
     }),
   ]);
 

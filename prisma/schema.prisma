@@ -704,9 +704,9 @@ model job_platforms {
   type              String?             @db.VarChar(255)
   key               String              @unique(map: "job_platforms_key_unique") @db.VarChar(255)
   login_page_url    String?             @db.VarChar(255)
-  job_searches      job_searches[]
   jobs              jobs[]
   platform_profiles platform_profiles[]
+  search_tasks      search_tasks[]
 }
 
 model job_resources {
@@ -722,116 +722,56 @@ model job_resources {
   jobs           jobs            @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_resources_job_foreign")
 }
 
-model job_searches {
-  id                     Int                      @id @default(autoincrement())
-  status                 String?                  @default("idle") @db.VarChar(50)
-  date_created           DateTime?                @db.Timestamptz(6)
-  date_updated           DateTime?                @db.Timestamptz(6)
-  name                   String                   @db.VarChar(255)
-  profile                Int
-  last_run               DateTime?                @db.Timestamptz(6)
-  search_url             String?
-  platform               Int?
-  navigation_type        String?                  @db.VarChar(255)
-  stripped_html          String?
-  last_run_jobs_found    Int?
-  live_url               String?                  @db.VarChar(500)
-  is_active              Boolean                  @default(true)
-  status_message         String?                  @db.VarChar(255)
-  platform_profile_id    Int?
-  max_jobs               Int?
-  search_term            String?                  @db.VarChar(500)
-  browser_provider       String?                  @db.VarChar(20)
-  skip_existing          Boolean                  @default(false)
-  stop_after_duplicates  Int?
-  skip_first             Int?
-  keep_minimized         Boolean?                 @default(true)
-  ui_preferences         Json?                    @default("{}") @db.JsonB
-  runs                   job_search_runs[]
-  job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
-  platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onUpdate: NoAction)
-  profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
-  job_searches_job_sites job_searches_job_sites[]
-
-  @@index([platform_profile_id], map: "idx_job_searches_platform_profile")
-}
-
-model job_searches_job_sites {
-  id              Int           @id @default(autoincrement())
-  job_searches_id Int?
-  job_searches    job_searches? @relation(fields: [job_searches_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
-}
-
-model job_search_runs {
-  id                   Int                    @id @default(autoincrement())
-  job_search_id        Int
-  status               String                 @db.VarChar(50)
-  started_at           DateTime               @default(now()) @db.Timestamptz(6)
-  finished_at          DateTime?              @db.Timestamptz(6)
-  jobs_found           Int?
-  error_message        String?
-  triggered_by         String                 @db.VarChar(20)
-  bullmq_job_id        String?                @db.VarChar(100)
-  live_url             String?                @db.VarChar(500)
-  user_response        String?                @db.VarChar(20)
-  job_search_run_items job_search_run_items[]
-  job_searches         job_searches           @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  logs                 scraper_logs[]
-
-  @@index([job_search_id, started_at])
-}
-
 model scraper_logs {
-  id        Int             @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   run_id    Int
-  level     String          @db.VarChar(10)
+  level     String           @db.VarChar(10)
   message   String
-  timestamp DateTime        @default(now()) @db.Timestamptz(6)
-  run       job_search_runs @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  timestamp DateTime         @default(now()) @db.Timestamptz(6)
+  run       search_task_runs @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([run_id, timestamp])
 }
 
 model jobs {
-  id                   Int                    @id @default(autoincrement())
-  status               String                 @default("draft") @db.VarChar(255)
-  date_created         DateTime?              @db.Timestamptz(6)
-  date_updated         DateTime?              @db.Timestamptz(6)
-  source_url           String?                @db.VarChar(2048)
-  title                String?                @db.VarChar(255)
-  job_description      String?
-  job_poster           String?                @db.VarChar(255)
-  company_description  String?
-  date_posted          DateTime?              @db.Date
-  salary_min           Int?
-  salary_max           Int?
-  salary_currency      String?                @db.VarChar(255)
-  salary_period        String?                @db.VarChar(255)
-  import_error         String?
-  last_scraped         DateTime?              @db.Timestamptz(6)
-  office_location      String?                @db.VarChar(255)
-  scrape_count         Int?                   @default(0)
-  job_types            Json?                  @db.Json
-  experience_levels    Json?                  @db.Json
-  work_location        Json?                  @db.Json
-  source_html_stripped String?
-  job_platform         Int?
-  ai_chat_extraction   Int?
-  company              String?                @db.VarChar(255)
-  skills_required      Json?                  @db.Json
-  skills_preferred     Json?                  @db.Json
-  responsibilities     Json?
-  soft_skills          Json?
-  rescrape_status      String?                @db.VarChar(50)
-  rescrape_message     String?
-  rescrape_live_url    String?
-  applications         applications[]
-  job_matches          job_matches[]
-  rescrape_runs        rescrape_runs[]
-  job_resources        job_resources[]
-  job_search_run_items job_search_run_items[]
-  ai_chat              ai_chats?              @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
-  job_platforms        job_platforms?         @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
+  id                    Int                     @id @default(autoincrement())
+  status                String                  @default("draft") @db.VarChar(255)
+  date_created          DateTime?               @db.Timestamptz(6)
+  date_updated          DateTime?               @db.Timestamptz(6)
+  source_url            String?                 @db.VarChar(2048)
+  title                 String?                 @db.VarChar(255)
+  job_description       String?
+  job_poster            String?                 @db.VarChar(255)
+  company_description   String?
+  date_posted           DateTime?               @db.Date
+  salary_min            Int?
+  salary_max            Int?
+  salary_currency       String?                 @db.VarChar(255)
+  salary_period         String?                 @db.VarChar(255)
+  import_error          String?
+  last_scraped          DateTime?               @db.Timestamptz(6)
+  office_location       String?                 @db.VarChar(255)
+  scrape_count          Int?                    @default(0)
+  job_types             Json?                   @db.Json
+  experience_levels     Json?                   @db.Json
+  work_location         Json?                   @db.Json
+  source_html_stripped  String?
+  job_platform          Int?
+  ai_chat_extraction    Int?
+  company               String?                 @db.VarChar(255)
+  skills_required       Json?                   @db.Json
+  skills_preferred      Json?                   @db.Json
+  responsibilities      Json?
+  soft_skills           Json?
+  rescrape_status       String?                 @db.VarChar(50)
+  rescrape_message      String?
+  rescrape_live_url     String?
+  applications          applications[]
+  job_matches           job_matches[]
+  job_resources         job_resources[]
+  ai_chat               ai_chats?               @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
+  job_platforms         job_platforms?          @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
+  search_task_run_items search_task_run_items[]
 
   @@index([title, job_poster, date_posted], map: "idx_jobs_uniqueness")
   @@index([source_url])
@@ -880,9 +820,9 @@ model platform_profiles {
   last_login_at       DateTime?      @db.Timestamptz(6)
   login_error         String?
   provider_profile_id String?        @db.VarChar(255)
-  job_searches        job_searches[]
   job_platforms       job_platforms? @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "platform_profiles_platform_foreign")
   profiles            profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "platform_profiles_profile_foreign")
+  search_tasks        search_tasks[]
 }
 
 model profile_exports {
@@ -998,9 +938,9 @@ model profiles {
   browser_user_agent                                                String?                 @db.VarChar(500)
   browser_language                                                  String?                 @db.VarChar(50)
   browser_timezone                                                  String?                 @db.VarChar(100)
-  browser_profile_id                                                String?                 @db.VarChar(100)
+  ui_preferences                                                    Json?                   @default("{}")
   browser_country_code                                              String?                 @db.VarChar(10)
-  ui_preferences                                                    Json?                   @default("{}") @db.JsonB
+  browser_profile_id                                                String?                 @db.VarChar(100)
   ai_chats                                                          ai_chats[]
   api_keys                                                          api_keys[]
   applications                                                      applications[]
@@ -1009,10 +949,9 @@ model profiles {
   config                                                            config[]
   education                                                         education[]
   highlights                                                        highlights[]
-  job_match_config                                                  job_match_config[]
   job_matches                                                       job_matches[]
-  job_searches                                                      job_searches[]
   languages                                                         languages[]
+  match_config                                                      match_config[]
   os_contributions                                                  os_contributions[]
   platform_profiles                                                 platform_profiles[]
   profile_exports                                                   profile_exports[]
@@ -1023,6 +962,7 @@ model profiles {
   project_stories                                                   project_stories[]
   references                                                        references[]
   salary_expectations                                               salary_expectations[]
+  search_tasks                                                      search_tasks[]
   side_projects                                                     side_projects[]
   tech_skill_categories                                             tech_skill_categories[]
   work_experiences                                                  work_experiences[]
@@ -1378,29 +1318,7 @@ model verifications {
   updatedAt  DateTime? @db.Timestamptz(6)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model job_search_run_items {
-  id              Int             @id @default(autoincrement())
-  run_id          Int
-  position        Int
-  clickable_id    Int?
-  title           String?         @db.VarChar(500)
-  company         String?         @db.VarChar(255)
-  location        String?         @db.VarChar(255)
-  status          String          @default("pending") @db.VarChar(50)
-  status_message  String?
-  job_id          Int?
-  was_created     Boolean?
-  created_at      DateTime?       @default(now()) @db.Timestamptz(6)
-  processed_at    DateTime?       @db.Timestamptz(6)
-  jobs            jobs?           @relation(fields: [job_id], references: [id], onUpdate: NoAction)
-  job_search_runs job_search_runs @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([run_id], map: "idx_job_search_run_items_run_id")
-  @@index([run_id, status], map: "idx_job_search_run_items_run_status")
-}
-
-model job_match_config {
+model match_config {
   id                Int       @id @default(autoincrement())
   date_created      DateTime? @db.Timestamptz(6)
   date_updated      DateTime? @db.Timestamptz(6)
@@ -1410,21 +1328,89 @@ model job_match_config {
   locations         Json?     @db.Json
   profile           Int
   name              String?   @db.VarChar(255)
-  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "match_config_profile_foreign")
 }
 
-model rescrape_runs {
-  id            Int       @id @default(autoincrement())
-  job           Int
-  status        String?   @default("queued") @db.VarChar(50)
-  started_at    DateTime? @default(now()) @db.Timestamptz(6)
-  finished_at   DateTime? @db.Timestamptz(6)
-  message       String?
-  triggered_by  String?   @default("user") @db.VarChar(20)
-  bullmq_job_id String?   @db.VarChar(100)
-  jobs          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction)
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model search_task_run_items {
+  id               Int              @id(map: "job_search_run_items_pkey") @default(autoincrement())
+  run_id           Int
+  position         Int
+  clickable_id     Int?
+  title            String?          @db.VarChar(500)
+  company          String?          @db.VarChar(255)
+  location         String?          @db.VarChar(255)
+  status           String           @default("pending") @db.VarChar(50)
+  status_message   String?
+  job_id           Int?
+  was_created      Boolean?
+  created_at       DateTime?        @default(now()) @db.Timestamptz(6)
+  processed_at     DateTime?        @db.Timestamptz(6)
+  jobs             jobs?            @relation(fields: [job_id], references: [id], onUpdate: NoAction, map: "job_search_run_items_job_id_fkey")
+  search_task_runs search_task_runs @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([job])
+  @@index([run_id], map: "idx_search_task_run_items_run_id")
+  @@index([run_id, status], map: "idx_search_task_run_items_run_status")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model search_task_runs {
+  id                    Int                     @id(map: "job_search_runs_pkey") @default(autoincrement())
+  search_task_id        Int
+  status                String                  @db.VarChar(50)
+  started_at            DateTime                @default(now()) @db.Timestamptz(6)
+  finished_at           DateTime?               @db.Timestamptz(6)
+  jobs_found            Int?
+  error_message         String?
+  triggered_by          String                  @db.VarChar(20)
+  bullmq_job_id         String?                 @db.VarChar(100)
+  live_url              String?                 @db.VarChar(500)
+  user_response         String?                 @db.VarChar(20)
+  logs                  scraper_logs[]
+  search_task_run_items search_task_run_items[]
+  search_tasks          search_tasks            @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([search_task_id, started_at])
+}
+
+model search_tasks {
+  id                     Int                      @id @default(autoincrement())
+  status                 String?                  @default("idle") @db.VarChar(50)
+  date_created           DateTime?                @db.Timestamptz(6)
+  date_updated           DateTime?                @db.Timestamptz(6)
+  name                   String                   @db.VarChar(255)
+  profile                Int
+  last_run               DateTime?                @db.Timestamptz(6)
+  search_url             String?
+  platform               Int?
+  navigation_type        String?                  @db.VarChar(255)
+  stripped_html          String?
+  last_run_jobs_found    Int?
+  live_url               String?                  @db.VarChar(500)
+  is_active              Boolean                  @default(true)
+  status_message         String?                  @db.VarChar(255)
+  platform_profile_id    Int?
+  max_jobs               Int?
+  browser_provider       String?                  @db.VarChar(20)
+  search_term            String?                  @db.VarChar(500)
+  skip_existing          Boolean                  @default(false)
+  skip_first             Int?
+  stop_after_duplicates  Int?
+  keep_minimized         Boolean?                 @default(true)
+  ui_preferences         Json?                    @default("{}")
+  search_task_runs       search_task_runs[]
+  job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "search_tasks_platform_foreign")
+  platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "search_tasks_profile_foreign")
+  search_tasks_job_sites search_tasks_job_sites[]
+
+  @@index([platform_profile_id], map: "idx_search_tasks_platform_profile")
+}
+
+model search_tasks_job_sites {
+  id              Int           @id @default(autoincrement())
+  search_tasks_id Int?
+  search_tasks    search_tasks? @relation(fields: [search_tasks_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "search_tasks_job_sites_search_tasks_id_foreign")
 }
 
 enum Role {

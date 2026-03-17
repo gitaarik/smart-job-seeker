@@ -218,21 +218,6 @@ export type job_platforms = Prisma.job_platformsModel
  */
 export type job_resources = Prisma.job_resourcesModel
 /**
- * Model job_searches
- * 
- */
-export type job_searches = Prisma.job_searchesModel
-/**
- * Model job_searches_job_sites
- * 
- */
-export type job_searches_job_sites = Prisma.job_searches_job_sitesModel
-/**
- * Model job_search_runs
- * 
- */
-export type job_search_runs = Prisma.job_search_runsModel
-/**
  * Model scraper_logs
  * 
  */
@@ -403,17 +388,27 @@ export type users = Prisma.usersModel
  */
 export type verifications = Prisma.verificationsModel
 /**
- * Model job_search_run_items
+ * Model match_config
+ * 
+ */
+export type match_config = Prisma.match_configModel
+/**
+ * Model search_task_run_items
  * This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
  */
-export type job_search_run_items = Prisma.job_search_run_itemsModel
+export type search_task_run_items = Prisma.search_task_run_itemsModel
 /**
- * Model job_match_config
+ * Model search_task_runs
+ * This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+ */
+export type search_task_runs = Prisma.search_task_runsModel
+/**
+ * Model search_tasks
  * 
  */
-export type job_match_config = Prisma.job_match_configModel
+export type search_tasks = Prisma.search_tasksModel
 /**
- * Model rescrape_runs
+ * Model search_tasks_job_sites
  * 
  */
-export type rescrape_runs = Prisma.rescrape_runsModel
+export type search_tasks_job_sites = Prisma.search_tasks_job_sitesModel

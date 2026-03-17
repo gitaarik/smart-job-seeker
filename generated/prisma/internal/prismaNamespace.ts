@@ -424,9 +424,6 @@ export const ModelName = {
   job_matches: 'job_matches',
   job_platforms: 'job_platforms',
   job_resources: 'job_resources',
-  job_searches: 'job_searches',
-  job_searches_job_sites: 'job_searches_job_sites',
-  job_search_runs: 'job_search_runs',
   scraper_logs: 'scraper_logs',
   jobs: 'jobs',
   languages: 'languages',
@@ -461,9 +458,11 @@ export const ModelName = {
   sessions: 'sessions',
   users: 'users',
   verifications: 'verifications',
-  job_search_run_items: 'job_search_run_items',
-  job_match_config: 'job_match_config',
-  rescrape_runs: 'rescrape_runs'
+  match_config: 'match_config',
+  search_task_run_items: 'search_task_run_items',
+  search_task_runs: 'search_task_runs',
+  search_tasks: 'search_tasks',
+  search_tasks_job_sites: 'search_tasks_job_sites'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -479,7 +478,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "job_search_runs" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_search_run_items" | "job_match_config" | "rescrape_runs"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3443,228 +3442,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    job_searches: {
-      payload: Prisma.$job_searchesPayload<ExtArgs>
-      fields: Prisma.job_searchesFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.job_searchesFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.job_searchesFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>
-        }
-        findFirst: {
-          args: Prisma.job_searchesFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.job_searchesFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>
-        }
-        findMany: {
-          args: Prisma.job_searchesFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>[]
-        }
-        create: {
-          args: Prisma.job_searchesCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>
-        }
-        createMany: {
-          args: Prisma.job_searchesCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.job_searchesCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>[]
-        }
-        delete: {
-          args: Prisma.job_searchesDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>
-        }
-        update: {
-          args: Prisma.job_searchesUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>
-        }
-        deleteMany: {
-          args: Prisma.job_searchesDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.job_searchesUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.job_searchesUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>[]
-        }
-        upsert: {
-          args: Prisma.job_searchesUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searchesPayload>
-        }
-        aggregate: {
-          args: Prisma.Job_searchesAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_searches>
-        }
-        groupBy: {
-          args: Prisma.job_searchesGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_searchesGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.job_searchesCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_searchesCountAggregateOutputType> | number
-        }
-      }
-    }
-    job_searches_job_sites: {
-      payload: Prisma.$job_searches_job_sitesPayload<ExtArgs>
-      fields: Prisma.job_searches_job_sitesFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.job_searches_job_sitesFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.job_searches_job_sitesFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>
-        }
-        findFirst: {
-          args: Prisma.job_searches_job_sitesFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.job_searches_job_sitesFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>
-        }
-        findMany: {
-          args: Prisma.job_searches_job_sitesFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>[]
-        }
-        create: {
-          args: Prisma.job_searches_job_sitesCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>
-        }
-        createMany: {
-          args: Prisma.job_searches_job_sitesCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.job_searches_job_sitesCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>[]
-        }
-        delete: {
-          args: Prisma.job_searches_job_sitesDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>
-        }
-        update: {
-          args: Prisma.job_searches_job_sitesUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>
-        }
-        deleteMany: {
-          args: Prisma.job_searches_job_sitesDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.job_searches_job_sitesUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.job_searches_job_sitesUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>[]
-        }
-        upsert: {
-          args: Prisma.job_searches_job_sitesUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_searches_job_sitesPayload>
-        }
-        aggregate: {
-          args: Prisma.Job_searches_job_sitesAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_searches_job_sites>
-        }
-        groupBy: {
-          args: Prisma.job_searches_job_sitesGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_searches_job_sitesGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.job_searches_job_sitesCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_searches_job_sitesCountAggregateOutputType> | number
-        }
-      }
-    }
-    job_search_runs: {
-      payload: Prisma.$job_search_runsPayload<ExtArgs>
-      fields: Prisma.job_search_runsFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.job_search_runsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.job_search_runsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
-        }
-        findFirst: {
-          args: Prisma.job_search_runsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.job_search_runsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
-        }
-        findMany: {
-          args: Prisma.job_search_runsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>[]
-        }
-        create: {
-          args: Prisma.job_search_runsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
-        }
-        createMany: {
-          args: Prisma.job_search_runsCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.job_search_runsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>[]
-        }
-        delete: {
-          args: Prisma.job_search_runsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
-        }
-        update: {
-          args: Prisma.job_search_runsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
-        }
-        deleteMany: {
-          args: Prisma.job_search_runsDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.job_search_runsUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.job_search_runsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>[]
-        }
-        upsert: {
-          args: Prisma.job_search_runsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
-        }
-        aggregate: {
-          args: Prisma.Job_search_runsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_search_runs>
-        }
-        groupBy: {
-          args: Prisma.job_search_runsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_search_runsGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.job_search_runsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_search_runsCountAggregateOutputType> | number
-        }
-      }
-    }
     scraper_logs: {
       payload: Prisma.$scraper_logsPayload<ExtArgs>
       fields: Prisma.scraper_logsFieldRefs
@@ -6181,225 +5958,373 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    job_search_run_items: {
-      payload: Prisma.$job_search_run_itemsPayload<ExtArgs>
-      fields: Prisma.job_search_run_itemsFieldRefs
+    match_config: {
+      payload: Prisma.$match_configPayload<ExtArgs>
+      fields: Prisma.match_configFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.job_search_run_itemsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload> | null
+          args: Prisma.match_configFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.job_search_run_itemsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>
+          args: Prisma.match_configFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>
         }
         findFirst: {
-          args: Prisma.job_search_run_itemsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload> | null
+          args: Prisma.match_configFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.job_search_run_itemsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>
+          args: Prisma.match_configFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>
         }
         findMany: {
-          args: Prisma.job_search_run_itemsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>[]
+          args: Prisma.match_configFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>[]
         }
         create: {
-          args: Prisma.job_search_run_itemsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>
+          args: Prisma.match_configCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>
         }
         createMany: {
-          args: Prisma.job_search_run_itemsCreateManyArgs<ExtArgs>
+          args: Prisma.match_configCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.job_search_run_itemsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>[]
+          args: Prisma.match_configCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>[]
         }
         delete: {
-          args: Prisma.job_search_run_itemsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>
+          args: Prisma.match_configDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>
         }
         update: {
-          args: Prisma.job_search_run_itemsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>
+          args: Prisma.match_configUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>
         }
         deleteMany: {
-          args: Prisma.job_search_run_itemsDeleteManyArgs<ExtArgs>
+          args: Prisma.match_configDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.job_search_run_itemsUpdateManyArgs<ExtArgs>
+          args: Prisma.match_configUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.job_search_run_itemsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>[]
+          args: Prisma.match_configUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>[]
         }
         upsert: {
-          args: Prisma.job_search_run_itemsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_run_itemsPayload>
+          args: Prisma.match_configUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$match_configPayload>
         }
         aggregate: {
-          args: Prisma.Job_search_run_itemsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_search_run_items>
+          args: Prisma.Match_configAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMatch_config>
         }
         groupBy: {
-          args: Prisma.job_search_run_itemsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_search_run_itemsGroupByOutputType>[]
+          args: Prisma.match_configGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Match_configGroupByOutputType>[]
         }
         count: {
-          args: Prisma.job_search_run_itemsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_search_run_itemsCountAggregateOutputType> | number
+          args: Prisma.match_configCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Match_configCountAggregateOutputType> | number
         }
       }
     }
-    job_match_config: {
-      payload: Prisma.$job_match_configPayload<ExtArgs>
-      fields: Prisma.job_match_configFieldRefs
+    search_task_run_items: {
+      payload: Prisma.$search_task_run_itemsPayload<ExtArgs>
+      fields: Prisma.search_task_run_itemsFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.job_match_configFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload> | null
+          args: Prisma.search_task_run_itemsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.job_match_configFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>
+          args: Prisma.search_task_run_itemsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>
         }
         findFirst: {
-          args: Prisma.job_match_configFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload> | null
+          args: Prisma.search_task_run_itemsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.job_match_configFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>
+          args: Prisma.search_task_run_itemsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>
         }
         findMany: {
-          args: Prisma.job_match_configFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>[]
+          args: Prisma.search_task_run_itemsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>[]
         }
         create: {
-          args: Prisma.job_match_configCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>
+          args: Prisma.search_task_run_itemsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>
         }
         createMany: {
-          args: Prisma.job_match_configCreateManyArgs<ExtArgs>
+          args: Prisma.search_task_run_itemsCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.job_match_configCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>[]
+          args: Prisma.search_task_run_itemsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>[]
         }
         delete: {
-          args: Prisma.job_match_configDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>
+          args: Prisma.search_task_run_itemsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>
         }
         update: {
-          args: Prisma.job_match_configUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>
+          args: Prisma.search_task_run_itemsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>
         }
         deleteMany: {
-          args: Prisma.job_match_configDeleteManyArgs<ExtArgs>
+          args: Prisma.search_task_run_itemsDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.job_match_configUpdateManyArgs<ExtArgs>
+          args: Prisma.search_task_run_itemsUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.job_match_configUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>[]
+          args: Prisma.search_task_run_itemsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>[]
         }
         upsert: {
-          args: Prisma.job_match_configUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_configPayload>
+          args: Prisma.search_task_run_itemsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_run_itemsPayload>
         }
         aggregate: {
-          args: Prisma.Job_match_configAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_match_config>
+          args: Prisma.Search_task_run_itemsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSearch_task_run_items>
         }
         groupBy: {
-          args: Prisma.job_match_configGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_match_configGroupByOutputType>[]
+          args: Prisma.search_task_run_itemsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_task_run_itemsGroupByOutputType>[]
         }
         count: {
-          args: Prisma.job_match_configCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Job_match_configCountAggregateOutputType> | number
+          args: Prisma.search_task_run_itemsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_task_run_itemsCountAggregateOutputType> | number
         }
       }
     }
-    rescrape_runs: {
-      payload: Prisma.$rescrape_runsPayload<ExtArgs>
-      fields: Prisma.rescrape_runsFieldRefs
+    search_task_runs: {
+      payload: Prisma.$search_task_runsPayload<ExtArgs>
+      fields: Prisma.search_task_runsFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.rescrape_runsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload> | null
+          args: Prisma.search_task_runsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.rescrape_runsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>
+          args: Prisma.search_task_runsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>
         }
         findFirst: {
-          args: Prisma.rescrape_runsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload> | null
+          args: Prisma.search_task_runsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.rescrape_runsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>
+          args: Prisma.search_task_runsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>
         }
         findMany: {
-          args: Prisma.rescrape_runsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>[]
+          args: Prisma.search_task_runsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>[]
         }
         create: {
-          args: Prisma.rescrape_runsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>
+          args: Prisma.search_task_runsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>
         }
         createMany: {
-          args: Prisma.rescrape_runsCreateManyArgs<ExtArgs>
+          args: Prisma.search_task_runsCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.rescrape_runsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>[]
+          args: Prisma.search_task_runsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>[]
         }
         delete: {
-          args: Prisma.rescrape_runsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>
+          args: Prisma.search_task_runsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>
         }
         update: {
-          args: Prisma.rescrape_runsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>
+          args: Prisma.search_task_runsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>
         }
         deleteMany: {
-          args: Prisma.rescrape_runsDeleteManyArgs<ExtArgs>
+          args: Prisma.search_task_runsDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.rescrape_runsUpdateManyArgs<ExtArgs>
+          args: Prisma.search_task_runsUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.rescrape_runsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>[]
+          args: Prisma.search_task_runsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>[]
         }
         upsert: {
-          args: Prisma.rescrape_runsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$rescrape_runsPayload>
+          args: Prisma.search_task_runsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_task_runsPayload>
         }
         aggregate: {
-          args: Prisma.Rescrape_runsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateRescrape_runs>
+          args: Prisma.Search_task_runsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSearch_task_runs>
         }
         groupBy: {
-          args: Prisma.rescrape_runsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Rescrape_runsGroupByOutputType>[]
+          args: Prisma.search_task_runsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_task_runsGroupByOutputType>[]
         }
         count: {
-          args: Prisma.rescrape_runsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Rescrape_runsCountAggregateOutputType> | number
+          args: Prisma.search_task_runsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_task_runsCountAggregateOutputType> | number
+        }
+      }
+    }
+    search_tasks: {
+      payload: Prisma.$search_tasksPayload<ExtArgs>
+      fields: Prisma.search_tasksFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.search_tasksFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.search_tasksFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>
+        }
+        findFirst: {
+          args: Prisma.search_tasksFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.search_tasksFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>
+        }
+        findMany: {
+          args: Prisma.search_tasksFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>[]
+        }
+        create: {
+          args: Prisma.search_tasksCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>
+        }
+        createMany: {
+          args: Prisma.search_tasksCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.search_tasksCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>[]
+        }
+        delete: {
+          args: Prisma.search_tasksDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>
+        }
+        update: {
+          args: Prisma.search_tasksUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>
+        }
+        deleteMany: {
+          args: Prisma.search_tasksDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.search_tasksUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.search_tasksUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>[]
+        }
+        upsert: {
+          args: Prisma.search_tasksUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasksPayload>
+        }
+        aggregate: {
+          args: Prisma.Search_tasksAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSearch_tasks>
+        }
+        groupBy: {
+          args: Prisma.search_tasksGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_tasksGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.search_tasksCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_tasksCountAggregateOutputType> | number
+        }
+      }
+    }
+    search_tasks_job_sites: {
+      payload: Prisma.$search_tasks_job_sitesPayload<ExtArgs>
+      fields: Prisma.search_tasks_job_sitesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.search_tasks_job_sitesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.search_tasks_job_sitesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>
+        }
+        findFirst: {
+          args: Prisma.search_tasks_job_sitesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.search_tasks_job_sitesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>
+        }
+        findMany: {
+          args: Prisma.search_tasks_job_sitesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>[]
+        }
+        create: {
+          args: Prisma.search_tasks_job_sitesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>
+        }
+        createMany: {
+          args: Prisma.search_tasks_job_sitesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.search_tasks_job_sitesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>[]
+        }
+        delete: {
+          args: Prisma.search_tasks_job_sitesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>
+        }
+        update: {
+          args: Prisma.search_tasks_job_sitesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>
+        }
+        deleteMany: {
+          args: Prisma.search_tasks_job_sitesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.search_tasks_job_sitesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.search_tasks_job_sitesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>[]
+        }
+        upsert: {
+          args: Prisma.search_tasks_job_sitesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$search_tasks_job_sitesPayload>
+        }
+        aggregate: {
+          args: Prisma.Search_tasks_job_sitesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSearch_tasks_job_sites>
+        }
+        groupBy: {
+          args: Prisma.search_tasks_job_sitesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_tasks_job_sitesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.search_tasks_job_sitesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Search_tasks_job_sitesCountAggregateOutputType> | number
         }
       }
     }
@@ -7141,61 +7066,6 @@ export const Job_resourcesScalarFieldEnum = {
 export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)[keyof typeof Job_resourcesScalarFieldEnum]
 
 
-export const Job_searchesScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  profile: 'profile',
-  last_run: 'last_run',
-  search_url: 'search_url',
-  platform: 'platform',
-  navigation_type: 'navigation_type',
-  stripped_html: 'stripped_html',
-  last_run_jobs_found: 'last_run_jobs_found',
-  live_url: 'live_url',
-  is_active: 'is_active',
-  status_message: 'status_message',
-  platform_profile_id: 'platform_profile_id',
-  max_jobs: 'max_jobs',
-  search_term: 'search_term',
-  browser_provider: 'browser_provider',
-  skip_existing: 'skip_existing',
-  stop_after_duplicates: 'stop_after_duplicates',
-  skip_first: 'skip_first',
-  keep_minimized: 'keep_minimized',
-  ui_preferences: 'ui_preferences'
-} as const
-
-export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
-
-
-export const Job_searches_job_sitesScalarFieldEnum = {
-  id: 'id',
-  job_searches_id: 'job_searches_id'
-} as const
-
-export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
-
-
-export const Job_search_runsScalarFieldEnum = {
-  id: 'id',
-  job_search_id: 'job_search_id',
-  status: 'status',
-  started_at: 'started_at',
-  finished_at: 'finished_at',
-  jobs_found: 'jobs_found',
-  error_message: 'error_message',
-  triggered_by: 'triggered_by',
-  bullmq_job_id: 'bullmq_job_id',
-  live_url: 'live_url',
-  user_response: 'user_response'
-} as const
-
-export type Job_search_runsScalarFieldEnum = (typeof Job_search_runsScalarFieldEnum)[keyof typeof Job_search_runsScalarFieldEnum]
-
-
 export const Scraper_logsScalarFieldEnum = {
   id: 'id',
   run_id: 'run_id',
@@ -7413,9 +7283,9 @@ export const ProfilesScalarFieldEnum = {
   browser_user_agent: 'browser_user_agent',
   browser_language: 'browser_language',
   browser_timezone: 'browser_timezone',
-  browser_profile_id: 'browser_profile_id',
+  ui_preferences: 'ui_preferences',
   browser_country_code: 'browser_country_code',
-  ui_preferences: 'ui_preferences'
+  browser_profile_id: 'browser_profile_id'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
@@ -7792,7 +7662,22 @@ export const VerificationsScalarFieldEnum = {
 export type VerificationsScalarFieldEnum = (typeof VerificationsScalarFieldEnum)[keyof typeof VerificationsScalarFieldEnum]
 
 
-export const Job_search_run_itemsScalarFieldEnum = {
+export const Match_configScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  work_location: 'work_location',
+  locations: 'locations',
+  profile: 'profile',
+  name: 'name'
+} as const
+
+export type Match_configScalarFieldEnum = (typeof Match_configScalarFieldEnum)[keyof typeof Match_configScalarFieldEnum]
+
+
+export const Search_task_run_itemsScalarFieldEnum = {
   id: 'id',
   run_id: 'run_id',
   position: 'position',
@@ -7808,36 +7693,62 @@ export const Job_search_run_itemsScalarFieldEnum = {
   processed_at: 'processed_at'
 } as const
 
-export type Job_search_run_itemsScalarFieldEnum = (typeof Job_search_run_itemsScalarFieldEnum)[keyof typeof Job_search_run_itemsScalarFieldEnum]
+export type Search_task_run_itemsScalarFieldEnum = (typeof Search_task_run_itemsScalarFieldEnum)[keyof typeof Search_task_run_itemsScalarFieldEnum]
 
 
-export const Job_match_configScalarFieldEnum = {
+export const Search_task_runsScalarFieldEnum = {
   id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  job_types: 'job_types',
-  experience_levels: 'experience_levels',
-  work_location: 'work_location',
-  locations: 'locations',
-  profile: 'profile',
-  name: 'name'
-} as const
-
-export type Job_match_configScalarFieldEnum = (typeof Job_match_configScalarFieldEnum)[keyof typeof Job_match_configScalarFieldEnum]
-
-
-export const Rescrape_runsScalarFieldEnum = {
-  id: 'id',
-  job: 'job',
+  search_task_id: 'search_task_id',
   status: 'status',
   started_at: 'started_at',
   finished_at: 'finished_at',
-  message: 'message',
+  jobs_found: 'jobs_found',
+  error_message: 'error_message',
   triggered_by: 'triggered_by',
-  bullmq_job_id: 'bullmq_job_id'
+  bullmq_job_id: 'bullmq_job_id',
+  live_url: 'live_url',
+  user_response: 'user_response'
 } as const
 
-export type Rescrape_runsScalarFieldEnum = (typeof Rescrape_runsScalarFieldEnum)[keyof typeof Rescrape_runsScalarFieldEnum]
+export type Search_task_runsScalarFieldEnum = (typeof Search_task_runsScalarFieldEnum)[keyof typeof Search_task_runsScalarFieldEnum]
+
+
+export const Search_tasksScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  name: 'name',
+  profile: 'profile',
+  last_run: 'last_run',
+  search_url: 'search_url',
+  platform: 'platform',
+  navigation_type: 'navigation_type',
+  stripped_html: 'stripped_html',
+  last_run_jobs_found: 'last_run_jobs_found',
+  live_url: 'live_url',
+  is_active: 'is_active',
+  status_message: 'status_message',
+  platform_profile_id: 'platform_profile_id',
+  max_jobs: 'max_jobs',
+  browser_provider: 'browser_provider',
+  search_term: 'search_term',
+  skip_existing: 'skip_existing',
+  skip_first: 'skip_first',
+  stop_after_duplicates: 'stop_after_duplicates',
+  keep_minimized: 'keep_minimized',
+  ui_preferences: 'ui_preferences'
+} as const
+
+export type Search_tasksScalarFieldEnum = (typeof Search_tasksScalarFieldEnum)[keyof typeof Search_tasksScalarFieldEnum]
+
+
+export const Search_tasks_job_sitesScalarFieldEnum = {
+  id: 'id',
+  search_tasks_id: 'search_tasks_id'
+} as const
+
+export type Search_tasks_job_sitesScalarFieldEnum = (typeof Search_tasks_job_sitesScalarFieldEnum)[keyof typeof Search_tasks_job_sitesScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -8126,9 +8037,6 @@ export type GlobalOmitConfig = {
   job_matches?: Prisma.job_matchesOmit
   job_platforms?: Prisma.job_platformsOmit
   job_resources?: Prisma.job_resourcesOmit
-  job_searches?: Prisma.job_searchesOmit
-  job_searches_job_sites?: Prisma.job_searches_job_sitesOmit
-  job_search_runs?: Prisma.job_search_runsOmit
   scraper_logs?: Prisma.scraper_logsOmit
   jobs?: Prisma.jobsOmit
   languages?: Prisma.languagesOmit
@@ -8163,9 +8071,11 @@ export type GlobalOmitConfig = {
   sessions?: Prisma.sessionsOmit
   users?: Prisma.usersOmit
   verifications?: Prisma.verificationsOmit
-  job_search_run_items?: Prisma.job_search_run_itemsOmit
-  job_match_config?: Prisma.job_match_configOmit
-  rescrape_runs?: Prisma.rescrape_runsOmit
+  match_config?: Prisma.match_configOmit
+  search_task_run_items?: Prisma.search_task_run_itemsOmit
+  search_task_runs?: Prisma.search_task_runsOmit
+  search_tasks?: Prisma.search_tasksOmit
+  search_tasks_job_sites?: Prisma.search_tasks_job_sitesOmit
 }
 
 /* Types for Logging */

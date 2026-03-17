@@ -1,7 +1,7 @@
 /**
  * Run Items API
  *
- * GET /api/job-searches/[id]/runs/[runId]/items
+ * GET /api/search-tasks/[id]/runs/[runId]/items
  * Returns the list of jobs discovered during a scraper run with their processing status.
  */
 
@@ -12,15 +12,15 @@ import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
   const runId = parseIntParam(params.runId, "run");
 
   // Verify the run belongs to this job search and the user owns it
-  const run = await db.job_search_runs.findFirst({
+  const run = await db.search_task_runs.findFirst({
     where: {
       id: runId,
-      job_search_id: jobSearchId,
-      job_searches: { profiles: { user_id: user.id } },
+      search_task_id: searchTaskId,
+      search_tasks: { profiles: { user_id: user.id } },
     },
     select: { id: true },
   });
@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   }
 
   // Get all items for this run with job details for completed items
-  const items = await db.job_search_run_items.findMany({
+  const items = await db.search_task_run_items.findMany({
     where: { run_id: runId },
     orderBy: { position: "asc" },
     select: {

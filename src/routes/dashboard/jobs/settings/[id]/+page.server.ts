@@ -11,14 +11,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const jobSearchId = parseInt(params.id);
-  if (isNaN(jobSearchId)) {
+  const searchTaskId = parseInt(params.id);
+  if (isNaN(searchTaskId)) {
     throw error(400, "Invalid job search ID");
   }
 
-  const jobSearch = await db.job_searches.findFirst({
+  const searchTask = await db.search_tasks.findFirst({
     where: {
-      id: jobSearchId,
+      id: searchTaskId,
       profile: layoutData.selectedProfile.id,
     },
     include: {
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     },
   });
 
-  if (!jobSearch) {
+  if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
@@ -36,11 +36,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     id: number;
     username: string | null;
   }> = [];
-  if (jobSearch.platform) {
+  if (searchTask.platform) {
     platformCredentials = await db.platform_profiles.findMany({
       where: {
         profile: layoutData.selectedProfile.id,
-        platform: jobSearch.platform,
+        platform: searchTask.platform,
       },
       select: { id: true, username: true },
       orderBy: { date_created: "asc" },
@@ -55,10 +55,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Staff can always edit. Normal users can edit only if no other user's
   // accounts reference this platform (cheap existence check with LIMIT 1).
   let canEditPlatformUrls = isStaff;
-  if (!canEditPlatformUrls && jobSearch.platform && user) {
-    const otherUserUsage = await db.job_searches.findFirst({
+  if (!canEditPlatformUrls && searchTask.platform && user) {
+    const otherUserUsage = await db.search_tasks.findFirst({
       where: {
-        platform: jobSearch.platform,
+        platform: searchTask.platform,
         profiles: { user_id: { not: user.id } },
       },
       select: { id: true },
@@ -83,7 +83,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const geoDefaults = getGeoConfig(effectiveCountryCode);
 
   return {
-    jobSearch,
+    searchTask,
     platformCredentials,
     profileId: layoutData.selectedProfile.id,
     isStaff,
@@ -102,6 +102,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       language: geoDefaults.language,
       timezone: geoDefaults.timezone,
     },
-    uiPreferences: ((jobSearch as any).ui_preferences ?? {}) as Record<string, unknown>,
+    uiPreferences: ((searchTask as any).ui_preferences ?? {}) as Record<string, unknown>,
   };
 };

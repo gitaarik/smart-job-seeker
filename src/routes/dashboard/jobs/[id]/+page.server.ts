@@ -63,7 +63,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   // Load scrape history for staff (only if scraped more than once)
   let scrapeHistory: { processed_at: Date }[] = [];
   if (isStaff && job.scrape_count && job.scrape_count > 1) {
-    scrapeHistory = await db.job_search_run_items.findMany({
+    scrapeHistory = await db.search_task_run_items.findMany({
       where: {
         job_id: jobId,
         processed_at: { not: null },
@@ -97,7 +97,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     });
 
     // Fetch job search settings for this platform + profile
-    const jobSearch = await db.job_searches.findFirst({
+    const searchTask = await db.search_tasks.findFirst({
       where: { platform: job.job_platform, profile: profileId },
       select: {
         browser_provider: true,
@@ -123,11 +123,11 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     rescrapeConfig = {
       platformCredentials,
       platformId: job.job_platform,
-      selectedCredentialId: jobSearch?.platform_profile_id?.toString() ??
+      selectedCredentialId: searchTask?.platform_profile_id?.toString() ??
         "none",
-      loginUrl: jobSearch?.job_platforms?.login_page_url ?? null,
-      browserProvider: (jobSearch as any)?.browser_provider ?? null,
-      keepMinimized: (jobSearch as any)?.keep_minimized ?? true,
+      loginUrl: searchTask?.job_platforms?.login_page_url ?? null,
+      browserProvider: (searchTask as any)?.browser_provider ?? null,
+      keepMinimized: (searchTask as any)?.keep_minimized ?? true,
       defaultCountryCode,
       browserFingerprint: {
         language: profile?.browser_language || "",

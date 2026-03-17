@@ -220,7 +220,7 @@ export type scraper_logsWhereInput = {
   level?: Prisma.StringFilter<"scraper_logs"> | string
   message?: Prisma.StringFilter<"scraper_logs"> | string
   timestamp?: Prisma.DateTimeFilter<"scraper_logs"> | Date | string
-  run?: Prisma.XOR<Prisma.Job_search_runsScalarRelationFilter, Prisma.job_search_runsWhereInput>
+  run?: Prisma.XOR<Prisma.Search_task_runsScalarRelationFilter, Prisma.search_task_runsWhereInput>
 }
 
 export type scraper_logsOrderByWithRelationInput = {
@@ -229,7 +229,7 @@ export type scraper_logsOrderByWithRelationInput = {
   level?: Prisma.SortOrder
   message?: Prisma.SortOrder
   timestamp?: Prisma.SortOrder
-  run?: Prisma.job_search_runsOrderByWithRelationInput
+  run?: Prisma.search_task_runsOrderByWithRelationInput
 }
 
 export type scraper_logsWhereUniqueInput = Prisma.AtLeast<{
@@ -241,7 +241,7 @@ export type scraper_logsWhereUniqueInput = Prisma.AtLeast<{
   level?: Prisma.StringFilter<"scraper_logs"> | string
   message?: Prisma.StringFilter<"scraper_logs"> | string
   timestamp?: Prisma.DateTimeFilter<"scraper_logs"> | Date | string
-  run?: Prisma.XOR<Prisma.Job_search_runsScalarRelationFilter, Prisma.job_search_runsWhereInput>
+  run?: Prisma.XOR<Prisma.Search_task_runsScalarRelationFilter, Prisma.search_task_runsWhereInput>
 }, "id">
 
 export type scraper_logsOrderByWithAggregationInput = {
@@ -272,7 +272,7 @@ export type scraper_logsCreateInput = {
   level: string
   message: string
   timestamp?: Date | string
-  run: Prisma.job_search_runsCreateNestedOneWithoutLogsInput
+  run: Prisma.search_task_runsCreateNestedOneWithoutLogsInput
 }
 
 export type scraper_logsUncheckedCreateInput = {
@@ -287,7 +287,7 @@ export type scraper_logsUpdateInput = {
   level?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.StringFieldUpdateOperationsInput | string
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  run?: Prisma.job_search_runsUpdateOneRequiredWithoutLogsNestedInput
+  run?: Prisma.search_task_runsUpdateOneRequiredWithoutLogsNestedInput
 }
 
 export type scraper_logsUncheckedUpdateInput = {
@@ -318,16 +318,6 @@ export type scraper_logsUncheckedUpdateManyInput = {
   level?: Prisma.StringFieldUpdateOperationsInput | string
   message?: Prisma.StringFieldUpdateOperationsInput | string
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type Scraper_logsListRelationFilter = {
-  every?: Prisma.scraper_logsWhereInput
-  some?: Prisma.scraper_logsWhereInput
-  none?: Prisma.scraper_logsWhereInput
-}
-
-export type scraper_logsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
 }
 
 export type scraper_logsCountOrderByAggregateInput = {
@@ -362,6 +352,16 @@ export type scraper_logsMinOrderByAggregateInput = {
 export type scraper_logsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   run_id?: Prisma.SortOrder
+}
+
+export type Scraper_logsListRelationFilter = {
+  every?: Prisma.scraper_logsWhereInput
+  some?: Prisma.scraper_logsWhereInput
+  none?: Prisma.scraper_logsWhereInput
+}
+
+export type scraper_logsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type scraper_logsCreateNestedManyWithoutRunInput = {
@@ -491,7 +491,7 @@ export type scraper_logsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   level?: boolean
   message?: boolean
   timestamp?: boolean
-  run?: boolean | Prisma.job_search_runsDefaultArgs<ExtArgs>
+  run?: boolean | Prisma.search_task_runsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scraper_logs"]>
 
 export type scraper_logsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -500,7 +500,7 @@ export type scraper_logsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   level?: boolean
   message?: boolean
   timestamp?: boolean
-  run?: boolean | Prisma.job_search_runsDefaultArgs<ExtArgs>
+  run?: boolean | Prisma.search_task_runsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scraper_logs"]>
 
 export type scraper_logsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -509,7 +509,7 @@ export type scraper_logsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   level?: boolean
   message?: boolean
   timestamp?: boolean
-  run?: boolean | Prisma.job_search_runsDefaultArgs<ExtArgs>
+  run?: boolean | Prisma.search_task_runsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["scraper_logs"]>
 
 export type scraper_logsSelectScalar = {
@@ -522,19 +522,19 @@ export type scraper_logsSelectScalar = {
 
 export type scraper_logsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "run_id" | "level" | "message" | "timestamp", ExtArgs["result"]["scraper_logs"]>
 export type scraper_logsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  run?: boolean | Prisma.job_search_runsDefaultArgs<ExtArgs>
+  run?: boolean | Prisma.search_task_runsDefaultArgs<ExtArgs>
 }
 export type scraper_logsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  run?: boolean | Prisma.job_search_runsDefaultArgs<ExtArgs>
+  run?: boolean | Prisma.search_task_runsDefaultArgs<ExtArgs>
 }
 export type scraper_logsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  run?: boolean | Prisma.job_search_runsDefaultArgs<ExtArgs>
+  run?: boolean | Prisma.search_task_runsDefaultArgs<ExtArgs>
 }
 
 export type $scraper_logsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "scraper_logs"
   objects: {
-    run: Prisma.$job_search_runsPayload<ExtArgs>
+    run: Prisma.$search_task_runsPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -936,7 +936,7 @@ readonly fields: scraper_logsFieldRefs;
  */
 export interface Prisma__scraper_logsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  run<T extends Prisma.job_search_runsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_search_runsDefaultArgs<ExtArgs>>): Prisma.Prisma__job_search_runsClient<runtime.Types.Result.GetResult<Prisma.$job_search_runsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  run<T extends Prisma.search_task_runsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.search_task_runsDefaultArgs<ExtArgs>>): Prisma.Prisma__search_task_runsClient<runtime.Types.Result.GetResult<Prisma.$search_task_runsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

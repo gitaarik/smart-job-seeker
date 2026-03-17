@@ -159,7 +159,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
     });
 
     // Clear platform_profile_id on any job searches using this credential
-    await db.job_searches.updateMany({
+    await db.search_tasks.updateMany({
       where: {
         platform_profile_id: cred.id,
         profile: profile.id,
@@ -183,7 +183,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 
     // Clear platform_profile_id on any job searches using these credentials
     if (credIds.length > 0) {
-      await db.job_searches.updateMany({
+      await db.search_tasks.updateMany({
         where: {
           platform_profile_id: { in: credIds },
           profile: profile.id,

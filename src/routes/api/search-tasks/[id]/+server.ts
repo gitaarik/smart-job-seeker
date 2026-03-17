@@ -2,31 +2,31 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { jobSearchUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
+import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 /**
- * PATCH /api/job-searches/[id]
+ * PATCH /api/search-tasks/[id]
  *
  * Update job search settings (e.g. max_jobs).
  */
 export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
 
-  const jobSearch = await db.job_searches.findFirst({
-    where: { id: jobSearchId },
+  const searchTask = await db.search_tasks.findFirst({
+    where: { id: searchTaskId },
     include: { profiles: true },
   });
 
-  if (!jobSearch) {
+  if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
-  if (jobSearch.profiles.user_id !== user.id) {
+  if (searchTask.profiles.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
-  const body = parseBody(jobSearchUpdateSchema, await request.json());
+  const body = parseBody(searchTaskUpdateSchema, await request.json());
 
   const data: { name?: string; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; keep_minimized?: boolean } = {};
 
@@ -41,11 +41,11 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (body.keep_minimized !== undefined) data.keep_minimized = body.keep_minimized;
 
   // Create new credential and assign it
-  if (body.new_credential && jobSearch.platform) {
+  if (body.new_credential && searchTask.platform) {
     const newCred = await db.platform_profiles.create({
       data: {
-        profile: jobSearch.profile,
-        platform: jobSearch.platform,
+        profile: searchTask.profile,
+        platform: searchTask.platform,
         username: body.new_credential.username,
         password: body.new_credential.password || null,
         status: "active",
@@ -63,8 +63,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       const cred = await db.platform_profiles.findFirst({
         where: {
           id: body.platform_profile_id,
-          profile: jobSearch.profile,
-          platform: jobSearch.platform ?? undefined,
+          profile: searchTask.profile,
+          platform: searchTask.platform ?? undefined,
         },
       });
       if (!cred) {
@@ -74,8 +74,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     }
   }
 
-  await db.job_searches.update({
-    where: { id: jobSearchId },
+  await db.search_tasks.update({
+    where: { id: searchTaskId },
     data,
   });
 
@@ -83,29 +83,29 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 };
 
 /**
- * DELETE /api/job-searches/[id]
+ * DELETE /api/search-tasks/[id]
  *
  * Delete a job search task.
  */
 export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
-  const jobSearchId = parseIntParam(params.id, "job search");
+  const searchTaskId = parseIntParam(params.id, "job search");
 
-  const jobSearch = await db.job_searches.findFirst({
-    where: { id: jobSearchId },
+  const searchTask = await db.search_tasks.findFirst({
+    where: { id: searchTaskId },
     include: { profiles: { select: { user_id: true } } },
   });
 
-  if (!jobSearch) {
+  if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
-  if (jobSearch.profiles.user_id !== user.id) {
+  if (searchTask.profiles.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
-  await db.job_searches.delete({
-    where: { id: jobSearchId },
+  await db.search_tasks.delete({
+    where: { id: searchTaskId },
   });
 
   return json({ ok: true });

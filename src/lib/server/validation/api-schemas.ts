@@ -82,7 +82,7 @@ const newCredentialSchema = z.object({
   password: optionalTrimmedString(1000),
 });
 
-export const jobSearchUpdateSchema = z.object({
+export const searchTaskUpdateSchema = z.object({
   name: trimmedString().optional(),
   search_url: httpUrl("search_url").optional().nullable(),
   search_term: z.string().max(500).optional().nullable(),

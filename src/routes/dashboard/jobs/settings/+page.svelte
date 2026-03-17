@@ -21,14 +21,14 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let jobSearches = $derived(data.jobSearches);
+  let searchTasks = $derived(data.searchTasks);
   let showAddForm = $state(false);
 
   // Desktop scraper connection status
   let desktopConnected = $state<boolean | null>(null); // null = checking
 
   let anyTaskUsesDesktop = $derived(
-    jobSearches.some((s) => s.browser_provider === "local")
+    searchTasks.some((s) => s.browser_provider === "local")
   );
 
   async function checkDesktopStatus() {
@@ -177,7 +177,7 @@
     };
   }
 
-  function getStatusColor(search: (typeof jobSearches)[0]): string {
+  function getStatusColor(search: (typeof searchTasks)[0]): string {
     if (search.status === "running" || search.status === "queued") return "text-blue-500";
     if (search.status === "blocked" || search.status === "partial") return "text-yellow-600";
     if (search.status === "error") return "text-red-500";
@@ -186,7 +186,7 @@
     return "text-[var(--dash-text-muted)]";
   }
 
-  function getStatusBgColor(search: (typeof jobSearches)[0]): string {
+  function getStatusBgColor(search: (typeof searchTasks)[0]): string {
     if (search.status === "running" || search.status === "queued") return "bg-blue-500/10";
     if (search.status === "blocked" || search.status === "partial") return "bg-yellow-500/10";
     if (search.status === "error") return "bg-red-500/10";
@@ -200,7 +200,7 @@
   <SectionHeader
     title="Search Tasks"
     icon={faSearch}
-    showAddButton={!showAddForm && jobSearches.length > 0}
+    showAddButton={!showAddForm && searchTasks.length > 0}
     addLabel="Add Search"
     onAdd={() => (showAddForm = true)}
   />
@@ -477,7 +477,7 @@
   {/if}
 
   <!-- Job Searches List -->
-  {#if jobSearches.length === 0 && !showAddForm}
+  {#if searchTasks.length === 0 && !showAddForm}
     <EmptyState
       icon={faSearch}
       title="No search tasks yet"
@@ -487,7 +487,7 @@
     />
   {:else}
     <div class="space-y-3">
-      {#each jobSearches as search (search.id)}
+      {#each searchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
         <a
           href="/dashboard/jobs/settings/{search.id}"
