@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { config } from "$lib/server/config";
 import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -190,6 +191,7 @@ export const actions: Actions = {
         is_active,
         profile: profileId,
         status: "idle",
+        browser_provider: config.defaultBrowserProvider,
         date_created: new Date(),
       },
     });
