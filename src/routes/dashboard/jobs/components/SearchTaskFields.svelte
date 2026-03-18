@@ -112,8 +112,8 @@
   let addMaxJobsInput = $state(defaultMaxJobs?.toString() ?? "");
   let addSkipFirstEnabled = $state(false);
   let addSkipFirstInput = $state("");
-  let addStopAfterDuplicatesEnabled = $state(false);
-  let addStopAfterDuplicatesInput = $state("");
+  let addStopAfterDuplicatesEnabled = $state(true);
+  let addStopAfterDuplicatesInput = $state("5");
   let addSkipExisting = $state(true);
   let addKeepMinimized = $state(true);
 
@@ -822,16 +822,14 @@
         {#if isEdit}
           {@render sectionToggle("auth", "Authentication")}
         {:else}
-          {#if detectedPlatform}
-            <h3
-              class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-            >
-              Authentication
-            </h3>
-          {/if}
+          <h3
+            class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+          >
+            Authentication
+          </h3>
         {/if}
 
-        {#if (isAdd && detectedPlatform) || (isEdit && sectionOpen.auth)}
+        {#if isAdd || (isEdit && sectionOpen.auth)}
           <!-- Login URL -->
           {#if isAdd}
             <div>
@@ -1093,63 +1091,6 @@
           {/if}
         </div>
 
-        <!-- Skip first -->
-        <div class="flex items-center flex-wrap gap-3">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isAdd ? addSkipFirstEnabled : skipFirstEnabled}
-              onchange={(e) => {
-                if (isAdd) {
-                  addSkipFirstEnabled =
-                    (e.target as HTMLInputElement).checked;
-                } else {skipFirstEnabled =
-                    (e.target as HTMLInputElement).checked;}
-              }}
-              class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-            />
-            <span
-              class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-            >Skip first</span>
-          </label>
-          {#if isAdd}
-            <input
-              type="number"
-              name="skip_first"
-              min="1"
-              placeholder="Off"
-              bind:value={addSkipFirstInput}
-              disabled={!addSkipFirstEnabled}
-              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-            />
-          {:else}
-            <input
-              type="number"
-              min="1"
-              placeholder="Off"
-              bind:value={skipFirstInput}
-              disabled={!skipFirstEnabled}
-              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-            />
-          {/if}
-          <span
-            class="text-sm text-[var(--dash-text-secondary)]"
-            class:opacity-40={isAdd ? !addSkipFirstEnabled : !skipFirstEnabled}
-          >jobs</span>
-          {#if isEdit}
-            {@render           saveCancel(
-            skipFirstDirty,
-            isSavingSkipFirst,
-            saveSkipFirst,
-            () => {
-              skipFirstInput = searchTask?.skip_first?.toString() ??
-                "";
-              skipFirstEnabled = searchTask?.skip_first != null;
-            },
-          )}
-          {/if}
-        </div>
-
         <!-- Stop after duplicates -->
         <div class="flex items-center flex-wrap gap-3">
           <label class="flex items-center gap-2 cursor-pointer">
@@ -1261,6 +1202,63 @@
             isSavingSkipExisting,
             saveSkipExisting,
             () => (skipExisting = searchTask?.skip_existing ?? false),
+          )}
+          {/if}
+        </div>
+
+        <!-- Skip first -->
+        <div class="flex items-center flex-wrap gap-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isAdd ? addSkipFirstEnabled : skipFirstEnabled}
+              onchange={(e) => {
+                if (isAdd) {
+                  addSkipFirstEnabled =
+                    (e.target as HTMLInputElement).checked;
+                } else {skipFirstEnabled =
+                    (e.target as HTMLInputElement).checked;}
+              }}
+              class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+            />
+            <span
+              class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+            >Skip first</span>
+          </label>
+          {#if isAdd}
+            <input
+              type="number"
+              name="skip_first"
+              min="1"
+              placeholder="Off"
+              bind:value={addSkipFirstInput}
+              disabled={!addSkipFirstEnabled}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+            />
+          {:else}
+            <input
+              type="number"
+              min="1"
+              placeholder="Off"
+              bind:value={skipFirstInput}
+              disabled={!skipFirstEnabled}
+              class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+            />
+          {/if}
+          <span
+            class="text-sm text-[var(--dash-text-secondary)]"
+            class:opacity-40={isAdd ? !addSkipFirstEnabled : !skipFirstEnabled}
+          >jobs</span>
+          {#if isEdit}
+            {@render           saveCancel(
+            skipFirstDirty,
+            isSavingSkipFirst,
+            saveSkipFirst,
+            () => {
+              skipFirstInput = searchTask?.skip_first?.toString() ??
+                "";
+              skipFirstEnabled = searchTask?.skip_first != null;
+            },
           )}
           {/if}
         </div>
