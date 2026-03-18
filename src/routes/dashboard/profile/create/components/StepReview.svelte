@@ -64,25 +64,20 @@
 
 <div class="space-y-4">
   <Card padding="responsive">
-    <h3 class="font-medium text-[var(--dash-text)] mb-1">
-      {#if source === "manual"}
-        Create Your Profile
-      {:else}
-        Review Your Profile
-      {/if}
-    </h3>
-    <p class="text-sm text-[var(--dash-text-secondary)]">
-      {#if source === "manual"}
-        Fill in your information to get started. You can add more details later.
-      {:else if source === "import"}
-        We imported the following information from your export file
-      {:else if fileName}
-        We extracted the following information from
-        <span class="font-medium">{fileName}</span>
-      {:else}
-        We extracted the following information from your resume
-      {/if}
-    </p>
+    <div class="bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/20 rounded-lg px-4 py-3">
+      <p class="text-sm text-[var(--dash-text)]">
+        {#if source === "manual"}
+          Fill in your information to get started. You can add more details later.
+        {:else if source === "import"}
+          Your profile has not been created yet. Review the imported data below, make any edits, then click <strong>Create Profile</strong>.
+        {:else if fileName}
+          Your profile has not been created yet. We extracted data from
+          <span class="font-medium">{fileName}</span> — review and edit, then click <strong>Create Profile</strong>.
+        {:else}
+          Your profile has not been created yet. Review the extracted data below, make any edits, then click <strong>Create Profile</strong>.
+        {/if}
+      </p>
+    </div>
 
     <!-- Stats summary -->
     {#if source !== "manual"}
@@ -186,7 +181,7 @@
         }
       };
     }}
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6"
+    class="sticky bottom-0 z-10 bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]"
   >
     <input type="hidden" name="data" value="" />
     {#if fileId}

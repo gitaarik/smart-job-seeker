@@ -69,7 +69,7 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Create Your Profile"
+    title={showReview ? "Review Your Profile" : "Create Your Profile"}
     icon={faUser}
   />
 
