@@ -6,6 +6,8 @@
     faBars,
     faBookmark,
     faBriefcase,
+    faBullseye,
+    faChartBar,
     faChevronDown,
     faChevronRight,
     faCode,
@@ -62,9 +64,9 @@
           icon: faSearch,
         },
         {
-          label: "Match Config",
-          href: "/dashboard/jobs/match-config",
-          icon: faSliders,
+          label: "Job Matching",
+          href: "/dashboard/jobs/matching",
+          icon: faBullseye,
         },
         {
           label: "Job Matches",
@@ -213,6 +215,11 @@
           label: "Users",
           href: "/dashboard/admin/users",
           icon: faUsers,
+        },
+        {
+          label: "Matcher",
+          href: "/dashboard/admin/matcher",
+          icon: faChartBar,
         },
       ],
     },

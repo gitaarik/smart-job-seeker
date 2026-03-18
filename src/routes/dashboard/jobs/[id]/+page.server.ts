@@ -73,6 +73,52 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     }) as { processed_at: Date }[];
   }
 
+  // Load importers (which profiles scraped/imported this job) for staff
+  let importers: { profileName: string; scrapedAt: Date | null }[] = [];
+  if (isStaff) {
+    // Get profiles that scraped this job (via search task run items → search task → profile)
+    const scrapeImporters = await db.search_task_run_items.findMany({
+      where: { job_id: jobId },
+      select: {
+        processed_at: true,
+        search_task_runs: {
+          select: {
+            search_tasks: {
+              select: {
+                profiles: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { processed_at: "asc" },
+    });
+
+    // Also get profiles from job_importers (in case of manual imports without a scrape run)
+    const jobImporters = await db.job_importers.findMany({
+      where: { job: jobId },
+      select: {
+        date_created: true,
+        profiles: { select: { name: true } },
+      },
+    });
+
+    // Merge both sources, deduplicate by profile name, keep earliest date
+    const seen = new Map<string, Date | null>();
+    for (const sri of scrapeImporters) {
+      const name = sri.search_task_runs?.search_tasks?.profiles?.name || "Unknown";
+      if (!seen.has(name)) seen.set(name, sri.processed_at);
+    }
+    for (const imp of jobImporters) {
+      const name = imp.profiles?.name || "Unknown";
+      if (!seen.has(name)) seen.set(name, imp.date_created);
+    }
+    importers = Array.from(seen.entries()).map(([profileName, scrapedAt]) => ({
+      profileName,
+      scrapedAt,
+    }));
+  }
+
   // Load rescrape config data: credentials, country, browser fingerprint, browser provider, etc.
   let rescrapeConfig: {
     platformCredentials: { id: number; username: string | null }[];
@@ -149,6 +195,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     profileSkillLevels,
     isStaff,
     scrapeHistory,
+    importers,
     rescrapeConfig,
   };
 };

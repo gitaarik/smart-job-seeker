@@ -577,6 +577,27 @@
             </div>
           </dl>
 
+          <!-- Imported By -->
+          {#if data.importers.length > 0}
+            <div class="mt-4">
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
+                Imported By
+              </p>
+              <ul class="space-y-1 text-sm text-[var(--dash-text)]">
+                {#each data.importers as imp}
+                  <li>
+                    <span class="font-medium">{imp.profileName}</span>
+                    {#if imp.scrapedAt}
+                      <span class="text-[var(--dash-text-muted)]">
+                        — {formatDateTime(imp.scrapedAt)}
+                      </span>
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
           <!-- Scrape History -->
           {#if data.scrapeHistory.length > 0}
             <div class="mt-4">

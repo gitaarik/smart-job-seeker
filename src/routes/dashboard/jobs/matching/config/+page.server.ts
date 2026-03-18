@@ -1,5 +1,4 @@
 import type { PageServerLoad } from "./$types";
-import { redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 
 // Standard options for the form
@@ -22,13 +21,7 @@ const EXPERIENCE_LEVELS = [
 const WORK_LOCATION_OPTIONS = ["Remote", "Hybrid", "On-site"];
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const layoutData = await parent();
-
-  if (!layoutData.selectedProfile) {
-    redirect(302, "/dashboard");
-  }
-
-  const profileId = layoutData.selectedProfile.id;
+  const { profileId } = await parent();
 
   // Get existing config for this profile
   const config = await db.match_config.findFirst({
@@ -51,6 +44,5 @@ export const load: PageServerLoad = async ({ parent }) => {
       experienceLevels: EXPERIENCE_LEVELS,
       workLocationOptions: WORK_LOCATION_OPTIONS,
     },
-    profileId,
   };
 };

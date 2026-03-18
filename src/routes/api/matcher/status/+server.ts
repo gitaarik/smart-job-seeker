@@ -12,7 +12,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { Prisma } from "../../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
-import { getMatcherState } from "$lib/server/job/matcher-state";
+import { getMatcherState, isMatcherAlive } from "$lib/server/job/matcher-state";
 import { getProfileSkills } from "$lib/server/job/match-utils";
 import { buildEligibilityFilter } from "$lib/server/job/eligibility";
 
@@ -57,8 +57,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         where: { profile: profileId },
       }),
 
-      // Current matcher state from Redis
-      getMatcherState(),
+      // Current matcher state from Redis (per-profile)
+      getMatcherState(profileId),
 
       // Recently matched jobs (last 20, excluding ineligible)
       db.job_matches.findMany({
@@ -118,12 +118,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     eligibleUnmatched = result[0]?.cnt ?? 0;
   }
 
+  const matcherAlive = await isMatcherAlive();
+
   return json({
     totalJobs,
     matchedCount,
     unmatchedCount,
     eligibleUnmatched,
     matcherState,
+    matcherAlive,
     recentMatches,
   });
 };

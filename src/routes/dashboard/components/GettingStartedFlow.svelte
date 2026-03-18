@@ -40,7 +40,7 @@
       description:
         "Tell us what you're looking for: job types, work arrangements, locations, and experience levels.",
       done: completeness.hasMatchConfig,
-      href: "/dashboard/jobs/match-config",
+      href: "/dashboard/jobs/matching/config",
       actionLabel: "Set Preferences",
     },
     {

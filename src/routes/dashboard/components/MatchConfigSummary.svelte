@@ -42,7 +42,7 @@
       <p class="text-sm font-medium text-[var(--dash-text)]">Match Config</p>
     </div>
     <a
-      href="/dashboard/jobs/match-config"
+      href="/dashboard/jobs/matching/config"
       class="px-2.5 py-1 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0"
     >
       {matchConfig ? "Edit" : "Configure"}

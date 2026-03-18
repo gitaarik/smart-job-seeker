@@ -3,12 +3,10 @@
   import { onMount, onDestroy } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faChartBar,
     faCircle,
     faSpinner,
   } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import ScoreBadge from "../components/ScoreBadge.svelte";
+  import ScoreBadge from "../../components/ScoreBadge.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -50,6 +48,7 @@
   let unmatchedCount = $state(0);
   let eligibleUnmatched = $state(0);
   let matcherState = $state<MatcherState | null>(null);
+  let matcherAlive = $state(false);
   let recentMatches = $state<RecentMatch[]>([]);
   let pollInterval: ReturnType<typeof setInterval> | null = null;
   let loading = $state(true);
@@ -58,8 +57,17 @@
   let relevantTotal = $derived(matchedCount + eligibleUnmatched);
   let matchProgress = $derived(relevantTotal > 0 ? (matchedCount / relevantTotal) * 100 : 0);
   let filteredOut = $derived(unmatchedCount - eligibleUnmatched);
-  let isMatcherActive = $derived(matcherState?.active === true);
-  let isProcessingJob = $derived(isMatcherActive && matcherState?.currentJobId != null);
+
+  // Matcher status states
+  let isProcessingThisProfile = $derived(
+    matcherState?.active === true && matcherState?.profileId === data.profileId,
+  );
+  let isProcessingJob = $derived(
+    isProcessingThisProfile && matcherState?.currentJobId != null,
+  );
+  let isWaitingForMatcher = $derived(
+    !matcherState?.active && matcherAlive,
+  );
 
   async function loadStatus() {
     try {
@@ -71,6 +79,7 @@
         unmatchedCount = result.unmatchedCount;
         eligibleUnmatched = result.eligibleUnmatched;
         matcherState = result.matcherState;
+        matcherAlive = result.matcherAlive ?? false;
         recentMatches = result.recentMatches;
       }
     } catch (err) {
@@ -145,15 +154,13 @@
 </script>
 
 <div>
-  <SectionHeader title="Match Progress" icon={faChartBar} />
-
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] animate-spin" />
     </div>
   {:else}
     <!-- Stats Overview -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 mt-4">
       <!-- Matched -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Matched</div>
@@ -200,7 +207,7 @@
       <div class="text-xs text-[var(--dash-text-muted)] mt-1">
         {matchedCount} of {relevantTotal} eligible jobs matched
         {#if filteredOut > 0}
-          &middot; {filteredOut} jobs don't match your <a href="/dashboard/jobs/match-config" class="text-[var(--dash-primary)] hover:underline">match config</a>
+          &middot; {filteredOut} jobs don't match your match config
         {/if}
       </div>
     </div>
@@ -209,7 +216,7 @@
     <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4 mb-6">
       <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Matcher Status</h3>
 
-      {#if isMatcherActive}
+      {#if isProcessingThisProfile}
         <div class="flex items-center gap-2 mb-3">
           <span class="relative flex h-3 w-3">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -247,7 +254,7 @@
         {:else}
           <!-- Idle between cycles -->
           <div class="text-sm text-[var(--dash-text-secondary)]">
-            Waiting for next cycle...
+            Waiting for next batch...
           </div>
         {/if}
 
@@ -261,6 +268,25 @@
             {/if}
           </div>
         {/if}
+      {:else if isWaitingForMatcher}
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+          </span>
+          <span class="text-sm text-[var(--dash-warning)]">Waiting for matcher</span>
+        </div>
+        <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+          The matcher is currently processing another profile. Your jobs will be matched in the next cycle.
+        </p>
+      {:else if matcherAlive}
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          <span class="text-sm text-[var(--dash-text-secondary)]">Matcher is active, waiting for next cycle...</span>
+        </div>
       {:else}
         <div class="flex items-center gap-2">
           <FontAwesomeIcon icon={faCircle} class="w-3 h-3 text-[var(--dash-text-muted)]" />

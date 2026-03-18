@@ -8,9 +8,12 @@
     state?: SaveState;
     onClick?: () => void;
     disabled?: boolean;
+    label?: string;
   }
 
-  let { state = "idle", onClick, disabled = false }: Props = $props();
+  let { state = "idle", onClick, disabled = false, label }: Props = $props();
+
+  const defaultLabel = label ?? "Save";
 
   const buttonText = $derived(
     state === "saving"
@@ -19,7 +22,7 @@
         ? "Saved"
         : state === "error"
           ? "Error"
-          : "Save",
+          : defaultLabel,
   );
 </script>
 

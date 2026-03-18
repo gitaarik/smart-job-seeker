@@ -105,7 +105,7 @@
           </p>
         </a>
         <a
-          href="/dashboard/jobs/match-config"
+          href="/dashboard/jobs/matching"
           class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
         >
           <FontAwesomeIcon

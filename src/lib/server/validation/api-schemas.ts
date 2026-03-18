@@ -51,6 +51,15 @@ export const jobPreferencesSchema = z.object({
   match_community_jobs: z.boolean().optional(),
 });
 
+export const jobPreferencesPatchSchema = z.object({
+  profile_id: positiveInt(),
+  job_types: z.array(z.string()).min(1, "Please select at least one job type").optional(),
+  experience_levels: z.array(z.string()).optional().nullable(),
+  work_location: z.array(z.string()).min(1, "Please select at least one work location option").optional(),
+  locations: z.array(z.string()).optional().nullable(),
+  match_community_jobs: z.boolean().optional(),
+});
+
 // Platform create
 
 export const platformCreateSchema = z.object({

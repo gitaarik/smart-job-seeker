@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
-import { jobPreferencesSchema, parseBody } from "$lib/server/validation/api-schemas";
+import { jobPreferencesPatchSchema, jobPreferencesSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
@@ -50,6 +50,62 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       },
     });
   }
+
+  return json({ success: true, id: result.id });
+};
+
+export const PATCH: RequestHandler = async ({ request, locals }) => {
+  const user = requireAuth(locals);
+
+  const { profile_id, ...fields } = parseBody(
+    jobPreferencesPatchSchema,
+    await request.json(),
+  );
+
+  // Verify the profile belongs to this user
+  const profile = await db.profiles.findFirst({
+    where: { id: profile_id, user_id: user.id },
+  });
+
+  if (!profile) {
+    return json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  const existing = await db.match_config.findFirst({
+    where: { profile: profile_id },
+  });
+
+  if (!existing) {
+    return json(
+      { error: "No match config found. Create one first via PUT." },
+      { status: 404 },
+    );
+  }
+
+  // Build update data from provided fields
+  const data: Record<string, unknown> = { date_updated: new Date() };
+  if (fields.job_types !== undefined) data.job_types = fields.job_types;
+  if (fields.experience_levels !== undefined) {
+    data.experience_levels =
+      fields.experience_levels && fields.experience_levels.length > 0
+        ? fields.experience_levels
+        : null;
+  }
+  if (fields.work_location !== undefined)
+    data.work_location = fields.work_location;
+  if (fields.locations !== undefined) {
+    data.locations =
+      fields.locations && fields.locations.length > 0
+        ? fields.locations
+        : null;
+  }
+  if (fields.match_community_jobs !== undefined)
+    data.match_community_jobs = fields.match_community_jobs;
+
+  const result = await db.match_config.update({
+    where: { id: existing.id },
+    data,
+  });
 
   return json({ success: true, id: result.id });
 };
