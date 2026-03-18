@@ -80,87 +80,114 @@ Guidelines:
 - For work experience: "summary" is a brief 1-2 sentence overview of the role. All bullet points, accomplishments, metrics, and specific results go in "achievements". Do NOT put bullet-point content in summary.
 - For education: if the resume only shows a single year (e.g. "MSc Computer Science, 2020"), treat it as the graduation year, NOT as a start or end date. Only use startDate/endDate when the resume explicitly provides date ranges for the education period.`;
 
+// Helper: accept string, null, or undefined → string | undefined
+const nullableString = z.string().nullable().optional().transform(
+  (v) => v ?? undefined,
+);
+
 // Zod schema for resume data
 const ResumeBasicsSchema = z.object({
   name: z.string().min(1),
-  email: z.string().optional(),
-  phone: z.string().optional(),
-  title: z.string().optional(),
-  summary: z.string().optional(),
-  location: z.string().optional(),
-  website: z.string().optional(),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
-  stackoverflow: z.string().optional(),
+  email: nullableString,
+  phone: nullableString,
+  title: nullableString,
+  summary: nullableString,
+  location: nullableString,
+  website: nullableString,
+  linkedin: nullableString,
+  github: nullableString,
+  stackoverflow: nullableString,
 });
 
 const WorkExperienceSchema = z.object({
-  name: z.string(),
-  position: z.string(),
-  location: z.string().optional(),
-  website: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  summary: z.string().optional(),
-  achievements: z.array(z.string()).optional(),
-  technologies: z.array(z.string()).optional(),
+  name: nullableString,
+  position: nullableString,
+  location: nullableString,
+  website: nullableString,
+  startDate: nullableString,
+  endDate: nullableString,
+  summary: nullableString,
+  achievements: z.array(z.string()).nullable().optional().transform(
+    (v) => v ?? undefined,
+  ),
+  technologies: z.array(z.string()).nullable().optional().transform(
+    (v) => v ?? undefined,
+  ),
 });
 
 const EducationSchema = z.object({
-  institution: z.string(),
-  area: z.string().optional(),
-  studyType: z.string().optional(),
-  location: z.string().optional(),
-  url: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  graduationYear: z.number().optional(),
+  institution: nullableString,
+  area: nullableString,
+  studyType: nullableString,
+  location: nullableString,
+  url: nullableString,
+  startDate: nullableString,
+  endDate: nullableString,
+  graduationYear: z.number().nullable().optional().transform(
+    (v) => v ?? undefined,
+  ),
 });
 
+const validSkillLevels = ["expert", "proficient", "intermediate", "beginner"] as const;
 const TechSkillSchema = z.object({
-  name: z.string(),
-  level: z.enum(["expert", "proficient", "intermediate", "beginner"])
-    .optional(),
-  yearsExperience: z.number().optional(),
+  name: nullableString,
+  level: z.string().nullable().optional().transform(
+    (v) => v && (validSkillLevels as readonly string[]).includes(v)
+      ? (v as typeof validSkillLevels[number])
+      : undefined,
+  ),
+  yearsExperience: z.number().nullable().optional().transform(
+    (v) => v ?? undefined,
+  ),
 });
 
 const SkillCategorySchema = z.object({
-  name: z.string(),
+  name: nullableString,
   skills: z.array(TechSkillSchema),
 });
 
+const validProficiencies = ["native", "fluent", "proficient", "conversational", "basic"] as const;
 const LanguageSchema = z.object({
-  name: z.string(),
-  languageCode: z.string().optional(),
-  proficiency: z
-    .enum(["native", "fluent", "proficient", "conversational", "basic"])
-    .optional(),
+  name: nullableString,
+  languageCode: nullableString,
+  proficiency: z.string().nullable().optional().transform(
+    (v) => v && (validProficiencies as readonly string[]).includes(v)
+      ? (v as typeof validProficiencies[number])
+      : undefined,
+  ),
 });
 
 const SideProjectSchema = z.object({
-  name: z.string(),
-  url: z.string().optional(),
-  summary: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  achievements: z.array(z.string()).optional(),
-  technologies: z.array(z.string()).optional(),
+  name: nullableString,
+  url: nullableString,
+  summary: nullableString,
+  startDate: nullableString,
+  endDate: nullableString,
+  achievements: z.array(z.string()).nullable().optional().transform(
+    (v) => v ?? undefined,
+  ),
+  technologies: z.array(z.string()).nullable().optional().transform(
+    (v) => v ?? undefined,
+  ),
 });
 
 const ReferenceSchema = z.object({
-  author: z.string(),
-  authorPosition: z.string().optional(),
-  text: z.string(),
+  author: nullableString,
+  authorPosition: nullableString,
+  text: nullableString,
 });
+
+const nullableArray = <T extends z.ZodTypeAny>(schema: T) =>
+  z.array(schema).nullable().optional().transform((v) => v ?? undefined);
 
 const ResumeDataSchema = z.object({
   basics: ResumeBasicsSchema,
-  work: z.array(WorkExperienceSchema).optional(),
-  education: z.array(EducationSchema).optional(),
-  skills: z.array(SkillCategorySchema).optional(),
-  languages: z.array(LanguageSchema).optional(),
-  projects: z.array(SideProjectSchema).optional(),
-  references: z.array(ReferenceSchema).optional(),
+  work: nullableArray(WorkExperienceSchema),
+  education: nullableArray(EducationSchema),
+  skills: nullableArray(SkillCategorySchema),
+  languages: nullableArray(LanguageSchema),
+  projects: nullableArray(SideProjectSchema),
+  references: nullableArray(ReferenceSchema),
 });
 
 /**
@@ -198,5 +225,35 @@ export async function parseResumeWithLLM(
     throw new Error("Failed to extract profile name from resume");
   }
 
-  return resumeData;
+  // Filter out entries with missing identity fields and coerce required DB fields
+  if (resumeData.work) {
+    resumeData.work = resumeData.work.filter((w) => w.name && w.position);
+  }
+  if (resumeData.education) {
+    resumeData.education = resumeData.education.map((e) => ({
+      ...e,
+      institution: e.institution || "Unknown",
+    }));
+  }
+  if (resumeData.skills) {
+    resumeData.skills = resumeData.skills
+      .filter((c) => c.name)
+      .map((c) => ({
+        ...c,
+        skills: c.skills.filter((s) => s.name),
+      }));
+  }
+  if (resumeData.languages) {
+    resumeData.languages = resumeData.languages.filter((l) => l.name);
+  }
+  if (resumeData.projects) {
+    resumeData.projects = resumeData.projects.filter((p) => p.name);
+  }
+  if (resumeData.references) {
+    resumeData.references = resumeData.references
+      .filter((r) => r.author)
+      .map((r) => ({ ...r, text: r.text || "" }));
+  }
+
+  return resumeData as ResumeData;
 }

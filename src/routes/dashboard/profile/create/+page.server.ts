@@ -168,7 +168,11 @@ export const actions: Actions = {
       return fail(400, { error: result.message });
     }
 
-    redirect(302, `/dashboard?profile=${result.profileId}`);
+    if (result.errors && result.errors.length > 0) {
+      console.warn("[create] import warnings:", result.errors);
+    }
+
+    redirect(303, `/dashboard?profile=${result.profileId}`);
   },
 
   /**
@@ -217,7 +221,7 @@ export const actions: Actions = {
       },
     });
 
-    redirect(302, `/dashboard?profile=${profile.id}`);
+    redirect(303, `/dashboard?profile=${profile.id}`);
   },
 
   /**
@@ -267,6 +271,6 @@ export const actions: Actions = {
       return fail(500, { error: message });
     }
 
-    redirect(302, `/dashboard?profile=${result.profileId}`);
+    redirect(303, `/dashboard?profile=${result.profileId}`);
   },
 };

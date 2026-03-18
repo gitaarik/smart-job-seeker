@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons";
   import type { ResumeData } from "$lib/server/resume/types";
@@ -179,7 +180,7 @@
       return async ({ result, update }) => {
         onLoadingChange(false);
         if (result.type === "redirect") {
-          window.location.href = result.location;
+          await goto(result.location, { invalidateAll: true });
         } else {
           await update();
         }

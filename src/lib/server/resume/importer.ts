@@ -91,61 +91,107 @@ export async function createProfileFromResume(
     projects: 0,
     references: 0,
   };
+  const errors: string[] = [];
 
   // Import work experiences
   if (data.work && data.work.length > 0) {
     for (const work of data.work) {
-      await createWorkExperience(profile.id, work);
-      stats.workExperiences++;
+      try {
+        await createWorkExperience(profile.id, work);
+        stats.workExperiences++;
+      } catch (e) {
+        const msg = `Failed to import work "${work.name}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
     }
   }
 
   // Import education
   if (data.education && data.education.length > 0) {
     for (const edu of data.education) {
-      await createEducation(profile.id, edu);
-      stats.education++;
+      try {
+        await createEducation(profile.id, edu);
+        stats.education++;
+      } catch (e) {
+        const msg = `Failed to import education "${edu.institution}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
     }
   }
 
   // Import skill categories
   if (data.skills && data.skills.length > 0) {
     for (const category of data.skills) {
-      const skillCount = await createSkillCategory(profile.id, category);
-      stats.skillCategories++;
-      stats.totalSkills += skillCount;
+      try {
+        const skillCount = await createSkillCategory(profile.id, category);
+        stats.skillCategories++;
+        stats.totalSkills += skillCount;
+      } catch (e) {
+        const msg = `Failed to import skill category "${category.name}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
     }
   }
 
   // Import languages
   if (data.languages && data.languages.length > 0) {
     for (const lang of data.languages) {
-      await createLanguage(profile.id, lang);
-      stats.languages++;
+      try {
+        await createLanguage(profile.id, lang);
+        stats.languages++;
+      } catch (e) {
+        const msg = `Failed to import language "${lang.name}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
     }
   }
 
   // Import side projects
   if (data.projects && data.projects.length > 0) {
     for (const project of data.projects) {
-      await createSideProject(profile.id, project);
-      stats.projects++;
+      try {
+        await createSideProject(profile.id, project);
+        stats.projects++;
+      } catch (e) {
+        const msg = `Failed to import project "${project.name}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
     }
   }
 
   // Import references
   if (data.references && data.references.length > 0) {
     for (const ref of data.references) {
-      await createReference(profile.id, ref);
-      stats.references++;
+      try {
+        await createReference(profile.id, ref);
+        stats.references++;
+      } catch (e) {
+        const msg = `Failed to import reference by "${ref.author}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
     }
+  }
+
+  if (errors.length > 0) {
+    console.warn(
+      `[Resume Import] Profile ${profile.id} created with ${errors.length} import errors`,
+    );
   }
 
   return {
     success: true,
     profileId: profile.id,
-    message: "Profile imported successfully",
+    message: errors.length > 0
+      ? `Profile imported with ${errors.length} warning(s)`
+      : "Profile imported successfully",
     stats,
+    errors: errors.length > 0 ? errors : undefined,
   };
 }
 
