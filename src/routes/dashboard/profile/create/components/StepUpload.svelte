@@ -111,6 +111,14 @@
     exportPreview = null;
     parsedExport = null;
     selectedFile = file;
+
+    const input = document.getElementById("file-input") as HTMLInputElement;
+    if (input) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+    }
+
     detectSjsExport(file);
   }
 
