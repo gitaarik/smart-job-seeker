@@ -48,6 +48,7 @@ export const jobPreferencesSchema = z.object({
   experience_levels: z.array(z.string()).optional().nullable(),
   work_location: z.array(z.string()).min(1, "Please select at least one work location option"),
   locations: z.array(z.string()).optional().nullable(),
+  match_community_jobs: z.boolean().optional(),
 });
 
 // Platform create

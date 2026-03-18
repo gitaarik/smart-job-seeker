@@ -42,6 +42,7 @@ export type Match_configMinAggregateOutputType = {
   date_updated: Date | null
   profile: number | null
   name: string | null
+  match_community_jobs: boolean | null
 }
 
 export type Match_configMaxAggregateOutputType = {
@@ -50,6 +51,7 @@ export type Match_configMaxAggregateOutputType = {
   date_updated: Date | null
   profile: number | null
   name: string | null
+  match_community_jobs: boolean | null
 }
 
 export type Match_configCountAggregateOutputType = {
@@ -62,6 +64,7 @@ export type Match_configCountAggregateOutputType = {
   locations: number
   profile: number
   name: number
+  match_community_jobs: number
   _all: number
 }
 
@@ -82,6 +85,7 @@ export type Match_configMinAggregateInputType = {
   date_updated?: true
   profile?: true
   name?: true
+  match_community_jobs?: true
 }
 
 export type Match_configMaxAggregateInputType = {
@@ -90,6 +94,7 @@ export type Match_configMaxAggregateInputType = {
   date_updated?: true
   profile?: true
   name?: true
+  match_community_jobs?: true
 }
 
 export type Match_configCountAggregateInputType = {
@@ -102,6 +107,7 @@ export type Match_configCountAggregateInputType = {
   locations?: true
   profile?: true
   name?: true
+  match_community_jobs?: true
   _all?: true
 }
 
@@ -201,6 +207,7 @@ export type Match_configGroupByOutputType = {
   locations: runtime.JsonValue | null
   profile: number
   name: string | null
+  match_community_jobs: boolean
   _count: Match_configCountAggregateOutputType | null
   _avg: Match_configAvgAggregateOutputType | null
   _sum: Match_configSumAggregateOutputType | null
@@ -236,6 +243,7 @@ export type match_configWhereInput = {
   locations?: Prisma.JsonNullableFilter<"match_config">
   profile?: Prisma.IntFilter<"match_config"> | number
   name?: Prisma.StringNullableFilter<"match_config"> | string | null
+  match_community_jobs?: Prisma.BoolFilter<"match_config"> | boolean
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
 
@@ -249,6 +257,7 @@ export type match_configOrderByWithRelationInput = {
   locations?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  match_community_jobs?: Prisma.SortOrder
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
 
@@ -265,6 +274,7 @@ export type match_configWhereUniqueInput = Prisma.AtLeast<{
   locations?: Prisma.JsonNullableFilter<"match_config">
   profile?: Prisma.IntFilter<"match_config"> | number
   name?: Prisma.StringNullableFilter<"match_config"> | string | null
+  match_community_jobs?: Prisma.BoolFilter<"match_config"> | boolean
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
 
@@ -278,6 +288,7 @@ export type match_configOrderByWithAggregationInput = {
   locations?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  match_community_jobs?: Prisma.SortOrder
   _count?: Prisma.match_configCountOrderByAggregateInput
   _avg?: Prisma.match_configAvgOrderByAggregateInput
   _max?: Prisma.match_configMaxOrderByAggregateInput
@@ -298,6 +309,7 @@ export type match_configScalarWhereWithAggregatesInput = {
   locations?: Prisma.JsonNullableWithAggregatesFilter<"match_config">
   profile?: Prisma.IntWithAggregatesFilter<"match_config"> | number
   name?: Prisma.StringNullableWithAggregatesFilter<"match_config"> | string | null
+  match_community_jobs?: Prisma.BoolWithAggregatesFilter<"match_config"> | boolean
 }
 
 export type match_configCreateInput = {
@@ -308,6 +320,7 @@ export type match_configCreateInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: string | null
+  match_community_jobs?: boolean
   profiles: Prisma.profilesCreateNestedOneWithoutMatch_configInput
 }
 
@@ -321,6 +334,7 @@ export type match_configUncheckedCreateInput = {
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile: number
   name?: string | null
+  match_community_jobs?: boolean
 }
 
 export type match_configUpdateInput = {
@@ -331,6 +345,7 @@ export type match_configUpdateInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
   profiles?: Prisma.profilesUpdateOneRequiredWithoutMatch_configNestedInput
 }
 
@@ -344,6 +359,7 @@ export type match_configUncheckedUpdateInput = {
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type match_configCreateManyInput = {
@@ -356,6 +372,7 @@ export type match_configCreateManyInput = {
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile: number
   name?: string | null
+  match_community_jobs?: boolean
 }
 
 export type match_configUpdateManyMutationInput = {
@@ -366,6 +383,7 @@ export type match_configUpdateManyMutationInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type match_configUncheckedUpdateManyInput = {
@@ -378,6 +396,7 @@ export type match_configUncheckedUpdateManyInput = {
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type Match_configListRelationFilter = {
@@ -400,6 +419,7 @@ export type match_configCountOrderByAggregateInput = {
   locations?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  match_community_jobs?: Prisma.SortOrder
 }
 
 export type match_configAvgOrderByAggregateInput = {
@@ -413,6 +433,7 @@ export type match_configMaxOrderByAggregateInput = {
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  match_community_jobs?: Prisma.SortOrder
 }
 
 export type match_configMinOrderByAggregateInput = {
@@ -421,6 +442,7 @@ export type match_configMinOrderByAggregateInput = {
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  match_community_jobs?: Prisma.SortOrder
 }
 
 export type match_configSumOrderByAggregateInput = {
@@ -478,6 +500,7 @@ export type match_configCreateWithoutProfilesInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: string | null
+  match_community_jobs?: boolean
 }
 
 export type match_configUncheckedCreateWithoutProfilesInput = {
@@ -489,6 +512,7 @@ export type match_configUncheckedCreateWithoutProfilesInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: string | null
+  match_community_jobs?: boolean
 }
 
 export type match_configCreateOrConnectWithoutProfilesInput = {
@@ -530,6 +554,7 @@ export type match_configScalarWhereInput = {
   locations?: Prisma.JsonNullableFilter<"match_config">
   profile?: Prisma.IntFilter<"match_config"> | number
   name?: Prisma.StringNullableFilter<"match_config"> | string | null
+  match_community_jobs?: Prisma.BoolFilter<"match_config"> | boolean
 }
 
 export type match_configCreateManyProfilesInput = {
@@ -541,6 +566,7 @@ export type match_configCreateManyProfilesInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: string | null
+  match_community_jobs?: boolean
 }
 
 export type match_configUpdateWithoutProfilesInput = {
@@ -551,6 +577,7 @@ export type match_configUpdateWithoutProfilesInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type match_configUncheckedUpdateWithoutProfilesInput = {
@@ -562,6 +589,7 @@ export type match_configUncheckedUpdateWithoutProfilesInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type match_configUncheckedUpdateManyWithoutProfilesInput = {
@@ -573,6 +601,7 @@ export type match_configUncheckedUpdateManyWithoutProfilesInput = {
   work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  match_community_jobs?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -587,6 +616,7 @@ export type match_configSelect<ExtArgs extends runtime.Types.Extensions.Internal
   locations?: boolean
   profile?: boolean
   name?: boolean
+  match_community_jobs?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["match_config"]>
 
@@ -600,6 +630,7 @@ export type match_configSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   locations?: boolean
   profile?: boolean
   name?: boolean
+  match_community_jobs?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["match_config"]>
 
@@ -613,6 +644,7 @@ export type match_configSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   locations?: boolean
   profile?: boolean
   name?: boolean
+  match_community_jobs?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["match_config"]>
 
@@ -626,9 +658,10 @@ export type match_configSelectScalar = {
   locations?: boolean
   profile?: boolean
   name?: boolean
+  match_community_jobs?: boolean
 }
 
-export type match_configOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "job_types" | "experience_levels" | "work_location" | "locations" | "profile" | "name", ExtArgs["result"]["match_config"]>
+export type match_configOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "job_types" | "experience_levels" | "work_location" | "locations" | "profile" | "name" | "match_community_jobs", ExtArgs["result"]["match_config"]>
 export type match_configInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
@@ -654,6 +687,7 @@ export type $match_configPayload<ExtArgs extends runtime.Types.Extensions.Intern
     locations: runtime.JsonValue | null
     profile: number
     name: string | null
+    match_community_jobs: boolean
   }, ExtArgs["result"]["match_config"]>
   composites: {}
 }
@@ -1087,6 +1121,7 @@ export interface match_configFieldRefs {
   readonly locations: Prisma.FieldRef<"match_config", 'Json'>
   readonly profile: Prisma.FieldRef<"match_config", 'Int'>
   readonly name: Prisma.FieldRef<"match_config", 'String'>
+  readonly match_community_jobs: Prisma.FieldRef<"match_config", 'Boolean'>
 }
     
 

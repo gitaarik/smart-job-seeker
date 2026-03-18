@@ -6,7 +6,7 @@ import { jobPreferencesSchema, parseBody } from "$lib/server/validation/api-sche
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const { profile_id, job_types, experience_levels, work_location, locations } =
+  const { profile_id, job_types, experience_levels, work_location, locations, match_community_jobs } =
     parseBody(jobPreferencesSchema, await request.json());
 
   // Verify the profile belongs to this user
@@ -31,6 +31,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
         : null,
     work_location: work_location,
     locations: locations && locations.length > 0 ? locations : null,
+    ...(match_community_jobs !== undefined && { match_community_jobs }),
     date_updated: new Date(),
   };
 

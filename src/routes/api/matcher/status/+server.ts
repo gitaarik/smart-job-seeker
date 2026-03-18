@@ -10,6 +10,7 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { Prisma } from "../../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { getMatcherState } from "$lib/server/job/matcher-state";
 import { getProfileSkills } from "$lib/server/job/match-utils";
@@ -93,6 +94,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   let eligibleUnmatched = 0;
   const workLocations = matchConfig?.work_location as string[] | null;
   const jobTypes = matchConfig?.job_types as string[] | null;
+  const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
 
   if (workLocations?.length && jobTypes?.length && profileSkills.length > 0) {
     const eligibilityFilter = buildEligibilityFilter(
@@ -100,12 +102,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       profileSkills,
     );
 
+    const ownershipFilter = matchCommunityJobs
+      ? Prisma.empty
+      : Prisma.sql`AND ji.id IS NOT NULL`;
+
     const result = await db.$queryRaw<{ cnt: number }[]>`
       SELECT COUNT(*)::int as cnt FROM jobs j
       LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+      LEFT JOIN job_importers ji ON j.id = ji.job AND ji.profile = ${profileId}
       WHERE jm.id IS NULL
       AND j.status != 'archived'
       AND ${eligibilityFilter}
+      ${ownershipFilter}
     `;
     eligibleUnmatched = result[0]?.cnt ?? 0;
   }

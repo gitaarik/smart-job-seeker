@@ -767,6 +767,7 @@ model jobs {
   rescrape_message      String?
   rescrape_live_url     String?
   applications          applications[]
+  job_importers         job_importers[]
   job_matches           job_matches[]
   job_resources         job_resources[]
   ai_chat               ai_chats?               @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
@@ -949,6 +950,7 @@ model profiles {
   config                                                            config[]
   education                                                         education[]
   highlights                                                        highlights[]
+  job_importers                                                     job_importers[]
   job_matches                                                       job_matches[]
   languages                                                         languages[]
   match_config                                                      match_config[]
@@ -1318,17 +1320,29 @@ model verifications {
   updatedAt  DateTime? @db.Timestamptz(6)
 }
 
+model job_importers {
+  id           Int       @id @default(autoincrement())
+  date_created DateTime? @default(now()) @db.Timestamptz(6)
+  job          Int
+  profile      Int
+  jobs         jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_importers_job_foreign")
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_importers_profile_foreign")
+
+  @@unique([job, profile], map: "job_importers_job_profile_unique")
+}
+
 model match_config {
-  id                Int       @id @default(autoincrement())
-  date_created      DateTime? @db.Timestamptz(6)
-  date_updated      DateTime? @db.Timestamptz(6)
-  job_types         Json?     @db.Json
-  experience_levels Json?     @db.Json
-  work_location     Json?     @db.Json
-  locations         Json?     @db.Json
-  profile           Int
-  name              String?   @db.VarChar(255)
-  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "match_config_profile_foreign")
+  id                   Int       @id @default(autoincrement())
+  date_created         DateTime? @db.Timestamptz(6)
+  date_updated         DateTime? @db.Timestamptz(6)
+  job_types            Json?     @db.Json
+  experience_levels    Json?     @db.Json
+  work_location        Json?     @db.Json
+  locations            Json?     @db.Json
+  profile              Int
+  name                 String?   @db.VarChar(255)
+  match_community_jobs Boolean   @default(false)
+  profiles             profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "match_config_profile_foreign")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

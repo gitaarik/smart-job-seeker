@@ -36,6 +36,7 @@
     )
   );
   let locations = $state<string[]>(data.config?.locations || []);
+  let matchCommunityJobs = $state<boolean>(data.config?.match_community_jobs ?? false);
 
   // Location input state
   let locationInput = $state("");
@@ -100,6 +101,7 @@
           experience_levels: experienceLevels,
           work_location: workLocation,
           locations: locations,
+          match_community_jobs: matchCommunityJobs,
         }),
       });
 
@@ -304,6 +306,29 @@
       </button>
     </div>
 
+  </Card>
+
+  <!-- Community Jobs -->
+  <Card padding="responsive">
+    <label class="flex items-center justify-between cursor-pointer">
+      <div>
+        <h3 class="font-medium text-[var(--dash-text)]">
+          Also match jobs imported by other users
+        </h3>
+        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+          When enabled, the matcher will also process jobs you didn't import yourself (your own jobs are always matched first)
+        </p>
+      </div>
+      <div class="relative ml-4 shrink-0">
+        <input
+          type="checkbox"
+          bind:checked={matchCommunityJobs}
+          class="sr-only peer"
+        />
+        <div class="w-11 h-6 bg-[var(--dash-border)] rounded-full peer-checked:bg-[var(--dash-primary)] transition-colors"></div>
+        <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
+      </div>
+    </label>
   </Card>
 
   <!-- Save Button -->

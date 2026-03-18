@@ -125,6 +125,7 @@ export const ModelName = {
   sessions: 'sessions',
   users: 'users',
   verifications: 'verifications',
+  job_importers: 'job_importers',
   match_config: 'match_config',
   search_task_run_items: 'search_task_run_items',
   search_task_runs: 'search_task_runs',
@@ -1443,6 +1444,16 @@ export const VerificationsScalarFieldEnum = {
 export type VerificationsScalarFieldEnum = (typeof VerificationsScalarFieldEnum)[keyof typeof VerificationsScalarFieldEnum]
 
 
+export const Job_importersScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  job: 'job',
+  profile: 'profile'
+} as const
+
+export type Job_importersScalarFieldEnum = (typeof Job_importersScalarFieldEnum)[keyof typeof Job_importersScalarFieldEnum]
+
+
 export const Match_configScalarFieldEnum = {
   id: 'id',
   date_created: 'date_created',
@@ -1452,7 +1463,8 @@ export const Match_configScalarFieldEnum = {
   work_location: 'work_location',
   locations: 'locations',
   profile: 'profile',
-  name: 'name'
+  name: 'name',
+  match_community_jobs: 'match_community_jobs'
 } as const
 
 export type Match_configScalarFieldEnum = (typeof Match_configScalarFieldEnum)[keyof typeof Match_configScalarFieldEnum]

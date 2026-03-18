@@ -103,6 +103,13 @@ export const POST: RequestHandler = async (event) => {
         },
       });
 
+      // Record who imported this job
+      await db.job_importers.upsert({
+        where: { job_importers_job_profile_unique: { job: existing.id, profile: profileId } },
+        create: { job: existing.id, profile: profileId },
+        update: {},
+      });
+
       return json(
         {
           success: true,
@@ -113,7 +120,13 @@ export const POST: RequestHandler = async (event) => {
       );
     }
 
-    // No changes, skip
+    // No changes — still record the importer
+    await db.job_importers.upsert({
+      where: { job_importers_job_profile_unique: { job: existing.id, profile: profileId } },
+      create: { job: existing.id, profile: profileId },
+      update: {},
+    });
+
     return json(
       {
         success: true,
@@ -150,6 +163,11 @@ export const POST: RequestHandler = async (event) => {
         date_created: new Date(),
         date_updated: new Date(),
       },
+    });
+
+    // Record who imported this job
+    await db.job_importers.create({
+      data: { job: newJob.id, profile: profileId },
     });
 
     return json(

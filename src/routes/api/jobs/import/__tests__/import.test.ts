@@ -16,6 +16,10 @@ vi.mock("$lib/server/db", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    job_importers: {
+      create: vi.fn(),
+      upsert: vi.fn(),
+    },
     api_keys: {
       findUnique: vi.fn(),
       update: vi.fn(),

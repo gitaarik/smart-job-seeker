@@ -388,6 +388,11 @@ export type users = Prisma.usersModel
  */
 export type verifications = Prisma.verificationsModel
 /**
+ * Model job_importers
+ * 
+ */
+export type job_importers = Prisma.job_importersModel
+/**
  * Model match_config
  * 
  */
