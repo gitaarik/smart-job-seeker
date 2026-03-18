@@ -27,6 +27,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     throw error(400, "Missing profileId parameter");
   }
 
+  const includeIneligible = url.searchParams.get("includeIneligible") === "true";
+
   // Verify profile belongs to user
   const profile = await db.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
@@ -60,9 +62,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       // Current matcher state from Redis (per-profile)
       getMatcherState(profileId),
 
-      // Recently matched jobs (last 20, excluding ineligible)
+      // Recently matched jobs (last 20, optionally excluding ineligible)
       db.job_matches.findMany({
-        where: { profile: profileId, recommendation: { not: "ineligible" } },
+        where: {
+          profile: profileId,
+          ...(!includeIneligible && { recommendation: { not: "ineligible" } }),
+        },
         orderBy: { date_created: "desc" },
         take: 20,
         select: {

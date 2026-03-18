@@ -52,6 +52,7 @@
   let recentMatches = $state<RecentMatch[]>([]);
   let pollInterval: ReturnType<typeof setInterval> | null = null;
   let loading = $state(true);
+  let showNoMatch = $state(false);
 
   // Derived
   let relevantTotal = $derived(matchedCount + eligibleUnmatched);
@@ -71,7 +72,9 @@
 
   async function loadStatus() {
     try {
-      const response = await fetch(`/api/matcher/status?profileId=${data.profileId}`);
+      const params = new URLSearchParams({ profileId: String(data.profileId) });
+      if (showNoMatch) params.set("includeIneligible", "true");
+      const response = await fetch(`/api/matcher/status?${params}`);
       if (response.ok) {
         const result = await response.json();
         totalJobs = result.totalJobs;
@@ -147,6 +150,8 @@
         return { text: "Consider", class: "text-[var(--dash-text-secondary)]" };
       case "not_recommended":
         return { text: "Not recommended", class: "text-[var(--dash-warning)]" };
+      case "ineligible":
+        return { text: "No match", class: "text-[var(--dash-error)]" };
       default:
         return { text: rec.replace(/_/g, " "), class: "text-[var(--dash-text-secondary)]" };
     }
@@ -305,10 +310,21 @@
         <h3 class="text-sm font-medium text-[var(--dash-text)]">
           Recently Matched Jobs
         </h3>
-        <a
-          href="/dashboard/jobs/matches"
-          class="text-xs text-[var(--dash-primary)] hover:underline"
-        >View all matches</a>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              bind:checked={showNoMatch}
+              onchange={loadStatus}
+              class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+            />
+            <span class="text-xs text-[var(--dash-text-secondary)]">Show no-match</span>
+          </label>
+          <a
+            href="/dashboard/jobs/matches"
+            class="text-xs text-[var(--dash-primary)] hover:underline"
+          >View all matches</a>
+        </div>
       </div>
 
       {#if recentMatches.length === 0}
