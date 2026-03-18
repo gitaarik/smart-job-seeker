@@ -11,6 +11,7 @@
     faTimes,
     faTrash,
     faUsers,
+    faUserSecret,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
@@ -515,6 +516,18 @@
                   {/if}
                 </button>
               </form>
+              {#if user.id !== data.user?.id}
+                <form method="POST" action="?/impersonate">
+                  <input type="hidden" name="id" value={user.id} />
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 text-xs bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-500 hover:bg-purple-500/20 hover:border-purple-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <FontAwesomeIcon icon={faUserSecret} class="w-3 h-3" />
+                    Login as
+                  </button>
+                </form>
+              {/if}
             </div>
           {/if}
         </Card>

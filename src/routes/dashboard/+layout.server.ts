@@ -7,6 +7,7 @@ import { dbDirect as db } from "$lib/server/db";
 export const load: LayoutServerLoad = async (event) => {
   // Require authentication - redirects to /login?redirect=/dashboard
   const user = requireAuth(event);
+  const adminUser = event.locals.adminUser ?? null;
 
   // Get all profiles owned by this user
   const profiles = await getProfilesByUserId(user.id);
@@ -22,6 +23,7 @@ export const load: LayoutServerLoad = async (event) => {
       user,
       profiles: [],
       selectedProfile: null,
+      adminUser,
     };
   }
 
@@ -67,5 +69,6 @@ export const load: LayoutServerLoad = async (event) => {
     user,
     profiles,
     selectedProfile,
+    adminUser,
   };
 };

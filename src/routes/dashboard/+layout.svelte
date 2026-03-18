@@ -38,6 +38,26 @@
 </svelte:head>
 
 <div class="min-h-screen bg-[var(--dash-bg)] transition-colors">
+  {#if data.adminUser}
+    <div
+      class="bg-purple-600 text-white px-4 py-2 text-sm flex items-center justify-between z-50 relative"
+    >
+      <span>
+        Impersonating <strong>{data.user?.name || data.user?.email}</strong>
+      </span>
+      <form
+        method="POST"
+        action="/dashboard/admin/users?/stop_impersonate"
+      >
+        <button
+          type="submit"
+          class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
+        >
+          Stop
+        </button>
+      </form>
+    </div>
+  {/if}
   <DashboardHeader
     user={data.user}
     profiles={data.profiles}

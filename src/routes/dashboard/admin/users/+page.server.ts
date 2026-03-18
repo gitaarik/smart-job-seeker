@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { fail } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
@@ -269,6 +269,42 @@ export const actions: Actions = {
     });
 
     return { success: true };
+  },
+
+  impersonate: async ({ request, locals, cookies }) => {
+    if (!locals.user?.is_admin) {
+      return fail(403, { error: "Admin access required" });
+    }
+
+    const formData = await request.formData();
+    const id = formData.get("id") as string;
+
+    if (!id) {
+      return fail(400, { error: "User ID is required" });
+    }
+
+    const targetUser = await db.users.findUnique({ where: { id } });
+    if (!targetUser) {
+      return fail(404, { error: "User not found" });
+    }
+
+    cookies.set("sjs_impersonate", id, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60, // 1 hour
+    });
+
+    redirect(302, "/dashboard");
+  },
+
+  stop_impersonate: async ({ locals, cookies }) => {
+    if (!locals.user?.is_admin && !locals.adminUser?.is_admin) {
+      return fail(403, { error: "Admin access required" });
+    }
+
+    cookies.delete("sjs_impersonate", { path: "/" });
+    redirect(302, "/dashboard/admin/users");
   },
 
   delete: async ({ request, locals }) => {

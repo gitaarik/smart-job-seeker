@@ -4,6 +4,7 @@ import { svelteKitHandler } from "better-auth/svelte-kit";
 import { auth } from "$lib/server/auth/better-auth";
 import type { User } from "$lib/server/auth/better-auth";
 import { config } from "$lib/server/config";
+import { dbDirect as db } from "$lib/server/db";
 
 // API routes that don't require session auth (they handle their own auth or are public)
 const PUBLIC_API_ROUTES = [
@@ -92,6 +93,25 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.session = null;
   }
 
+  // Admin impersonation
+  event.locals.adminUser = null;
+  const impersonateId = event.cookies.get("sjs_impersonate");
+  if (impersonateId && event.locals.user) {
+    if ((event.locals.user as { is_admin?: boolean }).is_admin) {
+      const targetUser = await db.users.findUnique({
+        where: { id: impersonateId },
+      });
+      if (targetUser) {
+        event.locals.adminUser = event.locals.user;
+        event.locals.user = targetUser as User;
+      } else {
+        event.cookies.delete("sjs_impersonate", { path: "/" });
+      }
+    } else {
+      event.cookies.delete("sjs_impersonate", { path: "/" });
+    }
+  }
+
   // Handle Better Auth routes (e.g., /api/auth/*)
   // In dev mode, Vite's dev server always uses http://localhost:PORT as the
   // request origin, which doesn't match the public baseURL behind a reverse
@@ -124,7 +144,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (!event.locals.user) {
       return json({ error: "Not authenticated" }, { status: 401 });
     }
-    if (!(event.locals.user as { is_approved?: boolean }).is_approved) {
+    if (
+      !(event.locals.user as { is_approved?: boolean }).is_approved &&
+      !event.locals.adminUser
+    ) {
       return json({ error: "Account pending approval" }, { status: 403 });
     }
   }

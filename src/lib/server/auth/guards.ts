@@ -18,7 +18,10 @@ export function requireAuth(event: RequestEvent) {
     );
     redirect(302, `/login?redirect=${redirectTo}`);
   }
-  if (!(event.locals.user as { is_approved?: boolean }).is_approved) {
+  if (
+    !(event.locals.user as { is_approved?: boolean }).is_approved &&
+    !event.locals.adminUser
+  ) {
     redirect(302, "/signup/pending");
   }
   return event.locals.user;
@@ -29,7 +32,10 @@ export function requireAuth(event: RequestEvent) {
  */
 export function requireAdmin(event: RequestEvent) {
   const user = requireAuth(event);
-  if (!(user as { is_admin?: boolean }).is_admin) {
+  if (
+    !(user as { is_admin?: boolean }).is_admin &&
+    !(event.locals.adminUser as { is_admin?: boolean } | null)?.is_admin
+  ) {
     redirect(302, "/dashboard");
   }
   return user;
