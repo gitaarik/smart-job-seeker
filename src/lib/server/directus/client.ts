@@ -58,18 +58,7 @@ export async function directusRequest(
 }
 
 export async function clearDirectusCache(): Promise<void> {
-  // Detect if running on host or in Docker by checking if admin hostname resolves
-  const isRunningInDocker = await (async () => {
-    try {
-      const dns = await import("dns/promises");
-      await dns.lookup("admin");
-      return true; // Successfully resolved, we're in Docker
-    } catch {
-      return false; // Failed to resolve, we're on host
-    }
-  })();
-
-  if (isRunningInDocker) {
+  if (isRunningInDocker()) {
     // Running in Docker - use direct API call (try block for async operation)
     try {
       await directusRequest("POST", "/utils/cache/clear");
