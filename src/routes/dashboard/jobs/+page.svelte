@@ -24,6 +24,7 @@
     faStar as faStarSolid,
     faTag,
     faTimes,
+    faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../profile/components/SectionHeader.svelte";
@@ -120,6 +121,7 @@
   let selectedPlatforms = $state<Set<string>>(new Set());
   let selectedWorkLocations = $state<Set<string>>(new Set());
   let selectedJobTypes = $state<Set<string>>(new Set());
+  let selectedImportedBy = $state<Set<string>>(new Set());
   let minScoreFilter = $state("");
   let datePostedFilter = $state("");
   let expandedId = $state<number | null>(null);
@@ -133,6 +135,7 @@
     selectedPlatforms = new Set(filters.platform ? filters.platform.split(",") : []);
     selectedWorkLocations = new Set(filters.workLocation ? filters.workLocation.split(",") : []);
     selectedJobTypes = new Set(filters.jobType ? filters.jobType.split(",") : []);
+    selectedImportedBy = new Set(filters.importedBy ? filters.importedBy.split(",") : []);
     minScoreFilter = filters.minScore;
     datePostedFilter = filters.datePosted;
   });
@@ -157,6 +160,7 @@
   let workLocationString = $derived([...selectedWorkLocations].join(","));
   let jobTypeString = $derived([...selectedJobTypes].join(","));
   let statusString = $derived([...selectedStatuses].join(","));
+  let importedByString = $derived([...selectedImportedBy].join(","));
 
   function buildUrl(overrides: Record<string, string | undefined> = {}) {
     const params = new URLSearchParams();
@@ -167,6 +171,7 @@
     const jt = overrides.jobType ?? jobTypeString;
     const ms = overrides.minScore ?? minScoreFilter;
     const dp = overrides.datePosted ?? datePostedFilter;
+    const ib = overrides.importedBy ?? importedByString;
     const pg = overrides.page ?? "1";
 
     if (st) params.set("status", st);
@@ -176,6 +181,7 @@
     if (jt) params.set("jobType", jt);
     if (ms) params.set("minScore", ms);
     if (dp) params.set("datePosted", dp);
+    if (ib) params.set("importedBy", ib);
     if (pg !== "1") params.set("page", pg);
 
     return `?${params.toString()}`;
@@ -219,6 +225,11 @@
     goto(buildUrl({ jobType: [...selectedJobTypes].join(","), page: "1" }));
   }
 
+  function toggleImportedBy(value: string) {
+    selectedImportedBy = toggleSetValue(selectedImportedBy, value);
+    goto(buildUrl({ importedBy: [...selectedImportedBy].join(","), page: "1" }));
+  }
+
   function setMinScore(value: string) {
     minScoreFilter = value;
     applyFilter({ minScore: value });
@@ -246,6 +257,7 @@
     selectedPlatforms = new Set();
     selectedWorkLocations = new Set();
     selectedJobTypes = new Set();
+    selectedImportedBy = new Set();
     minScoreFilter = "";
     datePostedFilter = "";
     goto(buildUrl({
@@ -256,6 +268,7 @@
       jobType: "",
       minScore: "",
       datePosted: "",
+      importedBy: "",
       page: "1",
     }));
   }
@@ -315,7 +328,7 @@
   let hasActiveFilters = $derived(
     filters.status || filters.search || filters.platform ||
     filters.workLocation || filters.jobType ||
-    filters.minScore || filters.datePosted
+    filters.minScore || filters.datePosted || filters.importedBy
   );
 
   // Empty state messages
@@ -543,6 +556,45 @@
           {/if}
         </div>
       {/if}
+
+      <!-- Imported by multi-select -->
+      <div class="relative" data-dropdown="importedBy">
+        <button
+          type="button"
+          onclick={() => toggleDropdown("importedBy")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedImportedBy.size > 0
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
+        >
+          <FontAwesomeIcon icon={faUser} class="w-3 h-3 opacity-60" />
+          Imported by
+          {#if selectedImportedBy.size > 0}
+            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedImportedBy.size}</span>
+          {:else}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+          {/if}
+        </button>
+        {#if openDropdown === "importedBy"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+            {#each [{ value: "me", label: "Me" }, { value: "others", label: "Others" }] as opt}
+              <button
+                type="button"
+                onclick={() => toggleImportedBy(opt.value)}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedImportedBy.has(opt.value)
+                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if selectedImportedBy.has(opt.value)}
+                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
 
       {#if hasActiveFilters}
         <button

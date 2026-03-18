@@ -62,6 +62,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const jobType = url.searchParams.get("jobType") || ""; // full_time, contract, part_time, freelance
   const minScore = url.searchParams.get("minScore") || ""; // 40, 50, 60, 70, 80, 90
   const datePosted = url.searchParams.get("datePosted") || ""; // 1, 3, 7, 30, 90 (days)
+  const importedBy = url.searchParams.get("importedBy") || ""; // comma-separated: "me", "others"
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = 20;
   const offset = (page - 1) * limit;
@@ -105,6 +106,18 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
   }
 
+  let importedByFilter = Prisma.sql`TRUE`;
+  if (importedBy) {
+    const values = importedBy.split(",").map((v) => v.trim()).filter(Boolean);
+    const hasMe = values.includes("me");
+    const hasOthers = values.includes("others");
+    if (hasMe && !hasOthers) {
+      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+    } else if (hasOthers && !hasMe) {
+      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+    }
+  }
+
   // Parse status filter values
   const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
   const minScoreVal = minScore ? parseInt(minScore) : 0;
@@ -141,6 +154,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       AND ${platformFilter}
       AND ${dateFilter}
       AND ${jsonFilter}
+      AND ${importedByFilter}
       ORDER BY j.date_posted DESC NULLS LAST, j.date_created DESC
       LIMIT ${limit}
       OFFSET ${offset}
@@ -201,6 +215,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       AND ${platformFilter}
       AND ${dateFilter}
       AND ${jsonFilter}
+      AND ${importedByFilter}
       ORDER BY j.date_posted DESC NULLS LAST, j.date_created DESC
       LIMIT ${limit}
       OFFSET ${offset}
@@ -283,6 +298,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       jobType,
       minScore,
       datePosted,
+      importedBy,
     },
   };
 };
