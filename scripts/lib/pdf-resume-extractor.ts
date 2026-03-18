@@ -160,6 +160,8 @@ ${resumeText}`;
                   languageCode: { type: "string" },
                   proficiency: {
                     type: "string",
+                    description:
+                      "Language proficiency level: basic (elementary), conversational (limited working), proficient (professional working), fluent (full professional), native (native/bilingual)",
                     enum: [
                       "native",
                       "fluent",

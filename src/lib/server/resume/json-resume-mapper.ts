@@ -226,10 +226,13 @@ function mapLanguageProficiency(
 
   const normalized = fluency.toLowerCase();
 
-  if (normalized.includes("native")) {
+  if (normalized.includes("native") || normalized.includes("bilingual")) {
     return "native";
   }
-  if (normalized.includes("fluent")) {
+  if (
+    normalized.includes("fluent") ||
+    normalized.includes("full professional")
+  ) {
     return "fluent";
   }
   if (
@@ -237,7 +240,11 @@ function mapLanguageProficiency(
   ) {
     return "proficient";
   }
-  if (normalized.includes("conversational") || normalized.includes("working")) {
+  if (
+    normalized.includes("conversational") ||
+    normalized.includes("limited working") ||
+    normalized.includes("working")
+  ) {
     return "conversational";
   }
   if (
