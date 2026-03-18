@@ -249,7 +249,7 @@
   {#if credentials.length === 0 && !showAddForm}
     <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
       No credentials configured{platformName ? ` for ${platformName}` : ""}. Add
-      credentials to enable authenticated scraping.
+      credentials for automatic login. Otherwise manual login is required.
     </p>
   {/if}
 

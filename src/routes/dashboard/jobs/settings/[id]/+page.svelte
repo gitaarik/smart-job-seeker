@@ -3,10 +3,8 @@
   import { onDestroy, onMount } from "svelte";
   import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import CountrySelect from "../../components/CountrySelect.svelte";
-  import CredentialSelector from "../../components/CredentialSelector.svelte";
-  import BrowserProviderToggle from "../../components/BrowserProviderToggle.svelte";
   import Card from "../../../components/Card.svelte";
+  import SearchTaskFields from "../../components/SearchTaskFields.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
   import {
     faArrowLeft,
@@ -22,9 +20,7 @@
     faEye,
     faEyeSlash,
     faForward,
-    faGlobe,
     faHistory,
-    faKey,
     faMapMarkerAlt,
     faMoneyBillWave,
     faPencil,
@@ -39,81 +35,7 @@
   let { data }: { data: PageData } = $props();
 
   let searchTask = $state(data.searchTask);
-  let maxJobsEnabled = $state<boolean>((searchTask as any).max_jobs != null);
-  let maxJobsInput = $state<string>(
-    (searchTask as any).max_jobs?.toString() ?? "",
-  );
-  let isSavingMaxJobs = $state(false);
-
-  function parseMaxJobs(val: unknown): number | null {
-    if (val === undefined || val === null || val === "") return null;
-    const n = typeof val === "number" ? val : parseInt(String(val));
-    return isNaN(n) || n < 1 ? null : n;
-  }
-  let maxJobsDirty = $derived(
-    (maxJobsEnabled ? parseMaxJobs(maxJobsInput) : null) !==
-      ((searchTask as any).max_jobs ?? null),
-  );
-
-  let skipExisting = $state<boolean>(
-    (searchTask as any).skip_existing ?? false,
-  );
-  let isSavingSkipExisting = $state(false);
-  let skipExistingDirty = $derived(
-    skipExisting !== ((searchTask as any).skip_existing ?? false),
-  );
-
-  let stopAfterDuplicatesEnabled = $state<boolean>(
-    (searchTask as any).stop_after_duplicates != null,
-  );
-  let stopAfterDuplicatesInput = $state<string>(
-    (searchTask as any).stop_after_duplicates?.toString() ?? "",
-  );
-  let isSavingStopAfterDuplicates = $state(false);
-
-  function parseStopAfterDuplicates(val: unknown): number | null {
-    if (val === undefined || val === null || val === "") return null;
-    const n = typeof val === "number" ? val : parseInt(String(val));
-    return isNaN(n) || n < 1 ? null : n;
-  }
-  let stopAfterDuplicatesDirty = $derived(
-    (stopAfterDuplicatesEnabled
-      ? parseStopAfterDuplicates(stopAfterDuplicatesInput)
-      : null) !== ((searchTask as any).stop_after_duplicates ?? null),
-  );
-
-  let skipFirstEnabled = $state<boolean>(
-    (searchTask as any).skip_first != null,
-  );
-  let skipFirstInput = $state<string>(
-    (searchTask as any).skip_first?.toString() ?? "",
-  );
-  let isSavingSkipFirst = $state(false);
-
-  function parseSkipFirst(val: unknown): number | null {
-    if (val === undefined || val === null || val === "") return null;
-    const n = typeof val === "number" ? val : parseInt(String(val));
-    return isNaN(n) || n < 1 ? null : n;
-  }
-  let skipFirstDirty = $derived(
-    (skipFirstEnabled ? parseSkipFirst(skipFirstInput) : null) !==
-      ((searchTask as any).skip_first ?? null),
-  );
-
-  // Credentials state
-  let platformCredentials = $state(data.platformCredentials);
-  const initialCredentialId =
-    (searchTask as any).platform_profile_id?.toString() ?? "none";
-  let savedCredentialId = $state<string>(initialCredentialId);
-  let selectedCredentialId = $state<string>(initialCredentialId);
-  let credentialDirty = $derived(
-    selectedCredentialId !== savedCredentialId,
-  );
-  let isSavingCredential = $state(false);
-  let showAddCredential = $state(false);
-  let newCredUsername = $state("");
-  let newCredPassword = $state("");
-  let showPassword = $state(false);
+  let searchTaskFieldsRef: ReturnType<typeof SearchTaskFields> | undefined;
 
   // Header editing state (name + platform name)
   let isEditingHeader = $state(false);
@@ -147,32 +69,24 @@
     isEditingHeader = false;
   }
 
-  // Collapsible section state (persisted in profile ui_preferences)
-  function loadSectionOpen(section: string, defaultOpen = true): boolean {
-    const key = `task_sections_${section}`;
-    const val = (data.uiPreferences as Record<string, unknown>)[key];
-    return val === undefined ? defaultOpen : Boolean(val);
-  }
+  // Settings section (danger zone) — collapsed by default
+  let settingsOpen = $state(
+    (() => {
+      const v = (data.uiPreferences as Record<string, unknown>)[
+        "task_sections_settings"
+      ];
+      return v === undefined ? false : Boolean(v);
+    })(),
+  );
 
-  function toggleSection(section: string) {
-    const isOpen = sectionOpen[section];
-    sectionOpen[section] = !isOpen;
-    // Persist to job search
-    const key = `task_sections_${section}`;
+  function toggleSettingsSection() {
+    settingsOpen = !settingsOpen;
     fetch(`/api/search-tasks/${data.searchTask.id}/ui-preferences`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [key]: !isOpen }),
+      body: JSON.stringify({ task_sections_settings: settingsOpen }),
     }).catch(() => {});
   }
-
-  let sectionOpen = $state<Record<string, boolean>>({
-    search: loadSectionOpen("search"),
-    auth: loadSectionOpen("auth"),
-    options: loadSectionOpen("options"),
-    browser: loadSectionOpen("browser"),
-    settings: loadSectionOpen("settings", false),
-  });
 
   // Delete task
   let isDeleting = $state(false);
@@ -192,39 +106,6 @@
     }
   }
 
-  // URL editing state
-  let canEditPlatformUrls = $state(data.canEditPlatformUrls);
-  let searchUrlInput = $state<string>(searchTask.search_url ?? "");
-  let searchTermInput = $state<string>(searchTask.search_term ?? "");
-  let loginUrlInput = $state<string>(
-    searchTask.job_platforms?.login_page_url ?? "",
-  );
-  let isSavingSearchUrl = $state(false);
-  let isSavingSearchTerm = $state(false);
-  let isSavingLoginUrl = $state(false);
-  let searchUrlDirty = $derived(
-    searchUrlInput.trim() !== (searchTask.search_url ?? ""),
-  );
-  let searchTermDirty = $derived(
-    searchTermInput.trim() !== (searchTask.search_term ?? ""),
-  );
-  let loginUrlDirty = $derived(
-    loginUrlInput.trim() !==
-      (searchTask.job_platforms?.login_page_url ?? ""),
-  );
-
-  // Browser provider (hosted vs local) state
-  let browserProvider = $state<string | null>(
-    (searchTask as any).browser_provider ?? null,
-  );
-  let savedBrowserProvider = $state<string | null>(
-    (searchTask as any).browser_provider ?? null,
-  );
-  let browserProviderDirty = $derived(
-    browserProvider !== savedBrowserProvider,
-  );
-  let isSavingBrowserProvider = $state(false);
-
   // Desktop scraper connection status
   let desktopConnected = $state<boolean | null>(null);
 
@@ -237,43 +118,6 @@
       desktopConnected = false;
     }
   }
-
-  // Keep minimized (for local/tunnel mode)
-  let keepMinimized = $state<boolean>(
-    (searchTask as any).keep_minimized ?? true,
-  );
-  let savedKeepMinimized = $state<boolean>(
-    (searchTask as any).keep_minimized ?? true,
-  );
-  let keepMinimizedDirty = $derived(keepMinimized !== savedKeepMinimized);
-  let isSavingKeepMinimized = $state(false);
-
-  // Browser location state
-  let browserCountryCode = $state(data.browserCountryCode || "");
-  let savedBrowserCountryCode = $state(data.browserCountryCode || "");
-  let browserCountryDirty = $derived(
-    browserCountryCode !== savedBrowserCountryCode,
-  );
-  let isSavingBrowserCountry = $state(false);
-  let defaultCountryCode = data.defaultCountryCode || "";
-
-  // Browser fingerprint (advanced settings)
-  let showAdvancedSearch = $state(false);
-  let showAdvancedBrowser = $state(false);
-  let browserLanguage = $state(data.browserFingerprint.language);
-  let savedBrowserLanguage = $state(data.browserFingerprint.language);
-  let browserTimezone = $state(data.browserFingerprint.timezone);
-  let savedBrowserTimezone = $state(data.browserFingerprint.timezone);
-  let browserUserAgent = $state(data.browserFingerprint.userAgent);
-  let savedBrowserUserAgent = $state(data.browserFingerprint.userAgent);
-  let browserFingerprintDirty = $derived(
-    browserLanguage !== savedBrowserLanguage ||
-      browserTimezone !== savedBrowserTimezone ||
-      browserUserAgent !== savedBrowserUserAgent,
-  );
-  let isSavingBrowserFingerprint = $state(false);
-  let defaultBrowserLanguage = data.browserFingerprintDefaults.language;
-  let defaultBrowserTimezone = data.browserFingerprintDefaults.timezone;
 
   let isStarting = $state(false);
   let isStopping = $state(false);
@@ -385,41 +229,24 @@
     searchTask = data.searchTask;
     isEditingHeader = false;
     editNameInput = data.searchTask.name ?? "";
-    platformCredentials = data.platformCredentials;
-    canEditPlatformUrls = data.canEditPlatformUrls;
-    maxJobsEnabled = (data.searchTask as any).max_jobs != null;
-    maxJobsInput = (data.searchTask as any).max_jobs?.toString() ?? "";
-    skipFirstEnabled = (data.searchTask as any).skip_first != null;
-    stopAfterDuplicatesEnabled =
-      (data.searchTask as any).stop_after_duplicates != null;
-    sectionOpen = {
-      search: loadSectionOpen("search"),
-      auth: loadSectionOpen("auth"),
-      options: loadSectionOpen("options"),
-      settings: loadSectionOpen("settings", false),
-    };
-    searchUrlInput = data.searchTask.search_url ?? "";
-    searchTermInput = data.searchTask.search_term ?? "";
-    loginUrlInput = data.searchTask.job_platforms?.login_page_url ?? "";
-    browserProvider = (data.searchTask as any).browser_provider ?? null;
-    savedBrowserProvider = (data.searchTask as any).browser_provider ?? null;
-    keepMinimized = (data.searchTask as any).keep_minimized ?? true;
-    savedKeepMinimized = (data.searchTask as any).keep_minimized ?? true;
-    browserCountryCode = data.browserCountryCode || "";
-    savedBrowserCountryCode = data.browserCountryCode || "";
-    browserLanguage = data.browserFingerprint.language;
-    savedBrowserLanguage = data.browserFingerprint.language;
-    browserTimezone = data.browserFingerprint.timezone;
-    savedBrowserTimezone = data.browserFingerprint.timezone;
-    browserUserAgent = data.browserFingerprint.userAgent;
-    savedBrowserUserAgent = data.browserFingerprint.userAgent;
-    defaultCountryCode = data.defaultCountryCode || "";
-    defaultBrowserLanguage = data.browserFingerprintDefaults.language;
-    defaultBrowserTimezone = data.browserFingerprintDefaults.timezone;
-    const credId =
-      (data.searchTask as any).platform_profile_id?.toString() ?? "none";
-    savedCredentialId = credId;
-    selectedCredentialId = credId;
+    // Reset settings section
+    settingsOpen = (() => {
+      const v = (data.uiPreferences as Record<string, unknown>)[
+        "task_sections_settings"
+      ];
+      return v === undefined ? false : Boolean(v);
+    })();
+    // Reset field state inside the shared component
+    searchTaskFieldsRef?.resetToData({
+      searchTask: data.searchTask,
+      platformCredentials: data.platformCredentials,
+      canEditPlatformUrls: data.canEditPlatformUrls,
+      browserCountryCode: data.browserCountryCode || "",
+      defaultCountryCode: data.defaultCountryCode || "",
+      browserFingerprint: data.browserFingerprint,
+      browserFingerprintDefaults: data.browserFingerprintDefaults,
+      uiPreferences: data.uiPreferences as Record<string, unknown>,
+    });
     // Reset transient input state
     typeTextValue = "";
     typeTextMessage = null;
@@ -437,7 +264,9 @@
     // Restart polling if needed
     stopPolling();
     if (
-      ["running", "blocked", "queued"].includes(data.searchTask.status ?? "")
+      ["running", "blocked", "queued"].includes(
+        data.searchTask.status ?? "",
+      )
     ) {
       startPolling();
     }
@@ -454,13 +283,15 @@
   );
   // Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
   let expectsCloudBrowser = $derived(
-    savedBrowserProvider === "hosted" ||
-      (!savedBrowserProvider && data.browserProvider === "goLogin"),
+    (searchTask as any).browser_provider === "hosted" ||
+      (!(searchTask as any).browser_provider &&
+        data.browserProvider === "goLogin"),
   );
   // Tunnel mode: uses desktop app browser (no VNC, no live URL by default)
   let isTunnelMode = $derived(
-    savedBrowserProvider === "local" ||
-      (!savedBrowserProvider && data.browserProvider === "tunnel"),
+    (searchTask as any).browser_provider === "local" ||
+      (!(searchTask as any).browser_provider &&
+        data.browserProvider === "tunnel"),
   );
   // Only fall back to VNC when using local browser; show nothing while waiting for cloud live URL
   let browserViewUrl = $derived(
@@ -870,307 +701,6 @@
         console.error("Failed to poll logs:", err);
       }
     }, 2000);
-  }
-
-  async function saveMaxJobs() {
-    const maxJobs = maxJobsEnabled ? parseMaxJobs(maxJobsInput) : null;
-    isSavingMaxJobs = true;
-    try {
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ max_jobs: maxJobs }),
-      });
-      (searchTask as any).max_jobs = maxJobs;
-    } catch (err) {
-      console.error("Failed to save max jobs:", err);
-    } finally {
-      isSavingMaxJobs = false;
-    }
-  }
-
-  async function saveSkipExisting() {
-    isSavingSkipExisting = true;
-    try {
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skip_existing: skipExisting }),
-      });
-      (searchTask as any).skip_existing = skipExisting;
-    } catch (err) {
-      console.error("Failed to save skip existing:", err);
-    } finally {
-      isSavingSkipExisting = false;
-    }
-  }
-
-  async function saveStopAfterDuplicates() {
-    const stopAfterDuplicates = stopAfterDuplicatesEnabled
-      ? parseStopAfterDuplicates(stopAfterDuplicatesInput)
-      : null;
-    isSavingStopAfterDuplicates = true;
-    try {
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stop_after_duplicates: stopAfterDuplicates,
-        }),
-      });
-      (searchTask as any).stop_after_duplicates = stopAfterDuplicates;
-    } catch (err) {
-      console.error("Failed to save stop after duplicates:", err);
-    } finally {
-      isSavingStopAfterDuplicates = false;
-    }
-  }
-
-  async function saveSkipFirst() {
-    const skipFirst = skipFirstEnabled
-      ? parseSkipFirst(skipFirstInput)
-      : null;
-    isSavingSkipFirst = true;
-    try {
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skip_first: skipFirst }),
-      });
-      (searchTask as any).skip_first = skipFirst;
-    } catch (err) {
-      console.error("Failed to save skip first:", err);
-    } finally {
-      isSavingSkipFirst = false;
-    }
-  }
-
-  async function saveSearchUrl() {
-    isSavingSearchUrl = true;
-    try {
-      const url = searchUrlInput.trim() || null;
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ search_url: url }),
-      });
-      searchTask.search_url = url;
-    } catch (err) {
-      console.error("Failed to save search URL:", err);
-    } finally {
-      isSavingSearchUrl = false;
-    }
-  }
-
-  async function saveSearchTerm() {
-    isSavingSearchTerm = true;
-    try {
-      const term = searchTermInput.trim() || null;
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ search_term: term }),
-      });
-      searchTask.search_term = term;
-    } catch (err) {
-      console.error("Failed to save search term:", err);
-    } finally {
-      isSavingSearchTerm = false;
-    }
-  }
-
-  async function saveLoginUrl() {
-    if (!searchTask.platform) return;
-    isSavingLoginUrl = true;
-    try {
-      const url = loginUrlInput.trim() || null;
-      await fetch(`/api/platforms/${searchTask.platform}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login_page_url: url }),
-      });
-      if (searchTask.job_platforms) {
-        searchTask.job_platforms.login_page_url = url;
-      }
-    } catch (err) {
-      console.error("Failed to save login URL:", err);
-    } finally {
-      isSavingLoginUrl = false;
-    }
-  }
-
-  async function saveBrowserCountryCode() {
-    isSavingBrowserCountry = true;
-    try {
-      const code = browserCountryCode.trim().toUpperCase() || null;
-      await fetch(`/api/profile/${data.profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ browser_country_code: code }),
-      });
-      const normalized = code || "";
-      browserCountryCode = normalized;
-      savedBrowserCountryCode = normalized;
-    } catch (err) {
-      console.error("Failed to save browser country code:", err);
-    } finally {
-      isSavingBrowserCountry = false;
-    }
-  }
-
-  async function saveBrowserProvider() {
-    isSavingBrowserProvider = true;
-    try {
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ browser_provider: browserProvider }),
-      });
-      savedBrowserProvider = browserProvider;
-      (searchTask as any).browser_provider = browserProvider;
-    } catch (err) {
-      console.error("Failed to save browser provider:", err);
-    } finally {
-      isSavingBrowserProvider = false;
-    }
-  }
-
-  async function saveKeepMinimized() {
-    isSavingKeepMinimized = true;
-    try {
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keep_minimized: keepMinimized }),
-      });
-      savedKeepMinimized = keepMinimized;
-      (searchTask as any).keep_minimized = keepMinimized;
-    } catch (err) {
-      console.error("Failed to save keep minimized:", err);
-    } finally {
-      isSavingKeepMinimized = false;
-    }
-  }
-
-  async function saveBrowserFingerprint() {
-    isSavingBrowserFingerprint = true;
-    try {
-      const fields: Record<string, string | null> = {
-        browser_language: browserLanguage.trim() || null,
-        browser_timezone: browserTimezone.trim() || null,
-        browser_user_agent: browserUserAgent.trim() || null,
-      };
-      await fetch(`/api/profile/${data.profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fields),
-      });
-      savedBrowserLanguage = browserLanguage;
-      savedBrowserTimezone = browserTimezone;
-      savedBrowserUserAgent = browserUserAgent;
-    } catch (err) {
-      console.error("Failed to save browser fingerprint:", err);
-    } finally {
-      isSavingBrowserFingerprint = false;
-    }
-  }
-
-  function resetBrowserFingerprint() {
-    browserLanguage = savedBrowserLanguage;
-    browserTimezone = savedBrowserTimezone;
-    browserUserAgent = savedBrowserUserAgent;
-  }
-
-  async function saveCredential() {
-    isSavingCredential = true;
-    try {
-      const profileId = selectedCredentialId === "none"
-        ? null
-        : parseInt(selectedCredentialId);
-      await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform_profile_id: profileId }),
-      });
-      (searchTask as any).platform_profile_id = profileId;
-      savedCredentialId = selectedCredentialId;
-    } catch (err) {
-      console.error("Failed to save credential:", err);
-    } finally {
-      isSavingCredential = false;
-    }
-  }
-
-  async function addNewCredential() {
-    if (!newCredUsername.trim()) return;
-    isSavingCredential = true;
-    try {
-      const response = await fetch(`/api/search-tasks/${searchTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          new_credential: {
-            username: newCredUsername.trim(),
-            password: newCredPassword,
-          },
-        }),
-      });
-      if (response.ok) {
-        // Reload page data to get updated credentials list
-        const pageResponse = await fetch(window.location.href, {
-          headers: { Accept: "application/json" },
-        });
-        if (pageResponse.ok) {
-          // Simpler: just reload the page
-          window.location.reload();
-          return;
-        }
-      }
-    } catch (err) {
-      console.error("Failed to add credential:", err);
-    } finally {
-      isSavingCredential = false;
-      showAddCredential = false;
-      newCredUsername = "";
-      newCredPassword = "";
-    }
-  }
-
-  let isDeletingCredential = $state<number | null>(null);
-
-  async function deleteCredential(credId: number) {
-    if (
-      !confirm(
-        "Delete this credential? Any search tasks using it will be unlinked.",
-      )
-    ) return;
-    isDeletingCredential = credId;
-    try {
-      const platform = (searchTask as any).platform;
-      const response = await fetch(
-        `/api/platforms/${platform}/credentials?profileId=${data.profileId}&credentialId=${credId}`,
-        { method: "DELETE" },
-      );
-      if (response.ok) {
-        // Remove from local list
-        platformCredentials = platformCredentials.filter((c) =>
-          c.id !== credId
-        );
-        // If this was the saved credential, clear it
-        if ((searchTask as any).platform_profile_id === credId) {
-          (searchTask as any).platform_profile_id = null;
-          savedCredentialId = "none";
-        }
-        // If this was the pending selection, reset to saved
-        if (selectedCredentialId === String(credId)) {
-          selectedCredentialId = savedCredentialId;
-        }
-      }
-    } catch (err) {
-      console.error("Failed to delete credential:", err);
-    } finally {
-      isDeletingCredential = null;
-    }
   }
 
   async function startScrape() {
@@ -1631,7 +1161,9 @@
                 {searchTask.status_message || "Running..."}
               </p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                Scraping jobs from {searchTask.job_platforms?.name || "platform"}
+                Scraping jobs from {
+                  searchTask.job_platforms?.name || "platform"
+                }
               </p>
             </div>
           {:else if searchTask.status === "blocked"}
@@ -1760,9 +1292,14 @@
           {/if}
         </div>
 
-        {#if desktopConnected !== null && (isTunnelMode || desktopConnected)}
-          <div class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}">
-            <span class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"></span>
+        {#if           desktopConnected !== null &&
+            (isTunnelMode || desktopConnected)}
+          <div
+            class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}"
+          >
+            <span
+              class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"
+            ></span>
             <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
             Desktop app {desktopConnected ? "connected" : "not connected"}
           </div>
@@ -1860,883 +1397,23 @@
       {/if}
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Left column: Search & Credentials -->
-      <div class="space-y-4">
-        {#if searchTask.platform}
-          <button
-            type="button"
-            onclick={() => toggleSection("search")}
-            class="flex items-center gap-2 w-full text-left"
-          >
-            {#if sectionOpen.search}
-              <FontAwesomeIcon
-                icon={faChevronDown}
-                class="w-3 h-3 text-[var(--dash-text-muted)]"
-              />
-            {:else}
-              <FontAwesomeIcon
-                icon={faChevronRight}
-                class="w-3 h-3 text-[var(--dash-text-muted)]"
-              />
-            {/if}
-            <h3
-              class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-            >
-              Search
-            </h3>
-          </button>
-
-          {#if sectionOpen.search}
-            <!-- URLs -->
-            <div class="space-y-3">
-              <div>
-                <h3
-                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                >
-                  Search URL
-                </h3>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="url"
-                    bind:value={searchUrlInput}
-                    placeholder="https://..."
-                    class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                  />
-                  {#if searchTask.search_url}
-                    <a
-                      href={searchTask.search_url}
-                      target="_blank"
-                      rel="noopener"
-                      class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                      title="Open search URL"
-                    >
-                      <FontAwesomeIcon
-                        icon={faExternalLinkAlt}
-                        class="w-3 h-3"
-                      />
-                    </a>
-                  {/if}
-                </div>
-                {#if searchUrlDirty}
-                  <div class="flex items-center gap-2 mt-2">
-                    <button
-                      type="button"
-                      onclick={saveSearchUrl}
-                      disabled={isSavingSearchUrl}
-                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                    >
-                      {#if isSavingSearchUrl}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {/if}
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => (searchUrlInput = searchTask.search_url ??
-                        "")}
-                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                {/if}
-              </div>
-
-              <button
-                type="button"
-                onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
-                class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-              >
-                {#if showAdvancedSearch}
-                  <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-                {:else}
-                  <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
-                {/if}
-                Advanced
-              </button>
-
-              {#if showAdvancedSearch}
-                <div>
-                  <h3
-                    class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                  >
-                    Search Term <span class="font-normal">(optional)</span>
-                  </h3>
-                  <input
-                    type="text"
-                    bind:value={searchTermInput}
-                    placeholder="e.g., frontend developer amsterdam"
-                    class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                  />
-                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                    For sites that don't support search in the URL. The scraper
-                    will type this into the search field.
-                  </p>
-                  {#if searchTermDirty}
-                    <div class="flex items-center gap-2 mt-2">
-                      <button
-                        type="button"
-                        onclick={saveSearchTerm}
-                        disabled={isSavingSearchTerm}
-                        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                      >
-                        {#if isSavingSearchTerm}
-                          <FontAwesomeIcon
-                            icon={faSpinner}
-                            class="w-3 h-3 animate-spin"
-                          />
-                        {:else}
-                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                        {/if}
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onclick={() => (searchTermInput =
-                          searchTask.search_term ?? "")}
-                        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          {/if}
-
-          <!-- Authentication -->
-          <div class="pt-4 border-t border-[var(--dash-border)] space-y-3">
-            <button
-              type="button"
-              onclick={() => toggleSection("auth")}
-              class="flex items-center gap-2 w-full text-left"
-            >
-              {#if sectionOpen.auth}
-                <FontAwesomeIcon
-                  icon={faChevronDown}
-                  class="w-3 h-3 text-[var(--dash-text-muted)]"
-                />
-              {:else}
-                <FontAwesomeIcon
-                  icon={faChevronRight}
-                  class="w-3 h-3 text-[var(--dash-text-muted)]"
-                />
-              {/if}
-              <h3
-                class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-              >
-                Authentication
-              </h3>
-            </button>
-
-            {#if sectionOpen.auth}
-              <!-- Login URL -->
-              <div>
-                <h3
-                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                >
-                  Login URL
-                </h3>
-                {#if canEditPlatformUrls}
-                  <div class="flex items-center gap-2">
-                    <input
-                      type="url"
-                      bind:value={loginUrlInput}
-                      placeholder="https://..."
-                      class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                    />
-                    {#if searchTask.job_platforms?.login_page_url}
-                      <a
-                        href={searchTask.job_platforms.login_page_url}
-                        target="_blank"
-                        rel="noopener"
-                        class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                        title="Open login URL"
-                      >
-                        <FontAwesomeIcon
-                          icon={faExternalLinkAlt}
-                          class="w-3 h-3"
-                        />
-                      </a>
-                    {/if}
-                  </div>
-                  {#if loginUrlDirty}
-                    <div class="flex items-center gap-2 mt-2">
-                      <button
-                        type="button"
-                        onclick={saveLoginUrl}
-                        disabled={isSavingLoginUrl}
-                        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                      >
-                        {#if isSavingLoginUrl}
-                          <FontAwesomeIcon
-                            icon={faSpinner}
-                            class="w-3 h-3 animate-spin"
-                          />
-                        {:else}
-                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                        {/if}
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onclick={() => (loginUrlInput =
-                          searchTask.job_platforms?.login_page_url ??
-                            "")}
-                        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  {/if}
-                {:else if searchTask.job_platforms?.login_page_url}
-                  <a
-                    href={searchTask.job_platforms.login_page_url}
-                    target="_blank"
-                    rel="noopener"
-                    class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                  >
-                    {searchTask.job_platforms.login_page_url}
-                    <FontAwesomeIcon
-                      icon={faExternalLinkAlt}
-                      class="w-3 h-3 flex-shrink-0"
-                    />
-                  </a>
-                {:else}
-                  <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
-                {/if}
-              </div>
-
-              <!-- Credentials -->
-              <CredentialSelector
-                bind:credentials={platformCredentials}
-                bind:selectedId={selectedCredentialId}
-                platformId={(searchTask as any).platform}
-                profileId={data.profileId}
-                platformName={searchTask.job_platforms?.name}
-                oncredentialdeleted={(credId) => {
-                  if ((searchTask as any).platform_profile_id === credId) {
-                    (searchTask as any).platform_profile_id = null;
-                    savedCredentialId = "none";
-                  }
-                }}
-              />
-
-              {#if credentialDirty}
-                <div class="flex items-center gap-2 mt-3">
-                  <button
-                    type="button"
-                    onclick={saveCredential}
-                    disabled={isSavingCredential}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingCredential}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => (selectedCredentialId = savedCredentialId)}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              {/if}
-            {/if}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Right column: Scraping Options -->
-      <div class="lg:border-l lg:border-[var(--dash-border)] lg:pl-6 space-y-4">
-        <hr class="border-[var(--dash-border)] lg:hidden" />
-        <button
-          type="button"
-          onclick={() => toggleSection("options")}
-          class="flex items-center gap-2 w-full text-left"
-        >
-          {#if sectionOpen.options}
-            <FontAwesomeIcon
-              icon={faChevronDown}
-              class="w-3 h-3 text-[var(--dash-text-muted)]"
-            />
-          {:else}
-            <FontAwesomeIcon
-              icon={faChevronRight}
-              class="w-3 h-3 text-[var(--dash-text-muted)]"
-            />
-          {/if}
-          <h3
-            class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-          >
-            Scraping Options
-          </h3>
-        </button>
-
-        {#if sectionOpen.options}
-          <div class="space-y-3">
-            <div class="flex items-center flex-wrap gap-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  bind:checked={maxJobsEnabled}
-                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                />
-                <span
-                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-                >Max jobs to import</span>
-              </label>
-              <input
-                id="max-jobs"
-                type="number"
-                min="1"
-                placeholder="No limit"
-                bind:value={maxJobsInput}
-                disabled={!maxJobsEnabled}
-                class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-              />
-              {#if maxJobsDirty}
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onclick={saveMaxJobs}
-                    disabled={isSavingMaxJobs}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingMaxJobs}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => {
-                      maxJobsInput =
-                        (searchTask as any).max_jobs?.toString() ??
-                          "";
-                      maxJobsEnabled =
-                        (searchTask as any).max_jobs != null;
-                    }}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              {/if}
-            </div>
-
-            <div class="flex items-center flex-wrap gap-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  bind:checked={skipFirstEnabled}
-                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                />
-                <span
-                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-                >Skip first</span>
-              </label>
-              <input
-                id="skip-first"
-                type="number"
-                min="1"
-                placeholder="Off"
-                bind:value={skipFirstInput}
-                disabled={!skipFirstEnabled}
-                class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-              />
-              <span
-                class="text-sm text-[var(--dash-text-secondary)]"
-                class:opacity-40={!skipFirstEnabled}
-              >jobs</span>
-              {#if skipFirstDirty}
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onclick={saveSkipFirst}
-                    disabled={isSavingSkipFirst}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingSkipFirst}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => {
-                      skipFirstInput =
-                        (searchTask as any).skip_first?.toString() ??
-                          "";
-                      skipFirstEnabled =
-                        (searchTask as any).skip_first != null;
-                    }}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              {/if}
-            </div>
-
-            <div class="flex items-center flex-wrap gap-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  bind:checked={stopAfterDuplicatesEnabled}
-                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                />
-                <span
-                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-                >Stop after</span>
-              </label>
-              <input
-                id="stop-after-duplicates"
-                type="number"
-                min="1"
-                placeholder="Off"
-                bind:value={stopAfterDuplicatesInput}
-                disabled={!stopAfterDuplicatesEnabled}
-                class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-              />
-              <span
-                class="text-sm text-[var(--dash-text-secondary)]"
-                class:opacity-40={!stopAfterDuplicatesEnabled}
-              >already imported jobs in a row</span>
-              {#if stopAfterDuplicatesDirty}
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onclick={saveStopAfterDuplicates}
-                    disabled={isSavingStopAfterDuplicates}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingStopAfterDuplicates}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => {
-                      stopAfterDuplicatesInput =
-                        (searchTask as any).stop_after_duplicates
-                          ?.toString() ?? "";
-                      stopAfterDuplicatesEnabled =
-                        (searchTask as any).stop_after_duplicates !=
-                          null;
-                    }}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              {/if}
-            </div>
-
-            <div class="flex items-center flex-wrap gap-3">
-              <span
-                class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-              >Already imported jobs</span>
-              <div
-                class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
-              >
-                <button
-                  type="button"
-                  onclick={() => (skipExisting = false)}
-                  class={`px-3 py-1 text-xs font-medium transition-colors ${
-                    !skipExisting
-                      ? "bg-[var(--dash-primary)] text-white"
-                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                  }`}
-                >
-                  Update
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (skipExisting = true)}
-                  class={`px-3 py-1 text-xs font-medium transition-colors ${
-                    skipExisting
-                      ? "bg-[var(--dash-primary)] text-white"
-                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                  }`}
-                >
-                  Skip
-                </button>
-              </div>
-              {#if skipExistingDirty}
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onclick={saveSkipExisting}
-                    disabled={isSavingSkipExisting}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingSkipExisting}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
-                      />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => (skipExisting =
-                      (searchTask as any).skip_existing ?? false)}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-        <!-- Browser Control -->
-        <hr class="border-[var(--dash-border)] mt-4" />
-        <button
-          type="button"
-          onclick={() => toggleSection("browser")}
-          class="flex items-center gap-2 w-full text-left"
-        >
-          {#if sectionOpen.browser}
-            <FontAwesomeIcon
-              icon={faChevronDown}
-              class="w-3 h-3 text-[var(--dash-text-muted)]"
-            />
-          {:else}
-            <FontAwesomeIcon
-              icon={faChevronRight}
-              class="w-3 h-3 text-[var(--dash-text-muted)]"
-            />
-          {/if}
-          <h3
-            class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-          >
-            Browser Control
-          </h3>
-        </button>
-
-        {#if sectionOpen.browser}
-          <div class="space-y-3">
-            <BrowserProviderToggle
-              bind:value={browserProvider}
-              localBrowserAllowed={data.localBrowserAllowed}
-            />
-            {#if browserProviderDirty}
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onclick={saveBrowserProvider}
-                  disabled={isSavingBrowserProvider}
-                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                >
-                  {#if isSavingBrowserProvider}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
-                    />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (browserProvider = savedBrowserProvider)}
-                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            {/if}
-
-            <!-- Desktop connection status -->
-            {#if desktopConnected !== null && (isTunnelMode || desktopConnected)}
-              <div class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}">
-                <span class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"></span>
-                <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-                Desktop app {desktopConnected ? "connected" : "not connected"}
-              </div>
-            {/if}
-
-            <!-- Browser Location (hosted mode only) -->
-            {#if             savedBrowserProvider === "hosted" ||
-              (!savedBrowserProvider &&
-                data.browserProvider === "goLogin")}
-              <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
-                <div class="flex items-center gap-2 mb-2">
-                  <FontAwesomeIcon
-                    icon={faGlobe}
-                    class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]"
-                  />
-                  <h3
-                    class="text-xs font-medium text-[var(--dash-text-secondary)]"
-                  >
-                    Browser Location
-                  </h3>
-                </div>
-                <div class="flex items-center gap-2">
-                  <div class="flex-1">
-                    <CountrySelect
-                      bind:value={browserCountryCode}
-                      fallback={defaultCountryCode}
-                    />
-                  </div>
-                  {#if browserCountryDirty}
-                    <button
-                      type="button"
-                      onclick={saveBrowserCountryCode}
-                      disabled={isSavingBrowserCountry}
-                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                    >
-                      {#if isSavingBrowserCountry}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 animate-spin"
-                        />
-                      {:else}
-                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {/if}
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => (browserCountryCode =
-                        savedBrowserCountryCode)}
-                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  {/if}
-                  {#if                 isSavingBrowserCountry && !browserCountryDirty}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
-                    />
-                  {/if}
-                </div>
-                <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-                  The country the scraper will appear to browse from. Set this
-                  to match your actual location to avoid your account being
-                  flagged for logging in from unusual locations. If empty, your
-                  profile's country is used.
-                </p>
-
-                <!-- Advanced: browser fingerprint toggle -->
-                <button
-                  type="button"
-                  onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
-                  class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-                >
-                  {#if showAdvancedBrowser}
-                    <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-                  {:else}
-                    <FontAwesomeIcon
-                      icon={faChevronRight}
-                      class="w-2.5 h-2.5"
-                    />
-                  {/if}
-                  Advanced
-                </button>
-
-                {#if showAdvancedBrowser}
-                  <div
-                    class="mt-3 pt-3 border-t border-[var(--dash-border)] space-y-3"
-                  >
-                    <div>
-                      <label
-                        for="browser_language"
-                        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                      >
-                        Language
-                      </label>
-                      <input
-                        type="text"
-                        id="browser_language"
-                        bind:value={browserLanguage}
-                        placeholder={defaultBrowserLanguage}
-                        class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                      {#if !browserLanguage}
-                        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                          Defaults to <span class="font-mono">{
-                            defaultBrowserLanguage
-                          }</span> based on selected country
-                        </p>
-                      {/if}
-                    </div>
-
-                    <div>
-                      <label
-                        for="browser_timezone"
-                        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                      >
-                        Timezone
-                      </label>
-                      <input
-                        type="text"
-                        id="browser_timezone"
-                        bind:value={browserTimezone}
-                        placeholder={defaultBrowserTimezone}
-                        class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                      {#if !browserTimezone}
-                        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                          Defaults to <span class="font-mono">{
-                            defaultBrowserTimezone
-                          }</span> based on selected country
-                        </p>
-                      {/if}
-                    </div>
-
-                    <div>
-                      <label
-                        for="browser_user_agent"
-                        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                      >
-                        User Agent
-                      </label>
-                      <input
-                        type="text"
-                        id="browser_user_agent"
-                        bind:value={browserUserAgent}
-                        placeholder="Auto-detected or random"
-                        class="w-full px-2.5 py-1.5 text-xs font-mono border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                      {#if !browserUserAgent}
-                        <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                          Auto-detected from your browser, or GoLogin generates
-                          a random one
-                        </p>
-                      {/if}
-                    </div>
-
-                    {#if browserFingerprintDirty}
-                      <div class="flex items-center gap-2 pt-1">
-                        <button
-                          type="button"
-                          onclick={saveBrowserFingerprint}
-                          disabled={isSavingBrowserFingerprint}
-                          class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                        >
-                          {#if isSavingBrowserFingerprint}
-                            <FontAwesomeIcon
-                              icon={faSpinner}
-                              class="w-3 h-3 animate-spin"
-                            />
-                          {:else}
-                            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                          {/if}
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onclick={resetBrowserFingerprint}
-                          class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    {/if}
-                    {#if                 isSavingBrowserFingerprint &&
-                  !browserFingerprintDirty}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
-                      />
-                    {/if}
-                  </div>
-                {/if}
-              </div>
-            {/if}
-
-            <!-- Keep Minimized (desktop/tunnel mode only) -->
-            {#if             savedBrowserProvider === "local" ||
-              (!savedBrowserProvider &&
-                data.browserProvider === "tunnel")}
-              <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
-                <div class="flex items-center flex-wrap gap-3">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      bind:checked={keepMinimized}
-                      class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                    />
-                    <span class="text-sm text-[var(--dash-text-secondary)]"
-                    >Keep Chrome minimized during scraping</span>
-                  </label>
-                  {#if keepMinimizedDirty}
-                    <div class="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onclick={saveKeepMinimized}
-                        disabled={isSavingKeepMinimized}
-                        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                      >
-                        {#if isSavingKeepMinimized}
-                          <FontAwesomeIcon
-                            icon={faSpinner}
-                            class="w-3 h-3 animate-spin"
-                          />
-                        {:else}
-                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                        {/if}
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onclick={() => (keepMinimized = savedKeepMinimized)}
-                        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  {/if}
-                </div>
-                <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-                  When enabled, Chrome is automatically minimized while the
-                  scraper runs. Disable to watch the browser in real-time.
-                </p>
-              </div>
-            {/if}
-          </div>
-        {/if}
-      </div>
-    </div>
+    <SearchTaskFields
+      bind:this={searchTaskFieldsRef}
+      mode="edit"
+      localBrowserAllowed={data.localBrowserAllowed}
+      serverBrowserProvider={data.browserProvider}
+      {searchTask}
+      searchTaskId={searchTask.id}
+      profileId={data.profileId}
+      platformCredentials={data.platformCredentials}
+      canEditPlatformUrls={data.canEditPlatformUrls}
+      browserCountryCode={data.browserCountryCode}
+      defaultCountryCode={data.defaultCountryCode}
+      browserFingerprint={data.browserFingerprint}
+      browserFingerprintDefaults={data.browserFingerprintDefaults}
+      uiPreferences={data.uiPreferences as Record<string, unknown>}
+      {desktopConnected}
+    />
   </Card>
 
   <!-- Browser View popup -->
@@ -2762,7 +1439,9 @@
       >
       </div>
       <!-- Popup content -->
-      <Card class="relative overflow-hidden shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <Card
+        class="relative overflow-hidden shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
+      >
         <div
           class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]"
         >
@@ -3708,10 +2387,10 @@
   <Card>
     <button
       type="button"
-      onclick={() => toggleSection("settings")}
+      onclick={toggleSettingsSection}
       class="flex items-center gap-2 w-full text-left p-4"
     >
-      {#if sectionOpen.settings}
+      {#if settingsOpen}
         <FontAwesomeIcon
           icon={faChevronDown}
           class="w-3 h-3 text-[var(--dash-text-muted)]"
@@ -3733,7 +2412,7 @@
       </h3>
     </button>
 
-    {#if sectionOpen.settings}
+    {#if settingsOpen}
       <div class="px-4 pb-4 space-y-4">
         <div class="pt-2 border-t border-[var(--dash-border)]">
           <h4 class="text-sm font-medium text-red-500 mb-2">Danger Zone</h4>

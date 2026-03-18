@@ -59,6 +59,7 @@ export interface AppConfig {
   scrapeMaxRunsPerCooldown: number;
   browserProvider: string;
   defaultBrowserProvider: string;
+  defaultMaxJobs: number | null;
   localBrowserAllowed: boolean;
 }
 
@@ -164,6 +165,11 @@ function loadConfig(): AppConfig {
     scrapeMaxRunsPerCooldown: parseInt(getEnv("SJS_SCRAPE_MAX_RUNS_PER_COOLDOWN", "1"), 10),
     browserProvider: getEnv("SJS_BROWSER_PROVIDER", "local"),
     defaultBrowserProvider: getEnv("SJS_DEFAULT_BROWSER_PROVIDER", "hosted"),
+    defaultMaxJobs: (() => {
+      const v = getEnv("SJS_DEFAULT_MAX_JOBS", "25");
+      const n = parseInt(v, 10);
+      return isNaN(n) || n < 1 ? null : n;
+    })(),
     localBrowserAllowed: getEnv("SJS_LOCAL_BROWSER_ALLOWED", "true") === "true",
   };
 

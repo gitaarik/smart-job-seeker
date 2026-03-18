@@ -470,7 +470,7 @@
             Also match jobs imported by other users
           </h3>
           <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-            When enabled, the matcher will also process jobs you didn't import yourself (your own jobs are always matched first)
+            When enabled, the matcher will also process jobs you didn't import yourself (your own-imported jobs are always matched first)
           </p>
         </div>
         <div class="relative ml-4 shrink-0">

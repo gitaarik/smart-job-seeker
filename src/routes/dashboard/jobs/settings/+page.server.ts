@@ -23,6 +23,10 @@ export const load: PageServerLoad = async ({ parent }) => {
   return {
     searchTasks,
     profileId: layoutData.selectedProfile.id,
+    localBrowserAllowed: config.localBrowserAllowed,
+    serverBrowserProvider: config.browserProvider,
+    defaultBrowserProvider: config.defaultBrowserProvider,
+    defaultMaxJobs: config.defaultMaxJobs,
   };
 };
 
@@ -181,6 +185,24 @@ export const actions: Actions = {
       );
     }
 
+    // Scraping options
+    const browserProvider = formData.get("browser_provider") as string;
+    const maxJobsRaw = formData.get("max_jobs") as string;
+    const skipFirstRaw = formData.get("skip_first") as string;
+    const stopAfterDuplicatesRaw = formData.get(
+      "stop_after_duplicates",
+    ) as string;
+    const skipExistingRaw = formData.get("skip_existing") as string;
+    const keepMinimizedRaw = formData.get("keep_minimized") as string;
+
+    const maxJobs = maxJobsRaw ? parseInt(maxJobsRaw) : null;
+    const skipFirst = skipFirstRaw ? parseInt(skipFirstRaw) : null;
+    const stopAfterDuplicates = stopAfterDuplicatesRaw
+      ? parseInt(stopAfterDuplicatesRaw)
+      : null;
+    const skipExisting = skipExistingRaw === "true";
+    const keepMinimized = keepMinimizedRaw === "false" ? false : true;
+
     await db.search_tasks.create({
       data: {
         name: name.trim(),
@@ -191,7 +213,14 @@ export const actions: Actions = {
         is_active,
         profile: profileId,
         status: "idle",
-        browser_provider: config.defaultBrowserProvider,
+        browser_provider: browserProvider || config.defaultBrowserProvider,
+        max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
+        skip_first: isNaN(skipFirst as number) ? null : skipFirst,
+        stop_after_duplicates: isNaN(stopAfterDuplicates as number)
+          ? null
+          : stopAfterDuplicates,
+        skip_existing: skipExisting,
+        keep_minimized: keepMinimized,
         date_created: new Date(),
       },
     });
