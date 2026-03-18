@@ -122,13 +122,23 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     },
   });
 
-  // Add to BullMQ queue
+  // Resolve effective browser provider for queue routing.
+  // When the search task has no explicit provider, check the server default
+  // so GoLogin-default servers route to the hosted queue.
+  let effectiveProvider = searchTask.browser_provider;
+  if (!effectiveProvider) {
+    const serverDefault = process.env.SJS_BROWSER_PROVIDER || "local";
+    if (serverDefault === "goLogin") effectiveProvider = "hosted";
+  }
+
+  // Add to BullMQ queue (routed to hosted or desktop based on provider)
   const job = await addScrapeJob({
     searchTaskId,
     runId: run.id,
     searchUrl: searchTask.search_url,
     platformId: String(searchTask.platform),
     triggeredBy: "user",
+    browserProvider: effectiveProvider,
     ...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {}),
   });
 
