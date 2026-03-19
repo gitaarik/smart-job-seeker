@@ -529,8 +529,17 @@ async function generateWithLangChain(
             // LLM returned bare array - wrap it
             normalizedParsed = { jobs: parsed };
           } else if (parsed && typeof parsed === "object" && !("jobs" in parsed)) {
-            // LLM returned single job object - wrap in array
-            if ("clickableId" in parsed || "title" in parsed) {
+            // Check if LLM returned object with numeric keys (e.g. { "25": {...}, "27": {...} })
+            const values = Object.values(parsed);
+            if (
+              values.length > 0 &&
+              values.every(
+                (v) => v && typeof v === "object" && ("clickableId" in v || "title" in v),
+              )
+            ) {
+              normalizedParsed = { jobs: values };
+            } else if ("clickableId" in parsed || "title" in parsed) {
+              // LLM returned single job object - wrap in array
               normalizedParsed = { jobs: [parsed] };
             }
           }
