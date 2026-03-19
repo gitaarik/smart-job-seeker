@@ -3,6 +3,14 @@
  * This file re-exports the LangChain-based implementation for backward compatibility
  */
 
+// Explicit import for local use in isFatalLLMError (re-exports don't create
+// local bindings in ESM, which causes ReferenceError at runtime with tsx/esbuild)
+import {
+  LLMAuthenticationError,
+  LLMQuotaExceededError,
+  LLMRateLimitError,
+} from "./langchain";
+
 export {
   type ChatCompletionOptions,
   type ChatMessage,
