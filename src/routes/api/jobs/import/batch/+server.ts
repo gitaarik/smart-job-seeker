@@ -66,7 +66,7 @@ async function importSingleJob(
       });
 
       await db.job_importers.upsert({
-        where: { job_importers_job_profile_unique: { job: existing.id, profile: profileId } },
+        where: { job_profile: { job: existing.id, profile: profileId } },
         create: { job: existing.id, profile: profileId },
         update: {},
       });
@@ -81,7 +81,7 @@ async function importSingleJob(
 
     // No changes — still record the importer
     await db.job_importers.upsert({
-      where: { job_importers_job_profile_unique: { job: existing.id, profile: profileId } },
+      where: { job_profile: { job: existing.id, profile: profileId } },
       create: { job: existing.id, profile: profileId },
       update: {},
     });
