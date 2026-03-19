@@ -123,9 +123,10 @@ const EducationSchema = z.object({
   url: nullableString,
   startDate: nullableString,
   endDate: nullableString,
-  graduationYear: z.number().nullable().optional().transform(
-    (v) => v ?? undefined,
-  ),
+  graduationYear: z.union([z.number(), z.string().transform(Number)])
+    .nullable().optional().transform(
+      (v) => v ?? undefined,
+    ),
 });
 
 const validSkillLevels = ["expert", "proficient", "intermediate", "beginner"] as const;
