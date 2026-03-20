@@ -1091,7 +1091,61 @@
           {/if}
         </div>
 
-        <!-- Stop after duplicates -->
+        <!-- Already imported behavior -->
+        <div class="flex items-center flex-wrap gap-3">
+          <span
+            class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+          >Already imported jobs</span>
+          <div
+            class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
+          >
+            <button
+              type="button"
+              onclick={() => {
+                if (isAdd) addSkipExisting = false;
+                else skipExisting = false;
+              }}
+              class={`px-3 py-1 text-xs font-medium transition-colors ${
+                !(isAdd ? addSkipExisting : skipExisting)
+                  ? "bg-[var(--dash-primary)] text-white"
+                  : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+              }`}
+            >
+              Update
+            </button>
+            <button
+              type="button"
+              onclick={() => {
+                if (isAdd) addSkipExisting = true;
+                else skipExisting = true;
+              }}
+              class={`px-3 py-1 text-xs font-medium transition-colors ${
+                (isAdd ? addSkipExisting : skipExisting)
+                  ? "bg-[var(--dash-primary)] text-white"
+                  : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+              }`}
+            >
+              Skip
+            </button>
+          </div>
+          {#if isAdd}
+            <input
+              type="hidden"
+              name="skip_existing"
+              value={addSkipExisting ? "true" : "false"}
+            />
+          {:else}
+            {@render           saveCancel(
+            skipExistingDirty,
+            isSavingSkipExisting,
+            saveSkipExisting,
+            () => (skipExisting = searchTask?.skip_existing ?? false),
+          )}
+          {/if}
+        </div>
+
+        <!-- Stop after duplicates (only when skip is selected) -->
+        {#if isAdd ? addSkipExisting : skipExisting}
         <div class="flex items-center flex-wrap gap-3">
           <label class="flex items-center gap-2 cursor-pointer">
             <input
@@ -1152,59 +1206,7 @@
           )}
           {/if}
         </div>
-
-        <!-- Already imported behavior -->
-        <div class="flex items-center flex-wrap gap-3">
-          <span
-            class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-          >Already imported jobs</span>
-          <div
-            class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
-          >
-            <button
-              type="button"
-              onclick={() => {
-                if (isAdd) addSkipExisting = false;
-                else skipExisting = false;
-              }}
-              class={`px-3 py-1 text-xs font-medium transition-colors ${
-                !(isAdd ? addSkipExisting : skipExisting)
-                  ? "bg-[var(--dash-primary)] text-white"
-                  : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-              }`}
-            >
-              Update
-            </button>
-            <button
-              type="button"
-              onclick={() => {
-                if (isAdd) addSkipExisting = true;
-                else skipExisting = true;
-              }}
-              class={`px-3 py-1 text-xs font-medium transition-colors ${
-                (isAdd ? addSkipExisting : skipExisting)
-                  ? "bg-[var(--dash-primary)] text-white"
-                  : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-              }`}
-            >
-              Skip
-            </button>
-          </div>
-          {#if isAdd}
-            <input
-              type="hidden"
-              name="skip_existing"
-              value={addSkipExisting ? "true" : "false"}
-            />
-          {:else}
-            {@render           saveCancel(
-            skipExistingDirty,
-            isSavingSkipExisting,
-            saveSkipExisting,
-            () => (skipExisting = searchTask?.skip_existing ?? false),
-          )}
-          {/if}
-        </div>
+        {/if}
 
         <!-- Skip first -->
         <div class="flex items-center flex-wrap gap-3">
