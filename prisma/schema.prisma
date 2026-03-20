@@ -1412,6 +1412,7 @@ model search_tasks {
   stop_after_duplicates  Int?
   keep_minimized         Boolean?                 @default(true)
   ui_preferences         Json?                    @default("{}")
+  extracted_jobs_json    String?
   search_task_runs       search_task_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "search_tasks_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

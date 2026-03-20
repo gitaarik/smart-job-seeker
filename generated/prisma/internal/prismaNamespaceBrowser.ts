@@ -1530,7 +1530,8 @@ export const Search_tasksScalarFieldEnum = {
   skip_first: 'skip_first',
   stop_after_duplicates: 'stop_after_duplicates',
   keep_minimized: 'keep_minimized',
-  ui_preferences: 'ui_preferences'
+  ui_preferences: 'ui_preferences',
+  extracted_jobs_json: 'extracted_jobs_json'
 } as const
 
 export type Search_tasksScalarFieldEnum = (typeof Search_tasksScalarFieldEnum)[keyof typeof Search_tasksScalarFieldEnum]
