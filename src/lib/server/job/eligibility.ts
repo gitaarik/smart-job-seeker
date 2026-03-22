@@ -41,9 +41,12 @@ export function buildEligibilityFilter(
     throw new Error("Profile must have at least one skill for job matching");
   }
 
-  // Lowercase config values for case-insensitive comparison with jsonb ?|
-  const workLocations = config.work_location.map((v) => v.toLowerCase());
-  const jobTypes = config.job_types.map((v) => v.toLowerCase());
+  // Normalize config values: lowercase + strip hyphens/underscores/spaces
+  // This ensures "Full-time" matches "full_time", "fulltime", etc.
+  const normalizeValue = (v: string) =>
+    v.toLowerCase().replace(/[-_\s]/g, "");
+  const workLocations = config.work_location.map(normalizeValue);
+  const jobTypes = config.job_types.map(normalizeValue);
 
   return Prisma.sql`
     -- Minimum data: job must have a description OR at least one skill
@@ -52,22 +55,22 @@ export function buildEligibilityFilter(
       OR (j.skills_required IS NOT NULL AND j.skills_required::text != 'null' AND jsonb_array_length(j.skills_required::jsonb) > 0)
       OR (j.skills_preferred IS NOT NULL AND j.skills_preferred::text != 'null' AND jsonb_array_length(j.skills_preferred::jsonb) > 0)
     )
-    -- Work location overlap — case-insensitive via lower() on both sides
+    -- Work location overlap — normalized (case + separator insensitive)
     AND (
       j.work_location IS NULL
       OR j.work_location::text = 'null'
       OR EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(j.work_location::jsonb) AS elem
-        WHERE lower(elem) = ANY(array[${Prisma.join(workLocations)}]::text[])
+        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${Prisma.join(workLocations)}]::text[])
       )
     )
-    -- Job types overlap — case-insensitive
+    -- Job types overlap — normalized (case + separator insensitive)
     AND (
       j.job_types IS NULL
       OR j.job_types::text = 'null'
       OR EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(j.job_types::jsonb) AS elem
-        WHERE lower(elem) = ANY(array[${Prisma.join(jobTypes)}]::text[])
+        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${Prisma.join(jobTypes)}]::text[])
       )
     )
     -- Skills overlap (AT LEAST ONE match in required OR preferred)

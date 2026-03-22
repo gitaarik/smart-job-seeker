@@ -16,6 +16,33 @@ import { getMatcherState, isMatcherAlive } from "$lib/server/job/matcher-state";
 import { getProfileSkills } from "$lib/server/job/match-utils";
 import { buildEligibilityFilter } from "$lib/server/job/eligibility";
 
+/**
+ * Shared visibility scope for all job queries in this endpoint.
+ *
+ * SINGLE SOURCE OF TRUTH: every query uses these same fragments so
+ * that totalJobs, matchedCount, noMatchCount, and eligibleUnmatched
+ * are always consistent with each other.
+ *
+ * When match_community_jobs is off, only jobs imported by this profile
+ * (via job_importers) are visible.
+ */
+function buildVisibilityScope(profileId: number, matchCommunityJobs: boolean) {
+  const ownershipFilter = matchCommunityJobs
+    ? Prisma.empty
+    : Prisma.sql`AND ji.id IS NOT NULL`;
+
+  return {
+    /** FROM + JOIN fragment — append additional JOINs after this */
+    from: Prisma.sql`
+      FROM jobs j
+      LEFT JOIN job_importers ji ON j.id = ji.job AND ji.profile = ${profileId}`,
+    /** WHERE conditions — combine with AND for additional filters */
+    where: Prisma.sql`
+      WHERE j.status != 'archived'
+      ${ownershipFilter}`,
+  };
+}
+
 export const GET: RequestHandler = async ({ url, locals }) => {
   const user = locals.user;
   if (!user) {
@@ -43,26 +70,54 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     where: { profile: profileId },
   });
 
-  // Get profile skills for eligibility counting
   const profileSkills = await getProfileSkills(profileId);
+  const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
+  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs);
 
-  // Get counts in parallel
-  const [totalJobs, matchedCount, matcherState, recentMatches] = await Promise
+  // Single query for all counts — uses the shared visibility scope
+  // so total, matched, and no_match are always consistent
+  const countsQuery = db.$queryRaw<{
+    total: number;
+    matched: number;
+    no_match: number;
+  }[]>`
+    SELECT
+      COUNT(DISTINCT j.id)::int AS total,
+      COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation IN ('highly_recommend', 'recommend', 'consider'))::int AS matched,
+      COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation IN ('not_recommended', 'ineligible'))::int AS no_match
+    ${from}
+    LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+    ${where}
+  `;
+
+  // Eligible unmatched: jobs that pass the eligibility filter but haven't been evaluated
+  let eligibleUnmatchedQuery: Promise<{ cnt: number }[]> | null = null;
+  const workLocations = matchConfig?.work_location as string[] | null;
+  const jobTypes = matchConfig?.job_types as string[] | null;
+
+  if (workLocations?.length && jobTypes?.length && profileSkills.length > 0) {
+    const eligibilityFilter = buildEligibilityFilter(
+      { work_location: workLocations, job_types: jobTypes },
+      profileSkills,
+    );
+
+    eligibleUnmatchedQuery = db.$queryRaw<{ cnt: number }[]>`
+      SELECT COUNT(*)::int as cnt
+      ${from}
+      LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+      ${where}
+      AND jm.id IS NULL
+      AND ${eligibilityFilter}
+    `;
+  }
+
+  // Run all queries in parallel
+  const [counts, eligibleResult, matcherState, matcherAlive, recentMatches] = await Promise
     .all([
-      // Total non-archived jobs
-      db.jobs.count({
-        where: { status: { not: "archived" } },
-      }),
-
-      // Jobs with a match record for this profile
-      db.job_matches.count({
-        where: { profile: profileId },
-      }),
-
-      // Current matcher state from Redis (per-profile)
+      countsQuery,
+      eligibleUnmatchedQuery ?? Promise.resolve([{ cnt: 0 }]),
       getMatcherState(profileId),
-
-      // Recently matched jobs (last 20, optionally excluding ineligible)
+      isMatcherAlive(),
       db.job_matches.findMany({
         where: {
           profile: profileId,
@@ -93,41 +148,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       }),
     ]);
 
-  const unmatchedCount = totalJobs - matchedCount;
-
-  // Count eligible unmatched jobs using the shared eligibility filter
-  let eligibleUnmatched = 0;
-  const workLocations = matchConfig?.work_location as string[] | null;
-  const jobTypes = matchConfig?.job_types as string[] | null;
-  const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
-
-  if (workLocations?.length && jobTypes?.length && profileSkills.length > 0) {
-    const eligibilityFilter = buildEligibilityFilter(
-      { work_location: workLocations, job_types: jobTypes },
-      profileSkills,
-    );
-
-    const ownershipFilter = matchCommunityJobs
-      ? Prisma.empty
-      : Prisma.sql`AND ji.id IS NOT NULL`;
-
-    const result = await db.$queryRaw<{ cnt: number }[]>`
-      SELECT COUNT(*)::int as cnt FROM jobs j
-      LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
-      LEFT JOIN job_importers ji ON j.id = ji.job AND ji.profile = ${profileId}
-      WHERE jm.id IS NULL
-      AND j.status != 'archived'
-      AND ${eligibilityFilter}
-      ${ownershipFilter}
-    `;
-    eligibleUnmatched = result[0]?.cnt ?? 0;
-  }
-
-  const matcherAlive = await isMatcherAlive();
+  const { total: totalJobs, matched: matchedCount, no_match: noMatchCount } = counts[0];
+  const evaluatedCount = matchedCount + noMatchCount;
+  const unmatchedCount = totalJobs - evaluatedCount;
+  const eligibleUnmatched = eligibleResult[0]?.cnt ?? 0;
 
   return json({
     totalJobs,
     matchedCount,
+    noMatchCount,
     unmatchedCount,
     eligibleUnmatched,
     matcherState,

@@ -5,6 +5,7 @@
   import {
     faCircle,
     faSpinner,
+    faRotate,
   } from "@fortawesome/free-solid-svg-icons";
   import ScoreBadge from "../../components/ScoreBadge.svelte";
 
@@ -45,6 +46,7 @@
 
   let totalJobs = $state(0);
   let matchedCount = $state(0);
+  let noMatchCount = $state(0);
   let unmatchedCount = $state(0);
   let eligibleUnmatched = $state(0);
   let matcherState = $state<MatcherState | null>(null);
@@ -53,10 +55,12 @@
   let pollInterval: ReturnType<typeof setInterval> | null = null;
   let loading = $state(true);
   let showNoMatch = $state(false);
+  let rematching = $state(false);
 
   // Derived
-  let relevantTotal = $derived(matchedCount + eligibleUnmatched);
-  let matchProgress = $derived(relevantTotal > 0 ? (matchedCount / relevantTotal) * 100 : 0);
+  let evaluatedCount = $derived(matchedCount + noMatchCount);
+  let relevantTotal = $derived(evaluatedCount + eligibleUnmatched);
+  let evaluatedProgress = $derived(relevantTotal > 0 ? (evaluatedCount / relevantTotal) * 100 : 0);
   let filteredOut = $derived(unmatchedCount - eligibleUnmatched);
 
   // Matcher status states
@@ -79,6 +83,7 @@
         const result = await response.json();
         totalJobs = result.totalJobs;
         matchedCount = result.matchedCount;
+        noMatchCount = result.noMatchCount;
         unmatchedCount = result.unmatchedCount;
         eligibleUnmatched = result.eligibleUnmatched;
         matcherState = result.matcherState;
@@ -101,6 +106,25 @@
     if (pollInterval) {
       clearInterval(pollInterval);
       pollInterval = null;
+    }
+  }
+
+  async function rematchNoMatches() {
+    if (rematching || noMatchCount === 0) return;
+    rematching = true;
+    try {
+      const response = await fetch("/api/matcher/rematch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId: data.profileId }),
+      });
+      if (response.ok) {
+        await loadStatus();
+      }
+    } catch (err) {
+      console.error("Failed to trigger rematch:", err);
+    } finally {
+      rematching = false;
     }
   }
 
@@ -165,17 +189,36 @@
     </div>
   {:else}
     <!-- Stats Overview -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 mt-4">
-      <!-- Matched -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 mt-4">
+      <!-- Matched (good matches) -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Matched</div>
         <div class="text-2xl font-bold text-[var(--dash-success)]">{matchedCount}</div>
+        <div class="text-xs text-[var(--dash-text-muted)]">fit your profile</div>
+      </div>
+
+      <!-- No Match (evaluated but not a fit) -->
+      <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
+        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">No Match</div>
+        <div class="text-2xl font-bold text-[var(--dash-error)]">{noMatchCount}</div>
+        <div class="text-xs text-[var(--dash-text-muted)]">don't fit your profile</div>
+        {#if noMatchCount > 0}
+          <button
+            onclick={rematchNoMatches}
+            disabled={rematching}
+            class="mt-2 text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] disabled:opacity-50 flex items-center gap-1"
+          >
+            <FontAwesomeIcon icon={rematching ? faSpinner : faRotate} class="w-3 h-3 {rematching ? 'animate-spin' : ''}" />
+            Re-evaluate
+          </button>
+        {/if}
       </div>
 
       <!-- Pending (eligible but unmatched) -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Pending</div>
         <div class="text-2xl font-bold text-[var(--dash-warning)]">{eligibleUnmatched}</div>
+        <div class="text-xs text-[var(--dash-text-muted)]">waiting to evaluate</div>
       </div>
 
       <!-- Filtered Out -->
@@ -195,9 +238,9 @@
     <!-- Progress Bar -->
     <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4 mb-6">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm font-medium text-[var(--dash-text)]">Matching Progress</span>
+        <span class="text-sm font-medium text-[var(--dash-text)]">Evaluation Progress</span>
         <span class="text-sm text-[var(--dash-text-secondary)]">
-          {matchProgress.toFixed(0)}%
+          {evaluatedProgress.toFixed(0)}%
           {#if eligibleUnmatched > 0}
             <span class="text-[var(--dash-text-muted)]">({eligibleUnmatched} pending)</span>
           {/if}
@@ -205,14 +248,16 @@
       </div>
       <div class="w-full bg-[var(--dash-bg)] rounded-full h-3 overflow-hidden">
         <div
-          class="h-full rounded-full transition-all duration-500 ease-out {matchProgress >= 100 ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-primary)]'}"
-          style="width: {matchProgress}%"
+          class="h-full rounded-full transition-all duration-500 ease-out {evaluatedProgress >= 100 ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-primary)]'}"
+          style="width: {evaluatedProgress}%"
         ></div>
       </div>
       <div class="text-xs text-[var(--dash-text-muted)] mt-1">
-        {matchedCount} of {relevantTotal} eligible jobs matched
+        {evaluatedCount} of {relevantTotal} eligible jobs evaluated
+        &middot; <span class="text-[var(--dash-success)]">{matchedCount} matched</span>
+        &middot; <span class="text-[var(--dash-error)]">{noMatchCount} no match</span>
         {#if filteredOut > 0}
-          &middot; {filteredOut} jobs don't match your match config
+          &middot; {filteredOut} filtered out by match config
         {/if}
       </div>
     </div>
