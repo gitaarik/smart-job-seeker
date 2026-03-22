@@ -99,27 +99,24 @@ describe("AI Prompt Schemas", () => {
       expect(result.salary_max).toBe(120001);
     });
 
-    it("should reject invalid salary values", () => {
+    it("should coerce numeric strings and 'null' strings from LLM responses", () => {
+      const llmData = {
+        title: "Software Engineer",
+        job_description: "Description",
+        salary_min: "80000", // Numeric string — should coerce to 80000
+        salary_max: "null",  // String "null" — should coerce to null
+      };
+      const result = extractJobDataSchema.parse(llmData);
+      expect(result.salary_min).toBe(80000);
+      expect(result.salary_max).toBeNull();
+    });
+
+    it("should reject non-numeric salary strings", () => {
       const invalidData = {
         title: "Software Engineer",
         job_description: "Description",
-        company_description: null,
-        company: null,
-        job_poster: null,
-        date_posted: null,
-        location: null,
-        remote: null,
-        experience_levels: null,
-        job_type: null,
-        salary_min: "80000", // String instead of number
+        salary_min: "competitive", // Non-numeric string — should fail
         salary_max: 120000,
-        salary_currency: "EUR",
-        salary_period: "year",
-        skills_required: null,
-        skills_preferred: null,
-        responsibilities: null,
-        soft_skills: null,
-        status: null,
       };
       expect(() => extractJobDataSchema.parse(invalidData)).toThrow();
     });

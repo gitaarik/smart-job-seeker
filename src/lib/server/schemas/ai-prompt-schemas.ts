@@ -13,11 +13,24 @@ import { z } from "zod";
  * Schema for extract_job_data prompt
  * Extracts structured data from individual job posting pages
  */
+// LLMs sometimes return the string "null" instead of JSON null
+const coerceNull = (v: unknown) => (v === "null" || v === "none" || v === "N/A" ? null : v);
+
 // Helper for optional nullable fields (field can be missing, null, or have a value)
-const optionalNullableString = () => z.string().optional().nullable();
+const optionalNullableString = () =>
+  z.preprocess(coerceNull, z.string().optional().nullable());
 const optionalNullableNumber = () =>
-  z.number().optional().nullable().transform((v) => (v != null ? Math.round(v) : v));
-const optionalNullableArray = () => z.array(z.string()).optional().nullable();
+  z.preprocess(
+    (v) => {
+      const n = coerceNull(v);
+      // Coerce numeric strings like "50000" to actual numbers
+      if (typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim())) return Number(n);
+      return n;
+    },
+    z.number().optional().nullable().transform((v) => (v != null ? Math.round(v) : v)),
+  );
+const optionalNullableArray = () =>
+  z.preprocess(coerceNull, z.array(z.string()).optional().nullable());
 
 export const extractJobDataSchema = z.object({
   title: optionalNullableString().describe("Job title"),
@@ -172,12 +185,14 @@ export const extractJobsFromSearchPageSchema = z.object({
       location: z.string().nullable().describe(
         "Physical office location (city, region, country)",
       ),
-      salary_min: z.number().nullable().describe(
-        "Minimum salary as numeric value only",
-      ),
-      salary_max: z.number().nullable().describe(
-        "Maximum salary as numeric value only",
-      ),
+      salary_min: z.preprocess(
+        (v) => { const n = coerceNull(v); return typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim()) ? Number(n) : n; },
+        z.number().nullable(),
+      ).describe("Minimum salary as numeric value only"),
+      salary_max: z.preprocess(
+        (v) => { const n = coerceNull(v); return typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim()) ? Number(n) : n; },
+        z.number().nullable(),
+      ).describe("Maximum salary as numeric value only"),
       salary_currency: z.string().nullable().describe(
         "Currency code (USD, EUR, GBP, etc.)",
       ),
