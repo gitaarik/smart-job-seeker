@@ -201,38 +201,6 @@ export const extractJobsFromSearchPageSchema = z.object({
 }).passthrough(); // Allow extra keys like pattern, jobCount that LLMs might add
 
 /**
- * Schema for classify_clickables prompt
- * Classifies clickable elements as view-details or action buttons
- * Made flexible to handle various LLM response formats
- * Uses passthrough() to allow extra keys like $schema, definitions that LLMs may add
- */
-export const classifyClickablesSchema = z.object({
-  clickables: z.array(
-    z.object({
-      id: z.number().int().optional().describe("The data-xxx value"),
-      ID: z.number().int().optional().describe("Alternative: The data-xxx value"),
-      type: z
-        .enum(["view-details", "action"])
-        .optional()
-        .describe("Clickable classification"),
-      classification: z
-        .enum(["view-details", "action"])
-        .optional()
-        .describe("Alternative: Clickable classification"),
-    }).passthrough(),
-  ).optional(),
-  // Handle alternative response format where LLM uses schema name as key
-  classify_clickables: z.array(
-    z.object({
-      id: z.number().int().optional(),
-      ID: z.number().int().optional(),
-      type: z.enum(["view-details", "action"]).optional(),
-      classification: z.enum(["view-details", "action"]).optional(),
-    }).passthrough(),
-  ).optional(),
-}).passthrough();
-
-/**
  * Schema for extract_matched_skills prompt
  * Extracts which job skills the candidate has via semantic matching
  * Returns job skill strings (not candidate skill names) that the candidate matches
@@ -258,7 +226,6 @@ export const aiPromptSchemas = {
   extract_matched_skills: extractMatchedSkillsSchema,
   detect_login_page: detectLoginPageSchema,
   find_next_page_button: findNextPageButtonSchema,
-  classify_clickables: classifyClickablesSchema,
   check_login_state: checkLoginStateSchema,
 } as const;
 

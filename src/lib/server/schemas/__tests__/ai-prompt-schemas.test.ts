@@ -15,7 +15,6 @@ describe("AI Prompt Schemas", () => {
       expect(aiPromptSchemas).toHaveProperty("score_job_match");
       expect(aiPromptSchemas).toHaveProperty("detect_login_page");
       expect(aiPromptSchemas).toHaveProperty("find_next_page_button");
-      expect(aiPromptSchemas).toHaveProperty("classify_clickables");
     });
 
     it("should get schema by request name", () => {

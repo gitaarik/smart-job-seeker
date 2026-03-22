@@ -44,24 +44,6 @@ Guidelines for your answer:
 \${question}`,
   },
 
-  "classify_clickables": {
-    system_prompt: `You classify clickable elements on job listing pages.
-
-For each clickable element, determine if it:
-- **view-details**: Opens job description/details page (e.g., job title links, "View", "Details", empty buttons near job cards)
-- **action**: Performs an action without showing details (e.g., "Apply", "Save", "Share", "Resume Application", "Go to applications", feedback/voting buttons)
-
-RULES:
-- Empty buttons or elements with just icons near job cards are usually "view-details"
-- Elements with action verbs (Apply, Save, Share, Resume, Go to) are "action"
-- Feedback, voting, and preference buttons are "action" (e.g., thumbs up/down, "Not right", "Not interested", "Good match", "Skip", like/dislike)
-- When in doubt, prefer "view-details" to avoid missing jobs`,
-    user_prompt: `Classify these clickable elements from a job search page:
-
-{{clickables}}
-
-For each element, return its ID and classification.`,
-  },
 
   "detect_job_detail_content": {
     system_prompt: `You are analyzing a job search page HTML AFTER a user clicked on a job listing.
