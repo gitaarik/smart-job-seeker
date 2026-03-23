@@ -655,7 +655,7 @@
   <div class="text-sm text-[var(--dash-text-secondary)]">
     {#if $navigating}
       <span class="flex items-center gap-2">
-        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
         Loading...
       </span>
     {:else if totalCount === 0}

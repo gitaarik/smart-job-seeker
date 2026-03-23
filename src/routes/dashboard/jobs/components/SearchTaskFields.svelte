@@ -563,7 +563,7 @@
         class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
       >
         {#if saving}
-          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
         {:else}
           <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
         {/if}
@@ -637,7 +637,7 @@
                   <div class="absolute right-3 top-1/2 -translate-y-1/2">
                     <FontAwesomeIcon
                       icon={faSpinner}
-                      class="w-4 h-4 text-[var(--dash-text-secondary)] animate-spin"
+                      class="w-4 h-4 text-[var(--dash-text-secondary)] spin-pulse"
                     />
                   </div>
                 {/if}
@@ -1353,7 +1353,7 @@
                     {#if isSavingBrowserCountry}
                       <FontAwesomeIcon
                         icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
+                        class="w-3 h-3 spin-pulse"
                       />
                     {:else}
                       <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
@@ -1372,7 +1372,7 @@
                 {#if isSavingBrowserCountry && !browserCountryDirty}
                   <FontAwesomeIcon
                     icon={faSpinner}
-                    class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                    class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
                   />
                 {/if}
               </div>
@@ -1471,7 +1471,7 @@
                   {#if             isSavingBrowserFingerprint && !browserFingerprintDirty}
                     <FontAwesomeIcon
                       icon={faSpinner}
-                      class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                      class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
                     />
                   {/if}
                 </div>

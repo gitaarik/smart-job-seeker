@@ -76,6 +76,15 @@
   --dash-purple-light: #3b0764;      /* purple-950 */
 }
 
+/* Stepped spinner — rotates in 8 discrete steps so faSpinner's
+   circles appear to stay in place while each one "lights up" in order */
+@keyframes spin-pulse {
+  to { transform: rotate(360deg); }
+}
+.spin-pulse {
+  animation: spin-pulse 1s infinite steps(8);
+}
+
 /* Navigation loading bar */
 @keyframes nav-progress {
   0% { width: 0; }

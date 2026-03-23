@@ -213,7 +213,7 @@
         class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         {#if isLoading}
-          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
           Creating Profile...
         {:else}
           <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />

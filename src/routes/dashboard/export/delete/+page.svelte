@@ -138,7 +138,7 @@
               style="background-color: var(--dash-error);"
             >
               {#if isLoading}
-                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
               {/if}
               Yes, delete permanently
             </button>

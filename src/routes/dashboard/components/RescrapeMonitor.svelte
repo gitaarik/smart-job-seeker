@@ -302,7 +302,7 @@
         {#if isActive}
           <FontAwesomeIcon
             icon={faSpinner}
-            class="w-4 h-4 text-[var(--dash-primary)] animate-spin"
+            class="w-4 h-4 text-[var(--dash-primary)] spin-pulse"
           />
         {:else if isComplete}
           <FontAwesomeIcon

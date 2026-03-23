@@ -284,7 +284,7 @@
           {#if addingUser}
             <FontAwesomeIcon
               icon={faSpinner}
-              class="w-4 h-4 animate-spin"
+              class="w-4 h-4 spin-pulse"
             />
             {newSendInvite ? "Sending..." : "Adding..."}
           {:else}
@@ -503,7 +503,7 @@
                   {#if sendingInviteId === user.id}
                     <FontAwesomeIcon
                       icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
+                      class="w-3 h-3 spin-pulse"
                     />
                     Sending...
                   {:else}

@@ -1072,7 +1072,7 @@
               {#if isSavingHeader}
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  class="w-3 h-3 animate-spin"
+                  class="w-3 h-3 spin-pulse"
                 />
               {/if}
               Save
@@ -1138,7 +1138,7 @@
             >
               <FontAwesomeIcon
                 icon={faSpinner}
-                class="w-5 h-5 text-[var(--dash-primary)] animate-spin"
+                class="w-5 h-5 text-[var(--dash-primary)] spin-pulse"
               />
             </div>
             <div class="min-w-0">
@@ -1153,7 +1153,7 @@
             >
               <FontAwesomeIcon
                 icon={faSpinner}
-                class="w-5 h-5 text-[var(--dash-primary)] animate-spin"
+                class="w-5 h-5 text-[var(--dash-primary)] spin-pulse"
               />
             </div>
             <div class="min-w-0">
@@ -1315,7 +1315,7 @@
               {#if isSendingFeedback}
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  class="w-4 h-4 animate-spin"
+                  class="w-4 h-4 spin-pulse"
                 />
               {:else}
                 <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
@@ -1342,7 +1342,7 @@
               {#if isStopping}
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  class="w-4 h-4 animate-spin"
+                  class="w-4 h-4 spin-pulse"
                 />
                 <span>Stopping...</span>
               {:else}
@@ -1360,7 +1360,7 @@
               {#if isStarting}
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  class="w-4 h-4 animate-spin"
+                  class="w-4 h-4 spin-pulse"
                 />
                 <span>Starting...</span>
               {:else}
@@ -1526,7 +1526,7 @@
               <div class="text-center">
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2"
+                  class="w-6 h-6 text-[var(--dash-text-muted)] spin-pulse mb-2"
                 />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Starting live view...
@@ -1572,7 +1572,7 @@
               <div class="text-center">
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin mb-2"
+                  class="w-6 h-6 text-[var(--dash-text-muted)] spin-pulse mb-2"
                 />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Starting cloud browser...
@@ -1604,7 +1604,7 @@
                   {#if isSendingFeedback}
                     <FontAwesomeIcon
                       icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
+                      class="w-3 h-3 spin-pulse"
                     />
                   {:else}
                     <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
@@ -1656,7 +1656,7 @@
                 {#if isNavigating}
                   <FontAwesomeIcon
                     icon={faSpinner}
-                    class="w-3 h-3 animate-spin"
+                    class="w-3 h-3 spin-pulse"
                   />
                 {:else}
                   Navigate
@@ -1691,7 +1691,7 @@
                 {#if isTypingText}
                   <FontAwesomeIcon
                     icon={faSpinner}
-                    class="w-3 h-3 animate-spin"
+                    class="w-3 h-3 spin-pulse"
                   />
                 {:else}
                   Type
@@ -1772,7 +1772,7 @@
                     class={`w-3 h-3 ${getRunStatusColor(run.status)} ${
                       run.status === "running" ||
                         run.status === "queued"
-                        ? "animate-spin"
+                        ? "spin-pulse"
                         : ""
                     }`}
                   />
@@ -1863,7 +1863,7 @@
                       {#if loadingItems[run.id]}
                         <FontAwesomeIcon
                           icon={faSpinner}
-                          class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                          class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
                         />
                       {/if}
                     </div>
@@ -2323,7 +2323,7 @@
                       {#if loadingLogs[run.id]}
                         <FontAwesomeIcon
                           icon={faSpinner}
-                          class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+                          class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
                         />
                       {/if}
                     </div>
@@ -2431,7 +2431,7 @@
                   {#if isDeleting}
                     <FontAwesomeIcon
                       icon={faSpinner}
-                      class="w-3 h-3 animate-spin mr-1"
+                      class="w-3 h-3 spin-pulse mr-1"
                     />
                   {/if}
                   Yes, delete

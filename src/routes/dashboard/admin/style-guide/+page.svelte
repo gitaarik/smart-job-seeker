@@ -1,0 +1,687 @@
+<script lang="ts">
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import {
+    faArrowLeft,
+    faArrowRight,
+    faBan,
+    faBars,
+    faBell,
+    faBook,
+    faBookmark,
+    faBriefcase,
+    faBullseye,
+    faBuilding,
+    faCalendar,
+    faCalendarDays,
+    faCamera,
+    faChartBar,
+    faCheck,
+    faCheckCircle,
+    faChevronDown,
+    faChevronLeft,
+    faChevronRight,
+    faChevronUp,
+    faCircle,
+    faCloud,
+    faCloudUploadAlt,
+    faCode,
+    faCog,
+    faComments,
+    faCopy,
+    faDatabase,
+    faDesktop,
+    faDownload,
+    faEnvelope,
+    faExclamationTriangle,
+    faExternalLink,
+    faExternalLinkAlt,
+    faEye,
+    faEyeSlash,
+    faFile,
+    faFileAlt,
+    faFileArchive,
+    faFileImport,
+    faForward,
+    faGauge,
+    faGlobe,
+    faGraduationCap,
+    faGripVertical,
+    faHistory,
+    faHome,
+    faImage,
+    faKey,
+    faLayerGroup,
+    faLightbulb,
+    faLink,
+    faListCheck,
+    faLocationDot,
+    faMapMarkerAlt,
+    faMoneyBillWave,
+    faPaperPlane,
+    faPalette,
+    faPencil,
+    faPlay,
+    faPlus,
+    faQuoteLeft,
+    faRotate,
+    faSearch,
+    faShieldAlt,
+    faSignOutAlt,
+    faSitemap,
+    faSliders,
+    faSpinner,
+    faStop,
+    faStickyNote,
+    faSync,
+    faTag,
+    faTimes,
+    faTimesCircle,
+    faTrash,
+    faUndo,
+    faUser,
+    faUserFriends,
+    faUserSecret,
+    faUsers,
+    faUserTie,
+    faWrench,
+    faXmark,
+  } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faClock,
+    faStar as faStarRegular,
+    faTimesCircle as faTimesCircleRegular,
+  } from "@fortawesome/free-regular-svg-icons";
+  import {
+    faGithub,
+    faLinkedin,
+    faNpm,
+    faPython,
+    faStackOverflow,
+  } from "@fortawesome/free-brands-svg-icons";
+  import { faStar } from "@fortawesome/free-solid-svg-icons";
+  import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+  import SectionHeader from "../../profile/components/SectionHeader.svelte";
+  import Card from "../../components/Card.svelte";
+
+  // Group icons by category for display
+  const iconGroups: { label: string; icons: { name: string; icon: IconDefinition }[] }[] = [
+    {
+      label: "Navigation",
+      icons: [
+        { name: "faHome", icon: faHome },
+        { name: "faArrowLeft", icon: faArrowLeft },
+        { name: "faArrowRight", icon: faArrowRight },
+        { name: "faChevronDown", icon: faChevronDown },
+        { name: "faChevronUp", icon: faChevronUp },
+        { name: "faChevronLeft", icon: faChevronLeft },
+        { name: "faChevronRight", icon: faChevronRight },
+        { name: "faBars", icon: faBars },
+        { name: "faTimes", icon: faTimes },
+        { name: "faXmark", icon: faXmark },
+        { name: "faExternalLink", icon: faExternalLink },
+        { name: "faExternalLinkAlt", icon: faExternalLinkAlt },
+        { name: "faSearch", icon: faSearch },
+      ],
+    },
+    {
+      label: "Actions",
+      icons: [
+        { name: "faPlus", icon: faPlus },
+        { name: "faPencil", icon: faPencil },
+        { name: "faTrash", icon: faTrash },
+        { name: "faCopy", icon: faCopy },
+        { name: "faDownload", icon: faDownload },
+        { name: "faCloudUploadAlt", icon: faCloudUploadAlt },
+        { name: "faFileImport", icon: faFileImport },
+        { name: "faPlay", icon: faPlay },
+        { name: "faStop", icon: faStop },
+        { name: "faForward", icon: faForward },
+        { name: "faSync", icon: faSync },
+        { name: "faRotate", icon: faRotate },
+        { name: "faUndo", icon: faUndo },
+        { name: "faSave (faCheck)", icon: faCheck },
+        { name: "faBan", icon: faBan },
+        { name: "faSignOutAlt", icon: faSignOutAlt },
+      ],
+    },
+    {
+      label: "Status & Feedback",
+      icons: [
+        { name: "faSpinner", icon: faSpinner },
+        { name: "faCheckCircle", icon: faCheckCircle },
+        { name: "faTimesCircle", icon: faTimesCircle },
+        { name: "faExclamationTriangle", icon: faExclamationTriangle },
+        { name: "faCircle", icon: faCircle },
+        { name: "faBell", icon: faBell },
+        { name: "faLightbulb", icon: faLightbulb },
+        { name: "faEye", icon: faEye },
+        { name: "faEyeSlash", icon: faEyeSlash },
+        { name: "faGauge", icon: faGauge },
+      ],
+    },
+    {
+      label: "Content & Data",
+      icons: [
+        { name: "faFile", icon: faFile },
+        { name: "faFileAlt", icon: faFileAlt },
+        { name: "faFileArchive", icon: faFileArchive },
+        { name: "faBook", icon: faBook },
+        { name: "faImage", icon: faImage },
+        { name: "faCamera", icon: faCamera },
+        { name: "faLink", icon: faLink },
+        { name: "faTag", icon: faTag },
+        { name: "faDatabase", icon: faDatabase },
+        { name: "faChartBar", icon: faChartBar },
+        { name: "faQuoteLeft", icon: faQuoteLeft },
+        { name: "faGripVertical", icon: faGripVertical },
+      ],
+    },
+    {
+      label: "Dashboard Sections",
+      icons: [
+        { name: "faBriefcase", icon: faBriefcase },
+        { name: "faBullseye", icon: faBullseye },
+        { name: "faListCheck", icon: faListCheck },
+        { name: "faBookmark", icon: faBookmark },
+        { name: "faPaperPlane", icon: faPaperPlane },
+        { name: "faEnvelope", icon: faEnvelope },
+        { name: "faMoneyBillWave", icon: faMoneyBillWave },
+        { name: "faUserTie", icon: faUserTie },
+        { name: "faComments", icon: faComments },
+        { name: "faStickyNote", icon: faStickyNote },
+        { name: "faUser", icon: faUser },
+        { name: "faUsers", icon: faUsers },
+        { name: "faUserFriends", icon: faUserFriends },
+        { name: "faUserSecret", icon: faUserSecret },
+        { name: "faCog", icon: faCog },
+        { name: "faSliders", icon: faSliders },
+        { name: "faShieldAlt", icon: faShieldAlt },
+        { name: "faDesktop", icon: faDesktop },
+      ],
+    },
+    {
+      label: "Job & Profile",
+      icons: [
+        { name: "faBuilding", icon: faBuilding },
+        { name: "faLocationDot", icon: faLocationDot },
+        { name: "faMapMarkerAlt", icon: faMapMarkerAlt },
+        { name: "faCalendar", icon: faCalendar },
+        { name: "faCalendarDays", icon: faCalendarDays },
+        { name: "faGlobe", icon: faGlobe },
+        { name: "faGraduationCap", icon: faGraduationCap },
+        { name: "faCode", icon: faCode },
+        { name: "faWrench", icon: faWrench },
+        { name: "faCloud", icon: faCloud },
+        { name: "faKey", icon: faKey },
+        { name: "faHistory", icon: faHistory },
+        { name: "faSitemap", icon: faSitemap },
+        { name: "faLayerGroup", icon: faLayerGroup },
+        { name: "faStar (solid)", icon: faStar },
+      ],
+    },
+    {
+      label: "Regular (outlined)",
+      icons: [
+        { name: "faClock", icon: faClock },
+        { name: "faStar (regular)", icon: faStarRegular },
+        { name: "faTimesCircle (regular)", icon: faTimesCircleRegular },
+      ],
+    },
+    {
+      label: "Brands",
+      icons: [
+        { name: "faGithub", icon: faGithub },
+        { name: "faLinkedin", icon: faLinkedin },
+        { name: "faNpm", icon: faNpm },
+        { name: "faPython", icon: faPython },
+        { name: "faStackOverflow", icon: faStackOverflow },
+      ],
+    },
+  ];
+
+  const colorTokens = [
+    { group: "Primary", tokens: [
+      { name: "--dash-primary", label: "Primary" },
+      { name: "--dash-primary-hover", label: "Primary Hover" },
+      { name: "--dash-primary-light", label: "Primary Light" },
+    ]},
+    { group: "Chrome", tokens: [
+      { name: "--dash-chrome", label: "Chrome" },
+      { name: "--dash-chrome-hover", label: "Chrome Hover" },
+      { name: "--dash-chrome-text", label: "Chrome Text" },
+    ]},
+    { group: "Backgrounds", tokens: [
+      { name: "--dash-bg", label: "Background" },
+      { name: "--dash-bg-inset", label: "Background Inset" },
+      { name: "--dash-card", label: "Card" },
+    ]},
+    { group: "Borders", tokens: [
+      { name: "--dash-border", label: "Border" },
+      { name: "--dash-border-input", label: "Input Border" },
+    ]},
+    { group: "Text", tokens: [
+      { name: "--dash-text", label: "Text" },
+      { name: "--dash-text-secondary", label: "Text Secondary" },
+      { name: "--dash-text-muted", label: "Text Muted" },
+    ]},
+    { group: "Semantic", tokens: [
+      { name: "--dash-error", label: "Error" },
+      { name: "--dash-error-light", label: "Error Light" },
+      { name: "--dash-success", label: "Success" },
+      { name: "--dash-success-light", label: "Success Light" },
+      { name: "--dash-warning", label: "Warning" },
+      { name: "--dash-warning-light", label: "Warning Light" },
+      { name: "--dash-info", label: "Info" },
+      { name: "--dash-info-light", label: "Info Light" },
+      { name: "--dash-purple", label: "Purple" },
+      { name: "--dash-purple-light", label: "Purple Light" },
+    ]},
+  ];
+</script>
+
+<div class="space-y-8">
+  <SectionHeader title="Style Guide" icon={faPalette} />
+
+  <!-- Logo -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Logo</h2>
+
+    <!-- Logo with text -->
+    <Card padding="responsive" class="mb-3">
+      <h3 class="text-sm font-medium text-[var(--dash-text)] mb-4">Logo with Text</h3>
+      <div class="flex flex-wrap gap-6">
+        <!-- Light background -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center gap-3 px-6 py-4 rounded-lg border border-[var(--dash-border)]">
+            <svg class="h-10 w-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="12" stroke="#4f46e5" stroke-width="3" fill="none"/>
+              <line x1="25" y1="25" x2="36" y2="36" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+              <path d="M10 17l4 4 8-8" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span class="font-semibold tracking-wide uppercase text-[var(--dash-text)]">Smart Job Seeker</span>
+          </div>
+          <span class="text-xs text-[var(--dash-text-muted)]">Light background</span>
+        </div>
+        <!-- Indigo header -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center gap-3 px-6 py-4 rounded-lg bg-[var(--dash-chrome)]">
+            <svg class="h-10 w-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="12" stroke="#ffffff" stroke-width="3" fill="none"/>
+              <line x1="25" y1="25" x2="36" y2="36" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+              <path d="M10 17l4 4 8-8" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span class="font-semibold tracking-wide uppercase text-white">Smart Job Seeker</span>
+          </div>
+          <span class="text-xs text-[var(--dash-text-muted)]">Indigo header</span>
+        </div>
+        <!-- Dark background -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center gap-3 px-6 py-4 rounded-lg bg-gray-800">
+            <svg class="h-10 w-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="12" stroke="#ffffff" stroke-width="3" fill="none"/>
+              <line x1="25" y1="25" x2="36" y2="36" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+              <path d="M10 17l4 4 8-8" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span class="font-semibold tracking-wide uppercase text-white">Smart Job Seeker</span>
+          </div>
+          <span class="text-xs text-[var(--dash-text-muted)]">Dark background</span>
+        </div>
+      </div>
+    </Card>
+
+    <!-- Icon only -->
+    <Card padding="responsive" class="mb-3">
+      <h3 class="text-sm font-medium text-[var(--dash-text)] mb-4">Icon Only</h3>
+      <div class="flex flex-wrap items-end gap-10">
+        <div class="flex flex-col items-center gap-2">
+          <svg class="h-16 w-16" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="12" stroke="#4f46e5" stroke-width="3" fill="none"/>
+            <line x1="25" y1="25" x2="36" y2="36" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+            <path d="M10 17l4 4 8-8" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="text-xs text-[var(--dash-text-muted)]">64px</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <svg class="h-12 w-12" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="12" stroke="#4f46e5" stroke-width="3" fill="none"/>
+            <line x1="25" y1="25" x2="36" y2="36" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+            <path d="M10 17l4 4 8-8" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="text-xs text-[var(--dash-text-muted)]">48px</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <svg class="h-9 w-9" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="12" stroke="#4f46e5" stroke-width="3" fill="none"/>
+            <line x1="25" y1="25" x2="36" y2="36" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+            <path d="M10 17l4 4 8-8" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="text-xs text-[var(--dash-text-muted)]">36px (header)</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <svg class="h-7 w-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="12" stroke="#4f46e5" stroke-width="3" fill="none"/>
+            <line x1="25" y1="25" x2="36" y2="36" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+            <path d="M10 17l4 4 8-8" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="text-xs text-[var(--dash-text-muted)]">28px</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <svg class="h-4 w-4" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="12" stroke="#4f46e5" stroke-width="3" fill="none"/>
+            <line x1="25" y1="25" x2="36" y2="36" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
+            <path d="M10 17l4 4 8-8" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="text-xs text-[var(--dash-text-muted)]">16px (favicon)</span>
+        </div>
+      </div>
+    </Card>
+
+    <!-- SVG assets -->
+    <Card padding="responsive">
+      <h3 class="text-sm font-medium text-[var(--dash-text)] mb-2">SVG Assets</h3>
+      <div class="flex flex-wrap gap-4 text-xs text-[var(--dash-text-secondary)]">
+        <a href="/brand/logo-indigo.svg" target="_blank" class="text-[var(--dash-primary)] hover:underline">/brand/logo-indigo.svg</a>
+        <a href="/brand/logo-white.svg" target="_blank" class="text-[var(--dash-primary)] hover:underline">/brand/logo-white.svg</a>
+      </div>
+      <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+        Uses <code class="text-[var(--dash-primary)]">currentColor</code> via stroke attribute. Set color with CSS <code class="text-[var(--dash-primary)]">color</code> or Tailwind <code class="text-[var(--dash-primary)]">text-*</code> classes.
+      </p>
+    </Card>
+  </section>
+
+  <!-- Color Tokens -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Color Tokens</h2>
+    <div class="space-y-3">
+      {#each colorTokens as group}
+        <Card padding="responsive">
+          <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">{group.group}</h3>
+          <div class="flex flex-wrap gap-3">
+            {#each group.tokens as token}
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-8 h-8 rounded border border-[var(--dash-border)]"
+                  style="background: var({token.name})"
+                ></div>
+                <div>
+                  <div class="text-xs font-medium text-[var(--dash-text)]">{token.label}</div>
+                  <div class="text-xs text-[var(--dash-text-muted)] font-mono">{token.name}</div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </Card>
+      {/each}
+    </div>
+  </section>
+
+  <!-- Typography -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Typography</h2>
+    <Card padding="responsive">
+      <div class="space-y-3">
+        <div>
+          <h1 class="text-2xl font-bold text-[var(--dash-text)]">Page Title (text-2xl bold)</h1>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-[var(--dash-text)]">Section Title (text-lg semibold)</h2>
+        </div>
+        <div>
+          <h3 class="text-sm font-medium text-[var(--dash-text)]">Card Title (text-sm medium)</h3>
+        </div>
+        <div>
+          <p class="text-sm text-[var(--dash-text)]">Body text (text-sm)</p>
+        </div>
+        <div>
+          <p class="text-sm text-[var(--dash-text-secondary)]">Secondary text (text-sm, --dash-text-secondary)</p>
+        </div>
+        <div>
+          <p class="text-xs text-[var(--dash-text-muted)]">Muted / caption text (text-xs, --dash-text-muted)</p>
+        </div>
+        <div>
+          <code class="text-xs text-[var(--dash-primary)] bg-[var(--dash-bg)] px-1.5 py-0.5 rounded">Inline code</code>
+        </div>
+      </div>
+      <p class="text-xs text-[var(--dash-text-muted)] mt-4">
+        Font: Noto Sans (300–700). All text uses CSS variable colors.
+      </p>
+    </Card>
+  </section>
+
+  <!-- Loading States -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Loading States</h2>
+    <Card padding="responsive">
+      <div class="flex flex-wrap items-start gap-8">
+        <!-- Spinner (pulse) -->
+        <div class="flex flex-col items-center gap-2">
+          <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" />
+          <span class="text-xs text-[var(--dash-text-muted)]">Spinner (default)</span>
+        </div>
+        <!-- Small spinner -->
+        <div class="flex flex-col items-center gap-2">
+          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 text-[var(--dash-primary)] spin-pulse" />
+          <span class="text-xs text-[var(--dash-text-muted)]">Spinner (small)</span>
+        </div>
+        <!-- Spinner in button -->
+        <div class="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            disabled
+            class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg opacity-70 cursor-not-allowed"
+          >
+            <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
+            <span class="text-sm">Saving...</span>
+          </button>
+          <span class="text-xs text-[var(--dash-text-muted)]">Button loading</span>
+        </div>
+        <!-- Smooth spin (comparison) -->
+        <div class="flex flex-col items-center gap-2">
+          <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin" />
+          <span class="text-xs text-[var(--dash-text-muted)]">Smooth spin</span>
+        </div>
+        <!-- Live indicator -->
+        <div class="flex flex-col items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          <span class="text-xs text-[var(--dash-text-muted)]">Live indicator</span>
+        </div>
+        <!-- Idle indicator -->
+        <div class="flex flex-col items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-gray-400"></span>
+          </span>
+          <span class="text-xs text-[var(--dash-text-muted)]">Idle indicator</span>
+        </div>
+        <!-- Active (no ping) -->
+        <div class="flex flex-col items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+          </span>
+          <span class="text-xs text-[var(--dash-text-muted)]">Active (waiting)</span>
+        </div>
+      </div>
+
+      <!-- Inline usage examples -->
+      <div class="mt-6 space-y-3 border-t border-[var(--dash-border)] pt-4">
+        <h3 class="text-sm font-medium text-[var(--dash-text)]">Usage</h3>
+        <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
+          &lt;FontAwesomeIcon icon=&#123;faSpinner&#125; class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" /&gt;
+        </div>
+        <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
+          &lt;span class="animate-ping absolute ... rounded-full bg-green-400 opacity-75"&gt;&lt;/span&gt;
+        </div>
+      </div>
+    </Card>
+  </section>
+
+  <!-- Buttons -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Buttons</h2>
+    <Card padding="responsive">
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors text-sm"
+        >Primary</button>
+        <button
+          type="button"
+          class="px-4 py-2 border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-sm"
+        >Secondary</button>
+        <button
+          type="button"
+          class="px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+        >Danger</button>
+        <button
+          type="button"
+          class="px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+        >Success</button>
+        <button
+          type="button"
+          class="text-sm text-[var(--dash-primary)] hover:underline"
+        >Text Link</button>
+        <button
+          type="button"
+          disabled
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg opacity-50 cursor-not-allowed text-sm"
+        >Disabled</button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 mt-4">
+        <button
+          type="button"
+          class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors text-sm"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
+          With Icon
+        </button>
+        <button
+          type="button"
+          class="flex items-center justify-center w-10 h-10 bg-[var(--dash-primary)] text-white rounded-full hover:bg-[var(--dash-primary-hover)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-5 h-5" />
+        </button>
+        <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]">Badge</span>
+        <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]">Success badge</span>
+        <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-error-light)] text-[var(--dash-error)]">Error badge</span>
+        <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">Warning badge</span>
+      </div>
+    </Card>
+  </section>
+
+  <!-- Cards -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Cards</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">Default Card</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)]">padding="responsive" — p-4 on mobile, p-6 on desktop</p>
+      </Card>
+      <Card padding="sm">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">Small Card</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)]">padding="sm" — p-3</p>
+      </Card>
+      <Card padding="responsive">
+        <div class="flex items-center gap-3">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          <span class="text-sm font-medium text-[var(--dash-success)]">Card with status</span>
+        </div>
+      </Card>
+      <Card padding="responsive">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-medium text-[var(--dash-text)]">Card with action</h3>
+          <button type="button" class="text-xs text-[var(--dash-primary)] hover:underline">View all</button>
+        </div>
+      </Card>
+    </div>
+  </section>
+
+  <!-- Alerts / Status Messages -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Alerts</h2>
+    <div class="space-y-3">
+      <div class="p-3 rounded-lg bg-[var(--dash-info-light)] border border-[var(--dash-info)]/20">
+        <div class="flex items-center gap-2">
+          <FontAwesomeIcon icon={faCircle} class="w-3 h-3 text-[var(--dash-info)]" />
+          <span class="text-sm text-[var(--dash-info)]">Info message — general information</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-lg bg-[var(--dash-success-light)] border border-[var(--dash-success)]/20">
+        <div class="flex items-center gap-2">
+          <FontAwesomeIcon icon={faCheckCircle} class="w-3.5 h-3.5 text-[var(--dash-success)]" />
+          <span class="text-sm text-[var(--dash-success)]">Success — operation completed</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-lg bg-[var(--dash-warning-light)] border border-[var(--dash-warning)]/20">
+        <div class="flex items-center gap-2">
+          <FontAwesomeIcon icon={faExclamationTriangle} class="w-3.5 h-3.5 text-[var(--dash-warning)]" />
+          <span class="text-sm text-[var(--dash-warning)]">Warning — something needs attention</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-lg bg-[var(--dash-error-light)] border border-[var(--dash-error)]/20">
+        <div class="flex items-center gap-2">
+          <FontAwesomeIcon icon={faTimesCircle} class="w-3.5 h-3.5 text-[var(--dash-error)]" />
+          <span class="text-sm text-[var(--dash-error)]">Error — something went wrong</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Progress Bar -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Progress Bars</h2>
+    <Card padding="responsive">
+      <div class="space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-[var(--dash-text-secondary)]">In progress (65%)</span>
+          </div>
+          <div class="w-full bg-[var(--dash-bg)] rounded-full h-1.5 overflow-hidden">
+            <div class="h-full rounded-full bg-[var(--dash-primary)] transition-all duration-500" style="width: 65%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-[var(--dash-text-secondary)]">Complete (100%)</span>
+          </div>
+          <div class="w-full bg-[var(--dash-bg)] rounded-full h-1.5 overflow-hidden">
+            <div class="h-full rounded-full bg-[var(--dash-success)] transition-all duration-500" style="width: 100%"></div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  </section>
+
+  <!-- Icons -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Icons</h2>
+    <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
+      FontAwesome 6.7 — all icons currently used in the dashboard.
+    </p>
+    <div class="space-y-3">
+      {#each iconGroups as group}
+        <Card padding="responsive">
+          <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">{group.label}</h3>
+          <div class="flex flex-wrap gap-1.5">
+            {#each group.icons as { name, icon }}
+              <div
+                class="group relative flex flex-col items-center justify-center w-14 h-14 rounded-lg hover:bg-[var(--dash-bg)] transition-colors cursor-default"
+                title={name}
+              >
+                <FontAwesomeIcon {icon} class="w-5 h-5 text-[var(--dash-text-secondary)]" />
+                <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-[var(--dash-text-muted)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  {name.replace("fa", "")}
+                </span>
+              </div>
+            {/each}
+          </div>
+        </Card>
+      {/each}
+    </div>
+  </section>
+</div>

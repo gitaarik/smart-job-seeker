@@ -478,7 +478,7 @@
                     >
                       <FontAwesomeIcon
                         icon={isGenerating(itemId) ? faSpinner : faRobot}
-                        class="w-3.5 h-3.5 {isGenerating(itemId) ? 'animate-spin' : ''}"
+                        class="w-3.5 h-3.5 {isGenerating(itemId) ? 'spin-pulse' : ''}"
                       />
                       {isGenerating(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
                     </button>
@@ -532,7 +532,7 @@
                           class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
                           {#if isGenerating(itemId)}
-                            <FontAwesomeIcon icon={faSpinner} class="w-3.5 h-3.5 animate-spin" />
+                            <FontAwesomeIcon icon={faSpinner} class="w-3.5 h-3.5 spin-pulse" />
                             Generating...
                           {:else}
                             Send Follow-up

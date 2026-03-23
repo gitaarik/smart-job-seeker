@@ -528,7 +528,7 @@
                     : match?.reasoning
                     ? faSync
                     : faSearch}
-                  class="w-4 h-4 {isRematching ? 'animate-spin' : ''}"
+                  class="w-4 h-4 {isRematching ? 'spin-pulse' : ''}"
                 />
                 {
                   isRematching

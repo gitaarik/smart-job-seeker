@@ -85,7 +85,7 @@
     {#if loading}
       <FontAwesomeIcon
         icon={faSpinner}
-        class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+        class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
       />
     {/if}
   </div>

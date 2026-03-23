@@ -105,7 +105,7 @@
 
   {#if loading}
     <div class="flex items-center justify-center py-12">
-      <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] animate-spin" />
+      <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" />
     </div>
   {:else if error}
     <Card padding="responsive">

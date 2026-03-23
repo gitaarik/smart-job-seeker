@@ -180,7 +180,7 @@
         </div>
       </div>
       {#if tunnelStatus === "checking"}
-        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 text-[var(--dash-text-muted)] animate-spin" />
+        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 text-[var(--dash-text-muted)] spin-pulse" />
       {/if}
     </div>
   </Card>
@@ -315,7 +315,7 @@
             class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if isCreating}
-              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
             {:else}
               Create
             {/if}

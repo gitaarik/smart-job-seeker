@@ -100,7 +100,7 @@
         <div class="flex items-center gap-2 text-xs">
           <FontAwesomeIcon
             icon={statusIcon.icon}
-            class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'animate-spin' : ''} shrink-0"
+            class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'spin-pulse' : ''} shrink-0"
           />
 
           <!-- Name @ platform -->

@@ -451,7 +451,7 @@
                     {#if isLoading}
                       <FontAwesomeIcon
                         icon={faSpinner}
-                        class="w-3 h-3 animate-spin"
+                        class="w-3 h-3 spin-pulse"
                       />
                     {/if}
                     Yes, overwrite permanently
@@ -490,7 +490,7 @@
             class="flex-1 py-2.5 px-4 bg-[var(--dash-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {#if isLoading && importMode === "new"}
-              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
               Importing...
             {:else}
               <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />

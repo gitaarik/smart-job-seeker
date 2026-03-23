@@ -147,7 +147,7 @@
       {#if isSaving}
         <FontAwesomeIcon
           icon={faSpinner}
-          class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin"
+          class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
         />
       {/if}
       {#if !disabled}
@@ -235,7 +235,7 @@
             {#if isDeletingId === cred.id}
               <FontAwesomeIcon
                 icon={faSpinner}
-                class="w-3 h-3 animate-spin"
+                class="w-3 h-3 spin-pulse"
               />
             {:else}
               <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
@@ -318,7 +318,7 @@
           {#if isSaving}
             <FontAwesomeIcon
               icon={faSpinner}
-              class="w-3 h-3 animate-spin"
+              class="w-3 h-3 spin-pulse"
             />
           {:else}
             <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />

@@ -360,7 +360,7 @@
                   >
                     <FontAwesomeIcon
                       icon={faSpinner}
-                      class="w-3 h-3 animate-spin"
+                      class="w-3 h-3 spin-pulse"
                     />
                     {
                       search.status === "queued"
@@ -405,7 +405,7 @@
                 {:else if search.status === "running"}
                   <FontAwesomeIcon
                     icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'animate-spin' : ''}"
+                    class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'spin-pulse' : ''}"
                   />
                   <span>Running...</span>
                 {:else if search.status === "success"}
