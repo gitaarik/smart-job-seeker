@@ -1,0 +1,808 @@
+<script lang="ts">
+  import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import {
+    faUser,
+    faBriefcase,
+    faGraduationCap,
+    faCode,
+    faGlobe,
+    faLightbulb,
+    faQuoteLeft,
+    faCheck,
+    faArrowLeft,
+  } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
+  import type { ResumeData } from "$lib/server/resume/types";
+  import {
+    diffResumeData,
+    countEnabledChanges,
+    type ResumeDataDiff,
+    type FieldDiff,
+    type ItemDiff,
+    type SkillCategoryDiff,
+    type SkillItemDiff,
+  } from "$lib/resume-diff";
+  import type { DiffApplyPayload } from "$lib/server/resume/apply-diff";
+  import DiffSectionCard from "./DiffSectionCard.svelte";
+  import DiffFieldRow from "./DiffFieldRow.svelte";
+  import DiffItemRow from "./DiffItemRow.svelte";
+  import Card from "../../../components/Card.svelte";
+
+  interface Props {
+    currentData: ResumeData;
+    incomingData: ResumeData;
+    isLoading: boolean;
+    error: string | null;
+    onBack: () => void;
+    onLoadingChange: (loading: boolean) => void;
+  }
+
+  let {
+    currentData,
+    incomingData,
+    isLoading,
+    error,
+    onBack,
+    onLoadingChange,
+  }: Props = $props();
+
+  // Compute the diff
+  let diff = $state<ResumeDataDiff>(
+    diffResumeData(currentData, incomingData),
+  );
+
+  let showUnchanged = $state(false);
+  const enabledCount = $derived(countEnabledChanges(diff));
+
+  // Build the payload from current diff state
+  function buildPayload(): DiffApplyPayload {
+    const payload: DiffApplyPayload = {};
+
+    // Basics
+    const enabledBasics: Record<string, string | undefined> = {};
+    for (const field of diff.basics) {
+      if (field.changed && field.enabled) {
+        enabledBasics[field.field] = field.incoming;
+      }
+    }
+    if (Object.keys(enabledBasics).length > 0) {
+      payload.basics = enabledBasics as any;
+    }
+
+    // Work
+    const workPayload: DiffApplyPayload["work"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const item of diff.work) {
+      if (!item.enabled) continue;
+      if (item.type === "added" && item.incoming) {
+        workPayload.added!.push(item.incoming);
+      } else if (item.type === "removed" && item.current) {
+        workPayload.removed!.push(
+          `${item.current.name}|||${item.current.position}`,
+        );
+      } else if (item.type === "modified" && item.current && item.incoming) {
+        const fields: Record<string, any> = {};
+        for (const fd of item.fieldDiffs ?? []) {
+          if (fd.changed && fd.enabled) {
+            fields[fd.field] = fd.incoming;
+          }
+        }
+        const mod: any = {
+          matchKey: `${item.current.name}|||${item.current.position}`,
+          fields,
+        };
+
+        // Handle nested diffs
+        for (const nd of item.nestedDiffs ?? []) {
+          const addKey =
+            nd.field === "achievements"
+              ? "addAchievements"
+              : "addTechnologies";
+          const removeKey =
+            nd.field === "achievements"
+              ? "removeAchievements"
+              : "removeTechnologies";
+
+          const toAdd = nd.added.filter((_, i) => nd.addedEnabled[i]);
+          const toRemove = nd.removed.filter((_, i) => nd.removedEnabled[i]);
+
+          if (toAdd.length > 0) mod[addKey] = toAdd;
+          if (toRemove.length > 0) mod[removeKey] = toRemove;
+        }
+
+        workPayload.modified!.push(mod);
+      }
+    }
+    if (
+      workPayload.added!.length > 0 ||
+      workPayload.modified!.length > 0 ||
+      workPayload.removed!.length > 0
+    ) {
+      payload.work = workPayload;
+    }
+
+    // Education
+    const eduPayload: DiffApplyPayload["education"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const item of diff.education) {
+      if (!item.enabled) continue;
+      if (item.type === "added" && item.incoming) {
+        eduPayload.added!.push(item.incoming);
+      } else if (item.type === "removed" && item.current) {
+        eduPayload.removed!.push(
+          `${item.current.institution}|||${item.current.area ?? ""}`,
+        );
+      } else if (item.type === "modified" && item.current) {
+        const fields: Record<string, any> = {};
+        for (const fd of item.fieldDiffs ?? []) {
+          if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
+        }
+        eduPayload.modified!.push({
+          matchKey: `${item.current.institution}|||${item.current.area ?? ""}`,
+          fields,
+        });
+      }
+    }
+    if (
+      eduPayload.added!.length > 0 ||
+      eduPayload.modified!.length > 0 ||
+      eduPayload.removed!.length > 0
+    ) {
+      payload.education = eduPayload;
+    }
+
+    // Skills
+    const skillsPayload: DiffApplyPayload["skills"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const cat of diff.skills) {
+      if (!cat.enabled) continue;
+      if (cat.type === "added" && cat.incoming) {
+        skillsPayload.added!.push(cat.incoming);
+      } else if (cat.type === "removed" && cat.current) {
+        skillsPayload.removed!.push(cat.current.name);
+      } else if (cat.type === "modified" && cat.current) {
+        const mod: any = { matchKey: cat.current.name };
+
+        const addSkills: any[] = [];
+        const removeSkills: string[] = [];
+        const modifySkills: any[] = [];
+
+        for (const sd of cat.skillDiffs ?? []) {
+          if (!sd.enabled) continue;
+          if (sd.type === "added" && sd.incoming) {
+            addSkills.push(sd.incoming);
+          } else if (sd.type === "removed" && sd.current) {
+            removeSkills.push(sd.current.name);
+          } else if (sd.type === "modified" && sd.current) {
+            const fields: Record<string, any> = {};
+            for (const fd of sd.fieldDiffs ?? []) {
+              if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
+            }
+            if (Object.keys(fields).length > 0) {
+              modifySkills.push({ name: sd.current.name, fields });
+            }
+          }
+        }
+
+        if (addSkills.length > 0) mod.addSkills = addSkills;
+        if (removeSkills.length > 0) mod.removeSkills = removeSkills;
+        if (modifySkills.length > 0) mod.modifySkills = modifySkills;
+
+        skillsPayload.modified!.push(mod);
+      }
+    }
+    if (
+      skillsPayload.added!.length > 0 ||
+      skillsPayload.modified!.length > 0 ||
+      skillsPayload.removed!.length > 0
+    ) {
+      payload.skills = skillsPayload;
+    }
+
+    // Languages
+    const langPayload: DiffApplyPayload["languages"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const item of diff.languages) {
+      if (!item.enabled) continue;
+      if (item.type === "added" && item.incoming) {
+        langPayload.added!.push(item.incoming);
+      } else if (item.type === "removed" && item.current) {
+        langPayload.removed!.push(item.current.name);
+      } else if (item.type === "modified" && item.current) {
+        const fields: Record<string, any> = {};
+        for (const fd of item.fieldDiffs ?? []) {
+          if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
+        }
+        langPayload.modified!.push({
+          matchKey: item.current.name,
+          fields,
+        });
+      }
+    }
+    if (
+      langPayload.added!.length > 0 ||
+      langPayload.modified!.length > 0 ||
+      langPayload.removed!.length > 0
+    ) {
+      payload.languages = langPayload;
+    }
+
+    // Projects
+    const projPayload: DiffApplyPayload["projects"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const item of diff.projects) {
+      if (!item.enabled) continue;
+      if (item.type === "added" && item.incoming) {
+        projPayload.added!.push(item.incoming);
+      } else if (item.type === "removed" && item.current) {
+        projPayload.removed!.push(item.current.name);
+      } else if (item.type === "modified" && item.current) {
+        const fields: Record<string, any> = {};
+        for (const fd of item.fieldDiffs ?? []) {
+          if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
+        }
+        const mod: any = { matchKey: item.current.name, fields };
+
+        for (const nd of item.nestedDiffs ?? []) {
+          const addKey =
+            nd.field === "achievements"
+              ? "addAchievements"
+              : "addTechnologies";
+          const removeKey =
+            nd.field === "achievements"
+              ? "removeAchievements"
+              : "removeTechnologies";
+
+          const toAdd = nd.added.filter((_, i) => nd.addedEnabled[i]);
+          const toRemove = nd.removed.filter((_, i) => nd.removedEnabled[i]);
+
+          if (toAdd.length > 0) mod[addKey] = toAdd;
+          if (toRemove.length > 0) mod[removeKey] = toRemove;
+        }
+
+        projPayload.modified!.push(mod);
+      }
+    }
+    if (
+      projPayload.added!.length > 0 ||
+      projPayload.modified!.length > 0 ||
+      projPayload.removed!.length > 0
+    ) {
+      payload.projects = projPayload;
+    }
+
+    // References
+    const refPayload: DiffApplyPayload["references"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const item of diff.references) {
+      if (!item.enabled) continue;
+      if (item.type === "added" && item.incoming) {
+        refPayload.added!.push(item.incoming);
+      } else if (item.type === "removed" && item.current) {
+        refPayload.removed!.push(item.current.author);
+      } else if (item.type === "modified" && item.current) {
+        const fields: Record<string, any> = {};
+        for (const fd of item.fieldDiffs ?? []) {
+          if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
+        }
+        refPayload.modified!.push({
+          matchKey: item.current.author,
+          fields,
+        });
+      }
+    }
+    if (
+      refPayload.added!.length > 0 ||
+      refPayload.modified!.length > 0 ||
+      refPayload.removed!.length > 0
+    ) {
+      payload.references = refPayload;
+    }
+
+    return payload;
+  }
+
+  function selectAll() {
+    for (const f of diff.basics) {
+      if (f.changed) f.enabled = true;
+    }
+    for (const section of [
+      diff.work,
+      diff.education,
+      diff.languages,
+      diff.projects,
+      diff.references,
+    ]) {
+      for (const item of section) {
+        if (item.type !== "unchanged") item.enabled = true;
+      }
+    }
+    for (const cat of diff.skills) {
+      if (cat.type !== "unchanged") {
+        cat.enabled = true;
+        for (const sd of cat.skillDiffs ?? []) {
+          if (sd.type !== "unchanged") sd.enabled = true;
+        }
+      }
+    }
+    // Trigger reactivity
+    diff = diff;
+  }
+
+  function deselectAll() {
+    for (const f of diff.basics) f.enabled = false;
+    for (const section of [
+      diff.work,
+      diff.education,
+      diff.languages,
+      diff.projects,
+      diff.references,
+    ]) {
+      for (const item of section) item.enabled = false;
+    }
+    for (const cat of diff.skills) {
+      cat.enabled = false;
+      for (const sd of cat.skillDiffs ?? []) sd.enabled = false;
+    }
+    diff = diff;
+  }
+
+  const basicsChangedCount = $derived(
+    diff.basics.filter((d) => d.changed).length,
+  );
+</script>
+
+<div class="space-y-4">
+  <!-- Summary bar -->
+  <Card padding="responsive">
+    <div
+      class="bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/20 rounded-lg px-4 py-3 mb-4"
+    >
+      <p class="text-sm text-[var(--dash-text)]">
+        Review the differences between your current profile and the imported
+        data. Toggle individual changes on or off, then click <strong
+          >Apply Changes</strong
+        > to update your profile.
+      </p>
+    </div>
+
+    <!-- Stats grid -->
+    <div
+      class="grid grid-cols-3 md:grid-cols-7 gap-2 p-3 sm:p-4 bg-[var(--dash-bg)] rounded-lg"
+    >
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.basicsChanged > 0
+            ? 'text-amber-600'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.basicsChanged}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Basics
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.workAdded +
+            diff.stats.workModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.workAdded + diff.stats.workModified + diff.stats.workRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Work
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.educationAdded +
+            diff.stats.educationModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.educationAdded + diff.stats.educationModified + diff.stats.educationRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Education
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.skillsAdded +
+            diff.stats.skillsModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.skillsAdded + diff.stats.skillsModified + diff.stats.skillsRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Skills
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.languagesAdded +
+            diff.stats.languagesModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.languagesAdded + diff.stats.languagesModified + diff.stats.languagesRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Languages
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.projectsAdded +
+            diff.stats.projectsModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.projectsAdded + diff.stats.projectsModified + diff.stats.projectsRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Projects
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.referencesAdded +
+            diff.stats.referencesModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.referencesAdded + diff.stats.referencesModified + diff.stats.referencesRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          References
+        </div>
+      </div>
+    </div>
+
+    <!-- Global controls -->
+    <div class="flex items-center justify-between mt-4">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onclick={selectAll}
+          class="text-xs px-2.5 py-1 rounded border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          Select All
+        </button>
+        <button
+          type="button"
+          onclick={deselectAll}
+          class="text-xs px-2.5 py-1 rounded border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          Deselect All
+        </button>
+        <label class="flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] ml-2">
+          <input
+            type="checkbox"
+            bind:checked={showUnchanged}
+            class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+          />
+          Show unchanged
+        </label>
+      </div>
+      <span class="text-sm text-[var(--dash-text-secondary)]">
+        {enabledCount} change{enabledCount !== 1 ? "s" : ""} selected
+      </span>
+    </div>
+  </Card>
+
+  {#if error}
+    <div
+      class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
+    >
+      <p class="text-sm text-[var(--dash-error)]">{error}</p>
+    </div>
+  {/if}
+
+  <!-- Basics section -->
+  {#if basicsChangedCount > 0 || showUnchanged}
+    <DiffSectionCard
+      title="Basic Information"
+      icon={faUser}
+      count="{basicsChangedCount} changed"
+      defaultExpanded={basicsChangedCount > 0}
+    >
+      <div class="p-3 sm:p-4 space-y-1">
+        {#each diff.basics as _, i}
+          <DiffFieldRow bind:diff={diff.basics[i]} {showUnchanged} />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- Work section -->
+  {#if diff.work.some((d) => d.type !== "unchanged") || showUnchanged}
+    <DiffSectionCard
+      title="Work Experience"
+      icon={faBriefcase}
+      badge={{
+        added: diff.stats.workAdded,
+        modified: diff.stats.workModified,
+        removed: diff.stats.workRemoved,
+      }}
+      defaultExpanded={diff.work.some((d) => d.type !== "unchanged")}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.work as _, i}
+          {@const item = diff.work[i]}
+          <DiffItemRow
+            type={item.type}
+            title={item.type === "removed"
+              ? `${item.current?.position || "Position"} at ${item.current?.name || "Company"}`
+              : `${item.incoming?.position || "Position"} at ${item.incoming?.name || "Company"}`}
+            subtitle={item.type === "modified"
+              ? `${item.current?.startDate || "?"} – ${item.current?.endDate || "Present"}`
+              : item.type === "added"
+                ? `${item.incoming?.startDate || "?"} – ${item.incoming?.endDate || "Present"}`
+                : undefined}
+            bind:enabled={diff.work[i].enabled}
+            fieldDiffs={item.fieldDiffs}
+            nestedDiffs={item.nestedDiffs}
+          />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- Education section -->
+  {#if diff.education.some((d) => d.type !== "unchanged") || showUnchanged}
+    <DiffSectionCard
+      title="Education"
+      icon={faGraduationCap}
+      badge={{
+        added: diff.stats.educationAdded,
+        modified: diff.stats.educationModified,
+        removed: diff.stats.educationRemoved,
+      }}
+      defaultExpanded={diff.education.some((d) => d.type !== "unchanged")}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.education as _, i}
+          {@const item = diff.education[i]}
+          <DiffItemRow
+            type={item.type}
+            title={item.type === "removed"
+              ? item.current?.institution || "Institution"
+              : item.incoming?.institution || "Institution"}
+            subtitle={item.type === "removed"
+              ? item.current?.area
+              : item.incoming?.area}
+            bind:enabled={diff.education[i].enabled}
+            fieldDiffs={item.fieldDiffs}
+          />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- Skills section -->
+  {#if diff.skills.some((d) => d.type !== "unchanged") || showUnchanged}
+    <DiffSectionCard
+      title="Skills"
+      icon={faCode}
+      badge={{
+        added: diff.stats.skillsAdded,
+        modified: diff.stats.skillsModified,
+        removed: diff.stats.skillsRemoved,
+      }}
+      defaultExpanded={diff.skills.some((d) => d.type !== "unchanged")}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.skills as _, i}
+          {@const cat = diff.skills[i]}
+          {#if cat.type !== "unchanged" || showUnchanged}
+            <DiffItemRow
+              type={cat.type}
+              title={cat.type === "removed"
+                ? cat.current?.name || "Category"
+                : cat.incoming?.name || "Category"}
+              subtitle={cat.type === "modified" && cat.skillDiffs
+                ? `${cat.skillDiffs.filter((s) => s.type === "added").length} new, ${cat.skillDiffs.filter((s) => s.type === "modified").length} modified, ${cat.skillDiffs.filter((s) => s.type === "removed").length} removed skills`
+                : cat.type === "added" && cat.incoming
+                  ? `${cat.incoming.skills.length} skills`
+                  : undefined}
+              bind:enabled={diff.skills[i].enabled}
+              fieldDiffs={cat.fieldDiffs}
+            />
+          {/if}
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- Languages section -->
+  {#if diff.languages.some((d) => d.type !== "unchanged") || showUnchanged}
+    <DiffSectionCard
+      title="Languages"
+      icon={faGlobe}
+      badge={{
+        added: diff.stats.languagesAdded,
+        modified: diff.stats.languagesModified,
+        removed: diff.stats.languagesRemoved,
+      }}
+      defaultExpanded={diff.languages.some((d) => d.type !== "unchanged")}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.languages as _, i}
+          {@const item = diff.languages[i]}
+          <DiffItemRow
+            type={item.type}
+            title={item.type === "removed"
+              ? item.current?.name || "Language"
+              : item.incoming?.name || "Language"}
+            subtitle={item.type === "removed"
+              ? item.current?.proficiency
+              : item.incoming?.proficiency}
+            bind:enabled={diff.languages[i].enabled}
+            fieldDiffs={item.fieldDiffs}
+          />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- Projects section -->
+  {#if diff.projects.some((d) => d.type !== "unchanged") || showUnchanged}
+    <DiffSectionCard
+      title="Side Projects"
+      icon={faLightbulb}
+      badge={{
+        added: diff.stats.projectsAdded,
+        modified: diff.stats.projectsModified,
+        removed: diff.stats.projectsRemoved,
+      }}
+      defaultExpanded={diff.projects.some((d) => d.type !== "unchanged")}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.projects as _, i}
+          {@const item = diff.projects[i]}
+          <DiffItemRow
+            type={item.type}
+            title={item.type === "removed"
+              ? item.current?.name || "Project"
+              : item.incoming?.name || "Project"}
+            subtitle={item.type === "removed"
+              ? item.current?.url
+              : item.incoming?.url}
+            bind:enabled={diff.projects[i].enabled}
+            fieldDiffs={item.fieldDiffs}
+            nestedDiffs={item.nestedDiffs}
+          />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- References section -->
+  {#if diff.references.some((d) => d.type !== "unchanged") || showUnchanged}
+    <DiffSectionCard
+      title="References"
+      icon={faQuoteLeft}
+      badge={{
+        added: diff.stats.referencesAdded,
+        modified: diff.stats.referencesModified,
+        removed: diff.stats.referencesRemoved,
+      }}
+      defaultExpanded={diff.references.some((d) => d.type !== "unchanged")}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.references as _, i}
+          {@const item = diff.references[i]}
+          <DiffItemRow
+            type={item.type}
+            title={item.type === "removed"
+              ? item.current?.author || "Author"
+              : item.incoming?.author || "Author"}
+            subtitle={item.type === "removed"
+              ? item.current?.authorPosition
+              : item.incoming?.authorPosition}
+            bind:enabled={diff.references[i].enabled}
+            fieldDiffs={item.fieldDiffs}
+          />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- No changes message -->
+  {#if diff.stats.totalChanges === 0}
+    <Card padding="responsive">
+      <div class="text-center py-8">
+        <FontAwesomeIcon
+          icon={faCheck}
+          class="w-12 h-12 text-green-500 mx-auto mb-3"
+        />
+        <h3 class="font-semibold text-[var(--dash-text)] mb-1">
+          No differences found
+        </h3>
+        <p class="text-sm text-[var(--dash-text-secondary)]">
+          The imported data matches your current profile.
+        </p>
+      </div>
+    </Card>
+  {/if}
+
+  <!-- Submit -->
+  <form
+    method="POST"
+    action="?/applyDiff"
+    use:enhance={({ formData }) => {
+      formData.set("payload", JSON.stringify(buildPayload()));
+      onLoadingChange(true);
+      return async ({ result, update }) => {
+        onLoadingChange(false);
+        if (result.type === "redirect") {
+          await goto(result.location, { invalidateAll: true });
+        } else {
+          await update();
+        }
+      };
+    }}
+    class="sticky bottom-0 z-10 bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 sm:p-6 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]"
+  >
+    <input type="hidden" name="payload" value="" />
+    <div class="flex justify-between items-center">
+      <button
+        type="button"
+        onclick={onBack}
+        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-2"
+      >
+        <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+        Back
+      </button>
+
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-[var(--dash-text-secondary)] hidden sm:inline">
+          {enabledCount} change{enabledCount !== 1 ? "s" : ""} selected
+        </span>
+        <button
+          type="submit"
+          disabled={enabledCount === 0 || isLoading}
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {#if isLoading}
+            <Spinner size="w-4 h-4" />
+            Applying...
+          {:else}
+            <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+            Apply Changes
+          {/if}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

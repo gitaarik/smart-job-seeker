@@ -12,13 +12,26 @@ import {
 } from "$lib/server/export";
 import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
+import { getProfileAsResumeData } from "$lib/server/resume/profile-to-resume-data";
+import { applyDiffToProfile, type DiffApplyPayload } from "$lib/server/resume/apply-diff";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
+  const profile = layoutData.selectedProfile;
+
+  let currentProfileData = null;
+  if (profile?.id) {
+    try {
+      currentProfileData = await getProfileAsResumeData(profile.id);
+    } catch {
+      // Profile may have no data yet
+    }
+  }
 
   return {
-    selectedProfileName: layoutData.selectedProfile?.name || "Current Profile",
-    selectedProfileId: layoutData.selectedProfile?.id,
+    selectedProfileName: profile?.name || "Current Profile",
+    selectedProfileId: profile?.id,
+    currentProfileData,
   };
 };
 
@@ -142,6 +155,42 @@ export const actions: Actions = {
       const message = e instanceof Error ? e.message : "Import failed";
       return fail(500, { error: message });
     }
+  },
+
+  applyDiff: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const selectedId = await getSelectedProfileId(cookies, user.id);
+    if (!selectedId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const payloadJson = formData.get("payload") as string;
+
+    if (!payloadJson) {
+      return fail(400, { error: "No diff payload provided" });
+    }
+
+    let payload: DiffApplyPayload;
+    try {
+      payload = JSON.parse(payloadJson);
+    } catch {
+      return fail(400, { error: "Invalid diff payload" });
+    }
+
+    try {
+      await applyDiffToProfile(selectedId, user.id, payload);
+    } catch (e) {
+      console.error("Apply diff failed:", e);
+      const message = e instanceof Error ? e.message : "Failed to apply changes";
+      return fail(500, { error: message });
+    }
+
+    redirect(302, `/dashboard?profile=${selectedId}`);
   },
 
   // Keep legacy action for backwards compatibility
