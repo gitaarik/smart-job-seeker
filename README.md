@@ -23,15 +23,13 @@ journey with AI-powered insights.
   pre-configured search URLs
 - **Dual-Mode Navigation** - Traditional URL-based and modern click-based (SPA)
   navigation
-- **Playwright Browser Automation** - Reliable, auto-waiting browser control
-  with stealth capabilities
+- **Patchright Browser Automation** - Reliable, auto-waiting browser control
+  with stealth capabilities (Playwright fork)
 - **CDP Integration** - Chrome DevTools Protocol for detecting clickable
   elements
 - **HTML Processing** - Extract and clean job posting data for AI analysis
 - **LLM Integration** - AI-powered job data extraction with structured output
 - **Smart Matching** - Match your profile against scraped jobs (coming soon)
-
-See [SCRAPING.md](docs/SCRAPING.md) for detailed scraping documentation.
 
 ### Application Management
 
@@ -86,12 +84,12 @@ This starts:
 - **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
 - **Database**: PostgreSQL with Directus CMS
 - **AI**: Multi-provider LLM (Groq, Anthropic, OpenAI, Gemini, DeepSeek)
-- **Browser Automation**: Playwright (Chromium) with CDP
+- **Browser Automation**: Patchright (Playwright fork) with CDP
 - **DevOps**: Docker Compose, Vitest
 
 ### Key Modules
 
-**Job Scraping Pipeline** (see [SCRAPING.md](docs/SCRAPING.md))
+**Job Scraping Pipeline**
 
 - `scrapers/scraper.ts` - Login orchestration and CDP handoff
 - `scrapers/extraction/` - CDP element marking and LLM extraction
@@ -153,7 +151,7 @@ See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for complete development guide.
 ## Testing
 
 ```bash
-npm run test              # Run all tests (593 tests)
+npm run test              # Run all tests
 npm run test:watch       # Watch mode
 npm run test:ui          # Test UI dashboard
 ```
@@ -168,9 +166,8 @@ See [TESTING.md](docs/TESTING.md) for testing guide.
 
 - **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development setup and workflows
 - **[AI_FEATURES.md](docs/AI_FEATURES.md)** - AI features and usage
-- **[WEBHOOK.md](docs/WEBHOOK.md)** - Webhook integration
 - **[TESTING.md](docs/TESTING.md)** - Testing framework
-- **[AUTHENTICATION.md](docs/AUTHENTICATION.md)** - Auth system
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
 - **[CLAUDE.md](CLAUDE.md)** - Development notes
 
 ## Deployment
