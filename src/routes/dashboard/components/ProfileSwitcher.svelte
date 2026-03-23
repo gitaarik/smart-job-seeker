@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { page } from "$app/state";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
@@ -20,10 +19,8 @@
 
   function selectProfile(profile: ProfileSummary) {
     isOpen = false;
-    // Navigate with new profile parameter
-    const url = new URL(page.url);
-    url.searchParams.set("profile", String(profile.id));
-    goto(url.toString());
+    // Always navigate to dashboard overview to avoid 404s on profile-specific detail pages
+    goto(`/dashboard?profile=${profile.id}`);
   }
 
   function handleClickOutside(event: MouseEvent) {

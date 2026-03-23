@@ -1380,6 +1380,7 @@ model search_task_runs {
   bullmq_job_id         String?                 @db.VarChar(100)
   live_url              String?                 @db.VarChar(500)
   user_response         String?                 @db.VarChar(20)
+  settings              Json?
   logs                  scraper_logs[]
   search_task_run_items search_task_run_items[]
   search_tasks          search_tasks            @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)

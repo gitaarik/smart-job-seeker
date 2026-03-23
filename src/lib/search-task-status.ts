@@ -30,6 +30,14 @@ export function getSearchTaskStatusIcon(
       spinner: true,
     };
   }
+  if (task.status === "stopping") {
+    return {
+      icon: null,
+      colorClass: "text-orange-500",
+      iconSize: "w-3 h-3",
+      spinner: true,
+    };
+  }
   if (task.status === "success") {
     return {
       icon: faCheck,

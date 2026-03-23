@@ -1314,7 +1314,11 @@
               "
             ></span>
             <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-            Desktop app {desktopConnected ? "connected" : "not connected"}
+            {#if desktopConnected}
+              Desktop app connected
+            {:else}
+              Desktop app not connected — <a href="/dashboard/export/local-setup" class="underline hover:text-amber-700">Setup guide</a>
+            {/if}
           </div>
         {/if}
 

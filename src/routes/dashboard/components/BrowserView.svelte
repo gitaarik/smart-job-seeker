@@ -4,6 +4,7 @@
     faCloud,
     faDesktop,
     faExternalLinkAlt,
+    faExpand,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "./Card.svelte";
@@ -53,13 +54,42 @@
       {/if}
     </div>
   </div>
-  <div class="relative" style="padding-bottom: 56.25%;">
-    <iframe
-      src={browserViewUrl}
-      class="absolute inset-0 w-full h-full border-0"
-      title="Browser view"
-    ></iframe>
-  </div>
+
+  {#if isCloudMode && liveUrl}
+    <!-- Cloud mode: GoLogin live view renders at native browser resolution
+         which can be small on mobile. Show prominent "open in new tab" on small screens. -->
+    <div class="sm:hidden flex flex-col items-center gap-3 p-6 bg-[var(--dash-bg)]">
+      <p class="text-sm text-[var(--dash-text-secondary)] text-center">
+        Open the browser view in a new tab for the best experience on mobile.
+      </p>
+      <a
+        href={liveUrl}
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
+      >
+        <FontAwesomeIcon icon={faExpand} class="w-4 h-4" />
+        Open Browser View
+      </a>
+    </div>
+    <div class="hidden sm:block relative" style="padding-bottom: 56.25%;">
+      <iframe
+        src={browserViewUrl}
+        class="absolute inset-0 w-full h-full border-0"
+        title="Browser view"
+      ></iframe>
+    </div>
+  {:else}
+    <!-- VNC mode: noVNC has built-in resize=scale, works well at any size -->
+    <div class="relative" style="padding-bottom: 56.25%;">
+      <iframe
+        src={browserViewUrl}
+        class="absolute inset-0 w-full h-full border-0"
+        title="Browser view"
+      ></iframe>
+    </div>
+  {/if}
+
   {#if statusMessage}
     <div class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]">
       <p class="text-sm text-[var(--dash-text-secondary)]">{statusMessage}</p>

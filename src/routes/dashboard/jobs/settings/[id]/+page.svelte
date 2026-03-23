@@ -36,7 +36,6 @@
   let { data }: { data: PageData } = $props();
 
   let searchTask = $state(data.searchTask);
-  let searchTaskFieldsRef: ReturnType<typeof SearchTaskFields> | undefined;
 
   // Header editing state (name + platform name)
   let isEditingHeader = $state(false);
@@ -141,6 +140,14 @@
   let navigateUrlMessage = $state<string | null>(null);
 
   // Runs history
+  interface RunSettings {
+    max_jobs?: number | null;
+    skip_existing?: boolean;
+    skip_first?: number | null;
+    stop_after_duplicates?: number | null;
+    browser_provider?: string | null;
+  }
+
   interface Run {
     id: number;
     status: string;
@@ -150,6 +157,7 @@
     error_message: string | null;
     triggered_by: string;
     live_url: string | null;
+    settings: RunSettings | null;
   }
 
   interface LogEntry {
@@ -222,13 +230,17 @@
   let logContainerRefs = $state<Record<number, HTMLElement | null>>({});
   let logAutoScroll = $state<Record<number, boolean>>({});
 
-  // Reset state when navigating between job searches
-  let prevSearchTaskId = data.searchTask.id;
-  $effect(() => {
-    if (data.searchTask.id === prevSearchTaskId) return;
-    prevSearchTaskId = data.searchTask.id;
-    // Re-sync all data-derived state
+  // Keep searchTask in sync when data updates (e.g. invalidateAll)
+  $effect.pre(() => {
     searchTask = data.searchTask;
+  });
+
+  // Reset all page state when navigating between different search tasks
+  let currentSearchTaskId = $state(data.searchTask.id);
+  $effect(() => {
+    if (data.searchTask.id === currentSearchTaskId) return;
+    currentSearchTaskId = data.searchTask.id;
+    // Reset header editing
     isEditingHeader = false;
     editNameInput = data.searchTask.name ?? "";
     // Reset settings section
@@ -238,17 +250,6 @@
       ];
       return v === undefined ? false : Boolean(v);
     })();
-    // Reset field state inside the shared component
-    searchTaskFieldsRef?.resetToData({
-      searchTask: data.searchTask,
-      platformCredentials: data.platformCredentials,
-      canEditPlatformUrls: data.canEditPlatformUrls,
-      browserCountryCode: data.browserCountryCode || "",
-      defaultCountryCode: data.defaultCountryCode || "",
-      browserFingerprint: data.browserFingerprint,
-      browserFingerprintDefaults: data.browserFingerprintDefaults,
-      uiPreferences: data.uiPreferences as Record<string, unknown>,
-    });
     // Reset transient input state
     typeTextValue = "";
     typeTextMessage = null;
@@ -261,12 +262,12 @@
     currentRunId = null;
     runs = [];
     expandedRunId = null;
-    // Reload runs for the new job search
+    // Reload runs for the new search task
     loadRuns();
     // Restart polling if needed
     stopPolling();
     if (
-      ["running", "blocked", "queued"].includes(
+      ["running", "blocked", "queued", "stopping"].includes(
         data.searchTask.status ?? "",
       )
     ) {
@@ -278,6 +279,7 @@
   let isRunning = $derived(searchTask.status === "running");
   let isBlocked = $derived(searchTask.status === "blocked");
   let isQueued = $derived(searchTask.status === "queued");
+  let isStoppingStatus = $derived(searchTask.status === "stopping");
   let needsIntervention = $derived(isRunning || isBlocked);
   let isCloudMode = $derived(!!liveUrl);
   let isMagicLink = $derived(
@@ -808,8 +810,8 @@
         // Update runs list
         await loadRuns();
 
-        // Stop polling when scrape is complete
-        if (!["running", "blocked", "queued"].includes(result.status)) {
+        // Stop polling when scrape is complete (keep polling during "stopping")
+        if (!["running", "blocked", "queued", "stopping"].includes(result.status)) {
           stopPolling();
           showBrowser = false;
           liveUrl = null;
@@ -856,21 +858,22 @@
         return;
       }
 
-      if (
-        result.status === "removed_from_queue" ||
-        result.status === "cancellation_requested" ||
-        result.status === "cancelled"
-      ) {
+      if (result.status === "removed_from_queue" || result.status === "cancelled") {
+        // Immediate cancellation (was queued, not yet running)
         searchTask.status = "idle";
         searchTask.status_message = "Cancelled by user";
         stopPolling();
         showBrowser = false;
         liveUrl = null;
-
-        // Reload runs to show updated status
         await loadRuns();
-        // Invalidate all data so the overview page shows fresh status
         await invalidateAll();
+      } else if (result.status === "cancellation_requested") {
+        // Worker is still running, transition to "stopping" state
+        searchTask.status = "stopping";
+        searchTask.status_message = "Stopping...";
+        // Keep polling — the worker will set the final status
+        if (!pollInterval) startPolling();
+        await loadRuns();
       }
     } catch (err) {
       errorMessage = "Failed to stop scrape";
@@ -1006,8 +1009,8 @@
     // Load runs history
     loadRuns();
 
-    // Start polling if already running/blocked/queued
-    if (needsIntervention || isQueued) {
+    // Start polling if already running/blocked/queued/stopping
+    if (needsIntervention || isQueued || isStoppingStatus) {
       startPolling();
     }
 
@@ -1192,6 +1195,18 @@
                 {/if}
               </p>
             </div>
+          {:else if searchTask.status === "stopping"}
+            <div
+              class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
+            >
+              <Spinner size="w-5 h-5" color="var(--dash-error)" />
+            </div>
+            <div class="min-w-0">
+              <p class="font-medium text-[var(--dash-text)]">Stopping...</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                Waiting for the scraper to finish current action
+              </p>
+            </div>
           {:else if searchTask.status === "success"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center shrink-0"
@@ -1306,7 +1321,11 @@
               class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"
             ></span>
             <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-            Desktop app {desktopConnected ? "connected" : "not connected"}
+            {#if desktopConnected}
+              Desktop app connected
+            {:else}
+              Desktop app not connected — <a href="/dashboard/export/local-setup" class="underline hover:text-amber-700">Setup guide</a>
+            {/if}
           </div>
         {/if}
 
@@ -1335,13 +1354,13 @@
             </button>
           {/if}
 
-          {#if isRunning || isBlocked || isQueued}
+          {#if isRunning || isBlocked || isQueued || isStoppingStatus}
             <button
               onclick={stopScrape}
-              disabled={isStopping}
+              disabled={isStopping || isStoppingStatus}
               class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {#if isStopping}
+              {#if isStopping || isStoppingStatus}
                 <Spinner size="w-4 h-4" />
                 <span>Stopping...</span>
               {:else}
@@ -1393,23 +1412,24 @@
       {/if}
     </div>
 
-    <SearchTaskFields
-      bind:this={searchTaskFieldsRef}
-      mode="edit"
-      localBrowserAllowed={data.localBrowserAllowed}
-      serverBrowserProvider={data.browserProvider}
-      {searchTask}
-      searchTaskId={searchTask.id}
-      profileId={data.profileId}
-      platformCredentials={data.platformCredentials}
-      canEditPlatformUrls={data.canEditPlatformUrls}
-      browserCountryCode={data.browserCountryCode}
-      defaultCountryCode={data.defaultCountryCode}
-      browserFingerprint={data.browserFingerprint}
-      browserFingerprintDefaults={data.browserFingerprintDefaults}
-      uiPreferences={data.uiPreferences as Record<string, unknown>}
-      {desktopConnected}
-    />
+    {#key data.searchTask.id}
+      <SearchTaskFields
+        mode="edit"
+        localBrowserAllowed={data.localBrowserAllowed}
+        serverBrowserProvider={data.browserProvider}
+        {searchTask}
+        searchTaskId={searchTask.id}
+        profileId={data.profileId}
+        platformCredentials={data.platformCredentials}
+        canEditPlatformUrls={data.canEditPlatformUrls}
+        browserCountryCode={data.browserCountryCode}
+        defaultCountryCode={data.defaultCountryCode}
+        browserFingerprint={data.browserFingerprint}
+        browserFingerprintDefaults={data.browserFingerprintDefaults}
+        uiPreferences={data.uiPreferences as Record<string, unknown>}
+        {desktopConnected}
+      />
+    {/key}
   </Card>
 
   <!-- Browser View popup -->
@@ -1810,6 +1830,35 @@
                     />
                   </span>
                 </div>
+                {#if run.settings}
+                  <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    {#if run.settings.max_jobs}
+                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                        max: {run.settings.max_jobs}
+                      </span>
+                    {/if}
+                    {#if run.settings.skip_first}
+                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                        skip first: {run.settings.skip_first}
+                      </span>
+                    {/if}
+                    {#if run.settings.skip_existing}
+                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                        skip existing
+                      </span>
+                    {/if}
+                    {#if run.settings.stop_after_duplicates}
+                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                        stop after: {run.settings.stop_after_duplicates} dupes
+                      </span>
+                    {/if}
+                    {#if run.settings.browser_provider}
+                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                        {run.settings.browser_provider}
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
               </div>
             </button>
 

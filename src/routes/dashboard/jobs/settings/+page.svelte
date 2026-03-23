@@ -164,6 +164,7 @@
     if (search.status === "running" || search.status === "queued") {
       return "text-blue-500";
     }
+    if (search.status === "stopping") return "text-orange-500";
     if (search.status === "blocked" || search.status === "partial") {
       return "text-yellow-600";
     }
@@ -177,6 +178,7 @@
     if (search.status === "running" || search.status === "queued") {
       return "bg-blue-500/10";
     }
+    if (search.status === "stopping") return "bg-orange-500/10";
     if (search.status === "blocked" || search.status === "partial") {
       return "bg-yellow-500/10";
     }
@@ -204,7 +206,11 @@
         class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : 'bg-[var(--dash-text-muted)]'}"
       ></span>
       <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-      Desktop app {desktopConnected ? "connected" : "not connected"}
+      {#if desktopConnected}
+        Desktop app connected
+      {:else}
+        Desktop app not connected — <a href="/dashboard/export/local-setup" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
+      {/if}
     </div>
   {/if}
 
@@ -365,6 +371,13 @@
                         : "Running"
                     }
                   </span>
+                {:else if search.status === "stopping"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-orange-500/20 text-orange-600"
+                  >
+                    <Spinner size="w-3 h-3" />
+                    Stopping
+                  </span>
                 {:else if search.status === "blocked"}
                   <span
                     class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-yellow-500/20 text-yellow-600 animate-pulse"
@@ -402,6 +415,9 @@
                 {:else if search.status === "running"}
                   <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" />
                   <span>Running...</span>
+                {:else if search.status === "stopping"}
+                  <Spinner size={statusIcon.iconSize} color="var(--dash-error)" />
+                  <span class="text-orange-600">Stopping...</span>
                 {:else if search.status === "success"}
                   <FontAwesomeIcon
                     icon={statusIcon.icon}

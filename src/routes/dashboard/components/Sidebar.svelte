@@ -218,6 +218,11 @@
           icon: faUsers,
         },
         {
+          label: "Scraper",
+          href: "/dashboard/admin/scraper",
+          icon: faSearch,
+        },
+        {
           label: "Matcher",
           href: "/dashboard/admin/matcher",
           icon: faChartBar,

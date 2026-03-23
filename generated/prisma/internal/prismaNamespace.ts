@@ -7793,7 +7793,8 @@ export const Search_task_runsScalarFieldEnum = {
   triggered_by: 'triggered_by',
   bullmq_job_id: 'bullmq_job_id',
   live_url: 'live_url',
-  user_response: 'user_response'
+  user_response: 'user_response',
+  settings: 'settings'
 } as const
 
 export type Search_task_runsScalarFieldEnum = (typeof Search_task_runsScalarFieldEnum)[keyof typeof Search_task_runsScalarFieldEnum]

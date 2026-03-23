@@ -103,12 +103,19 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(400, "Job search has no platform configured");
   }
 
-  // Create a run record
+  // Create a run record with a snapshot of current scraping settings
   const run = await db.search_task_runs.create({
     data: {
       search_task_id: searchTaskId,
       status: "queued",
       triggered_by: "user",
+      settings: {
+        max_jobs: searchTask.max_jobs,
+        skip_existing: searchTask.skip_existing,
+        skip_first: searchTask.skip_first,
+        stop_after_duplicates: (searchTask as Record<string, unknown>).stop_after_duplicates as number | null ?? null,
+        browser_provider: searchTask.browser_provider,
+      },
     },
   });
 
@@ -240,46 +247,31 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json({ status: "not_found" });
   }
 
-  // Try to force-fail the BullMQ job (best-effort — it may not be found
-  // if the worker restarted or BullMQ state diverged, but that's OK)
-  await removeActiveJob(searchTaskId);
-
-  // Mark the run as cancelled in the database — this is what the worker
-  // checks via isRunCancelled() to stop the scraping process
+  // Mark as "stopping" so the worker picks it up via isRunCancelled()
+  // and the UI shows the in-progress cancellation to all users.
+  // The worker will set the final "cancelled" status when it actually stops.
   await db.search_task_runs.update({
     where: { id: runningRun.id },
     data: {
-      status: "cancelled",
-      error_message: "Cancelled by user",
-      finished_at: new Date(),
-      live_url: null,
-    },
-  });
-
-  // Mark any in-progress or pending run items as cancelled
-  await db.search_task_run_items.updateMany({
-    where: {
-      run_id: runningRun.id,
-      status: { in: ["processing", "pending"] },
-    },
-    data: {
-      status: "cancelled",
-      status_message: "Cancelled by user",
+      status: "stopping",
     },
   });
 
   await db.search_tasks.update({
     where: { id: searchTaskId },
     data: {
-      status: "idle",
-      status_message: "Cancelled by user",
+      status: "stopping",
+      status_message: "Stopping...",
       date_updated: new Date(),
-      live_url: null,
     },
   });
 
-  console.log(`[API] Cancelled running search ${searchTaskId}`);
-  return json({ status: "cancelled" });
+  // Try to force-fail the BullMQ job (best-effort — it may not be found
+  // if the worker restarted or BullMQ state diverged, but that's OK)
+  await removeActiveJob(searchTaskId);
+
+  console.log(`[API] Requested stop for search ${searchTaskId}`);
+  return json({ status: "cancellation_requested" });
 };
 
 /**

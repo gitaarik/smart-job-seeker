@@ -177,8 +177,8 @@ export const findNextPageButtonSchema = z.object({
 export const extractJobsFromSearchPageSchema = z.object({
   jobs: z.array(
     z.object({
-      clickableId: z.number().int().describe(
-        "EXACT data-xxx from HTML - do not invent",
+      clickableId: z.number().int().nullable().describe(
+        "EXACT data-xxx from HTML - do not invent. null if no data-xxx found",
       ),
       title: z.string().nullable().describe("Job title/position name"),
       company: z.string().nullable().describe("Company or employer name"),

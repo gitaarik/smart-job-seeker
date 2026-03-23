@@ -49,6 +49,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
         triggered_by: true,
         live_url: true,
         user_response: true,
+        settings: true,
       },
     }),
     db.search_task_runs.count({
