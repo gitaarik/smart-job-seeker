@@ -15,6 +15,7 @@
     faChevronRight,
     faCloud,
     faCog,
+    faCopy,
     faDesktop,
     faExclamationTriangle,
     faExternalLinkAlt,
@@ -201,6 +202,7 @@
   }
 
   let runs = $state<Run[]>([]);
+  let copiedRunId = $state<number | null>(null);
   let expandedRunId = $state<number | null>(null);
   let expandedItemId = $state<number | null>(null);
   let runLogs = $state<Record<number, LogEntry[]>>({});
@@ -599,6 +601,18 @@
         return "bg-[var(--dash-error-light)]";
       default:
         return "bg-[var(--dash-bg)]";
+    }
+  }
+
+  async function copyRunId(runId: number) {
+    try {
+      await navigator.clipboard.writeText(String(runId));
+      copiedRunId = runId;
+      setTimeout(() => {
+        copiedRunId = null;
+      }, 2000);
+    } catch {
+      // Fallback: ignore
     }
   }
 
@@ -1767,10 +1781,34 @@
                     </span>
                   {/if}
                 </div>
-                <div class="text-sm text-[var(--dash-text-muted)]">
+                <div class="flex items-center gap-1 text-sm text-[var(--dash-text-muted)]">
                   {formatRelativeTime(run.started_at)}
                   <span class="text-[var(--dash-text-muted)]">•</span>
                   <span class="capitalize">{run.triggered_by}</span>
+                  <span class="text-[var(--dash-text-muted)]">•</span>
+                  <span class="font-mono text-xs">#{run.id}</span>
+                  <span
+                    role="button"
+                    tabindex="0"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      copyRunId(run.id);
+                    }}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        copyRunId(run.id);
+                      }
+                    }}
+                    class="p-0.5 cursor-pointer text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                    aria-label="Copy run ID"
+                  >
+                    <FontAwesomeIcon
+                      icon={copiedRunId === run.id ? faCheck : faCopy}
+                      class="w-3 h-3 {copiedRunId === run.id ? 'text-green-600' : ''}"
+                    />
+                  </span>
                 </div>
               </div>
             </button>
