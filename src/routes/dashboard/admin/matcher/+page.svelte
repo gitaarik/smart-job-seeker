@@ -4,10 +4,10 @@
   import {
     faChartBar,
     faCircle,
-    faSpinner,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import Card from "../../components/Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   interface MatcherState {
     active: boolean;
@@ -105,7 +105,7 @@
 
   {#if loading}
     <div class="flex items-center justify-center py-12">
-      <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" />
+      <Spinner size="w-6 h-6" color="var(--dash-primary)" />
     </div>
   {:else if error}
     <Card padding="responsive">

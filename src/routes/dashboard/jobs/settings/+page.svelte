@@ -7,10 +7,10 @@
     faDesktop,
     faExclamationTriangle,
     faSearch,
-    faSpinner,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
+  import Spinner from "$lib/components/Spinner.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import SearchTaskFields from "../components/SearchTaskFields.svelte";
@@ -358,10 +358,7 @@
                   <span
                     class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-blue-500/20 text-blue-600"
                   >
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 spin-pulse"
-                    />
+                    <Spinner size="w-3 h-3" />
                     {
                       search.status === "queued"
                         ? "Queued"
@@ -403,10 +400,7 @@
                     search.status_message || "Waiting in queue..."
                   }</span>
                 {:else if search.status === "running"}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'spin-pulse' : ''}"
-                  />
+                  <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" />
                   <span>Running...</span>
                 {:else if search.status === "success"}
                   <FontAwesomeIcon

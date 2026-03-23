@@ -3,7 +3,6 @@ import {
   faCheck,
   faCircle,
   faExclamationTriangle,
-  faSpinner,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
@@ -14,10 +13,10 @@ interface SearchTaskStatusInput {
 }
 
 interface SearchTaskStatusResult {
-  icon: IconDefinition;
+  icon: IconDefinition | null;
   colorClass: string;
   iconSize: string;
-  animate: boolean;
+  spinner: boolean;
 }
 
 export function getSearchTaskStatusIcon(
@@ -25,10 +24,10 @@ export function getSearchTaskStatusIcon(
 ): SearchTaskStatusResult {
   if (task.status === "running" || task.status === "queued") {
     return {
-      icon: faSpinner,
+      icon: null,
       colorClass: "text-blue-500",
       iconSize: "w-3 h-3",
-      animate: true,
+      spinner: true,
     };
   }
   if (task.status === "success") {
@@ -36,7 +35,7 @@ export function getSearchTaskStatusIcon(
       icon: faCheck,
       colorClass: "text-[var(--dash-success)]",
       iconSize: "w-3 h-3",
-      animate: false,
+      spinner: false,
     };
   }
   if (task.status === "error") {
@@ -44,7 +43,7 @@ export function getSearchTaskStatusIcon(
       icon: faTimes,
       colorClass: "text-red-500",
       iconSize: "w-3 h-3",
-      animate: false,
+      spinner: false,
     };
   }
   if (task.status === "blocked" || task.status === "partial") {
@@ -52,7 +51,7 @@ export function getSearchTaskStatusIcon(
       icon: faExclamationTriangle,
       colorClass: "text-yellow-500",
       iconSize: "w-3 h-3",
-      animate: false,
+      spinner: false,
     };
   }
   if (task.status === "cancelled") {
@@ -60,7 +59,7 @@ export function getSearchTaskStatusIcon(
       icon: faBan,
       colorClass: "text-[var(--dash-text-muted)]",
       iconSize: "w-3 h-3",
-      animate: false,
+      spinner: false,
     };
   }
   // Fallback: task has run before but status is null/unrecognized (legacy data)
@@ -69,7 +68,7 @@ export function getSearchTaskStatusIcon(
       icon: faCheck,
       colorClass: "text-[var(--dash-success)]",
       iconSize: "w-3 h-3",
-      animate: false,
+      spinner: false,
     };
   }
   // Never run (idle or truly unknown)
@@ -77,6 +76,6 @@ export function getSearchTaskStatusIcon(
     icon: faCircle,
     colorClass: "text-[var(--dash-text-muted)]",
     iconSize: "w-2 h-2",
-    animate: false,
+    spinner: false,
   };
 }

@@ -3,9 +3,9 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
-    faSpinner,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
 
   let { data }: { data: PageData } = $props();
@@ -256,7 +256,7 @@
           class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
         >
           {#if isSavingJobTypes}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+            <Spinner size="w-3 h-3" />
           {:else}
             <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
           {/if}
@@ -313,7 +313,7 @@
           class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
         >
           {#if isSavingWorkLocation}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+            <Spinner size="w-3 h-3" />
           {:else}
             <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
           {/if}
@@ -368,7 +368,7 @@
           class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
         >
           {#if isSavingExperienceLevels}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+            <Spinner size="w-3 h-3" />
           {:else}
             <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
           {/if}
@@ -444,7 +444,7 @@
           class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
         >
           {#if isSavingLocations}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+            <Spinner size="w-3 h-3" />
           {:else}
             <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
           {/if}
@@ -493,7 +493,7 @@
           class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
         >
           {#if isSavingCommunityJobs}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+            <Spinner size="w-3 h-3" />
           {:else}
             <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
           {/if}

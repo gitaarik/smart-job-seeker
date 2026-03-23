@@ -6,9 +6,9 @@
     faEyeSlash,
     faKey,
     faPlus,
-    faSpinner,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   interface Props {
     credentials: { id: number; username: string | null }[];
@@ -145,10 +145,7 @@
     </div>
     <div class="flex items-center gap-2">
       {#if isSaving}
-        <FontAwesomeIcon
-          icon={faSpinner}
-          class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
-        />
+        <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
       {/if}
       {#if !disabled}
         <button
@@ -233,10 +230,7 @@
             title="Delete credential"
           >
             {#if isDeletingId === cred.id}
-              <FontAwesomeIcon
-                icon={faSpinner}
-                class="w-3 h-3 spin-pulse"
-              />
+              <Spinner size="w-3 h-3" />
             {:else}
               <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
             {/if}
@@ -316,10 +310,7 @@
           class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
         >
           {#if isSaving}
-            <FontAwesomeIcon
-              icon={faSpinner}
-              class="w-3 h-3 spin-pulse"
-            />
+            <Spinner size="w-3 h-3" />
           {:else}
             <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
           {/if}

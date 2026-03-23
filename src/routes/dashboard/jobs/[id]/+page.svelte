@@ -23,6 +23,7 @@
   import ScoreBadge from "../components/ScoreBadge.svelte";
   import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
   import Card from "../../components/Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import {
     formatExperienceLevel,
     formatJobStatus,
@@ -522,14 +523,14 @@
                   ? "Re-run AI matching for this job"
                   : "Run AI matching for this job"}
               >
-                <FontAwesomeIcon
-                  icon={isRematching
-                    ? faSync
-                    : match?.reasoning
-                    ? faSync
-                    : faSearch}
-                  class="w-4 h-4 {isRematching ? 'spin-pulse' : ''}"
-                />
+                {#if isRematching}
+                  <Spinner size="w-4 h-4" />
+                {:else}
+                  <FontAwesomeIcon
+                    icon={match?.reasoning ? faSync : faSearch}
+                    class="w-4 h-4"
+                  />
+                {/if}
                 {
                   isRematching
                     ? "Matching..."

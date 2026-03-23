@@ -10,11 +10,11 @@
     faEnvelope,
     faQuestionCircle,
     faRobot,
-    faSpinner,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
@@ -476,10 +476,11 @@
                       disabled={isGenerating(itemId)}
                       class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                     >
-                      <FontAwesomeIcon
-                        icon={isGenerating(itemId) ? faSpinner : faRobot}
-                        class="w-3.5 h-3.5 {isGenerating(itemId) ? 'spin-pulse' : ''}"
-                      />
+                      {#if isGenerating(itemId)}
+                        <Spinner size="w-3.5 h-3.5" />
+                      {:else}
+                        <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
+                      {/if}
                       {isGenerating(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
                     </button>
                     {#if hasAiChat}
@@ -532,7 +533,7 @@
                           class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
                           {#if isGenerating(itemId)}
-                            <FontAwesomeIcon icon={faSpinner} class="w-3.5 h-3.5 spin-pulse" />
+                            <Spinner size="w-3.5 h-3.5" />
                             Generating...
                           {:else}
                             Send Follow-up

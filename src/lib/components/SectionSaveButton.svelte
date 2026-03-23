@@ -1,6 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
+  import { faCheck } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -39,7 +40,7 @@
     disabled:opacity-50 disabled:cursor-not-allowed"
 >
   {#if state === "saving"}
-    <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+    <Spinner size="w-4 h-4" />
   {:else if state === "saved"}
     <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
   {/if}

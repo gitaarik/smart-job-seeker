@@ -20,13 +20,13 @@
     faMoneyBillWave,
     faSearch,
     faSitemap,
-    faSpinner,
     faStar as faStarSolid,
     faTag,
     faTimes,
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
@@ -655,7 +655,7 @@
   <div class="text-sm text-[var(--dash-text-secondary)]">
     {#if $navigating}
       <span class="flex items-center gap-2">
-        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
+        <Spinner size="w-4 h-4" />
         Loading...
       </span>
     {:else if totalCount === 0}

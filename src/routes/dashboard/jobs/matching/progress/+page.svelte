@@ -4,10 +4,10 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCircle,
-    faSpinner,
     faRotate,
   } from "@fortawesome/free-solid-svg-icons";
   import ScoreBadge from "../../components/ScoreBadge.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -185,7 +185,7 @@
 <div>
   {#if loading}
     <div class="flex items-center justify-center py-12">
-      <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" />
+      <Spinner size="w-6 h-6" color="var(--dash-primary)" />
     </div>
   {:else}
     <!-- Stats Overview -->
@@ -208,7 +208,7 @@
             disabled={rematching}
             class="mt-2 text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] disabled:opacity-50 flex items-center gap-1"
           >
-            <FontAwesomeIcon icon={rematching ? faSpinner : faRotate} class="w-3 h-3 {rematching ? 'spin-pulse' : ''}" />
+            {#if rematching}<Spinner size="w-3 h-3" />{:else}<FontAwesomeIcon icon={faRotate} class="w-3 h-3" />{/if}
             Re-evaluate
           </button>
         {/if}
@@ -284,7 +284,7 @@
           <!-- Currently Processing -->
           <div class="bg-[var(--dash-bg)] rounded-lg p-3 border border-[var(--dash-primary)]/20">
             <div class="flex items-center gap-2 mb-1">
-              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 text-[var(--dash-primary)] spin-pulse" />
+              <Spinner size="w-4 h-4" color="var(--dash-primary)" />
               <span class="text-sm font-medium text-[var(--dash-text)]">Currently matching:</span>
             </div>
             <div class="ml-6">

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
   import Card from "../../../components/Card.svelte";
 
   interface Props {
@@ -136,7 +135,7 @@
         class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         {#if isLoading}
-          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
+          <Spinner size="w-4 h-4" />
           Creating...
         {:else}
           Create Profile

@@ -1,8 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let password = $state("");
@@ -146,10 +145,7 @@
             class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[var(--dash-primary)] hover:bg-[var(--dash-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--dash-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {#if loading}
-              <FontAwesomeIcon
-                icon={faSpinner}
-                class="w-4 h-4 animate-spin mr-2"
-              />
+              <Spinner size="w-4 h-4" class="mr-2" />
               Creating account...
             {:else}
               Activate Account

@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   interface LogEntry {
     id: number | string;
@@ -83,10 +82,7 @@
       {/each}
     </select>
     {#if loading}
-      <FontAwesomeIcon
-        icon={faSpinner}
-        class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
-      />
+      <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
     {/if}
   </div>
 </div>

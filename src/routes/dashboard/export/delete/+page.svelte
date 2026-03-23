@@ -4,10 +4,10 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faExclamationTriangle,
-    faSpinner,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -138,7 +138,7 @@
               style="background-color: var(--dash-error);"
             >
               {#if isLoading}
-                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+                <Spinner size="w-3 h-3" />
               {/if}
               Yes, delete permanently
             </button>

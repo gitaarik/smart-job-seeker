@@ -12,11 +12,11 @@
     faHistory,
     faLink,
     faPlay,
-    faSpinner,
     faTimes,
     faTimesCircle,
   } from "@fortawesome/free-solid-svg-icons";
   import BrowserView from "./BrowserView.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import LogViewer from "./LogViewer.svelte";
   import CountrySelect from "../jobs/components/CountrySelect.svelte";
   import CredentialSelector from "../jobs/components/CredentialSelector.svelte";
@@ -300,10 +300,7 @@
           Rescrape Job #{jobId}
         </h2>
         {#if isActive}
-          <FontAwesomeIcon
-            icon={faSpinner}
-            class="w-4 h-4 text-[var(--dash-primary)] spin-pulse"
-          />
+          <Spinner size="w-4 h-4" color="var(--dash-primary)" />
         {:else if isComplete}
           <FontAwesomeIcon
             icon={faCheckCircle}

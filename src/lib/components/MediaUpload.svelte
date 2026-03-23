@@ -1,12 +1,12 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faSpinner,
     faTimes,
     faImage,
     faExpand,
     faCheck,
   } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   interface Props {
     entityType: string;
@@ -207,10 +207,7 @@
       "
     >
       {#if isUploading}
-        <FontAwesomeIcon
-          icon={faSpinner}
-          class="w-6 h-6 text-[var(--dash-primary)] animate-spin"
-        />
+        <Spinner size="w-6 h-6" color="var(--dash-primary)" />
       {:else}
         <FontAwesomeIcon
           icon={faImage}

@@ -11,9 +11,9 @@
     faGlobe,
     faKey,
     faPlus,
-    faSpinner,
   } from "@fortawesome/free-solid-svg-icons";
   import CountrySelect from "./CountrySelect.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import CredentialSelector from "./CredentialSelector.svelte";
   import BrowserProviderToggle from "./BrowserProviderToggle.svelte";
 
@@ -563,7 +563,7 @@
         class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
       >
         {#if saving}
-          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 spin-pulse" />
+          <Spinner size="w-3 h-3" />
         {:else}
           <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
         {/if}
@@ -635,10 +635,7 @@
                 />
                 {#if detectingPlatform}
                   <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-4 h-4 text-[var(--dash-text-secondary)] spin-pulse"
-                    />
+                    <Spinner size="w-4 h-4" color="var(--dash-text-secondary)" />
                   </div>
                 {/if}
               </div>
@@ -1351,10 +1348,7 @@
                     class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
                     {#if isSavingBrowserCountry}
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        class="w-3 h-3 spin-pulse"
-                      />
+                      <Spinner size="w-3 h-3" />
                     {:else}
                       <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
                     {/if}
@@ -1370,10 +1364,7 @@
                   </button>
                 {/if}
                 {#if isSavingBrowserCountry && !browserCountryDirty}
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
-                  />
+                  <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
                 {/if}
               </div>
             {/if}
@@ -1469,10 +1460,7 @@
                     </div>
                   {/if}
                   {#if             isSavingBrowserFingerprint && !browserFingerprintDirty}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
-                    />
+                    <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
                   {/if}
                 </div>
               {/if}

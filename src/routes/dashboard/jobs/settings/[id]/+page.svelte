@@ -4,6 +4,7 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import Card from "../../../components/Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import SearchTaskFields from "../../components/SearchTaskFields.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
   import {
@@ -26,7 +27,6 @@
     faPencil,
     faPlay,
     faPlus,
-    faSpinner,
     faStop,
     faTimes,
     faTrash,
@@ -428,7 +428,7 @@
         return faTimes;
       case "running":
       case "queued":
-        return faSpinner;
+        return null;
       default:
         return faCog;
     }
@@ -1070,10 +1070,7 @@
               class="flex items-center gap-2 px-3 py-1.5 bg-[var(--dash-primary)] text-white rounded-lg text-sm hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
             >
               {#if isSavingHeader}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-3 h-3 spin-pulse"
-                />
+                <Spinner size="w-3 h-3" />
               {/if}
               Save
             </button>
@@ -1136,10 +1133,7 @@
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
             >
-              <FontAwesomeIcon
-                icon={faSpinner}
-                class="w-5 h-5 text-[var(--dash-primary)] spin-pulse"
-              />
+              <Spinner size="w-5 h-5" color="var(--dash-primary)" />
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Queued</p>
@@ -1151,10 +1145,7 @@
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
             >
-              <FontAwesomeIcon
-                icon={faSpinner}
-                class="w-5 h-5 text-[var(--dash-primary)] spin-pulse"
-              />
+              <Spinner size="w-5 h-5" color="var(--dash-primary)" />
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">
@@ -1313,10 +1304,7 @@
               class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {#if isSendingFeedback}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-4 h-4 spin-pulse"
-                />
+                <Spinner size="w-4 h-4" />
               {:else}
                 <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
               {/if}
@@ -1340,10 +1328,7 @@
               class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {#if isStopping}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-4 h-4 spin-pulse"
-                />
+                <Spinner size="w-4 h-4" />
                 <span>Stopping...</span>
               {:else}
                 <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
@@ -1358,10 +1343,7 @@
               class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {#if isStarting}
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-4 h-4 spin-pulse"
-                />
+                <Spinner size="w-4 h-4" />
                 <span>Starting...</span>
               {:else}
                 <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
@@ -1524,10 +1506,7 @@
               class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
             >
               <div class="text-center">
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-6 h-6 text-[var(--dash-text-muted)] spin-pulse mb-2"
-                />
+                <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Starting live view...
                 </p>
@@ -1570,10 +1549,7 @@
               class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
             >
               <div class="text-center">
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  class="w-6 h-6 text-[var(--dash-text-muted)] spin-pulse mb-2"
-                />
+                <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Starting cloud browser...
                 </p>
@@ -1602,10 +1578,7 @@
                   class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   {#if isSendingFeedback}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 spin-pulse"
-                    />
+                    <Spinner size="w-3 h-3" />
                   {:else}
                     <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
                   {/if}
@@ -1654,10 +1627,7 @@
                 title="Open URL in the scraper browser"
               >
                 {#if isNavigating}
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 spin-pulse"
-                  />
+                  <Spinner size="w-3 h-3" />
                 {:else}
                   Navigate
                 {/if}
@@ -1689,10 +1659,7 @@
                 title="Type text without submitting"
               >
                 {#if isTypingText}
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    class="w-3 h-3 spin-pulse"
-                  />
+                  <Spinner size="w-3 h-3" />
                 {:else}
                   Type
                 {/if}
@@ -1767,15 +1734,14 @@
                 }`}
               >
                 {#key run.status}
-                  <FontAwesomeIcon
-                    icon={getRunStatusIcon(run.status)}
-                    class={`w-3 h-3 ${getRunStatusColor(run.status)} ${
-                      run.status === "running" ||
-                        run.status === "queued"
-                        ? "spin-pulse"
-                        : ""
-                    }`}
-                  />
+                  {#if run.status === "running" || run.status === "queued"}
+                    <Spinner size="w-3 h-3" color="var(--dash-primary)" />
+                  {:else}
+                    <FontAwesomeIcon
+                      icon={getRunStatusIcon(run.status)}
+                      class="w-3 h-3 {getRunStatusColor(run.status)}"
+                    />
+                  {/if}
                 {/key}
               </div>
 
@@ -1861,10 +1827,7 @@
                       <span class="text-sm font-medium text-[var(--dash-text)]"
                       >Discovered Jobs</span>
                       {#if loadingItems[run.id]}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
-                        />
+                        <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
                       {/if}
                     </div>
 
@@ -2321,10 +2284,7 @@
                         </select>
                       </div>
                       {#if loadingLogs[run.id]}
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          class="w-3 h-3 text-[var(--dash-text-muted)] spin-pulse"
-                        />
+                        <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
                       {/if}
                     </div>
 
@@ -2429,10 +2389,7 @@
                   class="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
                 >
                   {#if isDeleting}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 spin-pulse mr-1"
-                    />
+                    <Spinner size="w-3 h-3" class="mr-1" />
                   {/if}
                   Yes, delete
                 </button>

@@ -102,6 +102,7 @@
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import Card from "../../components/Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   // Group icons by category for display
   const iconGroups: { label: string; icons: { name: string; icon: IconDefinition }[] }[] = [
@@ -453,15 +454,20 @@
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Loading States</h2>
     <Card padding="responsive">
       <div class="flex flex-wrap items-start gap-8">
-        <!-- Spinner (pulse) -->
+        <!-- Custom spinner -->
         <div class="flex flex-col items-center gap-2">
-          <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" />
+          <Spinner size="w-6 h-6" color="var(--dash-primary)" />
           <span class="text-xs text-[var(--dash-text-muted)]">Spinner (default)</span>
         </div>
         <!-- Small spinner -->
         <div class="flex flex-col items-center gap-2">
-          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 text-[var(--dash-primary)] spin-pulse" />
+          <Spinner size="w-4 h-4" color="var(--dash-primary)" />
           <span class="text-xs text-[var(--dash-text-muted)]">Spinner (small)</span>
+        </div>
+        <!-- Inline spinner -->
+        <div class="flex flex-col items-center gap-2">
+          <Spinner size="w-3 h-3" />
+          <span class="text-xs text-[var(--dash-text-muted)]">Spinner (inline)</span>
         </div>
         <!-- Spinner in button -->
         <div class="flex flex-col items-center gap-2">
@@ -470,15 +476,15 @@
             disabled
             class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg opacity-70 cursor-not-allowed"
           >
-            <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
+            <Spinner size="w-4 h-4" color="white" />
             <span class="text-sm">Saving...</span>
           </button>
           <span class="text-xs text-[var(--dash-text-muted)]">Button loading</span>
         </div>
-        <!-- Smooth spin (comparison) -->
+        <!-- Muted spinner -->
         <div class="flex flex-col items-center gap-2">
-          <FontAwesomeIcon icon={faSpinner} class="w-6 h-6 text-[var(--dash-text-muted)] animate-spin" />
-          <span class="text-xs text-[var(--dash-text-muted)]">Smooth spin</span>
+          <Spinner size="w-5 h-5" color="var(--dash-text-muted)" />
+          <span class="text-xs text-[var(--dash-text-muted)]">Muted</span>
         </div>
         <!-- Live indicator -->
         <div class="flex flex-col items-center gap-2">
@@ -508,10 +514,13 @@
       <div class="mt-6 space-y-3 border-t border-[var(--dash-border)] pt-4">
         <h3 class="text-sm font-medium text-[var(--dash-text)]">Usage</h3>
         <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
-          &lt;FontAwesomeIcon icon=&#123;faSpinner&#125; class="w-6 h-6 text-[var(--dash-primary)] spin-pulse" /&gt;
+          &lt;Spinner size="w-6 h-6" color="var(--dash-primary)" /&gt;
         </div>
         <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
-          &lt;span class="animate-ping absolute ... rounded-full bg-green-400 opacity-75"&gt;&lt;/span&gt;
+          &lt;Spinner size="w-4 h-4" color="white" /&gt;  &lt;!-- in buttons --&gt;
+        </div>
+        <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
+          &lt;Spinner /&gt;  &lt;!-- inherits text color, w-4 h-4 default --&gt;
         </div>
       </div>
     </Card>

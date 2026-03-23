@@ -3,6 +3,7 @@
   import { faPlay, faSearch } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import Card from "./Card.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
 
   interface SearchTask {
     id: number;
@@ -98,10 +99,14 @@
       {#each recentTasks as task (task.id)}
         {@const statusIcon = getSearchTaskStatusIcon(task)}
         <div class="flex items-center gap-2 text-xs">
-          <FontAwesomeIcon
-            icon={statusIcon.icon}
-            class="{statusIcon.iconSize} {statusIcon.colorClass} {statusIcon.animate ? 'spin-pulse' : ''} shrink-0"
-          />
+          {#if statusIcon.spinner}
+            <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" class="shrink-0" />
+          {:else}
+            <FontAwesomeIcon
+              icon={statusIcon.icon}
+              class="{statusIcon.iconSize} {statusIcon.colorClass} shrink-0"
+            />
+          {/if}
 
           <!-- Name @ platform -->
           <span class="text-[var(--dash-text)] truncate flex-1 min-w-0">

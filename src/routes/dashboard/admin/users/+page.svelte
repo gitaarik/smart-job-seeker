@@ -7,13 +7,13 @@
     faEnvelope,
     faPencil,
     faPlus,
-    faSpinner,
     faTimes,
     faTrash,
     faUsers,
     faUserSecret,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
@@ -282,10 +282,7 @@
           class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {#if addingUser}
-            <FontAwesomeIcon
-              icon={faSpinner}
-              class="w-4 h-4 spin-pulse"
-            />
+            <Spinner size="w-4 h-4" />
             {newSendInvite ? "Sending..." : "Adding..."}
           {:else}
             {newSendInvite ? "Send Invite" : "Add User"}
@@ -501,10 +498,7 @@
                   class="px-3 py-1.5 text-xs bg-orange-500/10 border border-orange-500/30 rounded-lg text-orange-500 hover:bg-orange-500/20 hover:border-orange-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {#if sendingInviteId === user.id}
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      class="w-3 h-3 spin-pulse"
-                    />
+                    <Spinner size="w-3 h-3" />
                     Sending...
                   {:else}
                     <FontAwesomeIcon icon={faEnvelope} class="w-3 h-3" />

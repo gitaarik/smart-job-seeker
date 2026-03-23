@@ -5,9 +5,9 @@
     faArrowRight,
     faCloudUploadAlt,
     faFile,
-    faSpinner,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import Spinner from "$lib/components/Spinner.svelte";
   import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
   import type { ResumeData } from "$lib/server/resume/types";
   import { convertExportToResumeData } from "../lib/convert-export";
@@ -350,7 +350,7 @@
           class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {#if isLoading}
-            <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 spin-pulse" />
+            <Spinner size="w-4 h-4" />
             Processing...
           {:else}
             Upload & Parse
