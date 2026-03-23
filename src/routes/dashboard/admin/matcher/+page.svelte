@@ -25,6 +25,11 @@
   interface ProfileInfo {
     id: number;
     name: string;
+    matchCommunityJobs: boolean;
+    totalJobs: number;
+    matchedCount: number;
+    noMatchCount: number;
+    unmatchedCount: number;
   }
 
   let matcherStates = $state<MatcherState[]>([]);
@@ -137,6 +142,7 @@
       <div class="space-y-3">
         {#each profiles as profile (profile.id)}
           {@const state = getProfileState(profile.id)}
+          {@const evaluated = profile.matchedCount + profile.noMatchCount}
           <Card padding="responsive">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
@@ -156,6 +162,9 @@
                 {/if}
                 <h4 class="text-sm font-medium text-[var(--dash-text)]">{profile.name}</h4>
                 <span class="text-xs text-[var(--dash-text-muted)]">ID: {profile.id}</span>
+                {#if profile.matchCommunityJobs}
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]">community</span>
+                {/if}
               </div>
               {#if state?.lastUpdated}
                 <span class="text-xs text-[var(--dash-text-muted)]">
@@ -164,12 +173,31 @@
               {/if}
             </div>
 
+            <!-- DB stats row -->
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-secondary)] mb-2">
+              <span>{profile.totalJobs} jobs</span>
+              <span class="text-[var(--dash-success)]">{profile.matchedCount} matched</span>
+              <span class="text-[var(--dash-error)]">{profile.noMatchCount} no match</span>
+              <span class="text-[var(--dash-text-muted)]">{profile.unmatchedCount} unevaluated</span>
+            </div>
+
+            <!-- Progress bar -->
+            {#if profile.totalJobs > 0}
+              <div class="w-full bg-[var(--dash-bg)] rounded-full h-1.5 overflow-hidden mb-2">
+                <div
+                  class="h-full rounded-full transition-all duration-500 {evaluated >= profile.totalJobs ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-primary)]'}"
+                  style="width: {Math.min(100, (evaluated / profile.totalJobs) * 100)}%"
+                ></div>
+              </div>
+            {/if}
+
+            <!-- Worker state row -->
             {#if state}
-              <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-secondary)]">
+              <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-muted)]">
                 <span>Cycles: {state.totalCycles}</span>
-                <span class="text-[var(--dash-success)]">Matched: {state.totalMatched}</span>
+                <span>Session: {state.totalMatched} matched</span>
                 {#if state.totalFailed > 0}
-                  <span class="text-[var(--dash-error)]">Failed: {state.totalFailed}</span>
+                  <span class="text-[var(--dash-error)]">{state.totalFailed} failed</span>
                 {/if}
                 {#if state.currentJobId}
                   <span>

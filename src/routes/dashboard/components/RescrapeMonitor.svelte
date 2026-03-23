@@ -37,7 +37,6 @@
     browserFingerprint: {
       language: string;
       timezone: string;
-      userAgent: string;
     };
     browserFingerprintDefaults: { language: string; timezone: string };
     /** If the job already has an active rescrape, pass "queued" or "scraping" to resume monitoring */
@@ -92,7 +91,6 @@
   let countryCode = $state("");
   let browserLanguage = $state(browserFingerprint.language);
   let browserTimezone = $state(browserFingerprint.timezone);
-  let browserUserAgent = $state(browserFingerprint.userAgent);
   let showAdvanced = $state(false);
   let started = $state(resuming);
 
@@ -136,7 +134,6 @@
       if (countryCode) body.countryCode = countryCode;
       if (browserLanguage) body.browserLanguage = browserLanguage;
       if (browserTimezone) body.browserTimezone = browserTimezone;
-      if (browserUserAgent) body.browserUserAgent = browserUserAgent;
       if (credentialId !== "none") {
         body.credentialId = parseInt(credentialId);
       }
@@ -492,28 +489,6 @@
                   {/if}
                 </div>
 
-                <div>
-                  <label
-                    for="rescrape_user_agent"
-                    class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                  >
-                    User Agent
-                  </label>
-                  <input
-                    type="text"
-                    id="rescrape_user_agent"
-                    bind:value={browserUserAgent}
-                    placeholder="Auto-detected or random"
-                    disabled={started}
-                    class="w-full px-2.5 py-1.5 text-xs font-mono border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent disabled:opacity-50"
-                  />
-                  {#if !browserUserAgent}
-                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                      Auto-detected from your browser, or GoLogin generates a
-                      random one
-                    </p>
-                  {/if}
-                </div>
               </div>
             {/if}
           {/if}

@@ -19,7 +19,6 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     where: { id: profileId, user_id: user.id },
     select: {
       id: true,
-      browser_user_agent: true,
       browser_language: true,
       browser_timezone: true,
     },
@@ -34,9 +33,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
   const updateData: Record<string, string> = {};
 
-  if (body.browser_user_agent && (force || !profile.browser_user_agent)) {
-    updateData.browser_user_agent = String(body.browser_user_agent).substring(0, 500);
-  }
+  // browser_user_agent is intentionally not stored — GoLogin manages its own UA
   if (body.browser_language && (force || !profile.browser_language)) {
     updateData.browser_language = String(body.browser_language).substring(0, 50);
   }

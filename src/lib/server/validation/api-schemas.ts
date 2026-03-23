@@ -80,7 +80,6 @@ export const platformCredentialsSchema = z.object({
 
 export const browserInfoSchema = z.object({
   force: z.boolean().optional(),
-  browser_user_agent: z.string().max(500).optional().nullable(),
   browser_language: z.string().max(50).optional().nullable(),
   browser_timezone: z.string().max(100).optional().nullable(),
 });
@@ -150,7 +149,6 @@ export const profileUpdateSchema = z.object({
   npm_profile: optionalTrimmedString(),
   pypi_profile: optionalTrimmedString(),
   country_code: optionalTrimmedString(10),
-  browser_user_agent: optionalTrimmedString(500),
   browser_language: optionalTrimmedString(50),
   browser_timezone: optionalTrimmedString(100),
   browser_country_code: z.string().trim().toUpperCase()

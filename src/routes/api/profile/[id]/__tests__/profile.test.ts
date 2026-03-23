@@ -216,14 +216,12 @@ describe("PUT /api/profile/[id]/browser-info", () => {
   it("only updates empty fields by default", async () => {
     mockFindFirst.mockResolvedValueOnce({
       id: 1,
-      browser_user_agent: "existing-ua",
       browser_language: null,
       browser_timezone: null,
     });
     const event = createEvent({
       method: "PUT",
       body: {
-        browser_user_agent: "new-ua",
         browser_language: "en-US",
         browser_timezone: "Europe/Amsterdam",
       },
@@ -231,8 +229,6 @@ describe("PUT /api/profile/[id]/browser-info", () => {
     const response = await PUT(event);
     const data = await response.json();
     expect(data.success).toBe(true);
-    // Should NOT update user_agent (already set), but SHOULD update language + timezone
-    expect(data.updated).not.toContain("browser_user_agent");
     expect(data.updated).toContain("browser_language");
     expect(data.updated).toContain("browser_timezone");
   });
@@ -240,7 +236,6 @@ describe("PUT /api/profile/[id]/browser-info", () => {
   it("overwrites all fields when force=true", async () => {
     mockFindFirst.mockResolvedValueOnce({
       id: 1,
-      browser_user_agent: "existing-ua",
       browser_language: "de-DE",
       browser_timezone: "Europe/Berlin",
     });
@@ -248,14 +243,12 @@ describe("PUT /api/profile/[id]/browser-info", () => {
       method: "PUT",
       body: {
         force: true,
-        browser_user_agent: "new-ua",
         browser_language: "en-US",
         browser_timezone: "Europe/Amsterdam",
       },
     });
     const response = await PUT(event);
     const data = await response.json();
-    expect(data.updated).toContain("browser_user_agent");
     expect(data.updated).toContain("browser_language");
     expect(data.updated).toContain("browser_timezone");
   });
@@ -263,7 +256,6 @@ describe("PUT /api/profile/[id]/browser-info", () => {
   it("skips update when no new fields provided", async () => {
     mockFindFirst.mockResolvedValueOnce({
       id: 1,
-      browser_user_agent: "existing",
       browser_language: "en",
       browser_timezone: "UTC",
     });

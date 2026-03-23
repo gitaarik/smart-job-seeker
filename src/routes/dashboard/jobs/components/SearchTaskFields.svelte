@@ -50,7 +50,6 @@
     browserCountryCode?: string;
     defaultCountryCode?: string;
     browserFingerprint?: {
-      userAgent: string;
       language: string;
       timezone: string;
     };
@@ -81,7 +80,7 @@
     canEditPlatformUrls: initialCanEditPlatformUrls = true,
     browserCountryCode: initialBrowserCountryCode = "",
     defaultCountryCode = "",
-    browserFingerprint = { userAgent: "", language: "", timezone: "" },
+    browserFingerprint = { language: "", timezone: "" },
     browserFingerprintDefaults = { language: "", timezone: "" },
     uiPreferences = {},
     desktopConnected = null,
@@ -256,13 +255,10 @@
   let savedBrowserLanguage = $state(browserFingerprint.language);
   let browserTimezone = $state(browserFingerprint.timezone);
   let savedBrowserTimezone = $state(browserFingerprint.timezone);
-  let browserUserAgent = $state(browserFingerprint.userAgent);
-  let savedBrowserUserAgent = $state(browserFingerprint.userAgent);
   let browserFingerprintDirty = $derived(
     isEdit &&
       (browserLanguage !== savedBrowserLanguage ||
-        browserTimezone !== savedBrowserTimezone ||
-        browserUserAgent !== savedBrowserUserAgent),
+        browserTimezone !== savedBrowserTimezone),
   );
   let isSavingBrowserFingerprint = $state(false);
   let defaultBrowserLanguage = browserFingerprintDefaults.language;
@@ -455,12 +451,10 @@
         body: JSON.stringify({
           browser_language: browserLanguage.trim() || null,
           browser_timezone: browserTimezone.trim() || null,
-          browser_user_agent: browserUserAgent.trim() || null,
         }),
       });
       savedBrowserLanguage = browserLanguage;
       savedBrowserTimezone = browserTimezone;
-      savedBrowserUserAgent = browserUserAgent;
     } catch (err) {
       console.error("Failed to save browser fingerprint:", err);
     } finally {
@@ -471,7 +465,6 @@
   function resetBrowserFingerprint() {
     browserLanguage = savedBrowserLanguage;
     browserTimezone = savedBrowserTimezone;
-    browserUserAgent = savedBrowserUserAgent;
   }
 
   async function saveCredential() {
@@ -498,7 +491,6 @@
     browserCountryCode: string;
     defaultCountryCode: string;
     browserFingerprint: {
-      userAgent: string;
       language: string;
       timezone: string;
     };
@@ -527,8 +519,6 @@
     savedBrowserLanguage = newData.browserFingerprint.language;
     browserTimezone = newData.browserFingerprint.timezone;
     savedBrowserTimezone = newData.browserFingerprint.timezone;
-    browserUserAgent = newData.browserFingerprint.userAgent;
-    savedBrowserUserAgent = newData.browserFingerprint.userAgent;
     defaultBrowserLanguage = newData.browserFingerprintDefaults.language;
     defaultBrowserTimezone = newData.browserFingerprintDefaults.timezone;
     editPlatformCredentials = newData.platformCredentials;
@@ -1464,28 +1454,6 @@
                         Defaults to <span class="font-mono">{
                           defaultBrowserTimezone
                         }</span> based on selected country
-                      </p>
-                    {/if}
-                  </div>
-
-                  <div>
-                    <label
-                      for="browser_user_agent"
-                      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      User Agent
-                    </label>
-                    <input
-                      type="text"
-                      id="browser_user_agent"
-                      bind:value={browserUserAgent}
-                      placeholder="Auto-detected or random"
-                      class="w-full px-2.5 py-1.5 text-xs font-mono border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                    {#if !browserUserAgent}
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                        Auto-detected from your browser, or GoLogin generates a
-                        random one
                       </p>
                     {/if}
                   </div>

@@ -157,7 +157,6 @@ export const load: PageServerLoad = async ({ parent, params }) => {
       where: { id: profileId },
       select: {
         country_code: true,
-        browser_user_agent: true,
         browser_language: true,
         browser_timezone: true,
       },
@@ -178,7 +177,6 @@ export const load: PageServerLoad = async ({ parent, params }) => {
       browserFingerprint: {
         language: profile?.browser_language || "",
         timezone: profile?.browser_timezone || "",
-        userAgent: profile?.browser_user_agent || "",
       },
       browserFingerprintDefaults: {
         language: geoDefaults.language,

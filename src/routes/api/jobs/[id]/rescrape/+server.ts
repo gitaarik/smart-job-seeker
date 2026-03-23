@@ -26,7 +26,6 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     countryCode?: string;
     browserLanguage?: string;
     browserTimezone?: string;
-    browserUserAgent?: string;
     credentialId?: number;
     browserProvider?: string;
     keepMinimized?: boolean;
@@ -36,9 +35,6 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     if (body.countryCode) overrides.countryCode = body.countryCode;
     if (body.browserLanguage) overrides.browserLanguage = body.browserLanguage;
     if (body.browserTimezone) overrides.browserTimezone = body.browserTimezone;
-    if (body.browserUserAgent) {
-      overrides.browserUserAgent = body.browserUserAgent;
-    }
     if (body.credentialId) overrides.credentialId = Number(body.credentialId);
     if (body.browserProvider) overrides.browserProvider = body.browserProvider;
     if (body.keepMinimized !== undefined) {

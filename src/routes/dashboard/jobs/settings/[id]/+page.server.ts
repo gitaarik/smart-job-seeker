@@ -72,7 +72,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     select: {
       country_code: true,
       browser_country_code: true,
-      browser_user_agent: true,
       browser_language: true,
       browser_timezone: true,
     },
@@ -94,7 +93,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     localBrowserAllowed: config.localBrowserAllowed,
     // Browser fingerprint: saved values + geo-derived defaults
     browserFingerprint: {
-      userAgent: profileData?.browser_user_agent || "",
       language: profileData?.browser_language || "",
       timezone: profileData?.browser_timezone || "",
     },

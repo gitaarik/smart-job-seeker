@@ -21,7 +21,6 @@ export interface RescrapeJobData {
   countryCode?: string;
   browserLanguage?: string;
   browserTimezone?: string;
-  browserUserAgent?: string;
   credentialId?: number;
   browserProvider?: string;
   keepMinimized?: boolean;

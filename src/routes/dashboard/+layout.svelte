@@ -20,7 +20,6 @@
     sessionStorage.setItem(key, "1");
 
     const browserInfo = {
-      browser_user_agent: navigator.userAgent,
       browser_language: navigator.language,
       browser_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
