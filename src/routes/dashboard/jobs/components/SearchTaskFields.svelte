@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
@@ -546,6 +547,37 @@
       })(),
     };
   }
+
+  // Prevent browser form restoration from causing dirty state on page load/refresh.
+  // Browsers can restore previous input values after Svelte hydration, which bind:value
+  // picks up and makes fields appear dirty. Re-sync all state from props after mount.
+  onMount(() => {
+    if (isEdit && searchTask) {
+      searchUrlInput = searchTask.search_url ?? "";
+      searchTermInput = searchTask.search_term ?? "";
+      loginUrlInput = searchTask.job_platforms?.login_page_url ?? "";
+      maxJobsEnabled = searchTask.max_jobs != null;
+      maxJobsInput = searchTask.max_jobs?.toString() ?? "";
+      skipFirstEnabled = searchTask.skip_first != null;
+      skipFirstInput = searchTask.skip_first?.toString() ?? "";
+      stopAfterDuplicatesEnabled = searchTask.stop_after_duplicates != null;
+      stopAfterDuplicatesInput = searchTask.stop_after_duplicates?.toString() ?? "";
+      skipExisting = searchTask.skip_existing ?? false;
+      browserProvider = searchTask.browser_provider ?? null;
+      savedBrowserProvider = searchTask.browser_provider ?? null;
+      keepMinimized = searchTask.keep_minimized ?? true;
+      savedKeepMinimized = searchTask.keep_minimized ?? true;
+      editBrowserCountryCode = initialBrowserCountryCode;
+      savedBrowserCountryCode = initialBrowserCountryCode;
+      browserLanguage = browserFingerprint.language;
+      savedBrowserLanguage = browserFingerprint.language;
+      browserTimezone = browserFingerprint.timezone;
+      savedBrowserTimezone = browserFingerprint.timezone;
+      const credId = searchTask.platform_profile_id?.toString() ?? "none";
+      editSavedCredentialId = credId;
+      editSelectedCredentialId = credId;
+    }
+  });
 </script>
 
 {#snippet saveCancel(
@@ -702,6 +734,7 @@
                 <input
                   type="url"
                   bind:value={searchUrlInput}
+                  autocomplete="off"
                   placeholder="https://..."
                   class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                 />
@@ -780,6 +813,7 @@
                 <input
                   type="text"
                   bind:value={searchTermInput}
+                  autocomplete="off"
                   placeholder="e.g., frontend developer amsterdam"
                   class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                 />
@@ -851,6 +885,7 @@
                   <input
                     type="url"
                     bind:value={loginUrlInput}
+                    autocomplete="off"
                     placeholder="https://..."
                     class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                   />
@@ -1063,6 +1098,7 @@
               min="1"
               placeholder="No limit"
               bind:value={maxJobsInput}
+              autocomplete="off"
               disabled={!maxJobsEnabled}
               class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
@@ -1169,6 +1205,7 @@
               min="1"
               placeholder="Off"
               bind:value={stopAfterDuplicatesInput}
+              autocomplete="off"
               disabled={!stopAfterDuplicatesEnabled}
               class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
@@ -1230,6 +1267,7 @@
               min="1"
               placeholder="Off"
               bind:value={skipFirstInput}
+              autocomplete="off"
               disabled={!skipFirstEnabled}
               class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
@@ -1418,6 +1456,7 @@
                       type="text"
                       id="browser_language"
                       bind:value={browserLanguage}
+                      autocomplete="off"
                       placeholder={defaultBrowserLanguage}
                       class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                     />
@@ -1441,6 +1480,7 @@
                       type="text"
                       id="browser_timezone"
                       bind:value={browserTimezone}
+                      autocomplete="off"
                       placeholder={defaultBrowserTimezone}
                       class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                     />

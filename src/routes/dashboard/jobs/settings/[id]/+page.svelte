@@ -230,11 +230,6 @@
   let logContainerRefs = $state<Record<number, HTMLElement | null>>({});
   let logAutoScroll = $state<Record<number, boolean>>({});
 
-  // Keep searchTask in sync when data updates (e.g. invalidateAll)
-  $effect.pre(() => {
-    searchTask = data.searchTask;
-  });
-
   // Reset all page state when navigating between different search tasks
   let currentSearchTaskId = $state(data.searchTask.id);
   $effect(() => {
@@ -1117,6 +1112,7 @@
               id="edit-task-name"
               type="text"
               bind:value={editNameInput}
+              autocomplete="off"
               class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
               onkeydown={(e) => {
                 if (e.key === "Enter") saveHeader();
