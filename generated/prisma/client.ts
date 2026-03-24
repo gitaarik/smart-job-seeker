@@ -439,3 +439,13 @@ export type search_tasks = Prisma.search_tasksModel
  * 
  */
 export type search_tasks_job_sites = Prisma.search_tasks_job_sitesModel
+/**
+ * Model scraper_agent_sessions
+ * 
+ */
+export type scraper_agent_sessions = Prisma.scraper_agent_sessionsModel
+/**
+ * Model scraper_agent_iterations
+ * 
+ */
+export type scraper_agent_iterations = Prisma.scraper_agent_iterationsModel

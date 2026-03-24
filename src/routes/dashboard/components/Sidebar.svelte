@@ -27,6 +27,7 @@
     faMoneyBillWave,
     faPalette,
     faPaperPlane,
+    faRobot,
     faSearch,
     faShieldAlt,
     faSliders,
@@ -226,6 +227,11 @@
           label: "Matcher",
           href: "/dashboard/admin/matcher",
           icon: faChartBar,
+        },
+        {
+          label: "Scraper Agent",
+          href: "/dashboard/admin/scraper-agent",
+          icon: faRobot,
         },
         {
           label: "Style Guide",

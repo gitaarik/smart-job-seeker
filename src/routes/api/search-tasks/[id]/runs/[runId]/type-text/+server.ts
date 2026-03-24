@@ -13,10 +13,11 @@ const CLOUD_BROWSER_BASE = "wss://cloudbrowser.gologin.com";
  * Used for entering 2FA codes, security codes, etc. on mobile where
  * the GoLogin browser view doesn't trigger the on-screen keyboard.
  *
- * Body: { text: string, submit?: boolean }
+ * Body: { text?: string, submit?: boolean, clear?: boolean }
  *
  * - text: The text to type (e.g., "123456")
- * - submit: If true, press Enter after typing (default: false)
+ * - submit: If true, click submit button or press Enter (default: false)
+ * - clear: If true, select all and delete text in focused input (default: false)
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
@@ -24,16 +25,16 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   const runId = parseIntParam(params.runId, "run");
 
   // Parse request body
-  let body: { text?: string; submit?: boolean };
+  let body: { text?: string; submit?: boolean; clear?: boolean };
   try {
     body = await request.json();
   } catch {
     throw error(400, "Invalid JSON body");
   }
 
-  const { text, submit = false } = body;
-  if (!text || typeof text !== "string") {
-    throw error(400, "Missing or invalid 'text' field");
+  const { text = "", submit = false, clear = false } = body;
+  if (!text && !submit && !clear) {
+    throw error(400, "Must provide text, submit, or clear");
   }
 
   // Verify ownership and get job search details
@@ -133,13 +134,60 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
       }
     }).catch(() => {}); // Non-fatal — worst case user still has whatever was focused
 
-    await page.keyboard.type(text, { delay: 50 });
-
-    if (submit) {
-      await page.keyboard.press("Enter");
+    if (clear) {
+      // Select all text in the focused input and delete it
+      await page.keyboard.press("Control+A");
+      await page.keyboard.press("Backspace");
+      return json({ success: true, message: "Cleared input" });
     }
 
-    return json({ success: true, message: `Typed ${text.length} character(s)` });
+    if (text) {
+      await page.keyboard.type(text, { delay: 50 });
+    }
+
+    if (submit) {
+      // Try clicking a submit button first (more reliable than Enter on many forms).
+      // Fall back to pressing Enter if no submit button is found.
+      const clicked = await page.evaluate(() => {
+        const submitSelectors = [
+          'button[type="submit"]',
+          'input[type="submit"]',
+          'button#submit',
+          // LinkedIn specific
+          'button[data-litms-control-urn*="submit"]',
+          'button.btn__primary--large',
+        ];
+        for (const sel of submitSelectors) {
+          const btn = document.querySelector<HTMLElement>(sel);
+          if (btn && btn.offsetParent !== null && !(btn as HTMLButtonElement).disabled) {
+            btn.click();
+            return true;
+          }
+        }
+        // Fallback: find a visible button containing "submit" or "verify" text
+        const buttons = document.querySelectorAll<HTMLButtonElement>("button");
+        for (const btn of buttons) {
+          const t = (btn.textContent || "").trim().toLowerCase();
+          if (btn.offsetParent !== null && !btn.disabled &&
+              (t === "submit" || t === "verify" || t === "send" || t === "confirm")) {
+            btn.click();
+            return true;
+          }
+        }
+        return false;
+      }).catch(() => false);
+
+      if (!clicked) {
+        await page.keyboard.press("Enter");
+      }
+      // Wait briefly so the form submission processes before we disconnect CDP
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+
+    const parts = [];
+    if (text) parts.push(`typed ${text.length} char(s)`);
+    if (submit) parts.push("submitted");
+    return json({ success: true, message: parts.join(" and ") || "Done" });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw error(502, `Failed to type text: ${message}`);

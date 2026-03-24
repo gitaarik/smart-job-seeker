@@ -130,7 +130,9 @@ export const ModelName = {
   search_task_run_items: 'search_task_run_items',
   search_task_runs: 'search_task_runs',
   search_tasks: 'search_tasks',
-  search_tasks_job_sites: 'search_tasks_job_sites'
+  search_tasks_job_sites: 'search_tasks_job_sites',
+  scraper_agent_sessions: 'scraper_agent_sessions',
+  scraper_agent_iterations: 'scraper_agent_iterations'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1544,6 +1546,50 @@ export const Search_tasks_job_sitesScalarFieldEnum = {
 } as const
 
 export type Search_tasks_job_sitesScalarFieldEnum = (typeof Search_tasks_job_sitesScalarFieldEnum)[keyof typeof Search_tasks_job_sitesScalarFieldEnum]
+
+
+export const Scraper_agent_sessionsScalarFieldEnum = {
+  id: 'id',
+  search_task_id: 'search_task_id',
+  status: 'status',
+  max_iterations: 'max_iterations',
+  current_iteration: 'current_iteration',
+  run_first: 'run_first',
+  goal: 'goal',
+  claude_session_id: 'claude_session_id',
+  system_prompt: 'system_prompt',
+  pending_hint: 'pending_hint',
+  needs_input: 'needs_input',
+  error_message: 'error_message',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  finished_at: 'finished_at'
+} as const
+
+export type Scraper_agent_sessionsScalarFieldEnum = (typeof Scraper_agent_sessionsScalarFieldEnum)[keyof typeof Scraper_agent_sessionsScalarFieldEnum]
+
+
+export const Scraper_agent_iterationsScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  iteration: 'iteration',
+  stage: 'stage',
+  run_id: 'run_id',
+  run_status: 'run_status',
+  items_total: 'items_total',
+  items_completed: 'items_completed',
+  items_error: 'items_error',
+  success_pct: 'success_pct',
+  goal_met: 'goal_met',
+  goal_evaluation: 'goal_evaluation',
+  prompt: 'prompt',
+  claude_analysis: 'claude_analysis',
+  claude_changes: 'claude_changes',
+  started_at: 'started_at',
+  finished_at: 'finished_at'
+} as const
+
+export type Scraper_agent_iterationsScalarFieldEnum = (typeof Scraper_agent_iterationsScalarFieldEnum)[keyof typeof Scraper_agent_iterationsScalarFieldEnum]
 
 
 export const SortOrder = {

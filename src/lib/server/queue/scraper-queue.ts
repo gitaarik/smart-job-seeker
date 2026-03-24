@@ -24,7 +24,7 @@ export interface ScrapeJobData {
   platformId: string;
   useVision?: boolean;
   searchTerm?: string;
-  triggeredBy: "user" | "scheduler";
+  triggeredBy: "user" | "scheduler" | "scraper-agent";
   /** Which queue to route to. Null/undefined uses server default. */
   browserProvider?: string | null;
 }

@@ -463,7 +463,9 @@ export const ModelName = {
   search_task_run_items: 'search_task_run_items',
   search_task_runs: 'search_task_runs',
   search_tasks: 'search_tasks',
-  search_tasks_job_sites: 'search_tasks_job_sites'
+  search_tasks_job_sites: 'search_tasks_job_sites',
+  scraper_agent_sessions: 'scraper_agent_sessions',
+  scraper_agent_iterations: 'scraper_agent_iterations'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -479,7 +481,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -6403,6 +6405,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    scraper_agent_sessions: {
+      payload: Prisma.$scraper_agent_sessionsPayload<ExtArgs>
+      fields: Prisma.scraper_agent_sessionsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.scraper_agent_sessionsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.scraper_agent_sessionsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>
+        }
+        findFirst: {
+          args: Prisma.scraper_agent_sessionsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.scraper_agent_sessionsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>
+        }
+        findMany: {
+          args: Prisma.scraper_agent_sessionsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>[]
+        }
+        create: {
+          args: Prisma.scraper_agent_sessionsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>
+        }
+        createMany: {
+          args: Prisma.scraper_agent_sessionsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.scraper_agent_sessionsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>[]
+        }
+        delete: {
+          args: Prisma.scraper_agent_sessionsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>
+        }
+        update: {
+          args: Prisma.scraper_agent_sessionsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>
+        }
+        deleteMany: {
+          args: Prisma.scraper_agent_sessionsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.scraper_agent_sessionsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.scraper_agent_sessionsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>[]
+        }
+        upsert: {
+          args: Prisma.scraper_agent_sessionsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_sessionsPayload>
+        }
+        aggregate: {
+          args: Prisma.Scraper_agent_sessionsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateScraper_agent_sessions>
+        }
+        groupBy: {
+          args: Prisma.scraper_agent_sessionsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Scraper_agent_sessionsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.scraper_agent_sessionsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Scraper_agent_sessionsCountAggregateOutputType> | number
+        }
+      }
+    }
+    scraper_agent_iterations: {
+      payload: Prisma.$scraper_agent_iterationsPayload<ExtArgs>
+      fields: Prisma.scraper_agent_iterationsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.scraper_agent_iterationsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.scraper_agent_iterationsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>
+        }
+        findFirst: {
+          args: Prisma.scraper_agent_iterationsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.scraper_agent_iterationsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>
+        }
+        findMany: {
+          args: Prisma.scraper_agent_iterationsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>[]
+        }
+        create: {
+          args: Prisma.scraper_agent_iterationsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>
+        }
+        createMany: {
+          args: Prisma.scraper_agent_iterationsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.scraper_agent_iterationsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>[]
+        }
+        delete: {
+          args: Prisma.scraper_agent_iterationsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>
+        }
+        update: {
+          args: Prisma.scraper_agent_iterationsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>
+        }
+        deleteMany: {
+          args: Prisma.scraper_agent_iterationsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.scraper_agent_iterationsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.scraper_agent_iterationsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>[]
+        }
+        upsert: {
+          args: Prisma.scraper_agent_iterationsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$scraper_agent_iterationsPayload>
+        }
+        aggregate: {
+          args: Prisma.Scraper_agent_iterationsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateScraper_agent_iterations>
+        }
+        groupBy: {
+          args: Prisma.scraper_agent_iterationsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Scraper_agent_iterationsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.scraper_agent_iterationsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Scraper_agent_iterationsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -7839,6 +7989,50 @@ export const Search_tasks_job_sitesScalarFieldEnum = {
 export type Search_tasks_job_sitesScalarFieldEnum = (typeof Search_tasks_job_sitesScalarFieldEnum)[keyof typeof Search_tasks_job_sitesScalarFieldEnum]
 
 
+export const Scraper_agent_sessionsScalarFieldEnum = {
+  id: 'id',
+  search_task_id: 'search_task_id',
+  status: 'status',
+  max_iterations: 'max_iterations',
+  current_iteration: 'current_iteration',
+  run_first: 'run_first',
+  goal: 'goal',
+  claude_session_id: 'claude_session_id',
+  system_prompt: 'system_prompt',
+  pending_hint: 'pending_hint',
+  needs_input: 'needs_input',
+  error_message: 'error_message',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  finished_at: 'finished_at'
+} as const
+
+export type Scraper_agent_sessionsScalarFieldEnum = (typeof Scraper_agent_sessionsScalarFieldEnum)[keyof typeof Scraper_agent_sessionsScalarFieldEnum]
+
+
+export const Scraper_agent_iterationsScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  iteration: 'iteration',
+  stage: 'stage',
+  run_id: 'run_id',
+  run_status: 'run_status',
+  items_total: 'items_total',
+  items_completed: 'items_completed',
+  items_error: 'items_error',
+  success_pct: 'success_pct',
+  goal_met: 'goal_met',
+  goal_evaluation: 'goal_evaluation',
+  prompt: 'prompt',
+  claude_analysis: 'claude_analysis',
+  claude_changes: 'claude_changes',
+  started_at: 'started_at',
+  finished_at: 'finished_at'
+} as const
+
+export type Scraper_agent_iterationsScalarFieldEnum = (typeof Scraper_agent_iterationsScalarFieldEnum)[keyof typeof Scraper_agent_iterationsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -8165,6 +8359,8 @@ export type GlobalOmitConfig = {
   search_task_runs?: Prisma.search_task_runsOmit
   search_tasks?: Prisma.search_tasksOmit
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesOmit
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsOmit
+  scraper_agent_iterations?: Prisma.scraper_agent_iterationsOmit
 }
 
 /* Types for Logging */

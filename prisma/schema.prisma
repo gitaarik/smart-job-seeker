@@ -1382,8 +1382,9 @@ model search_task_runs {
   user_response         String?                 @db.VarChar(20)
   settings              Json?
   logs                  scraper_logs[]
-  search_task_run_items search_task_run_items[]
-  search_tasks          search_tasks            @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  search_task_run_items    search_task_run_items[]
+  scraper_agent_iterations scraper_agent_iterations[]
+  search_tasks             search_tasks            @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([search_task_id, started_at])
 }
@@ -1414,8 +1415,9 @@ model search_tasks {
   keep_minimized         Boolean?                 @default(true)
   ui_preferences         Json?                    @default("{}")
   extracted_jobs_json    String?
-  search_task_runs       search_task_runs[]
-  job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "search_tasks_platform_foreign")
+  search_task_runs         search_task_runs[]
+  scraper_agent_sessions   scraper_agent_sessions[]
+  job_platforms            job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "search_tasks_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "search_tasks_profile_foreign")
   search_tasks_job_sites search_tasks_job_sites[]
@@ -1427,6 +1429,53 @@ model search_tasks_job_sites {
   id              Int           @id @default(autoincrement())
   search_tasks_id Int?
   search_tasks    search_tasks? @relation(fields: [search_tasks_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "search_tasks_job_sites_search_tasks_id_foreign")
+}
+
+model scraper_agent_sessions {
+  id                 Int                        @id @default(autoincrement())
+  search_task_id     Int
+  status             String                     @default("active") @db.VarChar(20)
+  max_iterations     Int                        @default(10)
+  current_iteration  Int                        @default(0)
+  run_first          Boolean                    @default(false)
+  goal               String
+  claude_session_id  String?                    @db.VarChar(255)
+  system_prompt      String?
+  pending_hint       String?
+  needs_input        String?
+  error_message      String?
+  created_at         DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime                   @default(now()) @db.Timestamptz(6)
+  finished_at        DateTime?                  @db.Timestamptz(6)
+  iterations         scraper_agent_iterations[]
+  search_tasks       search_tasks               @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([status])
+  @@index([search_task_id])
+}
+
+model scraper_agent_iterations {
+  id               Int                      @id @default(autoincrement())
+  session_id       Int
+  iteration        Int
+  stage            String?                  @db.VarChar(30)
+  run_id           Int?
+  run_status       String?                  @db.VarChar(50)
+  items_total      Int?
+  items_completed  Int?
+  items_error      Int?
+  success_pct      Float?
+  goal_met         Boolean?
+  goal_evaluation  String?
+  prompt           String?
+  claude_analysis  String?
+  claude_changes   String?
+  started_at       DateTime                 @default(now()) @db.Timestamptz(6)
+  finished_at      DateTime?                @db.Timestamptz(6)
+  session          scraper_agent_sessions   @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  search_task_runs search_task_runs?        @relation(fields: [run_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([session_id, iteration])
 }
 
 enum Role {

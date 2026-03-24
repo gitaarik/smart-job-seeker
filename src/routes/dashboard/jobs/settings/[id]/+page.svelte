@@ -967,6 +967,60 @@
     }
   }
 
+  async function submitBrowserForm() {
+    if (!currentRunId) return;
+    isTypingText = true;
+    typeTextMessage = null;
+    try {
+      const res = await fetch(
+        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: "", submit: true }),
+        },
+      );
+      const result = await res.json();
+      if (!res.ok) {
+        typeTextMessage = result.message || "Failed to submit";
+        return;
+      }
+      typeTextMessage = "Submitted";
+      setTimeout(() => { typeTextMessage = null; }, 2000);
+    } catch {
+      typeTextMessage = "Failed to submit";
+    } finally {
+      isTypingText = false;
+    }
+  }
+
+  async function clearBrowserInput() {
+    if (!currentRunId) return;
+    isTypingText = true;
+    typeTextMessage = null;
+    try {
+      const res = await fetch(
+        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: "", clear: true }),
+        },
+      );
+      const result = await res.json();
+      if (!res.ok) {
+        typeTextMessage = result.message || "Failed to clear";
+        return;
+      }
+      typeTextMessage = "Cleared";
+      setTimeout(() => { typeTextMessage = null; }, 2000);
+    } catch {
+      typeTextMessage = "Failed to clear";
+    } finally {
+      isTypingText = false;
+    }
+  }
+
   async function sendNavigateUrl() {
     if (!currentRunId || !navigateUrlValue.trim()) return;
 
@@ -1674,43 +1728,63 @@
             </div>
             <!-- Type text into browser (for 2FA codes on mobile) -->
             <div
-              class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]"
+              class="flex flex-col gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]"
             >
-              <input
-                type="text"
-                bind:value={typeTextValue}
-                placeholder="Type text into browser (2FA code, etc.)"
-                disabled={isTypingText}
-                onkeydown={(e) => {
-                  if (e.key === "Enter") sendTypeText(true);
-                }}
-                class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
-              />
-              <button
-                onclick={() => sendTypeText(false)}
-                disabled={isTypingText || !typeTextValue.trim()}
-                class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Type text without submitting"
-              >
-                {#if isTypingText}
-                  <Spinner size="w-3 h-3" />
-                {:else}
-                  Type
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  bind:value={typeTextValue}
+                  placeholder="2FA / verification code"
+                  disabled={isTypingText}
+                  onkeydown={(e) => {
+                    if (e.key === "Enter") sendTypeText(true);
+                  }}
+                  class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+                />
+                <button
+                  onclick={() => sendTypeText(true)}
+                  disabled={isTypingText || !typeTextValue.trim()}
+                  class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  title="Type text and submit the form"
+                >
+                  {#if isTypingText}
+                    <Spinner size="w-3 h-3" />
+                  {:else}
+                    Send
+                  {/if}
+                </button>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <button
+                  onclick={() => sendTypeText(false)}
+                  disabled={isTypingText || !typeTextValue.trim()}
+                  class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Type text without submitting"
+                >
+                  Type only
+                </button>
+                <button
+                  onclick={() => submitBrowserForm()}
+                  disabled={isTypingText}
+                  class="px-3 py-1.5 text-sm bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Click the submit button in the browser"
+                >
+                  Submit
+                </button>
+                <button
+                  onclick={() => clearBrowserInput()}
+                  disabled={isTypingText}
+                  class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Clear the input field in the browser"
+                >
+                  Clear
+                </button>
+                {#if typeTextMessage}
+                  <span class="text-xs text-[var(--dash-text-muted)]">{
+                    typeTextMessage
+                  }</span>
                 {/if}
-              </button>
-              <button
-                onclick={() => sendTypeText(true)}
-                disabled={isTypingText || !typeTextValue.trim()}
-                class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Type text and press Enter"
-              >
-                Send
-              </button>
-              {#if typeTextMessage}
-                <span class="text-xs text-[var(--dash-text-muted)]">{
-                  typeTextMessage
-                }</span>
-              {/if}
+              </div>
             </div>
           {/if}
         </div>

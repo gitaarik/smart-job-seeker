@@ -401,6 +401,7 @@ export type search_tasksWhereInput = {
   ui_preferences?: Prisma.JsonNullableFilter<"search_tasks">
   extracted_jobs_json?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   search_task_runs?: Prisma.Search_task_runsListRelationFilter
+  scraper_agent_sessions?: Prisma.Scraper_agent_sessionsListRelationFilter
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
   platform_profiles?: Prisma.XOR<Prisma.Platform_profilesNullableScalarRelationFilter, Prisma.platform_profilesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
@@ -434,6 +435,7 @@ export type search_tasksOrderByWithRelationInput = {
   ui_preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   extracted_jobs_json?: Prisma.SortOrderInput | Prisma.SortOrder
   search_task_runs?: Prisma.search_task_runsOrderByRelationAggregateInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsOrderByRelationAggregateInput
   job_platforms?: Prisma.job_platformsOrderByWithRelationInput
   platform_profiles?: Prisma.platform_profilesOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
@@ -470,6 +472,7 @@ export type search_tasksWhereUniqueInput = Prisma.AtLeast<{
   ui_preferences?: Prisma.JsonNullableFilter<"search_tasks">
   extracted_jobs_json?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   search_task_runs?: Prisma.Search_task_runsListRelationFilter
+  scraper_agent_sessions?: Prisma.Scraper_agent_sessionsListRelationFilter
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
   platform_profiles?: Prisma.XOR<Prisma.Platform_profilesNullableScalarRelationFilter, Prisma.platform_profilesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
@@ -563,6 +566,7 @@ export type search_tasksCreateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsCreateNestedManyWithoutSearch_tasksInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutSearch_tasksInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutSearch_tasksInput
   profiles: Prisma.profilesCreateNestedOneWithoutSearch_tasksInput
@@ -596,6 +600,7 @@ export type search_tasksUncheckedCreateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsUncheckedCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedCreateNestedManyWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedCreateNestedManyWithoutSearch_tasksInput
 }
 
@@ -622,6 +627,7 @@ export type search_tasksUpdateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUpdateManyWithoutSearch_tasksNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutSearch_tasksNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutSearch_tasksNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSearch_tasksNestedInput
@@ -655,6 +661,7 @@ export type search_tasksUncheckedUpdateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedUpdateManyWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedUpdateManyWithoutSearch_tasksNestedInput
 }
 
@@ -1018,6 +1025,20 @@ export type search_tasksUpdateOneWithoutSearch_tasks_job_sitesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.search_tasksUpdateToOneWithWhereWithoutSearch_tasks_job_sitesInput, Prisma.search_tasksUpdateWithoutSearch_tasks_job_sitesInput>, Prisma.search_tasksUncheckedUpdateWithoutSearch_tasks_job_sitesInput>
 }
 
+export type search_tasksCreateNestedOneWithoutScraper_agent_sessionsInput = {
+  create?: Prisma.XOR<Prisma.search_tasksCreateWithoutScraper_agent_sessionsInput, Prisma.search_tasksUncheckedCreateWithoutScraper_agent_sessionsInput>
+  connectOrCreate?: Prisma.search_tasksCreateOrConnectWithoutScraper_agent_sessionsInput
+  connect?: Prisma.search_tasksWhereUniqueInput
+}
+
+export type search_tasksUpdateOneRequiredWithoutScraper_agent_sessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.search_tasksCreateWithoutScraper_agent_sessionsInput, Prisma.search_tasksUncheckedCreateWithoutScraper_agent_sessionsInput>
+  connectOrCreate?: Prisma.search_tasksCreateOrConnectWithoutScraper_agent_sessionsInput
+  upsert?: Prisma.search_tasksUpsertWithoutScraper_agent_sessionsInput
+  connect?: Prisma.search_tasksWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.search_tasksUpdateToOneWithWhereWithoutScraper_agent_sessionsInput, Prisma.search_tasksUpdateWithoutScraper_agent_sessionsInput>, Prisma.search_tasksUncheckedUpdateWithoutScraper_agent_sessionsInput>
+}
+
 export type search_tasksCreateWithoutJob_platformsInput = {
   status?: string | null
   date_created?: Date | string | null
@@ -1041,6 +1062,7 @@ export type search_tasksCreateWithoutJob_platformsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsCreateNestedManyWithoutSearch_tasksInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutSearch_tasksInput
   profiles: Prisma.profilesCreateNestedOneWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesCreateNestedManyWithoutSearch_tasksInput
@@ -1072,6 +1094,7 @@ export type search_tasksUncheckedCreateWithoutJob_platformsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsUncheckedCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedCreateNestedManyWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedCreateNestedManyWithoutSearch_tasksInput
 }
 
@@ -1155,6 +1178,7 @@ export type search_tasksCreateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsCreateNestedManyWithoutSearch_tasksInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutSearch_tasksInput
   profiles: Prisma.profilesCreateNestedOneWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesCreateNestedManyWithoutSearch_tasksInput
@@ -1186,6 +1210,7 @@ export type search_tasksUncheckedCreateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsUncheckedCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedCreateNestedManyWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedCreateNestedManyWithoutSearch_tasksInput
 }
 
@@ -1238,6 +1263,7 @@ export type search_tasksCreateWithoutProfilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsCreateNestedManyWithoutSearch_tasksInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutSearch_tasksInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesCreateNestedManyWithoutSearch_tasksInput
@@ -1269,6 +1295,7 @@ export type search_tasksUncheckedCreateWithoutProfilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsUncheckedCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedCreateNestedManyWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedCreateNestedManyWithoutSearch_tasksInput
 }
 
@@ -1320,6 +1347,7 @@ export type search_tasksCreateWithoutSearch_task_runsInput = {
   keep_minimized?: boolean | null
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsCreateNestedManyWithoutSearch_tasksInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutSearch_tasksInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutSearch_tasksInput
   profiles: Prisma.profilesCreateNestedOneWithoutSearch_tasksInput
@@ -1352,6 +1380,7 @@ export type search_tasksUncheckedCreateWithoutSearch_task_runsInput = {
   keep_minimized?: boolean | null
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedCreateNestedManyWithoutSearch_tasksInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedCreateNestedManyWithoutSearch_tasksInput
 }
 
@@ -1393,6 +1422,7 @@ export type search_tasksUpdateWithoutSearch_task_runsInput = {
   keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUpdateManyWithoutSearch_tasksNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutSearch_tasksNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutSearch_tasksNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSearch_tasksNestedInput
@@ -1425,6 +1455,7 @@ export type search_tasksUncheckedUpdateWithoutSearch_task_runsInput = {
   keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedUpdateManyWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedUpdateManyWithoutSearch_tasksNestedInput
 }
 
@@ -1451,6 +1482,7 @@ export type search_tasksCreateWithoutSearch_tasks_job_sitesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsCreateNestedManyWithoutSearch_tasksInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutSearch_tasksInput
   platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutSearch_tasksInput
   profiles: Prisma.profilesCreateNestedOneWithoutSearch_tasksInput
@@ -1483,6 +1515,7 @@ export type search_tasksUncheckedCreateWithoutSearch_tasks_job_sitesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: string | null
   search_task_runs?: Prisma.search_task_runsUncheckedCreateNestedManyWithoutSearch_tasksInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedCreateNestedManyWithoutSearch_tasksInput
 }
 
 export type search_tasksCreateOrConnectWithoutSearch_tasks_job_sitesInput = {
@@ -1524,6 +1557,7 @@ export type search_tasksUpdateWithoutSearch_tasks_job_sitesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUpdateManyWithoutSearch_tasksNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutSearch_tasksNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutSearch_tasksNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSearch_tasksNestedInput
@@ -1556,6 +1590,141 @@ export type search_tasksUncheckedUpdateWithoutSearch_tasks_job_sitesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+}
+
+export type search_tasksCreateWithoutScraper_agent_sessionsInput = {
+  status?: string | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name: string
+  last_run?: Date | string | null
+  search_url?: string | null
+  navigation_type?: string | null
+  stripped_html?: string | null
+  last_run_jobs_found?: number | null
+  live_url?: string | null
+  is_active?: boolean
+  status_message?: string | null
+  max_jobs?: number | null
+  browser_provider?: string | null
+  search_term?: string | null
+  skip_existing?: boolean
+  skip_first?: number | null
+  stop_after_duplicates?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  extracted_jobs_json?: string | null
+  search_task_runs?: Prisma.search_task_runsCreateNestedManyWithoutSearch_tasksInput
+  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutSearch_tasksInput
+  platform_profiles?: Prisma.platform_profilesCreateNestedOneWithoutSearch_tasksInput
+  profiles: Prisma.profilesCreateNestedOneWithoutSearch_tasksInput
+  search_tasks_job_sites?: Prisma.search_tasks_job_sitesCreateNestedManyWithoutSearch_tasksInput
+}
+
+export type search_tasksUncheckedCreateWithoutScraper_agent_sessionsInput = {
+  id?: number
+  status?: string | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name: string
+  profile: number
+  last_run?: Date | string | null
+  search_url?: string | null
+  platform?: number | null
+  navigation_type?: string | null
+  stripped_html?: string | null
+  last_run_jobs_found?: number | null
+  live_url?: string | null
+  is_active?: boolean
+  status_message?: string | null
+  platform_profile_id?: number | null
+  max_jobs?: number | null
+  browser_provider?: string | null
+  search_term?: string | null
+  skip_existing?: boolean
+  skip_first?: number | null
+  stop_after_duplicates?: number | null
+  keep_minimized?: boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  extracted_jobs_json?: string | null
+  search_task_runs?: Prisma.search_task_runsUncheckedCreateNestedManyWithoutSearch_tasksInput
+  search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedCreateNestedManyWithoutSearch_tasksInput
+}
+
+export type search_tasksCreateOrConnectWithoutScraper_agent_sessionsInput = {
+  where: Prisma.search_tasksWhereUniqueInput
+  create: Prisma.XOR<Prisma.search_tasksCreateWithoutScraper_agent_sessionsInput, Prisma.search_tasksUncheckedCreateWithoutScraper_agent_sessionsInput>
+}
+
+export type search_tasksUpsertWithoutScraper_agent_sessionsInput = {
+  update: Prisma.XOR<Prisma.search_tasksUpdateWithoutScraper_agent_sessionsInput, Prisma.search_tasksUncheckedUpdateWithoutScraper_agent_sessionsInput>
+  create: Prisma.XOR<Prisma.search_tasksCreateWithoutScraper_agent_sessionsInput, Prisma.search_tasksUncheckedCreateWithoutScraper_agent_sessionsInput>
+  where?: Prisma.search_tasksWhereInput
+}
+
+export type search_tasksUpdateToOneWithWhereWithoutScraper_agent_sessionsInput = {
+  where?: Prisma.search_tasksWhereInput
+  data: Prisma.XOR<Prisma.search_tasksUpdateWithoutScraper_agent_sessionsInput, Prisma.search_tasksUncheckedUpdateWithoutScraper_agent_sessionsInput>
+}
+
+export type search_tasksUpdateWithoutScraper_agent_sessionsInput = {
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_run_jobs_found?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  status_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  max_jobs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  browser_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  search_term?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  search_task_runs?: Prisma.search_task_runsUpdateManyWithoutSearch_tasksNestedInput
+  job_platforms?: Prisma.job_platformsUpdateOneWithoutSearch_tasksNestedInput
+  platform_profiles?: Prisma.platform_profilesUpdateOneWithoutSearch_tasksNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutSearch_tasksNestedInput
+  search_tasks_job_sites?: Prisma.search_tasks_job_sitesUpdateManyWithoutSearch_tasksNestedInput
+}
+
+export type search_tasksUncheckedUpdateWithoutScraper_agent_sessionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_run_jobs_found?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  status_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  platform_profile_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  max_jobs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  browser_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  search_term?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skip_existing?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  skip_first?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  stop_after_duplicates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  keep_minimized?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  search_task_runs?: Prisma.search_task_runsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+  search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedUpdateManyWithoutSearch_tasksNestedInput
 }
 
 export type search_tasksCreateManyJob_platformsInput = {
@@ -1608,6 +1777,7 @@ export type search_tasksUpdateWithoutJob_platformsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUpdateManyWithoutSearch_tasksNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutSearch_tasksNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUpdateManyWithoutSearch_tasksNestedInput
@@ -1639,6 +1809,7 @@ export type search_tasksUncheckedUpdateWithoutJob_platformsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedUpdateManyWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedUpdateManyWithoutSearch_tasksNestedInput
 }
 
@@ -1719,6 +1890,7 @@ export type search_tasksUpdateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUpdateManyWithoutSearch_tasksNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutSearch_tasksNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUpdateManyWithoutSearch_tasksNestedInput
@@ -1750,6 +1922,7 @@ export type search_tasksUncheckedUpdateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedUpdateManyWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedUpdateManyWithoutSearch_tasksNestedInput
 }
 
@@ -1830,6 +2003,7 @@ export type search_tasksUpdateWithoutProfilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUpdateManyWithoutSearch_tasksNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutSearch_tasksNestedInput
   platform_profiles?: Prisma.platform_profilesUpdateOneWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUpdateManyWithoutSearch_tasksNestedInput
@@ -1861,6 +2035,7 @@ export type search_tasksUncheckedUpdateWithoutProfilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   extracted_jobs_json?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   search_task_runs?: Prisma.search_task_runsUncheckedUpdateManyWithoutSearch_tasksNestedInput
+  scraper_agent_sessions?: Prisma.scraper_agent_sessionsUncheckedUpdateManyWithoutSearch_tasksNestedInput
   search_tasks_job_sites?: Prisma.search_tasks_job_sitesUncheckedUpdateManyWithoutSearch_tasksNestedInput
 }
 
@@ -1898,11 +2073,13 @@ export type search_tasksUncheckedUpdateManyWithoutProfilesInput = {
 
 export type Search_tasksCountOutputType = {
   search_task_runs: number
+  scraper_agent_sessions: number
   search_tasks_job_sites: number
 }
 
 export type Search_tasksCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   search_task_runs?: boolean | Search_tasksCountOutputTypeCountSearch_task_runsArgs
+  scraper_agent_sessions?: boolean | Search_tasksCountOutputTypeCountScraper_agent_sessionsArgs
   search_tasks_job_sites?: boolean | Search_tasksCountOutputTypeCountSearch_tasks_job_sitesArgs
 }
 
@@ -1921,6 +2098,13 @@ export type Search_tasksCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types
  */
 export type Search_tasksCountOutputTypeCountSearch_task_runsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.search_task_runsWhereInput
+}
+
+/**
+ * Search_tasksCountOutputType without action
+ */
+export type Search_tasksCountOutputTypeCountScraper_agent_sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.scraper_agent_sessionsWhereInput
 }
 
 /**
@@ -1958,6 +2142,7 @@ export type search_tasksSelect<ExtArgs extends runtime.Types.Extensions.Internal
   ui_preferences?: boolean
   extracted_jobs_json?: boolean
   search_task_runs?: boolean | Prisma.search_tasks$search_task_runsArgs<ExtArgs>
+  scraper_agent_sessions?: boolean | Prisma.search_tasks$scraper_agent_sessionsArgs<ExtArgs>
   job_platforms?: boolean | Prisma.search_tasks$job_platformsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.search_tasks$platform_profilesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -2058,6 +2243,7 @@ export type search_tasksSelectScalar = {
 export type search_tasksOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "name" | "profile" | "last_run" | "search_url" | "platform" | "navigation_type" | "stripped_html" | "last_run_jobs_found" | "live_url" | "is_active" | "status_message" | "platform_profile_id" | "max_jobs" | "browser_provider" | "search_term" | "skip_existing" | "skip_first" | "stop_after_duplicates" | "keep_minimized" | "ui_preferences" | "extracted_jobs_json", ExtArgs["result"]["search_tasks"]>
 export type search_tasksInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   search_task_runs?: boolean | Prisma.search_tasks$search_task_runsArgs<ExtArgs>
+  scraper_agent_sessions?: boolean | Prisma.search_tasks$scraper_agent_sessionsArgs<ExtArgs>
   job_platforms?: boolean | Prisma.search_tasks$job_platformsArgs<ExtArgs>
   platform_profiles?: boolean | Prisma.search_tasks$platform_profilesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -2079,6 +2265,7 @@ export type $search_tasksPayload<ExtArgs extends runtime.Types.Extensions.Intern
   name: "search_tasks"
   objects: {
     search_task_runs: Prisma.$search_task_runsPayload<ExtArgs>[]
+    scraper_agent_sessions: Prisma.$scraper_agent_sessionsPayload<ExtArgs>[]
     job_platforms: Prisma.$job_platformsPayload<ExtArgs> | null
     platform_profiles: Prisma.$platform_profilesPayload<ExtArgs> | null
     profiles: Prisma.$profilesPayload<ExtArgs>
@@ -2505,6 +2692,7 @@ readonly fields: search_tasksFieldRefs;
 export interface Prisma__search_tasksClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   search_task_runs<T extends Prisma.search_tasks$search_task_runsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.search_tasks$search_task_runsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$search_task_runsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  scraper_agent_sessions<T extends Prisma.search_tasks$scraper_agent_sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.search_tasks$scraper_agent_sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$scraper_agent_sessionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_platforms<T extends Prisma.search_tasks$job_platformsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.search_tasks$job_platformsArgs<ExtArgs>>): Prisma.Prisma__job_platformsClient<runtime.Types.Result.GetResult<Prisma.$job_platformsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   platform_profiles<T extends Prisma.search_tasks$platform_profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.search_tasks$platform_profilesArgs<ExtArgs>>): Prisma.Prisma__platform_profilesClient<runtime.Types.Result.GetResult<Prisma.$platform_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
@@ -2980,6 +3168,30 @@ export type search_tasks$search_task_runsArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.Search_task_runsScalarFieldEnum | Prisma.Search_task_runsScalarFieldEnum[]
+}
+
+/**
+ * search_tasks.scraper_agent_sessions
+ */
+export type search_tasks$scraper_agent_sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the scraper_agent_sessions
+   */
+  select?: Prisma.scraper_agent_sessionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the scraper_agent_sessions
+   */
+  omit?: Prisma.scraper_agent_sessionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.scraper_agent_sessionsInclude<ExtArgs> | null
+  where?: Prisma.scraper_agent_sessionsWhereInput
+  orderBy?: Prisma.scraper_agent_sessionsOrderByWithRelationInput | Prisma.scraper_agent_sessionsOrderByWithRelationInput[]
+  cursor?: Prisma.scraper_agent_sessionsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Scraper_agent_sessionsScalarFieldEnum | Prisma.Scraper_agent_sessionsScalarFieldEnum[]
 }
 
 /**
