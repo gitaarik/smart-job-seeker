@@ -2,12 +2,12 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 
 const CLOUD_DIR = "/cloud";
 
-function git(cmd: string): string {
-  return execSync(`git ${cmd}`, { cwd: CLOUD_DIR, encoding: "utf-8", timeout: 30_000 }).trim();
+function git(...args: string[]): string {
+  return execFileSync("git", ["-c", `safe.directory=${CLOUD_DIR}`, ...args], { cwd: CLOUD_DIR, encoding: "utf-8", timeout: 30_000 }).trim();
 }
 
 export const POST: RequestHandler = async ({ params, locals }) => {
@@ -32,20 +32,25 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   try {
     // Check if there are changes to commit in the scrapers directory
-    const status = git("status --porcelain src/server/scrapers/");
+    const status = git("status", "--porcelain", "src/server/scrapers/");
     if (!status) {
       return json({ committed: false, message: "No changes to commit in scrapers directory" });
     }
 
     // Stage scraper changes
-    git("add src/server/scrapers/");
+    git("add", "src/server/scrapers/");
 
     // Build commit message
     const taskName = session.search_tasks.name;
-    const message = `Scraper agent: improve scraper for "${taskName}"\n\nSession ${session.id} completed after ${session.current_iteration} iterations.\nGoal: ${session.goal}`;
+    const message = [
+      `Scraper agent: improve scraper for "${taskName}"`,
+      "",
+      `Session ${session.id} completed after ${session.current_iteration} iterations.`,
+      `Goal: ${session.goal}`,
+    ].join("\n");
 
     // Commit
-    git(`commit -m "${message.replace(/"/g, '\\"')}"`);
+    git("commit", "-m", message);
 
     // Push
     git("push");
