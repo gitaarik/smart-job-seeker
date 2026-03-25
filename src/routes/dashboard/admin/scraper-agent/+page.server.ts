@@ -8,10 +8,10 @@ export const load: PageServerLoad = async () => {
       search_url: { not: null },
       platform: { not: null },
     },
-    orderBy: { name: "asc" },
+    orderBy: { id: "asc" },
     select: {
       id: true,
-      name: true,
+      note: true,
       browser_provider: true,
       profiles: {
         select: {
@@ -50,7 +50,7 @@ export const load: PageServerLoad = async () => {
       const user = userMap.get(t.profiles.user_id ?? "");
       return {
         id: t.id,
-        name: t.name,
+        note: t.note,
         profileName: t.profiles.name,
         platformName: t.job_platforms?.name ?? null,
         browserProvider: t.browser_provider,

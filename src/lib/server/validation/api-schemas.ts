@@ -92,7 +92,7 @@ const newCredentialSchema = z.object({
 });
 
 export const searchTaskUpdateSchema = z.object({
-  name: trimmedString().optional(),
+  note: trimmedString().max(500).optional().nullable(),
   search_url: httpUrl("search_url").optional().nullable(),
   search_term: z.string().max(500).optional().nullable(),
   max_jobs: z.union([

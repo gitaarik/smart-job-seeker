@@ -69,7 +69,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       where: { profile: profileId },
       select: {
         id: true,
-        name: true,
+        note: true,
         is_active: true,
         status: true,
         status_message: true,

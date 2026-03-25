@@ -11,18 +11,29 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const searchTasks = await db.search_tasks.findMany({
-    where: { profile: layoutData.selectedProfile.id },
-    include: {
-      job_platforms: true,
-      platform_profiles: true,
-    },
-    orderBy: { date_created: "desc" },
-  });
+  const profileId = layoutData.selectedProfile.id;
+
+  const [searchTasks, profile] = await Promise.all([
+    db.search_tasks.findMany({
+      where: { profile: profileId },
+      include: {
+        job_platforms: true,
+        platform_profiles: true,
+      },
+      orderBy: { date_created: "desc" },
+    }),
+    db.profiles.findUniqueOrThrow({
+      where: { id: profileId },
+      select: { ui_preferences: true },
+    }),
+  ]);
+
+  const uiPrefs = (profile.ui_preferences as Record<string, unknown>) ?? {};
 
   return {
     searchTasks,
-    profileId: layoutData.selectedProfile.id,
+    profileId,
+    searchTaskSort: (uiPrefs.searchTaskSort as string) ?? "added",
     localBrowserAllowed: config.localBrowserAllowed,
     serverBrowserProvider: config.browserProvider,
     defaultBrowserProvider: config.defaultBrowserProvider,
@@ -139,7 +150,7 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
-    const name = formData.get("name") as string;
+    const note = formData.get("note") as string;
     const search_url = formData.get("search_url") as string;
     const search_term = formData.get("search_term") as string;
     const is_active = formData.get("is_active") !== "false";
@@ -155,10 +166,6 @@ export const actions: Actions = {
     const credentialId = formData.get("credential_id") as string;
     const newCredUsername = formData.get("new_credential_username") as string;
     const newCredPassword = formData.get("new_credential_password") as string;
-
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Name is required" });
-    }
 
     if (!search_url || search_url.trim().length === 0) {
       return fail(400, { error: "Search URL is required" });
@@ -205,7 +212,7 @@ export const actions: Actions = {
 
     await db.search_tasks.create({
       data: {
-        name: name.trim(),
+        note: note?.trim() || null,
         search_url: search_url.trim(),
         search_term: search_term?.trim() || null,
         platform: resolvedPlatformId,
@@ -241,7 +248,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
-    const name = formData.get("name") as string;
+    const note = formData.get("note") as string;
     const search_url = formData.get("search_url") as string;
     const search_term = formData.get("search_term") as string;
     const is_active = formData.get("is_active") !== "false";
@@ -260,10 +267,6 @@ export const actions: Actions = {
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid search ID" });
-    }
-
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Name is required" });
     }
 
     const existing = await db.search_tasks.findFirst({
@@ -298,7 +301,7 @@ export const actions: Actions = {
     await db.search_tasks.update({
       where: { id },
       data: {
-        name: name.trim(),
+        note: note?.trim() || null,
         search_url: search_url?.trim() || null,
         search_term: search_term?.trim() || null,
         platform: resolvedPlatformId,

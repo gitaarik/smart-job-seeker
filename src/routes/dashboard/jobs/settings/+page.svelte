@@ -8,8 +8,10 @@
     faExclamationTriangle,
     faSearch,
     faTimes,
+    faSortAmountDown,
   } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
+  import { searchTaskDisplayName } from "$lib/format";
   import Spinner from "$lib/components/Spinner.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
@@ -19,6 +21,49 @@
 
   let searchTasks = $derived(data.searchTasks);
   let showAddForm = $state(false);
+
+  // Sort options (initialized from server-persisted preference)
+  type SortOption = "added" | "alpha" | "last_run";
+  const validSorts: SortOption[] = ["added", "alpha", "last_run"];
+  let sortBy = $state<SortOption>(
+    validSorts.includes(data.searchTaskSort as SortOption)
+      ? (data.searchTaskSort as SortOption)
+      : "added",
+  );
+
+  function setSortBy(value: SortOption) {
+    sortBy = value;
+    fetch(`/api/profile/${data.profileId}/ui-preferences`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ searchTaskSort: value }),
+    });
+  }
+
+  let sortedSearchTasks = $derived.by(() => {
+    const tasks = [...searchTasks];
+    switch (sortBy) {
+      case "alpha":
+        return tasks.sort((a, b) => {
+          const nameA = a.job_platforms?.name?.toLowerCase() ?? "";
+          const nameB = b.job_platforms?.name?.toLowerCase() ?? "";
+          return nameA.localeCompare(nameB);
+        });
+      case "last_run":
+        return tasks.sort((a, b) => {
+          const dateA = a.last_run ? new Date(a.last_run).getTime() : 0;
+          const dateB = b.last_run ? new Date(b.last_run).getTime() : 0;
+          return dateB - dateA;
+        });
+      case "added":
+      default:
+        return tasks.sort((a, b) => {
+          const dateA = a.date_created ? new Date(a.date_created).getTime() : 0;
+          const dateB = b.date_created ? new Date(b.date_created).getTime() : 0;
+          return dateB - dateA;
+        });
+    }
+  });
 
   // Desktop scraper connection status
   let desktopConnected = $state<boolean | null>(null); // null = checking
@@ -44,7 +89,7 @@
   });
 
   // Form states for new entry
-  let newName = $state("");
+  let newNote = $state("");
   let newSearchUrl = $state("");
   let newSearchTerm = $state("");
   let newLoginPageUrl = $state("");
@@ -137,7 +182,7 @@
 
   function resetAddForm() {
     showAddForm = false;
-    newName = "";
+    newNote = "";
     newSearchUrl = "";
     newSearchTerm = "";
     newLoginPageUrl = "";
@@ -234,25 +279,6 @@
         Add New Job Search
       </h3>
       <div class="space-y-4">
-        <!-- Search Name -->
-        <div>
-          <label
-            for="new-name"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Search Name <span class="text-[var(--dash-error)]">*</span>
-          </label>
-          <input
-            type="text"
-            id="new-name"
-            name="name"
-            bind:value={newName}
-            placeholder="e.g., Senior Frontend Developer"
-            required
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
-
         <SearchTaskFields
           mode="add"
           localBrowserAllowed={data.localBrowserAllowed}
@@ -267,6 +293,24 @@
           {existingCredentials}
           onsearchurlinput={handleSearchUrlInput}
         />
+
+        <!-- Optional note -->
+        <div>
+          <label
+            for="new-note"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Note <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="new-note"
+            name="note"
+            bind:value={newNote}
+            placeholder="e.g., Remote only, senior roles"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
       </div>
 
       <div class="flex justify-end gap-2 mt-4">
@@ -297,8 +341,29 @@
       onAction={() => (showAddForm = true)}
     />
   {:else}
+    {#if searchTasks.length > 1}
+      <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
+        <FontAwesomeIcon icon={faSortAmountDown} class="w-3 h-3" />
+        {#each [
+          { value: "added", label: "Date added" },
+          { value: "last_run", label: "Last run" },
+          { value: "alpha", label: "A–Z" },
+        ] as opt}
+          <button
+            type="button"
+            onclick={() => setSortBy(opt.value as SortOption)}
+            class="px-2 py-0.5 rounded-full transition-colors {sortBy === opt.value
+              ? 'bg-[var(--dash-primary)] text-white'
+              : 'bg-[var(--dash-bg)] hover:bg-[var(--dash-border)]'}"
+          >
+            {opt.label}
+          </button>
+        {/each}
+      </div>
+    {/if}
+
     <div class="space-y-3">
-      {#each searchTasks as search (search.id)}
+      {#each sortedSearchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
         <a
           href="/dashboard/jobs/settings/{search.id}"
@@ -322,18 +387,17 @@
             </div>
 
             <div class="flex-1 min-w-0">
-              <!-- Title: name @ platform -->
+              <!-- Title: platform name + optional note -->
               <div class="flex items-center gap-2 flex-wrap">
                 <h3
                   class="font-medium text-[var(--dash-text)] text-sm sm:text-base"
                 >
-                  {search.name}
-                  {#if search.job_platforms}
-                    <span class="text-[var(--dash-text-secondary)] font-normal"
-                    >@</span>
+                  {search.job_platforms?.name || "Search task"}
+                  {#if search.note}
+                    <span class="text-[var(--dash-text-secondary)] font-normal">—</span>
                     <span
-                      class="bg-[var(--dash-bg-inset)] px-2 py-0.5 rounded text-sm font-normal inline-block"
-                    >{search.job_platforms.name}</span>
+                      class="text-[var(--dash-text-secondary)] text-sm font-normal"
+                    >{search.note}</span>
                   {/if}
                 </h3>
                 {#if search.browser_provider === "local"}

@@ -2,6 +2,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { searchTaskDisplayName } from "$lib/format";
 import { execFileSync } from "child_process";
 
 const CLOUD_DIR = "/cloud";
@@ -21,7 +22,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const session = await db.scraper_agent_sessions.findUnique({
     where: { id: sessionId },
     include: {
-      search_tasks: { select: { name: true } },
+      search_tasks: { select: { note: true, job_platforms: { select: { name: true } } } },
     },
   });
 
@@ -41,7 +42,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     git("add", "src/server/scrapers/");
 
     // Build commit message
-    const taskName = session.search_tasks.name;
+    const taskName = searchTaskDisplayName(session.search_tasks.job_platforms?.name, session.search_tasks.note);
     const message = [
       `Scraper agent: improve scraper for "${taskName}"`,
       "",

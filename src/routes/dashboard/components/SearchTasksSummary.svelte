@@ -2,12 +2,13 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faPlay, faSearch } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
+  import { searchTaskDisplayName } from "$lib/format";
   import Card from "./Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
 
   interface SearchTask {
     id: number;
-    name: string;
+    note: string | null;
     is_active: boolean;
     status: string | null;
     status_message: string | null;
@@ -108,9 +109,9 @@
             />
           {/if}
 
-          <!-- Name @ platform -->
+          <!-- Platform name + optional note -->
           <span class="text-[var(--dash-text)] truncate flex-1 min-w-0">
-            {task.name || "Search task"}{#if task.job_platforms}<span class="text-[var(--dash-text-secondary)] ml-1">@ {task.job_platforms.name}</span>{/if}
+            {searchTaskDisplayName(task.job_platforms?.name, task.note)}
           </span>
 
           <!-- Jobs found -->

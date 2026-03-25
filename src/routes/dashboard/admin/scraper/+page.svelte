@@ -381,7 +381,7 @@
                   {/if}
                   <span>
                     {#if run.searchTask.browserProvider === "hosted"}
-                      <FontAwesomeIcon icon={faCloud} class="w-3 h-3" /> Hosted
+                      <FontAwesomeIcon icon={faCloud} class="w-3 h-3" /> Cloud
                     {:else}
                       <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" /> Desktop
                     {/if}

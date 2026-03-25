@@ -28,9 +28,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(searchTaskUpdateSchema, await request.json());
 
-  const data: { name?: string; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; keep_minimized?: boolean } = {};
+  const data: { note?: string | null; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; keep_minimized?: boolean } = {};
 
-  if (body.name !== undefined) data.name = body.name;
+  if (body.note !== undefined) data.note = body.note || null;
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
   if (body.search_term !== undefined) data.search_term = body.search_term?.trim() || null;
   if (body.max_jobs !== undefined) data.max_jobs = body.max_jobs;

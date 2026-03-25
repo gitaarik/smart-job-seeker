@@ -6,7 +6,7 @@
   import Card from "../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import SearchTaskFields from "../../components/SearchTaskFields.svelte";
-  import { formatJobType, formatWorkLocation } from "$lib/format";
+  import { formatJobType, formatWorkLocation, searchTaskDisplayName } from "$lib/format";
   import {
     faArrowLeft,
     faBuilding,
@@ -37,23 +37,23 @@
 
   let searchTask = $state(data.searchTask);
 
-  // Header editing state (name + platform name)
+  // Header editing state (note)
   let isEditingHeader = $state(false);
-  let editNameInput = $state(searchTask.name ?? "");
+  let editNoteInput = $state(searchTask.note ?? "");
   let isSavingHeader = $state(false);
 
   async function saveHeader() {
     isSavingHeader = true;
     try {
-      const newName = editNameInput.trim();
+      const newNote = editNoteInput.trim();
 
-      if (newName && newName !== (searchTask.name ?? "")) {
+      if (newNote !== (searchTask.note ?? "")) {
         await fetch(`/api/search-tasks/${searchTask.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: newName }),
+          body: JSON.stringify({ note: newNote }),
         });
-        searchTask.name = newName;
+        searchTask.note = newNote || null;
       }
 
       isEditingHeader = false;
@@ -65,7 +65,7 @@
   }
 
   function cancelEditHeader() {
-    editNameInput = searchTask.name ?? "";
+    editNoteInput = searchTask.note ?? "";
     isEditingHeader = false;
   }
 
@@ -237,7 +237,7 @@
     currentSearchTaskId = data.searchTask.id;
     // Reset header editing
     isEditingHeader = false;
-    editNameInput = data.searchTask.name ?? "";
+    editNoteInput = data.searchTask.note ?? "";
     // Reset settings section
     settingsOpen = (() => {
       const v = (data.uiPreferences as Record<string, unknown>)[
@@ -1103,23 +1103,6 @@
     <div class="space-y-4 pb-6 mb-6 border-b border-[var(--dash-border)]">
       {#if isEditingHeader}
         <div class="space-y-3">
-          <div>
-            <label
-              for="edit-task-name"
-              class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-            >Task Name</label>
-            <input
-              id="edit-task-name"
-              type="text"
-              bind:value={editNameInput}
-              autocomplete="off"
-              class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              onkeydown={(e) => {
-                if (e.key === "Enter") saveHeader();
-                if (e.key === "Escape") cancelEditHeader();
-              }}
-            />
-          </div>
           {#if searchTask.job_platforms}
             <div>
               <label
@@ -1130,6 +1113,24 @@
               </p>
             </div>
           {/if}
+          <div>
+            <label
+              for="edit-task-note"
+              class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+            >Note</label>
+            <input
+              id="edit-task-note"
+              type="text"
+              bind:value={editNoteInput}
+              autocomplete="off"
+              placeholder="e.g., Remote only, senior roles"
+              class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+              onkeydown={(e) => {
+                if (e.key === "Enter") saveHeader();
+                if (e.key === "Escape") cancelEditHeader();
+              }}
+            />
+          </div>
           <div class="flex items-center gap-2">
             <button
               onclick={saveHeader}
@@ -1154,13 +1155,12 @@
           <h2
             class="text-lg font-semibold text-[var(--dash-text)]"
           >
-            {searchTask.name}
-            {#if searchTask.job_platforms}
-              <span class="text-[var(--dash-text-secondary)] font-normal"
-              >@</span>
+            {searchTask.job_platforms?.name || "Search task"}
+            {#if searchTask.note}
+              <span class="text-[var(--dash-text-secondary)] font-normal">—</span>
               <span
-                class="bg-[var(--dash-bg-inset)] px-2 py-0.5 rounded inline-block"
-              >{searchTask.job_platforms.name}</span>
+                class="text-[var(--dash-text-secondary)] font-normal"
+              >{searchTask.note}</span>
             {/if}
           </h2>
           <button
@@ -1168,7 +1168,7 @@
               isEditingHeader = true;
             }}
             class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
-            title="Edit name"
+            title="Edit note"
           >
             <FontAwesomeIcon icon={faPencil} class="w-3.5 h-3.5" />
           </button>
@@ -1924,7 +1924,7 @@
                     {/if}
                     {#if run.settings.browser_provider}
                       <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
-                        {run.settings.browser_provider}
+                        {run.settings.browser_provider === 'hosted' ? 'cloud' : run.settings.browser_provider}
                       </span>
                     {/if}
                   </div>

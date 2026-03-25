@@ -164,7 +164,7 @@ function loadConfig(): AppConfig {
     scrapeCooldownHours: parseInt(getEnv("SJS_SCRAPE_COOLDOWN_HOURS", "6"), 10),
     scrapeMaxRunsPerCooldown: parseInt(getEnv("SJS_SCRAPE_MAX_RUNS_PER_COOLDOWN", "1"), 10),
     browserProvider: getEnv("SJS_BROWSER_PROVIDER", "local"),
-    defaultBrowserProvider: getEnv("SJS_DEFAULT_BROWSER_PROVIDER", "hosted"),
+    defaultBrowserProvider: getEnv("SJS_DEFAULT_BROWSER_PROVIDER", "local"),
     defaultMaxJobs: (() => {
       const v = getEnv("SJS_DEFAULT_MAX_JOBS", "25");
       const n = parseInt(v, 10);

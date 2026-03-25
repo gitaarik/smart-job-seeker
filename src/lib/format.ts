@@ -64,6 +64,17 @@ export function formatExperienceLevel(level: string): string {
   return EXPERIENCE_LEVEL_LABELS[level.toLowerCase()] ?? titleCase(level);
 }
 
+/**
+ * Build a display name for a search task: platform name is primary, note is optional secondary.
+ */
+export function searchTaskDisplayName(
+  platformName: string | null | undefined,
+  note: string | null | undefined,
+): string {
+  const base = platformName || "Search task";
+  return note ? `${base} — ${note}` : base;
+}
+
 function titleCase(str: string): string {
   return str
     .replace(/[_-]/g, " ")

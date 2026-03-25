@@ -63,7 +63,7 @@
     mode,
     localBrowserAllowed,
     serverBrowserProvider,
-    defaultBrowserProvider = "hosted",
+    defaultBrowserProvider = "local",
     defaultMaxJobs = 25,
     // Add mode
     searchUrl = $bindable(""),
@@ -1020,6 +1020,10 @@
               platformId={searchTask?.platform}
               {profileId}
               platformName={searchTask?.job_platforms?.name}
+              oncredentialadded={() => {
+                // Auto-save credential selection when a new one is added via "Add & Select"
+                saveCredential();
+              }}
               oncredentialdeleted={(credId) => {
                 if (searchTask?.platform_profile_id === credId) {
                   searchTask.platform_profile_id = null;
@@ -1080,7 +1084,7 @@
             />
             <span
               class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-            >Max jobs to import</span>
+            >Max jobs to process</span>
           </label>
           {#if isAdd}
             <input
@@ -1167,8 +1171,7 @@
           {/if}
         </div>
 
-        <!-- Stop after duplicates (only when skip is selected) -->
-        {#if isAdd ? addSkipExisting : skipExisting}
+        <!-- Stop after duplicates -->
         <div class="flex items-center flex-wrap gap-3">
           <label class="flex items-center gap-2 cursor-pointer">
             <input
@@ -1230,7 +1233,6 @@
           )}
           {/if}
         </div>
-        {/if}
 
         <!-- Skip first -->
         <div class="flex items-center flex-wrap gap-3">
@@ -1530,7 +1532,7 @@
                   class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
                 />
                 <span class="text-sm text-[var(--dash-text-secondary)]"
-                >Keep Chrome minimized during scraping</span>
+                >Keep Chrome minimized</span>
               </label>
               {#if isAdd}
                 <input

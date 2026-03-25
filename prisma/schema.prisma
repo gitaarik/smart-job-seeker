@@ -1394,7 +1394,7 @@ model search_tasks {
   status                 String?                  @default("idle") @db.VarChar(50)
   date_created           DateTime?                @db.Timestamptz(6)
   date_updated           DateTime?                @db.Timestamptz(6)
-  name                   String                   @db.VarChar(255)
+  note                   String?                  @db.VarChar(500)
   profile                Int
   last_run               DateTime?                @db.Timestamptz(6)
   search_url             String?

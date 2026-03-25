@@ -53,7 +53,7 @@ export type Search_tasksMinAggregateOutputType = {
   status: string | null
   date_created: Date | null
   date_updated: Date | null
-  name: string | null
+  note: string | null
   profile: number | null
   last_run: Date | null
   search_url: string | null
@@ -80,7 +80,7 @@ export type Search_tasksMaxAggregateOutputType = {
   status: string | null
   date_created: Date | null
   date_updated: Date | null
-  name: string | null
+  note: string | null
   profile: number | null
   last_run: Date | null
   search_url: string | null
@@ -107,7 +107,7 @@ export type Search_tasksCountAggregateOutputType = {
   status: number
   date_created: number
   date_updated: number
-  name: number
+  note: number
   profile: number
   last_run: number
   search_url: number
@@ -159,7 +159,7 @@ export type Search_tasksMinAggregateInputType = {
   status?: true
   date_created?: true
   date_updated?: true
-  name?: true
+  note?: true
   profile?: true
   last_run?: true
   search_url?: true
@@ -186,7 +186,7 @@ export type Search_tasksMaxAggregateInputType = {
   status?: true
   date_created?: true
   date_updated?: true
-  name?: true
+  note?: true
   profile?: true
   last_run?: true
   search_url?: true
@@ -213,7 +213,7 @@ export type Search_tasksCountAggregateInputType = {
   status?: true
   date_created?: true
   date_updated?: true
-  name?: true
+  note?: true
   profile?: true
   last_run?: true
   search_url?: true
@@ -328,7 +328,7 @@ export type Search_tasksGroupByOutputType = {
   status: string | null
   date_created: Date | null
   date_updated: Date | null
-  name: string
+  note: string | null
   profile: number
   last_run: Date | null
   search_url: string | null
@@ -379,7 +379,7 @@ export type search_tasksWhereInput = {
   status?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   date_created?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
-  name?: Prisma.StringFilter<"search_tasks"> | string
+  note?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   profile?: Prisma.IntFilter<"search_tasks"> | number
   last_run?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
   search_url?: Prisma.StringNullableFilter<"search_tasks"> | string | null
@@ -413,7 +413,7 @@ export type search_tasksOrderByWithRelationInput = {
   status?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
-  name?: Prisma.SortOrder
+  note?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   last_run?: Prisma.SortOrderInput | Prisma.SortOrder
   search_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -450,7 +450,7 @@ export type search_tasksWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   date_created?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
-  name?: Prisma.StringFilter<"search_tasks"> | string
+  note?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   profile?: Prisma.IntFilter<"search_tasks"> | number
   last_run?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
   search_url?: Prisma.StringNullableFilter<"search_tasks"> | string | null
@@ -484,7 +484,7 @@ export type search_tasksOrderByWithAggregationInput = {
   status?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
-  name?: Prisma.SortOrder
+  note?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   last_run?: Prisma.SortOrderInput | Prisma.SortOrder
   search_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -520,7 +520,7 @@ export type search_tasksScalarWhereWithAggregatesInput = {
   status?: Prisma.StringNullableWithAggregatesFilter<"search_tasks"> | string | null
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"search_tasks"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"search_tasks"> | Date | string | null
-  name?: Prisma.StringWithAggregatesFilter<"search_tasks"> | string
+  note?: Prisma.StringNullableWithAggregatesFilter<"search_tasks"> | string | null
   profile?: Prisma.IntWithAggregatesFilter<"search_tasks"> | number
   last_run?: Prisma.DateTimeNullableWithAggregatesFilter<"search_tasks"> | Date | string | null
   search_url?: Prisma.StringNullableWithAggregatesFilter<"search_tasks"> | string | null
@@ -547,7 +547,7 @@ export type search_tasksCreateInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -578,7 +578,7 @@ export type search_tasksUncheckedCreateInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -608,7 +608,7 @@ export type search_tasksUpdateInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -639,7 +639,7 @@ export type search_tasksUncheckedUpdateInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -670,7 +670,7 @@ export type search_tasksCreateManyInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -697,7 +697,7 @@ export type search_tasksUpdateManyMutationInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -722,7 +722,7 @@ export type search_tasksUncheckedUpdateManyInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -765,7 +765,7 @@ export type search_tasksCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   last_run?: Prisma.SortOrder
   search_url?: Prisma.SortOrder
@@ -804,7 +804,7 @@ export type search_tasksMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   last_run?: Prisma.SortOrder
   search_url?: Prisma.SortOrder
@@ -831,7 +831,7 @@ export type search_tasksMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   last_run?: Prisma.SortOrder
   search_url?: Prisma.SortOrder
@@ -1043,7 +1043,7 @@ export type search_tasksCreateWithoutJob_platformsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -1073,7 +1073,7 @@ export type search_tasksUncheckedCreateWithoutJob_platformsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1132,7 +1132,7 @@ export type search_tasksScalarWhereInput = {
   status?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   date_created?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
-  name?: Prisma.StringFilter<"search_tasks"> | string
+  note?: Prisma.StringNullableFilter<"search_tasks"> | string | null
   profile?: Prisma.IntFilter<"search_tasks"> | number
   last_run?: Prisma.DateTimeNullableFilter<"search_tasks"> | Date | string | null
   search_url?: Prisma.StringNullableFilter<"search_tasks"> | string | null
@@ -1159,7 +1159,7 @@ export type search_tasksCreateWithoutPlatform_profilesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -1189,7 +1189,7 @@ export type search_tasksUncheckedCreateWithoutPlatform_profilesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1244,7 +1244,7 @@ export type search_tasksCreateWithoutProfilesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -1274,7 +1274,7 @@ export type search_tasksUncheckedCreateWithoutProfilesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   platform?: number | null
@@ -1329,7 +1329,7 @@ export type search_tasksCreateWithoutSearch_task_runsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -1359,7 +1359,7 @@ export type search_tasksUncheckedCreateWithoutSearch_task_runsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1404,7 +1404,7 @@ export type search_tasksUpdateWithoutSearch_task_runsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1434,7 +1434,7 @@ export type search_tasksUncheckedUpdateWithoutSearch_task_runsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1463,7 +1463,7 @@ export type search_tasksCreateWithoutSearch_tasks_job_sitesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -1493,7 +1493,7 @@ export type search_tasksUncheckedCreateWithoutSearch_tasks_job_sitesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1538,7 +1538,7 @@ export type search_tasksUpdateWithoutSearch_tasks_job_sitesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1568,7 +1568,7 @@ export type search_tasksUncheckedUpdateWithoutSearch_tasks_job_sitesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1597,7 +1597,7 @@ export type search_tasksCreateWithoutScraper_agent_sessionsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   navigation_type?: string | null
@@ -1627,7 +1627,7 @@ export type search_tasksUncheckedCreateWithoutScraper_agent_sessionsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1672,7 +1672,7 @@ export type search_tasksUpdateWithoutScraper_agent_sessionsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1702,7 +1702,7 @@ export type search_tasksUncheckedUpdateWithoutScraper_agent_sessionsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1732,7 +1732,7 @@ export type search_tasksCreateManyJob_platformsInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1758,7 +1758,7 @@ export type search_tasksUpdateWithoutJob_platformsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1788,7 +1788,7 @@ export type search_tasksUncheckedUpdateWithoutJob_platformsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1818,7 +1818,7 @@ export type search_tasksUncheckedUpdateManyWithoutJob_platformsInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1845,7 +1845,7 @@ export type search_tasksCreateManyPlatform_profilesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   profile: number
   last_run?: Date | string | null
   search_url?: string | null
@@ -1871,7 +1871,7 @@ export type search_tasksUpdateWithoutPlatform_profilesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1901,7 +1901,7 @@ export type search_tasksUncheckedUpdateWithoutPlatform_profilesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1931,7 +1931,7 @@ export type search_tasksUncheckedUpdateManyWithoutPlatform_profilesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1958,7 +1958,7 @@ export type search_tasksCreateManyProfilesInput = {
   status?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  name: string
+  note?: string | null
   last_run?: Date | string | null
   search_url?: string | null
   platform?: number | null
@@ -1984,7 +1984,7 @@ export type search_tasksUpdateWithoutProfilesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2014,7 +2014,7 @@ export type search_tasksUncheckedUpdateWithoutProfilesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2044,7 +2044,7 @@ export type search_tasksUncheckedUpdateManyWithoutProfilesInput = {
   status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2120,7 +2120,7 @@ export type search_tasksSelect<ExtArgs extends runtime.Types.Extensions.Internal
   status?: boolean
   date_created?: boolean
   date_updated?: boolean
-  name?: boolean
+  note?: boolean
   profile?: boolean
   last_run?: boolean
   search_url?: boolean
@@ -2155,7 +2155,7 @@ export type search_tasksSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   date_created?: boolean
   date_updated?: boolean
-  name?: boolean
+  note?: boolean
   profile?: boolean
   last_run?: boolean
   search_url?: boolean
@@ -2186,7 +2186,7 @@ export type search_tasksSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   date_created?: boolean
   date_updated?: boolean
-  name?: boolean
+  note?: boolean
   profile?: boolean
   last_run?: boolean
   search_url?: boolean
@@ -2217,7 +2217,7 @@ export type search_tasksSelectScalar = {
   status?: boolean
   date_created?: boolean
   date_updated?: boolean
-  name?: boolean
+  note?: boolean
   profile?: boolean
   last_run?: boolean
   search_url?: boolean
@@ -2240,7 +2240,7 @@ export type search_tasksSelectScalar = {
   extracted_jobs_json?: boolean
 }
 
-export type search_tasksOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "name" | "profile" | "last_run" | "search_url" | "platform" | "navigation_type" | "stripped_html" | "last_run_jobs_found" | "live_url" | "is_active" | "status_message" | "platform_profile_id" | "max_jobs" | "browser_provider" | "search_term" | "skip_existing" | "skip_first" | "stop_after_duplicates" | "keep_minimized" | "ui_preferences" | "extracted_jobs_json", ExtArgs["result"]["search_tasks"]>
+export type search_tasksOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "note" | "profile" | "last_run" | "search_url" | "platform" | "navigation_type" | "stripped_html" | "last_run_jobs_found" | "live_url" | "is_active" | "status_message" | "platform_profile_id" | "max_jobs" | "browser_provider" | "search_term" | "skip_existing" | "skip_first" | "stop_after_duplicates" | "keep_minimized" | "ui_preferences" | "extracted_jobs_json", ExtArgs["result"]["search_tasks"]>
 export type search_tasksInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   search_task_runs?: boolean | Prisma.search_tasks$search_task_runsArgs<ExtArgs>
   scraper_agent_sessions?: boolean | Prisma.search_tasks$scraper_agent_sessionsArgs<ExtArgs>
@@ -2276,7 +2276,7 @@ export type $search_tasksPayload<ExtArgs extends runtime.Types.Extensions.Intern
     status: string | null
     date_created: Date | null
     date_updated: Date | null
-    name: string
+    note: string | null
     profile: number
     last_run: Date | null
     search_url: string | null
@@ -2730,7 +2730,7 @@ export interface search_tasksFieldRefs {
   readonly status: Prisma.FieldRef<"search_tasks", 'String'>
   readonly date_created: Prisma.FieldRef<"search_tasks", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"search_tasks", 'DateTime'>
-  readonly name: Prisma.FieldRef<"search_tasks", 'String'>
+  readonly note: Prisma.FieldRef<"search_tasks", 'String'>
   readonly profile: Prisma.FieldRef<"search_tasks", 'Int'>
   readonly last_run: Prisma.FieldRef<"search_tasks", 'DateTime'>
   readonly search_url: Prisma.FieldRef<"search_tasks", 'String'>

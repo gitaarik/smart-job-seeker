@@ -9,6 +9,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import { searchTaskDisplayName } from "$lib/format";
 
 export const GET: RequestHandler = async ({ locals }) => {
   const user = requireAuth(locals);
@@ -22,10 +23,11 @@ export const GET: RequestHandler = async ({ locals }) => {
       search_tasks: {
         select: {
           id: true,
-          name: true,
+          note: true,
           search_url: true,
           platform: true,
           browser_provider: true,
+          job_platforms: { select: { name: true } },
         },
       },
       iterations: {
@@ -35,6 +37,7 @@ export const GET: RequestHandler = async ({ locals }) => {
           iteration: true,
           stage: true,
           success_pct: true,
+          run_id: true,
           run_status: true,
           goal_met: true,
           finished_at: true,
@@ -43,19 +46,36 @@ export const GET: RequestHandler = async ({ locals }) => {
     },
   });
 
+  // For sessions with blocked runs, fetch the blocked reason
+  const blockedRunIds = sessions
+    .filter((s) => s.iterations[0]?.stage === "blocked" && s.iterations[0]?.run_id)
+    .map((s) => s.iterations[0].run_id!);
+
+  const blockedRuns = blockedRunIds.length > 0
+    ? await db.search_task_runs.findMany({
+        where: { id: { in: blockedRunIds } },
+        select: { id: true, error_message: true },
+      })
+    : [];
+  const blockedMessageMap = new Map(blockedRuns.map((r) => [r.id, r.error_message]));
+
   return json({
     sessions: sessions.map((s) => ({
       id: s.id,
       searchTaskId: s.search_task_id,
-      searchTaskName: s.search_tasks.name,
+      searchTaskName: searchTaskDisplayName(s.search_tasks.job_platforms?.name, s.search_tasks.note),
       status: s.status,
       goal: s.goal,
       maxIterations: s.max_iterations,
       currentIteration: s.current_iteration,
       latestStage: s.iterations[0]?.stage ?? null,
       latestSuccessPct: s.iterations[0]?.success_pct ?? null,
+      latestRunId: s.iterations[0]?.run_id ?? null,
       latestRunStatus: s.iterations[0]?.run_status ?? null,
       latestGoalMet: s.iterations[0]?.goal_met ?? null,
+      blockedMessage: s.iterations[0]?.run_id
+        ? blockedMessageMap.get(s.iterations[0].run_id) ?? null
+        : null,
       systemPrompt: s.system_prompt,
       runFirst: s.run_first,
       pendingHint: s.pending_hint,

@@ -2,12 +2,14 @@
  * Admin Scraper Agent Session Detail API
  *
  * GET - Get session details with all iterations
+ * PATCH - Update session settings (e.g. maxIterations)
  */
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { searchTaskDisplayName } from "$lib/format";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
@@ -23,10 +25,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       search_tasks: {
         select: {
           id: true,
-          name: true,
+          note: true,
           search_url: true,
           platform: true,
           browser_provider: true,
+          job_platforms: { select: { name: true } },
         },
       },
       iterations: {
@@ -57,16 +60,30 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     throw error(404, "Session not found");
   }
 
+  // Check if the latest iteration's run is blocked
+  const latestIter = session.iterations[session.iterations.length - 1];
+  let blockedMessage: string | null = null;
+  if (latestIter?.stage === "blocked" && latestIter.run_id) {
+    const run = await db.search_task_runs.findUnique({
+      where: { id: latestIter.run_id },
+      select: { error_message: true },
+    });
+    blockedMessage = run?.error_message ?? null;
+  }
+
   return json({
     session: {
       id: session.id,
       searchTaskId: session.search_task_id,
-      searchTaskName: session.search_tasks.name,
+      searchTaskName: searchTaskDisplayName(session.search_tasks.job_platforms?.name, session.search_tasks.note),
       status: session.status,
       goal: session.goal,
       maxIterations: session.max_iterations,
       currentIteration: session.current_iteration,
-      claudeSessionId: session.claude_session_id,
+      runFirst: session.run_first,
+      pendingHint: session.pending_hint,
+      needsInput: session.needs_input,
+      blockedMessage,
       systemPrompt: session.system_prompt,
       errorMessage: session.error_message,
       createdAt: session.created_at,
@@ -92,4 +109,37 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       finishedAt: i.finished_at,
     })),
   });
+};
+
+export const PATCH: RequestHandler = async ({ params, request, locals }) => {
+  const user = requireAuth(locals);
+  if (!(user as { is_admin?: boolean }).is_admin) {
+    throw error(403, "Admin access required");
+  }
+
+  const sessionId = parseIntParam(params.id, "session");
+
+  const session = await db.scraper_agent_sessions.findUnique({
+    where: { id: sessionId },
+  });
+
+  if (!session) throw error(404, "Session not found");
+  if (!["active", "paused"].includes(session.status)) {
+    throw error(400, `Cannot update session with status "${session.status}"`);
+  }
+
+  const body = await request.json();
+  const data: Record<string, unknown> = { updated_at: new Date() };
+
+  if (body.maxIterations !== undefined) {
+    const val = Math.min(50, Math.max(session.current_iteration + 1, Math.round(body.maxIterations)));
+    data.max_iterations = val;
+  }
+
+  await db.scraper_agent_sessions.update({
+    where: { id: sessionId },
+    data,
+  });
+
+  return json({ ok: true });
 };

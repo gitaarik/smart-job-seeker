@@ -7955,7 +7955,7 @@ export const Search_tasksScalarFieldEnum = {
   status: 'status',
   date_created: 'date_created',
   date_updated: 'date_updated',
-  name: 'name',
+  note: 'note',
   profile: 'profile',
   last_run: 'last_run',
   search_url: 'search_url',

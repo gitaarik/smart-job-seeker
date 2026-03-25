@@ -9,6 +9,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import { searchTaskDisplayName } from "$lib/format";
 import {
   addScrapeJob,
   removeActiveJob,
@@ -92,7 +93,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         liveUrl: r.live_url,
         searchTask: {
           id: r.search_tasks.id,
-          name: r.search_tasks.name,
+          name: searchTaskDisplayName(r.search_tasks.job_platforms?.name, r.search_tasks.note),
           status: r.search_tasks.status,
           browserProvider: r.search_tasks.browser_provider,
           searchUrl: r.search_tasks.search_url,
