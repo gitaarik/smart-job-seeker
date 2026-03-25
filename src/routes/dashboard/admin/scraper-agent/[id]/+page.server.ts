@@ -8,11 +8,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
   const session = await db.scraper_agent_sessions.findUnique({
     where: { id: sessionId },
-    include: {
-      search_tasks: {
-        select: { id: true, name: true },
-      },
-    },
+    select: { id: true },
   });
 
   if (!session) throw error(404, "Session not found");

@@ -9,6 +9,7 @@
     faStop,
     faRotateRight,
     faCodeCommit,
+    faExternalLinkAlt,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../../profile/components/SectionHeader.svelte";
   import Card from "../../../components/Card.svelte";
@@ -196,69 +197,43 @@
       </Card>
     {/if}
 
-    <!-- Session header card -->
+    <!-- Session overview -->
     <Card padding="responsive">
-      <div class="flex items-center gap-2 mb-1">
-        {#if session.status === "active"}
-          <span class="relative flex h-2 w-2 flex-shrink-0">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-          </span>
-        {:else}
-          <span class="w-2 h-2 rounded-full flex-shrink-0 {statusDot(session.status)}"></span>
-        {/if}
-        <span class="text-xs font-medium {statusColor(session.status)} uppercase">{session.status}</span>
-        <span class="text-sm font-medium text-[var(--dash-text)] truncate">
-          {session.searchTaskName}
-        </span>
-      </div>
-
-      <!-- Progress -->
-      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-secondary)]">
-        <span>
-          Iteration {session.currentIteration}/{session.maxIterations}
-        </span>
-        {#if session.status === "active" && latestStage && latestStage !== "done"}
-          <span class={stageColor(latestStage)}>
-            {stageLabel(latestStage)}
-          </span>
-        {/if}
-        {#if latestSuccessPct !== null}
-          <span class="text-[var(--dash-text-muted)]">
-            {latestSuccessPct.toFixed(1)}%
-          </span>
-        {/if}
-        <span>{formatTime(session.createdAt)}</span>
-      </div>
-
-      <!-- Progress bar -->
-      {#if session.currentIteration > 0}
-        <div class="mt-2 h-1.5 bg-[var(--dash-border)] rounded-full overflow-hidden">
-          <div
-            class="h-full rounded-full transition-all duration-300 {session.status === 'completed' ? 'bg-[var(--dash-primary)]' : session.status === 'failed' ? 'bg-[var(--dash-error)]' : 'bg-green-500'}"
-            style="width: {progressPct(session)}%"
-          ></div>
+      <!-- Status + search task link -->
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            {#if session.status === "active"}
+              <span class="relative flex h-2.5 w-2.5 flex-shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+            {:else}
+              <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 {statusDot(session.status)}"></span>
+            {/if}
+            <span class="text-sm font-semibold {statusColor(session.status)} uppercase">{session.status}</span>
+            {#if session.status === "active" && latestStage && latestStage !== "done"}
+              <span class="text-xs {stageColor(latestStage)}">
+                — {stageLabel(latestStage)}
+              </span>
+            {/if}
+          </div>
+          <a
+            href="/dashboard/jobs/settings/{session.searchTaskId}"
+            class="inline-flex items-center gap-1.5 text-sm text-[var(--dash-primary)] hover:underline"
+          >
+            {session.searchTaskName}
+            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 opacity-60" />
+          </a>
         </div>
-      {/if}
 
-      <!-- Error message -->
-      {#if session.errorMessage && session.status !== "active"}
-        <p class="text-xs text-[var(--dash-text-muted)] mt-1 truncate" title={session.errorMessage}>
-          {session.errorMessage}
-        </p>
-      {/if}
-    </Card>
-
-    <!-- Actions & controls -->
-    <Card padding="responsive">
-      <div class="space-y-3">
         <!-- Action buttons -->
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
           {#if session.status === "active"}
             <button
               onclick={() => performAction("pause")}
               disabled={!!actionInProgress}
-              class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
             >
               {#if actionInProgress === "pause"}
                 <Spinner size="w-3 h-3" />
@@ -270,7 +245,7 @@
             <button
               onclick={() => performAction("cancel")}
               disabled={!!actionInProgress}
-              class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-[var(--dash-error)]/10 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/20 transition-colors disabled:opacity-50"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-error)]/10 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/20 transition-colors disabled:opacity-50"
             >
               {#if actionInProgress === "cancel"}
                 <Spinner size="w-3 h-3" />
@@ -283,7 +258,7 @@
             <button
               onclick={() => performAction("resume")}
               disabled={!!actionInProgress}
-              class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/20 transition-colors disabled:opacity-50"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/20 transition-colors disabled:opacity-50"
             >
               {#if actionInProgress === "resume"}
                 <Spinner size="w-3 h-3" />
@@ -295,7 +270,7 @@
             <button
               onclick={() => performAction("cancel")}
               disabled={!!actionInProgress}
-              class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-[var(--dash-error)]/10 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/20 transition-colors disabled:opacity-50"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-error)]/10 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/20 transition-colors disabled:opacity-50"
             >
               {#if actionInProgress === "cancel"}
                 <Spinner size="w-3 h-3" />
@@ -311,7 +286,7 @@
                 <button
                   onclick={() => commitAndPush()}
                   disabled={committing}
-                  class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
                   {#if committing}
                     <Spinner size="w-3 h-3" />
@@ -322,14 +297,14 @@
                 </button>
                 <button
                   onclick={() => (confirmCommit = false)}
-                  class="px-2.5 py-1.5 text-xs rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)] transition-colors"
+                  class="px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)] transition-colors"
                 >
                   Cancel
                 </button>
               {:else}
                 <button
                   onclick={() => (confirmCommit = true)}
-                  class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
                 >
                   <FontAwesomeIcon icon={faCodeCommit} class="w-3 h-3" />
                   Commit & push
@@ -338,37 +313,119 @@
             {/if}
             <button
               onclick={retrySession}
-              class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/20 transition-colors"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/20 transition-colors"
             >
               <FontAwesomeIcon icon={faRotateRight} class="w-3 h-3" />
               Retry
             </button>
           {/if}
         </div>
+      </div>
 
-        <!-- Blocked by manual intervention -->
-        {#if latestStage === "blocked"}
-          <div class="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
-            <p class="text-xs font-medium text-orange-700 mb-1">Run is waiting for manual action</p>
-            {#if session.blockedMessage}
-              <p class="text-sm text-[var(--dash-text)] mb-2">{session.blockedMessage}</p>
+      <!-- Progress bar -->
+      {#if session.currentIteration > 0}
+        <div class="mb-4">
+          <div class="flex items-center justify-between text-xs text-[var(--dash-text-secondary)] mb-1">
+            <span>Iteration {session.currentIteration} / {session.maxIterations}</span>
+            {#if latestSuccessPct !== null}
+              <span>{latestSuccessPct.toFixed(1)}% success</span>
             {/if}
-            <p class="text-xs text-[var(--dash-text-muted)] mb-2">
-              You can complete the action manually and let the run continue, or skip the run to move on to evaluation.
-            </p>
-            <button
-              onclick={skipRun}
-              class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
-            >
-              Skip run
-            </button>
           </div>
-        {/if}
+          <div class="h-2 bg-[var(--dash-border)] rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-300 {session.status === 'completed' ? 'bg-[var(--dash-primary)]' : session.status === 'failed' ? 'bg-[var(--dash-error)]' : 'bg-green-500'}"
+              style="width: {progressPct(session)}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
 
+      <!-- Error message -->
+      {#if session.errorMessage && session.status !== "active"}
+        <div class="p-3 rounded-lg bg-[var(--dash-error)]/5 border border-[var(--dash-error)]/20 mb-4">
+          <p class="text-sm text-[var(--dash-error)]">{session.errorMessage}</p>
+        </div>
+      {/if}
+
+      <!-- Blocked by manual intervention -->
+      {#if latestStage === "blocked"}
+        <div class="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30 mb-4">
+          <p class="text-xs font-medium text-orange-700 mb-1">Run is waiting for manual action</p>
+          {#if session.blockedMessage}
+            <p class="text-sm text-[var(--dash-text)] mb-2">{session.blockedMessage}</p>
+          {/if}
+          <p class="text-xs text-[var(--dash-text-muted)] mb-2">
+            You can complete the action manually and let the run continue, or skip the run to move on to evaluation.
+          </p>
+          <button
+            onclick={skipRun}
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors"
+          >
+            Skip run
+          </button>
+        </div>
+      {/if}
+
+      <!-- Agent question (needs input) -->
+      {#if session.needsInput}
+        <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 mb-4">
+          <p class="text-xs font-medium text-amber-700 mb-1">Agent is asking for input:</p>
+          <p class="text-sm text-[var(--dash-text)]">{session.needsInput}</p>
+        </div>
+      {/if}
+
+      <!-- Hint input for active/paused sessions -->
+      {#if ["active", "paused"].includes(session.status)}
+        {@const currentHint = hintInput || session.pendingHint || ""}
+        {@const hintChanged = currentHint.trim() !== (session.pendingHint ?? "").trim()}
+        <div class="mb-4">
+          <div class="flex gap-2 items-end">
+            <textarea
+              placeholder={session.needsInput ? "Reply to the agent's question..." : "Add a hint for the next iteration..."}
+              value={currentHint}
+              oninput={(e) => (hintInput = (e.currentTarget as HTMLTextAreaElement).value)}
+              onkeydown={(e) => { if (e.key === "Enter" && !e.shiftKey && hintChanged) { e.preventDefault(); submitHint(); } }}
+              rows="1"
+              class="flex-1 rounded-lg border {session.pendingHint && !hintChanged ? 'border-purple-400' : 'border-[var(--dash-border)]'} bg-[var(--dash-bg)] text-sm text-[var(--dash-text)] px-3 py-2 placeholder:text-[var(--dash-text-muted)] resize-none transition-all"
+              onfocus={(e) => (e.currentTarget as HTMLTextAreaElement).rows = 3}
+              onblur={(e) => { if (!(e.currentTarget as HTMLTextAreaElement).value.trim()) (e.currentTarget as HTMLTextAreaElement).rows = 1; }}
+            ></textarea>
+            {#if session.pendingHint && !hintChanged}
+              <button
+                onclick={() => { hintInput = ""; submitHint(); }}
+                disabled={hintSending}
+                class="px-3 py-2 text-xs rounded-lg bg-[var(--dash-error)]/10 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/20 transition-colors disabled:opacity-50"
+              >
+                Clear
+              </button>
+            {:else}
+              <button
+                onclick={submitHint}
+                disabled={!hintChanged || hintSending}
+                class="px-3 py-2 text-xs rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
+              >
+                {#if hintSending}
+                  <Spinner size="w-3 h-3" />
+                {:else}
+                  {session.pendingHint ? "Update" : "Send"}
+                {/if}
+              </button>
+            {/if}
+          </div>
+          {#if session.pendingHint && !hintChanged}
+            <p class="text-xs text-purple-600 mt-1">
+              Queued — will be sent at the start of the next iteration
+            </p>
+          {/if}
+        </div>
+      {/if}
+
+      <!-- Session details -->
+      <div class="grid gap-3 text-xs sm:grid-cols-2">
         <!-- Max iterations (editable for active/paused) -->
         {#if ["active", "paused"].includes(session.status)}
-          <div class="flex items-center gap-2 text-xs">
-            <span class="text-[var(--dash-text-muted)]">Max iterations:</span>
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-[var(--dash-text-muted)]">Max iterations:</span>
             <input
               type="number"
               min={session.currentIteration + 1}
@@ -383,75 +440,28 @@
           </div>
         {/if}
 
-        <!-- Agent question (needs input) -->
-        {#if session.needsInput}
-          <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-            <p class="text-xs font-medium text-amber-700 mb-1">Agent is asking for input:</p>
-            <p class="text-sm text-[var(--dash-text)]">{session.needsInput}</p>
-          </div>
-        {/if}
+        <div class="sm:col-span-2">
+          <span class="font-medium text-[var(--dash-text-muted)]">Goal:</span>
+          <span class="text-[var(--dash-text-secondary)] ml-1">{session.goal}</span>
+        </div>
 
-        <!-- Hint input for active/paused sessions -->
-        {#if ["active", "paused"].includes(session.status)}
-          {@const currentHint = hintInput || session.pendingHint || ""}
-          {@const hintChanged = currentHint.trim() !== (session.pendingHint ?? "").trim()}
-          <div class="flex gap-2 items-end">
-            <textarea
-              placeholder={session.needsInput ? "Reply to the agent's question..." : "Add a hint for the next iteration..."}
-              value={currentHint}
-              oninput={(e) => (hintInput = (e.currentTarget as HTMLTextAreaElement).value)}
-              onkeydown={(e) => { if (e.key === "Enter" && !e.shiftKey && hintChanged) { e.preventDefault(); submitHint(); } }}
-              rows="1"
-              class="flex-1 rounded-lg border {session.pendingHint && !hintChanged ? 'border-purple-400' : 'border-[var(--dash-border)]'} bg-[var(--dash-bg)] text-xs text-[var(--dash-text)] px-3 py-1.5 placeholder:text-[var(--dash-text-muted)] resize-none focus:rows-3 transition-all"
-              onfocus={(e) => (e.currentTarget as HTMLTextAreaElement).rows = 3}
-              onblur={(e) => { if (!(e.currentTarget as HTMLTextAreaElement).value.trim()) (e.currentTarget as HTMLTextAreaElement).rows = 1; }}
-            ></textarea>
-            {#if session.pendingHint && !hintChanged}
-              <button
-                onclick={() => { hintInput = ""; submitHint(); }}
-                disabled={hintSending}
-                class="px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-error)]/10 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/20 transition-colors disabled:opacity-50"
-              >
-                Clear
-              </button>
-            {:else}
-              <button
-                onclick={submitHint}
-                disabled={!hintChanged || hintSending}
-                class="px-3 py-1.5 text-xs rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
-              >
-                {#if hintSending}
-                  <Spinner size="w-3 h-3" />
-                {:else}
-                  {session.pendingHint ? "Update" : "Send"}
-                {/if}
-              </button>
-            {/if}
-          </div>
-          {#if session.pendingHint && !hintChanged}
-            <p class="text-xs text-purple-600">
-              Queued — will be sent at the start of the next iteration
-            </p>
-          {/if}
-        {/if}
-
-        <!-- Session config -->
-        <div class="text-xs space-y-2">
-          <div>
-            <span class="font-medium text-[var(--dash-text-muted)]">Goal:</span>
-            <span class="text-[var(--dash-text-secondary)] ml-1">{session.goal}</span>
-          </div>
-          {#if session.systemPrompt}
-            <details>
-              <summary class="font-medium text-[var(--dash-text-muted)] cursor-pointer hover:text-[var(--dash-text-secondary)]">
-                System prompt
-              </summary>
-              <p class="text-[var(--dash-text-secondary)] mt-1 whitespace-pre-wrap max-h-48 overflow-y-auto font-mono text-[10px] leading-relaxed bg-[var(--dash-border)]/30 rounded p-2">
-                {session.systemPrompt}
-              </p>
-            </details>
+        <div class="sm:col-span-2 text-[var(--dash-text-muted)]">
+          Started {formatTime(session.createdAt)}
+          {#if session.finishedAt}
+            — finished {formatTime(session.finishedAt)}
           {/if}
         </div>
+
+        {#if session.systemPrompt}
+          <details class="sm:col-span-2">
+            <summary class="font-medium text-[var(--dash-text-muted)] cursor-pointer hover:text-[var(--dash-text-secondary)]">
+              System prompt
+            </summary>
+            <p class="text-[var(--dash-text-secondary)] mt-1 whitespace-pre-wrap max-h-48 overflow-y-auto font-mono text-[10px] leading-relaxed bg-[var(--dash-border)]/30 rounded p-2">
+              {session.systemPrompt}
+            </p>
+          </details>
+        {/if}
       </div>
     </Card>
 
@@ -459,7 +469,7 @@
     <Card padding="responsive">
       <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Iterations</h3>
       {#if iterations.length === 0}
-        <p class="text-xs text-[var(--dash-text-muted)] text-center py-2">
+        <p class="text-xs text-[var(--dash-text-muted)] text-center py-4">
           No iterations yet — waiting for agent to start...
         </p>
       {:else}
