@@ -290,8 +290,6 @@
       </div>
       <div class="text-xs text-[var(--dash-text-muted)] mt-1">
         {evaluatedCount} of {totalJobs} jobs processed
-        &middot; <span class="text-[var(--dash-success)]">{matchedCount} matched</span>
-        &middot; <span class="text-[var(--dash-error)]">{noMatchCount} no match</span>
       </div>
     </div>
 
