@@ -344,9 +344,6 @@
           <div class="flex gap-4 mt-3 text-xs text-[var(--dash-text-muted)]">
             <span>Cycles: {matcherState.totalCycles}</span>
             <span>Matched this session: {matcherState.totalMatched}</span>
-            {#if matcherState.totalFailed > 0}
-              <span class="text-[var(--dash-error)]">Failed: {matcherState.totalFailed}</span>
-            {/if}
           </div>
         {/if}
       {:else if isWaitingForMatcher}

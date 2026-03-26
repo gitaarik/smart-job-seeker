@@ -17,6 +17,13 @@ const MATCHER_STATE_TTL = 120; // seconds — auto-expire if worker dies
 const MATCHER_HEARTBEAT_KEY = "matcher:heartbeat";
 const MATCHER_HEARTBEAT_TTL = 120; // seconds
 
+export interface MatcherError {
+  jobId: number;
+  jobTitle: string;
+  message: string;
+  timestamp: string;
+}
+
 export interface MatcherState {
   /** Whether the matcher loop is actively running */
   active: boolean;
@@ -36,6 +43,8 @@ export interface MatcherState {
   totalMatched: number;
   /** Total jobs failed across all cycles */
   totalFailed: number;
+  /** Recent errors (last 50) */
+  recentErrors: MatcherError[];
   /** Timestamp of last update */
   lastUpdated: string;
 }

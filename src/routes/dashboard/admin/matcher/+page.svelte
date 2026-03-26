@@ -19,6 +19,7 @@
     totalCycles: number;
     totalMatched: number;
     totalFailed: number;
+    recentErrors: { jobId: number; jobTitle: string; message: string; timestamp: string }[];
     lastUpdated: string;
   }
 
@@ -197,7 +198,10 @@
                 <span>Cycles: {state.totalCycles}</span>
                 <span>Session: {state.totalMatched} matched</span>
                 {#if state.totalFailed > 0}
-                  <span class="text-[var(--dash-error)]">{state.totalFailed} failed</span>
+                  <a
+                    href="/dashboard/admin/matcher/{profile.id}"
+                    class="text-[var(--dash-error)] hover:underline"
+                  >{state.totalFailed} failed</a>
                 {/if}
                 {#if state.currentJobId}
                   <span>
