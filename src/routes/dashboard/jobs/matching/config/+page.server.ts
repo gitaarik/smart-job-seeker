@@ -36,6 +36,7 @@ export const load: PageServerLoad = async ({ parent }) => {
           experience_levels: (config.experience_levels as string[]) || [],
           work_location: (config.work_location as string[]) || [],
           locations: (config.locations as string[]) || [],
+          remote_only: config.remote_only,
           match_community_jobs: config.match_community_jobs,
         }
       : null,

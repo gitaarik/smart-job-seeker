@@ -39,6 +39,7 @@
     normalizeToOptions(data.config?.experience_levels || [], data.options.experienceLevels),
   );
   let savedLocations = $state<string[]>(data.config?.locations || []);
+  let savedRemoteOnly = $state<boolean>(data.config?.remote_only ?? false);
   let savedMatchCommunityJobs = $state<boolean>(data.config?.match_community_jobs ?? false);
 
   // === Current (editable) state ===
@@ -46,6 +47,7 @@
   let workLocation = $state<string[]>([...savedWorkLocation]);
   let experienceLevels = $state<string[]>([...savedExperienceLevels]);
   let locations = $state<string[]>([...savedLocations]);
+  let remoteOnly = $state<boolean>(savedRemoteOnly);
   let matchCommunityJobs = $state<boolean>(savedMatchCommunityJobs);
 
   // Location input
@@ -56,13 +58,14 @@
   let isSavingWorkLocation = $state(false);
   let isSavingExperienceLevels = $state(false);
   let isSavingLocations = $state(false);
+  let isSavingRemoteOnly = $state(false);
   let isSavingCommunityJobs = $state(false);
 
   // === Dirty detection ===
   let jobTypesDirty = $derived(!arraysEqual(jobTypes, savedJobTypes));
   let workLocationDirty = $derived(!arraysEqual(workLocation, savedWorkLocation));
   let experienceLevelsDirty = $derived(!arraysEqual(experienceLevels, savedExperienceLevels));
-  let locationsDirty = $derived(!arraysEqual(locations, savedLocations));
+  let locationsDirty = $derived(!arraysEqual(locations, savedLocations) || remoteOnly !== savedRemoteOnly);
   let communityJobsDirty = $derived(matchCommunityJobs !== savedMatchCommunityJobs);
 
   // === First-time setup state ===
@@ -140,8 +143,26 @@
   }
 
   async function saveLocations() {
-    if (await patchField("locations", locations, (v) => (isSavingLocations = v))) {
-      savedLocations = [...locations];
+    isSavingLocations = true;
+    try {
+      const res = await fetch("/api/job-preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          locations: remoteOnly ? [] : locations,
+          remote_only: remoteOnly,
+        }),
+      });
+      if (res.ok) {
+        if (remoteOnly) locations = [];
+        savedLocations = [...locations];
+        savedRemoteOnly = remoteOnly;
+      }
+    } catch (err) {
+      console.error("Failed to save locations:", err);
+    } finally {
+      isSavingLocations = false;
     }
   }
 
@@ -172,7 +193,8 @@
           job_types: jobTypes,
           experience_levels: experienceLevels,
           work_location: workLocation,
-          locations,
+          locations: remoteOnly ? [] : locations,
+          remote_only: remoteOnly,
           match_community_jobs: matchCommunityJobs,
         }),
       });
@@ -391,49 +413,61 @@
       <div>
         <h3 class="font-medium text-[var(--dash-text)]">Preferred Locations</h3>
         <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-          Optional - cities or regions you'd like to work in (for non-remote jobs)
+          The AI compares these to the job's office location when scoring. Remote jobs are not affected.
         </p>
       </div>
     </div>
 
-    <!-- Location tags -->
-    {#if locations.length > 0}
-      <div class="flex flex-wrap gap-2 mb-3">
-        {#each locations as loc}
-          <span
-            class="px-3 py-1.5 bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded-lg text-sm flex items-center gap-2"
-          >
-            {loc}
-            <button
-              type="button"
-              onclick={() => removeLocation(loc)}
-              class="hover:text-[var(--dash-error)] transition-colors"
-              aria-label="Remove {loc}"
+    <!-- Remote only checkbox -->
+    <label class="flex items-center gap-2 cursor-pointer mb-4">
+      <input
+        type="checkbox"
+        bind:checked={remoteOnly}
+        class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+      />
+      <span class="text-sm text-[var(--dash-text)]">I only work remotely</span>
+    </label>
+
+    {#if !remoteOnly}
+      <!-- Location tags -->
+      {#if locations.length > 0}
+        <div class="flex flex-wrap gap-2 mb-3">
+          {#each locations as loc}
+            <span
+              class="px-3 py-1.5 bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded-lg text-sm flex items-center gap-2"
             >
-              &times;
-            </button>
-          </span>
-        {/each}
+              {loc}
+              <button
+                type="button"
+                onclick={() => removeLocation(loc)}
+                class="hover:text-[var(--dash-error)] transition-colors"
+                aria-label="Remove {loc}"
+              >
+                &times;
+              </button>
+            </span>
+          {/each}
+        </div>
+      {/if}
+
+      <!-- Location input -->
+      <div class="flex gap-2">
+        <input
+          type="text"
+          bind:value={locationInput}
+          onkeydown={handleLocationKeydown}
+          placeholder="Add a city or region..."
+          class="flex-1 px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        />
+        <button
+          type="button"
+          onclick={addLocation}
+          class="px-4 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors"
+        >
+          Add
+        </button>
       </div>
     {/if}
-
-    <!-- Location input -->
-    <div class="flex gap-2">
-      <input
-        type="text"
-        bind:value={locationInput}
-        onkeydown={handleLocationKeydown}
-        placeholder="Add a city or region..."
-        class="flex-1 px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-      />
-      <button
-        type="button"
-        onclick={addLocation}
-        class="px-4 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors"
-      >
-        Add
-      </button>
-    </div>
 
     {#if configExists && locationsDirty}
       <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
@@ -452,7 +486,7 @@
         </button>
         <button
           type="button"
-          onclick={() => (locations = [...savedLocations])}
+          onclick={() => { locations = [...savedLocations]; remoteOnly = savedRemoteOnly; }}
           class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
@@ -467,7 +501,7 @@
       <label class="flex items-center justify-between cursor-pointer flex-1">
         <div>
           <h3 class="font-medium text-[var(--dash-text)]">
-            Also match jobs imported by other users
+            Also match with jobs imported by other users
           </h3>
           <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
             When enabled, the matcher will also process jobs you didn't import yourself (your own-imported jobs are always matched first)

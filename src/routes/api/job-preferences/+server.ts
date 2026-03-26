@@ -6,7 +6,7 @@ import { jobPreferencesPatchSchema, jobPreferencesSchema, parseBody } from "$lib
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const { profile_id, job_types, experience_levels, work_location, locations, match_community_jobs } =
+  const { profile_id, job_types, experience_levels, work_location, locations, remote_only, match_community_jobs } =
     parseBody(jobPreferencesSchema, await request.json());
 
   // Verify the profile belongs to this user
@@ -31,6 +31,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
         : null,
     work_location: work_location,
     locations: locations && locations.length > 0 ? locations : null,
+    ...(remote_only !== undefined && { remote_only }),
     ...(match_community_jobs !== undefined && { match_community_jobs }),
     date_updated: new Date(),
   };
@@ -99,6 +100,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
         ? fields.locations
         : null;
   }
+  if (fields.remote_only !== undefined)
+    data.remote_only = fields.remote_only;
   if (fields.match_community_jobs !== undefined)
     data.match_community_jobs = fields.match_community_jobs;
 

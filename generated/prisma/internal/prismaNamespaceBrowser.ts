@@ -1493,6 +1493,7 @@ export const Match_configScalarFieldEnum = {
   locations: 'locations',
   profile: 'profile',
   name: 'name',
+  remote_only: 'remote_only',
   match_community_jobs: 'match_community_jobs'
 } as const
 
