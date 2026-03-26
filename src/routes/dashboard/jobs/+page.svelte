@@ -3,6 +3,7 @@
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import { navigating } from "$app/stores";
+  import { tick } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBan,
@@ -286,8 +287,21 @@
     goto(buildUrl({ page: page.toString() }));
   }
 
-  function toggleExpand(id: number) {
+  async function toggleExpand(id: number) {
+    // Capture clicked card's viewport offset before DOM changes
+    const cardEl = document.querySelector(`[data-job-id="${id}"]`);
+    const viewportOffset = cardEl?.getBoundingClientRect().top ?? null;
+
     expandedId = expandedId === id ? null : id;
+
+    // After DOM updates, restore the card to the same viewport position
+    if (viewportOffset !== null && expandedId !== null) {
+      await tick();
+      const updatedRect = cardEl?.getBoundingClientRect();
+      if (updatedRect) {
+        window.scrollBy(0, updatedRect.top - viewportOffset);
+      }
+    }
   }
 
   function formatDate(date: Date | string | null): string {
