@@ -9,7 +9,7 @@ import {
   LLMAuthenticationError,
   LLMQuotaExceededError,
   LLMRateLimitError,
-} from "./langchain";
+} from "./langchain.js";
 
 export {
   type ChatCompletionOptions,
@@ -20,9 +20,9 @@ export {
   LLMQuotaExceededError,
   LLMRateLimitError,
   type StructuredOutputConfig,
-} from "./langchain";
+} from "./langchain.js";
 
-export { llmCache } from "./cache";
+export { llmCache } from "./cache.js";
 
 /**
  * Check if an error is a fatal LLM error that should stop processing.

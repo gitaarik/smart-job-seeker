@@ -16,7 +16,7 @@ import {
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { getEnv } from "$lib/tools/get-env";
-import { llmCache } from "./cache";
+import { llmCache } from "./cache.js";
 import { isRetryableError, withRetry } from "$lib/server/utils/retry";
 import { errorTracker } from "$lib/server/monitoring/error-tracker";
 import { config } from "$lib/server/config";

@@ -2,7 +2,7 @@
  * Helper utilities for fetching display labels from Directus field metadata
  */
 
-import { directusRequest } from "./client";
+import { directusRequest } from "./client.js";
 
 /**
  * Directus field metadata response structure

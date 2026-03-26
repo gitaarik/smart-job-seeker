@@ -10,7 +10,7 @@
  * that produces human-readable failure reasons).
  */
 
-import { Prisma } from "../../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client.js";
 
 export interface EligibilityConfig {
   work_location: string[] | null;

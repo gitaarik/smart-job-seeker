@@ -11,7 +11,7 @@
  */
 
 import { Queue, QueueEvents } from "bullmq";
-import { redisConnection } from "./connection";
+import { redisConnection } from "./connection.js";
 
 // ============================================================================
 // Types

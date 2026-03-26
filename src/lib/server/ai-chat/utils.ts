@@ -9,7 +9,7 @@ import {
   isFatalLLMError,
 } from "$lib/server/llm";
 import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
-import { promptTemplates } from "./prompt-templates";
+import { promptTemplates } from "./prompt-templates.js";
 
 /**
  * Interpolate variables in a prompt string

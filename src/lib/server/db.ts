@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../generated/prisma/client";
+import { PrismaClient } from "../../../generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { getEnv } from "$lib/tools/get-env";
 import { isRunningInDocker } from "$lib/server/utils/docker";

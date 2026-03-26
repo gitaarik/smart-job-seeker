@@ -6,7 +6,7 @@
  */
 
 import { config } from "$lib/server/config";
-import { createAndGenerateAiChat } from "./utils";
+import { createAndGenerateAiChat } from "./utils.js";
 import { dbDirect } from "$lib/server/db";
 
 /**
