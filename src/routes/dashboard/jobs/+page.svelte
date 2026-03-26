@@ -299,7 +299,10 @@
       await tick();
       const updatedRect = cardEl?.getBoundingClientRect();
       if (updatedRect) {
-        window.scrollBy(0, updatedRect.top - viewportOffset);
+        const delta = updatedRect.top - viewportOffset;
+        if (Math.abs(delta) > 1) {
+          window.scrollBy({ top: delta, behavior: "smooth" });
+        }
       }
     }
   }
