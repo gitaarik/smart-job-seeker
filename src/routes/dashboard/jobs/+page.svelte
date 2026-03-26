@@ -62,6 +62,14 @@
     Object.fromEntries(data.rejectedJobIds.map((id: number) => [id, true]))
   );
 
+  // Re-sync when data changes (e.g. pagination)
+  $effect(() => {
+    savedJobIds = Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]));
+  });
+  $effect(() => {
+    rejectedJobIds = Object.fromEntries(data.rejectedJobIds.map((id: number) => [id, true]));
+  });
+
   // Store match data by job ID
   let matchesByJobId = $derived(data.matchesByJobId);
 
@@ -144,6 +152,7 @@
     selectedImportedBy = new Set(filters.importedBy ? filters.importedBy.split(",") : []);
     minScoreFilter = filters.minScore;
     datePostedFilter = filters.datePosted;
+    expandedId = null;
   });
 
   let pageTitle = $derived(
