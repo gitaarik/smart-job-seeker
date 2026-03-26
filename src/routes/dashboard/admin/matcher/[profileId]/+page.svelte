@@ -23,6 +23,10 @@
   interface MatcherState {
     active: boolean;
     profileId: number | null;
+    currentJobId: number | null;
+    currentJobTitle: string | null;
+    cycleProcessed: number;
+    cycleBatchSize: number;
     totalCycles: number;
     totalMatched: number;
     totalFailed: number;
@@ -33,6 +37,7 @@
   interface ProfileInfo {
     id: number;
     name: string;
+    matchCommunityJobs: boolean;
     totalJobs: number;
     matchedCount: number;
     noMatchCount: number;
@@ -87,6 +92,29 @@
       second: "2-digit",
     });
   }
+
+  function formatRelativeTime(date: string | null): string {
+    if (!date) return "";
+    const d = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+
+    if (diffSecs < 30) return "Just now";
+    if (diffMins < 1) return `${diffSecs}s ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  let evaluated = $derived((profile?.matchedCount ?? 0) + (profile?.noMatchCount ?? 0));
 </script>
 
 <div class="space-y-6">
@@ -112,32 +140,79 @@
       <p class="text-[var(--dash-error)] text-sm">{error}</p>
     </Card>
   {:else}
-    <!-- Session Stats -->
-    {#if state}
+    <!-- Profile Overview -->
+    {#if profile}
       <Card padding="responsive">
-        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Session Stats</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-          <div>
-            <div class="text-[var(--dash-text-muted)] text-xs">Cycles</div>
-            <div class="font-medium text-[var(--dash-text)]">{state.totalCycles}</div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            {#if state?.active && state?.currentJobId}
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+            {:else if state?.active}
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+              </span>
+            {:else}
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-400"></span>
+              </span>
+            {/if}
+            <span class="text-xs text-[var(--dash-text-muted)]">ID: {profile.id}</span>
+            {#if profile.matchCommunityJobs}
+              <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]">community</span>
+            {/if}
           </div>
-          <div>
-            <div class="text-[var(--dash-text-muted)] text-xs">Matched</div>
-            <div class="font-medium text-[var(--dash-success)]">{state.totalMatched}</div>
-          </div>
-          <div>
-            <div class="text-[var(--dash-text-muted)] text-xs">Failed</div>
-            <div class="font-medium text-[var(--dash-error)]">{state.totalFailed}</div>
-          </div>
-          <div>
-            <div class="text-[var(--dash-text-muted)] text-xs">DB Unevaluated</div>
-            <div class="font-medium text-[var(--dash-warning)]">{profile?.unmatchedCount ?? 0}</div>
-          </div>
+          {#if state?.lastUpdated}
+            <span class="text-xs text-[var(--dash-text-muted)]">
+              {formatRelativeTime(state.lastUpdated)}
+            </span>
+          {/if}
         </div>
-      </Card>
-    {:else}
-      <Card padding="responsive">
-        <p class="text-sm text-[var(--dash-text-muted)]">No matcher session data available for this profile.</p>
+
+        <!-- DB stats row -->
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-secondary)] mb-2">
+          <span>{profile.totalJobs} jobs</span>
+          <span class="text-[var(--dash-success)]">{profile.matchedCount} matched</span>
+          <span class="text-[var(--dash-error)]">{profile.noMatchCount} no match</span>
+          <span class="text-[var(--dash-text-muted)]">{profile.unmatchedCount} unevaluated</span>
+        </div>
+
+        <!-- Progress bar -->
+        {#if profile.totalJobs > 0}
+          <div class="w-full bg-[var(--dash-bg)] rounded-full h-1.5 overflow-hidden mb-2">
+            <div
+              class="h-full rounded-full transition-all duration-500 {evaluated >= profile.totalJobs ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-primary)]'}"
+              style="width: {Math.min(100, (evaluated / profile.totalJobs) * 100)}%"
+            ></div>
+          </div>
+        {/if}
+
+        <!-- Worker state row -->
+        {#if state}
+          <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-muted)]">
+            <span>Cycles: {state.totalCycles}</span>
+            <span>Session: {state.totalMatched} matched</span>
+            {#if state.totalFailed > 0}
+              <span class="text-[var(--dash-error)]">{state.totalFailed} failed</span>
+            {/if}
+            {#if state.currentJobId}
+              <span>
+                Processing:
+                <a
+                  href="/dashboard/jobs/{state.currentJobId}"
+                  class="text-[var(--dash-primary)] hover:underline"
+                >
+                  {state.currentJobTitle || `Job #${state.currentJobId}`}
+                </a>
+                ({state.cycleProcessed + 1}/{state.cycleBatchSize})
+              </span>
+            {/if}
+          </div>
+        {:else}
+          <p class="text-xs text-[var(--dash-text-muted)]">No recent session activity</p>
+        {/if}
       </Card>
     {/if}
 
