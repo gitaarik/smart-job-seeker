@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
+  import { faExclamationTriangle, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 
   interface Props {
     isOpen: boolean;
@@ -8,20 +8,40 @@
     message?: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    variant?: "destructive" | "primary";
     onConfirm: () => void;
     onCancel: () => void;
   }
 
   let {
     isOpen,
-    title = "Delete Item",
-    message =
-      "Are you sure you want to delete this item? This action cannot be undone.",
-    confirmLabel = "Delete",
+    title = "Confirm",
+    message = "Are you sure?",
+    confirmLabel = "Confirm",
     cancelLabel = "Cancel",
+    variant = "destructive",
     onConfirm,
     onCancel,
   }: Props = $props();
+
+  const iconBg = $derived(
+    variant === "destructive"
+      ? "bg-[var(--dash-error-light)]"
+      : "bg-[var(--dash-primary)]/10"
+  );
+  const iconColor = $derived(
+    variant === "destructive"
+      ? "text-[var(--dash-error)]"
+      : "text-[var(--dash-primary)]"
+  );
+  const icon = $derived(
+    variant === "destructive" ? faExclamationTriangle : faQuestionCircle
+  );
+  const btnClass = $derived(
+    variant === "destructive"
+      ? "bg-[var(--dash-error)] text-white"
+      : "bg-[var(--dash-primary)] text-white"
+  );
 </script>
 
 {#if isOpen}
@@ -51,11 +71,11 @@
     >
       <div class="flex items-start gap-4">
         <div
-          class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center flex-shrink-0"
+          class="w-10 h-10 rounded-full {iconBg} flex items-center justify-center flex-shrink-0"
         >
           <FontAwesomeIcon
-            icon={faExclamationTriangle}
-            class="w-5 h-5 text-[var(--dash-error)]"
+            {icon}
+            class="w-5 h-5 {iconColor}"
           />
         </div>
         <div>
@@ -77,7 +97,7 @@
         <button
           type="button"
           onclick={onConfirm}
-          class="px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:opacity-90 transition-colors"
+          class="px-4 py-2 {btnClass} rounded-lg hover:opacity-90 transition-colors"
         >
           {confirmLabel}
         </button>

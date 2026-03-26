@@ -12,7 +12,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
-  import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../components/ConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -324,7 +324,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={deleteId !== null}
   title="Delete Language"
   message="Are you sure you want to delete this language? This action cannot be undone."

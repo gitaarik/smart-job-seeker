@@ -8,6 +8,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import ScoreBadge from "../../components/ScoreBadge.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -57,6 +58,7 @@
   let loading = $state(true);
   let showNoMatch = $state(false);
   let rematching = $state(false);
+  let showRematchConfirm = $state(false);
 
   // Derived
   let evaluatedCount = $derived(matchedCount + noMatchCount);
@@ -216,7 +218,7 @@
           <div class="flex flex-wrap items-center gap-2 mt-2">
             <a href="/dashboard/jobs?minScore=0" class="inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
             <button
-              onclick={rematchNoMatches}
+              onclick={() => (showRematchConfirm = true)}
               disabled={rematching}
               class="inline-flex whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] disabled:opacity-50 transition-colors"
             >
@@ -434,3 +436,16 @@
     </div>
   {/if}
 </div>
+
+<ConfirmModal
+  isOpen={showRematchConfirm}
+  title="Re-match No-Match Jobs"
+  message="This will re-run AI matching for all {noMatchCount} jobs that currently have no match. This uses AI credits and may take a while."
+  confirmLabel="Re-match"
+  variant="primary"
+  onCancel={() => (showRematchConfirm = false)}
+  onConfirm={() => {
+    showRematchConfirm = false;
+    rematchNoMatches();
+  }}
+/>

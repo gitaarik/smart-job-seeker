@@ -31,7 +31,7 @@
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
-  import DeleteConfirmModal from "../profile/components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../profile/components/ConfirmModal.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -979,7 +979,7 @@
   {/if}
 </div>
 
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={showClearMatchConfirm}
   title="Clear Match Data"
   message="This will delete all match data for jobs matching your current filters. They will be re-scored on the next match run."

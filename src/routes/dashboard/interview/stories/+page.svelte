@@ -11,7 +11,7 @@
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
-  import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import { invalidateAll } from "$app/navigation";
 
@@ -660,7 +660,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={deleteId !== null}
   title="Delete Story"
   message="Are you sure you want to delete this project story? This action cannot be undone."

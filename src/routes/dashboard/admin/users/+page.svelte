@@ -16,7 +16,7 @@
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
-  import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -549,7 +549,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={deleteId !== null}
   title="Delete User"
   message="Are you sure you want to delete this user? All their sessions and accounts will be removed. This action cannot be undone."
@@ -571,7 +571,7 @@
 />
 
 <!-- Clear Matches Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={clearMatchesConfirmId !== null}
   title="Clear Match Data"
   message="This will delete all match data for this user's jobs. They will be re-scored on the next match run."

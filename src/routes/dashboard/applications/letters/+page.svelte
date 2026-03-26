@@ -17,7 +17,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
-  import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -553,7 +553,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={deleteItem !== null}
   title="Delete {deleteItem?.type === 'letter' ? 'Letter' : 'Question'}"
   message="Are you sure you want to delete this {deleteItem?.type === 'letter'

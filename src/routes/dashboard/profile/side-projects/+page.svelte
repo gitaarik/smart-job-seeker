@@ -12,7 +12,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
-  import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../components/ConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
   import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
 
@@ -387,7 +387,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={deleteId !== null}
   title="Delete Project"
   message="Are you sure you want to delete this project? All achievements and technologies will also be deleted. This action cannot be undone."

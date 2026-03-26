@@ -12,7 +12,7 @@
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
-  import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -700,7 +700,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmModal
+<ConfirmModal
   isOpen={deleteId !== null}
   title="Delete Salary Expectation"
   message="Are you sure you want to delete this salary expectation? This action cannot be undone."

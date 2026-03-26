@@ -24,6 +24,7 @@
   import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import {
     formatExperienceLevel,
     formatJobStatus,
@@ -39,6 +40,8 @@
   let isSaving = $state(false);
   let isRematching = $state(false);
   let rematchError = $state("");
+  let showRematchConfirm = $state(false);
+  let rematchFormEl: HTMLFormElement | undefined = $state();
 
   // Rescrape monitor modal — auto-show if a rescrape is in progress
   let rescrapeActive = ["queued", "scraping"].includes(
@@ -600,6 +603,7 @@
             {/if}
 
             <form
+              bind:this={rematchFormEl}
               method="POST"
               action="?/rematchJob"
               use:enhance={() => {
@@ -619,7 +623,8 @@
               }}
             >
               <button
-                type="submit"
+                type={match?.reasoning ? "button" : "submit"}
+                onclick={match?.reasoning ? () => (showRematchConfirm = true) : undefined}
                 disabled={isRematching}
                 class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
                 title={match?.reasoning
@@ -743,3 +748,16 @@
     oncomplete={() => window.location.reload()}
   />
 {/if}
+
+<ConfirmModal
+  isOpen={showRematchConfirm}
+  title="Re-match Job"
+  message="This will re-run AI matching for this job, replacing the current match result. This uses AI credits."
+  confirmLabel="Re-match"
+  variant="primary"
+  onCancel={() => (showRematchConfirm = false)}
+  onConfirm={() => {
+    showRematchConfirm = false;
+    rematchFormEl?.requestSubmit();
+  }}
+/>
