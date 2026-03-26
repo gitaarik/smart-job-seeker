@@ -161,7 +161,7 @@
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-400"></span>
                   </span>
                 {/if}
-                <h4 class="text-sm font-medium text-[var(--dash-text)]">{profile.name}</h4>
+                <a href="/dashboard/admin/matcher/{profile.id}" class="text-sm font-medium text-[var(--dash-text)] hover:text-[var(--dash-primary)] hover:underline">{profile.name}</a>
                 <span class="text-xs text-[var(--dash-text-muted)]">ID: {profile.id}</span>
                 {#if profile.matchCommunityJobs}
                   <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]">community</span>
