@@ -13,8 +13,8 @@
 import { Prisma } from "../../../../generated/prisma/client";
 
 export interface EligibilityConfig {
-  work_location: string[];
-  job_types: string[];
+  work_location: string[] | null;
+  job_types: string[] | null;
 }
 
 /**

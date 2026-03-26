@@ -6,14 +6,16 @@
  * so this module can be imported from both SvelteKit and the worker.
  */
 
-import Redis from "ioredis";
+import RedisModule from "ioredis";
+const Redis = RedisModule as unknown as typeof RedisModule.default;
+type RedisClient = InstanceType<typeof Redis>;
 
-let redisClient: Redis | null = null;
+let redisClient: RedisClient | null = null;
 
 /**
  * Get or create the shared Redis client
  */
-export function getRedisClient(): Redis {
+export function getRedisClient(): RedisClient {
   if (!redisClient) {
     redisClient = new Redis({
       host: process.env.REDIS_HOST || "localhost",
