@@ -281,7 +281,7 @@
 
   <!-- Expanded Content -->
   {#if isExpanded}
-    <div in:slide={{ duration: 200 }} class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4 relative">
+    <div transition:slide={{ duration: 200 }} class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4 relative">
       <!-- Source button in top right -->
       {#if job.source_url}
         <a
