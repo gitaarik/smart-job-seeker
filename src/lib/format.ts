@@ -23,10 +23,41 @@ const JOB_STATUS_LABELS: Record<string, string> = {
 
 const WORK_LOCATION_LABELS: Record<string, string> = {
   remote: "Remote",
+  "fully remote": "Remote",
+  "remote (no onsite)": "Remote",
   hybrid: "Hybrid",
+  hybride: "Hybrid",
   onsite: "On-site",
   "on-site": "On-site",
   "on_site": "On-site",
+  // Dutch
+  "in overleg": "Hybrid",
+  // English
+  flexible: "Hybrid",
+  negotiable: "Hybrid",
+  "by agreement": "Hybrid",
+  "by mutual agreement": "Hybrid",
+  "by arrangement": "Hybrid",
+  // German
+  "nach absprache": "Hybrid",
+  "nach vereinbarung": "Hybrid",
+  flexibel: "Hybrid",
+  "vor ort": "On-site",
+  // French
+  "en concertation": "Hybrid",
+  "selon accord": "Hybrid",
+  "à convenir": "Hybrid",
+  "à définir": "Hybrid",
+  "en accord": "Hybrid",
+  "sur site": "On-site",
+  "sur place": "On-site",
+  // Spanish
+  "a convenir": "Hybrid",
+  "según acuerdo": "Hybrid",
+  negociable: "Hybrid",
+  // Portuguese
+  "a combinar": "Hybrid",
+  "a negociar": "Hybrid",
 };
 
 export function formatJobType(type: string): string {
@@ -38,7 +69,12 @@ export function formatJobStatus(status: string): string {
 }
 
 export function formatWorkLocation(location: string): string {
-  return WORK_LOCATION_LABELS[location.toLowerCase()] ?? titleCase(location);
+  const lower = location.toLowerCase();
+  if (WORK_LOCATION_LABELS[lower]) return WORK_LOCATION_LABELS[lower];
+  // Handle prefix patterns like "Hybrid (up to 3 remote days p/w)" or "Remote in UK"
+  if (lower.startsWith("hybrid")) return "Hybrid";
+  if (lower.startsWith("remote")) return "Remote";
+  return titleCase(location);
 }
 
 const EXPERIENCE_LEVEL_LABELS: Record<string, string> = {

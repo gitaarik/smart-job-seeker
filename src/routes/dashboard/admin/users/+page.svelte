@@ -465,7 +465,7 @@
 
             <!-- Footer with action buttons -->
             <div
-              class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2"
+              class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex flex-wrap justify-end md:justify-start items-center gap-2"
             >
               <button
                 type="button"
