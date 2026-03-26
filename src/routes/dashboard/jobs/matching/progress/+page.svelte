@@ -46,9 +46,9 @@
 
   let totalJobs = $state(0);
   let matchedCount = $state(0);
-  let noMatchCount = $state(0);
+  let notRecommendedCount = $state(0);
+  let ineligibleCount = $state(0);
   let unmatchedCount = $state(0);
-  let eligibleUnmatched = $state(0);
   let matcherState = $state<MatcherState | null>(null);
   let matcherAlive = $state(false);
   let recentMatches = $state<RecentMatch[]>([]);
@@ -58,10 +58,8 @@
   let rematching = $state(false);
 
   // Derived
-  let evaluatedCount = $derived(matchedCount + noMatchCount);
-  let relevantTotal = $derived(evaluatedCount + eligibleUnmatched);
-  let evaluatedProgress = $derived(relevantTotal > 0 ? (evaluatedCount / relevantTotal) * 100 : 0);
-  let filteredOut = $derived(unmatchedCount - eligibleUnmatched);
+  let evaluatedCount = $derived(matchedCount + notRecommendedCount + ineligibleCount);
+  let evaluatedProgress = $derived(totalJobs > 0 ? (evaluatedCount / totalJobs) * 100 : 0);
 
   // Matcher status states
   let isProcessingThisProfile = $derived(
@@ -83,9 +81,9 @@
         const result = await response.json();
         totalJobs = result.totalJobs;
         matchedCount = result.matchedCount;
-        noMatchCount = result.noMatchCount;
+        notRecommendedCount = result.notRecommendedCount;
+        ineligibleCount = result.ineligibleCount;
         unmatchedCount = result.unmatchedCount;
-        eligibleUnmatched = result.eligibleUnmatched;
         matcherState = result.matcherState;
         matcherAlive = result.matcherAlive ?? false;
         recentMatches = result.recentMatches;
@@ -110,7 +108,7 @@
   }
 
   async function rematchNoMatches() {
-    if (rematching || noMatchCount === 0) return;
+    if (rematching || notRecommendedCount === 0) return;
     rematching = true;
     try {
       const response = await fetch("/api/matcher/rematch", {
@@ -189,60 +187,70 @@
     </div>
   {:else}
     <!-- Stats Overview -->
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 mt-4">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 mt-4">
       <!-- Matched (good matches) -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Matched</div>
         <div class="text-2xl font-bold text-[var(--dash-success)]">{matchedCount}</div>
         <div class="text-xs text-[var(--dash-text-muted)]">fit your profile</div>
-      </div>
-
-      <!-- No Match (evaluated but not a fit) -->
-      <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
-        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">No Match</div>
-        <div class="text-2xl font-bold text-[var(--dash-error)]">{noMatchCount}</div>
-        <div class="text-xs text-[var(--dash-text-muted)]">don't fit your profile</div>
-        {#if noMatchCount > 0}
-          <button
-            onclick={rematchNoMatches}
-            disabled={rematching}
-            class="mt-2 text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] disabled:opacity-50 flex items-center gap-1"
-          >
-            {#if rematching}<Spinner size="w-3 h-3" />{:else}<FontAwesomeIcon icon={faRotate} class="w-3 h-3" />{/if}
-            Re-evaluate
-          </button>
+        {#if matchedCount > 0}
+          <a href="/dashboard/jobs?minScore=50" class="mt-2 inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
         {/if}
       </div>
 
-      <!-- Pending (eligible but unmatched) -->
+      <!-- No Match (not recommended + filtered out) -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
-        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Pending</div>
-        <div class="text-2xl font-bold text-[var(--dash-warning)]">{eligibleUnmatched}</div>
-        <div class="text-xs text-[var(--dash-text-muted)]">waiting to evaluate</div>
+        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">No Match</div>
+        <div class="text-2xl font-bold text-[var(--dash-error)]">{notRecommendedCount + ineligibleCount}</div>
+        <div class="text-xs text-[var(--dash-text-muted)] space-y-0.5 mt-1">
+          {#if notRecommendedCount > 0}
+            <div>{notRecommendedCount} not recommended</div>
+          {/if}
+          {#if ineligibleCount > 0}
+            <div>{ineligibleCount} filtered out</div>
+          {/if}
+        </div>
+        {#if notRecommendedCount + ineligibleCount > 0}
+          <div class="flex flex-wrap items-center gap-2 mt-2">
+            <a href="/dashboard/jobs?minScore=0" class="inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
+            <button
+              onclick={rematchNoMatches}
+              disabled={rematching}
+              class="inline-flex whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] disabled:opacity-50 transition-colors"
+            >
+              {#if rematching}<Spinner size="w-3 h-3" />{:else}<FontAwesomeIcon icon={faRotate} class="w-3 h-3" />{/if}
+              Re-match
+            </button>
+          </div>
+        {/if}
       </div>
 
-      <!-- Filtered Out -->
+      <!-- Not yet matched -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
-        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Filtered Out</div>
-        <div class="text-2xl font-bold text-[var(--dash-text-muted)]">{filteredOut}</div>
-        <div class="text-xs text-[var(--dash-text-muted)]">by match config</div>
+        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Not Yet Matched</div>
+        <div class="text-2xl font-bold text-[var(--dash-warning)]">{unmatchedCount}</div>
+        <div class="text-xs text-[var(--dash-text-muted)]">waiting to be processed</div>
+        {#if unmatchedCount > 0}
+          <a href="/dashboard/jobs?minScore=unmatched" class="mt-2 inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
+        {/if}
       </div>
 
       <!-- Total Jobs -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Total Jobs</div>
         <div class="text-2xl font-bold text-[var(--dash-text)]">{totalJobs}</div>
+        <a href="/dashboard/jobs" class="mt-2 inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
       </div>
     </div>
 
     <!-- Progress Bar -->
     <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4 mb-6">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm font-medium text-[var(--dash-text)]">Evaluation Progress</span>
+        <span class="text-sm font-medium text-[var(--dash-text)]">Match Progress</span>
         <span class="text-sm text-[var(--dash-text-secondary)]">
           {evaluatedProgress.toFixed(0)}%
-          {#if eligibleUnmatched > 0}
-            <span class="text-[var(--dash-text-muted)]">({eligibleUnmatched} pending)</span>
+          {#if unmatchedCount > 0}
+            <span class="text-[var(--dash-text-muted)]">({unmatchedCount} remaining)</span>
           {/if}
         </span>
       </div>
@@ -253,12 +261,9 @@
         ></div>
       </div>
       <div class="text-xs text-[var(--dash-text-muted)] mt-1">
-        {evaluatedCount} of {relevantTotal} eligible jobs evaluated
+        {evaluatedCount} of {totalJobs} jobs processed
         &middot; <span class="text-[var(--dash-success)]">{matchedCount} matched</span>
-        &middot; <span class="text-[var(--dash-error)]">{noMatchCount} no match</span>
-        {#if filteredOut > 0}
-          &middot; {filteredOut} filtered out by match config
-        {/if}
+        &middot; <span class="text-[var(--dash-error)]">{notRecommendedCount + ineligibleCount} no match</span>
       </div>
     </div>
 

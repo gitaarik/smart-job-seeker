@@ -72,7 +72,7 @@
         },
         {
           label: "Job Matches",
-          href: "/dashboard/jobs?minScore=40",
+          href: "/dashboard/jobs?minScore=50",
           icon: faListCheck,
         },
         {
@@ -267,7 +267,7 @@
       if (href === "/dashboard/jobs?status=saved" && jobCategory === "saved") {
         return true;
       }
-      if (href === "/dashboard/jobs?minScore=40" && jobCategory === "matches") {
+      if (href === "/dashboard/jobs?minScore=50" && jobCategory === "matches") {
         return true;
       }
       if (href === "/dashboard/jobs" && (jobCategory === "all" || !jobCategory)) {
@@ -284,7 +284,7 @@
       if (href === "/dashboard/jobs?status=saved") {
         return hasStatus && currentParams.get("status")!.includes("saved");
       }
-      if (href === "/dashboard/jobs?minScore=40") {
+      if (href === "/dashboard/jobs?minScore=50") {
         return hasMinScore && !hasStatus;
       }
       if (href === "/dashboard/jobs") {

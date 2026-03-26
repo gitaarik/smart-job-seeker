@@ -148,15 +148,19 @@
   let pageTitle = $derived(
     selectedStatuses.has("saved")
       ? "Saved Jobs"
-      : minScoreFilter
-        ? "Job Matches"
-        : "All Jobs"
+      : minScoreFilter === "unmatched"
+        ? "Not Yet Matched"
+        : minScoreFilter === "0"
+          ? "No Match"
+          : minScoreFilter
+            ? "Job Matches"
+            : "All Jobs"
   );
 
   let pageIcon = $derived(
     selectedStatuses.has("saved")
       ? faBookmark
-      : minScoreFilter
+      : minScoreFilter && minScoreFilter !== "0"
         ? faListCheck
         : faBriefcase
   );
@@ -395,12 +399,14 @@
           class="text-xs bg-transparent text-[var(--dash-text)] focus:outline-none"
         >
           <option value="">All jobs</option>
-          <option value="40">Score 40+</option>
-          <option value="50">Score 50+</option>
-          <option value="60">Score 60+</option>
-          <option value="70">Score 70+</option>
-          <option value="80">Score 80+</option>
           <option value="90">Score 90+</option>
+          <option value="80">Score 80+</option>
+          <option value="70">Score 70+</option>
+          <option value="60">Score 60+</option>
+          <option value="50">Score 50+</option>
+          <option value="1-49">Score &lt; 50</option>
+          <option value="0">No match</option>
+          <option value="unmatched">Not yet matched</option>
         </select>
       </div>
 
@@ -964,6 +970,11 @@
         <FontAwesomeIcon icon={faChevronRight} class="w-4 h-4" />
       </button>
     </div>
+    {#if $navigating}
+      <div class="flex items-center justify-center">
+        <Spinner size="w-4 h-4" />
+      </div>
+    {/if}
   {/if}
 </div>
 

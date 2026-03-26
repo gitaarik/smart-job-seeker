@@ -3,6 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { Prisma } from "../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
+import { buildVisibilityScope } from "$lib/server/job/match-counts";
 import { getSelectedProfileId } from "../profile/utils";
 import {
   saveJob,
@@ -10,6 +11,31 @@ import {
   rejectJob,
   unrejectJob,
 } from "$lib/server/job/job-actions";
+
+/**
+ * Parse minScore filter value into a SQL WHERE fragment.
+ * Supports: "" (no filter), "unmatched" (no job_matches row),
+ * "0" (no match — not recommended or ineligible),
+ * "1-49" (range), "50"/"60"/etc (min threshold).
+ */
+function buildScoreFilter(minScore: string): { filter: Prisma.Sql; isActive: boolean; isUnmatched: boolean } {
+  if (!minScore) return { filter: Prisma.sql`TRUE`, isActive: false, isUnmatched: false };
+  if (minScore === "unmatched") {
+    return { filter: Prisma.sql`TRUE`, isActive: true, isUnmatched: true };
+  }
+  if (minScore === "0") {
+    return { filter: Prisma.sql`jm.recommendation IN ('not_recommended', 'ineligible')`, isActive: true, isUnmatched: false };
+  }
+  if (minScore.includes("-")) {
+    const [min, max] = minScore.split("-").map(Number);
+    return { filter: Prisma.sql`jm.score BETWEEN ${min} AND ${max}`, isActive: true, isUnmatched: false };
+  }
+  const val = parseInt(minScore);
+  if (val > 0) {
+    return { filter: Prisma.sql`jm.score >= ${val}`, isActive: true, isUnmatched: false };
+  }
+  return { filter: Prisma.sql`TRUE`, isActive: false, isUnmatched: false };
+}
 
 /**
  * Build SQL WHERE fragments for JSON array column filters.
@@ -60,7 +86,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const platform = url.searchParams.get("platform") || ""; // comma-separated IDs for multi-select
   const workLocation = url.searchParams.get("workLocation") || ""; // remote, hybrid, onsite
   const jobType = url.searchParams.get("jobType") || ""; // full_time, contract, part_time, freelance
-  const minScore = url.searchParams.get("minScore") || ""; // 40, 50, 60, 70, 80, 90
+  const minScore = url.searchParams.get("minScore") || ""; // 50, 60, 70, 80, 90, 1-49, 0, unmatched
   const datePosted = url.searchParams.get("datePosted") || ""; // 1, 3, 7, 30, 90 (days)
   const importedBy = url.searchParams.get("importedBy") || ""; // comma-separated: "me", "others"
   const page = parseInt(url.searchParams.get("page") || "1");
@@ -121,12 +147,55 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Parse status filter values
   const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
-  const minScoreVal = minScore ? parseInt(minScore) : 0;
+  const { filter: scoreFilter, isActive: hasScoreFilter, isUnmatched } = buildScoreFilter(minScore);
 
-  if (minScoreVal > 0 || statusValues.length > 0) {
+  if (isUnmatched) {
+    // "Not yet matched" — jobs with no job_matches row for this profile
+    // Uses same visibility scope as the matcher (respects match_community_jobs)
+    const matchConfig = await db.match_config.findFirst({
+      where: { profile: profileId },
+      select: { match_community_jobs: true },
+    });
+    const { from, where } = buildVisibilityScope(profileId, matchConfig?.match_community_jobs ?? false);
+
+    const jobRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
+      SELECT j.id, COUNT(*) OVER() as cnt
+      ${from}
+      LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+      ${where}
+      AND jm.id IS NULL
+      AND ${searchFilter}
+      AND ${platformFilter}
+      AND ${dateFilter}
+      AND ${jsonFilter}
+      AND ${importedByFilter}
+      ORDER BY j.date_posted DESC NULLS LAST, j.date_created DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `;
+
+    totalCount = jobRows.length > 0 ? Number(jobRows[0].cnt) : 0;
+    const jobIds = jobRows.map((r) => r.id);
+
+    if (jobIds.length > 0) {
+      const fullJobs = await db.jobs.findMany({
+        where: { id: { in: jobIds } },
+        include: {
+          job_platforms: {
+            select: { id: true, name: true },
+          },
+        },
+      });
+
+      const jobById = new Map(fullJobs.map((j) => [j.id, j]));
+      jobs = jobIds
+        .map((id) => jobById.get(id))
+        .filter(Boolean) as typeof fullJobs;
+      // No matches exist for these jobs by definition
+    }
+  } else if (hasScoreFilter || statusValues.length > 0) {
     // Query via job_matches + job_statuses tables when filtering by score or status
     let statusFilter = Prisma.sql`TRUE`;
-    let scoreFilter = Prisma.sql`TRUE`;
     let statusJoin = Prisma.sql`LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
 
     if (statusValues.length > 0) {
@@ -140,10 +209,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     } else {
       // When filtering by score only, exclude rejected
       statusFilter = Prisma.sql`COALESCE(js.status, 'new') != 'rejected'`;
-    }
-
-    if (minScoreVal > 0) {
-      scoreFilter = Prisma.sql`jm.score >= ${minScoreVal}`;
     }
 
     // Get filtered+paginated match IDs and count in one query
@@ -393,10 +458,9 @@ async function countMatchingJobs(
   }
 
   const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
-  const minScoreVal = minScore ? parseInt(minScore) : 0;
+  const { filter: scoreFilter } = buildScoreFilter(minScore);
 
   let statusFilter = Prisma.sql`TRUE`;
-  let scoreFilter = Prisma.sql`TRUE`;
   let statusJoin = Prisma.empty;
 
   if (statusValues.length > 0) {
@@ -406,10 +470,6 @@ async function countMatchingJobs(
     } else {
       statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
     }
-  }
-
-  if (minScoreVal > 0) {
-    scoreFilter = Prisma.sql`jm.score >= ${minScoreVal}`;
   }
 
   const result = await db.$queryRaw<{ cnt: bigint }[]>`
@@ -532,10 +592,9 @@ export const actions: Actions = {
     }
 
     const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
-    const minScoreVal = minScore ? parseInt(minScore) : 0;
+    const { filter: scoreFilter } = buildScoreFilter(minScore);
 
     let statusFilter = Prisma.sql`TRUE`;
-    let scoreFilter = Prisma.sql`TRUE`;
     let statusJoin = Prisma.empty;
 
     if (statusValues.length > 0) {
@@ -545,10 +604,6 @@ export const actions: Actions = {
       } else {
         statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
       }
-    }
-
-    if (minScoreVal > 0) {
-      scoreFilter = Prisma.sql`jm.score >= ${minScoreVal}`;
     }
 
     await db.$queryRaw`

@@ -46,7 +46,24 @@ export function buildEligibilityFilter(
   const normalizeValue = (v: string) =>
     v.toLowerCase().replace(/[-_\s]/g, "");
   const workLocations = config.work_location.map(normalizeValue);
-  const jobTypes = config.job_types.map(normalizeValue);
+
+  // Expand job types to include related scraped variants so e.g.
+  // "contract" also matches "one-time project", "freelance", "contractor", etc.
+  const contractFamily = [
+    "onetimeproject", "contractor", "freelance", "fixedprice",
+    "hourly", "hourlycontract", "temporary", "temptohire", "ftc",
+    "freelancecontract", "contractorassignmentfreelancer",
+  ];
+  const fullTimeFamily = ["fulltime", "permanent"];
+
+  const expandedJobTypes = new Set(config.job_types.map(normalizeValue));
+  if (expandedJobTypes.has("contract")) {
+    for (const v of contractFamily) expandedJobTypes.add(v);
+  }
+  if (expandedJobTypes.has("fulltime")) {
+    for (const v of fullTimeFamily) expandedJobTypes.add(v);
+  }
+  const jobTypes = [...expandedJobTypes];
 
   return Prisma.sql`
     -- Minimum data: job must have a description OR at least one skill

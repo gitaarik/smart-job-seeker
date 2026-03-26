@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { Prisma } from "../../../../generated/prisma/client";
+import { Prisma } from "../../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";

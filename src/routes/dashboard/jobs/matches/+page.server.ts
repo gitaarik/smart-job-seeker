@@ -2,8 +2,8 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ url }) => {
-  // Preserve any existing query params and add filter=matches
+  // Redirect to matches with minimum score filter
   const params = new URLSearchParams(url.search);
-  params.set("filter", "matches");
+  params.set("minScore", "50");
   redirect(302, `/dashboard/jobs?${params.toString()}`);
 };
