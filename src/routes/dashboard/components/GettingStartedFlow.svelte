@@ -49,7 +49,7 @@
       description:
         "Add search tasks that automatically scrape job boards for new listings matching your criteria.",
       done: hasSearchTasks,
-      href: "/dashboard/jobs/settings",
+      href: "/dashboard/jobs/search-tasks",
       actionLabel: "Add Search",
     },
     {

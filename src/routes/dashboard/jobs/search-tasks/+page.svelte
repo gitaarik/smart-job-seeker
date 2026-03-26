@@ -366,7 +366,7 @@
       {#each sortedSearchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
         <a
-          href="/dashboard/jobs/settings/{search.id}"
+          href="/dashboard/jobs/search-tasks/{search.id}"
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
         >
           <div class="flex items-start gap-3">

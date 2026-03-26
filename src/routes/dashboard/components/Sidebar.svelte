@@ -62,7 +62,7 @@
       children: [
         {
           label: "Search Tasks",
-          href: "/dashboard/jobs/settings",
+          href: "/dashboard/jobs/search-tasks",
           icon: faSearch,
         },
         {

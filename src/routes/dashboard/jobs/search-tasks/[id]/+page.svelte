@@ -99,7 +99,7 @@
         method: "DELETE",
       });
       if (res.ok) {
-        goto("/dashboard/jobs/settings");
+        goto("/dashboard/jobs/search-tasks");
       }
     } finally {
       isDeleting = false;
@@ -1085,7 +1085,7 @@
   <!-- Header -->
   <div class="flex items-center gap-4">
     <a
-      href="/dashboard/jobs/settings"
+      href="/dashboard/jobs/search-tasks"
       class="p-2 rounded-lg hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-5 h-5" />
