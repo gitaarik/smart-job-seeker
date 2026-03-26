@@ -563,11 +563,11 @@ Use SEMANTIC matching for technical skills — the candidate does not need to li
 - Skills in different languages still match (e.g. "Relationele databases" = "Relational databases")
 
 Be STRICT about the following:
-- Only match technical skills/tools that the candidate explicitly lists or has demonstrated experience with
-- Do NOT match a technology the candidate has never used (e.g. don't match "Go" just because they know other programming languages)
+- Only match skills/tools that the candidate explicitly mentions by name or has clearly demonstrated using
+- Do NOT infer related or adjacent technologies — each tool, platform, and framework is a distinct skill, even within the same ecosystem
 - Do NOT match generic soft skills (e.g. "Communication", "Problem-solving", "Collaboration") — these are too vague to verify from a profile
 - Do NOT match broad categories (e.g. "Cloud platforms", "Cloud experience") unless the candidate has specific skills in that area
-- When in doubt, do NOT include the skill
+- When in doubt, do NOT include the skill — a false positive is worse than a false negative
 
 Return ONLY the job skill strings (copied exactly from the provided list) that the candidate matches.
 Do NOT return the candidate's skill names — return the job's skill names.`,
@@ -657,11 +657,13 @@ Scoring Guidelines:
 - 0-19: Poor match - fundamental mismatch in skills, experience, or preferences
 
 Consider these factors:
-1. Technical skills alignment (40% weight) - How many required skills does the candidate have?
+1. Technical skills alignment (35% weight) - Score based on the proportion of required/preferred skills the candidate actually has. If a job lists 18 required skills and the candidate has 2, this factor should score very low regardless of the candidate's overall ability.
 2. Experience level fit (25% weight) - Does seniority match?
-3. Career progression alignment (15% weight) - Does this advance their career?
-4. Work preferences match (10% weight) - Remote, location, job type alignment
+3. Work preferences match (20% weight) - Remote, location, job type alignment
+4. Career progression alignment (10% weight) - Does this advance their career?
 5. Domain/industry experience (10% weight) - Relevant industry background
+
+IMPORTANT: Base the technical skills score strictly on skills the candidate demonstrably has — not skills they could likely learn or that are adjacent to what they know.
 
 CRITICAL for matched_skills: Return an array of skill names that the candidate possesses, selecting ONLY from the exact strings provided in the job's skills_required and skills_preferred lists. Copy the skill names EXACTLY as written - do not paraphrase or use synonyms. For example, if the job lists "JavaScript/TypeScript" and the candidate knows JavaScript, return "JavaScript/TypeScript" (not "JavaScript").
 
@@ -702,7 +704,7 @@ Be objective and constructive. Highlight both strengths and gaps clearly.`,
 Provide your analysis in JSON format with:
 - score (0-100)
 - summary (1-2 paragraph overview of the match)
-- reasoning (detailed explanation)
+- reasoning (detailed explanation as a plain text string, not an object)
 - skill_match_percentage (0-100)
 - strengths (array of 3-5 top reasons this is a good match)
 - gaps (array of areas where candidate doesn't fully meet requirements)

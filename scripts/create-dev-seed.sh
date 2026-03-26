@@ -174,7 +174,7 @@ EXCLUDE_TABLES=(
   directus_deployment_runs
   # App tables not needed
   session verification
-  jobs job_matches job_resources applications application_questions application_letters
+  jobs job_matches job_statuses job_resources applications application_questions application_letters
   application_activity_log applications_files
   profile_exports profile_tokens
   ai_chats ai_prompts config

@@ -24,13 +24,12 @@
     skill_match_percentage: number | null;
     matched_skills?: string[] | null;
     match_summary?: string | null;
-    status: string;
   }
 
   interface MatchItem {
     id: number;
     score: number;
-    status: string;
+    status?: string;
     match_summary: string | null;
     matched_skills: unknown;
     skill_match_percentage: number | null;
@@ -66,9 +65,7 @@
 
   let rejectedJobIds = $state<Record<number, boolean>>(
     Object.fromEntries(
-      items
-        .filter((i) => i.status === "rejected")
-        .map((i) => [i.job.id, true]),
+      items.filter((i) => i.status === "rejected").map((i) => [i.job.id, true]),
     ),
   );
 
@@ -101,7 +98,6 @@
       skill_match_percentage: item.skill_match_percentage,
       matched_skills: item.matched_skills as string[] | null,
       match_summary: item.match_summary,
-      status: item.status,
     };
   }
 </script>

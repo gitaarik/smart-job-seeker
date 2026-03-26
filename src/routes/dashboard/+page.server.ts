@@ -80,51 +80,59 @@ export const load: PageServerLoad = async ({ parent }) => {
       orderBy: { last_run: "desc" },
     }),
 
-    // Match aggregate stats in a single query
+    // Match aggregate stats in a single query (joins job_statuses for user curation)
     db.$queryRaw<
       [{ total: bigint; strong: bigint; saved: bigint; new_unreviewed: bigint }]
     >`
       SELECT
         COUNT(*) as total,
-        COUNT(*) FILTER (WHERE score >= 70 AND status != 'rejected') as strong,
-        COUNT(*) FILTER (WHERE status = 'saved') as saved,
-        COUNT(*) FILTER (WHERE status = 'new' AND score > 0) as new_unreviewed
-      FROM job_matches
-      WHERE profile = ${profileId}
+        COUNT(*) FILTER (WHERE jm.score >= 70 AND COALESCE(js.status, 'new') != 'rejected') as strong,
+        COUNT(*) FILTER (WHERE js.status = 'saved') as saved,
+        COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0) as new_unreviewed
+      FROM job_matches jm
+      LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job
+      WHERE jm.profile = ${profileId}
     `,
 
-    // Top 5 matches by score
-    db.job_matches.findMany({
-      where: {
-        profile: profileId,
-        status: { not: "rejected" },
-        score: { gt: 0 },
-      },
-      orderBy: { score: "desc" },
-      take: 5,
-      include: {
-        jobs: {
-          select: {
-            id: true,
-            title: true,
-            company: true,
-            office_location: true,
-            source_url: true,
-            job_description: true,
-            salary_min: true,
-            salary_max: true,
-            salary_currency: true,
-            salary_period: true,
-            skills_required: true,
-            work_location: true,
-            job_types: true,
-            experience_levels: true,
-            date_posted: true,
-            date_created: true,
-            job_platforms: { select: { id: true, name: true } },
+    // Top 5 matches by score (excluding rejected via job_statuses)
+    db.$queryRaw<{ id: number }[]>`
+      SELECT jm.id
+      FROM job_matches jm
+      LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job
+      WHERE jm.profile = ${profileId}
+      AND jm.score > 0
+      AND COALESCE(js.status, 'new') != 'rejected'
+      ORDER BY jm.score DESC
+      LIMIT 5
+    `.then(async (ids) => {
+      if (ids.length === 0) return [];
+      return db.job_matches.findMany({
+        where: { id: { in: ids.map((r) => r.id) } },
+        orderBy: { score: "desc" },
+        include: {
+          jobs: {
+            select: {
+              id: true,
+              title: true,
+              company: true,
+              office_location: true,
+              source_url: true,
+              job_description: true,
+              salary_min: true,
+              salary_max: true,
+              salary_currency: true,
+              salary_period: true,
+              skills_required: true,
+              work_location: true,
+              job_types: true,
+              experience_levels: true,
+              date_posted: true,
+              date_created: true,
+              job_platforms: { select: { id: true, name: true } },
+            },
           },
         },
-      },
+      });
     }),
 
     // Skill levels for match card highlighting
@@ -173,7 +181,6 @@ export const load: PageServerLoad = async ({ parent }) => {
   const topMatches = topMatchesRaw.map((m) => ({
     id: m.id,
     score: m.score,
-    status: m.status,
     match_summary: m.match_summary,
     matched_skills: m.matched_skills,
     skill_match_percentage: m.skill_match_percentage,

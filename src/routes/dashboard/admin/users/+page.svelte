@@ -7,6 +7,7 @@
     faEnvelope,
     faPencil,
     faPlus,
+    faSync,
     faTimes,
     faTrash,
     faUsers,
@@ -25,6 +26,8 @@
   let showAddForm = $state(false);
   let deleteId = $state<string | null>(null);
   let sendingInviteId = $state<string | null>(null);
+  let clearingMatchesId = $state<string | null>(null);
+  let clearMatchesConfirmId = $state<string | null>(null);
   let addingUser = $state(false);
 
   // Add form state
@@ -510,6 +513,21 @@
                   {/if}
                 </button>
               </form>
+              <button
+                type="button"
+                disabled={clearingMatchesId === user.id}
+                onclick={() => (clearMatchesConfirmId = user.id)}
+                class="px-3 py-1.5 text-xs bg-orange-500/10 border border-orange-500/30 rounded-lg text-orange-500 hover:bg-orange-500/20 hover:border-orange-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Clear all match scoring data for this user's jobs"
+              >
+                {#if clearingMatchesId === user.id}
+                  <Spinner size="w-3 h-3" />
+                  Clearing...
+                {:else}
+                  <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
+                  Clear matches
+                {/if}
+              </button>
               {#if user.id !== data.user?.id}
                 <form method="POST" action="?/impersonate">
                   <input type="hidden" name="id" value={user.id} />
@@ -545,6 +563,30 @@
       input.type = "hidden";
       input.name = "id";
       input.value = String(deleteId);
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }}
+/>
+
+<!-- Clear Matches Confirmation Modal -->
+<DeleteConfirmModal
+  isOpen={clearMatchesConfirmId !== null}
+  title="Clear Match Data"
+  message="This will delete all match data for this user's jobs. They will be re-scored on the next match run."
+  confirmLabel="Clear Match Data"
+  onCancel={() => (clearMatchesConfirmId = null)}
+  onConfirm={() => {
+    if (clearMatchesConfirmId !== null) {
+      clearingMatchesId = clearMatchesConfirmId;
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "?/clear_matches";
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "id";
+      input.value = String(clearMatchesConfirmId);
       form.appendChild(input);
       document.body.appendChild(form);
       form.submit();

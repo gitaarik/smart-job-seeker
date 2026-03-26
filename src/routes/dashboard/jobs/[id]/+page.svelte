@@ -35,6 +35,7 @@
 
   let job = $state(data.job);
   let match = $state(data.match);
+  let jobStatus = $state(data.jobStatus);
   let isSaving = $state(false);
   let isRematching = $state(false);
   let rematchError = $state("");
@@ -45,31 +46,23 @@
   );
   let showRescrapeMonitor = $state(rescrapeActive);
 
-  // Update match when form action completes
+  // Update status when form action completes
   $effect(() => {
     if (form?.success) {
-      const currentMatch = untrack(() => match);
       if (form.action === "saved") {
-        match = { ...currentMatch, status: "saved" } as typeof match;
+        jobStatus = "saved";
       } else if (form.action === "unsaved") {
-        if (
-          currentMatch && currentMatch.score === 0 &&
-          !currentMatch.reasoning
-        ) {
-          match = null;
-        } else if (currentMatch) {
-          match = { ...currentMatch, status: "new" };
-        }
+        jobStatus = "new";
       } else if (form.action === "rematched") {
         // Reload the page to get fresh match data from the server
         window.location.reload();
       } else if (form.status) {
-        match = { ...currentMatch, status: form.status } as typeof match;
+        jobStatus = form.status as string;
       }
     }
   });
 
-  let isSaved = $derived(match?.status === "saved");
+  let isSaved = $derived(jobStatus === "saved");
 
   // Helper for matched skills highlighting
   const matchedSkillsSet = $derived(
@@ -86,14 +79,6 @@
     if (level === "weak") return "weak";
     return "strong";
   }
-
-  const statusOptions = [
-    { value: "new", label: "New" },
-    { value: "viewed", label: "Viewed" },
-    { value: "saved", label: "Saved" },
-    { value: "applied", label: "Applied" },
-    { value: "rejected", label: "Not Interested" },
-  ];
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "N/A";
@@ -262,8 +247,7 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-col gap-2 mt-4 items-start">
-          <!-- Save + Source -->
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <form
               method="POST"
               action={isSaved ? "?/unsaveJob" : "?/saveJob"}
@@ -279,7 +263,7 @@
                 type="submit"
                 disabled={isSaving}
                 class="
-                  flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors {isSaved
+                  flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {isSaved
                   ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
                   : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'} disabled:opacity-50
                 "
@@ -293,12 +277,37 @@
               </button>
             </form>
 
+            <form
+              method="POST"
+              action="?/updateStatus"
+              use:enhance={() => {
+                return async ({ update }) => {
+                  await update();
+                };
+              }}
+              class="inline"
+            >
+              <input type="hidden" name="status" value="rejected" />
+              <button
+                type="submit"
+                class="
+                  flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {jobStatus === 'rejected'
+                  ? 'bg-red-500 text-white border-red-500'
+                  : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
+                "
+                title="Not interested in this job"
+              >
+                <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+                Not Interested
+              </button>
+            </form>
+
             {#if job.source_url}
               <a
                 href={job.source_url}
                 target="_blank"
                 rel="noopener"
-                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
               >
                 <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
                 Source
@@ -475,6 +484,94 @@
 
     <!-- Right Column -->
     <div class="space-y-6">
+      <!-- Match Analysis Card -->
+      <Card padding="lg">
+        <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
+          Match Analysis
+        </h2>
+
+        {#if           match && match.reasoning &&
+            match.recommendation === "filtered_out"}
+          <!-- Filtered out - didn't pass eligibility -->
+          <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
+            This job was filtered out before AI scoring because it doesn't match
+            your profile preferences.
+          </p>
+
+          {#if           match.gaps && Array.isArray(match.gaps) &&
+            match.gaps.length > 0}
+            <ul class="space-y-2">
+              {#each match.gaps as gap}
+                <li class="flex items-start gap-2 text-sm">
+                  <FontAwesomeIcon
+                    icon={faTimes}
+                    class="w-3 h-3 text-red-500 mt-1 flex-shrink-0"
+                  />
+                  <span class="text-[var(--dash-text)]">{gap}</span>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+        {:else if match && match.reasoning}
+          <!-- AI-scored match -->
+          <p class="font-medium text-[var(--dash-text)] mb-4">
+            {getRecommendationLabel(match.recommendation)}
+          </p>
+
+          {#if           match.strengths && Array.isArray(match.strengths) &&
+            match.strengths.length > 0}
+            <div class="mb-4">
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
+                Strengths
+              </p>
+              <ul class="space-y-1">
+                {#each match.strengths as strength}
+                  <li class="flex items-start gap-2 text-sm">
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      class="w-3 h-3 text-green-600 mt-1 flex-shrink-0"
+                    />
+                    <span class="text-[var(--dash-text)]">{strength}</span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
+          {#if           match.gaps && Array.isArray(match.gaps) &&
+            match.gaps.length > 0}
+            <div class="mb-4">
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Gaps</p>
+              <ul class="space-y-1">
+                {#each match.gaps as gap}
+                  <li class="flex items-start gap-2 text-sm">
+                    <FontAwesomeIcon
+                      icon={faTimes}
+                      class="w-3 h-3 text-red-500 mt-1 flex-shrink-0"
+                    />
+                    <span class="text-[var(--dash-text)]">{gap}</span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
+          {#if match.reasoning}
+            <div>
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
+                Analysis
+              </p>
+              <p class="text-sm text-[var(--dash-text)]">{match.reasoning}</p>
+            </div>
+          {/if}
+        {:else}
+          <!-- Not yet matched -->
+          <p class="text-sm text-[var(--dash-text-muted)]">
+            This job hasn't been matched against your profile yet.
+          </p>
+        {/if}
+      </Card>
+
       <!-- Staff: Metadata + Actions -->
       {#if data.isStaff}
         <Card padding="lg">
@@ -612,129 +709,6 @@
               </ul>
             </div>
           {/if}
-        </Card>
-      {/if}
-
-      <!-- Match Analysis Card -->
-      <Card padding="lg">
-        <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
-          Match Analysis
-        </h2>
-
-        {#if           match && match.reasoning &&
-            match.recommendation === "filtered_out"}
-          <!-- Filtered out - didn't pass eligibility -->
-          <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
-            This job was filtered out before AI scoring because it doesn't match
-            your profile preferences.
-          </p>
-
-          {#if           match.gaps && Array.isArray(match.gaps) &&
-            match.gaps.length > 0}
-            <ul class="space-y-2">
-              {#each match.gaps as gap}
-                <li class="flex items-start gap-2 text-sm">
-                  <FontAwesomeIcon
-                    icon={faTimes}
-                    class="w-3 h-3 text-red-500 mt-1 flex-shrink-0"
-                  />
-                  <span class="text-[var(--dash-text)]">{gap}</span>
-                </li>
-              {/each}
-            </ul>
-          {/if}
-        {:else if match && match.reasoning}
-          <!-- AI-scored match -->
-          <p class="font-medium text-[var(--dash-text)] mb-4">
-            {getRecommendationLabel(match.recommendation)}
-          </p>
-
-          {#if           match.strengths && Array.isArray(match.strengths) &&
-            match.strengths.length > 0}
-            <div class="mb-4">
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
-                Strengths
-              </p>
-              <ul class="space-y-1">
-                {#each match.strengths as strength}
-                  <li class="flex items-start gap-2 text-sm">
-                    <FontAwesomeIcon
-                      icon={faCheck}
-                      class="w-3 h-3 text-green-600 mt-1 flex-shrink-0"
-                    />
-                    <span class="text-[var(--dash-text)]">{strength}</span>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-
-          {#if           match.gaps && Array.isArray(match.gaps) &&
-            match.gaps.length > 0}
-            <div class="mb-4">
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Gaps</p>
-              <ul class="space-y-1">
-                {#each match.gaps as gap}
-                  <li class="flex items-start gap-2 text-sm">
-                    <FontAwesomeIcon
-                      icon={faTimes}
-                      class="w-3 h-3 text-red-500 mt-1 flex-shrink-0"
-                    />
-                    <span class="text-[var(--dash-text)]">{gap}</span>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-
-          {#if match.reasoning}
-            <div>
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
-                Analysis
-              </p>
-              <p class="text-sm text-[var(--dash-text)]">{match.reasoning}</p>
-            </div>
-          {/if}
-        {:else}
-          <!-- Not yet matched -->
-          <p class="text-sm text-[var(--dash-text-muted)]">
-            This job hasn't been matched against your profile yet.
-          </p>
-        {/if}
-      </Card>
-
-      <!-- Status Card -->
-      {#if match}
-        <Card padding="lg">
-          <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
-            Status
-          </h2>
-          <div class="flex flex-wrap gap-2">
-            {#each statusOptions as option}
-              <form
-                method="POST"
-                action="?/updateStatus"
-                use:enhance={() => {
-                  return async ({ update }) => {
-                    await update();
-                  };
-                }}
-                class="inline"
-              >
-                <input type="hidden" name="status" value={option.value} />
-                <button
-                  type="submit"
-                  class="
-                    px-3 py-1.5 text-sm rounded-lg transition-colors {match?.status === option.value
-                    ? 'bg-[var(--dash-primary)] text-white'
-                    : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
-                  "
-                >
-                  {option.label}
-                </button>
-              </form>
-            {/each}
-          </div>
         </Card>
       {/if}
     </div>

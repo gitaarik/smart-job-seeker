@@ -51,7 +51,6 @@ export type Job_matchesMinAggregateOutputType = {
   skill_match_percentage: number | null
   recommendation: string | null
   job_date_updated_when_matched: Date | null
-  status: string | null
   date_created: Date | null
   date_updated: Date | null
   job: number | null
@@ -68,7 +67,6 @@ export type Job_matchesMaxAggregateOutputType = {
   skill_match_percentage: number | null
   recommendation: string | null
   job_date_updated_when_matched: Date | null
-  status: string | null
   date_created: Date | null
   date_updated: Date | null
   job: number | null
@@ -87,7 +85,6 @@ export type Job_matchesCountAggregateOutputType = {
   gaps: number
   recommendation: number
   job_date_updated_when_matched: number
-  status: number
   date_created: number
   date_updated: number
   job: number
@@ -125,7 +122,6 @@ export type Job_matchesMinAggregateInputType = {
   skill_match_percentage?: true
   recommendation?: true
   job_date_updated_when_matched?: true
-  status?: true
   date_created?: true
   date_updated?: true
   job?: true
@@ -142,7 +138,6 @@ export type Job_matchesMaxAggregateInputType = {
   skill_match_percentage?: true
   recommendation?: true
   job_date_updated_when_matched?: true
-  status?: true
   date_created?: true
   date_updated?: true
   job?: true
@@ -161,7 +156,6 @@ export type Job_matchesCountAggregateInputType = {
   gaps?: true
   recommendation?: true
   job_date_updated_when_matched?: true
-  status?: true
   date_created?: true
   date_updated?: true
   job?: true
@@ -268,7 +262,6 @@ export type Job_matchesGroupByOutputType = {
   gaps: runtime.JsonValue | null
   recommendation: string | null
   job_date_updated_when_matched: Date | null
-  status: string
   date_created: Date | null
   date_updated: Date | null
   job: number
@@ -311,7 +304,6 @@ export type job_matchesWhereInput = {
   gaps?: Prisma.JsonNullableFilter<"job_matches">
   recommendation?: Prisma.StringNullableFilter<"job_matches"> | string | null
   job_date_updated_when_matched?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
-  status?: Prisma.StringFilter<"job_matches"> | string
   date_created?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
   job?: Prisma.IntFilter<"job_matches"> | number
@@ -334,7 +326,6 @@ export type job_matchesOrderByWithRelationInput = {
   gaps?: Prisma.SortOrderInput | Prisma.SortOrder
   recommendation?: Prisma.SortOrderInput | Prisma.SortOrder
   job_date_updated_when_matched?: Prisma.SortOrderInput | Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -360,7 +351,6 @@ export type job_matchesWhereUniqueInput = Prisma.AtLeast<{
   gaps?: Prisma.JsonNullableFilter<"job_matches">
   recommendation?: Prisma.StringNullableFilter<"job_matches"> | string | null
   job_date_updated_when_matched?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
-  status?: Prisma.StringFilter<"job_matches"> | string
   date_created?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
   job?: Prisma.IntFilter<"job_matches"> | number
@@ -383,7 +373,6 @@ export type job_matchesOrderByWithAggregationInput = {
   gaps?: Prisma.SortOrderInput | Prisma.SortOrder
   recommendation?: Prisma.SortOrderInput | Prisma.SortOrder
   job_date_updated_when_matched?: Prisma.SortOrderInput | Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -411,7 +400,6 @@ export type job_matchesScalarWhereWithAggregatesInput = {
   gaps?: Prisma.JsonNullableWithAggregatesFilter<"job_matches">
   recommendation?: Prisma.StringNullableWithAggregatesFilter<"job_matches"> | string | null
   job_date_updated_when_matched?: Prisma.DateTimeNullableWithAggregatesFilter<"job_matches"> | Date | string | null
-  status?: Prisma.StringWithAggregatesFilter<"job_matches"> | string
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"job_matches"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"job_matches"> | Date | string | null
   job?: Prisma.IntWithAggregatesFilter<"job_matches"> | number
@@ -430,7 +418,6 @@ export type job_matchesCreateInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   llm_prompt?: string | null
@@ -450,7 +437,6 @@ export type job_matchesUncheckedCreateInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job: number
@@ -469,7 +455,6 @@ export type job_matchesUpdateInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -489,7 +474,6 @@ export type job_matchesUncheckedUpdateInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.IntFieldUpdateOperationsInput | number
@@ -509,7 +493,6 @@ export type job_matchesCreateManyInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job: number
@@ -528,7 +511,6 @@ export type job_matchesUpdateManyMutationInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -545,7 +527,6 @@ export type job_matchesUncheckedUpdateManyInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.IntFieldUpdateOperationsInput | number
@@ -565,7 +546,6 @@ export type job_matchesCountOrderByAggregateInput = {
   gaps?: Prisma.SortOrder
   recommendation?: Prisma.SortOrder
   job_date_updated_when_matched?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -592,7 +572,6 @@ export type job_matchesMaxOrderByAggregateInput = {
   skill_match_percentage?: Prisma.SortOrder
   recommendation?: Prisma.SortOrder
   job_date_updated_when_matched?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -609,7 +588,6 @@ export type job_matchesMinOrderByAggregateInput = {
   skill_match_percentage?: Prisma.SortOrder
   recommendation?: Prisma.SortOrder
   job_date_updated_when_matched?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -772,7 +750,6 @@ export type job_matchesCreateWithoutJobsInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   llm_prompt?: string | null
@@ -791,7 +768,6 @@ export type job_matchesUncheckedCreateWithoutJobsInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   profile: number
@@ -839,7 +815,6 @@ export type job_matchesScalarWhereInput = {
   gaps?: Prisma.JsonNullableFilter<"job_matches">
   recommendation?: Prisma.StringNullableFilter<"job_matches"> | string | null
   job_date_updated_when_matched?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
-  status?: Prisma.StringFilter<"job_matches"> | string
   date_created?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
   job?: Prisma.IntFilter<"job_matches"> | number
@@ -858,7 +833,6 @@ export type job_matchesCreateWithoutProfilesInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   llm_prompt?: string | null
@@ -877,7 +851,6 @@ export type job_matchesUncheckedCreateWithoutProfilesInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job: number
@@ -921,7 +894,6 @@ export type job_matchesCreateWithoutAi_chatInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   llm_prompt?: string | null
@@ -940,7 +912,6 @@ export type job_matchesUncheckedCreateWithoutAi_chatInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job: number
@@ -985,7 +956,6 @@ export type job_matchesCreateManyJobsInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   profile: number
@@ -1003,7 +973,6 @@ export type job_matchesUpdateWithoutJobsInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1022,7 +991,6 @@ export type job_matchesUncheckedUpdateWithoutJobsInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1041,7 +1009,6 @@ export type job_matchesUncheckedUpdateManyWithoutJobsInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1060,7 +1027,6 @@ export type job_matchesCreateManyProfilesInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job: number
@@ -1078,7 +1044,6 @@ export type job_matchesUpdateWithoutProfilesInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1097,7 +1062,6 @@ export type job_matchesUncheckedUpdateWithoutProfilesInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1116,7 +1080,6 @@ export type job_matchesUncheckedUpdateManyWithoutProfilesInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1135,7 +1098,6 @@ export type job_matchesCreateManyAi_chatInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: string | null
   job_date_updated_when_matched?: Date | string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job: number
@@ -1153,7 +1115,6 @@ export type job_matchesUpdateWithoutAi_chatInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1172,7 +1133,6 @@ export type job_matchesUncheckedUpdateWithoutAi_chatInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1191,7 +1151,6 @@ export type job_matchesUncheckedUpdateManyWithoutAi_chatInput = {
   gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1212,7 +1171,6 @@ export type job_matchesSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   gaps?: boolean
   recommendation?: boolean
   job_date_updated_when_matched?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1235,7 +1193,6 @@ export type job_matchesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   gaps?: boolean
   recommendation?: boolean
   job_date_updated_when_matched?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1258,7 +1215,6 @@ export type job_matchesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   gaps?: boolean
   recommendation?: boolean
   job_date_updated_when_matched?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1281,7 +1237,6 @@ export type job_matchesSelectScalar = {
   gaps?: boolean
   recommendation?: boolean
   job_date_updated_when_matched?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1292,7 +1247,7 @@ export type job_matchesSelectScalar = {
   match_summary?: boolean
 }
 
-export type job_matchesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "score" | "reasoning" | "skill_match_percentage" | "strengths" | "gaps" | "recommendation" | "job_date_updated_when_matched" | "status" | "date_created" | "date_updated" | "job" | "profile" | "llm_prompt" | "ai_chat_scoring" | "matched_skills" | "match_summary", ExtArgs["result"]["job_matches"]>
+export type job_matchesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "score" | "reasoning" | "skill_match_percentage" | "strengths" | "gaps" | "recommendation" | "job_date_updated_when_matched" | "date_created" | "date_updated" | "job" | "profile" | "llm_prompt" | "ai_chat_scoring" | "matched_skills" | "match_summary", ExtArgs["result"]["job_matches"]>
 export type job_matchesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat?: boolean | Prisma.job_matches$ai_chatArgs<ExtArgs>
   jobs?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
@@ -1325,7 +1280,6 @@ export type $job_matchesPayload<ExtArgs extends runtime.Types.Extensions.Interna
     gaps: runtime.JsonValue | null
     recommendation: string | null
     job_date_updated_when_matched: Date | null
-    status: string
     date_created: Date | null
     date_updated: Date | null
     job: number
@@ -1768,7 +1722,6 @@ export interface job_matchesFieldRefs {
   readonly gaps: Prisma.FieldRef<"job_matches", 'Json'>
   readonly recommendation: Prisma.FieldRef<"job_matches", 'String'>
   readonly job_date_updated_when_matched: Prisma.FieldRef<"job_matches", 'DateTime'>
-  readonly status: Prisma.FieldRef<"job_matches", 'String'>
   readonly date_created: Prisma.FieldRef<"job_matches", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"job_matches", 'DateTime'>
   readonly job: Prisma.FieldRef<"job_matches", 'Int'>

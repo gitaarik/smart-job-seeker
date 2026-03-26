@@ -21,6 +21,7 @@
     faSearch,
     faSitemap,
     faStar as faStarSolid,
+    faSync,
     faTag,
     faTimes,
     faUser,
@@ -30,9 +31,18 @@
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
+  import DeleteConfirmModal from "../profile/components/DeleteConfirmModal.svelte";
   import { formatJobType, formatWorkLocation } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  let isStaff = $derived(
+    !!(data as any).user?.is_staff || !!(data as any).user?.is_admin
+  );
+  let isClearingMatches = $state(false);
+  let clearMatchResult = $state<{ count: number } | null>(null);
+  let showClearMatchConfirm = $state(false);
+  let clearMatchFormEl: HTMLFormElement;
 
   let jobs = $derived(data.jobs);
   let platforms = $derived(data.platforms);
@@ -48,11 +58,7 @@
 
   // Track rejected jobs
   let rejectedJobIds = $state<Record<number, boolean>>(
-    Object.fromEntries(
-      Object.entries(data.matchesByJobId)
-        .filter(([_, m]) => m.status === "rejected")
-        .map(([id, _]) => [parseInt(id), true])
-    )
+    Object.fromEntries(data.rejectedJobIds.map((id: number) => [id, true]))
   );
 
   // Store match data by job ID
@@ -95,7 +101,6 @@
       skill_match_percentage: m.skill_match_percentage,
       matched_skills: m.matched_skills as string[] | null,
       match_summary: m.match_summary as string | null,
-      status: m.status,
     };
   }
 
@@ -360,6 +365,23 @@
     </div>
   {/if}
 
+  {#if clearMatchResult}
+    <div
+      class="bg-green-50 border border-green-400 rounded-lg p-4 dark:bg-green-900/20 dark:border-green-600 flex items-center justify-between"
+    >
+      <p class="text-green-700 text-sm dark:text-green-400">
+        Cleared match data for {clearMatchResult.count} job{clearMatchResult.count === 1 ? "" : "s"}. They will be re-scored on next match run.
+      </p>
+      <button
+        type="button"
+        onclick={() => (clearMatchResult = null)}
+        class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
+      >
+        <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+      </button>
+    </div>
+  {/if}
+
   <!-- Filters -->
   <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-3 sm:p-4">
     <div class="inline-flex flex-col gap-2">
@@ -604,6 +626,42 @@
         >
           <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
           Clear
+        </button>
+      {/if}
+
+      {#if isStaff}
+        <form
+          bind:this={clearMatchFormEl}
+          method="POST"
+          action="?/clearMatchData"
+          use:enhance={() => {
+            isClearingMatches = true;
+            clearMatchResult = null;
+            return async ({ result, update }) => {
+              isClearingMatches = false;
+              if (result.type === "success" && result.data) {
+                clearMatchResult = { count: (result.data as any).clearedCount ?? 0 };
+              }
+              await update();
+            };
+          }}
+          class="hidden"
+        >
+        </form>
+        <button
+          type="button"
+          disabled={isClearingMatches}
+          onclick={() => (showClearMatchConfirm = true)}
+          class="px-2.5 py-1.5 text-xs rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"
+          title="Clear match scoring data for jobs matching current filters, so they get re-scored"
+        >
+          {#if isClearingMatches}
+            <Spinner size="w-3 h-3" />
+            Clearing...
+          {:else}
+            <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
+            Clear match data
+          {/if}
         </button>
       {/if}
     </div>
@@ -908,3 +966,15 @@
     </div>
   {/if}
 </div>
+
+<DeleteConfirmModal
+  isOpen={showClearMatchConfirm}
+  title="Clear Match Data"
+  message="This will delete all match data for jobs matching your current filters. They will be re-scored on the next match run."
+  confirmLabel="Clear Match Data"
+  onCancel={() => (showClearMatchConfirm = false)}
+  onConfirm={() => {
+    showClearMatchConfirm = false;
+    clearMatchFormEl?.requestSubmit();
+  }}
+/>

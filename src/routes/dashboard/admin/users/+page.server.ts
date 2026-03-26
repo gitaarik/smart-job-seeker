@@ -1,5 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
+import { Prisma } from "../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
@@ -305,6 +306,49 @@ export const actions: Actions = {
 
     cookies.delete("sjs_impersonate", { path: "/" });
     redirect(302, "/dashboard/admin/users");
+  },
+
+  clear_matches: async ({ request, locals }) => {
+    if (!locals.user?.is_admin) {
+      return fail(403, { error: "Admin access required" });
+    }
+
+    const formData = await request.formData();
+    const userId = formData.get("id") as string;
+
+    if (!userId) {
+      return fail(400, { error: "User ID is required" });
+    }
+
+    const user = await db.users.findUnique({ where: { id: userId } });
+    if (!user) {
+      return fail(404, { error: "User not found" });
+    }
+
+    // Get all profile IDs for this user
+    const profiles = await db.profiles.findMany({
+      where: { user_id: userId },
+      select: { id: true },
+    });
+
+    if (profiles.length === 0) {
+      return fail(400, { error: "User has no profiles" });
+    }
+
+    const profileIds = profiles.map((p) => p.id);
+
+    // Delete match rows so jobs get re-scored from scratch
+    const result = await db.$queryRaw<{ cnt: bigint }[]>`
+      WITH deleted AS (
+        DELETE FROM job_matches
+        WHERE profile IN (${Prisma.join(profileIds)})
+        AND reasoning IS NOT NULL
+        RETURNING id
+      )
+      SELECT COUNT(*) as cnt FROM deleted
+    `;
+
+    return { success: true, clearedCount: Number(result[0]?.cnt ?? 0) };
   },
 
   delete: async ({ request, locals }) => {

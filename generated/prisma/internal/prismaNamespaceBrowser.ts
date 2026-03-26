@@ -89,6 +89,7 @@ export const ModelName = {
   education: 'education',
   highlights: 'highlights',
   job_matches: 'job_matches',
+  job_statuses: 'job_statuses',
   job_platforms: 'job_platforms',
   job_resources: 'job_resources',
   scraper_logs: 'scraper_logs',
@@ -806,7 +807,6 @@ export const Job_matchesScalarFieldEnum = {
   gaps: 'gaps',
   recommendation: 'recommendation',
   job_date_updated_when_matched: 'job_date_updated_when_matched',
-  status: 'status',
   date_created: 'date_created',
   date_updated: 'date_updated',
   job: 'job',
@@ -818,6 +818,18 @@ export const Job_matchesScalarFieldEnum = {
 } as const
 
 export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
+
+
+export const Job_statusesScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job: 'job',
+  profile: 'profile'
+} as const
+
+export type Job_statusesScalarFieldEnum = (typeof Job_statusesScalarFieldEnum)[keyof typeof Job_statusesScalarFieldEnum]
 
 
 export const Job_platformsScalarFieldEnum = {

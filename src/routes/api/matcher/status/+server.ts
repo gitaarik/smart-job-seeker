@@ -130,7 +130,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
           job: true,
           score: true,
           recommendation: true,
-          status: true,
           date_created: true,
           skill_match_percentage: true,
           match_summary: true,

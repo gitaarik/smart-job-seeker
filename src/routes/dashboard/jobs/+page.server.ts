@@ -73,6 +73,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let matchesByJobId: Record<number, any> = {};
   let savedJobIds: number[] = [];
+  let rejectedJobIds: number[] = [];
 
   // Build filter SQL fragments shared by both branches (all reference jobs as `j`)
   const jsonFilter = buildJsonFilters(workLocation, jobType);
@@ -123,19 +124,22 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const minScoreVal = minScore ? parseInt(minScore) : 0;
 
   if (minScoreVal > 0 || statusValues.length > 0) {
-    // Query via job_matches table when filtering by score or status
+    // Query via job_matches + job_statuses tables when filtering by score or status
     let statusFilter = Prisma.sql`TRUE`;
     let scoreFilter = Prisma.sql`TRUE`;
+    let statusJoin = Prisma.sql`LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
 
     if (statusValues.length > 0) {
+      // When filtering by specific statuses, use INNER JOIN to require a status row
+      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
       if (statusValues.length === 1) {
-        statusFilter = Prisma.sql`jm.status = ${statusValues[0]}`;
+        statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
       } else {
-        statusFilter = Prisma.sql`jm.status IN (${Prisma.join(statusValues)})`;
+        statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
       }
     } else {
       // When filtering by score only, exclude rejected
-      statusFilter = Prisma.sql`jm.status != 'rejected'`;
+      statusFilter = Prisma.sql`COALESCE(js.status, 'new') != 'rejected'`;
     }
 
     if (minScoreVal > 0) {
@@ -147,6 +151,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       SELECT jm.id, COUNT(*) OVER() as cnt
       FROM job_matches jm
       JOIN jobs j ON j.id = jm.job
+      ${statusJoin}
       WHERE jm.profile = ${profileId}
       AND ${statusFilter}
       AND ${scoreFilter}
@@ -184,6 +189,15 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         .map((id) => matchById.get(id))
         .filter(Boolean) as typeof fullMatches;
 
+      const matchJobIds = orderedMatches.map((m) => m.job);
+
+      // Load user statuses from job_statuses table
+      const jobStatuses = await db.job_statuses.findMany({
+        where: { profile: profileId, job: { in: matchJobIds } },
+        select: { job: true, status: true },
+      });
+      const statusByJobId = Object.fromEntries(jobStatuses.map((s) => [s.job, s.status]));
+
       jobs = orderedMatches.map((m) => m.jobs);
       matchesByJobId = Object.fromEntries(
         orderedMatches.map((m) => [
@@ -196,13 +210,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
             matched_skills: m.matched_skills,
             match_summary: m.match_summary,
             reasoning: m.reasoning,
-            status: m.status,
           },
         ])
       );
-      savedJobIds = orderedMatches
-        .filter((m) => m.status === "saved")
-        .map((m) => m.job);
+      savedJobIds = matchJobIds.filter((id) => statusByJobId[id] === "saved");
+      rejectedJobIds = matchJobIds.filter((id) => statusByJobId[id] === "rejected");
     }
   } else {
     // "all" - Query from jobs table directly
@@ -255,14 +267,19 @@ export const load: PageServerLoad = async ({ parent, url }) => {
           matched_skills: true,
           match_summary: true,
           reasoning: true,
-          status: true,
         },
       });
 
+      // Load user statuses from job_statuses table
+      const jobStatuses = await db.job_statuses.findMany({
+        where: { profile: profileId, job: { in: jobIds } },
+        select: { job: true, status: true },
+      });
+      const statusByJobId = Object.fromEntries(jobStatuses.map((s) => [s.job, s.status]));
+
       matchesByJobId = Object.fromEntries(jobMatches.map((m) => [m.job, m]));
-      savedJobIds = jobMatches
-        .filter((m) => m.status === "saved")
-        .map((m) => m.job);
+      savedJobIds = jobIds.filter((id) => statusByJobId[id] === "saved");
+      rejectedJobIds = jobIds.filter((id) => statusByJobId[id] === "rejected");
     }
   }
 
@@ -288,6 +305,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     currentPage: page,
     totalPages,
     savedJobIds,
+    rejectedJobIds,
     matchesByJobId,
     profileSkillLevels,
     filters: {
@@ -316,6 +334,101 @@ async function getAuthProfileId(
   const user = locals.user;
   if (!user) return null;
   return getSelectedProfileId(cookies, user.id);
+}
+
+async function countMatchingJobs(
+  profileId: number,
+  url: URL,
+): Promise<number> {
+  const search = url.searchParams.get("q") || "";
+  const platform = url.searchParams.get("platform") || "";
+  const workLocation = url.searchParams.get("workLocation") || "";
+  const jobType = url.searchParams.get("jobType") || "";
+  const minScore = url.searchParams.get("minScore") || "";
+  const datePosted = url.searchParams.get("datePosted") || "";
+  const importedBy = url.searchParams.get("importedBy") || "";
+  const status = url.searchParams.get("status") || "";
+
+  const jsonFilter = buildJsonFilters(workLocation, jobType);
+
+  let searchFilter = Prisma.sql`TRUE`;
+  if (search) {
+    const searchPattern = `%${search}%`;
+    searchFilter = Prisma.sql`(
+      j.title ILIKE ${searchPattern}
+      OR j.company ILIKE ${searchPattern}
+      OR j.office_location ILIKE ${searchPattern}
+      OR j.job_description ILIKE ${searchPattern}
+    )`;
+  }
+
+  let platformFilter = Prisma.sql`TRUE`;
+  if (platform) {
+    const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
+    if (platformIds.length === 1) {
+      platformFilter = Prisma.sql`j.job_platform = ${platformIds[0]}`;
+    } else if (platformIds.length > 1) {
+      platformFilter = Prisma.sql`j.job_platform IN (${Prisma.join(platformIds)})`;
+    }
+  }
+
+  let dateFilter = Prisma.sql`TRUE`;
+  if (datePosted) {
+    const days = parseInt(datePosted);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
+  }
+
+  let importedByFilter = Prisma.sql`TRUE`;
+  if (importedBy) {
+    const values = importedBy.split(",").map((v) => v.trim()).filter(Boolean);
+    const hasMe = values.includes("me");
+    const hasOthers = values.includes("others");
+    if (hasMe && !hasOthers) {
+      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+    } else if (hasOthers && !hasMe) {
+      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+    }
+  }
+
+  const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
+  const minScoreVal = minScore ? parseInt(minScore) : 0;
+
+  let statusFilter = Prisma.sql`TRUE`;
+  let scoreFilter = Prisma.sql`TRUE`;
+  let statusJoin = Prisma.empty;
+
+  if (statusValues.length > 0) {
+    statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
+    if (statusValues.length === 1) {
+      statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
+    } else {
+      statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
+    }
+  }
+
+  if (minScoreVal > 0) {
+    scoreFilter = Prisma.sql`jm.score >= ${minScoreVal}`;
+  }
+
+  const result = await db.$queryRaw<{ cnt: bigint }[]>`
+    SELECT COUNT(*) as cnt
+    FROM job_matches jm
+    JOIN jobs j ON j.id = jm.job
+    ${statusJoin}
+    WHERE jm.profile = ${profileId}
+    AND jm.reasoning IS NOT NULL
+    AND ${statusFilter}
+    AND ${scoreFilter}
+    AND ${searchFilter}
+    AND ${platformFilter}
+    AND ${dateFilter}
+    AND ${jsonFilter}
+    AND ${importedByFilter}
+  `;
+
+  return Number(result[0]?.cnt ?? 0);
 }
 
 export const actions: Actions = {
@@ -349,5 +462,110 @@ export const actions: Actions = {
     const jobId = parseJobId(await request.formData());
     if (!jobId) return fail(400, { error: "Invalid job ID" });
     return unrejectJob(profileId, jobId);
+  },
+
+  clearMatchData: async ({ locals, cookies, url }) => {
+    if (!locals.user?.is_staff) {
+      return fail(403, { error: "Staff access required" });
+    }
+
+    const profileId = await getAuthProfileId(locals, cookies);
+    if (!profileId) return fail(401, { error: "Not authenticated" });
+
+    const count = await countMatchingJobs(profileId, url);
+
+    if (count === 0) {
+      return fail(400, { error: "No matched jobs found for current filters" });
+    }
+
+    // Delete match rows so jobs get re-scored from scratch
+    const search = url.searchParams.get("q") || "";
+    const platform = url.searchParams.get("platform") || "";
+    const workLocation = url.searchParams.get("workLocation") || "";
+    const jobType = url.searchParams.get("jobType") || "";
+    const minScore = url.searchParams.get("minScore") || "";
+    const datePosted = url.searchParams.get("datePosted") || "";
+    const importedBy = url.searchParams.get("importedBy") || "";
+    const status = url.searchParams.get("status") || "";
+
+    const jsonFilter = buildJsonFilters(workLocation, jobType);
+
+    let searchFilter = Prisma.sql`TRUE`;
+    if (search) {
+      const searchPattern = `%${search}%`;
+      searchFilter = Prisma.sql`(
+        j.title ILIKE ${searchPattern}
+        OR j.company ILIKE ${searchPattern}
+        OR j.office_location ILIKE ${searchPattern}
+        OR j.job_description ILIKE ${searchPattern}
+      )`;
+    }
+
+    let platformFilter = Prisma.sql`TRUE`;
+    if (platform) {
+      const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
+      if (platformIds.length === 1) {
+        platformFilter = Prisma.sql`j.job_platform = ${platformIds[0]}`;
+      } else if (platformIds.length > 1) {
+        platformFilter = Prisma.sql`j.job_platform IN (${Prisma.join(platformIds)})`;
+      }
+    }
+
+    let dateFilter = Prisma.sql`TRUE`;
+    if (datePosted) {
+      const days = parseInt(datePosted);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
+    }
+
+    let importedByFilter = Prisma.sql`TRUE`;
+    if (importedBy) {
+      const values = importedBy.split(",").map((v) => v.trim()).filter(Boolean);
+      const hasMe = values.includes("me");
+      const hasOthers = values.includes("others");
+      if (hasMe && !hasOthers) {
+        importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+      } else if (hasOthers && !hasMe) {
+        importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+      }
+    }
+
+    const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
+    const minScoreVal = minScore ? parseInt(minScore) : 0;
+
+    let statusFilter = Prisma.sql`TRUE`;
+    let scoreFilter = Prisma.sql`TRUE`;
+    let statusJoin = Prisma.empty;
+
+    if (statusValues.length > 0) {
+      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
+      if (statusValues.length === 1) {
+        statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
+      } else {
+        statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
+      }
+    }
+
+    if (minScoreVal > 0) {
+      scoreFilter = Prisma.sql`jm.score >= ${minScoreVal}`;
+    }
+
+    await db.$queryRaw`
+      DELETE FROM job_matches jm
+      USING jobs j ${statusJoin}
+      WHERE j.id = jm.job
+      AND jm.profile = ${profileId}
+      AND jm.reasoning IS NOT NULL
+      AND ${statusFilter}
+      AND ${scoreFilter}
+      AND ${searchFilter}
+      AND ${platformFilter}
+      AND ${dateFilter}
+      AND ${jsonFilter}
+      AND ${importedByFilter}
+    `;
+
+    return { success: true, action: "clearMatchData", clearedCount: count };
   },
 };

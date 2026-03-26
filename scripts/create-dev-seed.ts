@@ -166,6 +166,7 @@ const EXCLUDE_TABLES = [
   "verification",
   "jobs",
   "job_matches",
+  "job_statuses",
   "job_resources",
   "applications",
   "application_questions",

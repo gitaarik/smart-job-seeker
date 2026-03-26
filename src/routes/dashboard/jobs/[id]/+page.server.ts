@@ -45,8 +45,14 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     },
   });
 
+  // Get user status from job_statuses table
+  const jobStatus = await db.job_statuses.findFirst({
+    where: { profile: profileId, job: jobId },
+    select: { status: true },
+  });
+
   // Determine job category for sidebar highlighting
-  const jobCategory = match?.status === "saved"
+  const jobCategory = jobStatus?.status === "saved"
     ? "saved"
     : match && match.score > 0
     ? "matches"
@@ -188,6 +194,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   return {
     job,
     match,
+    jobStatus: jobStatus?.status ?? "new",
     profileId,
     jobCategory,
     profileSkillLevels,
@@ -199,7 +206,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 };
 
 export const actions: Actions = {
-  saveJob: async ({ request, locals, cookies, params }) => {
+  saveJob: async ({ locals, cookies, params }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
@@ -215,45 +222,23 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    // Check if job exists
-    const job = await db.jobs.findUnique({
-      where: { id: jobId },
-    });
-
+    const job = await db.jobs.findUnique({ where: { id: jobId } });
     if (!job) {
       return fail(404, { error: "Job not found" });
     }
 
-    // Check if match already exists
-    const existingMatch = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (existingMatch) {
-      await db.job_matches.update({
-        where: { id: existingMatch.id },
-        data: {
-          status: "saved",
-          date_updated: new Date(),
-        },
-      });
-    } else {
-      await db.job_matches.create({
-        data: {
-          profile: profileId,
-          job: jobId,
-          status: "saved",
-          score: 0,
-          date_created: new Date(),
-          date_updated: new Date(),
-        },
-      });
-    }
+    const now = new Date();
+    await db.$queryRaw`
+      INSERT INTO job_statuses (profile, job, status, date_created, date_updated)
+      VALUES (${profileId}, ${jobId}, 'saved', ${now}, ${now})
+      ON CONFLICT (profile, job)
+      DO UPDATE SET status = 'saved', date_updated = ${now}
+    `;
 
     return { success: true, action: "saved" };
   },
 
-  unsaveJob: async ({ request, locals, cookies, params }) => {
+  unsaveJob: async ({ locals, cookies, params }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
@@ -269,25 +254,9 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    const match = await db.job_matches.findFirst({
+    await db.job_statuses.deleteMany({
       where: { profile: profileId, job: jobId },
     });
-
-    if (match) {
-      if (match.score === 0 && !match.reasoning) {
-        await db.job_matches.delete({
-          where: { id: match.id },
-        });
-      } else {
-        await db.job_matches.update({
-          where: { id: match.id },
-          data: {
-            status: "new",
-            date_updated: new Date(),
-          },
-        });
-      }
-    }
 
     return { success: true, action: "unsaved" };
   },
@@ -311,21 +280,20 @@ export const actions: Actions = {
     const formData = await request.formData();
     const status = formData.get("status") as string;
 
-    const match = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (!match) {
-      return fail(404, { error: "Job match not found" });
+    if (status === "new") {
+      // "new" means remove the status row
+      await db.job_statuses.deleteMany({
+        where: { profile: profileId, job: jobId },
+      });
+    } else {
+      const now = new Date();
+      await db.$queryRaw`
+        INSERT INTO job_statuses (profile, job, status, date_created, date_updated)
+        VALUES (${profileId}, ${jobId}, ${status}, ${now}, ${now})
+        ON CONFLICT (profile, job)
+        DO UPDATE SET status = ${status}, date_updated = ${now}
+      `;
     }
-
-    await db.job_matches.update({
-      where: { id: match.id },
-      data: {
-        status,
-        date_updated: new Date(),
-      },
-    });
 
     return { success: true, status };
   },

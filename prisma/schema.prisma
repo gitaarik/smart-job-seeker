@@ -676,7 +676,6 @@ model job_matches {
   gaps                          Json?     @db.Json
   recommendation                String?   @default("consider") @db.VarChar(255)
   job_date_updated_when_matched DateTime? @db.Timestamptz(6)
-  status                        String    @default("new") @db.VarChar(255)
   date_created                  DateTime? @db.Timestamptz(6)
   date_updated                  DateTime? @db.Timestamptz(6)
   job                           Int
@@ -690,6 +689,19 @@ model job_matches {
   profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
 
   @@index([profile, job])
+}
+
+model job_statuses {
+  id           Int       @id @default(autoincrement())
+  status       String    @default("new") @db.VarChar(255)
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  job          Int
+  profile      Int
+  jobs         jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([profile, job])
   @@index([profile, status])
 }
 
@@ -769,6 +781,7 @@ model jobs {
   applications          applications[]
   job_importers         job_importers[]
   job_matches           job_matches[]
+  job_statuses          job_statuses[]
   job_resources         job_resources[]
   ai_chat               ai_chats?               @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
   job_platforms         job_platforms?          @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
@@ -952,6 +965,7 @@ model profiles {
   highlights                                                        highlights[]
   job_importers                                                     job_importers[]
   job_matches                                                       job_matches[]
+  job_statuses                                                      job_statuses[]
   languages                                                         languages[]
   match_config                                                      match_config[]
   os_contributions                                                  os_contributions[]
