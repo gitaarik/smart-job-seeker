@@ -144,84 +144,77 @@
         {#each profiles as profile (profile.id)}
           {@const state = getProfileState(profile.id)}
           {@const evaluated = profile.matchedCount + profile.noMatchCount}
-          <Card padding="responsive">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-2">
-                {#if state?.active && state?.currentJobId}
-                  <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+          <a href="/dashboard/admin/matcher/{profile.id}" class="block no-underline">
+            <Card padding="responsive" class="hover:border-[var(--dash-primary)]/50 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  {#if state?.active && state?.currentJobId}
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                    </span>
+                  {:else if state?.active}
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+                    </span>
+                  {:else}
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-400"></span>
+                    </span>
+                  {/if}
+                  <span class="text-sm font-medium text-[var(--dash-text)]">{profile.name}</span>
+                  <span class="text-xs text-[var(--dash-text-muted)]">ID: {profile.id}</span>
+                  {#if profile.matchCommunityJobs}
+                    <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]">community</span>
+                  {/if}
+                </div>
+                {#if state?.lastUpdated}
+                  <span class="text-xs text-[var(--dash-text-muted)]">
+                    {formatRelativeTime(state.lastUpdated)}
                   </span>
-                {:else if state?.active}
-                  <span class="relative flex h-2.5 w-2.5">
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
-                  </span>
-                {:else}
-                  <span class="relative flex h-2.5 w-2.5">
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-400"></span>
-                  </span>
-                {/if}
-                <a href="/dashboard/admin/matcher/{profile.id}" class="text-sm font-medium text-[var(--dash-text)] hover:text-[var(--dash-primary)] hover:underline">{profile.name}</a>
-                <span class="text-xs text-[var(--dash-text-muted)]">ID: {profile.id}</span>
-                {#if profile.matchCommunityJobs}
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]">community</span>
                 {/if}
               </div>
-              {#if state?.lastUpdated}
-                <span class="text-xs text-[var(--dash-text-muted)]">
-                  {formatRelativeTime(state.lastUpdated)}
-                </span>
+
+              <!-- DB stats row -->
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-secondary)] mb-2">
+                <span>{profile.totalJobs} jobs</span>
+                <span class="text-[var(--dash-success)]">{profile.matchedCount} matched</span>
+                <span class="text-[var(--dash-error)]">{profile.noMatchCount} no match</span>
+                <span class="text-[var(--dash-text-muted)]">{profile.unmatchedCount} unevaluated</span>
+              </div>
+
+              <!-- Progress bar -->
+              {#if profile.totalJobs > 0}
+                <div class="w-full bg-[var(--dash-bg)] rounded-full h-1.5 overflow-hidden mb-2">
+                  <div
+                    class="h-full rounded-full transition-all duration-500 {evaluated >= profile.totalJobs ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-primary)]'}"
+                    style="width: {Math.min(100, (evaluated / profile.totalJobs) * 100)}%"
+                  ></div>
+                </div>
               {/if}
-            </div>
 
-            <!-- DB stats row -->
-            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-secondary)] mb-2">
-              <span>{profile.totalJobs} jobs</span>
-              <span class="text-[var(--dash-success)]">{profile.matchedCount} matched</span>
-              <span class="text-[var(--dash-error)]">{profile.noMatchCount} no match</span>
-              <span class="text-[var(--dash-text-muted)]">{profile.unmatchedCount} unevaluated</span>
-            </div>
-
-            <!-- Progress bar -->
-            {#if profile.totalJobs > 0}
-              <div class="w-full bg-[var(--dash-bg)] rounded-full h-1.5 overflow-hidden mb-2">
-                <div
-                  class="h-full rounded-full transition-all duration-500 {evaluated >= profile.totalJobs ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-primary)]'}"
-                  style="width: {Math.min(100, (evaluated / profile.totalJobs) * 100)}%"
-                ></div>
-              </div>
-            {/if}
-
-            <!-- Worker state row -->
-            {#if state}
-              <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-muted)]">
-                <span>Cycles: {state.totalCycles}</span>
-                <span>Session: {state.totalMatched} matched</span>
-                {#if state.totalFailed > 0}
-                  <a
-                    href="/dashboard/admin/matcher/{profile.id}"
-                    class="text-[var(--dash-error)] hover:underline"
-                  >{state.totalFailed} failed</a>
-                {/if}
-                {#if state.currentJobId}
-                  <span>
-                    Processing:
-                    <a
-                      href="/dashboard/jobs/{state.currentJobId}"
-                      class="text-[var(--dash-primary)] hover:underline"
-                    >
-                      {state.currentJobTitle || `Job #${state.currentJobId}`}
-                    </a>
-                    ({state.cycleProcessed + 1}/{state.cycleBatchSize})
-                  </span>
-                {/if}
-              </div>
-            {:else}
-              <p class="text-xs text-[var(--dash-text-muted)]">
-                {matcherAlive ? "Waiting for next cycle" : "No recent activity"}
-              </p>
-            {/if}
-          </Card>
+              <!-- Worker state row -->
+              {#if state}
+                <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-muted)]">
+                  <span>Cycles: {state.totalCycles}</span>
+                  <span>Session: {state.totalMatched} matched</span>
+                  {#if state.totalFailed > 0}
+                    <span class="text-[var(--dash-error)]">{state.totalFailed} failed</span>
+                  {/if}
+                  {#if state.currentJobId}
+                    <span>
+                      Processing: {state.currentJobTitle || `Job #${state.currentJobId}`}
+                      ({state.cycleProcessed + 1}/{state.cycleBatchSize})
+                    </span>
+                  {/if}
+                </div>
+              {:else}
+                <p class="text-xs text-[var(--dash-text-muted)]">
+                  {matcherAlive ? "Waiting for next cycle" : "No recent activity"}
+                </p>
+              {/if}
+            </Card>
+          </a>
         {/each}
       </div>
     {/if}
