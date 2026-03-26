@@ -162,7 +162,7 @@
 
 <div
   data-job-id={job.id}
-  class="bg-[var(--dash-card)] overflow-hidden relative transition-all {borderless ? '' : 'rounded-lg border'} {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved && !borderless ? 'border-green-500 ring-2 ring-green-500/30' : 'border-[var(--dash-border)]'}"
+  class="bg-[var(--dash-card)] overflow-hidden relative transition-all {borderless ? '' : 'rounded-lg border'} {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved && !borderless ? 'border-green-500 ring-2 ring-green-500/30' : isExpanded ? 'border-[var(--dash-primary)] ring-2 ring-[var(--dash-primary)]/20' : 'border-[var(--dash-border)]'}"
 >
   <!-- Chevron in top right corner -->
   {#if onToggleExpand}
