@@ -691,6 +691,22 @@ model job_matches {
   @@index([profile, job])
 }
 
+model job_match_history {
+  id                   Int       @id @default(autoincrement())
+  job                  Int
+  profile              Int
+  score                Int       @default(0)
+  skill_match_percentage Int?
+  recommendation       String?   @db.VarChar(255)
+  match_summary        String?
+  date_created         DateTime? @default(now()) @db.Timestamptz(6)
+  jobs                 jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_match_history_job_foreign")
+  profiles             profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_match_history_profile_foreign")
+
+  @@index([profile, job])
+  @@index([job, date_created(sort: Desc)], map: "job_match_history_date_idx")
+}
+
 model job_statuses {
   id           Int       @id @default(autoincrement())
   status       String    @default("new") @db.VarChar(255)
@@ -780,6 +796,7 @@ model jobs {
   rescrape_live_url     String?
   applications          applications[]
   job_importers         job_importers[]
+  job_match_history     job_match_history[]
   job_matches           job_matches[]
   job_statuses          job_statuses[]
   job_resources         job_resources[]
@@ -964,6 +981,7 @@ model profiles {
   education                                                         education[]
   highlights                                                        highlights[]
   job_importers                                                     job_importers[]
+  job_match_history                                                 job_match_history[]
   job_matches                                                       job_matches[]
   job_statuses                                                      job_statuses[]
   languages                                                         languages[]

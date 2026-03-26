@@ -621,6 +621,7 @@ export type profilesWhereInput = {
   education?: Prisma.EducationListRelationFilter
   highlights?: Prisma.HighlightsListRelationFilter
   job_importers?: Prisma.Job_importersListRelationFilter
+  job_match_history?: Prisma.Job_match_historyListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_statuses?: Prisma.Job_statusesListRelationFilter
   languages?: Prisma.LanguagesListRelationFilter
@@ -703,6 +704,7 @@ export type profilesOrderByWithRelationInput = {
   education?: Prisma.educationOrderByRelationAggregateInput
   highlights?: Prisma.highlightsOrderByRelationAggregateInput
   job_importers?: Prisma.job_importersOrderByRelationAggregateInput
+  job_match_history?: Prisma.job_match_historyOrderByRelationAggregateInput
   job_matches?: Prisma.job_matchesOrderByRelationAggregateInput
   job_statuses?: Prisma.job_statusesOrderByRelationAggregateInput
   languages?: Prisma.languagesOrderByRelationAggregateInput
@@ -788,6 +790,7 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   education?: Prisma.EducationListRelationFilter
   highlights?: Prisma.HighlightsListRelationFilter
   job_importers?: Prisma.Job_importersListRelationFilter
+  job_match_history?: Prisma.Job_match_historyListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_statuses?: Prisma.Job_statusesListRelationFilter
   languages?: Prisma.LanguagesListRelationFilter
@@ -984,6 +987,7 @@ export type profilesCreateInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -1066,6 +1070,7 @@ export type profilesUncheckedCreateInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -1141,6 +1146,7 @@ export type profilesUpdateInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -1223,6 +1229,7 @@ export type profilesUncheckedUpdateInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1748,6 +1755,20 @@ export type profilesUpdateOneRequiredWithoutJob_matchesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.profilesUpdateToOneWithWhereWithoutJob_matchesInput, Prisma.profilesUpdateWithoutJob_matchesInput>, Prisma.profilesUncheckedUpdateWithoutJob_matchesInput>
 }
 
+export type profilesCreateNestedOneWithoutJob_match_historyInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutJob_match_historyInput, Prisma.profilesUncheckedCreateWithoutJob_match_historyInput>
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutJob_match_historyInput
+  connect?: Prisma.profilesWhereUniqueInput
+}
+
+export type profilesUpdateOneRequiredWithoutJob_match_historyNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutJob_match_historyInput, Prisma.profilesUncheckedCreateWithoutJob_match_historyInput>
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutJob_match_historyInput
+  upsert?: Prisma.profilesUpsertWithoutJob_match_historyInput
+  connect?: Prisma.profilesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.profilesUpdateToOneWithWhereWithoutJob_match_historyInput, Prisma.profilesUpdateWithoutJob_match_historyInput>, Prisma.profilesUncheckedUpdateWithoutJob_match_historyInput>
+}
+
 export type profilesCreateNestedOneWithoutJob_statusesInput = {
   create?: Prisma.XOR<Prisma.profilesCreateWithoutJob_statusesInput, Prisma.profilesUncheckedCreateWithoutJob_statusesInput>
   connectOrCreate?: Prisma.profilesCreateOrConnectWithoutJob_statusesInput
@@ -2129,6 +2150,7 @@ export type profilesCreateWithoutApplicationsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -2210,6 +2232,7 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -2300,6 +2323,7 @@ export type profilesUpdateWithoutApplicationsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -2381,6 +2405,7 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2455,6 +2480,7 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -2536,6 +2562,7 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -2626,6 +2653,7 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -2707,6 +2735,7 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2781,6 +2810,7 @@ export type profilesCreateWithoutCollected_dataInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -2862,6 +2892,7 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -2952,6 +2983,7 @@ export type profilesUpdateWithoutCollected_dataInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -3033,6 +3065,7 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3107,6 +3140,7 @@ export type profilesCreateWithoutConfigInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -3188,6 +3222,7 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -3278,6 +3313,7 @@ export type profilesUpdateWithoutConfigInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -3359,6 +3395,7 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3434,6 +3471,7 @@ export type profilesCreateWithoutDirectus_filesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -3514,6 +3552,7 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -3672,6 +3711,7 @@ export type profilesCreateWithoutEducationInput = {
   config?: Prisma.configCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -3753,6 +3793,7 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -3843,6 +3884,7 @@ export type profilesUpdateWithoutEducationInput = {
   config?: Prisma.configUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -3924,6 +3966,7 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3998,6 +4041,7 @@ export type profilesCreateWithoutHighlightsInput = {
   config?: Prisma.configCreateNestedManyWithoutProfilesInput
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -4079,6 +4123,7 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -4169,6 +4214,7 @@ export type profilesUpdateWithoutHighlightsInput = {
   config?: Prisma.configUpdateManyWithoutProfilesNestedInput
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -4250,6 +4296,7 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4325,6 +4372,7 @@ export type profilesCreateWithoutJob_matchesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
   match_config?: Prisma.match_configCreateNestedManyWithoutProfilesInput
@@ -4406,6 +4454,7 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
   match_config?: Prisma.match_configUncheckedCreateNestedManyWithoutProfilesInput
@@ -4496,6 +4545,7 @@ export type profilesUpdateWithoutJob_matchesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
   match_config?: Prisma.match_configUpdateManyWithoutProfilesNestedInput
@@ -4577,6 +4627,337 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
+  job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
+  match_config?: Prisma.match_configUncheckedUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUncheckedUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_versions_profile_versions_profileToprofiles?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfiles_profile_versions_profileToprofilesNestedInput
+  project_stories?: Prisma.project_storiesUncheckedUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUncheckedUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedUpdateManyWithoutProfilesNestedInput
+  search_tasks?: Prisma.search_tasksUncheckedUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUncheckedUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesCreateWithoutJob_match_historyInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  user_id?: string | null
+  source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  browser_country_code?: string | null
+  browser_profile_id?: string | null
+  ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
+  api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
+  job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
+  job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
+  match_config?: Prisma.match_configCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
+  profile_versions_profile_versions_profileToprofiles?: Prisma.profile_versionsCreateNestedManyWithoutProfiles_profile_versions_profileToprofilesInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
+  search_tasks?: Prisma.search_tasksCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesUncheckedCreateWithoutJob_match_historyInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  user_id?: string | null
+  public_cv_version?: number | null
+  public_resume_version?: number | null
+  source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  browser_country_code?: string | null
+  browser_profile_id?: string | null
+  ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
+  api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
+  job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
+  job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
+  match_config?: Prisma.match_configUncheckedCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsUncheckedCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutProfilesInput
+  profile_versions_profile_versions_profileToprofiles?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfiles_profile_versions_profileToprofilesInput
+  project_stories?: Prisma.project_storiesUncheckedCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesUncheckedCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedCreateNestedManyWithoutProfilesInput
+  search_tasks?: Prisma.search_tasksUncheckedCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsUncheckedCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesCreateOrConnectWithoutJob_match_historyInput = {
+  where: Prisma.profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.profilesCreateWithoutJob_match_historyInput, Prisma.profilesUncheckedCreateWithoutJob_match_historyInput>
+}
+
+export type profilesUpsertWithoutJob_match_historyInput = {
+  update: Prisma.XOR<Prisma.profilesUpdateWithoutJob_match_historyInput, Prisma.profilesUncheckedUpdateWithoutJob_match_historyInput>
+  create: Prisma.XOR<Prisma.profilesCreateWithoutJob_match_historyInput, Prisma.profilesUncheckedCreateWithoutJob_match_historyInput>
+  where?: Prisma.profilesWhereInput
+}
+
+export type profilesUpdateToOneWithWhereWithoutJob_match_historyInput = {
+  where?: Prisma.profilesWhereInput
+  data: Prisma.XOR<Prisma.profilesUpdateWithoutJob_match_historyInput, Prisma.profilesUncheckedUpdateWithoutJob_match_historyInput>
+}
+
+export type profilesUpdateWithoutJob_match_historyInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
+  api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
+  job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
+  job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
+  match_config?: Prisma.match_configUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
+  profile_versions_profile_versions_profileToprofiles?: Prisma.profile_versionsUpdateManyWithoutProfiles_profile_versions_profileToprofilesNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
+  search_tasks?: Prisma.search_tasksUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateWithoutJob_match_historyInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
+  api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
+  job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
   match_config?: Prisma.match_configUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4651,6 +5032,7 @@ export type profilesCreateWithoutJob_statusesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
   match_config?: Prisma.match_configCreateNestedManyWithoutProfilesInput
@@ -4732,6 +5114,7 @@ export type profilesUncheckedCreateWithoutJob_statusesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
   match_config?: Prisma.match_configUncheckedCreateNestedManyWithoutProfilesInput
@@ -4822,6 +5205,7 @@ export type profilesUpdateWithoutJob_statusesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
   match_config?: Prisma.match_configUpdateManyWithoutProfilesNestedInput
@@ -4903,6 +5287,7 @@ export type profilesUncheckedUpdateWithoutJob_statusesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
   match_config?: Prisma.match_configUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4977,6 +5362,7 @@ export type profilesCreateWithoutLanguagesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   match_config?: Prisma.match_configCreateNestedManyWithoutProfilesInput
@@ -5058,6 +5444,7 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   match_config?: Prisma.match_configUncheckedCreateNestedManyWithoutProfilesInput
@@ -5148,6 +5535,7 @@ export type profilesUpdateWithoutLanguagesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   match_config?: Prisma.match_configUpdateManyWithoutProfilesNestedInput
@@ -5229,6 +5617,7 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   match_config?: Prisma.match_configUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5303,6 +5692,7 @@ export type profilesCreateWithoutOs_contributionsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -5384,6 +5774,7 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -5474,6 +5865,7 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -5555,6 +5947,7 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5629,6 +6022,7 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -5710,6 +6104,7 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -5800,6 +6195,7 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -5881,6 +6277,7 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5955,6 +6352,7 @@ export type profilesCreateWithoutProfile_exportsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -6036,6 +6434,7 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -6126,6 +6525,7 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -6207,6 +6607,7 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6281,6 +6682,7 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -6362,6 +6764,7 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -6441,6 +6844,7 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -6521,6 +6925,7 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -6606,6 +7011,7 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -6686,6 +7092,7 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -6782,6 +7189,7 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -6863,6 +7271,7 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6968,6 +7377,7 @@ export type profilesCreateWithoutApi_keysInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -7049,6 +7459,7 @@ export type profilesUncheckedCreateWithoutApi_keysInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -7139,6 +7550,7 @@ export type profilesUpdateWithoutApi_keysInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -7220,6 +7632,7 @@ export type profilesUncheckedUpdateWithoutApi_keysInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7295,6 +7708,7 @@ export type profilesCreateWithoutProject_storiesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -7376,6 +7790,7 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -7466,6 +7881,7 @@ export type profilesUpdateWithoutProject_storiesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -7547,6 +7963,7 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7621,6 +8038,7 @@ export type profilesCreateWithoutReferencesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -7702,6 +8120,7 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -7792,6 +8211,7 @@ export type profilesUpdateWithoutReferencesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -7873,6 +8293,7 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7947,6 +8368,7 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -8028,6 +8450,7 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -8118,6 +8541,7 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -8199,6 +8623,7 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8273,6 +8698,7 @@ export type profilesCreateWithoutSide_projectsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -8354,6 +8780,7 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -8444,6 +8871,7 @@ export type profilesUpdateWithoutSide_projectsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -8525,6 +8953,7 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8599,6 +9028,7 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -8680,6 +9110,7 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -8770,6 +9201,7 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -8851,6 +9283,7 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8925,6 +9358,7 @@ export type profilesCreateWithoutWork_experiencesInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -9006,6 +9440,7 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -9096,6 +9531,7 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -9177,6 +9613,7 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9250,6 +9687,7 @@ export type profilesCreateWithoutAi_chatsInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -9331,6 +9769,7 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -9421,6 +9860,7 @@ export type profilesUpdateWithoutAi_chatsInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -9502,6 +9942,7 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9576,6 +10017,7 @@ export type profilesCreateWithoutJob_importersInput = {
   config?: Prisma.configCreateNestedManyWithoutProfilesInput
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -9657,6 +10099,7 @@ export type profilesUncheckedCreateWithoutJob_importersInput = {
   config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -9747,6 +10190,7 @@ export type profilesUpdateWithoutJob_importersInput = {
   config?: Prisma.configUpdateManyWithoutProfilesNestedInput
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -9828,6 +10272,7 @@ export type profilesUncheckedUpdateWithoutJob_importersInput = {
   config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9903,6 +10348,7 @@ export type profilesCreateWithoutMatch_configInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -9984,6 +10430,7 @@ export type profilesUncheckedCreateWithoutMatch_configInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -10074,6 +10521,7 @@ export type profilesUpdateWithoutMatch_configInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -10155,6 +10603,7 @@ export type profilesUncheckedUpdateWithoutMatch_configInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -10229,6 +10678,7 @@ export type profilesCreateWithoutSearch_tasksInput = {
   education?: Prisma.educationCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
@@ -10310,6 +10760,7 @@ export type profilesUncheckedCreateWithoutSearch_tasksInput = {
   education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
   highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
   job_importers?: Prisma.job_importersUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_history?: Prisma.job_match_historyUncheckedCreateNestedManyWithoutProfilesInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
   job_statuses?: Prisma.job_statusesUncheckedCreateNestedManyWithoutProfilesInput
   languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
@@ -10400,6 +10851,7 @@ export type profilesUpdateWithoutSearch_tasksInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -10481,6 +10933,7 @@ export type profilesUncheckedUpdateWithoutSearch_tasksInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -10609,6 +11062,7 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -10689,6 +11143,7 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -10926,6 +11381,7 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -11006,6 +11462,7 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -11135,6 +11592,7 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
@@ -11215,6 +11673,7 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
   highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
   job_importers?: Prisma.job_importersUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_history?: Prisma.job_match_historyUncheckedUpdateManyWithoutProfilesNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
   job_statuses?: Prisma.job_statusesUncheckedUpdateManyWithoutProfilesNestedInput
   languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
@@ -11301,6 +11760,7 @@ export type ProfilesCountOutputType = {
   education: number
   highlights: number
   job_importers: number
+  job_match_history: number
   job_matches: number
   job_statuses: number
   languages: number
@@ -11328,6 +11788,7 @@ export type ProfilesCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensio
   education?: boolean | ProfilesCountOutputTypeCountEducationArgs
   highlights?: boolean | ProfilesCountOutputTypeCountHighlightsArgs
   job_importers?: boolean | ProfilesCountOutputTypeCountJob_importersArgs
+  job_match_history?: boolean | ProfilesCountOutputTypeCountJob_match_historyArgs
   job_matches?: boolean | ProfilesCountOutputTypeCountJob_matchesArgs
   job_statuses?: boolean | ProfilesCountOutputTypeCountJob_statusesArgs
   languages?: boolean | ProfilesCountOutputTypeCountLanguagesArgs
@@ -11416,6 +11877,13 @@ export type ProfilesCountOutputTypeCountHighlightsArgs<ExtArgs extends runtime.T
  */
 export type ProfilesCountOutputTypeCountJob_importersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.job_importersWhereInput
+}
+
+/**
+ * ProfilesCountOutputType without action
+ */
+export type ProfilesCountOutputTypeCountJob_match_historyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.job_match_historyWhereInput
 }
 
 /**
@@ -11586,6 +12054,7 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   education?: boolean | Prisma.profiles$educationArgs<ExtArgs>
   highlights?: boolean | Prisma.profiles$highlightsArgs<ExtArgs>
   job_importers?: boolean | Prisma.profiles$job_importersArgs<ExtArgs>
+  job_match_history?: boolean | Prisma.profiles$job_match_historyArgs<ExtArgs>
   job_matches?: boolean | Prisma.profiles$job_matchesArgs<ExtArgs>
   job_statuses?: boolean | Prisma.profiles$job_statusesArgs<ExtArgs>
   languages?: boolean | Prisma.profiles$languagesArgs<ExtArgs>
@@ -11789,6 +12258,7 @@ export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   education?: boolean | Prisma.profiles$educationArgs<ExtArgs>
   highlights?: boolean | Prisma.profiles$highlightsArgs<ExtArgs>
   job_importers?: boolean | Prisma.profiles$job_importersArgs<ExtArgs>
+  job_match_history?: boolean | Prisma.profiles$job_match_historyArgs<ExtArgs>
   job_matches?: boolean | Prisma.profiles$job_matchesArgs<ExtArgs>
   job_statuses?: boolean | Prisma.profiles$job_statusesArgs<ExtArgs>
   languages?: boolean | Prisma.profiles$languagesArgs<ExtArgs>
@@ -11832,6 +12302,7 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     education: Prisma.$educationPayload<ExtArgs>[]
     highlights: Prisma.$highlightsPayload<ExtArgs>[]
     job_importers: Prisma.$job_importersPayload<ExtArgs>[]
+    job_match_history: Prisma.$job_match_historyPayload<ExtArgs>[]
     job_matches: Prisma.$job_matchesPayload<ExtArgs>[]
     job_statuses: Prisma.$job_statusesPayload<ExtArgs>[]
     languages: Prisma.$languagesPayload<ExtArgs>[]
@@ -12307,6 +12778,7 @@ export interface Prisma__profilesClient<T, Null = never, ExtArgs extends runtime
   education<T extends Prisma.profiles$educationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$educationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$educationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   highlights<T extends Prisma.profiles$highlightsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$highlightsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$highlightsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_importers<T extends Prisma.profiles$job_importersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$job_importersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_importersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  job_match_history<T extends Prisma.profiles$job_match_historyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$job_match_historyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_match_historyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_matches<T extends Prisma.profiles$job_matchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$job_matchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_matchesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_statuses<T extends Prisma.profiles$job_statusesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$job_statusesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_statusesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   languages<T extends Prisma.profiles$languagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$languagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$languagesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -13015,6 +13487,30 @@ export type profiles$job_importersArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.Job_importersScalarFieldEnum | Prisma.Job_importersScalarFieldEnum[]
+}
+
+/**
+ * profiles.job_match_history
+ */
+export type profiles$job_match_historyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the job_match_history
+   */
+  select?: Prisma.job_match_historySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the job_match_history
+   */
+  omit?: Prisma.job_match_historyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.job_match_historyInclude<ExtArgs> | null
+  where?: Prisma.job_match_historyWhereInput
+  orderBy?: Prisma.job_match_historyOrderByWithRelationInput | Prisma.job_match_historyOrderByWithRelationInput[]
+  cursor?: Prisma.job_match_historyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Job_match_historyScalarFieldEnum | Prisma.Job_match_historyScalarFieldEnum[]
 }
 
 /**

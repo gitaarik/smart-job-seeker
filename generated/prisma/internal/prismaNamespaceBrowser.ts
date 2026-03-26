@@ -89,6 +89,7 @@ export const ModelName = {
   education: 'education',
   highlights: 'highlights',
   job_matches: 'job_matches',
+  job_match_history: 'job_match_history',
   job_statuses: 'job_statuses',
   job_platforms: 'job_platforms',
   job_resources: 'job_resources',
@@ -818,6 +819,20 @@ export const Job_matchesScalarFieldEnum = {
 } as const
 
 export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
+
+
+export const Job_match_historyScalarFieldEnum = {
+  id: 'id',
+  job: 'job',
+  profile: 'profile',
+  score: 'score',
+  skill_match_percentage: 'skill_match_percentage',
+  recommendation: 'recommendation',
+  match_summary: 'match_summary',
+  date_created: 'date_created'
+} as const
+
+export type Job_match_historyScalarFieldEnum = (typeof Job_match_historyScalarFieldEnum)[keyof typeof Job_match_historyScalarFieldEnum]
 
 
 export const Job_statusesScalarFieldEnum = {

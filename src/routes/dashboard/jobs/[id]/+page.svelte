@@ -707,6 +707,51 @@
             </div>
           {/if}
 
+          <!-- Match History -->
+          {#if data.matchHistory.length > 0}
+            <div class="mt-4">
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
+                Match History
+              </p>
+              <ul class="space-y-2 text-sm">
+                {#each data.matchHistory as entry}
+                  <li class="flex justify-between items-start gap-2">
+                    <div class="text-[var(--dash-text)]">
+                      <span class="font-medium">{entry.score}/100</span>
+                      {#if entry.skill_match_percentage != null}
+                        <span class="text-[var(--dash-text-muted)]">({entry.skill_match_percentage}% skills)</span>
+                      {/if}
+                      {#if entry.recommendation}
+                        <span class="text-[var(--dash-text-muted)]">— {entry.recommendation.replace(/_/g, " ")}</span>
+                      {/if}
+                    </div>
+                    <span class="text-[var(--dash-text-muted)] whitespace-nowrap shrink-0">{formatDateTime(entry.date_created)}</span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {:else if match}
+            <div class="mt-4">
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
+                Match Info
+              </p>
+              <dl class="space-y-1 text-sm">
+                <div class="flex justify-between">
+                  <dt class="text-[var(--dash-text-secondary)]">Matched</dt>
+                  <dd class="text-[var(--dash-text)]">{formatDateTime(match.date_created)}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-[var(--dash-text-secondary)]">Score</dt>
+                  <dd class="text-[var(--dash-text)]">{match.score}/100</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-[var(--dash-text-secondary)]">Recommendation</dt>
+                  <dd class="text-[var(--dash-text)]">{match.recommendation?.replace(/_/g, " ") ?? "—"}</dd>
+                </div>
+              </dl>
+            </div>
+          {/if}
+
           <!-- Scrape History -->
           {#if data.scrapeHistory.length > 0}
             <div class="mt-4">

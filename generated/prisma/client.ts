@@ -230,6 +230,11 @@ export type highlights = Prisma.highlightsModel
  */
 export type job_matches = Prisma.job_matchesModel
 /**
+ * Model job_match_history
+ * 
+ */
+export type job_match_history = Prisma.job_match_historyModel
+/**
  * Model job_statuses
  * 
  */

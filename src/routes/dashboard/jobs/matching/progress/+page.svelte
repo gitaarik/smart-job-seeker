@@ -115,7 +115,7 @@
 
   function openRematchModal(type: "no_match" | "matched") {
     rematchType = type;
-    rematchDateFilter = "";
+    rematchDateFilter = "1";
     showRematchModal = true;
   }
 

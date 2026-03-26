@@ -125,6 +125,28 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     }));
   }
 
+  // Load match history for staff
+  let matchHistory: {
+    score: number;
+    skill_match_percentage: number | null;
+    recommendation: string | null;
+    match_summary: string | null;
+    date_created: Date | null;
+  }[] = [];
+  if (isStaff) {
+    matchHistory = await db.job_match_history.findMany({
+      where: { job: jobId, profile: profileId },
+      select: {
+        score: true,
+        skill_match_percentage: true,
+        recommendation: true,
+        match_summary: true,
+        date_created: true,
+      },
+      orderBy: { date_created: "desc" },
+    });
+  }
+
   // Load rescrape config data: credentials, country, browser fingerprint, browser provider, etc.
   let rescrapeConfig: {
     platformCredentials: { id: number; username: string | null }[];
@@ -201,6 +223,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     isStaff,
     scrapeHistory,
     importers,
+    matchHistory,
     rescrapeConfig,
   };
 };
