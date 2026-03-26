@@ -287,60 +287,19 @@
     goto(buildUrl({ page: page.toString() }));
   }
 
-  const SLIDE_DURATION = 200;
-
   async function toggleExpand(id: number) {
-    const isCollapsing = expandedId === id;
-    const previousId = expandedId;
-
     // Capture clicked card's viewport offset before DOM changes
     const cardEl = document.querySelector(`[data-job-id="${id}"]`);
     const viewportOffset = cardEl?.getBoundingClientRect().top ?? null;
 
-    if (isCollapsing) {
-      // Just collapse, no sequencing needed
-      expandedId = null;
-      return;
-    }
+    expandedId = expandedId === id ? null : id;
 
-    // Check if the currently expanded card is visible on screen
-    const previousEl = previousId
-      ? document.querySelector(`[data-job-id="${previousId}"]`)
-      : null;
-    const previousVisible = previousEl
-      ? previousEl.getBoundingClientRect().bottom > 0 &&
-        previousEl.getBoundingClientRect().top < window.innerHeight
-      : false;
-
-    if (previousId && previousVisible) {
-      // Sequence: collapse first, wait for animation, then expand
-      expandedId = null;
-      await new Promise((r) => setTimeout(r, SLIDE_DURATION));
-
-      // Correct scroll so clicked card stays at same viewport position
-      if (viewportOffset !== null) {
-        const updatedRect = cardEl?.getBoundingClientRect();
-        if (updatedRect) {
-          const delta = updatedRect.top - viewportOffset;
-          if (Math.abs(delta) > 1) {
-            window.scrollTo({ top: window.scrollY + delta });
-          }
-        }
-      }
-
-      expandedId = id;
-    } else {
-      // Previous card not visible (or none) — just swap instantly, then expand animates in
-      expandedId = id;
-      if (viewportOffset !== null) {
-        await tick();
-        const updatedRect = cardEl?.getBoundingClientRect();
-        if (updatedRect) {
-          const delta = updatedRect.top - viewportOffset;
-          if (Math.abs(delta) > 1) {
-            window.scrollTo({ top: window.scrollY + delta });
-          }
-        }
+    // After DOM updates, restore the card to the same viewport position
+    if (viewportOffset !== null && expandedId !== null) {
+      await tick();
+      const updatedRect = cardEl?.getBoundingClientRect();
+      if (updatedRect) {
+        window.scrollBy(0, updatedRect.top - viewportOffset);
       }
     }
   }
