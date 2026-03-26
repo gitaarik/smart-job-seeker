@@ -4,11 +4,11 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCircle,
+    faQuestionCircle,
     faRotate,
   } from "@fortawesome/free-solid-svg-icons";
   import ScoreBadge from "../../components/ScoreBadge.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
-  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -58,7 +58,9 @@
   let loading = $state(true);
   let showNoMatch = $state(false);
   let rematching = $state(false);
-  let showRematchConfirm = $state(false);
+  let rematchType = $state<"no_match" | "matched">("no_match");
+  let rematchDateFilter = $state("");
+  let showRematchModal = $state(false);
 
   // Derived
   let evaluatedCount = $derived(matchedCount + noMatchCount);
@@ -111,14 +113,26 @@
     }
   }
 
-  async function rematchNoMatches() {
-    if (rematching || notRecommendedCount === 0) return;
+  function openRematchModal(type: "no_match" | "matched") {
+    rematchType = type;
+    rematchDateFilter = "";
+    showRematchModal = true;
+  }
+
+  async function doRematch() {
+    if (rematching) return;
+    showRematchModal = false;
     rematching = true;
     try {
+      const body: Record<string, unknown> = {
+        profileId: data.profileId,
+        type: rematchType,
+      };
+      if (rematchDateFilter) body.datePostedDays = rematchDateFilter;
       const response = await fetch("/api/matcher/rematch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId: data.profileId }),
+        body: JSON.stringify(body),
       });
       if (response.ok) {
         await loadStatus();
@@ -198,7 +212,17 @@
         <div class="text-2xl font-bold text-[var(--dash-success)]">{matchedCount}</div>
         <div class="text-xs text-[var(--dash-text-muted)]">scored by AI</div>
         {#if matchedCount > 0}
-          <a href="/dashboard/jobs?minScore=1" class="mt-2 inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
+          <div class="flex flex-wrap items-center gap-2 mt-2">
+            <a href="/dashboard/jobs?minScore=1" class="inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
+            <button
+              onclick={() => openRematchModal("matched")}
+              disabled={rematching}
+              class="inline-flex whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] disabled:opacity-50 transition-colors"
+            >
+              {#if rematching}<Spinner size="w-3 h-3" />{:else}<FontAwesomeIcon icon={faRotate} class="w-3 h-3" />{/if}
+              Re-match
+            </button>
+          </div>
         {/if}
       </div>
 
@@ -218,7 +242,7 @@
           <div class="flex flex-wrap items-center gap-2 mt-2">
             <a href="/dashboard/jobs?minScore=0" class="inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
             <button
-              onclick={() => (showRematchConfirm = true)}
+              onclick={() => openRematchModal("no_match")}
               disabled={rematching}
               class="inline-flex whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] disabled:opacity-50 transition-colors"
             >
@@ -437,15 +461,78 @@
   {/if}
 </div>
 
-<ConfirmModal
-  isOpen={showRematchConfirm}
-  title="Re-match No-Match Jobs"
-  message="This will re-run AI matching for all {noMatchCount} jobs that currently have no match. This uses AI credits and may take a while."
-  confirmLabel="Re-match"
-  variant="primary"
-  onCancel={() => (showRematchConfirm = false)}
-  onConfirm={() => {
-    showRematchConfirm = false;
-    rematchNoMatches();
-  }}
-/>
+{#if showRematchModal}
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 bg-black/50 z-40"
+    onclick={() => (showRematchModal = false)}
+    onkeydown={(e) => e.key === "Escape" && (showRematchModal = false)}
+    role="button"
+    tabindex="-1"
+    aria-label="Close modal"
+  ></div>
+
+  <!-- Rematch Modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="rematch-modal-title"
+  >
+    <div
+      class="bg-[var(--dash-card)] rounded-xl shadow-xl max-w-md w-full p-6"
+      onclick={(e) => e.stopPropagation()}
+      onkeydown={() => {}}
+      role="document"
+    >
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 rounded-full bg-[var(--dash-primary)]/10 flex items-center justify-center flex-shrink-0">
+          <FontAwesomeIcon icon={faQuestionCircle} class="w-5 h-5 text-[var(--dash-primary)]" />
+        </div>
+        <div class="flex-1">
+          <h3 id="rematch-modal-title" class="text-lg font-semibold text-[var(--dash-text)] mb-2">
+            {rematchType === "matched" ? "Re-match Matched Jobs" : "Re-match No-Match Jobs"}
+          </h3>
+          <p class="text-[var(--dash-text-secondary)] text-sm mb-4">
+            {rematchType === "matched"
+              ? "This will re-run AI matching for jobs that currently have a match score. Existing scores will be replaced."
+              : "This will re-run AI matching for jobs that currently have no match."}
+            This uses AI credits and may take a while.
+          </p>
+
+          <label class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">
+            Date posted filter
+          </label>
+          <select
+            bind:value={rematchDateFilter}
+            class="w-full px-3 py-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] text-sm"
+          >
+            <option value="">All time</option>
+            <option value="1">Last 24 hours</option>
+            <option value="3">Last 3 days</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 3 months</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button
+          type="button"
+          onclick={() => (showRematchModal = false)}
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onclick={doRematch}
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors"
+        >
+          Re-match
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}

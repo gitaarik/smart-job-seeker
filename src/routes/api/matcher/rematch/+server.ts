@@ -1,13 +1,14 @@
 /**
  * Rematch API
  *
- * Deletes ineligible and/or not_recommended match records for a profile,
- * so the matcher re-evaluates them in the next cycle.
+ * Deletes match records for a profile so the matcher re-evaluates them.
+ * Supports filtering by type (no_match / matched) and date posted.
  */
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { Prisma } from "../../../../../generated/prisma/client";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = locals.user;
@@ -21,6 +22,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, "Missing profileId");
   }
 
+  const type: string = body.type || "no_match"; // "no_match" | "matched"
+  const datePostedDays: number | undefined = body.datePostedDays
+    ? parseInt(body.datePostedDays)
+    : undefined;
+
   // Verify profile belongs to user
   const profile = await db.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
@@ -30,13 +36,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(403, "Profile not found or not owned by user");
   }
 
-  // Delete ineligible and not_recommended matches so they get re-evaluated
-  const deleted = await db.job_matches.deleteMany({
-    where: {
-      profile: profileId,
-      recommendation: { in: ["ineligible", "not_recommended"] },
-    },
-  });
+  // Build score condition based on type
+  const scoreCondition =
+    type === "matched"
+      ? Prisma.sql`jm.score > 0`
+      : Prisma.sql`jm.score = 0`;
 
-  return json({ deleted: deleted.count });
+  // Build optional date filter
+  const dateCondition = datePostedDays
+    ? Prisma.sql`AND j.date_posted >= NOW() - INTERVAL '1 day' * ${datePostedDays}`
+    : Prisma.sql``;
+
+  const result = await db.$queryRaw<{ id: number }[]>`
+    DELETE FROM job_matches jm
+    USING jobs j
+    WHERE jm.job = j.id
+      AND jm.profile = ${profileId}
+      AND ${scoreCondition}
+      ${dateCondition}
+    RETURNING jm.id
+  `;
+
+  return json({ deleted: result.length });
 };
