@@ -48,7 +48,6 @@ export const GET: RequestHandler = async ({ locals }) => {
         name: p.name ?? `Profile ${p.id}`,
         matchCommunityJobs,
         ...counts,
-        noMatchCount: counts.notRecommendedCount + counts.ineligibleCount,
       };
     }),
   );

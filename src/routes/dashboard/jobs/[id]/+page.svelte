@@ -151,13 +151,19 @@
 <div class="space-y-6">
   <!-- Header with Back Button -->
   <div class="flex items-center gap-4">
-    <button
-      onclick={() => history.back()}
+    <a
+      href="/dashboard/jobs"
+      onclick={(e) => {
+        if (document.referrer && new URL(document.referrer).origin === location.origin) {
+          e.preventDefault();
+          history.back();
+        }
+      }}
       class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] transition-colors"
       aria-label="Back to jobs"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-    </button>
+    </a>
     <SectionHeader
       title={isSaved ? "Saved Job" : match ? "Job Match" : "Job Details"}
       icon={faBriefcase}

@@ -26,7 +26,7 @@
       label: "Total Matches",
       value: stats.total,
       icon: faChartBar,
-      href: "/dashboard/jobs?minScore=50",
+      href: "/dashboard/jobs?minScore=1",
       color: "text-[var(--dash-text-muted)]",
     },
     {
@@ -47,7 +47,7 @@
       label: "New to Review",
       value: stats.newUnreviewed,
       icon: faBell,
-      href: "/dashboard/jobs?minScore=50",
+      href: "/dashboard/jobs?minScore=1",
       color: "text-blue-500",
       highlight: stats.newUnreviewed > 0,
     },

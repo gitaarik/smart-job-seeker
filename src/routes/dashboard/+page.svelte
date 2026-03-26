@@ -73,7 +73,7 @@
           Top Matches
         </h3>
         <a
-          href="/dashboard/jobs?minScore=50"
+          href="/dashboard/jobs?minScore=1"
           class="text-sm text-[var(--dash-primary)] hover:underline flex items-center gap-1"
         >
           View all

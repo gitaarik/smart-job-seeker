@@ -13,10 +13,11 @@ import { getProfileSkills } from "$lib/server/job/match-utils";
 
 export interface MatchCounts {
   totalJobs: number;
-  matchedCount: number;
-  notRecommendedCount: number;
-  ineligibleCount: number;
-  unmatchedCount: number;
+  matchedCount: number;       // score > 0 (LLM evaluated, any positive score)
+  noMatchCount: number;       // score = 0 with a job_matches row (not recommended + ineligible)
+  notRecommendedCount: number; // subset of noMatch: LLM said not recommended
+  ineligibleCount: number;     // subset of noMatch: failed eligibility filter
+  unmatchedCount: number;      // no job_matches row yet
 }
 
 /**
@@ -51,13 +52,15 @@ export async function getMatchCounts(
   const result = await db.$queryRaw<{
     total: number;
     matched: number;
+    no_match: number;
     not_recommended: number;
     ineligible: number;
     unmatched: number;
   }[]>`
     SELECT
       COUNT(DISTINCT j.id)::int AS total,
-      COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation IN ('highly_recommend', 'recommend', 'consider'))::int AS matched,
+      COUNT(DISTINCT j.id) FILTER (WHERE jm.score > 0)::int AS matched,
+      COUNT(DISTINCT j.id) FILTER (WHERE jm.id IS NOT NULL AND jm.score = 0)::int AS no_match,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation = 'not_recommended')::int AS not_recommended,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation = 'ineligible')::int AS ineligible,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.id IS NULL)::int AS unmatched
@@ -70,6 +73,7 @@ export async function getMatchCounts(
   return {
     totalJobs: row.total,
     matchedCount: row.matched,
+    noMatchCount: row.no_match,
     notRecommendedCount: row.not_recommended,
     ineligibleCount: row.ineligible,
     unmatchedCount: row.unmatched,

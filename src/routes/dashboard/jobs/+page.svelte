@@ -405,6 +405,7 @@
           <option value="60">Score 60+</option>
           <option value="50">Score 50+</option>
           <option value="1-49">Score &lt; 50</option>
+          <option value="1">Score &gt; 0</option>
           <option value="0">No match</option>
           <option value="unmatched">Not yet matched</option>
         </select>

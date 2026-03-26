@@ -46,6 +46,7 @@
 
   let totalJobs = $state(0);
   let matchedCount = $state(0);
+  let noMatchCount = $state(0);
   let notRecommendedCount = $state(0);
   let ineligibleCount = $state(0);
   let unmatchedCount = $state(0);
@@ -58,7 +59,7 @@
   let rematching = $state(false);
 
   // Derived
-  let evaluatedCount = $derived(matchedCount + notRecommendedCount + ineligibleCount);
+  let evaluatedCount = $derived(matchedCount + noMatchCount);
   let evaluatedProgress = $derived(totalJobs > 0 ? (evaluatedCount / totalJobs) * 100 : 0);
 
   // Matcher status states
@@ -81,6 +82,7 @@
         const result = await response.json();
         totalJobs = result.totalJobs;
         matchedCount = result.matchedCount;
+        noMatchCount = result.noMatchCount;
         notRecommendedCount = result.notRecommendedCount;
         ineligibleCount = result.ineligibleCount;
         unmatchedCount = result.unmatchedCount;
@@ -188,20 +190,20 @@
   {:else}
     <!-- Stats Overview -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 mt-4">
-      <!-- Matched (good matches) -->
+      <!-- Matched (score > 0) -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Matched</div>
         <div class="text-2xl font-bold text-[var(--dash-success)]">{matchedCount}</div>
-        <div class="text-xs text-[var(--dash-text-muted)]">fit your profile</div>
+        <div class="text-xs text-[var(--dash-text-muted)]">scored by AI</div>
         {#if matchedCount > 0}
-          <a href="/dashboard/jobs?minScore=50" class="mt-2 inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
+          <a href="/dashboard/jobs?minScore=1" class="mt-2 inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
         {/if}
       </div>
 
-      <!-- No Match (not recommended + filtered out) -->
+      <!-- No Match (score = 0: not recommended + filtered out) -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
         <div class="text-sm text-[var(--dash-text-secondary)] mb-1">No Match</div>
-        <div class="text-2xl font-bold text-[var(--dash-error)]">{notRecommendedCount + ineligibleCount}</div>
+        <div class="text-2xl font-bold text-[var(--dash-error)]">{noMatchCount}</div>
         <div class="text-xs text-[var(--dash-text-muted)] space-y-0.5 mt-1">
           {#if notRecommendedCount > 0}
             <div>{notRecommendedCount} not recommended</div>
@@ -210,7 +212,7 @@
             <div>{ineligibleCount} filtered out</div>
           {/if}
         </div>
-        {#if notRecommendedCount + ineligibleCount > 0}
+        {#if noMatchCount > 0}
           <div class="flex flex-wrap items-center gap-2 mt-2">
             <a href="/dashboard/jobs?minScore=0" class="inline-flex whitespace-nowrap text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors">View</a>
             <button
@@ -263,7 +265,7 @@
       <div class="text-xs text-[var(--dash-text-muted)] mt-1">
         {evaluatedCount} of {totalJobs} jobs processed
         &middot; <span class="text-[var(--dash-success)]">{matchedCount} matched</span>
-        &middot; <span class="text-[var(--dash-error)]">{notRecommendedCount + ineligibleCount} no match</span>
+        &middot; <span class="text-[var(--dash-error)]">{noMatchCount} no match</span>
       </div>
     </div>
 

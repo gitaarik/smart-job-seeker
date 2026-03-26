@@ -15,7 +15,7 @@ import {
 /**
  * Parse minScore filter value into a SQL WHERE fragment.
  * Supports: "" (no filter), "unmatched" (no job_matches row),
- * "0" (no match — not recommended or ineligible),
+ * "0" (no match — score = 0), "1" (all matches — score > 0),
  * "1-49" (range), "50"/"60"/etc (min threshold).
  */
 function buildScoreFilter(minScore: string): { filter: Prisma.Sql; isActive: boolean; isUnmatched: boolean } {
@@ -24,7 +24,7 @@ function buildScoreFilter(minScore: string): { filter: Prisma.Sql; isActive: boo
     return { filter: Prisma.sql`TRUE`, isActive: true, isUnmatched: true };
   }
   if (minScore === "0") {
-    return { filter: Prisma.sql`jm.recommendation IN ('not_recommended', 'ineligible')`, isActive: true, isUnmatched: false };
+    return { filter: Prisma.sql`jm.score = 0`, isActive: true, isUnmatched: false };
   }
   if (minScore.includes("-")) {
     const [min, max] = minScore.split("-").map(Number);
@@ -206,8 +206,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       } else {
         statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
       }
-    } else {
-      // When filtering by score only, exclude rejected
+    } else if (minScore !== "0") {
+      // When filtering by score only (not "no match"), exclude rejected
       statusFilter = Prisma.sql`COALESCE(js.status, 'new') != 'rejected'`;
     }
 
