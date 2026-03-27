@@ -1144,6 +1144,7 @@ model tech_skills {
   level                 String?               @db.VarChar(255)
   tech_type             Int?
   years_experience      Int?
+  tags                  Json?                 @db.Json
   tech_skill_categories tech_skill_categories @relation(fields: [category], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skills_category_foreign")
   tech_skill_types      tech_skill_types?     @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
@@ -1509,6 +1510,26 @@ model scraper_agent_iterations {
   search_task_runs search_task_runs?        @relation(fields: [run_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@index([session_id, iteration])
+}
+
+model import_logs {
+  id           Int       @id @default(autoincrement())
+  date_created DateTime  @default(now()) @db.Timestamptz(6)
+  user_id      String    @db.VarChar(255)
+  user_email   String?   @db.VarChar(255)
+  profile_id   Int?
+  event        String    @db.VarChar(50) // "parse", "apply", "parse_error", "apply_error"
+  file_name    String?   @db.VarChar(255)
+  file_format  String?   @db.VarChar(50)
+  doc_type     String?   @db.VarChar(20) // "partial" or "full"
+  sections     Json?     @db.Json // { work: 3, education: 2, ... }
+  changes      Json?     @db.Json // { work: { added: 1, modified: 2 }, ... }
+  parsed_data  Json?     @db.Json // full parsed ResumeData for parse events
+  file_id      String?   @db.VarChar(255) // Directus file ID of the uploaded document
+  error        String?
+
+  @@index([user_id])
+  @@index([date_created])
 }
 
 enum Role {

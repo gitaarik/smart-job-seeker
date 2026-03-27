@@ -15,10 +15,9 @@ import {
   parseResumeWithLLM,
   validateJsonResume,
 } from "$lib/server/resume";
-import {
-  deleteFileFromDirectus,
-  uploadFileToDirectus,
-} from "$lib/server/directus/files";
+import type { ResumeData } from "$lib/server/resume/types";
+import { uploadFileToDirectus } from "$lib/server/directus/files";
+import { logImportEvent } from "$lib/server/import-log";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
@@ -37,12 +36,29 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Handle JSON Resume files
   if (file.type === "application/json" || file.name.endsWith(".json")) {
+    // Upload JSON file to Directus for logging
+    let jsonFileId: string | undefined;
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const uploadResult = await uploadFileToDirectus({
+        filename: file.name,
+        buffer,
+        title: `CV Upload (JSON) - ${user.email || user.id}`,
+        description: "JSON Resume uploaded during profile import",
+      });
+      jsonFileId = uploadResult.id;
+    } catch {
+      // Non-critical — continue without file storage
+    }
+
     try {
       const text = await file.text();
       const jsonData = JSON.parse(text);
 
       validateJsonResume(jsonData);
       const parsedData = mapJsonResumeToInternal(jsonData);
+
+      await logImportEvent(user, "parse", { fileName: file.name, fileFormat: "JSON Resume", parsedData, fileId: jsonFileId });
 
       return json({
         success: true,
@@ -53,6 +69,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to parse JSON Resume file";
+      await logImportEvent(user, "parse_error", { fileName: file.name, fileFormat: "JSON Resume", error: message, fileId: jsonFileId }).catch(() => {});
       error(400, message);
     }
   }
@@ -86,6 +103,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Parse with LLM
     const parsedData = await parseResumeWithLLM(text);
 
+    await logImportEvent(user, "parse", { fileName: file.name, fileFormat: getFormatName(file.type), parsedData, fileId });
+
     return json({
       success: true,
       parsedData,
@@ -94,17 +113,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       fileFormat: getFormatName(file.type),
     });
   } catch (err) {
-    // Clean up uploaded file if parsing failed
-    if (fileId) {
-      try {
-        await deleteFileFromDirectus(fileId);
-      } catch {
-        // Ignore cleanup errors
-      }
-    }
-
+    // Keep the uploaded file for debugging — it's referenced in the import log
     const message =
       err instanceof Error ? err.message : "Failed to parse resume";
+    await logImportEvent(user, "parse_error", { fileName: file.name, fileFormat: getFormatName(file.type), error: message, fileId }).catch(() => {});
     error(400, message);
   }
 };

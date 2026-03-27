@@ -4,6 +4,8 @@
     faCheck,
     faGripVertical,
     faPlus,
+    faTags,
+    faTimes,
     faTrash,
     faXmark,
   } from "@fortawesome/free-solid-svg-icons";
@@ -14,6 +16,7 @@
     name: string;
     level?: string;
     yearsExperience?: number;
+    tags?: string[] | null;
   }
 
   export interface LevelOption {
@@ -31,6 +34,7 @@
   interface Props {
     skills: SkillItem[];
     levelOptions?: LevelOption[];
+    versionNames?: string[];
     onupdate?: (skill: SkillItem) => void;
     oncreate?: (skill: SkillItem) => void;
     onremove?: (skill: SkillItem) => void;
@@ -40,6 +44,7 @@
   let {
     skills = $bindable(),
     levelOptions = defaultLevelOptions,
+    versionNames = [],
     onupdate,
     oncreate,
     onremove,
@@ -52,7 +57,46 @@
 
   let showLevel = $state(false);
   let showExperience = $state(false);
+  let showVersionTags = $state(false);
   let reorderMode = $state(false);
+  let reorderSnapshot = $state<SkillItem[] | null>(null);
+
+  // Version tag editing state
+  let newTag = $state("");
+  const builtinTags = ["resume", "cv"];
+
+  let editingTags = $derived.by(() => {
+    if (editingIndex === null) return [];
+    return skills[editingIndex]?.tags ?? [];
+  });
+
+  let allSuggestions = $derived.by(() => {
+    const all = [...builtinTags, ...versionNames.filter((v) => !builtinTags.includes(v.toLowerCase()))];
+    return all.filter((s) => !editingTags.some((t) => t.toLowerCase() === s.toLowerCase()));
+  });
+
+  function addSkillTag(tag: string) {
+    if (editingIndex === null) return;
+    const trimmed = tag.trim();
+    const current = skills[editingIndex].tags ?? [];
+    if (trimmed && !current.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
+      skills[editingIndex].tags = [...current, trimmed];
+    }
+    newTag = "";
+  }
+
+  function removeSkillTag(tag: string) {
+    if (editingIndex === null) return;
+    skills[editingIndex].tags = (skills[editingIndex].tags ?? []).filter((t) => t !== tag);
+    if (skills[editingIndex].tags!.length === 0) skills[editingIndex].tags = null;
+  }
+
+  function handleTagKeydown(e: KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (newTag.trim()) addSkillTag(newTag);
+    }
+  }
 
   interface DndSkillItem extends SkillItem {
     _dndId: string;
@@ -62,8 +106,8 @@
   let dndItems = $derived<DndSkillItem[]>(
     skills.map((s, i) => ({
       ...s,
-      _dndId: (s as Record<string, unknown>).id
-        ? String((s as Record<string, unknown>).id)
+      _dndId: (s as unknown as Record<string, unknown>).id
+        ? String((s as unknown as Record<string, unknown>).id)
         : `new-${i}`,
     })),
   );
@@ -94,9 +138,8 @@
     e: CustomEvent<{ items: typeof dndWrapped }>,
   ) {
     dndWrapped = e.detail.items;
-    // Map back to skills array
+    // Map back to skills array (don't save yet — wait for confirm)
     skills = dndWrapped.map((w) => w.skill);
-    onreorder?.(skills);
   }
 
   function getLevelLabel(value: string): string {
@@ -112,9 +155,10 @@
 
   function startEditing(index: number) {
     if (reorderMode) return;
-    editingSnapshot = { ...skills[index] };
+    editingSnapshot = { ...skills[index], tags: skills[index].tags ? [...skills[index].tags] : null };
     editingIsNew = false;
     editingIndex = index;
+    newTag = "";
   }
 
   function addSkill() {
@@ -161,14 +205,42 @@
 
   function keepInView(node: HTMLElement) {
     function reposition() {
+      const margin = 8;
+      const vw = window.innerWidth;
+
+      // Reset to default positioning
+      node.style.left = "0";
+      node.style.right = "auto";
+      node.style.width = "";
+
       const rect = node.getBoundingClientRect();
-      if (rect.right > window.innerWidth) {
-        node.style.left = "auto";
-        node.style.right = "0";
+
+      if (rect.width >= vw - margin * 2) {
+        // Popup wider than viewport — constrain to viewport width
+        const parentRect = node.offsetParent!.getBoundingClientRect();
+        node.style.left = `${-parentRect.left + margin}px`;
+        node.style.width = `${vw - margin * 2}px`;
+      } else if (rect.right > vw - margin) {
+        // Overflows right — shift left
+        const overflow = rect.right - (vw - margin);
+        node.style.left = `${-overflow}px`;
+      } else if (rect.left < margin) {
+        // Overflows left — shift right
+        const shift = margin - rect.left;
+        node.style.left = `${shift}px`;
       }
     }
     reposition();
-    return { destroy() {} };
+
+    // Re-check when popup content changes size (e.g. tags added/removed)
+    const ro = new ResizeObserver(() => reposition());
+    ro.observe(node);
+
+    return {
+      destroy() {
+        ro.disconnect();
+      },
+    };
   }
 
   function clickOutside(node: HTMLElement) {
@@ -196,36 +268,59 @@
     type="button"
     onclick={() => (showLevel = !showLevel)}
     class="
-      px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showLevel
+      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showLevel
       ? 'bg-blue-500/15 text-blue-700 border-blue-500/30'
       : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
     "
   >
+    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showLevel ? 'bg-blue-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
     Level
   </button>
   <button
     type="button"
     onclick={() => (showExperience = !showExperience)}
     class="
-      px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showExperience
+      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showExperience
       ? 'bg-purple-500/15 text-purple-700 border-purple-500/30'
       : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
     "
   >
+    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showExperience ? 'bg-purple-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
     Experience
   </button>
   <button
     type="button"
+    onclick={() => (showVersionTags = !showVersionTags)}
+    class="
+      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showVersionTags
+      ? 'bg-teal-500/15 text-teal-700 border-teal-500/30'
+      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
+    "
+  >
+    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showVersionTags ? 'bg-teal-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+    Versions
+  </button>
+  <button
+    type="button"
     onclick={() => {
-      reorderMode = !reorderMode;
-      if (reorderMode && editingIndex !== null) confirmEditing();
+      if (!reorderMode) {
+        if (editingIndex !== null) confirmEditing();
+        reorderSnapshot = skills.map((s) => ({ ...s }));
+        reorderMode = true;
+      } else {
+        // Clicking the toggle again = cancel
+        if (reorderSnapshot) skills = reorderSnapshot;
+        reorderSnapshot = null;
+        reorderMode = false;
+      }
     }}
     class="
-      px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {reorderMode
+      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {reorderMode
       ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
       : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
     "
   >
+    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {reorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
     Reorder
   </button>
 </div>
@@ -263,9 +358,40 @@
               class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-500/15 text-purple-600 border border-purple-500/30"
             >{item.skill.yearsExperience}y</span>
           {/if}
+          {#if showVersionTags && item.skill.tags && item.skill.tags.length > 0}
+            <span
+              class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
+            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {item.skill.tags.join(", ")}</span>
+          {/if}
         </div>
       </div>
     {/each}
+  </div>
+  <div class="flex justify-end gap-1 mt-2">
+    <button
+      type="button"
+      onclick={() => {
+        if (reorderSnapshot) skills = reorderSnapshot;
+        reorderSnapshot = null;
+        reorderMode = false;
+      }}
+      class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
+      aria-label="Cancel reorder"
+    >
+      <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+    </button>
+    <button
+      type="button"
+      onclick={() => {
+        onreorder?.(skills);
+        reorderSnapshot = null;
+        reorderMode = false;
+      }}
+      class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
+      aria-label="Confirm reorder"
+    >
+      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+    </button>
   </div>
 {:else}
   <div class="flex flex-wrap gap-2">
@@ -293,13 +419,18 @@
               class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-500/15 text-purple-600 border border-purple-500/30"
             >{skill.yearsExperience}y</span>
           {/if}
+          {#if showVersionTags && skill.tags && skill.tags.length > 0}
+            <span
+              class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
+            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {skill.tags.join(", ")}</span>
+          {/if}
         </button>
 
         {#if editingIndex === index}
           <div
             use:clickOutside
             use:keepInView
-            class="absolute top-full left-0 mt-1 z-10 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg p-3 space-y-2 w-56"
+            class="absolute top-full left-0 mt-1 z-10 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg p-3 space-y-2 w-64"
           >
             <div>
               <label
@@ -343,6 +474,63 @@
                 class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-transparent text-[var(--dash-text)] focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)]"
               />
             </div>
+            <!-- Version Tags -->
+            <div>
+              <label
+                class="block text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1"
+              >
+                <FontAwesomeIcon icon={faTags} class="w-2.5 h-2.5 mr-0.5" />
+                CV / Resume Versions
+              </label>
+              {#if editingTags.length > 0}
+                <div class="flex flex-wrap gap-1.5 mb-1.5">
+                  {#each editingTags as tag}
+                    <button
+                      type="button"
+                      onclick={() => removeSkillTag(tag)}
+                      class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+                    >
+                      {tag}
+                      <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+                    </button>
+                  {/each}
+                </div>
+              {:else}
+                <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
+              {/if}
+              {#if allSuggestions.length > 0}
+                <div class="flex flex-wrap gap-1.5 mb-1.5">
+                  {#each allSuggestions as suggestion}
+                    <button
+                      type="button"
+                      onclick={() => addSkillTag(suggestion)}
+                      class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
+                    >
+                      <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                      {suggestion}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+              <div class="flex gap-1">
+                <input
+                  type="text"
+                  bind:value={newTag}
+                  onkeydown={handleTagKeydown}
+                  placeholder="Custom tag..."
+                  class="flex-1 px-1.5 py-1 text-[11px] border border-[var(--dash-border)] rounded bg-transparent text-[var(--dash-text)] focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)]"
+                />
+                <button
+                  type="button"
+                  onclick={() => { if (newTag.trim()) addSkillTag(newTag); }}
+                  disabled={!newTag.trim()}
+                  class="px-1.5 py-1 text-[10px] bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
             <div class="flex items-center justify-between pt-1">
               <button
                 type="button"

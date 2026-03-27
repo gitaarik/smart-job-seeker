@@ -118,16 +118,14 @@
   {#if tags.length > 0}
     <div class="flex flex-wrap gap-1.5 mb-3">
       {#each tags as tag}
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-md bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20">
+        <button
+          type="button"
+          onclick={() => removeTag(tag)}
+          class="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-md bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+        >
           {tag}
-          <button
-            type="button"
-            onclick={() => removeTag(tag)}
-            class="hover:text-[var(--dash-error)] transition-colors"
-          >
-            <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
-          </button>
-        </span>
+          <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+        </button>
       {/each}
     </div>
   {:else}

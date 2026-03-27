@@ -17,6 +17,17 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
+  let versionNames = $state<string[]>([]);
+  let versionNamesLoaded = $state(false);
+  $effect(() => {
+    if (versionNamesLoaded) return;
+    versionNamesLoaded = true;
+    fetch("/dashboard/api/profile-versions")
+      .then((res) => res.ok ? res.json() : [])
+      .then((names: string[]) => { versionNames = names; })
+      .catch(() => {});
+  });
+
   function mapSkills(
     dbSkills: (typeof data.categories)[0]["tech_skills"],
   ): DbSkillItem[] {
@@ -25,6 +36,7 @@
       name: s.name || "",
       level: s.level || undefined,
       yearsExperience: s.years_experience || undefined,
+      tags: Array.isArray(s.tags) ? s.tags as string[] : null,
     }));
   }
 
@@ -84,6 +96,7 @@
       name: skill.name,
       level: skill.level || "",
       years_experience: skill.yearsExperience?.toString() || "",
+      tags: JSON.stringify(skill.tags || []),
     });
   }
 
@@ -95,6 +108,7 @@
       name: skill.name,
       level: skill.level || "",
       years_experience: skill.yearsExperience?.toString() || "",
+      tags: JSON.stringify(skill.tags || []),
     });
   }
 
@@ -132,6 +146,7 @@
     <SkillCategoriesEditor
       bind:categories={mappedCategories}
       levelOptions={data.levelOptions}
+      {versionNames}
       oncreate={handleCategoryCreate}
       onrename={handleCategoryRename}
       onremove={handleCategoryRemove}

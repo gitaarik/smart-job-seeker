@@ -459,3 +459,8 @@ export type scraper_agent_sessions = Prisma.scraper_agent_sessionsModel
  * 
  */
 export type scraper_agent_iterations = Prisma.scraper_agent_iterationsModel
+/**
+ * Model import_logs
+ * 
+ */
+export type import_logs = Prisma.import_logsModel

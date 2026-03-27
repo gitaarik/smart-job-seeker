@@ -134,7 +134,8 @@ export const ModelName = {
   search_tasks: 'search_tasks',
   search_tasks_job_sites: 'search_tasks_job_sites',
   scraper_agent_sessions: 'scraper_agent_sessions',
-  scraper_agent_iterations: 'scraper_agent_iterations'
+  scraper_agent_iterations: 'scraper_agent_iterations',
+  import_logs: 'import_logs'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1253,7 +1254,8 @@ export const Tech_skillsScalarFieldEnum = {
   category: 'category',
   level: 'level',
   tech_type: 'tech_type',
-  years_experience: 'years_experience'
+  years_experience: 'years_experience',
+  tags: 'tags'
 } as const
 
 export type Tech_skillsScalarFieldEnum = (typeof Tech_skillsScalarFieldEnum)[keyof typeof Tech_skillsScalarFieldEnum]
@@ -1618,6 +1620,26 @@ export const Scraper_agent_iterationsScalarFieldEnum = {
 } as const
 
 export type Scraper_agent_iterationsScalarFieldEnum = (typeof Scraper_agent_iterationsScalarFieldEnum)[keyof typeof Scraper_agent_iterationsScalarFieldEnum]
+
+
+export const Import_logsScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  user_id: 'user_id',
+  user_email: 'user_email',
+  profile_id: 'profile_id',
+  event: 'event',
+  file_name: 'file_name',
+  file_format: 'file_format',
+  doc_type: 'doc_type',
+  sections: 'sections',
+  changes: 'changes',
+  parsed_data: 'parsed_data',
+  file_id: 'file_id',
+  error: 'error'
+} as const
+
+export type Import_logsScalarFieldEnum = (typeof Import_logsScalarFieldEnum)[keyof typeof Import_logsScalarFieldEnum]
 
 
 export const SortOrder = {

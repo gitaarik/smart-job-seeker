@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faUser,
@@ -12,6 +13,9 @@
     faQuoteLeft,
     faCheck,
     faArrowLeft,
+    faBug,
+    faChevronDown,
+    faChevronRight,
   } from "@fortawesome/free-solid-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
   import type { ResumeData } from "$lib/server/resume/types";
@@ -370,6 +374,46 @@
   const basicsChangedCount = $derived(
     diff.basics.filter((d) => d.changed).length,
   );
+
+  // Admin debug panel (also visible when impersonating another user)
+  const isAdmin = $derived(
+    ($page.data.user as { is_admin?: boolean })?.is_admin ||
+    !!$page.data.adminUser,
+  );
+  let debugOpen = $state(false);
+
+  const debugSections = $derived([
+    { name: "Basics", fields: Object.entries(incomingData.basics).filter(([, v]) => v).length, total: Object.keys(incomingData.basics).length },
+    { name: "Work", count: incomingData.work?.length, present: incomingData.work !== undefined },
+    { name: "Education", count: incomingData.education?.length, present: incomingData.education !== undefined },
+    { name: "Skills", count: incomingData.skills?.length, present: incomingData.skills !== undefined },
+    { name: "Languages", count: incomingData.languages?.length, present: incomingData.languages !== undefined },
+    { name: "Projects", count: incomingData.projects?.length, present: incomingData.projects !== undefined },
+    { name: "References", count: incomingData.references?.length, present: incomingData.references !== undefined },
+  ]);
+
+  const isPartial = $derived(
+    debugSections.filter((s) => s.name !== "Basics" && s.present && (s.count ?? 0) > 0).length <= 2,
+  );
+
+  // For partial documents, always show sections that were parsed (even if
+  // all items match). This confirms to the user "your references were found"
+  // even when the profile already has them.
+  // For partial documents, show parsed sections even if all items match the
+  // current profile. This confirms to the user that the data was detected.
+  const partialWork = $derived(isPartial && (incomingData.work?.length ?? 0) > 0);
+  const partialEducation = $derived(isPartial && (incomingData.education?.length ?? 0) > 0);
+  const partialSkills = $derived(isPartial && (incomingData.skills?.length ?? 0) > 0);
+  const partialLanguages = $derived(isPartial && (incomingData.languages?.length ?? 0) > 0);
+  const partialProjects = $derived(isPartial && (incomingData.projects?.length ?? 0) > 0);
+  const partialReferences = $derived(isPartial && (incomingData.references?.length ?? 0) > 0);
+
+  const showWork = $derived(diff.work.some((d) => d.type !== "unchanged") || showUnchanged || partialWork);
+  const showEducation = $derived(diff.education.some((d) => d.type !== "unchanged") || showUnchanged || partialEducation);
+  const showSkills = $derived(diff.skills.some((d) => d.type !== "unchanged") || showUnchanged || partialSkills);
+  const showLanguages = $derived(diff.languages.some((d) => d.type !== "unchanged") || showUnchanged || partialLanguages);
+  const showProjects = $derived(diff.projects.some((d) => d.type !== "unchanged") || showUnchanged || partialProjects);
+  const showReferences = $derived(diff.references.some((d) => d.type !== "unchanged") || showUnchanged || partialReferences);
 </script>
 
 <div class="space-y-4">
@@ -545,7 +589,7 @@
   {/if}
 
   <!-- Work section -->
-  {#if diff.work.some((d) => d.type !== "unchanged") || showUnchanged}
+  {#if showWork}
     <DiffSectionCard
       title="Work Experience"
       icon={faBriefcase}
@@ -554,7 +598,7 @@
         modified: diff.stats.workModified,
         removed: diff.stats.workRemoved,
       }}
-      defaultExpanded={diff.work.some((d) => d.type !== "unchanged")}
+      defaultExpanded={diff.work.some((d) => d.type !== "unchanged") || partialWork}
     >
       <div class="divide-y divide-[var(--dash-border)]">
         {#each diff.work as _, i}
@@ -568,10 +612,13 @@
               ? `${item.current?.startDate || "?"} – ${item.current?.endDate || "Present"}`
               : item.type === "added"
                 ? `${item.incoming?.startDate || "?"} – ${item.incoming?.endDate || "Present"}`
-                : undefined}
+                : item.type === "unchanged"
+                  ? `${item.current?.startDate || "?"} – ${item.current?.endDate || "Present"}`
+                  : undefined}
             bind:enabled={diff.work[i].enabled}
             fieldDiffs={item.fieldDiffs}
             nestedDiffs={item.nestedDiffs}
+            showUnchanged={showUnchanged || partialWork}
           />
         {/each}
       </div>
@@ -579,7 +626,7 @@
   {/if}
 
   <!-- Education section -->
-  {#if diff.education.some((d) => d.type !== "unchanged") || showUnchanged}
+  {#if showEducation}
     <DiffSectionCard
       title="Education"
       icon={faGraduationCap}
@@ -588,7 +635,7 @@
         modified: diff.stats.educationModified,
         removed: diff.stats.educationRemoved,
       }}
-      defaultExpanded={diff.education.some((d) => d.type !== "unchanged")}
+      defaultExpanded={diff.education.some((d) => d.type !== "unchanged") || partialEducation}
     >
       <div class="divide-y divide-[var(--dash-border)]">
         {#each diff.education as _, i}
@@ -597,12 +644,13 @@
             type={item.type}
             title={item.type === "removed"
               ? item.current?.institution || "Institution"
-              : item.incoming?.institution || "Institution"}
+              : item.incoming?.institution || item.current?.institution || "Institution"}
             subtitle={item.type === "removed"
               ? item.current?.area
-              : item.incoming?.area}
+              : item.incoming?.area || item.current?.area}
             bind:enabled={diff.education[i].enabled}
             fieldDiffs={item.fieldDiffs}
+            showUnchanged={showUnchanged || partialEducation}
           />
         {/each}
       </div>
@@ -610,7 +658,7 @@
   {/if}
 
   <!-- Skills section -->
-  {#if diff.skills.some((d) => d.type !== "unchanged") || showUnchanged}
+  {#if showSkills}
     <DiffSectionCard
       title="Skills"
       icon={faCode}
@@ -619,33 +667,32 @@
         modified: diff.stats.skillsModified,
         removed: diff.stats.skillsRemoved,
       }}
-      defaultExpanded={diff.skills.some((d) => d.type !== "unchanged")}
+      defaultExpanded={diff.skills.some((d) => d.type !== "unchanged") || partialSkills}
     >
       <div class="divide-y divide-[var(--dash-border)]">
         {#each diff.skills as _, i}
           {@const cat = diff.skills[i]}
-          {#if cat.type !== "unchanged" || showUnchanged}
-            <DiffItemRow
-              type={cat.type}
-              title={cat.type === "removed"
-                ? cat.current?.name || "Category"
-                : cat.incoming?.name || "Category"}
-              subtitle={cat.type === "modified" && cat.skillDiffs
-                ? `${cat.skillDiffs.filter((s) => s.type === "added").length} new, ${cat.skillDiffs.filter((s) => s.type === "modified").length} modified, ${cat.skillDiffs.filter((s) => s.type === "removed").length} removed skills`
-                : cat.type === "added" && cat.incoming
-                  ? `${cat.incoming.skills.length} skills`
-                  : undefined}
-              bind:enabled={diff.skills[i].enabled}
-              fieldDiffs={cat.fieldDiffs}
-            />
-          {/if}
+          <DiffItemRow
+            type={cat.type}
+            title={cat.type === "removed"
+              ? cat.current?.name || "Category"
+              : cat.incoming?.name || cat.current?.name || "Category"}
+            subtitle={cat.type === "modified" && cat.skillDiffs
+              ? `${cat.skillDiffs.filter((s) => s.type === "added").length} new, ${cat.skillDiffs.filter((s) => s.type === "modified").length} modified, ${cat.skillDiffs.filter((s) => s.type === "removed").length} removed skills`
+              : cat.type === "added" && cat.incoming
+                ? `${cat.incoming.skills.length} skills`
+                : undefined}
+            bind:enabled={diff.skills[i].enabled}
+            fieldDiffs={cat.fieldDiffs}
+            showUnchanged={showUnchanged || partialSkills}
+          />
         {/each}
       </div>
     </DiffSectionCard>
   {/if}
 
   <!-- Languages section -->
-  {#if diff.languages.some((d) => d.type !== "unchanged") || showUnchanged}
+  {#if showLanguages}
     <DiffSectionCard
       title="Languages"
       icon={faGlobe}
@@ -654,7 +701,7 @@
         modified: diff.stats.languagesModified,
         removed: diff.stats.languagesRemoved,
       }}
-      defaultExpanded={diff.languages.some((d) => d.type !== "unchanged")}
+      defaultExpanded={diff.languages.some((d) => d.type !== "unchanged") || partialLanguages}
     >
       <div class="divide-y divide-[var(--dash-border)]">
         {#each diff.languages as _, i}
@@ -663,12 +710,13 @@
             type={item.type}
             title={item.type === "removed"
               ? item.current?.name || "Language"
-              : item.incoming?.name || "Language"}
+              : item.incoming?.name || item.current?.name || "Language"}
             subtitle={item.type === "removed"
               ? item.current?.proficiency
-              : item.incoming?.proficiency}
+              : item.incoming?.proficiency || item.current?.proficiency}
             bind:enabled={diff.languages[i].enabled}
             fieldDiffs={item.fieldDiffs}
+            showUnchanged={showUnchanged || partialLanguages}
           />
         {/each}
       </div>
@@ -676,7 +724,7 @@
   {/if}
 
   <!-- Projects section -->
-  {#if diff.projects.some((d) => d.type !== "unchanged") || showUnchanged}
+  {#if showProjects}
     <DiffSectionCard
       title="Side Projects"
       icon={faLightbulb}
@@ -685,7 +733,7 @@
         modified: diff.stats.projectsModified,
         removed: diff.stats.projectsRemoved,
       }}
-      defaultExpanded={diff.projects.some((d) => d.type !== "unchanged")}
+      defaultExpanded={diff.projects.some((d) => d.type !== "unchanged") || partialProjects}
     >
       <div class="divide-y divide-[var(--dash-border)]">
         {#each diff.projects as _, i}
@@ -694,13 +742,14 @@
             type={item.type}
             title={item.type === "removed"
               ? item.current?.name || "Project"
-              : item.incoming?.name || "Project"}
+              : item.incoming?.name || item.current?.name || "Project"}
             subtitle={item.type === "removed"
               ? item.current?.url
-              : item.incoming?.url}
+              : item.incoming?.url || item.current?.url}
             bind:enabled={diff.projects[i].enabled}
             fieldDiffs={item.fieldDiffs}
             nestedDiffs={item.nestedDiffs}
+            showUnchanged={showUnchanged || partialProjects}
           />
         {/each}
       </div>
@@ -708,7 +757,7 @@
   {/if}
 
   <!-- References section -->
-  {#if diff.references.some((d) => d.type !== "unchanged") || showUnchanged}
+  {#if showReferences}
     <DiffSectionCard
       title="References"
       icon={faQuoteLeft}
@@ -717,7 +766,7 @@
         modified: diff.stats.referencesModified,
         removed: diff.stats.referencesRemoved,
       }}
-      defaultExpanded={diff.references.some((d) => d.type !== "unchanged")}
+      defaultExpanded={diff.references.some((d) => d.type !== "unchanged") || partialReferences}
     >
       <div class="divide-y divide-[var(--dash-border)]">
         {#each diff.references as _, i}
@@ -726,12 +775,13 @@
             type={item.type}
             title={item.type === "removed"
               ? item.current?.author || "Author"
-              : item.incoming?.author || "Author"}
+              : item.incoming?.author || item.current?.author || "Author"}
             subtitle={item.type === "removed"
               ? item.current?.authorPosition
-              : item.incoming?.authorPosition}
+              : item.incoming?.authorPosition || item.current?.authorPosition}
             bind:enabled={diff.references[i].enabled}
             fieldDiffs={item.fieldDiffs}
+            showUnchanged={showUnchanged || partialReferences}
           />
         {/each}
       </div>
@@ -739,7 +789,7 @@
   {/if}
 
   <!-- No changes message -->
-  {#if diff.stats.totalChanges === 0}
+  {#if diff.stats.totalChanges === 0 && !isPartial}
     <Card padding="responsive">
       <div class="text-center py-8">
         <FontAwesomeIcon
@@ -753,6 +803,79 @@
           The imported data matches your current profile.
         </p>
       </div>
+    </Card>
+  {:else if diff.stats.totalChanges === 0 && isPartial}
+    <Card padding="responsive">
+      <div class="text-center py-4">
+        <FontAwesomeIcon
+          icon={faCheck}
+          class="w-10 h-10 text-green-500 mx-auto mb-2"
+        />
+        <h3 class="font-semibold text-[var(--dash-text)] mb-1">
+          All data already matches
+        </h3>
+        <p class="text-sm text-[var(--dash-text-secondary)]">
+          The parsed data from this document is already in your profile.
+        </p>
+      </div>
+    </Card>
+  {/if}
+
+  <!-- Admin debug panel -->
+  {#if isAdmin}
+    <Card padding="responsive">
+      <button
+        type="button"
+        onclick={() => (debugOpen = !debugOpen)}
+        class="flex items-center gap-2 w-full text-left text-sm font-medium text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faBug} class="w-3.5 h-3.5" />
+        Parser Debug Info
+        <FontAwesomeIcon icon={debugOpen ? faChevronDown : faChevronRight} class="w-3 h-3 ml-auto" />
+      </button>
+      {#if debugOpen}
+        <div class="mt-3 space-y-3">
+          <!-- Detection -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-medium text-[var(--dash-text-secondary)]">Document type:</span>
+            <span class="px-2 py-0.5 text-xs rounded {isPartial
+              ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30'
+              : 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'}">
+              {isPartial ? "Partial" : "Full"}
+            </span>
+          </div>
+
+          <!-- Section presence -->
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1.5">Parsed sections:</p>
+            <div class="flex flex-wrap gap-1.5">
+              {#each debugSections as section}
+                {#if section.name === "Basics"}
+                  <span class="px-2 py-0.5 text-xs rounded border {section.fields > 1
+                    ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                    : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}">
+                    {section.name}: {section.fields}/{section.total} fields
+                  </span>
+                {:else}
+                  <span class="px-2 py-0.5 text-xs rounded border {section.present && (section.count ?? 0) > 0
+                    ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                    : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}">
+                    {section.name}: {section.present ? section.count : "absent"}
+                  </span>
+                {/if}
+              {/each}
+            </div>
+          </div>
+
+          <!-- Raw JSON -->
+          <details class="text-xs">
+            <summary class="cursor-pointer text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]">
+              Raw parsed data
+            </summary>
+            <pre class="mt-1.5 p-3 bg-[var(--dash-bg)] rounded-lg overflow-x-auto text-[10px] text-[var(--dash-text-secondary)] max-h-80 overflow-y-auto">{JSON.stringify(incomingData, null, 2)}</pre>
+          </details>
+        </div>
+      {/if}
     </Card>
   {/if}
 

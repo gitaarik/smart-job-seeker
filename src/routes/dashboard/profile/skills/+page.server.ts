@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { Prisma } from "../../../../../generated/prisma/client.js";
 import { getFieldChoices } from "$lib/server/directus";
 import { getSelectedProfileId } from "../utils";
 
@@ -158,6 +159,7 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const level = formData.get("level") as string;
     const years_experience = formData.get("years_experience") as string;
+    const tagsJson = formData.get("tags") as string;
 
     if (isNaN(categoryId)) {
       return fail(400, { error: "Invalid category ID" });
@@ -182,11 +184,16 @@ export const actions: Actions = {
       orderBy: { sort: "desc" },
     });
 
+    let tags: string[] | null = null;
+    try { tags = tagsJson ? JSON.parse(tagsJson) : null; } catch { /* ignore */ }
+    if (tags && tags.length === 0) tags = null;
+
     await db.tech_skills.create({
       data: {
         name: name.trim(),
         level: level || null,
         years_experience: years_experience ? parseInt(years_experience) : null,
+        ...(tags ? { tags } : {}),
         category: categoryId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
@@ -213,6 +220,7 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const level = formData.get("level") as string;
     const years_experience = formData.get("years_experience") as string;
+    const tagsJson = formData.get("tags") as string;
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid skill ID" });
@@ -235,12 +243,17 @@ export const actions: Actions = {
       return fail(404, { error: "Skill not found" });
     }
 
+    let tags: string[] | null = null;
+    try { tags = tagsJson ? JSON.parse(tagsJson) : null; } catch { /* ignore */ }
+    if (tags && tags.length === 0) tags = null;
+
     await db.tech_skills.update({
       where: { id },
       data: {
         name: name.trim(),
         level: level || null,
         years_experience: years_experience ? parseInt(years_experience) : null,
+        tags: tags ?? Prisma.DbNull,
         date_updated: new Date(),
       },
     });

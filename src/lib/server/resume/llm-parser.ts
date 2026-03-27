@@ -226,15 +226,16 @@ export async function parseResumeWithLLM(
     throw new Error("Failed to extract profile name from resume");
   }
 
-  // Filter out entries with missing identity fields and coerce required DB fields
+  // Filter out entries with missing identity fields and coerce required DB fields.
+  // After filtering, convert empty arrays to undefined so the diff engine
+  // treats absent sections as "not present" rather than "all deleted".
   if (resumeData.work) {
     resumeData.work = resumeData.work.filter((w) => w.name && w.position);
+    if (resumeData.work.length === 0) resumeData.work = undefined;
   }
   if (resumeData.education) {
-    resumeData.education = resumeData.education.map((e) => ({
-      ...e,
-      institution: e.institution || "Unknown",
-    }));
+    resumeData.education = resumeData.education.filter((e) => e.institution);
+    if (resumeData.education.length === 0) resumeData.education = undefined;
   }
   if (resumeData.skills) {
     resumeData.skills = resumeData.skills
@@ -243,17 +244,21 @@ export async function parseResumeWithLLM(
         ...c,
         skills: c.skills.filter((s) => s.name),
       }));
+    if (resumeData.skills.length === 0) resumeData.skills = undefined;
   }
   if (resumeData.languages) {
     resumeData.languages = resumeData.languages.filter((l) => l.name);
+    if (resumeData.languages.length === 0) resumeData.languages = undefined;
   }
   if (resumeData.projects) {
     resumeData.projects = resumeData.projects.filter((p) => p.name);
+    if (resumeData.projects.length === 0) resumeData.projects = undefined;
   }
   if (resumeData.references) {
     resumeData.references = resumeData.references
       .filter((r) => r.author)
       .map((r) => ({ ...r, text: r.text || "" }));
+    if (resumeData.references.length === 0) resumeData.references = undefined;
   }
 
   return resumeData as ResumeData;

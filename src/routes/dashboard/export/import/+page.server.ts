@@ -14,10 +14,13 @@ import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
 import { getProfileAsResumeData } from "$lib/server/resume/profile-to-resume-data";
 import { applyDiffToProfile, type DiffApplyPayload } from "$lib/server/resume/apply-diff";
+import { logImportEvent } from "$lib/server/import-log";
+import { dbDirect as db } from "$lib/server/db";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
   const profile = layoutData.selectedProfile;
+  const user = layoutData.user;
 
   let currentProfileData = null;
   if (profile?.id) {
@@ -28,10 +31,44 @@ export const load: PageServerLoad = async ({ parent }) => {
     }
   }
 
+  // Load recent import logs for admins
+  const isAdmin = (user as { is_admin?: boolean })?.is_admin || !!layoutData.adminUser;
+  let importLogs: Array<{
+    id: number;
+    date_created: string;
+    user_email: string | null;
+    profile_id: number | null;
+    event: string;
+    file_name: string | null;
+    file_format: string | null;
+    doc_type: string | null;
+    sections: unknown;
+    changes: unknown;
+    parsed_data: unknown;
+    file_id: string | null;
+    error: string | null;
+  }> = [];
+
+  if (isAdmin) {
+    try {
+      const logs = await db.import_logs.findMany({
+        orderBy: { date_created: "desc" },
+        take: 50,
+      });
+      importLogs = logs.map((l) => ({
+        ...l,
+        date_created: l.date_created.toISOString(),
+      }));
+    } catch {
+      // Table may not exist yet
+    }
+  }
+
   return {
     selectedProfileName: profile?.name || "Current Profile",
     selectedProfileId: profile?.id,
     currentProfileData,
+    importLogs,
   };
 };
 
@@ -182,11 +219,13 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid diff payload" });
     }
 
+    await logImportEvent(user, "apply", { profileId: selectedId, payload });
+
     try {
       await applyDiffToProfile(selectedId, user.id, payload);
     } catch (e) {
-      console.error("Apply diff failed:", e);
       const message = e instanceof Error ? e.message : "Failed to apply changes";
+      await logImportEvent(user, "apply_error", { profileId: selectedId, error: message }).catch(() => {});
       return fail(500, { error: message });
     }
 

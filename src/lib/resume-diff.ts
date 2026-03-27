@@ -196,6 +196,22 @@ function diffBasics(current: ResumeBasics, incoming: ResumeBasics): FieldDiff[] 
   ];
 }
 
+/**
+ * Partial-mode basics diff: only show fields where the incoming value has
+ * actual content. If incoming is empty but current has data, treat as
+ * unchanged (the document simply didn't mention this field).
+ */
+function diffBasicsPartial(current: ResumeBasics, incoming: ResumeBasics): FieldDiff[] {
+  return diffBasics(current, incoming).map((fd) => {
+    // If incoming is empty but current has a value, treat as unchanged
+    // (partial document didn't contain this field — not a deliberate removal)
+    if (fd.changed && !fd.incoming && fd.current) {
+      return { ...fd, changed: false, enabled: false };
+    }
+    return fd;
+  });
+}
+
 // --- Work diff ---
 
 function diffWorkItem(current: WorkExperience, incoming: WorkExperience): ItemDiff<WorkExperience> {
@@ -606,25 +622,74 @@ function computeStats(diff: Omit<ResumeDataDiff, "stats">): DiffStats {
   };
 }
 
+// --- Partial document detection ---
+
+/** Check if a section has actual data (not undefined and not empty array) */
+function hasData<T>(section: T[] | undefined): section is T[] {
+  return section !== undefined && section.length > 0;
+}
+
+/**
+ * Detect whether the incoming data is a partial document (e.g. only references,
+ * only education). A document is partial if most list sections are missing/empty.
+ * Full resumes/CVs typically have at least work + skills or work + education.
+ */
+function isPartialDocument(incoming: ResumeData): boolean {
+  const sections = [
+    incoming.work,
+    incoming.education,
+    incoming.skills,
+    incoming.languages,
+    incoming.projects,
+    incoming.references,
+  ];
+  const presentSections = sections.filter((s) => hasData(s)).length;
+  // If 2 or fewer sections have data, treat as partial
+  return presentSections <= 2;
+}
+
 // --- Main ---
 
 export function diffResumeData(
   current: ResumeData,
   incoming: ResumeData,
 ): ResumeDataDiff {
-  const basics = diffBasics(current.basics, incoming.basics);
-  const work = diffWork(current.work ?? [], incoming.work ?? []);
-  const education = diffEducation(current.education ?? [], incoming.education ?? []);
-  const skills = diffSkills(current.skills ?? [], incoming.skills ?? []);
-  const languages = diffLanguages(current.languages ?? [], incoming.languages ?? []);
-  const projects = diffProjects(current.projects ?? [], incoming.projects ?? []);
-  const references = diffReferences(current.references ?? [], incoming.references ?? []);
+  // For partial documents: only diff sections that actually have data in
+  // the incoming document. An undefined or empty section means the document
+  // simply didn't contain that type of information — not that everything
+  // should be deleted. Empty arrays from the LLM parser mean "not found."
+  const partial = isPartialDocument(incoming);
 
-  const partial = { basics, work, education, skills, languages, projects, references };
+  // For basics in partial documents: only show fields where the incoming
+  // value has content (don't show "current → empty" as a removal).
+  const basics = partial
+    ? diffBasicsPartial(current.basics, incoming.basics)
+    : diffBasics(current.basics, incoming.basics);
+
+  const work = hasData(incoming.work)
+    ? diffWork(current.work ?? [], incoming.work)
+    : [];
+  const education = hasData(incoming.education)
+    ? diffEducation(current.education ?? [], incoming.education)
+    : [];
+  const skills = hasData(incoming.skills)
+    ? diffSkills(current.skills ?? [], incoming.skills)
+    : [];
+  const languages = hasData(incoming.languages)
+    ? diffLanguages(current.languages ?? [], incoming.languages)
+    : [];
+  const projects = hasData(incoming.projects)
+    ? diffProjects(current.projects ?? [], incoming.projects)
+    : [];
+  const references = hasData(incoming.references)
+    ? diffReferences(current.references ?? [], incoming.references)
+    : [];
+
+  const result = { basics, work, education, skills, languages, projects, references };
 
   return {
-    ...partial,
-    stats: computeStats(partial),
+    ...result,
+    stats: computeStats(result),
   };
 }
 

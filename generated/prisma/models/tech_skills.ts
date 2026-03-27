@@ -79,6 +79,7 @@ export type Tech_skillsCountAggregateOutputType = {
   level: number
   tech_type: number
   years_experience: number
+  tags: number
   _all: number
 }
 
@@ -136,6 +137,7 @@ export type Tech_skillsCountAggregateInputType = {
   level?: true
   tech_type?: true
   years_experience?: true
+  tags?: true
   _all?: true
 }
 
@@ -236,6 +238,7 @@ export type Tech_skillsGroupByOutputType = {
   level: string | null
   tech_type: number | null
   years_experience: number | null
+  tags: runtime.JsonValue | null
   _count: Tech_skillsCountAggregateOutputType | null
   _avg: Tech_skillsAvgAggregateOutputType | null
   _sum: Tech_skillsSumAggregateOutputType | null
@@ -272,6 +275,7 @@ export type tech_skillsWhereInput = {
   level?: Prisma.StringNullableFilter<"tech_skills"> | string | null
   tech_type?: Prisma.IntNullableFilter<"tech_skills"> | number | null
   years_experience?: Prisma.IntNullableFilter<"tech_skills"> | number | null
+  tags?: Prisma.JsonNullableFilter<"tech_skills">
   tech_skill_categories?: Prisma.XOR<Prisma.Tech_skill_categoriesScalarRelationFilter, Prisma.tech_skill_categoriesWhereInput>
   tech_skill_types?: Prisma.XOR<Prisma.Tech_skill_typesNullableScalarRelationFilter, Prisma.tech_skill_typesWhereInput> | null
 }
@@ -287,6 +291,7 @@ export type tech_skillsOrderByWithRelationInput = {
   level?: Prisma.SortOrderInput | Prisma.SortOrder
   tech_type?: Prisma.SortOrderInput | Prisma.SortOrder
   years_experience?: Prisma.SortOrderInput | Prisma.SortOrder
+  tags?: Prisma.SortOrderInput | Prisma.SortOrder
   tech_skill_categories?: Prisma.tech_skill_categoriesOrderByWithRelationInput
   tech_skill_types?: Prisma.tech_skill_typesOrderByWithRelationInput
 }
@@ -305,6 +310,7 @@ export type tech_skillsWhereUniqueInput = Prisma.AtLeast<{
   level?: Prisma.StringNullableFilter<"tech_skills"> | string | null
   tech_type?: Prisma.IntNullableFilter<"tech_skills"> | number | null
   years_experience?: Prisma.IntNullableFilter<"tech_skills"> | number | null
+  tags?: Prisma.JsonNullableFilter<"tech_skills">
   tech_skill_categories?: Prisma.XOR<Prisma.Tech_skill_categoriesScalarRelationFilter, Prisma.tech_skill_categoriesWhereInput>
   tech_skill_types?: Prisma.XOR<Prisma.Tech_skill_typesNullableScalarRelationFilter, Prisma.tech_skill_typesWhereInput> | null
 }, "id">
@@ -320,6 +326,7 @@ export type tech_skillsOrderByWithAggregationInput = {
   level?: Prisma.SortOrderInput | Prisma.SortOrder
   tech_type?: Prisma.SortOrderInput | Prisma.SortOrder
   years_experience?: Prisma.SortOrderInput | Prisma.SortOrder
+  tags?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.tech_skillsCountOrderByAggregateInput
   _avg?: Prisma.tech_skillsAvgOrderByAggregateInput
   _max?: Prisma.tech_skillsMaxOrderByAggregateInput
@@ -341,6 +348,7 @@ export type tech_skillsScalarWhereWithAggregatesInput = {
   level?: Prisma.StringNullableWithAggregatesFilter<"tech_skills"> | string | null
   tech_type?: Prisma.IntNullableWithAggregatesFilter<"tech_skills"> | number | null
   years_experience?: Prisma.IntNullableWithAggregatesFilter<"tech_skills"> | number | null
+  tags?: Prisma.JsonNullableWithAggregatesFilter<"tech_skills">
 }
 
 export type tech_skillsCreateInput = {
@@ -351,6 +359,7 @@ export type tech_skillsCreateInput = {
   name?: string | null
   level?: string | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   tech_skill_categories: Prisma.tech_skill_categoriesCreateNestedOneWithoutTech_skillsInput
   tech_skill_types?: Prisma.tech_skill_typesCreateNestedOneWithoutTech_skillsInput
 }
@@ -366,6 +375,7 @@ export type tech_skillsUncheckedCreateInput = {
   level?: string | null
   tech_type?: number | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUpdateInput = {
@@ -376,6 +386,7 @@ export type tech_skillsUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   tech_skill_categories?: Prisma.tech_skill_categoriesUpdateOneRequiredWithoutTech_skillsNestedInput
   tech_skill_types?: Prisma.tech_skill_typesUpdateOneWithoutTech_skillsNestedInput
 }
@@ -391,6 +402,7 @@ export type tech_skillsUncheckedUpdateInput = {
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tech_type?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsCreateManyInput = {
@@ -404,6 +416,7 @@ export type tech_skillsCreateManyInput = {
   level?: string | null
   tech_type?: number | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUpdateManyMutationInput = {
@@ -414,6 +427,7 @@ export type tech_skillsUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUncheckedUpdateManyInput = {
@@ -427,6 +441,7 @@ export type tech_skillsUncheckedUpdateManyInput = {
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tech_type?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type Tech_skillsListRelationFilter = {
@@ -450,6 +465,7 @@ export type tech_skillsCountOrderByAggregateInput = {
   level?: Prisma.SortOrder
   tech_type?: Prisma.SortOrder
   years_experience?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
 }
 
 export type tech_skillsAvgOrderByAggregateInput = {
@@ -586,6 +602,7 @@ export type tech_skillsCreateWithoutTech_skill_categoriesInput = {
   name?: string | null
   level?: string | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   tech_skill_types?: Prisma.tech_skill_typesCreateNestedOneWithoutTech_skillsInput
 }
 
@@ -599,6 +616,7 @@ export type tech_skillsUncheckedCreateWithoutTech_skill_categoriesInput = {
   level?: string | null
   tech_type?: number | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsCreateOrConnectWithoutTech_skill_categoriesInput = {
@@ -641,6 +659,7 @@ export type tech_skillsScalarWhereInput = {
   level?: Prisma.StringNullableFilter<"tech_skills"> | string | null
   tech_type?: Prisma.IntNullableFilter<"tech_skills"> | number | null
   years_experience?: Prisma.IntNullableFilter<"tech_skills"> | number | null
+  tags?: Prisma.JsonNullableFilter<"tech_skills">
 }
 
 export type tech_skillsCreateWithoutTech_skill_typesInput = {
@@ -651,6 +670,7 @@ export type tech_skillsCreateWithoutTech_skill_typesInput = {
   name?: string | null
   level?: string | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   tech_skill_categories: Prisma.tech_skill_categoriesCreateNestedOneWithoutTech_skillsInput
 }
 
@@ -664,6 +684,7 @@ export type tech_skillsUncheckedCreateWithoutTech_skill_typesInput = {
   category: number
   level?: string | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsCreateOrConnectWithoutTech_skill_typesInput = {
@@ -702,6 +723,7 @@ export type tech_skillsCreateManyTech_skill_categoriesInput = {
   level?: string | null
   tech_type?: number | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUpdateWithoutTech_skill_categoriesInput = {
@@ -712,6 +734,7 @@ export type tech_skillsUpdateWithoutTech_skill_categoriesInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   tech_skill_types?: Prisma.tech_skill_typesUpdateOneWithoutTech_skillsNestedInput
 }
 
@@ -725,6 +748,7 @@ export type tech_skillsUncheckedUpdateWithoutTech_skill_categoriesInput = {
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tech_type?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUncheckedUpdateManyWithoutTech_skill_categoriesInput = {
@@ -737,6 +761,7 @@ export type tech_skillsUncheckedUpdateManyWithoutTech_skill_categoriesInput = {
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tech_type?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsCreateManyTech_skill_typesInput = {
@@ -749,6 +774,7 @@ export type tech_skillsCreateManyTech_skill_typesInput = {
   category: number
   level?: string | null
   years_experience?: number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUpdateWithoutTech_skill_typesInput = {
@@ -759,6 +785,7 @@ export type tech_skillsUpdateWithoutTech_skill_typesInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   tech_skill_categories?: Prisma.tech_skill_categoriesUpdateOneRequiredWithoutTech_skillsNestedInput
 }
 
@@ -772,6 +799,7 @@ export type tech_skillsUncheckedUpdateWithoutTech_skill_typesInput = {
   category?: Prisma.IntFieldUpdateOperationsInput | number
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type tech_skillsUncheckedUpdateManyWithoutTech_skill_typesInput = {
@@ -784,6 +812,7 @@ export type tech_skillsUncheckedUpdateManyWithoutTech_skill_typesInput = {
   category?: Prisma.IntFieldUpdateOperationsInput | number
   level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   years_experience?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -799,6 +828,7 @@ export type tech_skillsSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   level?: boolean
   tech_type?: boolean
   years_experience?: boolean
+  tags?: boolean
   tech_skill_categories?: boolean | Prisma.tech_skill_categoriesDefaultArgs<ExtArgs>
   tech_skill_types?: boolean | Prisma.tech_skills$tech_skill_typesArgs<ExtArgs>
 }, ExtArgs["result"]["tech_skills"]>
@@ -814,6 +844,7 @@ export type tech_skillsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   level?: boolean
   tech_type?: boolean
   years_experience?: boolean
+  tags?: boolean
   tech_skill_categories?: boolean | Prisma.tech_skill_categoriesDefaultArgs<ExtArgs>
   tech_skill_types?: boolean | Prisma.tech_skills$tech_skill_typesArgs<ExtArgs>
 }, ExtArgs["result"]["tech_skills"]>
@@ -829,6 +860,7 @@ export type tech_skillsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   level?: boolean
   tech_type?: boolean
   years_experience?: boolean
+  tags?: boolean
   tech_skill_categories?: boolean | Prisma.tech_skill_categoriesDefaultArgs<ExtArgs>
   tech_skill_types?: boolean | Prisma.tech_skills$tech_skill_typesArgs<ExtArgs>
 }, ExtArgs["result"]["tech_skills"]>
@@ -844,9 +876,10 @@ export type tech_skillsSelectScalar = {
   level?: boolean
   tech_type?: boolean
   years_experience?: boolean
+  tags?: boolean
 }
 
-export type tech_skillsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "category" | "level" | "tech_type" | "years_experience", ExtArgs["result"]["tech_skills"]>
+export type tech_skillsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "category" | "level" | "tech_type" | "years_experience" | "tags", ExtArgs["result"]["tech_skills"]>
 export type tech_skillsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tech_skill_categories?: boolean | Prisma.tech_skill_categoriesDefaultArgs<ExtArgs>
   tech_skill_types?: boolean | Prisma.tech_skills$tech_skill_typesArgs<ExtArgs>
@@ -877,6 +910,7 @@ export type $tech_skillsPayload<ExtArgs extends runtime.Types.Extensions.Interna
     level: string | null
     tech_type: number | null
     years_experience: number | null
+    tags: runtime.JsonValue | null
   }, ExtArgs["result"]["tech_skills"]>
   composites: {}
 }
@@ -1312,6 +1346,7 @@ export interface tech_skillsFieldRefs {
   readonly level: Prisma.FieldRef<"tech_skills", 'String'>
   readonly tech_type: Prisma.FieldRef<"tech_skills", 'Int'>
   readonly years_experience: Prisma.FieldRef<"tech_skills", 'Int'>
+  readonly tags: Prisma.FieldRef<"tech_skills", 'Json'>
 }
     
 

@@ -25,6 +25,7 @@
       removedEnabled: boolean[];
     }[];
     defaultExpanded?: boolean;
+    showUnchanged?: boolean;
   }
 
   let {
@@ -35,6 +36,7 @@
     fieldDiffs,
     nestedDiffs,
     defaultExpanded = false,
+    showUnchanged = false,
   }: Props = $props();
 
   let isExpanded = $state(defaultExpanded);
@@ -78,7 +80,23 @@
   );
 </script>
 
-{#if type !== "unchanged"}
+{#if type === "unchanged" && showUnchanged}
+  <div class="opacity-50">
+    <div class="flex items-center p-3 sm:p-4 gap-3">
+      <div class="min-w-0 flex-1">
+        <div class="text-sm text-[var(--dash-text-muted)]">
+          {title}
+        </div>
+        {#if subtitle}
+          <div class="text-xs text-[var(--dash-text-muted)]">
+            {subtitle}
+          </div>
+        {/if}
+      </div>
+      <span class="text-[10px] text-[var(--dash-text-muted)] shrink-0">unchanged</span>
+    </div>
+  </div>
+{:else if type !== "unchanged"}
   <div class={borderClass}>
     <div
       class="flex items-center justify-between hover:bg-[var(--dash-bg)] transition-colors"
