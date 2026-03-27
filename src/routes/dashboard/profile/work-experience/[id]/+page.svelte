@@ -10,7 +10,8 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
-  import AchievementsList from "$lib/components/AchievementsList.svelte";
+  import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
+  import VersionTags from "$lib/components/VersionTags.svelte";
   import Card from "../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
@@ -35,15 +36,32 @@
   let editSummary = $state(experience.summary || "");
   let editStartDate = $state(formatDate(experience.start_date));
   let editEndDate = $state(formatDate(experience.end_date));
-  let editAchievements = $state<string[]>(
-    experience.work_experience_achievements.map((a) => a.description || ""),
+  let editTags = $state<string[]>(Array.isArray(experience.tags) ? experience.tags as string[] : []);
+
+  let editAchievements = $state<AchievementItem[]>(
+    experience.work_experience_achievements.map((a) => ({
+      description: a.description || "",
+      tags: Array.isArray(a.tags) ? a.tags as string[] : null,
+    })),
   );
+  let versionNames = $state<string[]>([]);
   let deletedAchievements = $state<Set<number>>(new Set());
   let editTechnologies = $state<string[]>(
     experience.work_experience_technologies.map((t) => t.name || ""),
   );
   let deletedTechnologies = $state<Set<number>>(new Set());
   let lastAddedTechIndex = $state<number | null>(null);
+
+  // Load version names for achievement tags
+  let versionNamesLoaded = $state(false);
+  $effect(() => {
+    if (versionNamesLoaded) return;
+    versionNamesLoaded = true;
+    fetch("/dashboard/api/profile-versions")
+      .then((res) => res.ok ? res.json() : [])
+      .then((names: string[]) => { versionNames = names; })
+      .catch(() => {});
+  });
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -115,7 +133,9 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "achievements",
-          achievements: editAchievements.filter((a, i) => a.trim() && !deletedAchievements.has(i)),
+          achievements: editAchievements
+            .filter((a, i) => a.description.trim() && !deletedAchievements.has(i))
+            .map((a) => ({ description: a.description, tags: a.tags })),
         }),
       });
 
@@ -135,12 +155,12 @@
   let lastAddedAchievementIndex = $state<number | null>(null);
 
   function addAchievement() {
-    editAchievements = [...editAchievements, ""];
+    editAchievements = [...editAchievements, { description: "", tags: null }];
     lastAddedAchievementIndex = editAchievements.length - 1;
   }
 
   function removeAchievement(index: number) {
-    if (!editAchievements[index]?.trim()) {
+    if (!editAchievements[index]?.description.trim()) {
       // Empty item - remove immediately
       editAchievements = editAchievements.filter((_, i) => i !== index);
       // Adjust deleted indices for removed item
@@ -415,6 +435,8 @@
       bind:achievements={editAchievements}
       deletedIndices={deletedAchievements}
       lastAddedIndex={lastAddedAchievementIndex}
+      showTags={true}
+      {versionNames}
       onAdd={addAchievement}
       onRemove={removeAchievement}
       onUndoRemove={undoRemoveAchievement}
@@ -460,5 +482,10 @@
     <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
       JPEG, PNG, WebP, or GIF. Max 5MB.
     </p>
+  </Card>
+
+  <!-- Version Tags -->
+  <Card padding="lg">
+    <VersionTags bind:tags={editTags} apiUrl={`/api/work-experience/${experience.id}`} section="basic" />
   </Card>
 </div>

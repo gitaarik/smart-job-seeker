@@ -7,6 +7,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import VersionTags from "$lib/components/VersionTags.svelte";
   import Card from "../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
@@ -31,6 +32,7 @@
   let editStartDate = $state(formatDate(education.start_date));
   let editEndDate = $state(formatDate(education.end_date));
   let editSummary = $state(education.summary || "");
+  let editTags = $state<string[]>(Array.isArray(education.tags) ? education.tags as string[] : []);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -292,5 +294,10 @@
     <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
       JPEG, PNG, WebP, or GIF. Max 5MB.
     </p>
+  </Card>
+
+  <!-- Version Tags -->
+  <Card padding="lg">
+    <VersionTags bind:tags={editTags} apiUrl={`/api/education/${education.id}`} />
   </Card>
 </div>

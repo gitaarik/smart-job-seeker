@@ -182,7 +182,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         where: { id: { in: jobIds } },
         include: {
           job_platforms: {
-            select: { id: true, name: true },
+            select: { id: true, name: true, url: true },
           },
         },
       });
@@ -241,7 +241,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
           jobs: {
             include: {
               job_platforms: {
-                select: { id: true, name: true },
+                select: { id: true, name: true, url: true },
               },
             },
           },
@@ -307,7 +307,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         where: { id: { in: jobIds } },
         include: {
           job_platforms: {
-            select: { id: true, name: true },
+            select: { id: true, name: true, url: true },
           },
         },
       });

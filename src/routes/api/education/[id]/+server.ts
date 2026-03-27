@@ -27,7 +27,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
   const updateData = buildUpdateData(
     data,
-    ["institution", "area", "study_type", "location", "url", "graduation_year", "start_date", "end_date", "summary"],
+    ["institution", "area", "study_type", "location", "url", "graduation_year", "start_date", "end_date", "summary", "tags"],
     { start_date: "date", end_date: "date", graduation_year: "number" },
   );
 

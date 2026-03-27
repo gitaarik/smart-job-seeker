@@ -10,7 +10,6 @@
     faCalendar,
     faCheck,
     faExternalLinkAlt,
-    faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
     faSearch,
@@ -21,6 +20,7 @@
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -203,7 +203,10 @@
             {/if}
             {#if job.job_platforms}
               <span class="flex items-center gap-1">
-                <FontAwesomeIcon icon={faGlobe} class="w-4 h-4" />
+                <PlatformLogo
+                  platformUrl={job.job_platforms.url}
+                  size="w-4 h-4"
+                />
                 {job.job_platforms.name}
               </span>
             {/if}

@@ -174,6 +174,7 @@ export const educationUpdateSchema = z.object({
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
   summary: optionalTrimmedString(10000),
+  tags: z.array(z.string()).optional().nullable(),
 });
 
 // Work experience update
@@ -187,6 +188,7 @@ export const workExperienceBasicSchema = z.object({
   summary: optionalTrimmedString(10000),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
+  tags: z.array(z.string()).optional().nullable(),
 });
 
 export const workExperienceTechSchema = z.object({
@@ -196,7 +198,10 @@ export const workExperienceTechSchema = z.object({
 
 export const workExperienceAchievementsSchema = z.object({
   section: z.literal("achievements"),
-  achievements: z.array(z.string()),
+  achievements: z.array(z.object({
+    description: z.string(),
+    tags: z.array(z.string()).optional().nullable(),
+  })),
 });
 
 // Side project update
@@ -210,6 +215,7 @@ export const sideProjectBasicSchema = z.object({
   stars: z.number().int().optional().nullable(),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
+  tags: z.array(z.string()).optional().nullable(),
 });
 
 export const sideProjectTechSchema = z.object({

@@ -45,7 +45,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {
   const updateData = buildUpdateData(
     data,
-    ["name", "position", "location", "website", "summary", "start_date", "end_date"],
+    ["name", "position", "location", "website", "summary", "start_date", "end_date", "tags"],
     { start_date: "date", end_date: "date" },
   );
 
@@ -81,26 +81,32 @@ async function updateTechnologies(id: number, technologies: string[]) {
   return json({ success: true });
 }
 
-async function updateAchievements(id: number, achievements: string[]) {
+async function updateAchievements(id: number, achievements: { description: string; tags?: string[] | null }[]) {
   await db.work_experience_achievements.deleteMany({
     where: { work_experience: id },
   });
 
   const now = new Date();
-  const achievementData = achievements
-    .map((desc, i) => ({ description: desc?.trim(), sort: i }))
-    .filter((a): a is { description: string; sort: number } => !!a.description)
-    .map((a) => ({
-      title: null,
-      description: a.description,
-      work_experience: id,
-      sort: a.sort,
-      status: "published",
-      date_created: now,
+  const filtered = achievements
+    .filter((a) => a.description?.trim())
+    .map((a, i) => ({
+      description: a.description.trim(),
+      tags: a.tags,
+      sort: i,
     }));
 
-  if (achievementData.length > 0) {
-    await db.work_experience_achievements.createMany({ data: achievementData });
+  if (filtered.length > 0) {
+    await db.work_experience_achievements.createMany({
+      data: filtered.map((a) => ({
+        title: null,
+        description: a.description,
+        ...(a.tags && a.tags.length > 0 ? { tags: a.tags } : {}),
+        work_experience: id,
+        sort: a.sort,
+        status: "published",
+        date_created: now,
+      })),
+    });
   }
 
   return json({ success: true });

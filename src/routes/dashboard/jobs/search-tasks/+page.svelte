@@ -13,6 +13,7 @@
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import { searchTaskDisplayName } from "$lib/format";
   import Spinner from "$lib/components/Spinner.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import SearchTaskFields from "../components/SearchTaskFields.svelte";
@@ -370,7 +371,7 @@
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
         >
           <div class="flex items-start gap-3">
-            <!-- Desktop: Icon on the left -->
+            <!-- Desktop: Platform logo on the left -->
             <div class="hidden md:flex flex-shrink-0">
               <div
                 class="
@@ -379,9 +380,9 @@
                   )} flex items-center justify-center
                 "
               >
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  class="w-6 h-6 {getStatusColor(search)}"
+                <PlatformLogo
+                  platformUrl={search.job_platforms?.url}
+                  size="w-7 h-7"
                 />
               </div>
             </div>
@@ -537,7 +538,7 @@
               </div>
             </div>
 
-            <!-- Mobile: Icon on the right -->
+            <!-- Mobile: Platform logo on the right -->
             <div class="flex-shrink-0 md:hidden">
               <div
                 class="
@@ -546,9 +547,9 @@
                   )} flex items-center justify-center
                 "
               >
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  class="w-5 h-5 {getStatusColor(search)}"
+                <PlatformLogo
+                  platformUrl={search.job_platforms?.url}
+                  size="w-6 h-6"
                 />
               </div>
             </div>

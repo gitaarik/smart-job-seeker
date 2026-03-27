@@ -10,7 +10,6 @@
     faChevronDown,
     faChevronUp,
     faExternalLinkAlt,
-    faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
     faStar as faStarSolid,
@@ -19,6 +18,7 @@
   import type { Snippet } from "svelte";
   import { formatExperienceLevel, formatJobType, formatWorkLocation } from "$lib/format";
   import ScoreBadge from "./ScoreBadge.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
 
   interface Job {
     id: number;
@@ -37,7 +37,7 @@
     experience_levels?: unknown; // JsonValue - string[]
     date_posted: Date | string | null;
     date_created: Date | string | null;
-    job_platforms?: { name: string } | null;
+    job_platforms?: { name: string; url?: string } | null;
   }
 
   interface Match {
@@ -218,7 +218,10 @@
             {/if}
             {#if job.job_platforms}
               <span class="flex items-center gap-1">
-                <FontAwesomeIcon icon={faGlobe} class="w-3 h-3" />
+                <PlatformLogo
+                  platformUrl={job.job_platforms.url}
+                  size="w-3.5 h-3.5"
+                />
                 {job.job_platforms.name}
               </span>
             {/if}

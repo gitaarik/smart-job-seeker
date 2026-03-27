@@ -9,8 +9,9 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
-  import AchievementsList from "$lib/components/AchievementsList.svelte";
+  import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
+  import VersionTags from "$lib/components/VersionTags.svelte";
   import Card from "../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
@@ -35,8 +36,12 @@
   let editStars = $state(project.stars?.toString() || "");
   let editStartDate = $state(formatDate(project.start_date));
   let editEndDate = $state(formatDate(project.end_date));
-  let editAchievements = $state<string[]>(
-    project.side_project_achievements.map((a) => a.description || ""),
+  let editTags = $state<string[]>(Array.isArray(project.tags) ? project.tags as string[] : []);
+  let editAchievements = $state<AchievementItem[]>(
+    project.side_project_achievements.map((a) => ({
+      description: a.description || "",
+      tags: null,
+    })),
   );
   let editTechnologies = $state<string[]>(
     project.side_project_technologies.map((t) => t.name || ""),
@@ -115,7 +120,9 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "achievements",
-          achievements: editAchievements.filter((a, i) => a.trim() && !deletedAchievements.has(i)),
+          achievements: editAchievements
+            .filter((a, i) => a.description.trim() && !deletedAchievements.has(i))
+            .map((a) => a.description),
         }),
       });
 
@@ -135,12 +142,12 @@
   let lastAddedAchievementIndex = $state<number | null>(null);
 
   function addAchievement() {
-    editAchievements = [...editAchievements, ""];
+    editAchievements = [...editAchievements, { description: "", tags: null }];
     lastAddedAchievementIndex = editAchievements.length - 1;
   }
 
   function removeAchievement(index: number) {
-    if (!editAchievements[index]?.trim()) {
+    if (!editAchievements[index]?.description.trim()) {
       // Empty item - remove immediately
       editAchievements = editAchievements.filter((_, i) => i !== index);
       // Adjust deleted indices for removed item
@@ -423,5 +430,10 @@
     <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
       JPEG, PNG, WebP, or GIF. Max 5MB.
     </p>
+  </Card>
+
+  <!-- Version Tags -->
+  <Card padding="lg">
+    <VersionTags bind:tags={editTags} apiUrl={`/api/side-project/${project.id}`} section="basic" />
   </Card>
 </div>

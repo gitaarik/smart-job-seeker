@@ -11,10 +11,10 @@
     faEyeSlash,
     faGlobe,
     faKey,
-    faPlus,
   } from "@fortawesome/free-solid-svg-icons";
   import CountrySelect from "./CountrySelect.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CredentialSelector from "./CredentialSelector.svelte";
   import BrowserProviderToggle from "./BrowserProviderToggle.svelte";
 
@@ -683,19 +683,15 @@
                 class="p-3 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]"
               >
                 <div class="flex items-center gap-2 text-sm">
+                  <PlatformLogo
+                    platformUrl={detectedPlatform.url}
+                    size="w-5 h-5"
+                  />
                   {#if detectedPlatform.isNew}
-                    <FontAwesomeIcon
-                      icon={faPlus}
-                      class="w-4 h-4 text-[var(--dash-primary)]"
-                    />
                     <span class="text-[var(--dash-text)]">New platform: <strong
                       >{detectedPlatform.name}</strong></span>
                   {:else}
-                    <FontAwesomeIcon
-                      icon={faCheck}
-                      class="w-4 h-4 text-[var(--dash-success)]"
-                    />
-                    <span class="text-[var(--dash-text)]">Platform: <strong>{
+                    <span class="text-[var(--dash-text)]"><strong>{
                         detectedPlatform.name
                       }</strong></span>
                   {/if}

@@ -2,12 +2,11 @@
   import type { ActionData, PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowRight,
     faBriefcase,
     faChevronDown,
     faChevronUp,
     faExternalLink,
-    faPencil,
-    faPlus,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
@@ -393,27 +392,27 @@
                   </ul>
                 </div>
               {/if}
+
+              <!-- Action buttons -->
+              <div class="flex justify-end md:justify-start items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onclick={() => deleteId = exp.id}
+                  class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                  Delete
+                </button>
+                <a
+                  href="/dashboard/profile/work-experience/{exp.id}"
+                  class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  Edit
+                  <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+                </a>
+              </div>
             </div>
           {/if}
-
-          <!-- Footer with action buttons -->
-          <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
-            <button
-              type="button"
-              onclick={() => deleteId = exp.id}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              Delete
-            </button>
-            <a
-              href="/dashboard/profile/work-experience/{exp.id}"
-              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-              Edit
-            </a>
-          </div>
         </Card>
       {/each}
     </div>

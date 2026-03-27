@@ -5,6 +5,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import Card from "../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import SearchTaskFields from "../../components/SearchTaskFields.svelte";
   import { formatJobType, formatWorkLocation, searchTaskDisplayName } from "$lib/format";
   import {
@@ -1108,7 +1109,11 @@
               <label
                 class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
               >Platform</label>
-              <p class="text-sm text-[var(--dash-text)]">
+              <p class="text-sm text-[var(--dash-text)] flex items-center gap-1.5">
+                <PlatformLogo
+                  platformUrl={searchTask.job_platforms.url}
+                  size="w-4 h-4"
+                />
                 {searchTask.job_platforms.name}
               </p>
             </div>
@@ -1153,8 +1158,14 @@
       {:else}
         <div class="flex items-start justify-between gap-2">
           <h2
-            class="text-lg font-semibold text-[var(--dash-text)]"
+            class="text-lg font-semibold text-[var(--dash-text)] flex items-center gap-2"
           >
+            {#if searchTask.job_platforms}
+              <PlatformLogo
+                platformUrl={searchTask.job_platforms.url}
+                size="w-5 h-5"
+              />
+            {/if}
             {searchTask.job_platforms?.name || "Search task"}
             {#if searchTask.note}
               <span class="text-[var(--dash-text-secondary)] font-normal">—</span>

@@ -63,6 +63,9 @@ export function buildUpdateData(
         updateData[field] = data[field] ? new Date(data[field] as string) : null;
       } else if (type === "number") {
         updateData[field] = data[field] ? parseInt(data[field] as string, 10) : null;
+      } else if (Array.isArray(data[field])) {
+        const arr = data[field] as unknown[];
+        updateData[field] = arr.length > 0 ? arr : null;
       } else {
         updateData[field] =
           typeof data[field] === "string"

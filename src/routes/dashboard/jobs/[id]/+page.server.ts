@@ -28,6 +28,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
         select: {
           id: true,
           name: true,
+          url: true,
         },
       },
     },
