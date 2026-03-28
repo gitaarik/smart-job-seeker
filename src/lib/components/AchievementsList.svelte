@@ -62,7 +62,6 @@
   let editingIndex = $state<number | null>(null);
   let editDescription = $state("");
   let editTags = $state<string[]>([]);
-  let newTag = $state("");
 
   const builtinTags = ["resume", "cv"];
 
@@ -77,14 +76,12 @@
     const item = getItem(index);
     editDescription = item.description;
     editTags = [...(item.tags || [])];
-    newTag = "";
   }
 
   function closeEdit() {
     editingIndex = null;
     editDescription = "";
     editTags = [];
-    newTag = "";
   }
 
   function saveEdit() {
@@ -101,20 +98,10 @@
     if (trimmed && !editTags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
       editTags = [...editTags, trimmed];
     }
-    newTag = "";
   }
 
   function removeEditTag(tag: string) {
     editTags = editTags.filter((t) => t !== tag);
-  }
-
-  function handleTagKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (newTag.trim()) {
-        addEditTag(newTag);
-      }
-    }
   }
 
   function focusIfNew(node: HTMLElement, isNew: boolean) {
@@ -237,7 +224,7 @@
       </div>
 
       <!-- Version Tags (only for work experience achievements) -->
-      {#if showTags}
+      {#if showTags && versionSlugs.length > 0}
         <div class="mb-4">
           <label class="block text-sm font-medium text-[var(--dash-text)] mb-1">
             <FontAwesomeIcon icon={faTags} class="w-3.5 h-3.5 mr-1 text-[var(--dash-text-secondary)]" />
@@ -267,7 +254,7 @@
 
           <!-- Suggestions -->
           {#if allSuggestions.length > 0}
-            <div class="flex flex-wrap gap-1.5 mb-2">
+            <div class="flex flex-wrap gap-1.5">
               {#each allSuggestions as suggestion}
                 <button
                   type="button"
@@ -280,25 +267,6 @@
               {/each}
             </div>
           {/if}
-
-          <!-- Custom tag input -->
-          <div class="flex gap-2">
-            <input
-              type="text"
-              bind:value={newTag}
-              onkeydown={handleTagKeydown}
-              placeholder="Custom tag..."
-              class="flex-1 max-w-[160px] px-2 py-1 text-xs border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-            <button
-              type="button"
-              onclick={() => { if (newTag.trim()) addEditTag(newTag); }}
-              disabled={!newTag.trim()}
-              class="px-2 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Add
-            </button>
-          </div>
         </div>
       {/if}
 

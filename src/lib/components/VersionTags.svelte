@@ -19,7 +19,6 @@
   let saveState = $state<SaveState>("idle");
   let versionSlugs = $state<string[]>([]);
   let loaded = $state(false);
-  let newTag = $state("");
 
   const builtinTags = ["resume", "cv"];
 
@@ -58,21 +57,10 @@
     if (trimmed && !tags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
       tags = [...tags, trimmed];
     }
-    newTag = "";
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (newTag.trim()) {
-        addTag(newTag);
-      }
-    }
   }
 
   function cancel() {
     tags = [...savedTags];
-    newTag = "";
   }
 
   async function save() {
@@ -105,7 +93,8 @@
   }
 </script>
 
-<div>
+{#if loaded && versionSlugs.length > 0}
+<div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
   <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-1">
     <FontAwesomeIcon icon={faTags} class="w-4 h-4 mr-1.5 text-[var(--dash-text-secondary)]" />
     CV / Resume Versions
@@ -148,25 +137,6 @@
     </div>
   {/if}
 
-  <!-- Custom tag input -->
-  <div class="flex gap-2 mb-3">
-    <input
-      type="text"
-      bind:value={newTag}
-      onkeydown={handleKeydown}
-      placeholder="Custom tag name..."
-      class="flex-1 max-w-[200px] px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-    />
-    <button
-      type="button"
-      onclick={() => { if (newTag.trim()) addTag(newTag); }}
-      disabled={!newTag.trim()}
-      class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      Add
-    </button>
-  </div>
-
   <!-- Save / Cancel -->
   <div class="flex items-center justify-end gap-2">
     {#if isDirty}
@@ -181,3 +151,4 @@
     <SectionSaveButton state={saveState} onClick={save} disabled={!isDirty} />
   </div>
 </div>
+{/if}

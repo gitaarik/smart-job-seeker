@@ -433,7 +433,5 @@
   </Card>
 
   <!-- Version Tags -->
-  <Card padding="lg">
-    <VersionTags bind:tags={editTags} apiUrl={`/api/side-project/${project.id}`} section="basic" />
-  </Card>
+  <VersionTags bind:tags={editTags} apiUrl={`/api/side-project/${project.id}`} section="basic" />
 </div>

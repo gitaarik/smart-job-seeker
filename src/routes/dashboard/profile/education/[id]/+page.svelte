@@ -297,7 +297,5 @@
   </Card>
 
   <!-- Version Tags -->
-  <Card padding="lg">
-    <VersionTags bind:tags={editTags} apiUrl={`/api/education/${education.id}`} />
-  </Card>
+  <VersionTags bind:tags={editTags} apiUrl={`/api/education/${education.id}`} />
 </div>

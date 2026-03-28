@@ -62,7 +62,6 @@
   let reorderSnapshot = $state<SkillItem[] | null>(null);
 
   // Version tag editing state
-  let newTag = $state("");
   const builtinTags = ["resume", "cv"];
 
   let editingTags = $derived.by(() => {
@@ -82,20 +81,12 @@
     if (trimmed && !current.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
       skills[editingIndex].tags = [...current, trimmed];
     }
-    newTag = "";
   }
 
   function removeSkillTag(tag: string) {
     if (editingIndex === null) return;
     skills[editingIndex].tags = (skills[editingIndex].tags ?? []).filter((t) => t !== tag);
     if (skills[editingIndex].tags!.length === 0) skills[editingIndex].tags = null;
-  }
-
-  function handleTagKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (newTag.trim()) addSkillTag(newTag);
-    }
   }
 
   interface DndSkillItem extends SkillItem {
@@ -158,7 +149,6 @@
     editingSnapshot = { ...skills[index], tags: skills[index].tags ? [...skills[index].tags] : null };
     editingIsNew = false;
     editingIndex = index;
-    newTag = "";
   }
 
   function addSkill() {
@@ -288,18 +278,20 @@
     <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showExperience ? 'bg-purple-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
     Experience
   </button>
-  <button
-    type="button"
-    onclick={() => (showVersionTags = !showVersionTags)}
-    class="
-      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showVersionTags
-      ? 'bg-teal-500/15 text-teal-700 border-teal-500/30'
-      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
-    "
-  >
-    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showVersionTags ? 'bg-teal-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
-    Versions
-  </button>
+  {#if versionSlugs.length > 0}
+    <button
+      type="button"
+      onclick={() => (showVersionTags = !showVersionTags)}
+      class="
+        inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showVersionTags
+        ? 'bg-teal-500/15 text-teal-700 border-teal-500/30'
+        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
+      "
+    >
+      <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showVersionTags ? 'bg-teal-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+      Versions
+    </button>
+  {/if}
   <button
     type="button"
     onclick={() => {
@@ -475,61 +467,46 @@
               />
             </div>
             <!-- Version Tags -->
-            <div>
-              <label
-                class="block text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1"
-              >
-                <FontAwesomeIcon icon={faTags} class="w-2.5 h-2.5 mr-0.5" />
-                CV / Resume Versions
-              </label>
-              {#if editingTags.length > 0}
-                <div class="flex flex-wrap gap-1.5 mb-1.5">
-                  {#each editingTags as tag}
-                    <button
-                      type="button"
-                      onclick={() => removeSkillTag(tag)}
-                      class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
-                    >
-                      {tag}
-                      <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
-                    </button>
-                  {/each}
-                </div>
-              {:else}
-                <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
-              {/if}
-              {#if allSuggestions.length > 0}
-                <div class="flex flex-wrap gap-1.5 mb-1.5">
-                  {#each allSuggestions as suggestion}
-                    <button
-                      type="button"
-                      onclick={() => addSkillTag(suggestion)}
-                      class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
-                    >
-                      <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
-                      {suggestion}
-                    </button>
-                  {/each}
-                </div>
-              {/if}
-              <div class="flex gap-1">
-                <input
-                  type="text"
-                  bind:value={newTag}
-                  onkeydown={handleTagKeydown}
-                  placeholder="Custom tag..."
-                  class="flex-1 px-1.5 py-1 text-[11px] border border-[var(--dash-border)] rounded bg-transparent text-[var(--dash-text)] focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)]"
-                />
-                <button
-                  type="button"
-                  onclick={() => { if (newTag.trim()) addSkillTag(newTag); }}
-                  disabled={!newTag.trim()}
-                  class="px-1.5 py-1 text-[10px] bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            {#if versionSlugs.length > 0}
+              <div>
+                <label
+                  class="block text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1"
                 >
-                  Add
-                </button>
+                  <FontAwesomeIcon icon={faTags} class="w-2.5 h-2.5 mr-0.5" />
+                  CV / Resume Versions
+                </label>
+                {#if editingTags.length > 0}
+                  <div class="flex flex-wrap gap-1.5 mb-1.5">
+                    {#each editingTags as tag}
+                      <button
+                        type="button"
+                        onclick={() => removeSkillTag(tag)}
+                        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+                      >
+                        {tag}
+                        <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+                      </button>
+                    {/each}
+                  </div>
+                {:else}
+                  <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
+                {/if}
+                {#if allSuggestions.length > 0}
+                  <div class="flex flex-wrap gap-1.5">
+                    {#each allSuggestions as suggestion}
+                      <button
+                        type="button"
+                        onclick={() => addSkillTag(suggestion)}
+                        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                        {suggestion}
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
               </div>
-            </div>
+            {/if}
 
             <div class="flex items-center justify-between pt-1">
               <button

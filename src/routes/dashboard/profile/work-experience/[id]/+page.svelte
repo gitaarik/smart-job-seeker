@@ -485,7 +485,5 @@
   </Card>
 
   <!-- Version Tags -->
-  <Card padding="lg">
-    <VersionTags bind:tags={editTags} apiUrl={`/api/work-experience/${experience.id}`} section="basic" />
-  </Card>
+  <VersionTags bind:tags={editTags} apiUrl={`/api/work-experience/${experience.id}`} section="basic" />
 </div>
