@@ -11,6 +11,7 @@
   interface Stats {
     total: number;
     strong: number;
+    strongThreshold: number;
     saved: number;
     newUnreviewed: number;
   }
@@ -30,10 +31,10 @@
       color: "text-[var(--dash-text-muted)]",
     },
     {
-      label: "Strong (70+)",
+      label: `Strong (${stats.strongThreshold}+)`,
       value: stats.strong,
       icon: faStar,
-      href: "/dashboard/jobs?minScore=70",
+      href: `/dashboard/jobs?minScore=${stats.strongThreshold}`,
       color: "text-amber-500",
     },
     {

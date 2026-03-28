@@ -1,13 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faArrowRight,
-    faFileAlt,
-    faSearch,
-    faSliders,
-  } from "@fortawesome/free-solid-svg-icons";
-  import Card from "./components/Card.svelte";
+  import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
   import MatchStatsGrid from "./components/MatchStatsGrid.svelte";
   import SearchTasksSummary from "./components/SearchTasksSummary.svelte";
   import MatchConfigSummary from "./components/MatchConfigSummary.svelte";
@@ -84,53 +78,4 @@
     </div>
   {/if}
 
-  <!-- Quick Actions -->
-  {#if hasMatches}
-    <Card padding="md">
-      <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">
-        Quick Actions
-      </h3>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <a
-          href="/dashboard/jobs"
-          class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
-        >
-          <FontAwesomeIcon
-            icon={faSearch}
-            class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
-          />
-          <p class="font-medium text-[var(--dash-text)]">Browse Jobs</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            View all matched jobs
-          </p>
-        </a>
-        <a
-          href="/dashboard/jobs/matching"
-          class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
-        >
-          <FontAwesomeIcon
-            icon={faSliders}
-            class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
-          />
-          <p class="font-medium text-[var(--dash-text)]">Match Config</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Tune match preferences
-          </p>
-        </a>
-        <a
-          href="/dashboard/profile/edit"
-          class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
-        >
-          <FontAwesomeIcon
-            icon={faFileAlt}
-            class="w-5 h-5 text-[var(--dash-primary)] mx-auto mb-1.5"
-          />
-          <p class="font-medium text-[var(--dash-text)]">Edit Profile</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Update your information
-          </p>
-        </a>
-      </div>
-    </Card>
-  {/if}
 </div>

@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getMatchCounts } from "$lib/server/job/match-counts";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import {
   saveJob,
@@ -26,11 +27,25 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const profileId = layoutData.selectedProfile.id;
 
+  // Fetch match config first — needed for visibility scope in getMatchCounts
+  const matchConfig = await db.match_config.findFirst({
+    where: { profile: profileId },
+    select: {
+      id: true,
+      job_types: true,
+      experience_levels: true,
+      work_location: true,
+      locations: true,
+      match_community_jobs: true,
+    },
+  });
+
+  const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
+
   const [
     profileData,
-    matchConfig,
     searchTasksList,
-    matchStatsRaw,
+    [sharedMatchCounts, curationStatsRaw],
     topMatchesRaw,
     profileSkillLevels,
   ] = await Promise.all([
@@ -52,18 +67,6 @@ export const load: PageServerLoad = async ({ parent }) => {
       },
     }),
 
-    // Load match config preferences
-    db.match_config.findFirst({
-      where: { profile: profileId },
-      select: {
-        id: true,
-        job_types: true,
-        experience_levels: true,
-        work_location: true,
-        locations: true,
-      },
-    }),
-
     // Search tasks for this profile
     db.search_tasks.findMany({
       where: { profile: profileId },
@@ -80,19 +83,23 @@ export const load: PageServerLoad = async ({ parent }) => {
       orderBy: { last_run: "desc" },
     }),
 
-    // Match aggregate stats in a single query (joins job_statuses for user curation)
-    db.$queryRaw<
-      [{ total: bigint; strong: bigint; saved: bigint; new_unreviewed: bigint }]
-    >`
-      SELECT
-        COUNT(*) as total,
-        COUNT(*) FILTER (WHERE jm.score >= 70 AND COALESCE(js.status, 'new') != 'rejected') as strong,
-        COUNT(*) FILTER (WHERE js.status = 'saved') as saved,
-        COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0) as new_unreviewed
-      FROM job_matches jm
-      LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job
-      WHERE jm.profile = ${profileId}
-    `,
+    // Match stats — "total" uses shared getMatchCounts (same as Match Progress page)
+    // while strong/saved/newUnreviewed still need job_statuses join
+    Promise.all([
+      getMatchCounts(profileId, matchCommunityJobs),
+      db.$queryRaw<
+        [{ strong80: bigint; strong70: bigint; saved: bigint; new_unreviewed: bigint }]
+      >`
+        SELECT
+          COUNT(*) FILTER (WHERE jm.score >= 80 AND COALESCE(js.status, 'new') != 'rejected') as strong80,
+          COUNT(*) FILTER (WHERE jm.score >= 70 AND COALESCE(js.status, 'new') != 'rejected') as strong70,
+          COUNT(*) FILTER (WHERE js.status = 'saved') as saved,
+          COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0) as new_unreviewed
+        FROM job_matches jm
+        LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job
+        WHERE jm.profile = ${profileId}
+      `,
+    ]),
 
     // Top 5 matches by score (excluding rejected via job_statuses)
     db.$queryRaw<{ id: number }[]>`
@@ -139,13 +146,18 @@ export const load: PageServerLoad = async ({ parent }) => {
     getProfileSkillLevels(profileId),
   ]);
 
-  // Process match stats
-  const stats = matchStatsRaw[0];
+  // Process match stats — total from shared getMatchCounts (same as Match Progress page)
+  const curationStats = curationStatsRaw[0];
+  const strong80 = Number(curationStats?.strong80 ?? 0);
+  const strong70 = Number(curationStats?.strong70 ?? 0);
+  // Prefer 80+ threshold, fall back to 70+ if fewer than 3 strong matches at 80+
+  const useHighThreshold = strong80 >= 3;
   const matchStats = {
-    total: Number(stats?.total ?? 0),
-    strong: Number(stats?.strong ?? 0),
-    saved: Number(stats?.saved ?? 0),
-    newUnreviewed: Number(stats?.new_unreviewed ?? 0),
+    total: sharedMatchCounts.matchedCount,
+    strong: useHighThreshold ? strong80 : strong70,
+    strongThreshold: useHighThreshold ? 80 : 70,
+    saved: Number(curationStats?.saved ?? 0),
+    newUnreviewed: Number(curationStats?.new_unreviewed ?? 0),
   };
 
   // Compute profile completeness

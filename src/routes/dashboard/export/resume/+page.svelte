@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
+  import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
     faChevronDown,
     faChevronUp,
+    faCopy,
     faFileAlt,
     faGlobe,
     faPencil,
@@ -45,6 +47,8 @@
   let editDescription = $state("");
   let editStatus = $state("");
   let editExtendsIds = $state<number[]>([]);
+  let editPublicResume = $state(false);
+  let editPublicCv = $state(false);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -81,6 +85,8 @@
     editDescription = version.description || "";
     editStatus = version.status || "draft";
     editExtendsIds = [...version.extendsIds];
+    editPublicResume = isPublicResume(version.id);
+    editPublicCv = isPublicCv(version.id);
   }
 
   function cancelEdit() {
@@ -131,6 +137,43 @@
 
   function isPublicCv(versionId: number): boolean {
     return publicCvVersionId === versionId;
+  }
+
+  function getReplacedPublicResumeName(versionId: number): string | null {
+    if (!publicResumeVersionId || publicResumeVersionId === versionId) return null;
+    return versions.find((v) => v.id === publicResumeVersionId)?.name ?? null;
+  }
+
+  function getReplacedPublicCvName(versionId: number): string | null {
+    if (!publicCvVersionId || publicCvVersionId === versionId) return null;
+    return versions.find((v) => v.id === publicCvVersionId)?.name ?? null;
+  }
+
+  function getParentVersionNames(extendsIds: number[]): string {
+    return extendsIds
+      .map((id) => versions.find((v) => v.id === id))
+      .filter(Boolean)
+      .map((v) => v?.name || "Untitled")
+      .join(", ");
+  }
+
+  let copiedLink = $state<string | null>(null);
+
+  function getPublicUrl(path: string): string {
+    const slug = data.selectedProfile?.slug;
+    return `${$page.url.origin}/p/${slug}/${path}`;
+  }
+
+  async function copyPublicLink(key: string) {
+    try {
+      await navigator.clipboard.writeText(getPublicUrl(key));
+      copiedLink = key;
+      setTimeout(() => {
+        copiedLink = null;
+      }, 2000);
+    } catch {
+      console.error("Failed to copy");
+    }
   }
 </script>
 
@@ -439,6 +482,45 @@
                         class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
                       ></textarea>
                     </div>
+
+                    <div>
+                      <p class="text-sm font-medium text-[var(--dash-text)] mb-1">
+                        Public Access
+                      </p>
+                      <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+                        For trackable links with view limits and expiration, use <a href="/dashboard/export/share" class="text-[var(--dash-primary)] hover:underline">Private Links</a>.
+                      </p>
+                      <div class="space-y-2">
+                        <label class="flex items-start gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="publicResume"
+                            bind:checked={editPublicResume}
+                            class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)] mt-0.5"
+                          />
+                          <span>
+                            Use as public resume
+                            {#if getReplacedPublicResumeName(version.id) && editPublicResume}
+                              <span class="text-xs text-[var(--dash-warning)]">(replaces {getReplacedPublicResumeName(version.id)})</span>
+                            {/if}
+                          </span>
+                        </label>
+                        <label class="flex items-start gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="publicCv"
+                            bind:checked={editPublicCv}
+                            class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)] mt-0.5"
+                          />
+                          <span>
+                            Use as public CV
+                            {#if getReplacedPublicCvName(version.id) && editPublicCv}
+                              <span class="text-xs text-[var(--dash-warning)]">(replaces {getReplacedPublicCvName(version.id)})</span>
+                            {/if}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="flex justify-end gap-2 mt-4">
@@ -476,26 +558,19 @@
                   {/if}
 
                   {#if version.extendsIds.length > 0}
-                    {@const parentVersions = version.extendsIds
-                      .map((id) => versions.find((v) => v.id === id))
-                      .filter(Boolean)}
-                    {#if parentVersions.length > 0}
-                      <div>
-                        <p
-                          class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
-                        >
-                          Extends
-                        </p>
-                        <p class="text-[var(--dash-text)] text-sm">
-                          {parentVersions.map((v) => v?.name || "Untitled").join(", ")}
-                        </p>
-                      </div>
-                    {/if}
+                    <div>
+                      <p
+                        class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
+                      >
+                        Extends
+                      </p>
+                      <p class="text-[var(--dash-text)] text-sm">
+                        {getParentVersionNames(version.extendsIds)}
+                      </p>
+                    </div>
                   {/if}
 
                   {#if data.selectedProfile?.slug}
-                    {@const slug = data.selectedProfile.slug}
-                    {@const encodedName = encodeURIComponent(version.name)}
                     <div>
                       <p
                         class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
@@ -504,64 +579,96 @@
                       </p>
                       <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                         <a
-                          href="/p/{slug}/resume?version={encodedName}"
+                          href="/p/{data.selectedProfile.slug}/resume?version={encodeURIComponent(version.name)}"
                           target="_blank"
                           class="text-[var(--dash-primary)] hover:underline"
                         >Resume</a>
                         <a
-                          href="/p/{slug}/resume.pdf?version={encodedName}"
+                          href="/p/{data.selectedProfile.slug}/resume.pdf?version={encodeURIComponent(version.name)}"
                           target="_blank"
                           class="text-[var(--dash-primary)] hover:underline"
                         >Resume PDF</a>
                         <a
-                          href="/p/{slug}/cv?version={encodedName}"
+                          href="/p/{data.selectedProfile.slug}/cv?version={encodeURIComponent(version.name)}"
                           target="_blank"
                           class="text-[var(--dash-primary)] hover:underline"
                         >CV</a>
                         <a
-                          href="/p/{slug}/cv.pdf?version={encodedName}"
+                          href="/p/{data.selectedProfile.slug}/cv.pdf?version={encodeURIComponent(version.name)}"
                           target="_blank"
                           class="text-[var(--dash-primary)] hover:underline"
                         >CV PDF</a>
                       </div>
                     </div>
-                  {/if}
 
-                  <div>
-                    <p
-                      class="text-sm font-medium text-[var(--dash-text-secondary)] mb-2"
-                    >
-                      Public Access
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                      <form method="POST" action="?/setPublicResume" use:enhance>
-                        <input type="hidden" name="versionId" value={isPublicResume(version.id) ? "" : version.id} />
-                        <button
-                          type="submit"
-                          class="text-sm px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5
-                            {isPublicResume(version.id)
-                              ? 'bg-[var(--dash-info-light)] border-[var(--dash-info)] text-[var(--dash-info)]'
-                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-info)] hover:text-[var(--dash-info)]'}"
+                    {#if isPublicResume(version.id) || isPublicCv(version.id)}
+                      <div>
+                        <p
+                          class="text-sm font-medium text-[var(--dash-text-secondary)] mb-2"
                         >
-                          <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5" />
-                          {isPublicResume(version.id) ? "Public Resume ✓" : "Set Public Resume"}
-                        </button>
-                      </form>
-                      <form method="POST" action="?/setPublicCv" use:enhance>
-                        <input type="hidden" name="versionId" value={isPublicCv(version.id) ? "" : version.id} />
-                        <button
-                          type="submit"
-                          class="text-sm px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5
-                            {isPublicCv(version.id)
-                              ? 'bg-[var(--dash-info-light)] border-[var(--dash-info)] text-[var(--dash-info)]'
-                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-info)] hover:text-[var(--dash-info)]'}"
-                        >
-                          <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5" />
-                          {isPublicCv(version.id) ? "Public CV ✓" : "Set Public CV"}
-                        </button>
-                      </form>
-                    </div>
-                  </div>
+                          Public Links
+                        </p>
+                        <div class="space-y-2">
+                          {#if isPublicResume(version.id)}
+                            {#each [{ path: "resume", label: "Resume (HTML)" }, { path: "resume.pdf", label: "Resume (PDF)" }] as link (link.path)}
+                              <div class="flex items-center gap-2 bg-[var(--dash-bg)] p-2 rounded-lg">
+                                <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-info)] shrink-0" />
+                                <div class="flex-1 min-w-0">
+                                  <p class="text-xs font-medium text-[var(--dash-text-secondary)]">{link.label}</p>
+                                  <a
+                                    href="/p/{data.selectedProfile.slug}/{link.path}"
+                                    target="_blank"
+                                    class="text-sm text-[var(--dash-primary)] hover:underline block truncate"
+                                  >
+                                    {$page.url.origin}/p/{data.selectedProfile.slug}/{link.path}
+                                  </a>
+                                </div>
+                                <button
+                                  type="button"
+                                  onclick={() => copyPublicLink(link.path)}
+                                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors shrink-0"
+                                  aria-label="Copy {link.label} link"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={copiedLink === link.path ? faCheck : faCopy}
+                                    class="w-3.5 h-3.5 {copiedLink === link.path ? 'text-green-600' : ''}"
+                                  />
+                                </button>
+                              </div>
+                            {/each}
+                          {/if}
+                          {#if isPublicCv(version.id)}
+                            {#each [{ path: "cv", label: "CV (HTML)" }, { path: "cv.pdf", label: "CV (PDF)" }] as link (link.path)}
+                              <div class="flex items-center gap-2 bg-[var(--dash-bg)] p-2 rounded-lg">
+                                <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-info)] shrink-0" />
+                                <div class="flex-1 min-w-0">
+                                  <p class="text-xs font-medium text-[var(--dash-text-secondary)]">{link.label}</p>
+                                  <a
+                                    href="/p/{data.selectedProfile.slug}/{link.path}"
+                                    target="_blank"
+                                    class="text-sm text-[var(--dash-primary)] hover:underline block truncate"
+                                  >
+                                    {$page.url.origin}/p/{data.selectedProfile.slug}/{link.path}
+                                  </a>
+                                </div>
+                                <button
+                                  type="button"
+                                  onclick={() => copyPublicLink(link.path)}
+                                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors shrink-0"
+                                  aria-label="Copy {link.label} link"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={copiedLink === link.path ? faCheck : faCopy}
+                                    class="w-3.5 h-3.5 {copiedLink === link.path ? 'text-green-600' : ''}"
+                                  />
+                                </button>
+                              </div>
+                            {/each}
+                          {/if}
+                        </div>
+                      </div>
+                    {/if}
+                  {/if}
 
                   <div
                     class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"

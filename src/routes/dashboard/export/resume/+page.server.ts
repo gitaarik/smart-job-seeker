@@ -111,6 +111,8 @@ export const actions: Actions = {
     const description = formData.get("description") as string;
     const status = formData.get("status") as string;
     const extendsIds = formData.getAll("extendsIds").map((v) => parseInt(v as string)).filter((v) => !isNaN(v) && v !== id);
+    const setPublicResume = formData.get("publicResume") === "on";
+    const setPublicCv = formData.get("publicCv") === "on";
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid version ID" });
@@ -137,6 +139,38 @@ export const actions: Actions = {
         date_updated: new Date(),
       },
     });
+
+    // Update public resume/cv version on profile
+    const profile = await db.profiles.findUnique({
+      where: { id: profileId },
+      select: { public_resume_version: true, public_cv_version: true },
+    });
+
+    const profileUpdate: { public_resume_version?: number | null; public_cv_version?: number | null } = {};
+
+    // If checkbox is checked, set this version as public; if unchecked and it was this version, clear it
+    if (setPublicResume) {
+      if (profile?.public_resume_version !== id) {
+        profileUpdate.public_resume_version = id;
+      }
+    } else if (profile?.public_resume_version === id) {
+      profileUpdate.public_resume_version = null;
+    }
+
+    if (setPublicCv) {
+      if (profile?.public_cv_version !== id) {
+        profileUpdate.public_cv_version = id;
+      }
+    } else if (profile?.public_cv_version === id) {
+      profileUpdate.public_cv_version = null;
+    }
+
+    if (Object.keys(profileUpdate).length > 0) {
+      await db.profiles.update({
+        where: { id: profileId },
+        data: profileUpdate,
+      });
+    }
 
     // Update extensions: remove old, add new ones
     await db.profile_version_extensions.deleteMany({
@@ -195,76 +229,6 @@ export const actions: Actions = {
 
     await db.profile_versions.delete({
       where: { id },
-    });
-
-    return { success: true };
-  },
-
-  setPublicResume: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const versionId = formData.get("versionId") as string;
-
-    // null means clear the public version
-    const newVersionId = versionId ? parseInt(versionId) : null;
-
-    if (newVersionId !== null) {
-      // Verify the version belongs to this profile
-      const version = await db.profile_versions.findFirst({
-        where: { id: newVersionId, profile: profileId },
-      });
-      if (!version) {
-        return fail(404, { error: "Version not found" });
-      }
-    }
-
-    await db.profiles.update({
-      where: { id: profileId },
-      data: { public_resume_version: newVersionId },
-    });
-
-    return { success: true };
-  },
-
-  setPublicCv: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const versionId = formData.get("versionId") as string;
-
-    // null means clear the public version
-    const newVersionId = versionId ? parseInt(versionId) : null;
-
-    if (newVersionId !== null) {
-      // Verify the version belongs to this profile
-      const version = await db.profile_versions.findFirst({
-        where: { id: newVersionId, profile: profileId },
-      });
-      if (!version) {
-        return fail(404, { error: "Version not found" });
-      }
-    }
-
-    await db.profiles.update({
-      where: { id: profileId },
-      data: { public_cv_version: newVersionId },
     });
 
     return { success: true };
