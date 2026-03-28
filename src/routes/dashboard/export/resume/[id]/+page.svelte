@@ -10,6 +10,7 @@
     faCogs,
     faFileAlt,
     faGraduationCap,
+    faStar,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
@@ -32,7 +33,8 @@
     tagUsage.workExperiences.length > 0 ||
     tagUsage.education.length > 0 ||
     tagUsage.sideProjects.length > 0 ||
-    tagUsage.skills.length > 0,
+    tagUsage.skills.length > 0 ||
+    tagUsage.achievements.length > 0,
   );
 
   function getReplacedPublicResumeName(): string | null {
@@ -272,7 +274,7 @@
         No items are tagged with this version yet. Add the <code class="text-xs bg-[var(--dash-bg)] px-1.5 py-0.5 rounded font-mono">{version.slug}</code> tag to work experiences, education, or side projects to include them in this version.
       </p>
     {:else}
-      <div class="space-y-4">
+      <div class="tagged-items space-y-4">
         {#if tagUsage.workExperiences.length > 0}
           <div>
             <div class="flex items-center gap-1.5 mb-2">
@@ -340,6 +342,23 @@
             </div>
           </div>
         {/if}
+
+        {#if tagUsage.achievements.length > 0}
+          <div>
+            <div class="flex items-center gap-1.5 mb-2">
+              <FontAwesomeIcon icon={faStar} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <span class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Achievements</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each tagUsage.achievements as item}
+                <a
+                  href="/dashboard/profile/work-experience/{item.work_experience}"
+                  class="dash-link-ext"
+                >{item.name || "Untitled"}</a>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
     {/if}
   </Card>
@@ -359,3 +378,9 @@
     form.submit();
   }}
 />
+
+<style>
+  :global(.tagged-items .dash-link-ext) {
+    border-radius: 0.375rem;
+  }
+</style>

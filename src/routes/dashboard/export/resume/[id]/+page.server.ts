@@ -55,16 +55,18 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Find entities that reference this version's slug in their tags
   const slug = v.slug;
   type TaggedRow = { id: number; name: string | null };
+  type TaggedAchievementRow = { id: number; name: string | null; work_experience: number };
   let taggedWorkExperiences: TaggedRow[] = [];
   let taggedEducation: TaggedRow[] = [];
   let taggedSideProjects: TaggedRow[] = [];
   let taggedSkills: TaggedRow[] = [];
+  let taggedAchievements: TaggedAchievementRow[] = [];
 
   if (slug) {
     const profileId = layoutData.selectedProfile.id;
     const tagJson = JSON.stringify([slug]);
 
-    [taggedWorkExperiences, taggedEducation, taggedSideProjects, taggedSkills] =
+    [taggedWorkExperiences, taggedEducation, taggedSideProjects, taggedSkills, taggedAchievements] =
       await Promise.all([
         db.$queryRaw<TaggedRow[]>`
           SELECT id, COALESCE(position, name) as name FROM work_experiences
@@ -83,6 +85,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
           JOIN tech_skill_categories tsc ON ts.category = tsc.id
           WHERE tsc.profile = ${profileId} AND ts.tags::jsonb @> ${tagJson}::jsonb
           ORDER BY ts.name ASC`,
+        db.$queryRaw<TaggedAchievementRow[]>`
+          SELECT wea.id, wea.description as name, wea.work_experience FROM work_experience_achievements wea
+          JOIN work_experiences we ON wea.work_experience = we.id
+          WHERE we.profile = ${profileId} AND wea.tags::jsonb @> ${tagJson}::jsonb
+          ORDER BY wea.description ASC`,
       ]);
   }
 
@@ -102,6 +109,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       education: taggedEducation,
       sideProjects: taggedSideProjects,
       skills: taggedSkills,
+      achievements: taggedAchievements,
     },
   };
 };
