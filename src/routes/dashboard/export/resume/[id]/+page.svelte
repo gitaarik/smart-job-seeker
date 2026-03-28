@@ -4,8 +4,12 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
+    faBriefcase,
     faCheck,
+    faCode,
+    faCogs,
     faFileAlt,
+    faGraduationCap,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
@@ -22,6 +26,14 @@
   let editExtendsIds = $state<number[]>([...data.version.extendsIds]);
   let editPublicResume = $state(data.publicResumeVersionId === data.version.id);
   let editPublicCv = $state(data.publicCvVersionId === data.version.id);
+
+  let tagUsage = $derived(data.tagUsage);
+  let hasTaggedItems = $derived(
+    tagUsage.workExperiences.length > 0 ||
+    tagUsage.education.length > 0 ||
+    tagUsage.sideProjects.length > 0 ||
+    tagUsage.skills.length > 0,
+  );
 
   function getReplacedPublicResumeName(): string | null {
     if (
@@ -247,6 +259,90 @@
       </div>
     </Card>
   </form>
+
+  <!-- Tagged Items -->
+  <Card padding="responsive">
+    <h3
+      class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide mb-3"
+    >
+      Tagged Items
+    </h3>
+    {#if !hasTaggedItems}
+      <p class="text-sm text-[var(--dash-text-secondary)]">
+        No items are tagged with this version yet. Add the <code class="text-xs bg-[var(--dash-bg)] px-1.5 py-0.5 rounded font-mono">{version.slug}</code> tag to work experiences, education, or side projects to include them in this version.
+      </p>
+    {:else}
+      <div class="space-y-4">
+        {#if tagUsage.workExperiences.length > 0}
+          <div>
+            <div class="flex items-center gap-1.5 mb-2">
+              <FontAwesomeIcon icon={faBriefcase} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <span class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Work Experience</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each tagUsage.workExperiences as item}
+                <a
+                  href="/dashboard/profile/work-experience/{item.id}"
+                  class="dash-link-ext"
+                >{item.name || "Untitled"}</a>
+              {/each}
+            </div>
+          </div>
+        {/if}
+
+        {#if tagUsage.education.length > 0}
+          <div>
+            <div class="flex items-center gap-1.5 mb-2">
+              <FontAwesomeIcon icon={faGraduationCap} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <span class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Education</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each tagUsage.education as item}
+                <a
+                  href="/dashboard/profile/education/{item.id}"
+                  class="dash-link-ext"
+                >{item.name || "Untitled"}</a>
+              {/each}
+            </div>
+          </div>
+        {/if}
+
+        {#if tagUsage.sideProjects.length > 0}
+          <div>
+            <div class="flex items-center gap-1.5 mb-2">
+              <FontAwesomeIcon icon={faCode} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <span class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Side Projects</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each tagUsage.sideProjects as item}
+                <a
+                  href="/dashboard/profile/side-projects/{item.id}"
+                  class="dash-link-ext"
+                >{item.name || "Untitled"}</a>
+              {/each}
+            </div>
+          </div>
+        {/if}
+
+        {#if tagUsage.skills.length > 0}
+          <div>
+            <div class="flex items-center gap-1.5 mb-2">
+              <FontAwesomeIcon icon={faCogs} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <span class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Skills</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              {#each tagUsage.skills as item}
+                <a
+                  href="/dashboard/profile/skills"
+                  class="dash-link-ext"
+                >{item.name || "Untitled"}</a>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </Card>
 </div>
 
 <!-- Delete Confirmation Modal -->

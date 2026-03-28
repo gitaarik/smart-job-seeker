@@ -52,6 +52,40 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     select: { id: true, name: true, slug: true },
   });
 
+  // Find entities that reference this version's slug in their tags
+  const slug = v.slug;
+  type TaggedRow = { id: number; name: string | null };
+  let taggedWorkExperiences: TaggedRow[] = [];
+  let taggedEducation: TaggedRow[] = [];
+  let taggedSideProjects: TaggedRow[] = [];
+  let taggedSkills: TaggedRow[] = [];
+
+  if (slug) {
+    const profileId = layoutData.selectedProfile.id;
+    const tagJson = JSON.stringify([slug]);
+
+    [taggedWorkExperiences, taggedEducation, taggedSideProjects, taggedSkills] =
+      await Promise.all([
+        db.$queryRaw<TaggedRow[]>`
+          SELECT id, COALESCE(position, name) as name FROM work_experiences
+          WHERE profile = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
+          ORDER BY name ASC`,
+        db.$queryRaw<TaggedRow[]>`
+          SELECT id, COALESCE(institution, area) as name FROM education
+          WHERE profile = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
+          ORDER BY name ASC`,
+        db.$queryRaw<TaggedRow[]>`
+          SELECT id, name FROM side_projects
+          WHERE profile = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
+          ORDER BY name ASC`,
+        db.$queryRaw<TaggedRow[]>`
+          SELECT ts.id, ts.name FROM tech_skills ts
+          JOIN tech_skill_categories tsc ON ts.category = tsc.id
+          WHERE tsc.profile = ${profileId} AND ts.tags::jsonb @> ${tagJson}::jsonb
+          ORDER BY ts.name ASC`,
+      ]);
+  }
+
   return {
     version: {
       ...v,
@@ -63,6 +97,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     allVersions,
     publicResumeVersionId: profile?.public_resume_version ?? null,
     publicCvVersionId: profile?.public_cv_version ?? null,
+    tagUsage: {
+      workExperiences: taggedWorkExperiences,
+      education: taggedEducation,
+      sideProjects: taggedSideProjects,
+      skills: taggedSkills,
+    },
   };
 };
 
