@@ -71,7 +71,7 @@
     }>;
     profile_versions: Array<{
       id: number;
-      name: string;
+      slug: string;
       toggles: string[];
       profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
         number[];
@@ -91,7 +91,7 @@
     if (typeof idx === "number") {
       return profile.profile_versions.find((v) => v.id === idx);
     } else {
-      return profile.profile_versions.find((v) => v.name === idx);
+      return profile.profile_versions.find((v) => v.slug === idx);
     }
   }
 
@@ -133,7 +133,7 @@
   //   versionObjs.push(versionObj);
   // }
 
-  const versionNames = versionObjs.map((v) => v?.name).filter(
+  const versionSlugs = versionObjs.map((v) => v?.slug).filter(
     Boolean,
   ) as string[];
 
@@ -154,10 +154,10 @@
           const tags = obj.tags.filter((item) =>
             !(["resume", "cv"].includes(item))
           );
-          if (!(tags.length && versionNames.length)) return true;
+          if (!(tags.length && versionSlugs.length)) return true;
 
-          return versionNames.some((versionName) => {
-            return tags.includes(versionName);
+          return versionSlugs.some((versionSlug) => {
+            return tags.includes(versionSlug);
           });
         }
       }

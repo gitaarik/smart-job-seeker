@@ -76,6 +76,25 @@
   --dash-purple-light: #3b0764;      /* purple-950 */
 }
 
+/* External link — pill-shaped action link for preview/export URLs */
+.dash-link-ext {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--dash-primary);
+  background: var(--dash-primary-light);
+  border-radius: 9999px;
+  transition: background-color 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.dash-link-ext:hover {
+  background: var(--dash-primary);
+  color: white;
+}
+
 /* Navigation loading bar */
 @keyframes nav-progress {
   0% { width: 0; }

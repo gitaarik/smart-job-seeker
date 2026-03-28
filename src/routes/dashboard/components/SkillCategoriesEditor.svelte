@@ -21,7 +21,7 @@
   interface Props {
     categories: CategoryItem[];
     levelOptions?: LevelOption[];
-    versionNames?: string[];
+    versionSlugs?: string[];
     compact?: boolean;
     oncreate?: (category: CategoryItem) => void;
     onrename?: (category: CategoryItem) => void;
@@ -35,7 +35,7 @@
   let {
     categories = $bindable(),
     levelOptions,
-    versionNames = [],
+    versionSlugs = [],
     compact = false,
     oncreate,
     onrename,
@@ -214,7 +214,7 @@
   <SkillTagsEditor
     bind:skills={categories[categoryIndex].skills}
     {levelOptions}
-    {versionNames}
+    {versionSlugs}
     oncreate={onskillcreate
       ? (skill) => onskillcreate(categories[categoryIndex], skill)
       : undefined}

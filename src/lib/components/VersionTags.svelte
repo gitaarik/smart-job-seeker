@@ -17,14 +17,14 @@
 
   let savedTags = $state<string[]>([...tags]);
   let saveState = $state<SaveState>("idle");
-  let versionNames = $state<string[]>([]);
+  let versionSlugs = $state<string[]>([]);
   let loaded = $state(false);
   let newTag = $state("");
 
   const builtinTags = ["resume", "cv"];
 
   let allSuggestions = $derived.by(() => {
-    const all = [...builtinTags, ...versionNames.filter((v) => !builtinTags.includes(v.toLowerCase()))];
+    const all = [...builtinTags, ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))];
     return all.filter((s) => !tags.some((t) => t.toLowerCase() === s.toLowerCase()));
   });
 
@@ -41,7 +41,7 @@
     try {
       const res = await fetch("/dashboard/api/profile-versions");
       if (res.ok) {
-        versionNames = await res.json();
+        versionSlugs = await res.json();
       }
     } catch {
       // ignore

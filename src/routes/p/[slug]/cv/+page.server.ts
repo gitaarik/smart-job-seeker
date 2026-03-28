@@ -2,7 +2,7 @@ import { error } from "@sveltejs/kit";
 import { getProfileByIdentifier } from "$lib/server/profile/default";
 import {
   checkProfileAccess,
-  getVersionIdByName,
+  getVersionIdBySlug,
 } from "$lib/server/profile/access-control";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import type { PageServerLoad } from "./$types";
@@ -48,9 +48,9 @@ export const load: PageServerLoad = async ({
   // Resolve version: from access control, query param, or public version fallback
   let versionId = accessResult.versionId;
   if (!versionId && accessResult.accessType === "owner") {
-    const versionName = url.searchParams.get("version");
-    if (versionName) {
-      versionId = await getVersionIdByName(profile.id, versionName) ??
+    const versionSlug = url.searchParams.get("version");
+    if (versionSlug) {
+      versionId = await getVersionIdBySlug(profile.id, versionSlug) ??
         undefined;
     } else if (profile.public_cv_version) {
       // Fall back to public version when no specific version requested

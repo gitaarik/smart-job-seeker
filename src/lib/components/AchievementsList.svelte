@@ -12,7 +12,7 @@
     deletedIndices?: Set<number>;
     lastAddedIndex?: number | null;
     showTags?: boolean;
-    versionNames?: string[];
+    versionSlugs?: string[];
     onAdd?: () => void;
     onRemove?: (index: number) => void;
     onUndoRemove?: (index: number) => void;
@@ -24,7 +24,7 @@
     deletedIndices = new Set(),
     lastAddedIndex = null,
     showTags = false,
-    versionNames = [],
+    versionSlugs = [],
     onAdd,
     onRemove,
     onUndoRemove,
@@ -68,7 +68,7 @@
 
   let allSuggestions = $derived.by(() => {
     if (!showTags) return [];
-    const all = [...builtinTags, ...versionNames.filter((v) => !builtinTags.includes(v.toLowerCase()))];
+    const all = [...builtinTags, ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))];
     return all.filter((s) => !editTags.some((t) => t.toLowerCase() === s.toLowerCase()));
   });
 

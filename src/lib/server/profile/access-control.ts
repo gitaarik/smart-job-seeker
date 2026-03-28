@@ -91,30 +91,30 @@ export async function checkProfileAccess(
 }
 
 /**
- * Get version name by version ID
+ * Get version slug by version ID
  * @param versionId The profile version ID
- * @returns Version name or null if not found
+ * @returns Version slug or null if not found
  */
-export async function getVersionNameById(
+export async function getVersionSlugById(
   versionId: number,
 ): Promise<string | null> {
   const version = await db.profile_versions.findUnique({
     where: { id: versionId },
-    select: { name: true },
+    select: { slug: true },
   });
 
-  return version?.name || null;
+  return version?.slug || null;
 }
 
 /**
- * Get version ID by name and profile
+ * Get version ID by slug and profile
  */
-export async function getVersionIdByName(
+export async function getVersionIdBySlug(
   profileId: number,
-  versionName: string,
+  versionSlug: string,
 ): Promise<number | null> {
   const version = await db.profile_versions.findFirst({
-    where: { profile: profileId, name: versionName },
+    where: { profile: profileId, slug: versionSlug },
     select: { id: true },
   });
 

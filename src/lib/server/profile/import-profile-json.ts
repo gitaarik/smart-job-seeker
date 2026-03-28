@@ -481,29 +481,33 @@ export async function importProfileFromJson(
 
   // Profile versions + extensions
   // Create all versions first, then resolve extends_from references
-  const versionNameToId = new Map<string, number>();
+  const versionSlugToId = new Map<string, number>();
 
   for (const pv of p.profile_versions ?? []) {
+    // Backward compat: old exports have name=slug, description=display name
+    const slug = pv.slug || pv.name || null;
+    const name = pv.slug ? (pv.name || null) : (pv.description || null);
     const createdPv = await dbDirect.profile_versions.create({
       data: {
         profile: profileId,
         status: pv.status || "draft",
         sort: pv.sort ?? null,
-        name: pv.name || null,
-        description: pv.description || null,
+        slug: slug,
+        name: name,
         toggles: pv.toggles ?? null,
       },
     });
-    if (pv.name) {
-      versionNameToId.set(pv.name, createdPv.id);
+    if (slug) {
+      versionSlugToId.set(slug, createdPv.id);
     }
   }
 
-  // Create extensions (resolve extends_from name -> id)
+  // Create extensions (resolve extends_from slug -> id)
   for (const pv of p.profile_versions ?? []) {
-    if (pv.extends_from && pv.name) {
-      const extenderId = versionNameToId.get(pv.name);
-      const extendedId = versionNameToId.get(pv.extends_from);
+    const slug = pv.slug || pv.name;
+    if (pv.extends_from && slug) {
+      const extenderId = versionSlugToId.get(slug);
+      const extendedId = versionSlugToId.get(pv.extends_from);
       if (extenderId && extendedId) {
         await dbDirect.profile_version_extensions.create({
           data: {
@@ -517,8 +521,9 @@ export async function importProfileFromJson(
 
   // Generate PDFs for all imported versions (fire-and-forget)
   for (const pv of p.profile_versions ?? []) {
-    if (pv.name) {
-      generateVersionPdfs(profileId, pv.name).catch(console.error);
+    const slug = pv.slug || pv.name;
+    if (slug) {
+      generateVersionPdfs(profileId, slug).catch(console.error);
     }
   }
 

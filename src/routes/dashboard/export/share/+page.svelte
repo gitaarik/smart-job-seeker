@@ -232,7 +232,7 @@
               >
                 <option value="">Select a version</option>
                 {#each versions as version}
-                  <option value={version.id}>{version.name}</option>
+                  <option value={version.id}>{version.name || version.slug || "Untitled"}</option>
                 {/each}
               </select>
             </div>
@@ -403,7 +403,7 @@
             {/snippet}
 
             {#snippet subtitle()}
-              {token.version?.name || "Unknown version"}
+              {token.version?.name || token.version?.slug || "Unknown version"}
               <span class="mx-1">•</span>
               {token.format === "cv" ? "CV" : "Resume"}
               <span class="mx-1">•</span>
@@ -494,7 +494,7 @@
                           class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
                         >
                           {#each versions as version}
-                            <option value={version.id.toString()}>{version.name}</option>
+                            <option value={version.id.toString()}>{version.name || version.slug || "Untitled"}</option>
                           {/each}
                         </select>
                       </div>

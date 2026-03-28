@@ -67,22 +67,22 @@ async function exportProfilesToPDF(profileId?: number) {
   console.log(`📦 Profile Versions: ${profile.profile_versions.length}`);
 
   // Define the versions to create for both resume and cv
-  const profileVersions = profile.profile_versions.map((v) => v.name || "");
+  const profileVersionSlugs = profile.profile_versions.map((v) => v.slug || "");
   const documentTypes = [
     { type: "resume", display: "Resume" },
     { type: "cv", display: "CV" },
   ] as const;
 
   const versions = documentTypes.flatMap((doc) =>
-    profileVersions.map((version) => ({
-      route: `${doc.type}?version=${version}`,
-      dirName: `${doc.type}/${version || "full"}`,
+    profileVersionSlugs.map((versionSlug) => ({
+      route: `${doc.type}?version=${versionSlug}`,
+      dirName: `${doc.type}/${versionSlug || "full"}`,
       docType: doc.type,
       displayType: doc.display,
-      versionName: version, // Raw version name for export_format
+      versionSlug: versionSlug, // Raw version slug for export_format
       description: `${doc.display} (${
-        version
-          ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+        versionSlug
+          ? versionSlug.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
           : "Full"
       })`,
     }))
@@ -90,7 +90,7 @@ async function exportProfilesToPDF(profileId?: number) {
 
   console.log(`\n📄 Export Formats (${versions.length} total):`);
   documentTypes.forEach((doc) => {
-    const count = profileVersions.length;
+    const count = profileVersionSlugs.length;
     console.log(
       `   • ${doc.display}: ${count} version${count !== 1 ? "s" : ""} (PDF)`,
     );
@@ -225,7 +225,7 @@ async function exportProfilesToPDF(profileId?: number) {
           filename,
           fileType: "pdf",
           exportType: version.docType as "resume" | "cv",
-          exportFormat: version.versionName, // Use raw version name for consistency with URL parameters
+          exportFormat: version.versionSlug, // Use raw version slug for consistency with URL parameters
           description: `${version.description} - Generated ${
             new Date().toISOString()
           }`,

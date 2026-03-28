@@ -1035,8 +1035,8 @@ export const Profile_versionsScalarFieldEnum = {
   sort: 'sort',
   date_created: 'date_created',
   date_updated: 'date_updated',
+  slug: 'slug',
   name: 'name',
-  description: 'description',
   profile: 'profile',
   toggles: 'toggles',
   preview_links: 'preview_links'

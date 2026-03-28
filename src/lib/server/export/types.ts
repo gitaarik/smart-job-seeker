@@ -105,7 +105,9 @@ export interface ExportedProfileData {
 export interface ExportedProfileVersion {
   status?: string;
   sort?: number | null;
+  slug?: string;
   name?: string;
+  /** @deprecated Legacy field from old format (was display name). Kept for backward-compatible imports. */
   description?: string;
   toggles?: unknown;
   extends_from?: string | null;

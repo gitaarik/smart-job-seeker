@@ -58,8 +58,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         select: {
           status: true,
           sort: true,
+          slug: true,
           name: true,
-          description: true,
           toggles: true,
           profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
             {
@@ -67,7 +67,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
                 profile_versions_profile_version_extensions_extendedToprofile_versions:
                   {
                     select: {
-                      name: true,
+                      slug: true,
                     },
                   },
               },
@@ -274,14 +274,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         .profile_versions_profile_versions_profileToprofiles.map((pv) => ({
           status: pv.status || undefined,
           sort: pv.sort,
+          slug: pv.slug || undefined,
           name: pv.name || undefined,
-          description: pv.description || undefined,
           toggles: pv.toggles,
           extends_from: pv
             .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
             ?.[0]
             ?.profile_versions_profile_version_extensions_extendedToprofile_versions
-            ?.name,
+            ?.slug,
         })),
       highlights: baseProfile.highlights,
       tech_skill_categories: baseProfile.tech_skill_categories.map((cat) => ({

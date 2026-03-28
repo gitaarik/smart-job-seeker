@@ -30,16 +30,16 @@ export const profileVersionLinksHandler: WebhookHandler = {
         const profileVersion = await db.profile_versions.findUnique({
           where: { id: profileVersionId },
           select: {
-            name: true,
+            slug: true,
             profiles: {
               select: { slug: true },
             },
           },
         });
 
-        if (!profileVersion || !profileVersion.name) {
+        if (!profileVersion || !profileVersion.slug) {
           throw new Error(
-            `Profile version ${profileVersionId} not found or has no name`,
+            `Profile version ${profileVersionId} not found or has no slug`,
           );
         }
 
@@ -49,7 +49,7 @@ export const profileVersionLinksHandler: WebhookHandler = {
           );
         }
 
-        const versionName = encodeURIComponent(profileVersion.name);
+        const versionSlug = encodeURIComponent(profileVersion.slug);
         const profileSlug = profileVersion.profiles.slug;
         const baseUrl = config.publicSiteUrl;
 
@@ -58,15 +58,15 @@ export const profileVersionLinksHandler: WebhookHandler = {
           `<div style="display: flex; flex-direction: column; gap: 8px;">` +
           `<div style="font-weight: 600; margin-bottom: 10px;">📄 Resume</div>` +
           `<div style="display: flex; gap: 12px;">` +
-          `<a href="${baseUrl}/p/${profileSlug}/resume?version=${versionName}" target="_blank">HTML</a>` +
-          `<a href="${baseUrl}/p/${profileSlug}/resume.pdf?version=${versionName}" target="_blank">PDF</a>` +
+          `<a href="${baseUrl}/p/${profileSlug}/resume?version=${versionSlug}" target="_blank">HTML</a>` +
+          `<a href="${baseUrl}/p/${profileSlug}/resume.pdf?version=${versionSlug}" target="_blank">PDF</a>` +
           `</div>` +
           `</div>` +
           `<div style="display: flex; flex-direction: column; gap: 8px;">` +
           `<div style="font-weight: 600; margin-bottom: 10px;">📋 CV</div>` +
           `<div style="display: flex; gap: 12px;">` +
-          `<a href="${baseUrl}/p/${profileSlug}/cv?version=${versionName}" target="_blank">HTML</a>` +
-          `<a href="${baseUrl}/p/${profileSlug}/cv.pdf?version=${versionName}" target="_blank">PDF</a>` +
+          `<a href="${baseUrl}/p/${profileSlug}/cv?version=${versionSlug}" target="_blank">HTML</a>` +
+          `<a href="${baseUrl}/p/${profileSlug}/cv.pdf?version=${versionSlug}" target="_blank">PDF</a>` +
           `</div>` +
           `</div>` +
           `</div>`;

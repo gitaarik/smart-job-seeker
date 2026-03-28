@@ -17,14 +17,14 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let versionNames = $state<string[]>([]);
-  let versionNamesLoaded = $state(false);
+  let versionSlugs = $state<string[]>([]);
+  let versionSlugsLoaded = $state(false);
   $effect(() => {
-    if (versionNamesLoaded) return;
-    versionNamesLoaded = true;
+    if (versionSlugsLoaded) return;
+    versionSlugsLoaded = true;
     fetch("/dashboard/api/profile-versions")
       .then((res) => res.ok ? res.json() : [])
-      .then((names: string[]) => { versionNames = names; })
+      .then((slugs: string[]) => { versionSlugs = slugs; })
       .catch(() => {});
   });
 
@@ -146,7 +146,7 @@
     <SkillCategoriesEditor
       bind:categories={mappedCategories}
       levelOptions={data.levelOptions}
-      {versionNames}
+      {versionSlugs}
       oncreate={handleCategoryCreate}
       onrename={handleCategoryRename}
       onremove={handleCategoryRemove}

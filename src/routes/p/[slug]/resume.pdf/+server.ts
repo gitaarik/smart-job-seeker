@@ -4,19 +4,19 @@ import { getProfileByIdentifier } from "$lib/server/profile/default";
 import { getLatestExportWithFile } from "$lib/server/profile/export-files";
 import {
   checkProfileAccess,
-  getVersionNameById,
+  getVersionSlugById,
 } from "$lib/server/profile/access-control";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 
 /**
- * Transform version name to export_format
+ * Transform version slug to export_format
  * Converts "fullstack-django" to "Resume (Fullstack Django)"
  */
 function transformVersionToExportFormat(
-  versionName: string,
+  versionSlug: string,
   docType: "Resume" | "CV",
 ): string {
-  const formatted = versionName
+  const formatted = versionSlug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
   return `${docType} (${formatted})`;
@@ -56,7 +56,7 @@ export const GET: RequestHandler = async (
   // Determine version from access control, or from ?version= query param for owner access
   let effectiveVersion: string | null = null;
   if (accessResult.versionId) {
-    effectiveVersion = await getVersionNameById(accessResult.versionId);
+    effectiveVersion = await getVersionSlugById(accessResult.versionId);
   } else if (accessResult.accessType === "owner") {
     effectiveVersion = url.searchParams.get("version");
   }

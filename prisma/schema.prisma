@@ -907,8 +907,8 @@ model profile_versions {
   sort                                                                             Int?
   date_created                                                                     DateTime?                    @db.Timestamptz(6)
   date_updated                                                                     DateTime?                    @db.Timestamptz(6)
-  name                                                                             String?                      @db.VarChar(255)
-  description                                                                      String?
+  slug                                                                             String?                      @db.VarChar(255)
+  name                                                                             String?
   profile                                                                          Int
   toggles                                                                          Json?                        @db.Json
   preview_links                                                                    String?

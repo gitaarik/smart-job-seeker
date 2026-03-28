@@ -23,15 +23,15 @@ export async function buildProfileExport(
         select: {
           status: true,
           sort: true,
+          slug: true,
           name: true,
-          description: true,
           toggles: true,
           profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
             {
               select: {
                 profile_versions_profile_version_extensions_extendedToprofile_versions:
                   {
-                    select: { name: true },
+                    select: { slug: true },
                   },
               },
             },
@@ -282,14 +282,14 @@ export async function buildProfileExport(
       profile.profile_versions_profile_versions_profileToprofiles.map((pv) => ({
         status: pv.status || undefined,
         sort: pv.sort,
+        slug: pv.slug || undefined,
         name: pv.name || undefined,
-        description: pv.description || undefined,
         toggles: pv.toggles,
         extends_from:
           pv
             .profile_version_extensions_profile_version_extensions_extenderToprofile_versions?.[0]
             ?.profile_versions_profile_version_extensions_extendedToprofile_versions
-            ?.name || null,
+            ?.slug || null,
       })),
 
     highlights: profile.highlights.map((h) => ({

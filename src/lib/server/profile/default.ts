@@ -41,8 +41,8 @@ const PROFILE_INCLUDE = {
       sort: true,
       date_created: true,
       date_updated: true,
+      slug: true,
       name: true,
-      description: true,
       profile: true,
       toggles: true,
       profile_version_extensions_profile_version_extensions_extenderToprofile_versions:

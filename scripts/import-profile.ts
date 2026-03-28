@@ -47,8 +47,9 @@ interface ImportedProfile {
     profile_versions: Array<{
       status?: string;
       sort?: number | null;
+      slug?: string;
       name?: string;
-      description?: string;
+      description?: string; // Legacy field (old format: display name)
       toggles?: any;
       extends_from?: string | null;
     }>;
@@ -397,23 +398,26 @@ async function importProfile(
       // First pass: create all profile versions
       const createdVersions: Array<{
         id: number;
-        name: string | null;
+        slug: string | null;
         extends_from?: string | null;
       }> = [];
       for (const version of data.profile_versions) {
+        // Backward compat: old exports have name=slug, description=display name
+        const slug = version.slug || version.name || null;
+        const name = version.slug ? (version.name || null) : (version.description || null);
         const created = await dbDirect.profile_versions.create({
           data: {
             status: version.status || "draft",
             sort: version.sort,
-            name: version.name,
-            description: version.description,
+            slug: slug,
+            name: name,
             toggles: version.toggles,
             profile: profile.id,
           },
         });
         createdVersions.push({
           id: created.id,
-          name: created.name,
+          slug: created.slug,
           extends_from: version.extends_from,
         });
       }
@@ -422,7 +426,7 @@ async function importProfile(
       for (const version of createdVersions) {
         if (version.extends_from) {
           const extendedVersion = createdVersions.find(
-            (v) => v.name === version.extends_from,
+            (v) => v.slug === version.extends_from,
           );
           if (extendedVersion) {
             await dbDirect.profile_version_extensions.create({

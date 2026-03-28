@@ -44,8 +44,8 @@ export type Profile_versionsMinAggregateOutputType = {
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
+  slug: string | null
   name: string | null
-  description: string | null
   profile: number | null
   preview_links: string | null
 }
@@ -56,8 +56,8 @@ export type Profile_versionsMaxAggregateOutputType = {
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
+  slug: string | null
   name: string | null
-  description: string | null
   profile: number | null
   preview_links: string | null
 }
@@ -68,8 +68,8 @@ export type Profile_versionsCountAggregateOutputType = {
   sort: number
   date_created: number
   date_updated: number
+  slug: number
   name: number
-  description: number
   profile: number
   toggles: number
   preview_links: number
@@ -95,8 +95,8 @@ export type Profile_versionsMinAggregateInputType = {
   sort?: true
   date_created?: true
   date_updated?: true
+  slug?: true
   name?: true
-  description?: true
   profile?: true
   preview_links?: true
 }
@@ -107,8 +107,8 @@ export type Profile_versionsMaxAggregateInputType = {
   sort?: true
   date_created?: true
   date_updated?: true
+  slug?: true
   name?: true
-  description?: true
   profile?: true
   preview_links?: true
 }
@@ -119,8 +119,8 @@ export type Profile_versionsCountAggregateInputType = {
   sort?: true
   date_created?: true
   date_updated?: true
+  slug?: true
   name?: true
-  description?: true
   profile?: true
   toggles?: true
   preview_links?: true
@@ -219,8 +219,8 @@ export type Profile_versionsGroupByOutputType = {
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
+  slug: string | null
   name: string | null
-  description: string | null
   profile: number
   toggles: runtime.JsonValue | null
   preview_links: string | null
@@ -255,8 +255,8 @@ export type profile_versionsWhereInput = {
   sort?: Prisma.IntNullableFilter<"profile_versions"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
+  slug?: Prisma.StringNullableFilter<"profile_versions"> | string | null
   name?: Prisma.StringNullableFilter<"profile_versions"> | string | null
-  description?: Prisma.StringNullableFilter<"profile_versions"> | string | null
   profile?: Prisma.IntFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableFilter<"profile_versions">
   preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
@@ -273,8 +273,8 @@ export type profile_versionsOrderByWithRelationInput = {
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
+  slug?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
-  description?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   toggles?: Prisma.SortOrderInput | Prisma.SortOrder
   preview_links?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -294,8 +294,8 @@ export type profile_versionsWhereUniqueInput = Prisma.AtLeast<{
   sort?: Prisma.IntNullableFilter<"profile_versions"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
+  slug?: Prisma.StringNullableFilter<"profile_versions"> | string | null
   name?: Prisma.StringNullableFilter<"profile_versions"> | string | null
-  description?: Prisma.StringNullableFilter<"profile_versions"> | string | null
   profile?: Prisma.IntFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableFilter<"profile_versions">
   preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
@@ -312,8 +312,8 @@ export type profile_versionsOrderByWithAggregationInput = {
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
+  slug?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
-  description?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   toggles?: Prisma.SortOrderInput | Prisma.SortOrder
   preview_links?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -333,8 +333,8 @@ export type profile_versionsScalarWhereWithAggregatesInput = {
   sort?: Prisma.IntNullableWithAggregatesFilter<"profile_versions"> | number | null
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"profile_versions"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"profile_versions"> | Date | string | null
+  slug?: Prisma.StringNullableWithAggregatesFilter<"profile_versions"> | string | null
   name?: Prisma.StringNullableWithAggregatesFilter<"profile_versions"> | string | null
-  description?: Prisma.StringNullableWithAggregatesFilter<"profile_versions"> | string | null
   profile?: Prisma.IntWithAggregatesFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableWithAggregatesFilter<"profile_versions">
   preview_links?: Prisma.StringNullableWithAggregatesFilter<"profile_versions"> | string | null
@@ -345,8 +345,8 @@ export type profile_versionsCreateInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput
@@ -362,8 +362,8 @@ export type profile_versionsUncheckedCreateInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
@@ -378,8 +378,8 @@ export type profile_versionsUpdateInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUpdateManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsNestedInput
@@ -395,8 +395,8 @@ export type profile_versionsUncheckedUpdateInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -412,8 +412,8 @@ export type profile_versionsCreateManyInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
@@ -424,8 +424,8 @@ export type profile_versionsUpdateManyMutationInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -436,8 +436,8 @@ export type profile_versionsUncheckedUpdateManyInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -454,8 +454,8 @@ export type profile_versionsCountOrderByAggregateInput = {
   sort?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
+  slug?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  description?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   toggles?: Prisma.SortOrder
   preview_links?: Prisma.SortOrder
@@ -473,8 +473,8 @@ export type profile_versionsMaxOrderByAggregateInput = {
   sort?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
+  slug?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  description?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   preview_links?: Prisma.SortOrder
 }
@@ -485,8 +485,8 @@ export type profile_versionsMinOrderByAggregateInput = {
   sort?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
+  slug?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  description?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   preview_links?: Prisma.SortOrder
 }
@@ -618,8 +618,8 @@ export type profile_versionsCreateWithoutProfile_version_extensions_profile_vers
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extenderToprofile_versions?: Prisma.profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extenderToprofile_versionsInput
@@ -634,8 +634,8 @@ export type profile_versionsUncheckedCreateWithoutProfile_version_extensions_pro
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
@@ -654,8 +654,8 @@ export type profile_versionsCreateWithoutProfile_version_extensions_profile_vers
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput
@@ -670,8 +670,8 @@ export type profile_versionsUncheckedCreateWithoutProfile_version_extensions_pro
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
@@ -701,8 +701,8 @@ export type profile_versionsUpdateWithoutProfile_version_extensions_profile_vers
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extenderToprofile_versions?: Prisma.profile_version_extensionsUpdateManyWithoutProfile_versions_profile_version_extensions_extenderToprofile_versionsNestedInput
@@ -717,8 +717,8 @@ export type profile_versionsUncheckedUpdateWithoutProfile_version_extensions_pro
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -743,8 +743,8 @@ export type profile_versionsUpdateWithoutProfile_version_extensions_profile_vers
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUpdateManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsNestedInput
@@ -759,8 +759,8 @@ export type profile_versionsUncheckedUpdateWithoutProfile_version_extensions_pro
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -774,8 +774,8 @@ export type profile_versionsCreateWithoutProfiles_profile_versions_profileToprof
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput
@@ -790,8 +790,8 @@ export type profile_versionsUncheckedCreateWithoutProfiles_profile_versions_prof
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUncheckedCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput
@@ -815,8 +815,8 @@ export type profile_versionsCreateWithoutProfiles_profiles_public_cv_versionTopr
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput
@@ -831,8 +831,8 @@ export type profile_versionsUncheckedCreateWithoutProfiles_profiles_public_cv_ve
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
@@ -851,8 +851,8 @@ export type profile_versionsCreateWithoutProfiles_profiles_public_resume_version
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput
@@ -867,8 +867,8 @@ export type profile_versionsUncheckedCreateWithoutProfiles_profiles_public_resum
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
@@ -907,8 +907,8 @@ export type profile_versionsScalarWhereInput = {
   sort?: Prisma.IntNullableFilter<"profile_versions"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
+  slug?: Prisma.StringNullableFilter<"profile_versions"> | string | null
   name?: Prisma.StringNullableFilter<"profile_versions"> | string | null
-  description?: Prisma.StringNullableFilter<"profile_versions"> | string | null
   profile?: Prisma.IntFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableFilter<"profile_versions">
   preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
@@ -930,8 +930,8 @@ export type profile_versionsUpdateWithoutProfiles_profiles_public_cv_versionTopr
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUpdateManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsNestedInput
@@ -946,8 +946,8 @@ export type profile_versionsUncheckedUpdateWithoutProfiles_profiles_public_cv_ve
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -972,8 +972,8 @@ export type profile_versionsUpdateWithoutProfiles_profiles_public_resume_version
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUpdateManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsNestedInput
@@ -988,8 +988,8 @@ export type profile_versionsUncheckedUpdateWithoutProfiles_profiles_public_resum
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1004,8 +1004,8 @@ export type profile_versionsCreateManyProfiles_profile_versions_profileToprofile
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
+  slug?: string | null
   name?: string | null
-  description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
 }
@@ -1015,8 +1015,8 @@ export type profile_versionsUpdateWithoutProfiles_profile_versions_profileToprof
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUpdateManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsNestedInput
@@ -1031,8 +1031,8 @@ export type profile_versionsUncheckedUpdateWithoutProfiles_profile_versions_prof
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: Prisma.profile_version_extensionsUncheckedUpdateManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsNestedInput
@@ -1047,8 +1047,8 @@ export type profile_versionsUncheckedUpdateManyWithoutProfiles_profile_versions_
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -1117,8 +1117,8 @@ export type profile_versionsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
+  slug?: boolean
   name?: boolean
-  description?: boolean
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
@@ -1136,8 +1136,8 @@ export type profile_versionsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
+  slug?: boolean
   name?: boolean
-  description?: boolean
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
@@ -1150,8 +1150,8 @@ export type profile_versionsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
+  slug?: boolean
   name?: boolean
-  description?: boolean
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
@@ -1164,14 +1164,14 @@ export type profile_versionsSelectScalar = {
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
+  slug?: boolean
   name?: boolean
-  description?: boolean
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
 }
 
-export type profile_versionsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "description" | "profile" | "toggles" | "preview_links", ExtArgs["result"]["profile_versions"]>
+export type profile_versionsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "slug" | "name" | "profile" | "toggles" | "preview_links", ExtArgs["result"]["profile_versions"]>
 export type profile_versionsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions?: boolean | Prisma.profile_versions$profile_version_extensions_profile_version_extensions_extendedToprofile_versionsArgs<ExtArgs>
   profile_version_extensions_profile_version_extensions_extenderToprofile_versions?: boolean | Prisma.profile_versions$profile_version_extensions_profile_version_extensions_extenderToprofile_versionsArgs<ExtArgs>
@@ -1202,8 +1202,8 @@ export type $profile_versionsPayload<ExtArgs extends runtime.Types.Extensions.In
     sort: number | null
     date_created: Date | null
     date_updated: Date | null
+    slug: string | null
     name: string | null
-    description: string | null
     profile: number
     toggles: runtime.JsonValue | null
     preview_links: string | null
@@ -1640,8 +1640,8 @@ export interface profile_versionsFieldRefs {
   readonly sort: Prisma.FieldRef<"profile_versions", 'Int'>
   readonly date_created: Prisma.FieldRef<"profile_versions", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"profile_versions", 'DateTime'>
+  readonly slug: Prisma.FieldRef<"profile_versions", 'String'>
   readonly name: Prisma.FieldRef<"profile_versions", 'String'>
-  readonly description: Prisma.FieldRef<"profile_versions", 'String'>
   readonly profile: Prisma.FieldRef<"profile_versions", 'Int'>
   readonly toggles: Prisma.FieldRef<"profile_versions", 'Json'>
   readonly preview_links: Prisma.FieldRef<"profile_versions", 'String'>

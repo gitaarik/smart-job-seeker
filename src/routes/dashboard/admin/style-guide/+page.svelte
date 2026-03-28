@@ -580,6 +580,43 @@
     </Card>
   </section>
 
+  <!-- Links -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Links</h2>
+    <Card padding="responsive">
+      <div class="space-y-4">
+        <div>
+          <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">External Link Pills</h3>
+          <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+            Use <code class="text-[var(--dash-primary)] bg-[var(--dash-bg)] px-1 py-0.5 rounded">.dash-link-ext</code> for prominent action links that open externally (previews, exports, documents).
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <a href="#" class="dash-link-ext">Resume</a>
+            <a href="#" class="dash-link-ext">Resume PDF</a>
+            <a href="#" class="dash-link-ext">CV</a>
+            <a href="#" class="dash-link-ext">CV PDF</a>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Inline Text Link</h3>
+          <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+            For links within body text, use <code class="text-[var(--dash-primary)] bg-[var(--dash-bg)] px-1 py-0.5 rounded">text-[var(--dash-primary)] hover:underline</code>.
+          </p>
+          <p class="text-sm text-[var(--dash-text)]">
+            For trackable links with view limits, use <a href="#" class="text-[var(--dash-primary)] hover:underline">Private Links</a>.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 space-y-3 border-t border-[var(--dash-border)] pt-4">
+        <h3 class="text-sm font-medium text-[var(--dash-text)]">Usage</h3>
+        <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
+          &lt;a href="..." target="_blank" class="dash-link-ext"&gt;Resume PDF&lt;/a&gt;
+        </div>
+      </div>
+    </Card>
+  </section>
+
   <!-- Cards -->
   <section>
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Cards</h2>

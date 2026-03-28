@@ -14,9 +14,9 @@ export const GET: RequestHandler = async ({ locals, cookies }) => {
 
   const versions = await db.profile_versions.findMany({
     where: { profile: profileId },
-    select: { name: true },
+    select: { slug: true },
     orderBy: { date_created: "desc" },
   });
 
-  return json(versions.map((v) => v.name).filter(Boolean));
+  return json(versions.map((v) => v.slug).filter(Boolean));
 };

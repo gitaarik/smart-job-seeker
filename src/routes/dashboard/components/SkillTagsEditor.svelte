@@ -34,7 +34,7 @@
   interface Props {
     skills: SkillItem[];
     levelOptions?: LevelOption[];
-    versionNames?: string[];
+    versionSlugs?: string[];
     onupdate?: (skill: SkillItem) => void;
     oncreate?: (skill: SkillItem) => void;
     onremove?: (skill: SkillItem) => void;
@@ -44,7 +44,7 @@
   let {
     skills = $bindable(),
     levelOptions = defaultLevelOptions,
-    versionNames = [],
+    versionSlugs = [],
     onupdate,
     oncreate,
     onremove,
@@ -71,7 +71,7 @@
   });
 
   let allSuggestions = $derived.by(() => {
-    const all = [...builtinTags, ...versionNames.filter((v) => !builtinTags.includes(v.toLowerCase()))];
+    const all = [...builtinTags, ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))];
     return all.filter((s) => !editingTags.some((t) => t.toLowerCase() === s.toLowerCase()));
   });
 

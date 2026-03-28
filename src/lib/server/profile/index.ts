@@ -31,4 +31,4 @@ export {
 } from "./export-files";
 
 // Profile exports management
-export { createProfileExport, getVersionNameById } from "./exports";
+export { createProfileExport } from "./exports";

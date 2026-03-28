@@ -44,7 +44,7 @@
       tags: Array.isArray(a.tags) ? a.tags as string[] : null,
     })),
   );
-  let versionNames = $state<string[]>([]);
+  let versionSlugs = $state<string[]>([]);
   let deletedAchievements = $state<Set<number>>(new Set());
   let editTechnologies = $state<string[]>(
     experience.work_experience_technologies.map((t) => t.name || ""),
@@ -52,14 +52,14 @@
   let deletedTechnologies = $state<Set<number>>(new Set());
   let lastAddedTechIndex = $state<number | null>(null);
 
-  // Load version names for achievement tags
-  let versionNamesLoaded = $state(false);
+  // Load version slugs for achievement tags
+  let versionSlugsLoaded = $state(false);
   $effect(() => {
-    if (versionNamesLoaded) return;
-    versionNamesLoaded = true;
+    if (versionSlugsLoaded) return;
+    versionSlugsLoaded = true;
     fetch("/dashboard/api/profile-versions")
       .then((res) => res.ok ? res.json() : [])
-      .then((names: string[]) => { versionNames = names; })
+      .then((slugs: string[]) => { versionSlugs = slugs; })
       .catch(() => {});
   });
 
@@ -436,7 +436,7 @@
       deletedIndices={deletedAchievements}
       lastAddedIndex={lastAddedAchievementIndex}
       showTags={true}
-      {versionNames}
+      {versionSlugs}
       onAdd={addAchievement}
       onRemove={removeAchievement}
       onUndoRemove={undoRemoveAchievement}

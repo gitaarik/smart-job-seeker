@@ -29,17 +29,32 @@ export const load: PageServerLoad = async ({ parent }) => {
           },
         },
     },
-    orderBy: { date_created: "desc" },
+    orderBy: { name: "asc" },
   });
 
+  const publicResumeVersionId = profile?.public_resume_version ?? null;
+  const publicCvVersionId = profile?.public_cv_version ?? null;
+
+  const mapped = versions.map(({ profile_version_extensions_profile_version_extensions_extenderToprofile_versions: exts, ...v }) => ({
+    ...v,
+    extendsIds: exts?.map((e) => e.extended).filter((id): id is number => id !== null) ?? [],
+  }));
+
+  // Put public resume first, then public cv, then the rest sorted by name
+  const publicIds = new Set([publicResumeVersionId, publicCvVersionId].filter(Boolean));
+  const pinned = [publicResumeVersionId, publicCvVersionId]
+    .filter((id): id is number => id !== null)
+    .map((id) => mapped.find((v) => v.id === id)!)
+    .filter(Boolean);
+  // Deduplicate if both point to the same version
+  const pinnedUnique = [...new Map(pinned.map((v) => [v.id, v])).values()];
+  const rest = mapped.filter((v) => !publicIds.has(v.id));
+
   return {
-    versions: versions.map(({ profile_version_extensions_profile_version_extensions_extenderToprofile_versions: exts, ...v }) => ({
-      ...v,
-      extendsIds: exts?.map((e) => e.extended).filter((id): id is number => id !== null) ?? [],
-    })),
+    versions: [...pinnedUnique, ...rest],
     profileId: layoutData.selectedProfile.id,
-    publicResumeVersionId: profile?.public_resume_version ?? null,
-    publicCvVersionId: profile?.public_cv_version ?? null,
+    publicResumeVersionId,
+    publicCvVersionId,
   };
 };
 
@@ -56,20 +71,18 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
+    const slug = formData.get("slug") as string;
     const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const status = (formData.get("status") as string) || "draft";
     const extendsIds = formData.getAll("extendsIds").map((v) => parseInt(v as string)).filter((v) => !isNaN(v));
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Name is required" });
+    if (!slug || slug.trim().length === 0) {
+      return fail(400, { error: "Slug is required" });
     }
 
     const created = await db.profile_versions.create({
       data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-        status,
+        slug: slug.trim(),
+        name: name?.trim() || null,
         profile: profileId,
         date_created: new Date(),
       },
@@ -89,7 +102,7 @@ export const actions: Actions = {
       }
     }
 
-    generateVersionPdfs(profileId, name.trim()).catch(console.error);
+    generateVersionPdfs(profileId, slug.trim()).catch(console.error);
 
     return { success: true };
   },
@@ -107,9 +120,8 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
+    const slug = formData.get("slug") as string;
     const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const status = formData.get("status") as string;
     const extendsIds = formData.getAll("extendsIds").map((v) => parseInt(v as string)).filter((v) => !isNaN(v) && v !== id);
     const setPublicResume = formData.get("publicResume") === "on";
     const setPublicCv = formData.get("publicCv") === "on";
@@ -118,8 +130,8 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid version ID" });
     }
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Name is required" });
+    if (!slug || slug.trim().length === 0) {
+      return fail(400, { error: "Slug is required" });
     }
 
     const existing = await db.profile_versions.findFirst({
@@ -133,9 +145,8 @@ export const actions: Actions = {
     await db.profile_versions.update({
       where: { id },
       data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-        status: status || "draft",
+        slug: slug.trim(),
+        name: name?.trim() || null,
         date_updated: new Date(),
       },
     });
@@ -191,7 +202,7 @@ export const actions: Actions = {
       }
     }
 
-    generateVersionPdfs(profileId, name.trim()).catch(console.error);
+    generateVersionPdfs(profileId, slug.trim()).catch(console.error);
 
     return { success: true };
   },
