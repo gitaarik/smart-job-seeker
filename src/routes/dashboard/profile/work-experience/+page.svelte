@@ -4,15 +4,13 @@
   import {
     faArrowRight,
     faBriefcase,
-    faChevronDown,
-    faChevronUp,
     faExternalLink,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import ConfirmModal from "../components/ConfirmModal.svelte";
-  import Card from "../../components/Card.svelte";
+  import ItemCard from "../components/ItemCard.svelte";
   import { getWorkExperienceLogoUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -252,168 +250,103 @@
   {:else}
     <div class="space-y-3">
       {#each experiences as exp (exp.id)}
-        <Card class="overflow-hidden relative transition-all">
-          <!-- Chevron in top right corner -->
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              toggleExpand(exp.id);
-            }}
-            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
-            aria-label={expandedId === exp.id ? "Collapse" : "Expand"}
-          >
-            <FontAwesomeIcon
-              icon={expandedId === exp.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
-          </button>
+        <ItemCard
+          id={exp.id}
+          {expandedId}
+          onToggle={toggleExpand}
+          icon={faBriefcase}
+          imageUrl={getWorkExperienceLogoUrl(exp)}
+          imageAlt="{exp.name} logo"
+        >
+          {#snippet title()}
+            {exp.position}
+          {/snippet}
 
-          <!-- Header -->
-          <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
-            <div class="flex items-start gap-3">
-              <!-- Desktop: Logo on the left -->
-              <div class="hidden md:flex flex-shrink-0">
-                {#if getWorkExperienceLogoUrl(exp)}
-                  <img
-                    src={getWorkExperienceLogoUrl(exp)}
-                    alt="{exp.name} logo"
-                    class="w-12 h-12 rounded-lg object-cover"
-                  />
-                {:else}
-                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                    <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6 text-[var(--dash-primary)]" />
-                  </div>
-                {/if}
+          {#snippet subtitle()}
+            <span class="truncate max-w-[150px] sm:max-w-none">{exp.name}</span>
+            {#if exp.location}
+              <span class="text-[var(--dash-text-muted)]">•</span>
+              <span class="truncate max-w-[100px] sm:max-w-none">{exp.location}</span>
+            {/if}
+          {/snippet}
+
+          {#snippet dateline()}
+            {formatDisplayDate(exp.start_date) || "N/A"} – {formatDisplayDate(exp.end_date) || "Present"}
+          {/snippet}
+
+          {#snippet expandedContent()}
+            <!-- Website link in top right -->
+            {#if exp.website}
+              <a
+                href={exp.website}
+                target="_blank"
+                rel="noopener"
+                class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
+              >
+                Website
+                <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
+              </a>
+            {/if}
+
+            {#if exp.summary}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Summary</p>
+                <p class="text-sm text-[var(--dash-text)]">{exp.summary}</p>
               </div>
+            {/if}
 
-              <!-- Clickable area for expand/collapse -->
+            {#if exp.work_experience_technologies.length > 0}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Technologies</p>
+                <div class="flex flex-wrap gap-1">
+                  {#each exp.work_experience_technologies as tech}
+                    <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">{tech.name}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
+            {#if exp.work_experience_achievements.length > 0}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Achievements</p>
+                <ul class="text-sm text-[var(--dash-text)] space-y-1">
+                  {#each exp.work_experience_achievements as achievement}
+                    <li class="flex items-start gap-2">
+                      <span class="text-[var(--dash-primary)] mt-1">•</span>
+                      <span>
+                        {#if achievement.title}
+                          <span class="font-medium">{achievement.title}</span>
+                          {#if achievement.description} – {achievement.description}{/if}
+                        {:else}
+                          {achievement.description}
+                        {/if}
+                      </span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+
+            <!-- Action buttons -->
+            <div class="flex justify-end md:justify-start items-center gap-2 pt-2">
               <button
                 type="button"
-                onclick={() => toggleExpand(exp.id)}
-                class="flex items-start gap-3 flex-1 min-w-0 text-left"
+                onclick={() => deleteId = exp.id}
+                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
               >
-                <div class="flex-1 min-w-0">
-                  <!-- Position Title -->
-                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
-                    {exp.position}
-                  </h3>
-
-                  <!-- Company and location -->
-                  <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
-                    <span class="truncate max-w-[150px] sm:max-w-none">{exp.name}</span>
-                    {#if exp.location}
-                      <span class="text-[var(--dash-text-muted)]">•</span>
-                      <span class="truncate max-w-[100px] sm:max-w-none">{exp.location}</span>
-                    {/if}
-                  </div>
-
-                  <!-- Dates -->
-                  <div class="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[var(--dash-text-muted)]">
-                    {formatDisplayDate(exp.start_date) || "N/A"} – {formatDisplayDate(exp.end_date) || "Present"}
-                  </div>
-                </div>
+                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                Delete
               </button>
-
-              <!-- Mobile: Logo on the right, below chevron -->
-              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
-                <div class="h-6 mb-1"></div> <!-- Spacer for chevron -->
-                <button
-                  type="button"
-                  onclick={() => toggleExpand(exp.id)}
-                >
-                  {#if getWorkExperienceLogoUrl(exp)}
-                    <img
-                      src={getWorkExperienceLogoUrl(exp)}
-                      alt="{exp.name} logo"
-                      class="w-12 h-12 rounded-lg object-cover"
-                    />
-                  {:else}
-                    <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                      <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6 text-[var(--dash-primary)]" />
-                    </div>
-                  {/if}
-                </button>
-              </div>
+              <a
+                href="/dashboard/profile/work-experience/{exp.id}"
+                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              >
+                Edit
+                <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+              </a>
             </div>
-          </div>
-
-          <!-- Expanded Content -->
-          {#if expandedId === exp.id}
-            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4 relative">
-              <!-- Website link in top right -->
-              {#if exp.website}
-                <a
-                  href={exp.website}
-                  target="_blank"
-                  rel="noopener"
-                  class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
-                >
-                  Website
-                  <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
-                </a>
-              {/if}
-
-              {#if exp.summary}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Summary</p>
-                  <p class="text-sm text-[var(--dash-text)]">{exp.summary}</p>
-                </div>
-              {/if}
-
-              {#if exp.work_experience_technologies.length > 0}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Technologies</p>
-                  <div class="flex flex-wrap gap-1">
-                    {#each exp.work_experience_technologies as tech}
-                      <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">{tech.name}</span>
-                    {/each}
-                  </div>
-                </div>
-              {/if}
-
-              {#if exp.work_experience_achievements.length > 0}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Achievements</p>
-                  <ul class="text-sm text-[var(--dash-text)] space-y-1">
-                    {#each exp.work_experience_achievements as achievement}
-                      <li class="flex items-start gap-2">
-                        <span class="text-[var(--dash-primary)] mt-1">•</span>
-                        <span>
-                          {#if achievement.title}
-                            <span class="font-medium">{achievement.title}</span>
-                            {#if achievement.description} – {achievement.description}{/if}
-                          {:else}
-                            {achievement.description}
-                          {/if}
-                        </span>
-                      </li>
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
-
-              <!-- Action buttons -->
-              <div class="flex justify-end md:justify-start items-center gap-2 pt-2">
-                <button
-                  type="button"
-                  onclick={() => deleteId = exp.id}
-                  class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                  Delete
-                </button>
-                <a
-                  href="/dashboard/profile/work-experience/{exp.id}"
-                  class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  Edit
-                  <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          {/if}
-        </Card>
+          {/snippet}
+        </ItemCard>
       {/each}
     </div>
   {/if}

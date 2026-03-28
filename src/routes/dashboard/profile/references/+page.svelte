@@ -5,7 +5,6 @@
   import {
     faCheck,
     faPencil,
-    faPlus,
     faQuoteLeft,
     faTimes,
     faTrash,
@@ -13,7 +12,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import ConfirmModal from "../components/ConfirmModal.svelte";
-  import Card from "../../components/Card.svelte";
+  import ItemCard from "../components/ItemCard.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -73,20 +72,6 @@
       await update();
       if (result.type === "success") {
         editingId = null;
-      }
-    };
-  }
-
-  function handleDeleteSubmit() {
-    return async (
-      { result, update }: {
-        result: { type: string };
-        update: () => Promise<void>;
-      },
-    ) => {
-      await update();
-      if (result.type === "success") {
-        deleteId = null;
       }
     };
   }
@@ -202,10 +187,28 @@
   {:else}
     <div class="space-y-4">
       {#each references as ref (ref.id)}
-        <Card class="overflow-hidden relative transition-all">
+        <ItemCard
+          id={ref.id}
+          icon={faQuoteLeft}
+        >
+          {#snippet title()}
+            {ref.author}
+          {/snippet}
+
+          {#snippet subtitle()}
+            {#if ref.author_position}
+              {ref.author_position}
+            {/if}
+          {/snippet}
+
+          {#snippet dateline()}
+            {#if ref.text}
+              <span class="text-[var(--dash-text)] italic text-sm">"{ref.text}"</span>
+            {/if}
+          {/snippet}
+
           {#if editingId === ref.id}
-            <!-- Edit Mode -->
-            <div class="p-3 sm:p-4">
+            {#snippet editContent()}
               <form
                 method="POST"
                 action="?/update"
@@ -283,69 +286,28 @@
                   </button>
                 </div>
               </form>
-            </div>
-          {:else}
-            <!-- View Mode -->
-            <!-- Header -->
-            <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
-              <div class="flex items-start gap-3">
-                <!-- Desktop: Icon on the left -->
-                <div class="hidden md:flex flex-shrink-0">
-                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                    <FontAwesomeIcon icon={faQuoteLeft} class="w-6 h-6 text-[var(--dash-primary)]" />
-                  </div>
-                </div>
-
-                <!-- Content -->
-                <div class="flex-1 min-w-0">
-                  <!-- Author Name -->
-                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base">
-                    {ref.author}
-                  </h3>
-
-                  <!-- Position -->
-                  {#if ref.author_position}
-                    <div class="mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)]">
-                      {ref.author_position}
-                    </div>
-                  {/if}
-
-                  <!-- Quote -->
-                  {#if ref.text}
-                    <p class="text-[var(--dash-text)] mt-2 text-sm italic">"{ref.text}"</p>
-                  {/if}
-                </div>
-
-                <!-- Mobile: Icon on the right -->
-                <div class="flex-shrink-0 md:hidden">
-                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                    <FontAwesomeIcon icon={faQuoteLeft} class="w-6 h-6 text-[var(--dash-primary)]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer with action buttons -->
-            <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
-              <button
-                type="button"
-                onclick={() => deleteId = ref.id}
-                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                Delete
-              </button>
-              <button
-                type="button"
-                onclick={() => startEdit(ref)}
-                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-                Edit
-              </button>
-            </div>
+            {/snippet}
           {/if}
-        </Card>
+
+          {#snippet footer()}
+            <button
+              type="button"
+              onclick={() => deleteId = ref.id}
+              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              Delete
+            </button>
+            <button
+              type="button"
+              onclick={() => startEdit(ref)}
+              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+              Edit
+            </button>
+          {/snippet}
+        </ItemCard>
       {/each}
     </div>
   {/if}

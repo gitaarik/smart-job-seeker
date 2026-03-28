@@ -4,8 +4,6 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
-    faChevronDown,
-    faChevronUp,
     faCopy,
     faEye,
     faLink,
@@ -13,10 +11,10 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
+  import ItemCard from "../../profile/components/ItemCard.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -369,380 +367,348 @@
       <div class="space-y-3">
         {#each tokens as token (token.id)}
           {@const expired = isExpired(token.expires_at)}
-          {@const       limitReached = token.visit_limit &&
-        token.visit_count >= token.visit_limit}
-          <Card class="overflow-hidden">
-            <!-- Header -->
-            <div
-              role="button"
-              tabindex="0"
-              onclick={() => toggleExpand(token.id)}
-              onkeydown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggleExpand(token.id);
-                }
-              }}
-              class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
-            >
-              <div class="flex items-center gap-4 flex-1 min-w-0">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style="background-color: {expired || limitReached ? 'var(--dash-bg)' : 'var(--dash-success-light)'};"
-                >
-                  <FontAwesomeIcon
-                    icon={faLink}
-                    class="w-5 h-5"
-                    style="color: {expired || limitReached ? 'var(--dash-text-muted)' : 'var(--dash-success)'};"
-                  />
-                </div>
+          {@const limitReached = token.visit_limit &&
+            token.visit_count >= token.visit_limit}
+          <ItemCard
+            id={token.id}
+            {expandedId}
+            onToggle={toggleExpand}
+            icon={faLink}
+            iconColor={expired || limitReached ? "text-[var(--dash-text-muted)]" : "text-[var(--dash-success)]"}
+          >
+            {#snippet title()}
+              {token.name || "Unnamed Link"}
+            {/snippet}
 
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="font-medium text-[var(--dash-text)] truncate">
-                      {token.name || "Unnamed Link"}
-                    </h3>
-                    {#if expired}
-                      <span
-                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-error-light)] text-[var(--dash-error)]"
-                      >
-                        Expired
-                      </span>
-                    {:else if limitReached}
-                      <span
-                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]"
-                      >
-                        Limit Reached
-                      </span>
-                    {:else}
-                      <span
-                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]"
-                      >
-                        Active
-                      </span>
-                    {/if}
-                  </div>
-                  <p class="text-sm text-[var(--dash-text-secondary)] truncate">
-                    {token.version?.name || "Unknown version"}
-                    <span class="mx-1">•</span>
-                    {token.format === "cv" ? "CV" : "Resume"}
-                    <span class="mx-1">•</span>
-                    {token.view_mode === "pdf" ? "PDF" : "HTML"}
-                    <span class="mx-1">•</span>
-                    <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
-                    {token.visit_count} view{token.visit_count !== 1 ? "s" : ""}
-                    {#if token.visit_limit}
-                      / {token.visit_limit}
-                    {/if}
-                  </p>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(token.token, token.id);
-                  }}
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                  aria-label="Copy link"
+            {#snippet badges()}
+              {#if expired}
+                <span
+                  class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-error-light)] text-[var(--dash-error)]"
                 >
-                  <FontAwesomeIcon
-                    icon={copiedId === token.id ? faCheck : faCopy}
-                    class="
-                      w-4 h-4 {copiedId === token.id
-                      ? 'text-green-600'
-                      : ''}
-                    "
-                  />
-                </button>
+                  Expired
+                </span>
+              {:else if limitReached}
+                <span
+                  class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]"
+                >
+                  Limit Reached
+                </span>
+              {:else}
+                <span
+                  class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]"
+                >
+                  Active
+                </span>
+              {/if}
+            {/snippet}
+
+            {#snippet subtitle()}
+              {token.version?.name || "Unknown version"}
+              <span class="mx-1">•</span>
+              {token.format === "cv" ? "CV" : "Resume"}
+              <span class="mx-1">•</span>
+              {token.view_mode === "pdf" ? "PDF" : "HTML"}
+              <span class="mx-1">•</span>
+              <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
+              {token.visit_count} view{token.visit_count !== 1 ? "s" : ""}
+              {#if token.visit_limit}
+                / {token.visit_limit}
+              {/if}
+            {/snippet}
+
+            {#snippet headerActions()}
+              <button
+                type="button"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(token.token, token.id);
+                }}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                aria-label="Copy link"
+              >
                 <FontAwesomeIcon
-                  icon={expandedId === token.id ? faChevronUp : faChevronDown}
-                  class="w-4 h-4 text-[var(--dash-text-secondary)]"
+                  icon={copiedId === token.id ? faCheck : faCopy}
+                  class="w-4 h-4 {copiedId === token.id ? 'text-green-600' : ''}"
                 />
-              </div>
-            </div>
+              </button>
+            {/snippet}
 
-            <!-- Expanded Content -->
-            {#if expandedId === token.id}
-              <div class="border-t border-[var(--dash-border)] p-4">
-                {#if editingId === token.id}
-                  <!-- Edit Mode -->
-                  <form
-                    method="POST"
-                    action="?/update"
-                    use:enhance={handleEditSubmit}
-                  >
-                    <input type="hidden" name="id" value={token.id} />
-                    <div class="space-y-4">
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            for="edit-name-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            Name
-                          </label>
-                          <input
-                            type="text"
-                            id="edit-name-{token.id}"
-                            name="name"
-                            bind:value={editName}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            for="edit-status-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            Status
-                          </label>
-                          <select
-                            id="edit-status-{token.id}"
-                            name="status"
-                            bind:value={editStatus}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          >
-                            <option value="published">Active</option>
-                            <option value="archived">Disabled</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            for="edit-version-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            Version
-                          </label>
-                          <select
-                            id="edit-version-{token.id}"
-                            name="profile_version"
-                            bind:value={editVersion}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          >
-                            {#each versions as version}
-                              <option value={version.id.toString()}>{version.name}</option>
-                            {/each}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            for="edit-format-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            Format
-                          </label>
-                          <select
-                            id="edit-format-{token.id}"
-                            name="format"
-                            bind:value={editFormat}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          >
-                            <option value="resume">Resume (compact)</option>
-                            <option value="cv">CV (full)</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            for="edit-view-mode-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            View Mode
-                          </label>
-                          <select
-                            id="edit-view-mode-{token.id}"
-                            name="view_mode"
-                            bind:value={editViewMode}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          >
-                            <option value="html">HTML (web page)</option>
-                            <option value="pdf">PDF (download)</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            for="edit-visit-limit-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            Visit Limit
-                          </label>
-                          <input
-                            type="number"
-                            id="edit-visit-limit-{token.id}"
-                            name="visit_limit"
-                            bind:value={editVisitLimit}
-                            min="1"
-                            placeholder="Unlimited"
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            for="edit-expires-at-{token.id}"
-                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                          >
-                            Expires On
-                          </label>
-                          <input
-                            type="date"
-                            id="edit-expires-at-{token.id}"
-                            name="expires_at"
-                            bind:value={editExpiresAt}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-                          />
-                        </div>
+            {#snippet expandedContent()}
+              {#if editingId === token.id}
+                <!-- Edit Mode -->
+                <form
+                  method="POST"
+                  action="?/update"
+                  use:enhance={handleEditSubmit}
+                >
+                  <input type="hidden" name="id" value={token.id} />
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          for="edit-name-{token.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          id="edit-name-{token.id}"
+                          name="name"
+                          bind:value={editName}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        />
                       </div>
 
                       <div>
                         <label
-                          for="edit-notes-{token.id}"
+                          for="edit-status-{token.id}"
                           class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
-                          Notes
+                          Status
                         </label>
-                        <textarea
-                          id="edit-notes-{token.id}"
-                          name="notes"
-                          bind:value={editNotes}
-                          rows={2}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                        ></textarea>
+                        <select
+                          id="edit-status-{token.id}"
+                          name="status"
+                          bind:value={editStatus}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        >
+                          <option value="published">Active</option>
+                          <option value="archived">Disabled</option>
+                        </select>
                       </div>
                     </div>
 
-                    <div class="flex justify-end gap-2 mt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          for="edit-version-{token.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          Version
+                        </label>
+                        <select
+                          id="edit-version-{token.id}"
+                          name="profile_version"
+                          bind:value={editVersion}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        >
+                          {#each versions as version}
+                            <option value={version.id.toString()}>{version.name}</option>
+                          {/each}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label
+                          for="edit-format-{token.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          Format
+                        </label>
+                        <select
+                          id="edit-format-{token.id}"
+                          name="format"
+                          bind:value={editFormat}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        >
+                          <option value="resume">Resume (compact)</option>
+                          <option value="cv">CV (full)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          for="edit-view-mode-{token.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          View Mode
+                        </label>
+                        <select
+                          id="edit-view-mode-{token.id}"
+                          name="view_mode"
+                          bind:value={editViewMode}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        >
+                          <option value="html">HTML (web page)</option>
+                          <option value="pdf">PDF (download)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label
+                          for="edit-visit-limit-{token.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          Visit Limit
+                        </label>
+                        <input
+                          type="number"
+                          id="edit-visit-limit-{token.id}"
+                          name="visit_limit"
+                          bind:value={editVisitLimit}
+                          min="1"
+                          placeholder="Unlimited"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          for="edit-expires-at-{token.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          Expires On
+                        </label>
+                        <input
+                          type="date"
+                          id="edit-expires-at-{token.id}"
+                          name="expires_at"
+                          bind:value={editExpiresAt}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        for="edit-notes-{token.id}"
+                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                      >
+                        Notes
+                      </label>
+                      <textarea
+                        id="edit-notes-{token.id}"
+                        name="notes"
+                        bind:value={editNotes}
+                        rows={2}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end gap-2 mt-4">
+                    <button
+                      type="button"
+                      onclick={cancelEdit}
+                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                      aria-label="Cancel"
+                    >
+                      <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+                    </button>
+                    <button
+                      type="submit"
+                      class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+                      aria-label="Save"
+                    >
+                      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              {:else}
+                <!-- View Mode -->
+                <div class="space-y-4">
+                  <!-- Share URL -->
+                  <div>
+                    <p
+                      class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
+                    >
+                      Share URL
+                    </p>
+                    <div
+                      class="flex items-center gap-2 bg-[var(--dash-bg)] p-2 rounded-lg"
+                    >
+                      <code
+                        class="text-sm text-[var(--dash-text)] flex-1 truncate"
+                      >
+                        {getPrivateLinkUrl(token.token)}
+                      </code>
                       <button
                         type="button"
-                        onclick={cancelEdit}
-                        class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                        aria-label="Cancel"
+                        onclick={() => copyToClipboard(token.token, token.id)}
+                        class="px-3 py-1 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors"
                       >
-                        <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-                      </button>
-                      <button
-                        type="submit"
-                        class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-                        aria-label="Save"
-                      >
-                        <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+                        {copiedId === token.id ? "Copied!" : "Copy"}
                       </button>
                     </div>
-                  </form>
-                {:else}
-                  <!-- View Mode -->
-                  <div class="space-y-4">
-                    <!-- Share URL -->
+                  </div>
+
+                  <!-- Stats -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p class="text-[var(--dash-text-secondary)]">Views</p>
+                      <p class="font-medium text-[var(--dash-text)]">
+                        {token.visit_count}
+                        {#if token.visit_limit}
+                          / {token.visit_limit}
+                        {/if}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-[var(--dash-text-secondary)]">Created</p>
+                      <p class="font-medium text-[var(--dash-text)]">
+                        {formatDate(token.date_created)}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-[var(--dash-text-secondary)]">Expires</p>
+                      <p class="font-medium text-[var(--dash-text)]">
+                        {
+                          token.expires_at
+                            ? formatDate(token.expires_at)
+                            : "Never"
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-[var(--dash-text-secondary)]">
+                        Last Accessed
+                      </p>
+                      <p class="font-medium text-[var(--dash-text)]">
+                        {formatDateTime(token.last_accessed_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {#if token.notes}
                     <div>
                       <p
                         class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
                       >
-                        Share URL
+                        Notes
                       </p>
-                      <div
-                        class="flex items-center gap-2 bg-[var(--dash-bg)] p-2 rounded-lg"
-                      >
-                        <code
-                          class="text-sm text-[var(--dash-text)] flex-1 truncate"
-                        >
-                          {getPrivateLinkUrl(token.token)}
-                        </code>
-                        <button
-                          type="button"
-                          onclick={() => copyToClipboard(token.token, token.id)}
-                          class="px-3 py-1 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors"
-                        >
-                          {copiedId === token.id ? "Copied!" : "Copy"}
-                        </button>
-                      </div>
+                      <p class="text-sm text-[var(--dash-text)]">
+                        {token.notes}
+                      </p>
                     </div>
+                  {/if}
 
-                    <!-- Stats -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p class="text-[var(--dash-text-secondary)]">Views</p>
-                        <p class="font-medium text-[var(--dash-text)]">
-                          {token.visit_count}
-                          {#if token.visit_limit}
-                            / {token.visit_limit}
-                          {/if}
-                        </p>
-                      </div>
-                      <div>
-                        <p class="text-[var(--dash-text-secondary)]">Created</p>
-                        <p class="font-medium text-[var(--dash-text)]">
-                          {formatDate(token.date_created)}
-                        </p>
-                      </div>
-                      <div>
-                        <p class="text-[var(--dash-text-secondary)]">Expires</p>
-                        <p class="font-medium text-[var(--dash-text)]">
-                          {
-                            token.expires_at
-                              ? formatDate(token.expires_at)
-                              : "Never"
-                          }
-                        </p>
-                      </div>
-                      <div>
-                        <p class="text-[var(--dash-text-secondary)]">
-                          Last Accessed
-                        </p>
-                        <p class="font-medium text-[var(--dash-text)]">
-                          {formatDateTime(token.last_accessed_at)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {#if token.notes}
-                      <div>
-                        <p
-                          class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
-                        >
-                          Notes
-                        </p>
-                        <p class="text-sm text-[var(--dash-text)]">
-                          {token.notes}
-                        </p>
-                      </div>
-                    {/if}
-
-                    <div
-                      class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"
+                  <div
+                    class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"
+                  >
+                    <button
+                      type="button"
+                      onclick={() => startEdit(token)}
+                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                      aria-label="Edit"
                     >
-                      <button
-                        type="button"
-                        onclick={() => startEdit(token)}
-                        class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                        aria-label="Edit"
-                      >
-                        <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onclick={() => (deleteId = token.id)}
-                        class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                        aria-label="Delete"
-                      >
-                        <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                      </button>
-                    </div>
+                      <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (deleteId = token.id)}
+                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                      aria-label="Delete"
+                    >
+                      <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+                    </button>
                   </div>
-                {/if}
-              </div>
-            {/if}
-          </Card>
+                </div>
+              {/if}
+            {/snippet}
+          </ItemCard>
         {/each}
       </div>
     {/if}

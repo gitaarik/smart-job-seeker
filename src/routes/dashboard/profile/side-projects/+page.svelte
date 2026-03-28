@@ -2,8 +2,6 @@
   import type { ActionData, PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faChevronDown,
-    faChevronUp,
     faExternalLink,
     faLightbulb,
     faPencil,
@@ -13,7 +11,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import ConfirmModal from "../components/ConfirmModal.svelte";
-  import Card from "../../components/Card.svelte";
+  import ItemCard from "../components/ItemCard.svelte";
   import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -233,137 +231,71 @@
   {:else}
     <div class="space-y-3">
       {#each projects as project (project.id)}
-        <Card class="overflow-hidden relative transition-all">
-          <!-- Chevron in top right corner -->
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              toggleExpand(project.id);
-            }}
-            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
-            aria-label={expandedId === project.id ? "Collapse" : "Expand"}
-          >
-            <FontAwesomeIcon
-              icon={expandedId === project.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
-          </button>
+        <ItemCard
+          id={project.id}
+          {expandedId}
+          onToggle={toggleExpand}
+          icon={faLightbulb}
+          imageUrl={getSideProjectImageUrl(project)}
+          imageAlt="{project.name} image"
+        >
+          {#snippet title()}
+            {project.name}
+            {#if project.stars}
+              <span class="text-amber-500 text-sm ml-2">
+                <FontAwesomeIcon icon={faStar} class="w-3 h-3" />
+                {project.stars}
+              </span>
+            {/if}
+          {/snippet}
 
-          <!-- Header -->
-          <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
-            <div class="flex items-start gap-3">
-              <!-- Desktop: Image on the left -->
-              <div class="hidden md:flex flex-shrink-0">
-                {#if getSideProjectImageUrl(project)}
-                  <img
-                    src={getSideProjectImageUrl(project)}
-                    alt="{project.name} image"
-                    class="w-12 h-12 rounded-lg object-cover"
-                  />
-                {:else}
-                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                    <FontAwesomeIcon icon={faLightbulb} class="w-6 h-6 text-[var(--dash-primary)]" />
-                  </div>
-                {/if}
-              </div>
+          {#snippet subtitle()}
+            <span class="truncate max-w-[200px] sm:max-w-none">
+              {project.side_project_technologies.map((t) => t.name).join(", ") || "No technologies listed"}
+            </span>
+          {/snippet}
 
-              <!-- Clickable area for expand/collapse -->
-              <button
-                type="button"
-                onclick={() => toggleExpand(project.id)}
-                class="flex items-start gap-3 flex-1 min-w-0 text-left"
+          {#snippet dateline()}
+            {formatDisplayDate(project.start_date) || "N/A"} – {formatDisplayDate(project.end_date) || "Present"}
+          {/snippet}
+
+          {#snippet expandedContent()}
+            <!-- URL link in top right -->
+            {#if project.url}
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noopener"
+                class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
               >
-                <div class="flex-1 min-w-0">
-                  <!-- Project Name -->
-                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
-                    {project.name}
-                    {#if project.stars}
-                      <span class="text-amber-500 text-sm ml-2">
-                        <FontAwesomeIcon icon={faStar} class="w-3 h-3" />
-                        {project.stars}
-                      </span>
-                    {/if}
-                  </h3>
+                {project.url_label || "View"}
+                <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
+              </a>
+            {/if}
 
-                  <!-- Technologies -->
-                  <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
-                    <span class="truncate max-w-[200px] sm:max-w-none">
-                      {project.side_project_technologies.map((t) => t.name).join(", ") || "No technologies listed"}
-                    </span>
-                  </div>
-
-                  <!-- Dates -->
-                  <div class="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[var(--dash-text-muted)]">
-                    {formatDisplayDate(project.start_date) || "N/A"} – {formatDisplayDate(project.end_date) || "Present"}
-                  </div>
-                </div>
-              </button>
-
-              <!-- Mobile: Image on the right, below chevron -->
-              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
-                <div class="h-6 mb-1"></div> <!-- Spacer for chevron -->
-                <button
-                  type="button"
-                  onclick={() => toggleExpand(project.id)}
-                >
-                  {#if getSideProjectImageUrl(project)}
-                    <img
-                      src={getSideProjectImageUrl(project)}
-                      alt="{project.name} image"
-                      class="w-12 h-12 rounded-lg object-cover"
-                    />
-                  {:else}
-                    <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                      <FontAwesomeIcon icon={faLightbulb} class="w-6 h-6 text-[var(--dash-primary)]" />
-                    </div>
-                  {/if}
-                </button>
+            {#if project.summary}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Summary</p>
+                <p class="text-sm text-[var(--dash-text)]">{project.summary}</p>
               </div>
-            </div>
-          </div>
+            {/if}
 
-          <!-- Expanded Content -->
-          {#if expandedId === project.id}
-            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4 relative">
-              <!-- URL link in top right -->
-              {#if project.url}
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener"
-                  class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
-                >
-                  {project.url_label || "View"}
-                  <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
-                </a>
-              {/if}
+            {#if project.side_project_achievements.length > 0}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Achievements</p>
+                <ul class="text-sm text-[var(--dash-text)] space-y-1">
+                  {#each project.side_project_achievements as achievement}
+                    <li class="flex items-start gap-2">
+                      <span class="text-[var(--dash-primary)] mt-1">•</span>
+                      <span>{achievement.description}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+          {/snippet}
 
-              {#if project.summary}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Summary</p>
-                  <p class="text-sm text-[var(--dash-text)]">{project.summary}</p>
-                </div>
-              {/if}
-
-              {#if project.side_project_achievements.length > 0}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Achievements</p>
-                  <ul class="text-sm text-[var(--dash-text)] space-y-1">
-                    {#each project.side_project_achievements as achievement}
-                      <li class="flex items-start gap-2">
-                        <span class="text-[var(--dash-primary)] mt-1">•</span>
-                        <span>{achievement.description}</span>
-                      </li>
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
-            </div>
-          {/if}
-
-          <!-- Footer with action buttons -->
-          <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+          {#snippet footer()}
             <button
               type="button"
               onclick={() => deleteId = project.id}
@@ -379,8 +311,8 @@
               <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
               Edit
             </a>
-          </div>
-        </Card>
+          {/snippet}
+        </ItemCard>
       {/each}
     </div>
   {/if}

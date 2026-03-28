@@ -2,8 +2,6 @@
   import type { ActionData, PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faChevronDown,
-    faChevronUp,
     faExternalLink,
     faGraduationCap,
     faPencil,
@@ -12,7 +10,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import ConfirmModal from "../components/ConfirmModal.svelte";
-  import Card from "../../components/Card.svelte";
+  import ItemCard from "../components/ItemCard.svelte";
   import { getEducationLogoUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -271,133 +269,67 @@
   {:else}
     <div class="space-y-3">
       {#each education as edu (edu.id)}
-        <Card class="overflow-hidden relative transition-all">
-          <!-- Chevron in top right corner -->
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              toggleExpand(edu.id);
-            }}
-            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
-            aria-label={expandedId === edu.id ? "Collapse" : "Expand"}
-          >
-            <FontAwesomeIcon
-              icon={expandedId === edu.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
-          </button>
+        <ItemCard
+          id={edu.id}
+          {expandedId}
+          onToggle={toggleExpand}
+          icon={faGraduationCap}
+          imageUrl={getEducationLogoUrl(edu)}
+          imageAlt="{edu.institution} logo"
+        >
+          {#snippet title()}
+            {edu.institution}
+          {/snippet}
 
-          <!-- Header -->
-          <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
-            <div class="flex items-start gap-3">
-              <!-- Desktop: Logo on the left -->
-              <div class="hidden md:flex flex-shrink-0">
-                {#if getEducationLogoUrl(edu)}
-                  <img
-                    src={getEducationLogoUrl(edu)}
-                    alt="{edu.institution} logo"
-                    class="w-12 h-12 rounded-lg object-cover"
-                  />
-                {:else}
-                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                    <FontAwesomeIcon icon={faGraduationCap} class="w-6 h-6 text-[var(--dash-primary)]" />
-                  </div>
-                {/if}
-              </div>
+          {#snippet subtitle()}
+            {#if edu.study_type}
+              <span class="truncate max-w-[150px] sm:max-w-none">{edu.study_type}</span>
+            {/if}
+            {#if edu.study_type && edu.area}
+              <span class="text-[var(--dash-text-muted)]">in</span>
+            {/if}
+            {#if edu.area}
+              <span class="truncate max-w-[150px] sm:max-w-none">{edu.area}</span>
+            {/if}
+            {#if edu.graduation_year}
+              <span class="text-[var(--dash-text-muted)]">({edu.graduation_year})</span>
+            {/if}
+          {/snippet}
 
-              <!-- Clickable area for expand/collapse -->
-              <button
-                type="button"
-                onclick={() => toggleExpand(edu.id)}
-                class="flex items-start gap-3 flex-1 min-w-0 text-left"
+          {#snippet dateline()}
+            {formatDisplayDate(edu.start_date) || "N/A"} – {formatDisplayDate(edu.end_date) || "Present"}
+          {/snippet}
+
+          {#snippet expandedContent()}
+            <!-- Website link in top right -->
+            {#if edu.url}
+              <a
+                href={edu.url}
+                target="_blank"
+                rel="noopener"
+                class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
               >
-                <div class="flex-1 min-w-0">
-                  <!-- Institution -->
-                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
-                    {edu.institution}
-                  </h3>
+                Website
+                <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
+              </a>
+            {/if}
 
-                  <!-- Degree and field -->
-                  <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
-                    {#if edu.study_type}
-                      <span class="truncate max-w-[150px] sm:max-w-none">{edu.study_type}</span>
-                    {/if}
-                    {#if edu.study_type && edu.area}
-                      <span class="text-[var(--dash-text-muted)]">in</span>
-                    {/if}
-                    {#if edu.area}
-                      <span class="truncate max-w-[150px] sm:max-w-none">{edu.area}</span>
-                    {/if}
-                    {#if edu.graduation_year}
-                      <span class="text-[var(--dash-text-muted)]">({edu.graduation_year})</span>
-                    {/if}
-                  </div>
-
-                  <!-- Dates -->
-                  <div class="mt-1.5 sm:mt-2 text-xs sm:text-sm text-[var(--dash-text-muted)]">
-                    {formatDisplayDate(edu.start_date) || "N/A"} – {formatDisplayDate(edu.end_date) || "Present"}
-                  </div>
-                </div>
-              </button>
-
-              <!-- Mobile: Logo on the right, below chevron -->
-              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
-                <div class="h-6 mb-1"></div> <!-- Spacer for chevron -->
-                <button
-                  type="button"
-                  onclick={() => toggleExpand(edu.id)}
-                >
-                  {#if getEducationLogoUrl(edu)}
-                    <img
-                      src={getEducationLogoUrl(edu)}
-                      alt="{edu.institution} logo"
-                      class="w-12 h-12 rounded-lg object-cover"
-                    />
-                  {:else}
-                    <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                      <FontAwesomeIcon icon={faGraduationCap} class="w-6 h-6 text-[var(--dash-primary)]" />
-                    </div>
-                  {/if}
-                </button>
+            {#if edu.location}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Location</p>
+                <p class="text-sm text-[var(--dash-text)]">{edu.location}</p>
               </div>
-            </div>
-          </div>
+            {/if}
 
-          <!-- Expanded Content -->
-          {#if expandedId === edu.id}
-            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4 relative">
-              <!-- Website link in top right -->
-              {#if edu.url}
-                <a
-                  href={edu.url}
-                  target="_blank"
-                  rel="noopener"
-                  class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
-                >
-                  Website
-                  <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
-                </a>
-              {/if}
+            {#if edu.summary}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Summary</p>
+                <p class="text-sm text-[var(--dash-text)]">{edu.summary}</p>
+              </div>
+            {/if}
+          {/snippet}
 
-              {#if edu.location}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Location</p>
-                  <p class="text-sm text-[var(--dash-text)]">{edu.location}</p>
-                </div>
-              {/if}
-
-              {#if edu.summary}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Summary</p>
-                  <p class="text-sm text-[var(--dash-text)]">{edu.summary}</p>
-                </div>
-              {/if}
-            </div>
-          {/if}
-
-          <!-- Footer with action buttons -->
-          <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+          {#snippet footer()}
             <button
               type="button"
               onclick={() => deleteId = edu.id}
@@ -413,8 +345,8 @@
               <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
               Edit
             </a>
-          </div>
-        </Card>
+          {/snippet}
+        </ItemCard>
       {/each}
     </div>
   {/if}
