@@ -46,6 +46,12 @@
     onskillreorder,
   }: Props = $props();
 
+  // Shared toggle state across all categories
+  let showLevel = $state(false);
+  let showExperience = $state(false);
+  let showVersionTags = $state(false);
+  let reorderMode = $state(false);
+
   // Compact mode: track expanded items
   let expandedItems = $state<Set<number>>(new Set());
 
@@ -215,6 +221,10 @@
     bind:skills={categories[categoryIndex].skills}
     {levelOptions}
     {versionSlugs}
+    bind:showLevel
+    bind:showExperience
+    bind:showVersionTags
+    bind:reorderMode
     oncreate={onskillcreate
       ? (skill) => onskillcreate(categories[categoryIndex], skill)
       : undefined}

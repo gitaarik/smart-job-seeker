@@ -35,6 +35,10 @@
     skills: SkillItem[];
     levelOptions?: LevelOption[];
     versionSlugs?: string[];
+    showLevel?: boolean;
+    showExperience?: boolean;
+    showVersionTags?: boolean;
+    reorderMode?: boolean;
     onupdate?: (skill: SkillItem) => void;
     oncreate?: (skill: SkillItem) => void;
     onremove?: (skill: SkillItem) => void;
@@ -45,6 +49,10 @@
     skills = $bindable(),
     levelOptions = defaultLevelOptions,
     versionSlugs = [],
+    showLevel = $bindable(false),
+    showExperience = $bindable(false),
+    showVersionTags = $bindable(false),
+    reorderMode = $bindable(false),
     onupdate,
     oncreate,
     onremove,
@@ -55,11 +63,26 @@
   let editingSnapshot = $state<SkillItem | null>(null);
   let editingIsNew = $state(false);
 
-  let showLevel = $state(false);
-  let showExperience = $state(false);
-  let showVersionTags = $state(false);
-  let reorderMode = $state(false);
   let reorderSnapshot = $state<SkillItem[] | null>(null);
+
+  // When reorderMode is toggled externally (from another category), take/restore snapshot
+  let prevReorderMode = $state(false);
+  $effect(() => {
+    if (reorderMode && !prevReorderMode) {
+      // Entering reorder mode — take snapshot if we don't have one yet
+      if (!reorderSnapshot) {
+        if (editingIndex !== null) confirmEditing();
+        reorderSnapshot = skills.map((s) => ({ ...s }));
+      }
+    } else if (!reorderMode && prevReorderMode) {
+      // Exiting reorder mode — restore from snapshot if not yet confirmed/cancelled
+      if (reorderSnapshot) {
+        skills = reorderSnapshot;
+        reorderSnapshot = null;
+      }
+    }
+    prevReorderMode = reorderMode;
+  });
 
   // Version tag editing state
   const builtinTags = ["resume", "cv"];
@@ -300,9 +323,7 @@
         reorderSnapshot = skills.map((s) => ({ ...s }));
         reorderMode = true;
       } else {
-        // Clicking the toggle again = cancel
-        if (reorderSnapshot) skills = reorderSnapshot;
-        reorderSnapshot = null;
+        // Clicking the toggle again = cancel all reordering
         reorderMode = false;
       }
     }}
@@ -365,7 +386,6 @@
       onclick={() => {
         if (reorderSnapshot) skills = reorderSnapshot;
         reorderSnapshot = null;
-        reorderMode = false;
       }}
       class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
       aria-label="Cancel reorder"
@@ -377,7 +397,6 @@
       onclick={() => {
         onreorder?.(skills);
         reorderSnapshot = null;
-        reorderMode = false;
       }}
       class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
       aria-label="Confirm reorder"
