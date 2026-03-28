@@ -174,7 +174,7 @@
       icon: faCog,
       children: [
         {
-          label: "Resume/CV Versions",
+          label: "Resumes & CVs",
           href: "/dashboard/export/resume",
           icon: faFileAlt,
         },
