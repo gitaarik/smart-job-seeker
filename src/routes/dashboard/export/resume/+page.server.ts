@@ -21,11 +21,22 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const versions = await db.profile_versions.findMany({
     where: { profile: layoutData.selectedProfile.id },
+    include: {
+      profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
+        {
+          select: {
+            extended: true,
+          },
+        },
+    },
     orderBy: { date_created: "desc" },
   });
 
   return {
-    versions,
+    versions: versions.map(({ profile_version_extensions_profile_version_extensions_extenderToprofile_versions: exts, ...v }) => ({
+      ...v,
+      extendsIds: exts?.map((e) => e.extended).filter((id): id is number => id !== null) ?? [],
+    })),
     profileId: layoutData.selectedProfile.id,
     publicResumeVersionId: profile?.public_resume_version ?? null,
     publicCvVersionId: profile?.public_cv_version ?? null,
@@ -48,12 +59,13 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const status = (formData.get("status") as string) || "draft";
+    const extendsIds = formData.getAll("extendsIds").map((v) => parseInt(v as string)).filter((v) => !isNaN(v));
 
     if (!name || name.trim().length === 0) {
       return fail(400, { error: "Name is required" });
     }
 
-    await db.profile_versions.create({
+    const created = await db.profile_versions.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,
@@ -62,6 +74,20 @@ export const actions: Actions = {
         date_created: new Date(),
       },
     });
+
+    for (const parentId of extendsIds) {
+      const parent = await db.profile_versions.findFirst({
+        where: { id: parentId, profile: profileId },
+      });
+      if (parent) {
+        await db.profile_version_extensions.create({
+          data: {
+            extender: created.id,
+            extended: parentId,
+          },
+        });
+      }
+    }
 
     generateVersionPdfs(profileId, name.trim()).catch(console.error);
 
@@ -84,6 +110,7 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const status = formData.get("status") as string;
+    const extendsIds = formData.getAll("extendsIds").map((v) => parseInt(v as string)).filter((v) => !isNaN(v) && v !== id);
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid version ID" });
@@ -110,6 +137,25 @@ export const actions: Actions = {
         date_updated: new Date(),
       },
     });
+
+    // Update extensions: remove old, add new ones
+    await db.profile_version_extensions.deleteMany({
+      where: { extender: id },
+    });
+
+    for (const parentId of extendsIds) {
+      const parent = await db.profile_versions.findFirst({
+        where: { id: parentId, profile: profileId },
+      });
+      if (parent) {
+        await db.profile_version_extensions.create({
+          data: {
+            extender: id,
+            extended: parentId,
+          },
+        });
+      }
+    }
 
     generateVersionPdfs(profileId, name.trim()).catch(console.error);
 
@@ -141,6 +187,11 @@ export const actions: Actions = {
     if (!existing) {
       return fail(404, { error: "Version not found" });
     }
+
+    // Remove extension records where this version is extender or extended
+    await db.profile_version_extensions.deleteMany({
+      where: { OR: [{ extender: id }, { extended: id }] },
+    });
 
     await db.profile_versions.delete({
       where: { id },

@@ -38,11 +38,13 @@
   let newName = $state("");
   let newDescription = $state("");
   let newStatus = $state("draft");
+  let newExtendsIds = $state<number[]>([]);
 
   // Form states for editing
   let editName = $state("");
   let editDescription = $state("");
   let editStatus = $state("");
+  let editExtendsIds = $state<number[]>([]);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -78,6 +80,7 @@
     editName = version.name || "";
     editDescription = version.description || "";
     editStatus = version.status || "draft";
+    editExtendsIds = [...version.extendsIds];
   }
 
   function cancelEdit() {
@@ -89,6 +92,7 @@
     newName = "";
     newDescription = "";
     newStatus = "draft";
+    newExtendsIds = [];
   }
 
   function handleAddSubmit() {
@@ -197,6 +201,38 @@
             </select>
           </div>
         </div>
+
+        {#if versions.length > 0}
+          <div>
+            <p class="block text-sm font-medium text-[var(--dash-text)] mb-2">
+              Extends
+            </p>
+            <div class="flex flex-wrap gap-x-4 gap-y-2">
+              {#each versions as v}
+                <label class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="extendsIds"
+                    value={v.id}
+                    checked={newExtendsIds.includes(v.id)}
+                    onchange={(e) => {
+                      if (e.currentTarget.checked) {
+                        newExtendsIds = [...newExtendsIds, v.id];
+                      } else {
+                        newExtendsIds = newExtendsIds.filter((id) => id !== v.id);
+                      }
+                    }}
+                    class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                  />
+                  {v.name || "Untitled"}
+                </label>
+              {/each}
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+              Inherit tags and toggles from other versions
+            </p>
+          </div>
+        {/if}
 
         <div>
           <label
@@ -356,6 +392,38 @@
                       </div>
                     </div>
 
+                    {#if versions.length > 1}
+                      <div>
+                        <p class="block text-sm font-medium text-[var(--dash-text)] mb-2">
+                          Extends
+                        </p>
+                        <div class="flex flex-wrap gap-x-4 gap-y-2">
+                          {#each versions.filter((v) => v.id !== version.id) as v}
+                            <label class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                name="extendsIds"
+                                value={v.id}
+                                checked={editExtendsIds.includes(v.id)}
+                                onchange={(e) => {
+                                  if (e.currentTarget.checked) {
+                                    editExtendsIds = [...editExtendsIds, v.id];
+                                  } else {
+                                    editExtendsIds = editExtendsIds.filter((id) => id !== v.id);
+                                  }
+                                }}
+                                class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                              />
+                              {v.name || "Untitled"}
+                            </label>
+                          {/each}
+                        </div>
+                        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                          Inherit tags and toggles from other versions
+                        </p>
+                      </div>
+                    {/if}
+
                     <div>
                       <label
                         for="edit-description-{version.id}"
@@ -405,6 +473,24 @@
                         {version.description}
                       </p>
                     </div>
+                  {/if}
+
+                  {#if version.extendsIds.length > 0}
+                    {@const parentVersions = version.extendsIds
+                      .map((id) => versions.find((v) => v.id === id))
+                      .filter(Boolean)}
+                    {#if parentVersions.length > 0}
+                      <div>
+                        <p
+                          class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
+                        >
+                          Extends
+                        </p>
+                        <p class="text-[var(--dash-text)] text-sm">
+                          {parentVersions.map((v) => v?.name || "Untitled").join(", ")}
+                        </p>
+                      </div>
+                    {/if}
                   {/if}
 
                   {#if data.selectedProfile?.slug}
