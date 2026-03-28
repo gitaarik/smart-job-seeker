@@ -3,9 +3,9 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faArrowRight,
     faFileAlt,
     faGlobe,
+    faPencil,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
@@ -262,11 +262,11 @@
             {/if}
           {/snippet}
 
-          {#snippet footer()}
+          {#snippet dateline()}
             {#if data.selectedProfile?.slug}
               {@const versionParam = isPublicResume(version.id) ? "" : `?version=${encodeURIComponent(version.slug ?? "")}`}
               {@const cvVersionParam = isPublicCv(version.id) ? "" : `?version=${encodeURIComponent(version.slug ?? "")}`}
-              <div class="flex items-center gap-2 flex-wrap flex-1">
+              <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
                 <a
                   href="/p/{data.selectedProfile.slug}/resume{versionParam}"
                   target="_blank"
@@ -287,16 +287,18 @@
                   target="_blank"
                   class="dash-link-ext"
                 >CV PDF</a>
-                <a
-                  href="/dashboard/export/resume/{version.id}"
-                  class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors ml-auto flex items-center gap-1.5"
-                  aria-label="Edit"
-                >
-                  Edit
-                  <FontAwesomeIcon icon={faArrowRight} class="w-3.5 h-3.5" />
-                </a>
               </div>
             {/if}
+          {/snippet}
+
+          {#snippet footer()}
+            <a
+              href="/dashboard/export/resume/{version.id}"
+              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+              Edit
+            </a>
           {/snippet}
         </ItemCard>
       {/each}

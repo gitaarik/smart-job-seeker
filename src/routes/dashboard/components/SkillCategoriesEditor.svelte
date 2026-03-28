@@ -52,6 +52,12 @@
   let showVersionTags = $state(false);
   let reorderMode = $state(false);
 
+  // Determine which toggles are relevant across all categories
+  let allSkills = $derived(categories.flatMap((c) => c.skills));
+  let hasAnyLevel = $derived(allSkills.some((s) => s.level));
+  let hasAnyExperience = $derived(allSkills.some((s) => s.yearsExperience));
+  let hasAnyVersionTags = $derived(versionSlugs.length > 0);
+
   // Compact mode: track expanded items
   let expandedItems = $state<Set<number>>(new Set());
 
@@ -221,6 +227,9 @@
     bind:skills={categories[categoryIndex].skills}
     {levelOptions}
     {versionSlugs}
+    {hasAnyLevel}
+    {hasAnyExperience}
+    {hasAnyVersionTags}
     bind:showLevel
     bind:showExperience
     bind:showVersionTags

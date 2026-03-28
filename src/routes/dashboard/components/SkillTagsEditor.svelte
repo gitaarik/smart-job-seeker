@@ -35,6 +35,9 @@
     skills: SkillItem[];
     levelOptions?: LevelOption[];
     versionSlugs?: string[];
+    hasAnyLevel?: boolean;
+    hasAnyExperience?: boolean;
+    hasAnyVersionTags?: boolean;
     showLevel?: boolean;
     showExperience?: boolean;
     showVersionTags?: boolean;
@@ -49,6 +52,9 @@
     skills = $bindable(),
     levelOptions = defaultLevelOptions,
     versionSlugs = [],
+    hasAnyLevel,
+    hasAnyExperience,
+    hasAnyVersionTags,
     showLevel = $bindable(false),
     showExperience = $bindable(false),
     showVersionTags = $bindable(false),
@@ -58,6 +64,11 @@
     onremove,
     onreorder,
   }: Props = $props();
+
+  // When used standalone (without parent), derive visibility from local skills
+  let showLevelToggle = $derived(hasAnyLevel ?? skills.some((s) => s.level));
+  let showExperienceToggle = $derived(hasAnyExperience ?? skills.some((s) => s.yearsExperience));
+  let showVersionTagsToggle = $derived(hasAnyVersionTags ?? versionSlugs.length > 0);
 
   let editingIndex = $state<number | null>(null);
   let editingSnapshot = $state<SkillItem | null>(null);
@@ -277,31 +288,35 @@
 
 <!-- Legend bar -->
 <div class="flex items-center gap-1.5 mb-2">
-  <button
-    type="button"
-    onclick={() => (showLevel = !showLevel)}
-    class="
-      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showLevel
-      ? 'bg-blue-500/15 text-blue-700 border-blue-500/30'
-      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
-    "
-  >
-    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showLevel ? 'bg-blue-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
-    Level
-  </button>
-  <button
-    type="button"
-    onclick={() => (showExperience = !showExperience)}
-    class="
-      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showExperience
-      ? 'bg-purple-500/15 text-purple-700 border-purple-500/30'
-      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
-    "
-  >
-    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showExperience ? 'bg-purple-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
-    Experience
-  </button>
-  {#if versionSlugs.length > 0}
+  {#if showLevelToggle}
+    <button
+      type="button"
+      onclick={() => (showLevel = !showLevel)}
+      class="
+        inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showLevel
+        ? 'bg-blue-500/15 text-blue-700 border-blue-500/30'
+        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
+      "
+    >
+      <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showLevel ? 'bg-blue-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+      Level
+    </button>
+  {/if}
+  {#if showExperienceToggle}
+    <button
+      type="button"
+      onclick={() => (showExperience = !showExperience)}
+      class="
+        inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showExperience
+        ? 'bg-purple-500/15 text-purple-700 border-purple-500/30'
+        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
+      "
+    >
+      <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showExperience ? 'bg-purple-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+      Experience
+    </button>
+  {/if}
+  {#if showVersionTagsToggle}
     <button
       type="button"
       onclick={() => (showVersionTags = !showVersionTags)}
