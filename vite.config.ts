@@ -17,7 +17,7 @@ export default defineConfig({
       ...(process.env.SJS_HOSTNAME ? [process.env.SJS_HOSTNAME] : []),
     ],
     hmr: process.env.SJS_HOSTNAME
-      ? { clientPort: 443 }
+      ? { host: process.env.SJS_HOSTNAME, protocol: "wss", clientPort: 443 }
       : undefined,
     fs: {
       allow: ["uploads"],
