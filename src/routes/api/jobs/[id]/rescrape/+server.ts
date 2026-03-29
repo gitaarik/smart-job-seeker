@@ -3,6 +3,7 @@
  *
  * POST /api/jobs/[id]/rescrape - Queue a job for re-scraping
  * GET /api/jobs/[id]/rescrape - Check rescrape status + run history
+ * DELETE /api/jobs/[id]/rescrape - Cancel a running or queued rescrape
  */
 
 import { json } from "@sveltejs/kit";
@@ -12,6 +13,8 @@ import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 import {
   addRescrapeJob,
   isJobRescraping,
+  removeWaitingRescrapeJob,
+  removeActiveRescrapeJob,
 } from "$lib/server/queue/rescrape-queue";
 
 /**
@@ -199,4 +202,94 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     lastUpdated: job.date_updated,
     history,
   });
+};
+
+/**
+ * DELETE - Cancel a running or queued rescrape
+ */
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+  requireAuth(locals);
+  const jobId = parseIntParam(params.id, "job");
+
+  // Try to remove from queue if still waiting
+  const removed = await removeWaitingRescrapeJob(jobId);
+  if (removed) {
+    // Find the queued run and mark as cancelled
+    try {
+      const queuedRun = await db.rescrape_runs.findFirst({
+        where: { job: jobId, status: "queued" },
+        orderBy: { started_at: "desc" },
+      });
+      if (queuedRun) {
+        await db.rescrape_runs.update({
+          where: { id: queuedRun.id },
+          data: {
+            status: "cancelled",
+            message: "Cancelled before start",
+            finished_at: new Date(),
+          },
+        });
+      }
+    } catch {
+      // rescrape_runs table may not exist
+    }
+
+    await db.jobs.update({
+      where: { id: jobId },
+      data: {
+        rescrape_status: "idle",
+        rescrape_message: null,
+        rescrape_live_url: null,
+      },
+    });
+
+    console.log(`[API] Removed queued rescrape for job ${jobId}`);
+    return json({ status: "removed_from_queue" });
+  }
+
+  // Check if actively scraping
+  const job = await db.jobs.findUnique({
+    where: { id: jobId },
+    select: { rescrape_status: true },
+  });
+
+  if (!job || !["queued", "scraping"].includes(job.rescrape_status || "")) {
+    return json({ status: "not_found" });
+  }
+
+  // Mark as cancelled in the database
+  await db.jobs.update({
+    where: { id: jobId },
+    data: {
+      rescrape_status: "cancelled",
+      rescrape_message: "Cancelled by user",
+      rescrape_live_url: null,
+    },
+  });
+
+  // Update the rescrape run record
+  try {
+    const activeRun = await db.rescrape_runs.findFirst({
+      where: { job: jobId, status: { in: ["queued", "scraping"] } },
+      orderBy: { started_at: "desc" },
+    });
+    if (activeRun) {
+      await db.rescrape_runs.update({
+        where: { id: activeRun.id },
+        data: {
+          status: "cancelled",
+          message: "Cancelled by user",
+          finished_at: new Date(),
+        },
+      });
+    }
+  } catch {
+    // rescrape_runs table may not exist
+  }
+
+  // Force-fail the BullMQ job (best-effort)
+  await removeActiveRescrapeJob(jobId);
+
+  console.log(`[API] Cancelled rescrape for job ${jobId}`);
+  return json({ status: "cancelled" });
 };

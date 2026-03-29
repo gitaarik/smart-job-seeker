@@ -43,6 +43,8 @@ export type ApplicationsSumAggregateOutputType = {
 export type ApplicationsMinAggregateOutputType = {
   id: number | null
   status: string | null
+  status_step: string | null
+  status_action: string | null
   date_created: Date | null
   date_updated: Date | null
   job: number | null
@@ -62,6 +64,8 @@ export type ApplicationsMinAggregateOutputType = {
 export type ApplicationsMaxAggregateOutputType = {
   id: number | null
   status: string | null
+  status_step: string | null
+  status_action: string | null
   date_created: Date | null
   date_updated: Date | null
   job: number | null
@@ -81,6 +85,8 @@ export type ApplicationsMaxAggregateOutputType = {
 export type ApplicationsCountAggregateOutputType = {
   id: number
   status: number
+  status_step: number
+  status_action: number
   date_created: number
   date_updated: number
   job: number
@@ -116,6 +122,8 @@ export type ApplicationsSumAggregateInputType = {
 export type ApplicationsMinAggregateInputType = {
   id?: true
   status?: true
+  status_step?: true
+  status_action?: true
   date_created?: true
   date_updated?: true
   job?: true
@@ -135,6 +143,8 @@ export type ApplicationsMinAggregateInputType = {
 export type ApplicationsMaxAggregateInputType = {
   id?: true
   status?: true
+  status_step?: true
+  status_action?: true
   date_created?: true
   date_updated?: true
   job?: true
@@ -154,6 +164,8 @@ export type ApplicationsMaxAggregateInputType = {
 export type ApplicationsCountAggregateInputType = {
   id?: true
   status?: true
+  status_step?: true
+  status_action?: true
   date_created?: true
   date_updated?: true
   job?: true
@@ -260,6 +272,8 @@ export type applicationsGroupByArgs<ExtArgs extends runtime.Types.Extensions.Int
 export type ApplicationsGroupByOutputType = {
   id: number
   status: string
+  status_step: string | null
+  status_action: string | null
   date_created: Date | null
   date_updated: Date | null
   job: number | null
@@ -302,6 +316,8 @@ export type applicationsWhereInput = {
   NOT?: Prisma.applicationsWhereInput | Prisma.applicationsWhereInput[]
   id?: Prisma.IntFilter<"applications"> | number
   status?: Prisma.StringFilter<"applications"> | string
+  status_step?: Prisma.StringNullableFilter<"applications"> | string | null
+  status_action?: Prisma.StringNullableFilter<"applications"> | string | null
   date_created?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   job?: Prisma.IntNullableFilter<"applications"> | number | null
@@ -317,6 +333,7 @@ export type applicationsWhereInput = {
   salary_currency?: Prisma.StringNullableFilter<"applications"> | string | null
   salary_period?: Prisma.StringNullableFilter<"applications"> | string | null
   application_activity_log?: Prisma.Application_activity_logListRelationFilter
+  application_status_log?: Prisma.Application_status_logListRelationFilter
   application_letters?: Prisma.Application_lettersListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
@@ -328,6 +345,8 @@ export type applicationsWhereInput = {
 export type applicationsOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  status_step?: Prisma.SortOrderInput | Prisma.SortOrder
+  status_action?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   job?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -343,6 +362,7 @@ export type applicationsOrderByWithRelationInput = {
   salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
   application_activity_log?: Prisma.application_activity_logOrderByRelationAggregateInput
+  application_status_log?: Prisma.application_status_logOrderByRelationAggregateInput
   application_letters?: Prisma.application_lettersOrderByRelationAggregateInput
   application_questions?: Prisma.application_questionsOrderByRelationAggregateInput
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
@@ -357,6 +377,8 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.applicationsWhereInput[]
   NOT?: Prisma.applicationsWhereInput | Prisma.applicationsWhereInput[]
   status?: Prisma.StringFilter<"applications"> | string
+  status_step?: Prisma.StringNullableFilter<"applications"> | string | null
+  status_action?: Prisma.StringNullableFilter<"applications"> | string | null
   date_created?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   job?: Prisma.IntNullableFilter<"applications"> | number | null
@@ -372,6 +394,7 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
   salary_currency?: Prisma.StringNullableFilter<"applications"> | string | null
   salary_period?: Prisma.StringNullableFilter<"applications"> | string | null
   application_activity_log?: Prisma.Application_activity_logListRelationFilter
+  application_status_log?: Prisma.Application_status_logListRelationFilter
   application_letters?: Prisma.Application_lettersListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
@@ -383,6 +406,8 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
 export type applicationsOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  status_step?: Prisma.SortOrderInput | Prisma.SortOrder
+  status_action?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   job?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -410,6 +435,8 @@ export type applicationsScalarWhereWithAggregatesInput = {
   NOT?: Prisma.applicationsScalarWhereWithAggregatesInput | Prisma.applicationsScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"applications"> | number
   status?: Prisma.StringWithAggregatesFilter<"applications"> | string
+  status_step?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
+  status_action?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"applications"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"applications"> | Date | string | null
   job?: Prisma.IntNullableWithAggregatesFilter<"applications"> | number | null
@@ -428,6 +455,8 @@ export type applicationsScalarWhereWithAggregatesInput = {
 
 export type applicationsCreateInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -440,6 +469,7 @@ export type applicationsCreateInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
@@ -451,6 +481,8 @@ export type applicationsCreateInput = {
 export type applicationsUncheckedCreateInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -466,6 +498,7 @@ export type applicationsUncheckedCreateInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
@@ -473,6 +506,8 @@ export type applicationsUncheckedCreateInput = {
 
 export type applicationsUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -485,6 +520,7 @@ export type applicationsUpdateInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
@@ -496,6 +532,8 @@ export type applicationsUpdateInput = {
 export type applicationsUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -511,6 +549,7 @@ export type applicationsUncheckedUpdateInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
@@ -519,6 +558,8 @@ export type applicationsUncheckedUpdateInput = {
 export type applicationsCreateManyInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -537,6 +578,8 @@ export type applicationsCreateManyInput = {
 
 export type applicationsUpdateManyMutationInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -553,6 +596,8 @@ export type applicationsUpdateManyMutationInput = {
 export type applicationsUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -582,6 +627,8 @@ export type ApplicationsScalarRelationFilter = {
 export type applicationsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  status_step?: Prisma.SortOrder
+  status_action?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -608,6 +655,8 @@ export type applicationsAvgOrderByAggregateInput = {
 export type applicationsMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  status_step?: Prisma.SortOrder
+  status_action?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -627,6 +676,8 @@ export type applicationsMaxOrderByAggregateInput = {
 export type applicationsMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  status_step?: Prisma.SortOrder
+  status_action?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   job?: Prisma.SortOrder
@@ -674,6 +725,20 @@ export type applicationsUpdateOneWithoutApplication_activity_logNestedInput = {
   delete?: Prisma.applicationsWhereInput | boolean
   connect?: Prisma.applicationsWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_activity_logInput, Prisma.applicationsUpdateWithoutApplication_activity_logInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+}
+
+export type applicationsCreateNestedOneWithoutApplication_status_logInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_status_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_status_logInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_status_logInput
+  connect?: Prisma.applicationsWhereUniqueInput
+}
+
+export type applicationsUpdateOneRequiredWithoutApplication_status_logNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_status_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_status_logInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_status_logInput
+  upsert?: Prisma.applicationsUpsertWithoutApplication_status_logInput
+  connect?: Prisma.applicationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_status_logInput, Prisma.applicationsUpdateWithoutApplication_status_logInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_status_logInput>
 }
 
 export type applicationsCreateNestedOneWithoutApplication_lettersInput = {
@@ -856,6 +921,8 @@ export type applicationsUncheckedUpdateManyWithoutProfilesNestedInput = {
 
 export type applicationsCreateWithoutApplication_activity_logInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -867,6 +934,7 @@ export type applicationsCreateWithoutApplication_activity_logInput = {
   salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   salary_currency?: string | null
   salary_period?: string | null
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
@@ -878,6 +946,8 @@ export type applicationsCreateWithoutApplication_activity_logInput = {
 export type applicationsUncheckedCreateWithoutApplication_activity_logInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -892,6 +962,7 @@ export type applicationsUncheckedCreateWithoutApplication_activity_logInput = {
   salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   salary_currency?: string | null
   salary_period?: string | null
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
@@ -915,6 +986,8 @@ export type applicationsUpdateToOneWithWhereWithoutApplication_activity_logInput
 
 export type applicationsUpdateWithoutApplication_activity_logInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -926,6 +999,7 @@ export type applicationsUpdateWithoutApplication_activity_logInput = {
   salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
@@ -937,6 +1011,8 @@ export type applicationsUpdateWithoutApplication_activity_logInput = {
 export type applicationsUncheckedUpdateWithoutApplication_activity_logInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -951,13 +1027,16 @@ export type applicationsUncheckedUpdateWithoutApplication_activity_logInput = {
   salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
-export type applicationsCreateWithoutApplication_lettersInput = {
+export type applicationsCreateWithoutApplication_status_logInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -970,6 +1049,7 @@ export type applicationsCreateWithoutApplication_lettersInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
@@ -977,9 +1057,11 @@ export type applicationsCreateWithoutApplication_lettersInput = {
   applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
-export type applicationsUncheckedCreateWithoutApplication_lettersInput = {
+export type applicationsUncheckedCreateWithoutApplication_status_logInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -995,6 +1077,121 @@ export type applicationsUncheckedCreateWithoutApplication_lettersInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutApplication_status_logInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_status_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_status_logInput>
+}
+
+export type applicationsUpsertWithoutApplication_status_logInput = {
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_status_logInput, Prisma.applicationsUncheckedUpdateWithoutApplication_status_logInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_status_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_status_logInput>
+  where?: Prisma.applicationsWhereInput
+}
+
+export type applicationsUpdateToOneWithWhereWithoutApplication_status_logInput = {
+  where?: Prisma.applicationsWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_status_logInput, Prisma.applicationsUncheckedUpdateWithoutApplication_status_logInput>
+}
+
+export type applicationsUpdateWithoutApplication_status_logInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutApplication_status_logInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsCreateWithoutApplication_lettersInput = {
+  status?: string
+  status_step?: string | null
+  status_action?: string | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutApplication_lettersInput = {
+  id?: number
+  status?: string
+  status_step?: string | null
+  status_action?: string | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  job?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
@@ -1017,6 +1214,8 @@ export type applicationsUpdateToOneWithWhereWithoutApplication_lettersInput = {
 
 export type applicationsUpdateWithoutApplication_lettersInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1029,6 +1228,7 @@ export type applicationsUpdateWithoutApplication_lettersInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
@@ -1039,6 +1239,8 @@ export type applicationsUpdateWithoutApplication_lettersInput = {
 export type applicationsUncheckedUpdateWithoutApplication_lettersInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1054,12 +1256,15 @@ export type applicationsUncheckedUpdateWithoutApplication_lettersInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateWithoutApplication_questionsInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -1072,6 +1277,7 @@ export type applicationsCreateWithoutApplication_questionsInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
@@ -1082,6 +1288,8 @@ export type applicationsCreateWithoutApplication_questionsInput = {
 export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -1097,6 +1305,7 @@ export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
@@ -1119,6 +1328,8 @@ export type applicationsUpdateToOneWithWhereWithoutApplication_questionsInput = 
 
 export type applicationsUpdateWithoutApplication_questionsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1131,6 +1342,7 @@ export type applicationsUpdateWithoutApplication_questionsInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
@@ -1141,6 +1353,8 @@ export type applicationsUpdateWithoutApplication_questionsInput = {
 export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1156,12 +1370,15 @@ export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateWithoutApplications_filesInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -1174,6 +1391,7 @@ export type applicationsCreateWithoutApplications_filesInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
@@ -1184,6 +1402,8 @@ export type applicationsCreateWithoutApplications_filesInput = {
 export type applicationsUncheckedCreateWithoutApplications_filesInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -1199,6 +1419,7 @@ export type applicationsUncheckedCreateWithoutApplications_filesInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
 }
@@ -1221,6 +1442,8 @@ export type applicationsUpdateToOneWithWhereWithoutApplications_filesInput = {
 
 export type applicationsUpdateWithoutApplications_filesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1233,6 +1456,7 @@ export type applicationsUpdateWithoutApplications_filesInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
@@ -1243,6 +1467,8 @@ export type applicationsUpdateWithoutApplications_filesInput = {
 export type applicationsUncheckedUpdateWithoutApplications_filesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1258,12 +1484,15 @@ export type applicationsUncheckedUpdateWithoutApplications_filesInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateWithoutDirectus_filesInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -1276,6 +1505,7 @@ export type applicationsCreateWithoutDirectus_filesInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
@@ -1286,6 +1516,8 @@ export type applicationsCreateWithoutDirectus_filesInput = {
 export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -1300,6 +1532,7 @@ export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
@@ -1337,6 +1570,8 @@ export type applicationsScalarWhereInput = {
   NOT?: Prisma.applicationsScalarWhereInput | Prisma.applicationsScalarWhereInput[]
   id?: Prisma.IntFilter<"applications"> | number
   status?: Prisma.StringFilter<"applications"> | string
+  status_step?: Prisma.StringNullableFilter<"applications"> | string | null
+  status_action?: Prisma.StringNullableFilter<"applications"> | string | null
   date_created?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   job?: Prisma.IntNullableFilter<"applications"> | number | null
@@ -1355,6 +1590,8 @@ export type applicationsScalarWhereInput = {
 
 export type applicationsCreateWithoutJobsInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -1367,6 +1604,7 @@ export type applicationsCreateWithoutJobsInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
@@ -1377,6 +1615,8 @@ export type applicationsCreateWithoutJobsInput = {
 export type applicationsUncheckedCreateWithoutJobsInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   profile: number
@@ -1391,6 +1631,7 @@ export type applicationsUncheckedCreateWithoutJobsInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
@@ -1424,6 +1665,8 @@ export type applicationsUpdateManyWithWhereWithoutJobsInput = {
 
 export type applicationsCreateWithoutProfilesInput = {
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
@@ -1436,6 +1679,7 @@ export type applicationsCreateWithoutProfilesInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
@@ -1446,6 +1690,8 @@ export type applicationsCreateWithoutProfilesInput = {
 export type applicationsUncheckedCreateWithoutProfilesInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -1460,6 +1706,7 @@ export type applicationsUncheckedCreateWithoutProfilesInput = {
   salary_currency?: string | null
   salary_period?: string | null
   application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_status_log?: Prisma.application_status_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
   applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
@@ -1494,6 +1741,8 @@ export type applicationsUpdateManyWithWhereWithoutProfilesInput = {
 export type applicationsCreateManyDirectus_filesInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -1511,6 +1760,8 @@ export type applicationsCreateManyDirectus_filesInput = {
 
 export type applicationsUpdateWithoutDirectus_filesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1523,6 +1774,7 @@ export type applicationsUpdateWithoutDirectus_filesInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
@@ -1533,6 +1785,8 @@ export type applicationsUpdateWithoutDirectus_filesInput = {
 export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1547,6 +1801,7 @@ export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
@@ -1555,6 +1810,8 @@ export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
 export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1573,6 +1830,8 @@ export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
 export type applicationsCreateManyJobsInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   profile: number
@@ -1590,6 +1849,8 @@ export type applicationsCreateManyJobsInput = {
 
 export type applicationsUpdateWithoutJobsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1602,6 +1863,7 @@ export type applicationsUpdateWithoutJobsInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
@@ -1612,6 +1874,8 @@ export type applicationsUpdateWithoutJobsInput = {
 export type applicationsUncheckedUpdateWithoutJobsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1626,6 +1890,7 @@ export type applicationsUncheckedUpdateWithoutJobsInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
@@ -1634,6 +1899,8 @@ export type applicationsUncheckedUpdateWithoutJobsInput = {
 export type applicationsUncheckedUpdateManyWithoutJobsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1652,6 +1919,8 @@ export type applicationsUncheckedUpdateManyWithoutJobsInput = {
 export type applicationsCreateManyProfilesInput = {
   id?: number
   status?: string
+  status_step?: string | null
+  status_action?: string | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
   job?: number | null
@@ -1669,6 +1938,8 @@ export type applicationsCreateManyProfilesInput = {
 
 export type applicationsUpdateWithoutProfilesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1681,6 +1952,7 @@ export type applicationsUpdateWithoutProfilesInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
@@ -1691,6 +1963,8 @@ export type applicationsUpdateWithoutProfilesInput = {
 export type applicationsUncheckedUpdateWithoutProfilesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1705,6 +1979,7 @@ export type applicationsUncheckedUpdateWithoutProfilesInput = {
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_status_log?: Prisma.application_status_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
@@ -1713,6 +1988,8 @@ export type applicationsUncheckedUpdateWithoutProfilesInput = {
 export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  status_step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status_action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1735,6 +2012,7 @@ export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
 
 export type ApplicationsCountOutputType = {
   application_activity_log: number
+  application_status_log: number
   application_letters: number
   application_questions: number
   applications_files: number
@@ -1742,6 +2020,7 @@ export type ApplicationsCountOutputType = {
 
 export type ApplicationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   application_activity_log?: boolean | ApplicationsCountOutputTypeCountApplication_activity_logArgs
+  application_status_log?: boolean | ApplicationsCountOutputTypeCountApplication_status_logArgs
   application_letters?: boolean | ApplicationsCountOutputTypeCountApplication_lettersArgs
   application_questions?: boolean | ApplicationsCountOutputTypeCountApplication_questionsArgs
   applications_files?: boolean | ApplicationsCountOutputTypeCountApplications_filesArgs
@@ -1762,6 +2041,13 @@ export type ApplicationsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types
  */
 export type ApplicationsCountOutputTypeCountApplication_activity_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.application_activity_logWhereInput
+}
+
+/**
+ * ApplicationsCountOutputType without action
+ */
+export type ApplicationsCountOutputTypeCountApplication_status_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.application_status_logWhereInput
 }
 
 /**
@@ -1789,6 +2075,8 @@ export type ApplicationsCountOutputTypeCountApplications_filesArgs<ExtArgs exten
 export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   status?: boolean
+  status_step?: boolean
+  status_action?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1804,6 +2092,7 @@ export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   salary_currency?: boolean
   salary_period?: boolean
   application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
+  application_status_log?: boolean | Prisma.applications$application_status_logArgs<ExtArgs>
   application_letters?: boolean | Prisma.applications$application_lettersArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
@@ -1816,6 +2105,8 @@ export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.Internal
 export type applicationsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   status?: boolean
+  status_step?: boolean
+  status_action?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1838,6 +2129,8 @@ export type applicationsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
 export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   status?: boolean
+  status_step?: boolean
+  status_action?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1860,6 +2153,8 @@ export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
 export type applicationsSelectScalar = {
   id?: boolean
   status?: boolean
+  status_step?: boolean
+  status_action?: boolean
   date_created?: boolean
   date_updated?: boolean
   job?: boolean
@@ -1876,9 +2171,10 @@ export type applicationsSelectScalar = {
   salary_period?: boolean
 }
 
-export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "job" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "salary_expectation" | "salary_currency" | "salary_period", ExtArgs["result"]["applications"]>
+export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "status_step" | "status_action" | "date_created" | "date_updated" | "job" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "salary_expectation" | "salary_currency" | "salary_period", ExtArgs["result"]["applications"]>
 export type applicationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
+  application_status_log?: boolean | Prisma.applications$application_status_logArgs<ExtArgs>
   application_letters?: boolean | Prisma.applications$application_lettersArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
@@ -1902,6 +2198,7 @@ export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.Intern
   name: "applications"
   objects: {
     application_activity_log: Prisma.$application_activity_logPayload<ExtArgs>[]
+    application_status_log: Prisma.$application_status_logPayload<ExtArgs>[]
     application_letters: Prisma.$application_lettersPayload<ExtArgs>[]
     application_questions: Prisma.$application_questionsPayload<ExtArgs>[]
     directus_files: Prisma.$directus_filesPayload<ExtArgs> | null
@@ -1912,6 +2209,8 @@ export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.Intern
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     status: string
+    status_step: string | null
+    status_action: string | null
     date_created: Date | null
     date_updated: Date | null
     job: number | null
@@ -2321,6 +2620,7 @@ readonly fields: applicationsFieldRefs;
 export interface Prisma__applicationsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   application_activity_log<T extends Prisma.applications$application_activity_logArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_activity_logArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_activity_logPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  application_status_log<T extends Prisma.applications$application_status_logArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_status_logArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_status_logPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   application_letters<T extends Prisma.applications$application_lettersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_lettersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_lettersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   application_questions<T extends Prisma.applications$application_questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   directus_files<T extends Prisma.applications$directus_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$directus_filesArgs<ExtArgs>>): Prisma.Prisma__directus_filesClient<runtime.Types.Result.GetResult<Prisma.$directus_filesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -2358,6 +2658,8 @@ export interface Prisma__applicationsClient<T, Null = never, ExtArgs extends run
 export interface applicationsFieldRefs {
   readonly id: Prisma.FieldRef<"applications", 'Int'>
   readonly status: Prisma.FieldRef<"applications", 'String'>
+  readonly status_step: Prisma.FieldRef<"applications", 'String'>
+  readonly status_action: Prisma.FieldRef<"applications", 'String'>
   readonly date_created: Prisma.FieldRef<"applications", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"applications", 'DateTime'>
   readonly job: Prisma.FieldRef<"applications", 'Int'>
@@ -2789,6 +3091,30 @@ export type applications$application_activity_logArgs<ExtArgs extends runtime.Ty
   take?: number
   skip?: number
   distinct?: Prisma.Application_activity_logScalarFieldEnum | Prisma.Application_activity_logScalarFieldEnum[]
+}
+
+/**
+ * applications.application_status_log
+ */
+export type applications$application_status_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the application_status_log
+   */
+  select?: Prisma.application_status_logSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the application_status_log
+   */
+  omit?: Prisma.application_status_logOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.application_status_logInclude<ExtArgs> | null
+  where?: Prisma.application_status_logWhereInput
+  orderBy?: Prisma.application_status_logOrderByWithRelationInput | Prisma.application_status_logOrderByWithRelationInput[]
+  cursor?: Prisma.application_status_logWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Application_status_logScalarFieldEnum | Prisma.Application_status_logScalarFieldEnum[]
 }
 
 /**

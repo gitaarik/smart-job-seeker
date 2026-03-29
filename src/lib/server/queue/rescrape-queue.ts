@@ -88,3 +88,37 @@ export async function isJobRescraping(jobId: number): Promise<boolean> {
   ]);
   return !!(active || waiting);
 }
+
+/**
+ * Remove a waiting rescrape job from the queue.
+ * Returns true if a job was found and removed.
+ */
+export async function removeWaitingRescrapeJob(
+  jobId: number,
+): Promise<boolean> {
+  const waitingJob = await getWaitingRescrapeJob(jobId);
+  if (waitingJob) {
+    await waitingJob.remove();
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Force-fail and remove an active rescrape job from the queue.
+ * Used when cancelling a running rescrape.
+ */
+export async function removeActiveRescrapeJob(
+  jobId: number,
+): Promise<boolean> {
+  const activeJob = await getActiveRescrapeJob(jobId);
+  if (activeJob) {
+    await activeJob.moveToFailed(
+      new Error("Cancelled by user"),
+      "0",
+      true,
+    );
+    return true;
+  }
+  return false;
+}

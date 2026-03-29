@@ -413,25 +413,56 @@
   <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-3 sm:p-4">
     <div class="inline-flex flex-col gap-2">
     <div class="flex flex-wrap items-center gap-2">
-      <!-- Min Score dropdown -->
-      <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-[var(--dash-bg)] border-[var(--dash-border)]">
-        <FontAwesomeIcon icon={faGauge} class="w-3 h-3 text-[var(--dash-text-muted)] shrink-0" />
-        <select
-          value={minScoreFilter}
-          onchange={(e) => setMinScore(e.currentTarget.value)}
-          class="text-xs bg-transparent text-[var(--dash-text)] focus:outline-none"
+      <!-- Min Score -->
+      <div class="relative" data-dropdown="minScore">
+        <button
+          type="button"
+          onclick={() => toggleDropdown("minScore")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {minScoreFilter
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
         >
-          <option value="">All jobs</option>
-          <option value="90">Score 90+</option>
-          <option value="80">Score 80+</option>
-          <option value="70">Score 70+</option>
-          <option value="60">Score 60+</option>
-          <option value="50">Score 50+</option>
-          <option value="1-49">Score &lt; 50</option>
-          <option value="1">Score &gt; 0</option>
-          <option value="0">No match</option>
-          <option value="unmatched">Not yet matched</option>
-        </select>
+          <FontAwesomeIcon icon={faGauge} class="w-3 h-3 opacity-60" />
+          {minScoreFilter ? {
+            "90": "Score 90+", "80": "Score 80+", "70": "Score 70+",
+            "60": "Score 60+", "50": "Score 50+", "1-49": "Score < 50",
+            "1": "Score > 0", "0": "No match", "unmatched": "Unmatched",
+          }[minScoreFilter] || "Score" : "Score"}
+          {#if !minScoreFilter}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+          {/if}
+        </button>
+        {#if openDropdown === "minScore"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[160px]">
+            {#each [
+              { value: "", label: "All jobs" },
+              { value: "90", label: "Score 90+" },
+              { value: "80", label: "Score 80+" },
+              { value: "70", label: "Score 70+" },
+              { value: "60", label: "Score 60+" },
+              { value: "50", label: "Score 50+" },
+              { value: "1-49", label: "Score < 50" },
+              { value: "1", label: "Score > 0" },
+              { value: "0", label: "No match" },
+              { value: "unmatched", label: "Not yet matched" },
+            ] as opt}
+              <button
+                type="button"
+                onclick={() => { setMinScore(opt.value); openDropdown = null; }}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {minScoreFilter === opt.value
+                  ? 'border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if minScoreFilter === opt.value}
+                    <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
 
       <!-- Status multi-select -->
@@ -473,21 +504,51 @@
         {/if}
       </div>
 
-      <!-- Date Posted dropdown -->
-      <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border bg-[var(--dash-bg)] border-[var(--dash-border)]">
-        <FontAwesomeIcon icon={faCalendarDays} class="w-3 h-3 text-[var(--dash-text-muted)] shrink-0" />
-        <select
-          value={datePostedFilter}
-          onchange={(e) => setDatePosted(e.currentTarget.value)}
-          class="text-xs bg-transparent text-[var(--dash-text)] focus:outline-none"
+      <!-- Date Posted -->
+      <div class="relative" data-dropdown="datePosted">
+        <button
+          type="button"
+          onclick={() => toggleDropdown("datePosted")}
+          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {datePostedFilter
+            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
         >
-          <option value="">Date posted</option>
-          <option value="1">Last 24h</option>
-          <option value="3">Last 3 days</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 3 months</option>
-        </select>
+          <FontAwesomeIcon icon={faCalendarDays} class="w-3 h-3 opacity-60" />
+          {datePostedFilter ? {
+            "1": "Last 24h", "3": "Last 3 days", "7": "Last 7 days",
+            "30": "Last 30 days", "90": "Last 3 months",
+          }[datePostedFilter] || "Date posted" : "Date posted"}
+          {#if !datePostedFilter}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
+          {/if}
+        </button>
+        {#if openDropdown === "datePosted"}
+          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+            {#each [
+              { value: "", label: "Any time" },
+              { value: "1", label: "Last 24h" },
+              { value: "3", label: "Last 3 days" },
+              { value: "7", label: "Last 7 days" },
+              { value: "30", label: "Last 30 days" },
+              { value: "90", label: "Last 3 months" },
+            ] as opt}
+              <button
+                type="button"
+                onclick={() => { setDatePosted(opt.value); openDropdown = null; }}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {datePostedFilter === opt.value
+                  ? 'border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if datePostedFilter === opt.value}
+                    <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)]">{opt.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
 
       <!-- Job Type multi-select -->

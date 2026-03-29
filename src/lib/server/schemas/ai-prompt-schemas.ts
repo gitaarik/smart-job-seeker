@@ -227,6 +227,19 @@ export const extractMatchedSkillsSchema = z.object({
 });
 
 /**
+ * Schema for estimate_salary_expectations prompt
+ * Estimates salary rates for a specific combination of parameters
+ */
+export const estimateSalaryExpectationsSchema = z.object({
+  hourly_rate: z.number().int().nullable().describe("Estimated hourly rate"),
+  daily_rate: z.number().int().nullable().describe("Estimated daily rate"),
+  month_salary: z.number().int().nullable().describe("Estimated monthly salary"),
+  year_salary: z.number().int().nullable().describe("Estimated yearly salary"),
+  confidence: z.enum(["high", "medium", "low"]).optional().default("medium").describe("Confidence level in the estimates"),
+  reasoning: z.string().optional().default("").describe("Brief explanation of how the estimates were derived"),
+});
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  *
@@ -242,6 +255,7 @@ export const aiPromptSchemas = {
   detect_login_page: detectLoginPageSchema,
   find_next_page_button: findNextPageButtonSchema,
   check_login_state: checkLoginStateSchema,
+  estimate_salary_expectations: estimateSalaryExpectationsSchema,
 } as const;
 
 /**

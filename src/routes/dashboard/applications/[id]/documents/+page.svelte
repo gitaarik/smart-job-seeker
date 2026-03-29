@@ -1,0 +1,264 @@
+<script lang="ts">
+  import type { ActionData, PageData } from "./$types";
+  import { enhance } from "$app/forms";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import {
+    faCheck,
+    faCloudUploadAlt,
+    faDownload,
+    faFile,
+    faFileAlt,
+    faFilePdf,
+    faFileImage,
+    faFileWord,
+    faSave,
+    faTrash,
+  } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../../components/Card.svelte";
+  import EmptyState from "../../../profile/components/EmptyState.svelte";
+  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+
+  let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  let app = $derived(data.application);
+  let files = $derived(app.applications_files || []);
+  let cvFile = $derived(app.directus_files);
+  let profileExports = $derived(data.profileExports || []);
+
+  let deleteFileId = $state<number | null>(null);
+  let uploading = $state(false);
+  let cvSaved = $state(false);
+
+  function formatFileSize(bytes: number | null): string {
+    if (!bytes) return "Unknown size";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function getFileIcon(mimeType: string | null) {
+    if (!mimeType) return faFile;
+    if (mimeType.includes("pdf")) return faFilePdf;
+    if (mimeType.includes("image")) return faFileImage;
+    if (mimeType.includes("word") || mimeType.includes("document")) return faFileWord;
+    return faFile;
+  }
+
+  function getFileIconColor(mimeType: string | null): string {
+    if (!mimeType) return "text-[var(--dash-text-muted)]";
+    if (mimeType.includes("pdf")) return "text-red-500";
+    if (mimeType.includes("image")) return "text-blue-500";
+    if (mimeType.includes("word")) return "text-blue-600";
+    return "text-[var(--dash-text-muted)]";
+  }
+
+  function handleUploadSubmit() {
+    uploading = true;
+    return async ({ update }: { update: () => Promise<void> }) => {
+      await update();
+      uploading = false;
+    };
+  }
+
+  function handleCvSubmit() {
+    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
+      await update();
+      if (result.type === "success") {
+        cvSaved = true;
+        setTimeout(() => { cvSaved = false; }, 2000);
+      }
+    };
+  }
+</script>
+
+<div class="space-y-6">
+  {#if form?.error}
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
+    </div>
+  {/if}
+
+  <!-- Section 1: CV / Resume Sent -->
+  <div>
+    <div class="flex items-center gap-2 mb-3">
+      <FontAwesomeIcon icon={faFileAlt} class="w-5 h-5 text-[var(--dash-primary)]" />
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">CV / Resume Sent</h2>
+    </div>
+
+    <Card padding="lg">
+      {#if cvFile}
+        <div class="flex items-center justify-between mb-4 p-3 bg-[var(--dash-bg)] rounded-lg">
+          <div class="flex items-center gap-3">
+            <FontAwesomeIcon icon={getFileIcon(cvFile.type)} class="w-5 h-5 {getFileIconColor(cvFile.type)}" />
+            <div>
+              <p class="text-sm font-medium text-[var(--dash-text)]">{cvFile.filename_download}</p>
+              <p class="text-xs text-[var(--dash-text-muted)]">
+                {formatFileSize(cvFile.filesize)}
+                {#if cvFile.type}
+                  <span class="mx-1">&middot;</span>{cvFile.type}
+                {/if}
+              </p>
+            </div>
+          </div>
+          <a
+            href="?fileId={cvFile.id}"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--dash-primary)] hover:bg-[var(--dash-primary-light)] rounded-lg transition-colors"
+          >
+            <FontAwesomeIcon icon={faDownload} class="w-3.5 h-3.5" />
+            Download
+          </a>
+        </div>
+      {/if}
+
+      <form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
+        <label for="cv-select" class="block text-sm text-[var(--dash-text-secondary)] mb-2">
+          {cvFile ? "Change CV sent" : "Select which CV/Resume you sent"}
+        </label>
+        <div class="flex gap-2">
+          <select
+            id="cv-select"
+            name="file_id"
+            class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm"
+          >
+            <option value="">None</option>
+            {#each profileExports as exp}
+              <option value={exp.directus_files?.id || ""} selected={exp.directus_files?.id === app.cv_file_sent}>
+                {exp.description || exp.directus_files?.filename_download || `${exp.export_type} export`}
+                ({exp.export_type}, {exp.file_type})
+              </option>
+            {/each}
+          </select>
+          <button
+            type="submit"
+            class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors text-sm"
+          >
+            {#if cvSaved}
+              <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5" />
+              Saved
+            {:else}
+              <FontAwesomeIcon icon={faSave} class="w-3.5 h-3.5" />
+              Set
+            {/if}
+          </button>
+        </div>
+      </form>
+    </Card>
+  </div>
+
+  <!-- Section 2: Attached Files -->
+  <div>
+    <div class="flex items-center gap-2 mb-3">
+      <FontAwesomeIcon icon={faCloudUploadAlt} class="w-5 h-5 text-[var(--dash-primary)]" />
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Attached Files</h2>
+    </div>
+
+    <!-- Upload Form -->
+    <Card padding="md">
+      <form
+        method="POST"
+        action="?/uploadFile"
+        enctype="multipart/form-data"
+        use:enhance={handleUploadSubmit}
+      >
+        <div class="flex items-center gap-3">
+          <label
+            class="flex-1 flex items-center justify-center gap-3 px-4 py-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg cursor-pointer hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors"
+          >
+            <FontAwesomeIcon icon={faCloudUploadAlt} class="w-5 h-5 text-[var(--dash-text-muted)]" />
+            <span class="text-sm text-[var(--dash-text-secondary)]">
+              Choose a file or drag it here (max 10MB)
+            </span>
+            <input
+              type="file"
+              name="file"
+              class="hidden"
+              onchange={(e) => {
+                const input = e.currentTarget as HTMLInputElement;
+                if (input.files?.length) {
+                  input.closest("form")?.requestSubmit();
+                }
+              }}
+            />
+          </label>
+        </div>
+        {#if uploading}
+          <p class="text-sm text-[var(--dash-text-secondary)] mt-2">Uploading...</p>
+        {/if}
+      </form>
+    </Card>
+
+    <!-- File List -->
+    {#if files.length === 0}
+      <div class="mt-4">
+        <EmptyState
+          icon={faFile}
+          title="No files attached"
+          description="Upload documents related to this application — offer letters, coding challenges, certificates, etc."
+        />
+      </div>
+    {:else}
+      <div class="space-y-2 mt-4">
+        {#each files as fileRecord (fileRecord.id)}
+          {@const file = fileRecord.directus_files}
+          {#if file}
+            <Card padding="sm">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 min-w-0">
+                  <FontAwesomeIcon icon={getFileIcon(file.type)} class="w-5 h-5 {getFileIconColor(file.type)} flex-shrink-0" />
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-[var(--dash-text)] truncate">{file.filename_download}</p>
+                    <p class="text-xs text-[var(--dash-text-muted)]">
+                      {formatFileSize(file.filesize)}
+                      {#if file.type}
+                        <span class="mx-1">&middot;</span>{file.type}
+                      {/if}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <a
+                    href="?fileId={file.id}"
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                    aria-label="Download"
+                  >
+                    <FontAwesomeIcon icon={faDownload} class="w-4 h-4" />
+                  </a>
+                  <button
+                    type="button"
+                    onclick={() => (deleteFileId = fileRecord.id)}
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                    aria-label="Delete"
+                  >
+                    <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </Card>
+          {/if}
+        {/each}
+      </div>
+    {/if}
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+  isOpen={deleteFileId !== null}
+  title="Delete File"
+  message="Are you sure you want to delete this file? This action cannot be undone."
+  onCancel={() => (deleteFileId = null)}
+  onConfirm={() => {
+    if (deleteFileId !== null) {
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "?/deleteFile";
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "id";
+      input.value = String(deleteFileId);
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }}
+/>

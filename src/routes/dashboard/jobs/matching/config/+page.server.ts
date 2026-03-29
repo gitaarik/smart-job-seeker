@@ -1,7 +1,10 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 
-// Standard options for the form
+// Preference options for the matching config form.
+// These are the values stored in the database. They don't map 1:1 to the
+// taxonomy's canonical values (e.g. "Freelance" is a user-facing preference
+// but normalizes to "contract" for matching). Keep in sync manually for now.
 const JOB_TYPES = [
   "Full-time",
   "Part-time",

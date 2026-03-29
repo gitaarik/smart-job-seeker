@@ -5,17 +5,27 @@
  * Used by the matcher (getUnmatchedJobs, filterEligibleJobs) and the
  * matcher status API (eligible unmatched count).
  *
+ * Job type and work location variants are defined in job-taxonomy.ts.
  * If you add a new filter dimension, update BOTH this function AND
  * checkEligibility() in cloud/src/server/job/matcher.ts (the in-memory version
  * that produces human-readable failure reasons).
  */
 
 import { Prisma } from "../../../../generated/prisma/client.js";
+import {
+  JOB_TYPES,
+  WORK_LOCATIONS,
+  buildFamilyMap,
+} from "$lib/data/job-taxonomy";
 
 export interface EligibilityConfig {
   work_location: string[] | null;
   job_types: string[] | null;
 }
+
+// Taxonomy-derived family expansion maps (built once at module load)
+const workLocationFamilies = buildFamilyMap(WORK_LOCATIONS);
+const jobTypeFamilies = buildFamilyMap(JOB_TYPES);
 
 /**
  * Build a Prisma.Sql WHERE clause fragment for job eligibility filtering.
@@ -46,53 +56,25 @@ export function buildEligibilityFilter(
   const normalizeValue = (v: string) =>
     v.toLowerCase().replace(/[-_\s]/g, "");
 
-  // Expand work locations to include multilingual variants so e.g.
-  // "hybrid" also matches "in overleg" (Dutch), "nach absprache" (German), etc.
-  const hybridFamily = [
-    "hybrid", "hybride",
-    // Dutch
-    "inoverleg",
-    // English
-    "flexible", "negotiable", "byagreement", "bymutualagreement", "byarrangement",
-    // German
-    "nachabsprache", "nachvereinbarung", "flexibel",
-    // French
-    "enconcertation", "selonaccord", "àconvenir", "àdéfinir", "enaccord",
-    // Spanish
-    "aconvenir", "segúnacuerdo", "negociable",
-    // Portuguese
-    "acombinar", "anegociar",
-  ];
-  const remoteFamily = [
-    "remote", "fullyremote", "remote(noonsite)",
-  ];
-
+  // Expand work locations to include multilingual variants from the taxonomy
+  // e.g. "hybrid" also matches "in overleg" (Dutch), "nach absprache" (German), etc.
   const expandedWorkLocations = new Set(config.work_location.map(normalizeValue));
-  if (expandedWorkLocations.has("hybrid")) {
-    for (const v of hybridFamily) expandedWorkLocations.add(v);
-  }
-  if (expandedWorkLocations.has("remote")) {
-    for (const v of remoteFamily) expandedWorkLocations.add(v);
-  }
-  const workLocations = [...expandedWorkLocations];
+  workLocationFamilies.forEach((family, canonical) => {
+    if (expandedWorkLocations.has(canonical)) {
+      family.forEach((v) => expandedWorkLocations.add(v));
+    }
+  });
+  const workLocations = Array.from(expandedWorkLocations);
 
-  // Expand job types to include related scraped variants so e.g.
-  // "contract" also matches "one-time project", "freelance", "contractor", etc.
-  const contractFamily = [
-    "onetimeproject", "contractor", "freelance", "fixedprice",
-    "hourly", "hourlycontract", "temporary", "temptohire", "ftc",
-    "freelancecontract", "contractorassignmentfreelancer",
-  ];
-  const fullTimeFamily = ["fulltime", "permanent"];
-
+  // Expand job types to include related scraped variants from the taxonomy
+  // e.g. "contract" also matches "one-time project", "freelance", "contractor", etc.
   const expandedJobTypes = new Set(config.job_types.map(normalizeValue));
-  if (expandedJobTypes.has("contract")) {
-    for (const v of contractFamily) expandedJobTypes.add(v);
-  }
-  if (expandedJobTypes.has("fulltime")) {
-    for (const v of fullTimeFamily) expandedJobTypes.add(v);
-  }
-  const jobTypes = [...expandedJobTypes];
+  jobTypeFamilies.forEach((family, canonical) => {
+    if (expandedJobTypes.has(canonical)) {
+      family.forEach((v) => expandedJobTypes.add(v));
+    }
+  });
+  const jobTypes = Array.from(expandedJobTypes);
 
   return Prisma.sql`
     -- Minimum data: job must have a description OR at least one skill

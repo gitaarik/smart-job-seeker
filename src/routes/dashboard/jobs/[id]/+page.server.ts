@@ -214,6 +214,12 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     };
   }
 
+  // Check if there's an existing application for this job
+  const existingApplication = await db.applications.findFirst({
+    where: { job: jobId, profile: profileId },
+    select: { id: true, status: true },
+  });
+
   return {
     job,
     match,
@@ -226,6 +232,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     importers,
     matchHistory,
     rescrapeConfig,
+    existingApplication,
   };
 };
 
@@ -320,6 +327,59 @@ export const actions: Actions = {
     }
 
     return { success: true, status };
+  },
+
+  startApplication: async ({ locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    // Check if application already exists
+    const existing = await db.applications.findFirst({
+      where: { job: jobId, profile: profileId },
+      select: { id: true },
+    });
+
+    if (existing) {
+      redirect(302, `/dashboard/applications/${existing.id}`);
+    }
+
+    // Create new application
+    const now = new Date();
+    const application = await db.applications.create({
+      data: {
+        job: jobId,
+        profile: profileId,
+        status: "draft",
+        date_created: now,
+        date_updated: now,
+        application_seen_date: now,
+      },
+    });
+
+    // Create initial status log entry
+    await db.application_status_log.create({
+      data: {
+        application: application.id,
+        date_created: now,
+        from_status: null,
+        to_status: "draft",
+        description: "Application created",
+      },
+    });
+
+    redirect(302, `/dashboard/applications/${application.id}`);
   },
 
   rematchJob: async ({ locals, cookies, params }) => {

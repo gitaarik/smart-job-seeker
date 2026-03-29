@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faBan,
     faCheck,
     faCheckCircle,
     faChevronDown,
@@ -12,6 +13,7 @@
     faHistory,
     faLink,
     faPlay,
+    faStop,
     faTimes,
     faTimesCircle,
   } from "@fortawesome/free-solid-svg-icons";
@@ -102,9 +104,11 @@
   let pollInterval: ReturnType<typeof setInterval> | null = null;
   let lastMessage = "";
   let logIdCounter = 0;
+  let isCancelling = $state(false);
   let isActive = $derived(status === "queued" || status === "scraping");
   let isComplete = $derived(status === "completed");
   let isError = $derived(status === "error");
+  let isCancelled = $derived(status === "cancelled");
 
   // Run history
   let history = $state<RescrapeRun[]>([]);
@@ -243,6 +247,36 @@
     }
   }
 
+  async function cancelRescrape() {
+    if (!confirm("Cancel this rescrape?")) return;
+    isCancelling = true;
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/rescrape`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+      if (response.ok) {
+        stopPolling();
+        // Reset to initial config screen so user can start a new rescrape
+        started = false;
+        status = "idle";
+        message = "";
+        liveUrl = null;
+        logs = [];
+        lastMessage = "";
+        loadHistory();
+      } else {
+        addLogEntry(`Failed to cancel: ${result.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      addLogEntry(
+        `Failed to cancel: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+    } finally {
+      isCancelling = false;
+    }
+  }
+
   function formatRunDate(dateStr: string): string {
     const d = new Date(dateStr);
     return d.toLocaleString("en-US", {
@@ -259,6 +293,8 @@
         return "text-[var(--dash-success)]";
       case "error":
         return "text-[var(--dash-error)]";
+      case "cancelled":
+        return "text-[var(--dash-text-muted)]";
       case "scraping":
         return "text-[var(--dash-primary)]";
       case "queued":
@@ -305,6 +341,11 @@
           <FontAwesomeIcon
             icon={faCheckCircle}
             class="w-4 h-4 text-[var(--dash-success)]"
+          />
+        {:else if isCancelled}
+          <FontAwesomeIcon
+            icon={faBan}
+            class="w-4 h-4 text-[var(--dash-text-muted)]"
           />
         {:else if isError}
           <FontAwesomeIcon
@@ -522,6 +563,8 @@
               </span>
             {:else if isComplete}
               <span class="text-[var(--dash-success)]">Completed</span>
+            {:else if isCancelled}
+              <span class="text-[var(--dash-text-muted)]">Cancelled</span>
             {:else if isError}
               <span class="text-[var(--dash-error)]">{
                 message || "Failed"
@@ -620,25 +663,41 @@
           </button>
         </div>
       {:else}
-        <button
-          onclick={onclose}
-          class="
-            px-4 py-2 rounded-lg text-sm {isActive
-            ? 'border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'
-            : 'bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)]'} transition-colors
-          "
-        >
+        <div class="flex gap-2">
           {#if isActive}
-            Close
-          {:else if isComplete}
-            <span class="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-              Done
-            </span>
-          {:else}
-            Close
+            <button
+              onclick={cancelRescrape}
+              disabled={isCancelling}
+              class="px-4 py-2 rounded-lg text-sm border border-[var(--dash-error)]/30 text-[var(--dash-error)] hover:bg-[var(--dash-error)]/10 transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {#if isCancelling}
+                <Spinner size="w-3 h-3" />
+              {:else}
+                <FontAwesomeIcon icon={faStop} class="w-3 h-3" />
+              {/if}
+              Cancel Rescrape
+            </button>
           {/if}
-        </button>
+          <button
+            onclick={onclose}
+            class="
+              px-4 py-2 rounded-lg text-sm {isActive
+              ? 'border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'
+              : 'bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)]'} transition-colors
+            "
+          >
+            {#if isActive}
+              Close
+            {:else if isComplete}
+              <span class="flex items-center gap-2">
+                <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                Done
+              </span>
+            {:else}
+              Close
+            {/if}
+          </button>
+        </div>
       {/if}
     </div>
   </div>

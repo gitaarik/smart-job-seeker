@@ -93,14 +93,9 @@
       icon: faPaperPlane,
       children: [
         {
-          label: "Active Applications",
+          label: "All Applications",
           href: "/dashboard/applications/active",
           icon: faPaperPlane,
-        },
-        {
-          label: "Letters & Forms",
-          href: "/dashboard/applications/letters",
-          icon: faEnvelope,
         },
         {
           label: "Salary Expectations",
@@ -260,6 +255,11 @@
   ): boolean {
     const [hrefPath, hrefSearch] = href.split("?");
     const currentParams = new URLSearchParams(currentSearch);
+
+    // Application detail pages (/dashboard/applications/123/...) → highlight "All Applications"
+    if (currentPath.match(/^\/dashboard\/applications\/\d+/) && href === "/dashboard/applications/active") {
+      return true;
+    }
 
     // Job detail pages (/dashboard/jobs/123) - check jobCategory from page data
     const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);

@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   ai_prompts: 'ai_prompts',
   application_activity_log: 'application_activity_log',
+  application_status_log: 'application_status_log',
   application_letters: 'application_letters',
   application_questions: 'application_questions',
   applications: 'applications',
@@ -184,6 +185,18 @@ export const Application_activity_logScalarFieldEnum = {
 export type Application_activity_logScalarFieldEnum = (typeof Application_activity_logScalarFieldEnum)[keyof typeof Application_activity_logScalarFieldEnum]
 
 
+export const Application_status_logScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  application: 'application',
+  from_status: 'from_status',
+  to_status: 'to_status',
+  description: 'description'
+} as const
+
+export type Application_status_logScalarFieldEnum = (typeof Application_status_logScalarFieldEnum)[keyof typeof Application_status_logScalarFieldEnum]
+
+
 export const Application_lettersScalarFieldEnum = {
   id: 'id',
   date_created: 'date_created',
@@ -217,6 +230,8 @@ export type Application_questionsScalarFieldEnum = (typeof Application_questions
 export const ApplicationsScalarFieldEnum = {
   id: 'id',
   status: 'status',
+  status_step: 'status_step',
+  status_action: 'status_action',
   date_created: 'date_created',
   date_updated: 'date_updated',
   job: 'job',

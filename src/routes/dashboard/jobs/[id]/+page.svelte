@@ -12,6 +12,7 @@
     faExternalLinkAlt,
     faMapMarkerAlt,
     faMoneyBillWave,
+    faPaperPlane,
     faSearch,
     faStar as faStarSolid,
     faSync,
@@ -324,6 +325,31 @@
                 <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
                 Source
               </a>
+            {/if}
+
+            {#if data.existingApplication}
+              <a
+                href="/dashboard/applications/{data.existingApplication.id}"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-success)] bg-[var(--dash-success-light)] text-[var(--dash-success)] hover:bg-[var(--dash-success)] hover:text-white transition-colors whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
+                View Application
+                <span class="text-xs capitalize">({data.existingApplication.status})</span>
+              </a>
+            {:else}
+              <form
+                method="POST"
+                action="?/startApplication"
+                use:enhance
+              >
+                <button
+                  type="submit"
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-primary)] text-[var(--dash-primary)] hover:bg-[var(--dash-primary)] hover:text-white transition-colors whitespace-nowrap"
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
+                  Start Application
+                </button>
+              </form>
             {/if}
           </div>
         </div>

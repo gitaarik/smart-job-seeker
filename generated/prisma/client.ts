@@ -50,6 +50,11 @@ export type ai_prompts = Prisma.ai_promptsModel
  */
 export type application_activity_log = Prisma.application_activity_logModel
 /**
+ * Model application_status_log
+ * 
+ */
+export type application_status_log = Prisma.application_status_logModel
+/**
  * Model application_letters
  * 
  */
