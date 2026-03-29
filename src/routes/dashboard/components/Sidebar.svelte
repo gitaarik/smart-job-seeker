@@ -428,12 +428,11 @@
                 <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />
                 <span class="font-medium">{item.label}</span>
               </div>
-              <FontAwesomeIcon
-                icon={expandedSections.has(item.label)
-                  ? faChevronDown
-                  : faChevronRight}
-                class="w-3 h-3"
-              />
+              {#if expandedSections.has(item.label)}
+                <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3" />
+              {:else}
+                <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3" />
+              {/if}
             </button>
 
             {#if expandedSections.has(item.label)}
