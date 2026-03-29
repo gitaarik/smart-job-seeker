@@ -250,6 +250,7 @@
 
   let mobileMenuOpen = $derived(sidebarState.mobileOpen);
   let expandedSections = $state<Set<string>>(new Set());
+  let lastPath = $state("");
 
   // Check if a child menu item should be considered active
   function isChildHrefActive(
@@ -318,31 +319,23 @@
     return false;
   }
 
-  // Auto-expand sections that contain the active menu item
+  // Auto-expand sections that contain the active menu item, but only on navigation
   $effect(() => {
+    const currentHref = $page.url.pathname + $page.url.search;
+    if (currentHref === lastPath) return;
+    lastPath = currentHref;
+
     const currentPath = $page.url.pathname;
     const currentSearch = $page.url.search;
-    const sectionsToExpand = new Set<string>();
 
     for (const item of menuItems) {
       if (item.children) {
         const hasActiveChild = item.children.some((child) =>
           isChildHrefActive(child.href, currentPath, currentSearch)
         );
-        if (hasActiveChild) {
-          sectionsToExpand.add(item.label);
+        if (hasActiveChild && !expandedSections.has(item.label)) {
+          expandedSections = new Set([...expandedSections, item.label]);
         }
-      }
-    }
-
-    // Only update if there are sections to expand that aren't already expanded
-    for (const section of sectionsToExpand) {
-      if (!expandedSections.has(section)) {
-        expandedSections = new Set([
-          ...expandedSections,
-          ...sectionsToExpand,
-        ]);
-        break;
       }
     }
   });

@@ -273,7 +273,7 @@
             <button
               type="button"
               onclick={() => removeCategory(categoryIndex)}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 flex-shrink-0"
+              class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
               aria-label="Remove category"
             >
               <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
@@ -322,7 +322,7 @@
         <button
           type="button"
           onclick={() => removeCategory(categoryIndex)}
-          class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
           aria-label="Remove category"
         >
           <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />

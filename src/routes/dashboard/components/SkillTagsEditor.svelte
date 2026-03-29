@@ -228,9 +228,24 @@
   }
 
   function keepInView(node: HTMLElement) {
+    const isMobile = window.innerWidth < 640;
+
     function reposition() {
       const margin = 8;
       const vw = window.innerWidth;
+
+      if (isMobile) {
+        // On mobile: use fixed positioning, full-width at bottom of viewport
+        node.style.position = "fixed";
+        node.style.left = `${margin}px`;
+        node.style.right = `${margin}px`;
+        node.style.bottom = `${margin}px`;
+        node.style.top = "auto";
+        node.style.width = `${vw - margin * 2}px`;
+        node.style.maxHeight = "70vh";
+        node.style.overflowY = "auto";
+        return;
+      }
 
       // Reset to default positioning
       node.style.left = "0";
@@ -453,10 +468,12 @@
         </button>
 
         {#if editingIndex === index}
+          <!-- Mobile backdrop -->
+          <div class="fixed inset-0 bg-black/30 z-40 sm:hidden"></div>
           <div
             use:clickOutside
             use:keepInView
-            class="absolute top-full left-0 mt-1 z-10 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg p-3 space-y-2 w-64"
+            class="absolute top-full left-0 mt-1 z-50 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg p-3 space-y-2 w-64"
           >
             <div>
               <label
@@ -546,27 +563,30 @@
               <button
                 type="button"
                 onclick={() => removeSkill(index)}
-                class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] hover:bg-red-500/10 rounded transition-colors"
+                class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
                 aria-label="Delete skill"
               >
-                <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
+                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                Delete
               </button>
-              <div class="flex gap-1">
+              <div class="flex gap-1.5">
                 <button
                   type="button"
                   onclick={() => cancelEditing()}
-                  class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
+                  class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-muted)] transition-colors flex items-center gap-1.5"
                   aria-label="Cancel"
                 >
-                  <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+                  <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
+                  Cancel
                 </button>
                 <button
                   type="button"
                   onclick={() => confirmEditing()}
-                  class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
+                  class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors flex items-center gap-1.5"
                   aria-label="Confirm"
                 >
-                  <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  Save
                 </button>
               </div>
             </div>

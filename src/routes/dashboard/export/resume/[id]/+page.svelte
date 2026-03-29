@@ -243,7 +243,7 @@
           <button
             type="button"
             onclick={() => (showDeleteModal = true)}
-            class="py-2 pr-2 text-[var(--dash-error)] opacity-70 hover:opacity-100 transition-opacity"
+            class="py-2 pr-2 text-red-500 hover:text-red-600 transition-colors"
             aria-label="Delete"
           >
             <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
