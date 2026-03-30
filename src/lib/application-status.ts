@@ -4,8 +4,8 @@ export const statusOptions = [
   { value: "interviewing", label: "Interviewing" },
   { value: "negotiating", label: "Negotiating" },
   { value: "accepted", label: "Accepted" },
-  { value: "withdrawn", label: "Discontinued" },
   { value: "rejected", label: "Not Selected" },
+  { value: "withdrawn", label: "Discontinued" },
 ] as const;
 
 export const statusFilters = [
@@ -109,21 +109,20 @@ export function getStatusBgColor(status: string): string {
 
 export const stepsByPhase: Record<string, string[]> = {
   sent: [
-    "Resume submitted",
-    "CV submitted",
+    "Job board message sent",
     "Application form completed",
     "E-mail sent",
-    "Job board message sent",
+    "Resume / CV sent",
   ],
   interviewing: [
     "Screening call",
-    "Technical interview",
+    "AI interview",
+    "Assessment / test",
     "Coding challenge",
     "Take-home assignment",
+    "Technical interview",
     "Hiring manager call",
     "Team interview",
-    "Assessment / test",
-    "AI interview",
   ],
   negotiating: [
     "Offer received",
@@ -134,6 +133,9 @@ export const stepsByPhase: Record<string, string[]> = {
 export const actionsByPhase: Record<string, string[]> = {
   preparing: [
     "Send application",
+    "Tailor Resume/CV",
+    "Write cover letter",
+    "Complete platform profile",
   ],
   sent: [
     "Awaiting response",
@@ -152,7 +154,11 @@ export const actionsByPhase: Record<string, string[]> = {
   ],
 };
 
-export const defaultStepByPhase: Record<string, string> = {};
+export const defaultStepByPhase: Record<string, string> = {
+  sent: "Job board message sent",
+  interviewing: "Screening call",
+  negotiating: "Offer received",
+};
 
 export const defaultActionByPhase: Record<string, string> = {
   preparing: "Send application",
@@ -162,7 +168,7 @@ export const defaultActionByPhase: Record<string, string> = {
 
 // Step-specific default actions (overrides phase default when a step is selected)
 export const defaultActionByStep: Record<string, string> = {
-  "Screening call": "Need to schedule",
+  "Screening call": "Scheduled",
   "Technical interview": "Need to schedule",
   "Hiring manager call": "Need to schedule",
   "Team interview": "Need to schedule",

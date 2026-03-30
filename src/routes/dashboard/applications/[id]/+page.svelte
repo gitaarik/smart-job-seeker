@@ -682,7 +682,8 @@
               const phase = e.currentTarget.value;
               pickerPhase = phase;
               pickerStep = defaultStepByPhase[phase] || "";
-              pickerAction = defaultActionByPhase[phase] || "";
+              const stepDefault = pickerStep && defaultActionByStep[pickerStep];
+              pickerAction = stepDefault || defaultActionByPhase[phase] || "";
               customStepActive = false;
               customStepText = "";
               customActionActive = false;
