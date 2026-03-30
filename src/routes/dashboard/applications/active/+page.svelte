@@ -5,6 +5,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowRight,
+    faBriefcase,
     faCalendar,
     faChevronDown,
     faChevronUp,
@@ -15,9 +16,11 @@
     faPaperPlane,
     faPlus,
     faSearch,
+    faStickyNote,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import {
@@ -383,35 +386,27 @@
               </div>
 
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h3 class="font-medium text-[var(--dash-text)] truncate">
-                    {job?.title || "Unknown Position"}
-                  </h3>
-                  <span
-                    class="
-                      text-xs px-2 py-0.5 rounded-full {getStatusColor(
-                      app.status,
-                      )}
-                    "
-                  >
-                    {getStatusLabel(app.status)}
-                  </span>
+                <h3 class="font-medium text-[var(--dash-text)] truncate">
+                  {job?.title || "Unknown Position"}
+                </h3>
+                <div class="mt-1 space-y-0.5">
+                  <div>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}">
+                      {getStatusLabel(app.status)}
+                    </span>
+                  </div>
+                  {#if app.status_step}
+                    <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
+                  {/if}
+                  {#if app.status_action}
+                    <p class="text-xs text-[var(--dash-primary)] font-medium">
+                      → {app.status_action}
+                      {#if app.status_action === "Scheduled" && app.status_action_date}
+                        — {formatDate(app.status_action_date)}
+                      {/if}
+                    </p>
+                  {/if}
                 </div>
-                <p class="text-sm text-[var(--dash-text-secondary)] truncate">
-                  {#if job?.job_platforms}
-                    {job.job_platforms.name}
-                  {/if}
-                  {#if job?.office_location}
-                    <span class="mx-1">•</span>
-                    <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
-                    {job.office_location}
-                  {/if}
-                  {#if app.application_sent_date}
-                    <span class="mx-1">•</span>
-                    <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                    Sent {formatDate(app.application_sent_date)}
-                  {/if}
-                </p>
               </div>
             </div>
 
@@ -425,46 +420,61 @@
 
           <!-- Expanded Content -->
           {#if expandedId === app.id}
-            <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
-              <!-- Application Details -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {#if app.cv_sent_through}
-                  <div>
-                    <p class="text-[var(--dash-text-secondary)]">Applied Via</p>
-                    <p class="font-medium text-[var(--dash-text)]">
-                      {app.cv_sent_through}
-                    </p>
-                  </div>
+            <div class="border-t border-[var(--dash-border)] p-4 space-y-3">
+              <!-- Job title -->
+              <h4 class="text-lg font-bold text-[var(--dash-text)]">{job?.title || "Unknown Position"}</h4>
+
+              <!-- Job info row -->
+              <div class="flex items-center gap-3 text-sm text-[var(--dash-text-secondary)] flex-wrap">
+                {#if job?.company}
+                  <span class="flex items-center gap-1">
+                    <FontAwesomeIcon icon={faBriefcase} class="w-3.5 h-3.5" />
+                    {job.company}
+                  </span>
                 {/if}
-                {#if app.salary_expectation}
-                  <div>
-                    <p class="text-[var(--dash-text-secondary)]">
-                      Salary Expectation
-                    </p>
-                    <p class="font-medium text-[var(--dash-text)]">
-                      {
-                        new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: app.salary_currency || "EUR",
-                          maximumFractionDigits: 0,
-                        }).format(Number(app.salary_expectation))
-                      }
-                      {#if app.salary_period}
-                        / {app.salary_period}
-                      {/if}
-                    </p>
-                  </div>
+                {#if job?.office_location}
+                  <span class="flex items-center gap-1">
+                    <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3.5 h-3.5" />
+                    {job.office_location}
+                  </span>
+                {/if}
+                {#if job?.job_platforms}
+                  <span class="flex items-center gap-1">
+                    <PlatformLogo
+                      platformUrl={job.job_platforms.url}
+                      size="w-3.5 h-3.5"
+                    />
+                    {job.job_platforms.name}
+                  </span>
                 {/if}
               </div>
 
-              {#if app.application_note}
+              {#if job?.id}
                 <div>
-                  <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
-                    Notes
-                  </p>
-                  <p class="text-sm text-[var(--dash-text)]">
-                    {app.application_note}
-                  </p>
+                  <a
+                    href="/dashboard/jobs/{job.id}"
+                    class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
+                  >
+                    View Job
+                    <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+                  </a>
+                </div>
+              {/if}
+
+              {#if app.salary_expectation}
+                <p class="text-sm text-[var(--dash-text)]">
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: app.salary_currency || "EUR",
+                    maximumFractionDigits: 0,
+                  }).format(Number(app.salary_expectation))}{#if app.salary_period} / {app.salary_period}{/if}
+                </p>
+              {/if}
+
+              {#if app.application_note}
+                <div class="flex gap-2 px-3 py-2 rounded-lg bg-[var(--dash-bg)] border border-[var(--dash-border)]">
+                  <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 text-[var(--dash-text-muted)] mt-0.5 flex-shrink-0" />
+                  <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.application_note}</p>
                 </div>
               {/if}
 
@@ -481,27 +491,6 @@
                 </div>
               {/if}
 
-              <!-- Status -->
-              <div
-                class="flex items-center gap-3 pt-2 border-t border-[var(--dash-border)]"
-              >
-                <span class="text-xs px-2.5 py-1 rounded-full font-medium {getStatusColor(app.status)}">
-                  {getStatusLabel(app.status)}
-                </span>
-                {#if app.status_step || app.status_action}
-                  <div class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
-                    {#if app.status_step}
-                      <span>{app.status_step}</span>
-                    {/if}
-                    {#if app.status_step && app.status_action}
-                      <span>&middot;</span>
-                    {/if}
-                    {#if app.status_action}
-                      <span>{app.status_action}</span>
-                    {/if}
-                  </div>
-                {/if}
-              </div>
             </div>
           {/if}
 

@@ -42,6 +42,9 @@ export type Application_status_logMinAggregateOutputType = {
   application: number | null
   from_status: string | null
   to_status: string | null
+  step: string | null
+  action: string | null
+  action_date: Date | null
   description: string | null
 }
 
@@ -51,6 +54,9 @@ export type Application_status_logMaxAggregateOutputType = {
   application: number | null
   from_status: string | null
   to_status: string | null
+  step: string | null
+  action: string | null
+  action_date: Date | null
   description: string | null
 }
 
@@ -60,6 +66,9 @@ export type Application_status_logCountAggregateOutputType = {
   application: number
   from_status: number
   to_status: number
+  step: number
+  action: number
+  action_date: number
   description: number
   _all: number
 }
@@ -81,6 +90,9 @@ export type Application_status_logMinAggregateInputType = {
   application?: true
   from_status?: true
   to_status?: true
+  step?: true
+  action?: true
+  action_date?: true
   description?: true
 }
 
@@ -90,6 +102,9 @@ export type Application_status_logMaxAggregateInputType = {
   application?: true
   from_status?: true
   to_status?: true
+  step?: true
+  action?: true
+  action_date?: true
   description?: true
 }
 
@@ -99,6 +114,9 @@ export type Application_status_logCountAggregateInputType = {
   application?: true
   from_status?: true
   to_status?: true
+  step?: true
+  action?: true
+  action_date?: true
   description?: true
   _all?: true
 }
@@ -195,6 +213,9 @@ export type Application_status_logGroupByOutputType = {
   application: number
   from_status: string | null
   to_status: string
+  step: string | null
+  action: string | null
+  action_date: Date | null
   description: string | null
   _count: Application_status_logCountAggregateOutputType | null
   _avg: Application_status_logAvgAggregateOutputType | null
@@ -227,6 +248,9 @@ export type application_status_logWhereInput = {
   application?: Prisma.IntFilter<"application_status_log"> | number
   from_status?: Prisma.StringNullableFilter<"application_status_log"> | string | null
   to_status?: Prisma.StringFilter<"application_status_log"> | string
+  step?: Prisma.StringNullableFilter<"application_status_log"> | string | null
+  action?: Prisma.StringNullableFilter<"application_status_log"> | string | null
+  action_date?: Prisma.DateTimeNullableFilter<"application_status_log"> | Date | string | null
   description?: Prisma.StringNullableFilter<"application_status_log"> | string | null
   applications?: Prisma.XOR<Prisma.ApplicationsScalarRelationFilter, Prisma.applicationsWhereInput>
 }
@@ -237,6 +261,9 @@ export type application_status_logOrderByWithRelationInput = {
   application?: Prisma.SortOrder
   from_status?: Prisma.SortOrderInput | Prisma.SortOrder
   to_status?: Prisma.SortOrder
+  step?: Prisma.SortOrderInput | Prisma.SortOrder
+  action?: Prisma.SortOrderInput | Prisma.SortOrder
+  action_date?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   applications?: Prisma.applicationsOrderByWithRelationInput
 }
@@ -250,6 +277,9 @@ export type application_status_logWhereUniqueInput = Prisma.AtLeast<{
   application?: Prisma.IntFilter<"application_status_log"> | number
   from_status?: Prisma.StringNullableFilter<"application_status_log"> | string | null
   to_status?: Prisma.StringFilter<"application_status_log"> | string
+  step?: Prisma.StringNullableFilter<"application_status_log"> | string | null
+  action?: Prisma.StringNullableFilter<"application_status_log"> | string | null
+  action_date?: Prisma.DateTimeNullableFilter<"application_status_log"> | Date | string | null
   description?: Prisma.StringNullableFilter<"application_status_log"> | string | null
   applications?: Prisma.XOR<Prisma.ApplicationsScalarRelationFilter, Prisma.applicationsWhereInput>
 }, "id">
@@ -260,6 +290,9 @@ export type application_status_logOrderByWithAggregationInput = {
   application?: Prisma.SortOrder
   from_status?: Prisma.SortOrderInput | Prisma.SortOrder
   to_status?: Prisma.SortOrder
+  step?: Prisma.SortOrderInput | Prisma.SortOrder
+  action?: Prisma.SortOrderInput | Prisma.SortOrder
+  action_date?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.application_status_logCountOrderByAggregateInput
   _avg?: Prisma.application_status_logAvgOrderByAggregateInput
@@ -277,6 +310,9 @@ export type application_status_logScalarWhereWithAggregatesInput = {
   application?: Prisma.IntWithAggregatesFilter<"application_status_log"> | number
   from_status?: Prisma.StringNullableWithAggregatesFilter<"application_status_log"> | string | null
   to_status?: Prisma.StringWithAggregatesFilter<"application_status_log"> | string
+  step?: Prisma.StringNullableWithAggregatesFilter<"application_status_log"> | string | null
+  action?: Prisma.StringNullableWithAggregatesFilter<"application_status_log"> | string | null
+  action_date?: Prisma.DateTimeNullableWithAggregatesFilter<"application_status_log"> | Date | string | null
   description?: Prisma.StringNullableWithAggregatesFilter<"application_status_log"> | string | null
 }
 
@@ -284,6 +320,9 @@ export type application_status_logCreateInput = {
   date_created?: Date | string | null
   from_status?: string | null
   to_status: string
+  step?: string | null
+  action?: string | null
+  action_date?: Date | string | null
   description?: string | null
   applications: Prisma.applicationsCreateNestedOneWithoutApplication_status_logInput
 }
@@ -294,6 +333,9 @@ export type application_status_logUncheckedCreateInput = {
   application: number
   from_status?: string | null
   to_status: string
+  step?: string | null
+  action?: string | null
+  action_date?: Date | string | null
   description?: string | null
 }
 
@@ -301,6 +343,9 @@ export type application_status_logUpdateInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateOneRequiredWithoutApplication_status_logNestedInput
 }
@@ -311,6 +356,9 @@ export type application_status_logUncheckedUpdateInput = {
   application?: Prisma.IntFieldUpdateOperationsInput | number
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -320,6 +368,9 @@ export type application_status_logCreateManyInput = {
   application: number
   from_status?: string | null
   to_status: string
+  step?: string | null
+  action?: string | null
+  action_date?: Date | string | null
   description?: string | null
 }
 
@@ -327,6 +378,9 @@ export type application_status_logUpdateManyMutationInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -336,6 +390,9 @@ export type application_status_logUncheckedUpdateManyInput = {
   application?: Prisma.IntFieldUpdateOperationsInput | number
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -345,6 +402,9 @@ export type application_status_logCountOrderByAggregateInput = {
   application?: Prisma.SortOrder
   from_status?: Prisma.SortOrder
   to_status?: Prisma.SortOrder
+  step?: Prisma.SortOrder
+  action?: Prisma.SortOrder
+  action_date?: Prisma.SortOrder
   description?: Prisma.SortOrder
 }
 
@@ -359,6 +419,9 @@ export type application_status_logMaxOrderByAggregateInput = {
   application?: Prisma.SortOrder
   from_status?: Prisma.SortOrder
   to_status?: Prisma.SortOrder
+  step?: Prisma.SortOrder
+  action?: Prisma.SortOrder
+  action_date?: Prisma.SortOrder
   description?: Prisma.SortOrder
 }
 
@@ -368,6 +431,9 @@ export type application_status_logMinOrderByAggregateInput = {
   application?: Prisma.SortOrder
   from_status?: Prisma.SortOrder
   to_status?: Prisma.SortOrder
+  step?: Prisma.SortOrder
+  action?: Prisma.SortOrder
+  action_date?: Prisma.SortOrder
   description?: Prisma.SortOrder
 }
 
@@ -432,6 +498,9 @@ export type application_status_logCreateWithoutApplicationsInput = {
   date_created?: Date | string | null
   from_status?: string | null
   to_status: string
+  step?: string | null
+  action?: string | null
+  action_date?: Date | string | null
   description?: string | null
 }
 
@@ -440,6 +509,9 @@ export type application_status_logUncheckedCreateWithoutApplicationsInput = {
   date_created?: Date | string | null
   from_status?: string | null
   to_status: string
+  step?: string | null
+  action?: string | null
+  action_date?: Date | string | null
   description?: string | null
 }
 
@@ -478,6 +550,9 @@ export type application_status_logScalarWhereInput = {
   application?: Prisma.IntFilter<"application_status_log"> | number
   from_status?: Prisma.StringNullableFilter<"application_status_log"> | string | null
   to_status?: Prisma.StringFilter<"application_status_log"> | string
+  step?: Prisma.StringNullableFilter<"application_status_log"> | string | null
+  action?: Prisma.StringNullableFilter<"application_status_log"> | string | null
+  action_date?: Prisma.DateTimeNullableFilter<"application_status_log"> | Date | string | null
   description?: Prisma.StringNullableFilter<"application_status_log"> | string | null
 }
 
@@ -486,6 +561,9 @@ export type application_status_logCreateManyApplicationsInput = {
   date_created?: Date | string | null
   from_status?: string | null
   to_status: string
+  step?: string | null
+  action?: string | null
+  action_date?: Date | string | null
   description?: string | null
 }
 
@@ -493,6 +571,9 @@ export type application_status_logUpdateWithoutApplicationsInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -501,6 +582,9 @@ export type application_status_logUncheckedUpdateWithoutApplicationsInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -509,6 +593,9 @@ export type application_status_logUncheckedUpdateManyWithoutApplicationsInput = 
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   from_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   to_status?: Prisma.StringFieldUpdateOperationsInput | string
+  step?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  action_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -520,6 +607,9 @@ export type application_status_logSelect<ExtArgs extends runtime.Types.Extension
   application?: boolean
   from_status?: boolean
   to_status?: boolean
+  step?: boolean
+  action?: boolean
+  action_date?: boolean
   description?: boolean
   applications?: boolean | Prisma.applicationsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["application_status_log"]>
@@ -530,6 +620,9 @@ export type application_status_logSelectCreateManyAndReturn<ExtArgs extends runt
   application?: boolean
   from_status?: boolean
   to_status?: boolean
+  step?: boolean
+  action?: boolean
+  action_date?: boolean
   description?: boolean
   applications?: boolean | Prisma.applicationsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["application_status_log"]>
@@ -540,6 +633,9 @@ export type application_status_logSelectUpdateManyAndReturn<ExtArgs extends runt
   application?: boolean
   from_status?: boolean
   to_status?: boolean
+  step?: boolean
+  action?: boolean
+  action_date?: boolean
   description?: boolean
   applications?: boolean | Prisma.applicationsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["application_status_log"]>
@@ -550,10 +646,13 @@ export type application_status_logSelectScalar = {
   application?: boolean
   from_status?: boolean
   to_status?: boolean
+  step?: boolean
+  action?: boolean
+  action_date?: boolean
   description?: boolean
 }
 
-export type application_status_logOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "application" | "from_status" | "to_status" | "description", ExtArgs["result"]["application_status_log"]>
+export type application_status_logOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "application" | "from_status" | "to_status" | "step" | "action" | "action_date" | "description", ExtArgs["result"]["application_status_log"]>
 export type application_status_logInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   applications?: boolean | Prisma.applicationsDefaultArgs<ExtArgs>
 }
@@ -575,6 +674,9 @@ export type $application_status_logPayload<ExtArgs extends runtime.Types.Extensi
     application: number
     from_status: string | null
     to_status: string
+    step: string | null
+    action: string | null
+    action_date: Date | null
     description: string | null
   }, ExtArgs["result"]["application_status_log"]>
   composites: {}
@@ -1005,6 +1107,9 @@ export interface application_status_logFieldRefs {
   readonly application: Prisma.FieldRef<"application_status_log", 'Int'>
   readonly from_status: Prisma.FieldRef<"application_status_log", 'String'>
   readonly to_status: Prisma.FieldRef<"application_status_log", 'String'>
+  readonly step: Prisma.FieldRef<"application_status_log", 'String'>
+  readonly action: Prisma.FieldRef<"application_status_log", 'String'>
+  readonly action_date: Prisma.FieldRef<"application_status_log", 'DateTime'>
   readonly description: Prisma.FieldRef<"application_status_log", 'String'>
 }
     

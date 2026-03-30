@@ -18,6 +18,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
+  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import {
     statusOptions,
     stepsByPhase,
@@ -50,6 +51,7 @@
   let customStepText = $state("");
   let customActionActive = $state(false);
   let customActionText = $state("");
+  let pickerActionDate = $state("");
 
   let pickerStepOptions = $derived(stepsByPhase[pickerPhase] || []);
   let pickerActionOptions = $derived(actionsByPhase[pickerPhase] || []);
@@ -58,6 +60,7 @@
     pickerPhase = app.status;
     pickerStep = app.status_step || "";
     pickerAction = app.status_action || "";
+    pickerActionDate = app.status_action_date ? new Date(app.status_action_date).toISOString().split("T")[0] : "";
     pickerDescription = "";
     customStepActive = false;
     customStepText = "";
@@ -142,6 +145,51 @@
 {/if}
 
 <div class="space-y-6">
+  <!-- Job Header -->
+  <Card padding="lg">
+    {#if job}
+      <h2 class="text-2xl font-bold text-[var(--dash-text)]">
+        {job.title || "Untitled Position"}
+      </h2>
+      <div class="flex items-center gap-3 text-[var(--dash-text-secondary)] flex-wrap mt-2">
+        {#if job.company}
+          <span class="flex items-center gap-1">
+            <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4" />
+            {job.company}
+          </span>
+        {/if}
+        {#if job.office_location}
+          <span class="flex items-center gap-1">
+            <FontAwesomeIcon icon={faMapMarkerAlt} class="w-4 h-4" />
+            {job.office_location}
+          </span>
+        {/if}
+        {#if job.job_platforms}
+          <span class="flex items-center gap-1">
+            <PlatformLogo
+              platformUrl={job.job_platforms.url}
+              size="w-4 h-4"
+            />
+            {job.job_platforms.name}
+          </span>
+        {/if}
+      </div>
+      {#if job.id}
+        <div class="mt-3">
+          <a
+            href="/dashboard/jobs/{job.id}"
+            class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
+          >
+            View Job
+            <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        </div>
+      {/if}
+    {:else}
+      <p class="text-sm text-[var(--dash-text-muted)]">No job linked to this application.</p>
+    {/if}
+  </Card>
+
   <!-- Status Widget -->
   <Card padding="lg">
     <div class="space-y-3">
@@ -160,31 +208,33 @@
       <button
         type="button"
         onclick={openStatusPicker}
-        class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
+        class="w-full flex items-start gap-3 px-4 py-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
       >
-        <span class="text-xs px-2.5 py-1 rounded-full font-medium {getStatusColor(app.status)}">
-          {getStatusLabel(app.status)}
-        </span>
-        <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0 space-y-0.5">
+          <div class="mb-1.5">
+            <span class="text-xs px-2.5 py-1 rounded-full font-medium {getStatusColor(app.status)}">
+              {getStatusLabel(app.status)}
+            </span>
+          </div>
           {#if app.status_step}
-            <span class="text-sm text-[var(--dash-text)]">{app.status_step}</span>
+            <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
           {/if}
           {#if app.status_action}
-            <span class="text-xs text-[var(--dash-text-muted)]">
-              {#if app.status_step}&middot;{/if}
-              {app.status_action}
-            </span>
+            <p class="text-xs text-[var(--dash-primary)] font-medium">
+              → {app.status_action}
+              {#if app.status_action === "Scheduled" && app.status_action_date}
+                — {formatDate(app.status_action_date)}
+              {/if}
+            </p>
           {/if}
         </div>
-        <span class="ml-auto text-[var(--dash-text-muted)] text-xs flex-shrink-0">Change</span>
+        <span class="ml-auto text-[var(--dash-text-muted)] text-xs flex-shrink-0 mt-1">Change</span>
       </button>
     </div>
   </Card>
 
-  <!-- Two-column grid for Activity and Job Info -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Recent Activity -->
-    <Card padding="lg">
+  <!-- Recent Activity -->
+  <Card padding="lg">
       <div class="space-y-3">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
@@ -211,22 +261,40 @@
 
         {#if recentStatusLog.length > 0}
           <div class="relative">
-            <div class="absolute left-[7px] top-0 bottom-0 w-0.5 bg-[var(--dash-border)]"></div>
+            <div class="absolute left-[13px] top-0 bottom-0 w-0.5 bg-[var(--dash-border)]"></div>
             <div class="space-y-0">
               {#each recentStatusLog as entry}
-                <div class="relative flex gap-3 pb-4">
-                  <div class="relative z-10 flex-shrink-0 w-4 flex justify-center">
-                    <div class="w-3 h-3 rounded-full {getStatusBgColor(entry.to_status)} border-2 border-[var(--dash-card)] mt-0.5"></div>
+                <div class="relative flex gap-3.5 pb-4">
+                  <div class="relative z-10 flex-shrink-0 w-7 flex justify-center">
+                    <div class="w-3.5 h-3.5 rounded-full {getStatusBgColor(entry.to_status)} border-2 border-[var(--dash-card)] mt-0.5"></div>
                   </div>
-                  <div class="flex-1 min-w-0 -mt-0.5">
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(entry.to_status)}">
-                      {getStatusLabel(entry.to_status)}
-                    </span>
+                  <div class="flex-1 min-w-0 -mt-0.5 space-y-0.5">
+                    {#if entry.from_status !== entry.to_status}
+                      <div class="mb-1.5">
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(entry.to_status)}">
+                          {getStatusLabel(entry.to_status)}
+                        </span>
+                      </div>
+                    {/if}
+                    {#if entry.step}
+                      <p class="text-xs text-[var(--dash-text-secondary)] italic">{entry.step}</p>
+                    {/if}
+                    {#if entry.action}
+                      <p class="text-xs text-[var(--dash-primary)] font-medium">
+                        → {entry.action}
+                        {#if entry.action_date}
+                          — {formatDate(entry.action_date)}
+                        {/if}
+                      </p>
+                    {/if}
                     {#if entry.description}
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">{entry.description}</p>
+                      <p class="text-xs text-[var(--dash-text)]">{entry.description}</p>
                     {/if}
                     {#if entry.date_created}
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">{formatDate(entry.date_created)}</p>
+                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5 flex items-center gap-1">
+                        <FontAwesomeIcon icon={faCalendar} class="w-2.5 h-2.5" />
+                        {formatDate(entry.date_created)}
+                      </p>
                     {/if}
                   </div>
                 </div>
@@ -252,123 +320,10 @@
       </div>
     </Card>
 
-    <!-- Job Info -->
-    <Card padding="lg">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <FontAwesomeIcon
-              icon={faBriefcase}
-              class="w-4 h-4 text-[var(--dash-text-secondary)]"
-            />
-            <h2
-              class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-            >
-              Job Info
-            </h2>
-          </div>
-          {#if job}
-            <a
-              href="/dashboard/jobs/{job.id}"
-              class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
-            >
-              View Job
-              <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-            </a>
-          {/if}
-        </div>
-
-        {#if job}
-          <div class="space-y-3 text-sm">
-            <div class="flex items-start gap-3">
-              <span
-                class="text-[var(--dash-text-secondary)] w-24 flex-shrink-0"
-              >
-                Position
-              </span>
-              <span class="text-[var(--dash-text)] font-medium">
-                {job.title || "Not specified"}
-              </span>
-            </div>
-            <div class="flex items-start gap-3">
-              <span
-                class="text-[var(--dash-text-secondary)] w-24 flex-shrink-0"
-              >
-                Company
-              </span>
-              <span class="text-[var(--dash-text)]">
-                {job.company || "Not specified"}
-              </span>
-            </div>
-            {#if job.office_location}
-              <div class="flex items-start gap-3">
-                <span
-                  class="text-[var(--dash-text-secondary)] w-24 flex-shrink-0"
-                >
-                  Location
-                </span>
-                <span class="text-[var(--dash-text)]">
-                  <FontAwesomeIcon
-                    icon={faMapMarkerAlt}
-                    class="w-3 h-3 mr-1"
-                  />
-                  {job.office_location}
-                </span>
-              </div>
-            {/if}
-            {#if job.job_platforms?.name}
-              <div class="flex items-start gap-3">
-                <span
-                  class="text-[var(--dash-text-secondary)] w-24 flex-shrink-0"
-                >
-                  Platform
-                </span>
-                <span class="text-[var(--dash-text)]">
-                  {job.job_platforms.name}
-                </span>
-              </div>
-            {/if}
-            {#if job.date_posted}
-              <div class="flex items-start gap-3">
-                <span
-                  class="text-[var(--dash-text-secondary)] w-24 flex-shrink-0"
-                >
-                  Posted
-                </span>
-                <span class="text-[var(--dash-text)]">
-                  {formatDate(job.date_posted)}
-                </span>
-              </div>
-            {/if}
-            {#if job.work_location}
-              <div class="flex items-start gap-3">
-                <span
-                  class="text-[var(--dash-text-secondary)] w-24 flex-shrink-0"
-                >
-                  Work Type
-                </span>
-                <span class="text-[var(--dash-text)]">
-                  {
-                    Array.isArray(job.work_location)
-                    ? job.work_location.join(", ")
-                    : job.work_location
-                  }
-                </span>
-              </div>
-            {/if}
-          </div>
-        {:else}
-          <p class="text-sm text-[var(--dash-text-muted)]">
-            No job linked to this application.
-          </p>
-        {/if}
-      </div>
-    </Card>
-  </div>
 
   <!-- Three-column grid for counts -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-    <!-- Letters & Questions -->
+    <!-- Texts -->
     <Card padding="lg">
       <div class="space-y-3">
         <div class="flex items-center gap-2">
@@ -379,7 +334,7 @@
           <h2
             class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
           >
-            Letters & Questions
+            Texts
           </h2>
         </div>
 
@@ -412,7 +367,7 @@
           href="/dashboard/applications/{app.id}/letters"
           class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
         >
-          Manage letters
+          Manage texts
           <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
         </a>
       </div>
@@ -618,7 +573,7 @@
       </div>
 
       <p class="text-sm text-[var(--dash-text-secondary)]">
-        Permanently remove this application and all associated data including letters, questions, documents, and timeline history.
+        Permanently remove this application and all associated data including texts, documents, and timeline history.
       </p>
 
       <button
@@ -637,7 +592,7 @@
 <ConfirmModal
   isOpen={showDeleteConfirm}
   title="Delete Application"
-  message="Are you sure you want to permanently delete this application? All letters, questions, documents, and timeline history will be removed. This action cannot be undone."
+  message="Are you sure you want to permanently delete this application? All texts, documents, and timeline history will be removed. This action cannot be undone."
   confirmLabel="Delete"
   onCancel={() => showDeleteConfirm = false}
   onConfirm={() => {
@@ -671,6 +626,7 @@
         <input type="hidden" name="status" value={pickerPhase} />
         <input type="hidden" name="step" value={customStepActive ? customStepText : pickerStep} />
         <input type="hidden" name="action" value={customActionActive ? customActionText : pickerAction} />
+        <input type="hidden" name="action_date" value={(customActionActive ? customActionText : pickerAction) === "Scheduled" ? pickerActionDate : ""} />
 
         <!-- Phase selection -->
         <div class="mb-4">
@@ -773,6 +729,17 @@
                 placeholder="Custom action..."
                 class="mt-2 w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
               />
+            {/if}
+            {#if (customActionActive ? customActionText : pickerAction) === "Scheduled"}
+              <div class="mt-2">
+                <label for="picker-action-date" class="block text-xs text-[var(--dash-text-secondary)] mb-1 uppercase tracking-wide">Scheduled Date</label>
+                <input
+                  id="picker-action-date"
+                  type="date"
+                  bind:value={pickerActionDate}
+                  class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
+                />
+              </div>
             {/if}
           </div>
         {/if}

@@ -74,7 +74,7 @@
 
   const typeFilters = [
     { value: "all", label: "All" },
-    { value: "letters", label: "Cover Letters" },
+    { value: "letters", label: "Letters" },
     { value: "questions", label: "Questions" },
   ];
 
@@ -325,9 +325,9 @@
   {#if items.length === 0}
     <EmptyState
       icon={faEnvelope}
-      title="No letters or questions yet"
-      description="Add a cover letter, motivation letter, or application questions to get started."
-      actionLabel="Add Letter"
+      title="No texts yet"
+      description="Add cover letters, motivation texts, or answer application questions to prepare your application."
+      actionLabel="Add Text"
       onAction={() => (showAddLetter = true)}
     />
   {:else}
@@ -563,8 +563,8 @@
 <!-- Delete Confirmation Modal -->
 <ConfirmModal
   isOpen={deleteItem !== null}
-  title="Delete {deleteItem?.type === 'letter' ? 'Letter' : 'Question'}"
-  message="Are you sure you want to delete this {deleteItem?.type === 'letter' ? 'cover letter' : 'application question'}? This action cannot be undone."
+  title="Delete {deleteItem?.type === 'letter' ? 'Text' : 'Question'}"
+  message="Are you sure you want to delete this {deleteItem?.type === 'letter' ? 'text' : 'question'}? This action cannot be undone."
   onCancel={() => (deleteItem = null)}
   onConfirm={() => {
     if (deleteItem !== null) {

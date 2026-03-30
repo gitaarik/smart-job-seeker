@@ -100,16 +100,16 @@
         class="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
       >
         <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Add Note
+        Add Event
       </button>
     {/if}
   </div>
 
-  <!-- Add Note Form -->
+  <!-- Add Event Form -->
   {#if showAddForm}
     <Card padding="md">
       <form method="POST" action="?/create" use:enhance={handleAddSubmit}>
-        <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Timeline Note</h3>
+        <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Timeline Event</h3>
         <div class="space-y-3">
           <div>
             <label for="new-description" class="block text-sm text-[var(--dash-text-secondary)] mb-1">
@@ -137,7 +137,7 @@
               type="submit"
               class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
             >
-              Add Note
+              Add Event
             </button>
           </div>
         </div>
@@ -150,8 +150,8 @@
     <EmptyState
       icon={faHistory}
       title="No timeline entries yet"
-      description="Status changes are logged automatically. You can also add notes to track important events."
-      actionLabel="Add First Note"
+      description="Status changes are logged automatically. You can also add events manually."
+      actionLabel="Add First Event"
       onAction={() => (showAddForm = true)}
     />
   {:else}
@@ -199,13 +199,28 @@
               {:else}
                 <!-- View Mode -->
                 <div class="flex items-start justify-between gap-2">
-                  <div class="min-w-0">
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(entry.to_status)}">
-                      {getStatusLabel(entry.to_status)}
-                    </span>
+                  <div class="min-w-0 space-y-0.5">
+                    {#if entry.from_status !== entry.to_status}
+                      <div class="mb-1.5">
+                        <span class="text-sm px-2.5 py-1 rounded-full font-medium {getStatusColor(entry.to_status)}">
+                          {getStatusLabel(entry.to_status)}
+                        </span>
+                      </div>
+                    {/if}
 
+                    {#if entry.step}
+                      <p class="text-sm text-[var(--dash-text-secondary)] italic">{entry.step}</p>
+                    {/if}
+                    {#if entry.action}
+                      <p class="text-xs text-[var(--dash-primary)] font-medium">
+                        → {entry.action}
+                        {#if entry.action_date}
+                          — {formatDate(entry.action_date)}
+                        {/if}
+                      </p>
+                    {/if}
                     {#if entry.description}
-                      <p class="text-sm text-[var(--dash-text)] mt-1 whitespace-pre-wrap">{entry.description}</p>
+                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{entry.description}</p>
                     {/if}
 
                     <p class="text-xs text-[var(--dash-text-muted)] mt-1 flex items-center gap-1">

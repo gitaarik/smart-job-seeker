@@ -6928,6 +6928,9 @@ export const Application_status_logScalarFieldEnum = {
   application: 'application',
   from_status: 'from_status',
   to_status: 'to_status',
+  step: 'step',
+  action: 'action',
+  action_date: 'action_date',
   description: 'description'
 } as const
 
@@ -6969,6 +6972,7 @@ export const ApplicationsScalarFieldEnum = {
   status: 'status',
   status_step: 'status_step',
   status_action: 'status_action',
+  status_action_date: 'status_action_date',
   date_created: 'date_created',
   date_updated: 'date_updated',
   job: 'job',

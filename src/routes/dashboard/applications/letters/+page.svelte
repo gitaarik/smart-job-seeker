@@ -45,8 +45,8 @@
 
   const typeFilters = [
     { value: "all", label: "All" },
-    { value: "letters", label: "Cover Letters" },
-    { value: "questions", label: "Application Questions" },
+    { value: "letters", label: "Letters" },
+    { value: "questions", label: "Questions" },
   ];
 
   const letterTypes: Record<string, string> = {
@@ -191,7 +191,7 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Letters & Forms"
+    title="Texts"
     icon={faEnvelope}
   />
 
@@ -225,12 +225,12 @@
   {#if items.length === 0}
     <EmptyState
       icon={faEnvelope}
-      title="No letters or forms yet"
+      title="No texts yet"
       description={currentType === "all"
-        ? "Cover letters and application questions will appear here as you apply for jobs."
+        ? "Cover letters, motivations, and question answers will appear here as you apply for jobs."
         : currentType === "letters"
-        ? "No cover letters found. Letters are created when you apply for jobs."
-        : "No application questions found."}
+        ? "No letters found. Create letters from the application's Texts tab."
+        : "No questions found."}
     />
   {:else}
     <div class="space-y-3">
@@ -555,10 +555,10 @@
 <!-- Delete Confirmation Modal -->
 <ConfirmModal
   isOpen={deleteItem !== null}
-  title="Delete {deleteItem?.type === 'letter' ? 'Letter' : 'Question'}"
+  title="Delete {deleteItem?.type === 'letter' ? 'Text' : 'Question'}"
   message="Are you sure you want to delete this {deleteItem?.type === 'letter'
-    ? 'cover letter'
-    : 'application question'}? This action cannot be undone."
+    ? 'text'
+    : 'question'}? This action cannot be undone."
   onCancel={() => (deleteItem = null)}
   onConfirm={() => {
     if (deleteItem !== null) {

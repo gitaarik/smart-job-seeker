@@ -11,21 +11,19 @@
     faMoneyBillWave,
   } from "@fortawesome/free-solid-svg-icons";
   import type { Snippet } from "svelte";
-  import { getStatusLabel, getStatusColor } from "$lib/application-status";
 
   let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
   let app = $derived(data.application);
-  let job = $derived(app.jobs);
 
   const basePath = $derived(`/dashboard/applications/${app.id}`);
 
   const tabs = [
     { label: "Overview", href: "", icon: faClipboardList },
-    { label: "Letters", href: "/letters", icon: faEnvelope },
-    { label: "Timeline", href: "/timeline", icon: faHistory },
-    { label: "Documents", href: "/documents", icon: faFileAlt },
+    { label: "Texts", href: "/letters", icon: faEnvelope },
     { label: "Salary", href: "/salary", icon: faMoneyBillWave },
+    { label: "Documents", href: "/documents", icon: faFileAlt },
+    { label: "Timeline", href: "/timeline", icon: faHistory },
   ];
 
   function isTabActive(tabHref: string): boolean {
@@ -49,27 +47,7 @@
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
     </a>
     <div class="flex-1 min-w-0">
-      <div class="flex items-center gap-3 flex-wrap">
-        <h1 class="text-2xl font-bold text-[var(--dash-text)] truncate">
-          {job?.title || `Application #${app.id}`}
-        </h1>
-        <span
-          class="text-xs px-2.5 py-1 rounded-full font-medium {getStatusColor(app.status)}"
-        >
-          {getStatusLabel(app.status)}{#if app.status_step} &middot; {app.status_step}{/if}{#if app.status_action} &rarr; {app.status_action}{/if}
-        </span>
-      </div>
-      {#if job?.company}
-        <p class="text-sm text-[var(--dash-text-secondary)] mt-0.5">
-          {job.company}
-          {#if job.office_location}
-            <span class="mx-1">&middot;</span>{job.office_location}
-          {/if}
-          {#if job.job_platforms?.name}
-            <span class="mx-1">&middot;</span>{job.job_platforms.name}
-          {/if}
-        </p>
-      {/if}
+      <h1 class="text-2xl font-bold text-[var(--dash-text)]">Application</h1>
     </div>
   </div>
 

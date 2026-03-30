@@ -27,6 +27,7 @@ export const actions: Actions = {
     const status = formData.get("status") as string;
     const step = (formData.get("step") as string)?.trim() || null;
     const action = (formData.get("action") as string)?.trim() || null;
+    const actionDate = (formData.get("action_date") as string)?.trim() || null;
     const description = (formData.get("description") as string)?.trim() || null;
 
     const phaseChanged = status !== existing.status;
@@ -43,6 +44,7 @@ export const actions: Actions = {
       status,
       status_step: step,
       status_action: action,
+      status_action_date: actionDate ? new Date(actionDate) : null,
       date_updated: now,
     };
 
@@ -64,20 +66,16 @@ export const actions: Actions = {
       data: updateData,
     });
 
-    // Build log description from step + action + optional note
-    const logParts: string[] = [];
-    if (step) logParts.push(step);
-    if (action) logParts.push(action);
-    if (description) logParts.push(description);
-    const logDescription = logParts.join(" — ") || null;
-
     await db.application_status_log.create({
       data: {
         application: appId,
         date_created: now,
         from_status: existing.status,
         to_status: status,
-        description: logDescription,
+        step,
+        action,
+        action_date: actionDate ? new Date(actionDate) : null,
+        description: description || null,
       },
     });
 

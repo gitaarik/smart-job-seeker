@@ -22,6 +22,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       matchStats: null,
       topMatches: null,
       profileSkillLevels: {},
+      activeApplications: [],
     };
   }
 
@@ -42,12 +43,15 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
 
+  const activeApplicationStatuses = ["preparing", "sent", "interviewing", "negotiating"];
+
   const [
     profileData,
     searchTasksList,
     [sharedMatchCounts, curationStatsRaw],
     topMatchesRaw,
     profileSkillLevels,
+    activeApplications,
   ] = await Promise.all([
     // Lightweight profile fields for completeness check
     db.profiles.findUnique({
@@ -144,6 +148,22 @@ export const load: PageServerLoad = async ({ parent }) => {
 
     // Skill levels for match card highlighting
     getProfileSkillLevels(profileId),
+
+    // Active applications
+    db.applications.findMany({
+      where: {
+        profile: profileId,
+        status: { in: activeApplicationStatuses },
+      },
+      include: {
+        jobs: {
+          include: {
+            job_platforms: true,
+          },
+        },
+      },
+      orderBy: { date_updated: "desc" },
+    }),
   ]);
 
   // Process match stats — total from shared getMatchCounts (same as Match Progress page)
@@ -206,6 +226,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     matchStats,
     topMatches,
     profileSkillLevels,
+    activeApplications,
   };
 };
 
