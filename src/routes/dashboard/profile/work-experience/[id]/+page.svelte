@@ -6,12 +6,14 @@
     faBriefcase,
     faPlus,
     faTimes,
+    faTrash,
     faUndo,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
+  import ConfirmModal from "../../components/ConfirmModal.svelte";
   import Card from "../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
@@ -37,6 +39,7 @@
   let editStartDate = $state(formatDate(experience.start_date));
   let editEndDate = $state(formatDate(experience.end_date));
   let editTags = $state<string[]>(Array.isArray(experience.tags) ? experience.tags as string[] : []);
+  let showDeleteConfirm = $state(false);
 
   let editAchievements = $state<AchievementItem[]>(
     experience.work_experience_achievements.map((a) => ({
@@ -486,4 +489,55 @@
 
   <!-- Version Tags -->
   <VersionTags bind:tags={editTags} apiUrl={`/api/work-experience/${experience.id}`} section="basic" />
+
+  <!-- Danger Zone -->
+  <Card padding="lg">
+    <div class="space-y-3">
+      <div class="flex items-center gap-2 mb-2">
+        <FontAwesomeIcon
+          icon={faTrash}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+        >
+          Danger Zone
+        </h2>
+      </div>
+
+      <p class="text-sm text-[var(--dash-text-secondary)]">
+        Permanently remove this work experience and all associated achievements and technologies.
+      </p>
+
+      <button
+        type="button"
+        onclick={() => showDeleteConfirm = true}
+        class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+      >
+        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+        Delete Work Experience
+      </button>
+    </div>
+  </Card>
 </div>
+
+<ConfirmModal
+  isOpen={showDeleteConfirm}
+  title="Delete Work Experience"
+  message="Are you sure you want to permanently delete this work experience? All achievements and technologies will also be deleted. This action cannot be undone."
+  confirmLabel="Delete"
+  onCancel={() => showDeleteConfirm = false}
+  onConfirm={() => {
+    showDeleteConfirm = false;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/dashboard/profile/work-experience?/delete";
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "id";
+    input.value = String(experience.id);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+  }}
+/>

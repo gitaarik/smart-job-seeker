@@ -2,14 +2,12 @@
   import type { ActionData, PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowRight,
     faExternalLink,
     faGraduationCap,
-    faPencil,
-    faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
-  import ConfirmModal from "../components/ConfirmModal.svelte";
   import ItemCard from "../components/ItemCard.svelte";
   import { getEducationLogoUrl } from "$lib/utils/entity-media-url";
 
@@ -18,7 +16,6 @@
   let education = $derived(data.education);
   let expandedId = $state<number | null>(null);
   let showAddForm = $state(false);
-  let deleteId = $state<number | null>(null);
 
   // Form states for new entry
   let newInstitution = $state("");
@@ -330,20 +327,12 @@
           {/snippet}
 
           {#snippet footer()}
-            <button
-              type="button"
-              onclick={() => deleteId = edu.id}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              Delete
-            </button>
             <a
               href="/dashboard/profile/education/{edu.id}"
-              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
             >
-              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-              Edit
+              Open
+              <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
             </a>
           {/snippet}
         </ItemCard>
@@ -352,24 +341,3 @@
   {/if}
 </div>
 
-<!-- Delete Confirmation Modal -->
-<ConfirmModal
-  isOpen={deleteId !== null}
-  title="Delete Education"
-  message="Are you sure you want to delete this education entry? This action cannot be undone."
-  onCancel={() => (deleteId = null)}
-  onConfirm={() => {
-    if (deleteId !== null) {
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "?/delete";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "id";
-      input.value = String(deleteId);
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-    }
-  }}
-/>

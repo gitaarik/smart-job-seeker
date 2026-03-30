@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { fail } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../profile/utils";
 
@@ -152,5 +152,27 @@ export const actions: Actions = {
     });
 
     return { success: true };
+  },
+
+  delete: async ({ locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const existing = await db.applications.findFirst({
+      where: { id: appId, profile: profileId },
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    await db.applications.delete({
+      where: { id: appId },
+    });
+
+    redirect(303, "/dashboard/applications/active");
   },
 };

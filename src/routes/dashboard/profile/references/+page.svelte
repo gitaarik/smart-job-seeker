@@ -4,7 +4,6 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
-    faPencil,
     faQuoteLeft,
     faTimes,
     faTrash,
@@ -17,7 +16,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let references = $derived(data.references);
-  let editingId = $state<number | null>(null);
+  let expandedId = $state<number | null>(null);
   let showAddForm = $state(false);
   let deleteId = $state<number | null>(null);
 
@@ -30,15 +29,18 @@
   let editAuthorPosition = $state("");
   let editText = $state("");
 
-  function startEdit(ref: typeof references[0]) {
-    editingId = ref.id;
-    editAuthor = ref.author || "";
-    editAuthorPosition = ref.author_position || "";
-    editText = ref.text || "";
-  }
-
-  function cancelEdit() {
-    editingId = null;
+  function toggleExpand(id: number) {
+    if (expandedId === id) {
+      expandedId = null;
+    } else {
+      expandedId = id;
+      const ref = references.find((r) => r.id === id);
+      if (ref) {
+        editAuthor = ref.author || "";
+        editAuthorPosition = ref.author_position || "";
+        editText = ref.text || "";
+      }
+    }
   }
 
   function resetAddForm() {
@@ -71,7 +73,7 @@
     ) => {
       await update();
       if (result.type === "success") {
-        editingId = null;
+        expandedId = null;
       }
     };
   }
@@ -189,6 +191,8 @@
       {#each references as ref (ref.id)}
         <ItemCard
           id={ref.id}
+          {expandedId}
+          onToggle={toggleExpand}
           icon={faQuoteLeft}
         >
           {#snippet title()}
@@ -207,71 +211,79 @@
             {/if}
           {/snippet}
 
-          {#if editingId === ref.id}
-            {#snippet editContent()}
-              <form
-                method="POST"
-                action="?/update"
-                use:enhance={handleEditSubmit}
-              >
-                <input type="hidden" name="id" value={ref.id} />
-                <div class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        for="edit-author-{ref.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Author Name <span class="text-[var(--dash-error)]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="edit-author-{ref.id}"
-                        name="author"
-                        bind:value={editAuthor}
-                        required
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        for="edit-position-{ref.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Position
-                      </label>
-                      <input
-                        type="text"
-                        id="edit-position-{ref.id}"
-                        name="author_position"
-                        bind:value={editAuthorPosition}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                    </div>
+          {#snippet expandedContent()}
+            <form
+              method="POST"
+              action="?/update"
+              use:enhance={handleEditSubmit}
+            >
+              <input type="hidden" name="id" value={ref.id} />
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="edit-author-{ref.id}"
+                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                    >
+                      Author Name <span class="text-[var(--dash-error)]">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-author-{ref.id}"
+                      name="author"
+                      bind:value={editAuthor}
+                      required
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    />
                   </div>
 
                   <div>
                     <label
-                      for="edit-text-{ref.id}"
+                      for="edit-position-{ref.id}"
                       class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                     >
-                      Reference Text
+                      Position
                     </label>
-                    <textarea
-                      id="edit-text-{ref.id}"
-                      name="text"
-                      bind:value={editText}
-                      rows={4}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                    ></textarea>
+                    <input
+                      type="text"
+                      id="edit-position-{ref.id}"
+                      name="author_position"
+                      bind:value={editAuthorPosition}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    />
                   </div>
                 </div>
 
-                <div class="flex justify-end gap-2 mt-4">
+                <div>
+                  <label
+                    for="edit-text-{ref.id}"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                  >
+                    Reference Text
+                  </label>
+                  <textarea
+                    id="edit-text-{ref.id}"
+                    name="text"
+                    bind:value={editText}
+                    rows={4}
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center mt-4">
+                <button
+                  type="button"
+                  onclick={() => { expandedId = null; deleteId = ref.id; }}
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                  Delete
+                </button>
+                <div class="flex gap-2">
                   <button
                     type="button"
-                    onclick={cancelEdit}
+                    onclick={() => expandedId = null}
                     class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                     aria-label="Cancel"
                   >
@@ -285,27 +297,8 @@
                     <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
                   </button>
                 </div>
-              </form>
-            {/snippet}
-          {/if}
-
-          {#snippet footer()}
-            <button
-              type="button"
-              onclick={() => deleteId = ref.id}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              Delete
-            </button>
-            <button
-              type="button"
-              onclick={() => startEdit(ref)}
-              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-              Edit
-            </button>
+              </div>
+            </form>
           {/snippet}
         </ItemCard>
       {/each}

@@ -481,39 +481,40 @@
                 </div>
               {/if}
 
-              <!-- Status & Open -->
+              <!-- Status -->
               <div
-                class="flex items-center justify-between gap-4 pt-2 border-t border-[var(--dash-border)]"
+                class="flex items-center gap-3 pt-2 border-t border-[var(--dash-border)]"
               >
-                <div class="flex items-center gap-3">
-                  <span class="text-xs px-2.5 py-1 rounded-full font-medium {getStatusColor(app.status)}">
-                    {getStatusLabel(app.status)}
-                  </span>
-                  {#if app.status_step || app.status_action}
-                    <div class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
-                      {#if app.status_step}
-                        <span>{app.status_step}</span>
-                      {/if}
-                      {#if app.status_step && app.status_action}
-                        <span>&middot;</span>
-                      {/if}
-                      {#if app.status_action}
-                        <span>{app.status_action}</span>
-                      {/if}
-                    </div>
-                  {/if}
-                </div>
-
-                <a
-                  href="/dashboard/applications/{app.id}"
-                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
-                >
-                  Open
-                  <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-                </a>
+                <span class="text-xs px-2.5 py-1 rounded-full font-medium {getStatusColor(app.status)}">
+                  {getStatusLabel(app.status)}
+                </span>
+                {#if app.status_step || app.status_action}
+                  <div class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
+                    {#if app.status_step}
+                      <span>{app.status_step}</span>
+                    {/if}
+                    {#if app.status_step && app.status_action}
+                      <span>&middot;</span>
+                    {/if}
+                    {#if app.status_action}
+                      <span>{app.status_action}</span>
+                    {/if}
+                  </div>
+                {/if}
               </div>
             </div>
           {/if}
+
+          <!-- Footer (always visible) -->
+          <div class="border-t border-[var(--dash-border)] px-4 py-2 flex justify-end md:justify-start items-center gap-2">
+            <a
+              href="/dashboard/applications/{app.id}"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
+            >
+              Open
+              <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+            </a>
+          </div>
         </Card>
       {/each}
     </div>

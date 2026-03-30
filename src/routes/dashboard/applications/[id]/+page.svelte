@@ -14,7 +14,9 @@
     faMoneyBillWave,
     faSave,
     faStickyNote,
+    faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
   import {
     statusOptions,
@@ -127,6 +129,8 @@
   let recentStatusLog = $derived(
     app.application_status_log?.slice(0, 5) || [],
   );
+
+  let showDeleteConfirm = $state(false);
 </script>
 
 {#if form?.error}
@@ -598,7 +602,53 @@
     </Card>
   {/if}
 
+  <!-- Delete Application -->
+  <Card padding="lg">
+    <div class="space-y-3">
+      <div class="flex items-center gap-2 mb-2">
+        <FontAwesomeIcon
+          icon={faTrash}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+        >
+          Danger Zone
+        </h2>
+      </div>
+
+      <p class="text-sm text-[var(--dash-text-secondary)]">
+        Permanently remove this application and all associated data including letters, questions, documents, and timeline history.
+      </p>
+
+      <button
+        type="button"
+        onclick={() => showDeleteConfirm = true}
+        class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+      >
+        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+        Delete Application
+      </button>
+    </div>
+  </Card>
+
 </div>
+
+<ConfirmModal
+  isOpen={showDeleteConfirm}
+  title="Delete Application"
+  message="Are you sure you want to permanently delete this application? All letters, questions, documents, and timeline history will be removed. This action cannot be undone."
+  confirmLabel="Delete"
+  onCancel={() => showDeleteConfirm = false}
+  onConfirm={() => {
+    showDeleteConfirm = false;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/delete";
+    document.body.appendChild(form);
+    form.submit();
+  }}
+/>
 
 <!-- Status Picker Modal -->
 {#if statusPickerOpen}

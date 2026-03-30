@@ -5,7 +5,6 @@
   import {
     faCheck,
     faGlobe,
-    faPencil,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -17,7 +16,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let languages = $derived(data.languages);
-  let editingId = $state<number | null>(null);
+  let expandedId = $state<number | null>(null);
   let showAddForm = $state(false);
   let deleteId = $state<number | null>(null);
 
@@ -36,14 +35,17 @@
     { value: "basic", label: "Basic" },
   ];
 
-  function startEdit(lang: typeof languages[0]) {
-    editingId = lang.id;
-    editName = lang.name || "";
-    editProficiency = lang.proficiency || "";
-  }
-
-  function cancelEdit() {
-    editingId = null;
+  function toggleExpand(id: number) {
+    if (expandedId === id) {
+      expandedId = null;
+    } else {
+      expandedId = id;
+      const lang = languages.find((l) => l.id === id);
+      if (lang) {
+        editName = lang.name || "";
+        editProficiency = lang.proficiency || "";
+      }
+    }
   }
 
   function resetAddForm() {
@@ -75,7 +77,7 @@
     ) => {
       await update();
       if (result.type === "success") {
-        editingId = null;
+        expandedId = null;
       }
     };
   }
@@ -182,6 +184,8 @@
       {#each languages as lang (lang.id)}
         <ItemCard
           id={lang.id}
+          {expandedId}
+          onToggle={toggleExpand}
           icon={faGlobe}
         >
           {#snippet title()}
@@ -192,57 +196,65 @@
             {getProficiencyLabel(lang.proficiency)}
           {/snippet}
 
-          {#if editingId === lang.id}
-            {#snippet editContent()}
-              <form
-                method="POST"
-                action="?/update"
-                use:enhance={handleEditSubmit}
-              >
-                <input type="hidden" name="id" value={lang.id} />
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      for="edit-name-{lang.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Language <span class="text-[var(--dash-error)]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-name-{lang.id}"
-                      name="name"
-                      bind:value={editName}
-                      required
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-proficiency-{lang.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Proficiency
-                    </label>
-                    <select
-                      id="edit-proficiency-{lang.id}"
-                      name="proficiency"
-                      bind:value={editProficiency}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    >
-                      <option value="">Select proficiency</option>
-                      {#each proficiencyOptions as option}
-                        <option value={option.value}>{option.label}</option>
-                      {/each}
-                    </select>
-                  </div>
+          {#snippet expandedContent()}
+            <form
+              method="POST"
+              action="?/update"
+              use:enhance={handleEditSubmit}
+            >
+              <input type="hidden" name="id" value={lang.id} />
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    for="edit-name-{lang.id}"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                  >
+                    Language <span class="text-[var(--dash-error)]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="edit-name-{lang.id}"
+                    name="name"
+                    bind:value={editName}
+                    required
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                  />
                 </div>
 
-                <div class="flex justify-end gap-2 mt-4">
+                <div>
+                  <label
+                    for="edit-proficiency-{lang.id}"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                  >
+                    Proficiency
+                  </label>
+                  <select
+                    id="edit-proficiency-{lang.id}"
+                    name="proficiency"
+                    bind:value={editProficiency}
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                  >
+                    <option value="">Select proficiency</option>
+                    {#each proficiencyOptions as option}
+                      <option value={option.value}>{option.label}</option>
+                    {/each}
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center mt-4">
+                <button
+                  type="button"
+                  onclick={() => { expandedId = null; deleteId = lang.id; }}
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                  Delete
+                </button>
+                <div class="flex gap-2">
                   <button
                     type="button"
-                    onclick={cancelEdit}
+                    onclick={() => expandedId = null}
                     class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                     aria-label="Cancel"
                   >
@@ -256,27 +268,8 @@
                     <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
                   </button>
                 </div>
-              </form>
-            {/snippet}
-          {/if}
-
-          {#snippet footer()}
-            <button
-              type="button"
-              onclick={() => deleteId = lang.id}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              Delete
-            </button>
-            <button
-              type="button"
-              onclick={() => startEdit(lang)}
-              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-              Edit
-            </button>
+              </div>
+            </form>
           {/snippet}
         </ItemCard>
       {/each}

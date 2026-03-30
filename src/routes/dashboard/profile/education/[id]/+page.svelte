@@ -4,10 +4,12 @@
   import {
     faArrowLeft,
     faGraduationCap,
+    faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
+  import ConfirmModal from "../../components/ConfirmModal.svelte";
   import Card from "../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
@@ -33,6 +35,7 @@
   let editEndDate = $state(formatDate(education.end_date));
   let editSummary = $state(education.summary || "");
   let editTags = $state<string[]>(Array.isArray(education.tags) ? education.tags as string[] : []);
+  let showDeleteConfirm = $state(false);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -298,4 +301,55 @@
 
   <!-- Version Tags -->
   <VersionTags bind:tags={editTags} apiUrl={`/api/education/${education.id}`} />
+
+  <!-- Danger Zone -->
+  <Card padding="lg">
+    <div class="space-y-3">
+      <div class="flex items-center gap-2 mb-2">
+        <FontAwesomeIcon
+          icon={faTrash}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+        >
+          Danger Zone
+        </h2>
+      </div>
+
+      <p class="text-sm text-[var(--dash-text-secondary)]">
+        Permanently remove this education entry and all associated data.
+      </p>
+
+      <button
+        type="button"
+        onclick={() => showDeleteConfirm = true}
+        class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+      >
+        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+        Delete Education
+      </button>
+    </div>
+  </Card>
 </div>
+
+<ConfirmModal
+  isOpen={showDeleteConfirm}
+  title="Delete Education"
+  message="Are you sure you want to permanently delete this education entry? This action cannot be undone."
+  confirmLabel="Delete"
+  onCancel={() => showDeleteConfirm = false}
+  onConfirm={() => {
+    showDeleteConfirm = false;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/dashboard/profile/education?/delete";
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "id";
+    input.value = String(education.id);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+  }}
+/>
