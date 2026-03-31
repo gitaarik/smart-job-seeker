@@ -32,6 +32,7 @@
     formatJobType,
     formatWorkLocation,
   } from "$lib/format";
+  import { JOB_TYPE_ICONS, WORK_LOCATION_ICONS, EXPERIENCE_LEVEL_ICONS } from "$lib/data/job-icons";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -232,8 +233,9 @@
           {#if job.job_types && Array.isArray(job.job_types)}
             {#each job.job_types as type}
               <span
-                class="text-xs px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
+                class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
               >
+                {#if JOB_TYPE_ICONS[type]}<FontAwesomeIcon icon={JOB_TYPE_ICONS[type]} class="w-2.5 h-2.5" />{/if}
                 {formatJobType(type)}
               </span>
             {/each}
@@ -241,8 +243,9 @@
           {#if job.work_location && Array.isArray(job.work_location)}
             {#each job.work_location as loc}
               <span
-                class="text-xs px-3 py-1 rounded-full border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]"
+                class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]"
               >
+                {#if WORK_LOCATION_ICONS[loc]}<FontAwesomeIcon icon={WORK_LOCATION_ICONS[loc]} class="w-2.5 h-2.5" />{/if}
                 {formatWorkLocation(loc)}
               </span>
             {/each}
@@ -250,8 +253,9 @@
           {#if job.experience_levels && Array.isArray(job.experience_levels)}
             {#each job.experience_levels as level}
               <span
-                class="text-xs px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/10 text-purple-700"
+                class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full border border-purple-500/20 bg-purple-500/10 text-purple-700"
               >
+                {#if EXPERIENCE_LEVEL_ICONS[level]}<FontAwesomeIcon icon={EXPERIENCE_LEVEL_ICONS[level]} class="w-2.5 h-2.5" />{/if}
                 {formatExperienceLevel(level)}
               </span>
             {/each}

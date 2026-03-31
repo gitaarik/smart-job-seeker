@@ -2,12 +2,42 @@
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
   import {
     faCheck,
     faMoneyBillWave,
     faPencil,
     faTimes,
     faTrash,
+    // Employment types
+    faBriefcase,
+    faHourglass,
+    faFileContract,
+    faClockRotateLeft,
+    faLaptop,
+    faGraduationCap,
+    // Work arrangements
+    faHouseLaptop,
+    faBuilding,
+    // Experience levels
+    faSeedling,
+    faLayerGroup,
+    faUserTie,
+    faSitemap,
+    faCrown,
+    // Company types
+    faRocket,
+    faChartLine,
+    faCity,
+    faUsers,
+    faCompass,
+    // Regions
+    faGlobe,
+    faEarthAmericas,
+    faEarthEurope,
+    faEarthAsia,
+    faEarthAfrica,
+    faEarthOceania,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
@@ -24,50 +54,50 @@
   // --- Option definitions ---
 
   const employmentTypes = [
-    { value: "any", label: "Any" },
-    { value: "full_time", label: "Full-time" },
-    { value: "part_time", label: "Part-time" },
-    { value: "contract", label: "Contract" },
-    { value: "temporary", label: "Temporary" },
-    { value: "freelance", label: "Freelance" },
-    { value: "internship", label: "Internship" },
+    { value: "any", label: "Any", icon: faBriefcase },
+    { value: "full_time", label: "Full-time", icon: faBriefcase },
+    { value: "part_time", label: "Part-time", icon: faHourglass },
+    { value: "contract", label: "Contract", icon: faFileContract },
+    { value: "temporary", label: "Temporary", icon: faClockRotateLeft },
+    { value: "freelance", label: "Freelance", icon: faLaptop },
+    { value: "internship", label: "Internship", icon: faGraduationCap },
   ];
 
   const workArrangements = [
-    { value: "any", label: "Any" },
-    { value: "remote", label: "Remote" },
-    { value: "hybrid", label: "Hybrid" },
-    { value: "onsite", label: "On-site" },
+    { value: "any", label: "Any", icon: faHouseLaptop },
+    { value: "remote", label: "Remote", icon: faHouseLaptop },
+    { value: "hybrid", label: "Hybrid", icon: faBuilding },
+    { value: "onsite", label: "On-site", icon: faCity },
   ];
 
   const experienceLevels = [
-    { value: "any", label: "Any" },
-    { value: "junior", label: "Junior" },
-    { value: "mid", label: "Mid" },
-    { value: "senior", label: "Senior" },
-    { value: "lead", label: "Lead" },
-    { value: "principal", label: "Principal" },
+    { value: "any", label: "Any", icon: faLayerGroup },
+    { value: "junior", label: "Junior", icon: faSeedling },
+    { value: "mid", label: "Mid", icon: faLayerGroup },
+    { value: "senior", label: "Senior", icon: faUserTie },
+    { value: "lead", label: "Lead", icon: faSitemap },
+    { value: "principal", label: "Principal", icon: faCrown },
   ];
 
   const companyTypes = [
-    { value: "any", label: "Any" },
-    { value: "startup", label: "Startup" },
-    { value: "scaleup", label: "Scale-up" },
-    { value: "corporate", label: "Corporate" },
-    { value: "agency", label: "Agency" },
-    { value: "consultancy", label: "Consultancy" },
+    { value: "any", label: "Any", icon: faBuilding },
+    { value: "startup", label: "Startup", icon: faRocket },
+    { value: "scaleup", label: "Scale-up", icon: faChartLine },
+    { value: "corporate", label: "Corporate", icon: faCity },
+    { value: "agency", label: "Agency", icon: faUsers },
+    { value: "consultancy", label: "Consultancy", icon: faCompass },
   ];
 
   const regions = [
-    { value: "Global", label: "Global" },
-    { value: "US", label: "US" },
-    { value: "UK", label: "UK" },
-    { value: "Western Europe", label: "Western Europe" },
-    { value: "Eastern Europe", label: "Eastern Europe" },
-    { value: "Middle East", label: "Middle East" },
-    { value: "Asia Pacific", label: "Asia Pacific" },
-    { value: "Latin America", label: "Latin America" },
-    { value: "Africa", label: "Africa" },
+    { value: "Global", label: "Global", icon: faGlobe },
+    { value: "US", label: "US", icon: faEarthAmericas },
+    { value: "UK", label: "UK", icon: faEarthEurope },
+    { value: "Western Europe", label: "Western Europe", icon: faEarthEurope },
+    { value: "Eastern Europe", label: "Eastern Europe", icon: faEarthEurope },
+    { value: "Middle East", label: "Middle East", icon: faEarthAsia },
+    { value: "Asia Pacific", label: "Asia Pacific", icon: faEarthOceania },
+    { value: "Latin America", label: "Latin America", icon: faEarthAmericas },
+    { value: "Africa", label: "Africa", icon: faEarthAfrica },
   ];
 
   const currencies = [
@@ -78,7 +108,7 @@
 
   // --- Multi-select toggle logic ---
 
-  type OptionDef = { value: string; label: string };
+  type OptionDef = { value: string; label: string; icon: IconDefinition };
 
   /** The "all" value is always the first option in each list */
   let flashField = $state<string | null>(null);
@@ -260,6 +290,7 @@
             <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 text-white" />
           {/if}
         </span>
+        <FontAwesomeIcon icon={opt.icon} class="w-3 h-3 opacity-70" />
         {opt.label}
       </button>
     {/each}
@@ -289,8 +320,10 @@
   fieldName: string,
 )}
   {#each [...deserializeSet(raw, options[0].value)].filter((v) => v !== options[0].value) as value}
-    <span class="text-xs px-2 py-0.5 rounded border {tagColors[fieldName]}">
-      {options.find((o) => o.value === value)?.label || value}
+    {@const opt = options.find((o) => o.value === value)}
+    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border {tagColors[fieldName]}">
+      {#if opt?.icon}<FontAwesomeIcon icon={opt.icon} class="w-2.5 h-2.5" />{/if}
+      {opt?.label || value}
     </span>
   {/each}
 {/snippet}

@@ -17,6 +17,7 @@
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import type { Snippet } from "svelte";
   import { formatExperienceLevel, formatJobType, formatWorkLocation } from "$lib/format";
+  import { JOB_TYPE_ICONS, WORK_LOCATION_ICONS, EXPERIENCE_LEVEL_ICONS } from "$lib/data/job-icons";
   import ScoreBadge from "./ScoreBadge.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
 
@@ -231,17 +232,20 @@
           {#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
             <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
               {#each workLocations as loc}
-                <span class="text-xs px-2 py-0.5 rounded border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
+                <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
+                  {#if WORK_LOCATION_ICONS[loc]}<FontAwesomeIcon icon={WORK_LOCATION_ICONS[loc]} class="w-2.5 h-2.5" />{/if}
                   {formatWorkLocation(loc)}
                 </span>
               {/each}
               {#each jobTypes as type}
-                <span class="text-xs px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-700">
+                <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-700">
+                  {#if JOB_TYPE_ICONS[type]}<FontAwesomeIcon icon={JOB_TYPE_ICONS[type]} class="w-2.5 h-2.5" />{/if}
                   {formatJobType(type)}
                 </span>
               {/each}
               {#each experienceLevels as level}
-                <span class="text-xs px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/10 text-purple-700">
+                <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/10 text-purple-700">
+                  {#if EXPERIENCE_LEVEL_ICONS[level]}<FontAwesomeIcon icon={EXPERIENCE_LEVEL_ICONS[level]} class="w-2.5 h-2.5" />{/if}
                   {formatExperienceLevel(level)}
                 </span>
               {/each}
