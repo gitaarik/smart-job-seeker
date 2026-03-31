@@ -38,18 +38,16 @@
 
 <!-- Header -->
 <div class="space-y-4 mb-6">
-  <div class="flex items-center gap-4">
+  <div>
     <a
       href="/dashboard/applications/active"
-      class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] transition-colors"
-      aria-label="Back to applications"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+      <span class="text-sm">Back to all Applications</span>
     </a>
-    <div class="flex-1 min-w-0">
-      <h1 class="text-2xl font-bold text-[var(--dash-text)]">Application</h1>
-    </div>
   </div>
+  <h1 class="text-2xl font-bold text-[var(--dash-text)]">Application</h1>
 
   <!-- Tab Navigation -->
   <div class="flex gap-1 border-b border-[var(--dash-border)] overflow-x-auto">

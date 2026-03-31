@@ -9,6 +9,7 @@ export async function createApplicationLetterFollowup(
   letterId: number,
   followupRequest: string,
   includeOriginalContext?: boolean,
+  updateContent?: boolean,
 ): Promise<FollowupResult> {
   return createEntityFollowup({
     entityId: letterId,
@@ -24,7 +25,11 @@ export async function createApplicationLetterFollowup(
     updateEntity: (id, aiChatId, aiChatResponse) =>
       db.application_letters.update({
         where: { id },
-        data: { ai_chat: aiChatId, ai_chat_response: aiChatResponse },
+        data: {
+          ai_chat: aiChatId,
+          ai_chat_response: aiChatResponse,
+          ...(updateContent ? { content: aiChatResponse } : {}),
+        },
       }).then(() => {}),
   });
 }

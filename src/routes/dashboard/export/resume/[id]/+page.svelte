@@ -59,23 +59,23 @@
 
 <div class="space-y-6">
   <!-- Header with back link -->
-  <div class="flex items-center gap-3">
+  <div>
     <a
       href="/dashboard/export/resume"
-      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-      aria-label="Back to list"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+      <span class="text-sm">Back to all Resume Versions</span>
     </a>
-    <div class="flex items-center gap-2">
-      <FontAwesomeIcon
-        icon={faFileAlt}
-        class="w-5 h-5 text-indigo-600"
-      />
-      <h2 class="text-lg font-semibold text-[var(--dash-text)]">
-        {version.name || version.slug || "Untitled Version"}
-      </h2>
-    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <FontAwesomeIcon
+      icon={faFileAlt}
+      class="w-5 h-5 text-indigo-600"
+    />
+    <h2 class="text-lg font-semibold text-[var(--dash-text)]">
+      {version.name || version.slug || "Untitled Version"}
+    </h2>
   </div>
 
   {#if form?.error}

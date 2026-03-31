@@ -10,11 +10,23 @@ import { getFieldChoiceLabel } from "../directus/field-labels";
 /**
  * Map letter types to their corresponding AI chat prompt request types
  */
-const LETTER_TYPE_TO_PROMPT: Record<string, string> = {
-  cover_letter: "write_cover_letter",
-  motivation_letter: "write_motivation_letter",
-  follow_up_email: "write_follow_up_email",
-  thank_you_letter: "write_thank_you_letter",
+const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
+  cover_letter: {
+    generate: "write_cover_letter",
+    advice: "advise_cover_letter",
+  },
+  motivation_letter: {
+    generate: "write_motivation_letter",
+    advice: "advise_motivation_letter",
+  },
+  follow_up_email: {
+    generate: "write_follow_up_email",
+    advice: "advise_follow_up_email",
+  },
+  thank_you_letter: {
+    generate: "write_thank_you_letter",
+    advice: "advise_thank_you_letter",
+  },
 };
 
 /**
@@ -34,6 +46,7 @@ const LETTER_TYPE_TO_PROMPT: Record<string, string> = {
 export async function generateApplicationLetter(
   letterId: number,
   additionalContext?: string,
+  mode: "generate" | "advice" = "generate",
 ): Promise<{
   success: boolean;
   message: string;
@@ -88,13 +101,20 @@ export async function generateApplicationLetter(
   const job = letter.applications.jobs;
   const letterType = letter.letter_type;
 
-  // Get the appropriate prompt type based on letter type
-  const promptType = LETTER_TYPE_TO_PROMPT[letterType];
-  if (!promptType) {
+  // Get the appropriate prompt type based on letter type and mode
+  const promptMap = LETTER_TYPE_TO_PROMPT[letterType];
+  if (!promptMap) {
     return {
       success: false,
       message:
         `Unknown letter type: ${letterType}. Cannot determine which AI prompt to use.`,
+    };
+  }
+  const promptType = promptMap[mode];
+  if (!promptType) {
+    return {
+      success: false,
+      message: `Unknown mode: ${mode} for letter type: ${letterType}.`,
     };
   }
 
@@ -166,12 +186,19 @@ export async function generateApplicationLetter(
 
   // Update the application_letter record (try block for database update)
   try {
+    const updateData: Record<string, unknown> = {
+      ai_chat: aiChat.id,
+      ai_chat_response: aiChat.response,
+    };
+
+    // For "generate" mode, also set the content to the AI response
+    if (mode === "generate") {
+      updateData.content = aiChat.response;
+    }
+
     await db.application_letters.update({
       where: { id: letterId },
-      data: {
-        ai_chat: aiChat.id,
-        ai_chat_response: aiChat.response,
-      },
+      data: updateData,
     });
   } catch (error) {
     const errorMessage = error instanceof Error

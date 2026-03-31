@@ -4,6 +4,8 @@
   import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowRight,
+    faCheck,
     faChevronDown,
     faChevronUp,
     faEnvelope,
@@ -12,6 +14,7 @@
     faRobot,
     faTimes,
     faTrash,
+    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -31,12 +34,10 @@
   let showAddLetter = $state(false);
   let showAddQuestion = $state(false);
 
-  // Edit states
-  let editContent = $state("");
-  let editStatus = $state("");
+  // Edit states (for questions only)
   let editAnswer = $state("");
 
-  // AI generation states
+  // AI generation states (for questions only)
   let generatingIds = $state<Set<string>>(new Set());
   let aiError = $state<string | null>(null);
   let followupText = $state<Record<string, string>>({});
@@ -97,12 +98,7 @@
     const id = getItemId(item);
     editingId = id;
     expandedId = id;
-    if (item.itemType === "letter") {
-      editContent = (item as LetterItem).content || "";
-      editStatus = (item as LetterItem).status || "draft";
-    } else {
-      editAnswer = (item as QuestionItem).answer || "";
-    }
+    editAnswer = (item as QuestionItem).answer || "";
   }
 
   function cancelEdit() {
@@ -132,10 +128,7 @@
 
   async function generateAi(item: Item) {
     const itemId = getItemId(item);
-    const isLetter = item.itemType === "letter";
-    const url = isLetter
-      ? `/api/ai/letters/${item.id}/generate`
-      : `/api/ai/questions/${item.id}/generate`;
+    const url = `/api/ai/questions/${item.id}/generate`;
 
     generatingIds.add(itemId);
     generatingIds = new Set(generatingIds);
@@ -163,13 +156,10 @@
 
   async function sendFollowup(item: Item) {
     const itemId = getItemId(item);
-    const isLetter = item.itemType === "letter";
     const text = followupText[itemId]?.trim();
     if (!text) return;
 
-    const url = isLetter
-      ? `/api/ai/letters/${item.id}/followup`
-      : `/api/ai/questions/${item.id}/followup`;
+    const url = `/api/ai/questions/${item.id}/followup`;
 
     generatingIds.add(itemId);
     generatingIds = new Set(generatingIds);
@@ -208,60 +198,77 @@
     </div>
   {/if}
 
-  <!-- Header with Add buttons -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
-    <div class="flex flex-wrap gap-2">
-      {#each typeFilters as filter}
+  <!-- Header with Add buttons (only shown when there are items) -->
+  {#if letters.length > 0 || questions.length > 0}
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      {#if letters.length > 0 && questions.length > 0}
+        <div class="flex flex-wrap gap-2">
+          {#each typeFilters as filter}
+            <button
+              type="button"
+              onclick={() => (currentType = filter.value)}
+              class="px-3 py-1.5 text-sm rounded-lg transition-colors {currentType === filter.value
+                ? 'bg-[var(--dash-primary)] text-white'
+                : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}"
+            >
+              {filter.label}
+            </button>
+          {/each}
+        </div>
+      {:else}
+        <div></div>
+      {/if}
+
+      <div class="flex gap-2">
         <button
           type="button"
-          onclick={() => (currentType = filter.value)}
-          class="px-3 py-1.5 text-sm rounded-lg transition-colors {currentType === filter.value
-            ? 'bg-[var(--dash-primary)] text-white'
-            : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}"
+          onclick={() => { showAddLetter = true; showAddQuestion = false; }}
+          class="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
-          {filter.label}
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Letter
         </button>
-      {/each}
+        <button
+          type="button"
+          onclick={() => { showAddQuestion = true; showAddLetter = false; }}
+          class="flex items-center gap-2 px-3 py-1.5 text-sm border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Question
+        </button>
+      </div>
     </div>
-
-    <div class="flex gap-2">
-      <button
-        type="button"
-        onclick={() => { showAddLetter = true; showAddQuestion = false; }}
-        class="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Letter
-      </button>
-      <button
-        type="button"
-        onclick={() => { showAddQuestion = true; showAddLetter = false; }}
-        class="flex items-center gap-2 px-3 py-1.5 text-sm border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Question
-      </button>
-    </div>
-  </div>
+  {/if}
 
   <!-- Add Letter Form -->
   {#if showAddLetter}
     <Card padding="md">
       <form method="POST" action="?/createLetter" use:enhance={handleAddSubmit}>
         <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Letter</h3>
+        <input type="hidden" name="letter_type" value={newLetterType} />
         <div class="space-y-3">
           <div>
-            <label for="new-letter-type" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Letter Type</label>
-            <select
-              id="new-letter-type"
-              name="letter_type"
-              bind:value={newLetterType}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            >
+            <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Letter Type</p>
+            <div class="flex flex-wrap gap-2">
               {#each Object.entries(letterTypes) as [value, label]}
-                <option {value}>{label}</option>
+                <button
+                  type="button"
+                  onclick={() => (newLetterType = value)}
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {newLetterType === value
+                    ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                    : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+                >
+                  <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {newLetterType === value
+                    ? 'border-[var(--dash-primary)]'
+                    : 'border-[var(--dash-border)]'}">
+                    {#if newLetterType === value}
+                      <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                    {/if}
+                  </span>
+                  {label}
+                </button>
               {/each}
-            </select>
+            </div>
           </div>
           <div class="flex justify-end gap-2">
             <button
@@ -322,108 +329,122 @@
   {/if}
 
   <!-- Items List -->
-  {#if items.length === 0}
-    <EmptyState
-      icon={faEnvelope}
-      title="No texts yet"
-      description="Add cover letters, motivation texts, or answer application questions to prepare your application."
-      actionLabel="Add Text"
-      onAction={() => (showAddLetter = true)}
-    />
+  {#if items.length === 0 && !showAddLetter && !showAddQuestion}
+    <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div class="w-16 h-16 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mb-4">
+        <FontAwesomeIcon icon={faEnvelope} class="w-8 h-8 text-[var(--dash-text-muted)]" />
+      </div>
+      <h3 class="text-lg font-medium text-[var(--dash-text)] mb-2">No texts yet</h3>
+      <p class="text-sm text-[var(--dash-text-secondary)] max-w-md mb-6">
+        Add cover letters, motivation texts, or answer application questions to prepare your application.
+      </p>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          onclick={() => { showAddLetter = true; showAddQuestion = false; }}
+          class="flex items-center gap-2 px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3.5 h-3.5" />
+          Add Letter
+        </button>
+        <button
+          type="button"
+          onclick={() => { showAddQuestion = true; showAddLetter = false; }}
+          class="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3.5 h-3.5" />
+          Add Question
+        </button>
+      </div>
+    </div>
   {:else}
     <div class="space-y-3">
       {#each items as item (getItemId(item))}
         {@const itemId = getItemId(item)}
         {@const isLetter = item.itemType === "letter"}
-        {@const hasAiChat = !!(item as LetterItem).ai_chat}
+        {@const hasAiChat = !!(item as QuestionItem).ai_chat}
         {@const hasContent = isLetter ? !!(item as LetterItem).content : !!(item as QuestionItem).answer}
-        <Card class="overflow-hidden">
-          <!-- Header -->
-          <button
-            type="button"
-            onclick={() => toggleExpand(itemId)}
-            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
-          >
-            <div class="flex items-center gap-4 flex-1 min-w-0">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)]">
-                <FontAwesomeIcon
-                  icon={isLetter ? faEnvelope : faQuestionCircle}
-                  class="w-5 h-5 {isLetter ? 'text-blue-600' : 'text-purple-600'}"
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h3 class="font-medium text-[var(--dash-text)] truncate">
-                    {#if isLetter}
+
+        {#if isLetter}
+          <!-- Letter Card: non-expandable, with Write/Edit link in footer -->
+          <Card class="overflow-hidden">
+            <div class="p-4">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)]">
+                  <FontAwesomeIcon icon={faEnvelope} class="w-5 h-5 text-blue-600" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="font-medium text-[var(--dash-text)] truncate">
                       {letterTypes[(item as LetterItem).letter_type] || (item as LetterItem).letter_type}
-                    {:else}
-                      {(item as QuestionItem).question}
-                    {/if}
-                  </h3>
-                  {#if isLetter}
+                    </h3>
                     <span
-                      class="text-xs px-2 py-0.5 rounded-full capitalize {(item as LetterItem).status === 'published'
+                      class="text-xs px-2 py-0.5 rounded-full capitalize {(item as LetterItem).status === 'ready'
                         ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
+                        : (item as LetterItem).status === 'sent'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                         : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
                     >
                       {(item as LetterItem).status}
                     </span>
-                  {/if}
+                  </div>
+                  <p class="text-sm text-[var(--dash-text-secondary)]">
+                    {formatDate(item.date_updated || item.date_created)}
+                    {#if !(item as LetterItem).content}
+                      <span class="mx-1">&middot;</span>
+                      <span class="text-[var(--dash-text-muted)] italic">No content yet</span>
+                    {/if}
+                  </p>
                 </div>
-                <p class="text-sm text-[var(--dash-text-secondary)]">
-                  {formatDate(item.date_updated || item.date_created)}
-                  {#if !isLetter && (item as QuestionItem).answer}
-                    <span class="mx-1">&middot;</span>
-                    <span class="text-[var(--dash-success)]">Answered</span>
-                  {/if}
-                </p>
               </div>
             </div>
-            <FontAwesomeIcon
-              icon={expandedId === itemId ? faChevronUp : faChevronDown}
-              class="w-4 h-4 text-[var(--dash-text-secondary)]"
-            />
-          </button>
+            <div class="border-t border-[var(--dash-border)] px-4 py-2 flex justify-end md:justify-start items-center gap-2">
+              <a
+                href="/dashboard/applications/{app.id}/letters/{item.id}"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
+              >
+                {(item as LetterItem).content ? "Edit" : "Write"}
+                <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+              </a>
+            </div>
+          </Card>
+        {:else}
+          <!-- Question Card: expandable with inline editing -->
+          <Card class="overflow-hidden">
+            <!-- Header -->
+            <button
+              type="button"
+              onclick={() => toggleExpand(itemId)}
+              class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
+            >
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)]">
+                  <FontAwesomeIcon icon={faQuestionCircle} class="w-5 h-5 text-purple-600" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-medium text-[var(--dash-text)] truncate">
+                    {(item as QuestionItem).question}
+                  </h3>
+                  <p class="text-sm text-[var(--dash-text-secondary)]">
+                    {formatDate(item.date_updated || item.date_created)}
+                    {#if (item as QuestionItem).answer}
+                      <span class="mx-1">&middot;</span>
+                      <span class="text-[var(--dash-success)]">Answered</span>
+                    {/if}
+                  </p>
+                </div>
+              </div>
+              <FontAwesomeIcon
+                icon={expandedId === itemId ? faChevronUp : faChevronDown}
+                class="w-4 h-4 text-[var(--dash-text-secondary)]"
+              />
+            </button>
 
-          <!-- Expanded Content -->
-          {#if expandedId === itemId}
-            <div class="border-t border-[var(--dash-border)] p-4">
-              {#if editingId === itemId}
-                <!-- Edit Mode -->
-                {#if isLetter}
-                  <form method="POST" action="?/updateLetter" use:enhance={handleEditSubmit}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <div class="space-y-4">
-                      <div>
-                        <label for="edit-content-{item.id}" class="block text-sm font-medium text-[var(--dash-text)] mb-1">Content</label>
-                        <textarea
-                          id="edit-content-{item.id}"
-                          name="content"
-                          bind:value={editContent}
-                          rows={10}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-                        ></textarea>
-                      </div>
-                      <div>
-                        <label for="edit-status-{item.id}" class="block text-sm font-medium text-[var(--dash-text)] mb-1">Status</label>
-                        <select
-                          id="edit-status-{item.id}"
-                          name="status"
-                          bind:value={editStatus}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        >
-                          <option value="draft">Draft</option>
-                          <option value="published">Published</option>
-                          <option value="archived">Archived</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="flex justify-end gap-2 mt-4">
-                      <button type="button" onclick={cancelEdit} class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">Cancel</button>
-                      <button type="submit" class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors">Save Changes</button>
-                    </div>
-                  </form>
-                {:else}
+            <!-- Expanded Content -->
+            {#if expandedId === itemId}
+              <div class="border-t border-[var(--dash-border)] p-4">
+                {#if editingId === itemId}
+                  <!-- Edit Mode -->
                   <form method="POST" action="?/updateQuestion" use:enhance={handleEditSubmit}>
                     <input type="hidden" name="id" value={item.id} />
                     <div class="space-y-4">
@@ -442,22 +463,30 @@
                         ></textarea>
                       </div>
                     </div>
-                    <div class="flex justify-end gap-2 mt-4">
-                      <button type="button" onclick={cancelEdit} class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">Cancel</button>
-                      <button type="submit" class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors">Save Answer</button>
+                    <div class="flex items-center justify-between mt-4">
+                      <button
+                        type="button"
+                        onclick={() => (deleteItem = { id: item.id, type: "question" })}
+                        class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
+                      >
+                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                        Delete
+                      </button>
+                      <div class="flex gap-1.5">
+                        <button type="button" onclick={cancelEdit} class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-muted)] transition-colors flex items-center gap-1.5">
+                          <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
+                          Cancel
+                        </button>
+                        <button type="submit" class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors flex items-center gap-1.5">
+                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                          Save
+                        </button>
+                      </div>
                     </div>
                   </form>
-                {/if}
-              {:else}
-                <!-- View Mode -->
-                <div class="space-y-4">
-                  {#if isLetter}
-                    {#if (item as LetterItem).content}
-                      <pre class="whitespace-pre-wrap text-sm text-[var(--dash-text)] bg-[var(--dash-bg)] p-4 rounded-lg overflow-x-auto">{(item as LetterItem).content}</pre>
-                    {:else}
-                      <p class="text-[var(--dash-text-secondary)] italic">No content yet. Write it manually or generate with AI.</p>
-                    {/if}
-                  {:else}
+                {:else}
+                  <!-- View Mode -->
+                  <div class="space-y-4">
                     <div>
                       <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Question</p>
                       <p class="text-[var(--dash-text)]">{(item as QuestionItem).question}</p>
@@ -470,91 +499,83 @@
                     {:else}
                       <p class="text-[var(--dash-text-secondary)] italic">No answer yet. Write it manually or generate with AI.</p>
                     {/if}
-                  {/if}
 
-                  <!-- Action Buttons -->
-                  <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]">
-                    <button
-                      type="button"
-                      onclick={() => startEdit(item)}
-                      class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => generateAi(item)}
-                      disabled={generatingIds.has(itemId)}
-                      class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                    >
-                      {#if generatingIds.has(itemId)}
-                        <Spinner size="w-3.5 h-3.5" />
-                      {:else}
-                        <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
-                      {/if}
-                      {generatingIds.has(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
-                    </button>
-                    {#if hasAiChat}
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]">
                       <button
                         type="button"
-                        onclick={() => (showFollowup[itemId] = !showFollowup[itemId])}
-                        disabled={generatingIds.has(itemId)}
-                        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                        onclick={() => startEdit(item)}
+                        class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
                       >
-                        Follow-up
+                        Edit
                       </button>
-                    {/if}
-                    <button
-                      type="button"
-                      onclick={() => (deleteItem = { id: item.id, type: item.itemType })}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                      aria-label="Delete"
-                    >
-                      <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <!-- Follow-up Section -->
-                  {#if showFollowup[itemId]}
-                    <div class="pt-2 space-y-2">
-                      <textarea
-                        bind:value={followupText[itemId]}
-                        placeholder="Ask AI to refine the {isLetter ? 'letter' : 'answer'}..."
-                        rows={3}
+                      <button
+                        type="button"
+                        onclick={() => generateAi(item)}
                         disabled={generatingIds.has(itemId)}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
-                      ></textarea>
-                      <div class="flex items-center justify-between">
-                        <label class="flex items-center gap-2 text-sm text-[var(--dash-text-secondary)]">
-                          <input
-                            type="checkbox"
-                            bind:checked={followupIncludeContext[itemId]}
-                            disabled={generatingIds.has(itemId)}
-                            class="rounded"
-                          />
-                          Include original context
-                        </label>
+                        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                      >
+                        {#if generatingIds.has(itemId)}
+                          <Spinner size="w-3.5 h-3.5" />
+                        {:else}
+                          <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
+                        {/if}
+                        {generatingIds.has(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
+                      </button>
+                      {#if hasAiChat}
                         <button
                           type="button"
-                          onclick={() => sendFollowup(item)}
-                          disabled={generatingIds.has(itemId) || !followupText[itemId]?.trim()}
-                          class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                          onclick={() => (showFollowup[itemId] = !showFollowup[itemId])}
+                          disabled={generatingIds.has(itemId)}
+                          class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
                         >
-                          {#if generatingIds.has(itemId)}
-                            <Spinner size="w-3.5 h-3.5" />
-                            Generating...
-                          {:else}
-                            Send Follow-up
-                          {/if}
+                          Follow-up
                         </button>
-                      </div>
+                      {/if}
                     </div>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          {/if}
-        </Card>
+
+                    <!-- Follow-up Section -->
+                    {#if showFollowup[itemId]}
+                      <div class="pt-2 space-y-2">
+                        <textarea
+                          bind:value={followupText[itemId]}
+                          placeholder="Ask AI to refine the answer..."
+                          rows={3}
+                          disabled={generatingIds.has(itemId)}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
+                        ></textarea>
+                        <div class="flex items-center justify-between">
+                          <label class="flex items-center gap-2 text-sm text-[var(--dash-text-secondary)]">
+                            <input
+                              type="checkbox"
+                              bind:checked={followupIncludeContext[itemId]}
+                              disabled={generatingIds.has(itemId)}
+                              class="rounded"
+                            />
+                            Include original context
+                          </label>
+                          <button
+                            type="button"
+                            onclick={() => sendFollowup(item)}
+                            disabled={generatingIds.has(itemId) || !followupText[itemId]?.trim()}
+                            class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                          >
+                            {#if generatingIds.has(itemId)}
+                              <Spinner size="w-3.5 h-3.5" />
+                              Generating...
+                            {:else}
+                              Send Follow-up
+                            {/if}
+                          </button>
+                        </div>
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </Card>
+        {/if}
       {/each}
     </div>
   {/if}
@@ -563,14 +584,14 @@
 <!-- Delete Confirmation Modal -->
 <ConfirmModal
   isOpen={deleteItem !== null}
-  title="Delete {deleteItem?.type === 'letter' ? 'Text' : 'Question'}"
-  message="Are you sure you want to delete this {deleteItem?.type === 'letter' ? 'text' : 'question'}? This action cannot be undone."
+  title="Delete Question"
+  message="Are you sure you want to delete this question? This action cannot be undone."
   onCancel={() => (deleteItem = null)}
   onConfirm={() => {
     if (deleteItem !== null) {
       const form = document.createElement("form");
       form.method = "POST";
-      form.action = deleteItem.type === "letter" ? "?/deleteLetter" : "?/deleteQuestion";
+      form.action = "?/deleteQuestion";
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = "id";

@@ -246,11 +246,13 @@ export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown): T {
 
 export const letterGenerateSchema = z.object({
   additionalContext: z.string().trim().max(5000).optional(),
+  mode: z.enum(["generate", "advice"]).optional().default("generate"),
 });
 
 export const followupRequestSchema = z.object({
   followupRequest: requiredTrimmedString("Follow-up request", 5000),
   includeOriginalContext: z.boolean().optional().default(false),
+  updateContent: z.boolean().optional().default(false),
 });
 
 /**

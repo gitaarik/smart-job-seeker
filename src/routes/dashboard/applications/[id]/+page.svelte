@@ -116,9 +116,9 @@
   }
 
   let letterCount = $derived(app.application_letters?.length || 0);
-  let publishedLetterCount = $derived(
+  let readyLetterCount = $derived(
     app.application_letters?.filter(
-      (l: { status: string }) => l.status === "published",
+      (l: { status: string }) => l.status === "ready" || l.status === "sent",
     ).length || 0,
   );
   let questionCount = $derived(app.application_questions?.length || 0);
@@ -342,8 +342,8 @@
           <div class="flex items-center justify-between text-sm">
             <span class="text-[var(--dash-text-secondary)]">Letters</span>
             <span class="text-[var(--dash-text)] font-medium">
-              {publishedLetterCount} published
-              {#if letterCount > publishedLetterCount}
+              {readyLetterCount} ready
+              {#if letterCount > readyLetterCount}
                 <span class="text-[var(--dash-text-muted)]">
                   / {letterCount} total
                 </span>

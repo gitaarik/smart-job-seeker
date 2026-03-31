@@ -12,6 +12,7 @@
     faRobot,
     faTimes,
     faTrash,
+    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -272,8 +273,10 @@
                     <span
                       class="
                         text-xs px-2 py-0.5 rounded-full capitalize {item.status ===
-                        'published'
+                        'ready'
                         ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
+                        : item.status === 'sent'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                         : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
                       "
                     >
@@ -343,25 +346,38 @@
                           class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         >
                           <option value="draft">Draft</option>
-                          <option value="published">Published</option>
+                          <option value="ready">Ready</option>
+                          <option value="sent">Sent</option>
                           <option value="archived">Archived</option>
                         </select>
                       </div>
                     </div>
-                    <div class="flex justify-end gap-2 mt-4">
+                    <div class="flex items-center justify-between mt-4">
                       <button
                         type="button"
-                        onclick={cancelEdit}
-                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                        onclick={() => (deleteItem = { id: item.id, type: item.itemType })}
+                        class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
                       >
-                        Cancel
+                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                        Delete
                       </button>
-                      <button
-                        type="submit"
-                        class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                      >
-                        Save Changes
-                      </button>
+                      <div class="flex gap-1.5">
+                        <button
+                          type="button"
+                          onclick={cancelEdit}
+                          class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-muted)] transition-colors flex items-center gap-1.5"
+                        >
+                          <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors flex items-center gap-1.5"
+                        >
+                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                          Save
+                        </button>
+                      </div>
                     </div>
                   </form>
                 {:else}
@@ -400,20 +416,32 @@
                         ></textarea>
                       </div>
                     </div>
-                    <div class="flex justify-end gap-2 mt-4">
+                    <div class="flex items-center justify-between mt-4">
                       <button
                         type="button"
-                        onclick={cancelEdit}
-                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                        onclick={() => (deleteItem = { id: item.id, type: item.itemType })}
+                        class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
                       >
-                        Cancel
+                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                        Delete
                       </button>
-                      <button
-                        type="submit"
-                        class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                      >
-                        Save Answer
-                      </button>
+                      <div class="flex gap-1.5">
+                        <button
+                          type="button"
+                          onclick={cancelEdit}
+                          class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-muted)] transition-colors flex items-center gap-1.5"
+                        >
+                          <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors flex items-center gap-1.5"
+                        >
+                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                          Save
+                        </button>
+                      </div>
                     </div>
                   </form>
                 {/if}
@@ -493,17 +521,6 @@
                         Follow-up
                       </button>
                     {/if}
-                    <button
-                      type="button"
-                      onclick={() => (deleteItem = {
-                        id: item.id,
-                        type: item.itemType,
-                      })}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                      aria-label="Delete"
-                    >
-                      <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                    </button>
                   </div>
 
                   <!-- Follow-up Section -->

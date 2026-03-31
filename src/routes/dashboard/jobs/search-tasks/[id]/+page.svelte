@@ -1084,19 +1084,18 @@
 
 <div class="space-y-6">
   <!-- Header -->
-  <div class="flex items-center gap-4">
+  <div>
     <a
       href="/dashboard/jobs/search-tasks"
-      class="p-2 rounded-lg hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
-      <FontAwesomeIcon icon={faArrowLeft} class="w-5 h-5" />
+      <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+      <span class="text-sm">Back to all Search Tasks</span>
     </a>
-    <div class="flex-1">
-      <h1 class="text-xl font-semibold text-[var(--dash-text)]">
-        Search Task
-      </h1>
-    </div>
   </div>
+  <h1 class="text-xl font-semibold text-[var(--dash-text)]">
+    Search Task
+  </h1>
 
   <!-- Scrape Configuration -->
   <Card padding="lg">

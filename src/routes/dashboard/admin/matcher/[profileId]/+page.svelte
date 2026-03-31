@@ -118,18 +118,19 @@
 </script>
 
 <div class="space-y-6">
-  <div class="flex items-center gap-3">
+  <div>
     <a
       href="/dashboard/admin/matcher"
-      class="p-2 rounded-lg hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] transition-colors"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+      <span class="text-sm">Back to all Matchers</span>
     </a>
-    <SectionHeader
-      title="Matcher Detail — {profile?.name ?? `Profile ${data.profileId}`}"
-      icon={faChartBar}
-    />
   </div>
+  <SectionHeader
+    title="Matcher Detail — {profile?.name ?? `Profile ${data.profileId}`}"
+    icon={faChartBar}
+  />
 
   {#if loading}
     <div class="flex items-center justify-center py-12">

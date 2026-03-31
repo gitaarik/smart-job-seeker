@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { fail } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../../profile/utils";
 
@@ -30,7 +30,7 @@ export const actions: Actions = {
       return fail(400, { error: "Letter type is required" });
     }
 
-    await db.application_letters.create({
+    const newLetter = await db.application_letters.create({
       data: {
         application: appId,
         letter_type,
@@ -39,7 +39,7 @@ export const actions: Actions = {
       },
     });
 
-    return { success: true };
+    redirect(303, `/dashboard/applications/${appId}/letters/${newLetter.id}`);
   },
 
   createQuestion: async ({ request, locals, cookies, params }) => {

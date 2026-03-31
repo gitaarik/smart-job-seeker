@@ -154,7 +154,7 @@
 
 <div class="space-y-6">
   <!-- Header with Back Button -->
-  <div class="flex items-center gap-4">
+  <div>
     <a
       href="/dashboard/jobs"
       onclick={(e) => {
@@ -163,16 +163,16 @@
           history.back();
         }
       }}
-      class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] transition-colors"
-      aria-label="Back to jobs"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+      <span class="text-sm">Back to all Jobs</span>
     </a>
-    <SectionHeader
-      title={isSaved ? "Saved Job" : match ? "Job Match" : "Job Details"}
-      icon={faBriefcase}
-    />
   </div>
+  <SectionHeader
+    title={isSaved ? "Saved Job" : match ? "Job Match" : "Job Details"}
+    icon={faBriefcase}
+  />
 
   <!-- Main Content -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

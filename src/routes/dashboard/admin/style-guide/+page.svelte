@@ -240,6 +240,44 @@
     },
   ];
 
+  // Selection control demo state
+  let segmentedValue = $state("option_b");
+  let chipValue = $state("cover_letter");
+
+  const segmentedOptions = [
+    { value: "option_a", label: "Option A" },
+    { value: "option_b", label: "Option B" },
+    { value: "option_c", label: "Option C" },
+  ];
+
+  const chipOptions = [
+    { value: "cover_letter", label: "Cover Letter" },
+    { value: "motivation_letter", label: "Motivation Letter" },
+    { value: "follow_up", label: "Follow-up" },
+    { value: "thank_you", label: "Thank You" },
+    { value: "introduction", label: "Introduction" },
+  ];
+
+  let checkboxValues = $state<Set<string>>(new Set(["frontend", "typescript"]));
+
+  const checkboxOptions = [
+    { value: "frontend", label: "Frontend" },
+    { value: "backend", label: "Backend" },
+    { value: "typescript", label: "TypeScript" },
+    { value: "python", label: "Python" },
+    { value: "devops", label: "DevOps" },
+    { value: "databases", label: "Databases" },
+  ];
+
+  function toggleCheckbox(value: string) {
+    if (checkboxValues.has(value)) {
+      checkboxValues.delete(value);
+    } else {
+      checkboxValues.add(value);
+    }
+    checkboxValues = new Set(checkboxValues);
+  }
+
   const colorTokens = [
     { group: "Primary", tokens: [
       { name: "--dash-primary", label: "Primary" },
@@ -578,6 +616,92 @@
         <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">Warning badge</span>
       </div>
     </Card>
+  </section>
+
+  <!-- Selection Controls -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Selection Controls</h2>
+    <div class="space-y-3">
+      <!-- Segmented Control -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Segmented Control</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          Best for 2–4 short options. All options visible at once. Not suitable for long labels or many items — will overflow on mobile.
+        </p>
+        <div class="inline-flex rounded-lg border border-[var(--dash-border)] overflow-hidden">
+          {#each segmentedOptions as opt, i}
+            <button
+              type="button"
+              onclick={() => (segmentedValue = opt.value)}
+              class="px-3 py-2 text-sm transition-colors {segmentedValue === opt.value
+                ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] font-medium'
+                : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}"
+            >
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+        <p class="text-xs text-[var(--dash-text-muted)] mt-3">Selected: <code class="text-[var(--dash-primary)]">{segmentedValue}</code></p>
+      </Card>
+
+      <!-- Chip / Pill Selector -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Chip Selector</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          Best for any number of options, including long labels. Wraps naturally on mobile. Radio dot makes it clearly a selection control, not an action button.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          {#each chipOptions as opt}
+            <button
+              type="button"
+              onclick={() => (chipValue = opt.value)}
+              class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {chipValue === opt.value
+                ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+            >
+              <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {chipValue === opt.value
+                ? 'border-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)]'}">
+                {#if chipValue === opt.value}
+                  <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                {/if}
+              </span>
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+        <p class="text-xs text-[var(--dash-text-muted)] mt-3">Selected: <code class="text-[var(--dash-primary)]">{chipValue}</code></p>
+      </Card>
+
+      <!-- Checkbox Chips -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Checkbox Chips (Multi-select)</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          Same wrapping pill style but for multi-select. Uses a checkmark square instead of a radio dot to signal multiple selection.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          {#each checkboxOptions as opt}
+            <button
+              type="button"
+              onclick={() => toggleCheckbox(opt.value)}
+              class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {checkboxValues.has(opt.value)
+                ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+            >
+              <span class="w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 {checkboxValues.has(opt.value)
+                ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)]'}">
+                {#if checkboxValues.has(opt.value)}
+                  <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 text-white" />
+                {/if}
+              </span>
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+        <p class="text-xs text-[var(--dash-text-muted)] mt-3">Selected: <code class="text-[var(--dash-primary)]">{[...checkboxValues].join(", ")}</code></p>
+      </Card>
+    </div>
   </section>
 
   <!-- Links -->
