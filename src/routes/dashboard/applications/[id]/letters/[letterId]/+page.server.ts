@@ -7,8 +7,25 @@ export type ConversationEntry = {
   type: "generation" | "feedback" | "review";
   request?: string;
   response: string;
+  summary?: string;
   date: Date | null;
 };
+
+/** Parse a structured JSON letter response ({ letter, summary? }) */
+function parseLetterResponse(response: string): { letter: string; summary?: string } {
+  try {
+    const parsed = JSON.parse(response);
+    if (parsed && typeof parsed.letter === "string") {
+      return {
+        letter: parsed.letter,
+        summary: typeof parsed.summary === "string" ? parsed.summary : undefined,
+      };
+    }
+  } catch {
+    // Not JSON, use raw response
+  }
+  return { letter: response };
+}
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -66,22 +83,36 @@ export const load: PageServerLoad = async ({ parent, params }) => {
       if (chat.followup_to === null) {
         // Root: initial generation
         if (chat.response) {
+          const { letter } = parseLetterResponse(chat.response);
           conversation.push({
             type: "generation",
-            response: chat.response,
+            response: letter,
             date: chat.date_created,
           });
         }
       } else {
         // Followup: has a followupRequest in context
         const request = (ctx.followupRequest as string) || undefined;
+        const isReview = request?.toLowerCase().includes("review my changes");
         if (chat.response) {
-          conversation.push({
-            type: request?.toLowerCase().includes("review my changes") ? "review" : "feedback",
-            request,
-            response: chat.response,
-            date: chat.date_created,
-          });
+          if (!isReview) {
+            // Feedback mode: parse letter and changes summary
+            const { letter, summary } = parseLetterResponse(chat.response);
+            conversation.push({
+              type: "feedback",
+              request,
+              response: letter,
+              summary,
+              date: chat.date_created,
+            });
+          } else {
+            conversation.push({
+              type: "review",
+              request,
+              response: chat.response,
+              date: chat.date_created,
+            });
+          }
         }
       }
     }

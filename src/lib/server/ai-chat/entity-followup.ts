@@ -30,10 +30,11 @@ export async function createEntityFollowup(opts: {
   noAiChatHint?: string;
   followupRequest: string;
   includeOriginalContext?: boolean;
+  promptType?: string;
   fetchEntity: (id: number) => Promise<{ id: number; ai_chat: number | null } | null>;
   updateEntity: (id: number, aiChatId: number, aiChatResponse: string | null) => Promise<void>;
 }): Promise<FollowupResult> {
-  const { entityId, entityLabel, followupRequest, includeOriginalContext, fetchEntity, updateEntity } = opts;
+  const { entityId, entityLabel, followupRequest, includeOriginalContext, promptType, fetchEntity, updateEntity } = opts;
   const noAiChatHint = opts.noAiChatHint ?? "Generate the initial content first.";
   const capLabel = entityLabel.charAt(0).toUpperCase() + entityLabel.slice(1);
 
@@ -66,7 +67,7 @@ export async function createEntityFollowup(opts: {
     result = await createFollowupAiChat(
       entity.ai_chat,
       followupRequest,
-      { includeOriginalContext },
+      { includeOriginalContext, promptType },
     );
   } catch (error) {
     return {

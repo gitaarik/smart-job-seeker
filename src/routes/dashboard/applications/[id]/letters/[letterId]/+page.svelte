@@ -292,7 +292,7 @@
     {#if lastEntry}
       <Card padding="md">
         <!-- History toggle at top -->
-        {#if conversation.length > 2}
+        {#if conversation.length > 1}
           <button
             type="button"
             onclick={() => { showHistory = !showHistory; }}
@@ -335,6 +335,9 @@
                       {@html marked(entry.response)}
                     </div>
                   {:else}
+                    {#if entry.summary}
+                      <p class="text-xs text-[var(--dash-text-secondary)] mb-1">{entry.summary}</p>
+                    {/if}
                     <details>
                       <summary class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] cursor-pointer">
                         Show version {i + 1}
@@ -380,6 +383,8 @@
               <div class="prose prose-sm max-w-none text-[var(--dash-text)] [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_p]:mb-2 [&_strong]:font-semibold">
                 {@html marked(lastEntry.response)}
               </div>
+            {:else if lastEntry.summary}
+              <p class="text-sm text-[var(--dash-text-secondary)]">{lastEntry.summary}</p>
             {:else}
               <p class="text-xs text-[var(--dash-text-muted)]">Letter updated based on your feedback.</p>
             {/if}

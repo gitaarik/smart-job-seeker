@@ -434,10 +434,18 @@ async function generateWithLangChain(
         // Add a simple reminder to output JSON data (not schema)
         const lastMessage = langChainMessages[langChainMessages.length - 1];
         if (lastMessage instanceof HumanMessage) {
+          // For letter prompts, include the expected field names
+          const isLetterPrompt = structuredOutput.name.includes("write_") || structuredOutput.name.includes("followup_letter");
+          const fieldHint = isLetterPrompt
+            ? (structuredOutput.name === "followup_letter"
+              ? ' Use exactly these JSON keys: "letter" (the complete letter text) and "summary" (brief summary of changes).'
+              : ' Use exactly this JSON key: "letter" (the complete letter text).')
+            : "";
+
           lastMessage.content = lastMessage.content +
             "\n\nIMPORTANT: Output ONLY a valid JSON object with actual DATA values. " +
             "Do NOT output a JSON Schema definition. Do NOT include $ref, definitions, type declarations, or schema metadata. " +
-            "Just output the extracted data as JSON.";
+            "Just output the extracted data as JSON." + fieldHint;
         }
 
         // Invoke with JSON mode enabled to ensure valid JSON output

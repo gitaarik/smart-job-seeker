@@ -643,6 +643,29 @@ Return JSON with:
 \${followupRequest}`,
   },
 
+  "followup_letter": {
+    system_prompt: `You are helping to refine a previously generated letter. This is a follow-up request.
+
+# Previous Letter:
+
+\${previousResponse}
+
+# Original System Prompt:
+
+\${originalSystemPrompt}
+
+# Original User Prompt:
+
+\${originalUserPrompt}
+
+# Rules:
+- Output the COMPLETE revised letter — no preamble or commentary
+- Include a brief 1-2 sentence summary of what you changed and why`,
+    user_prompt: `# Follow-up Request:
+
+\${followupRequest}`,
+  },
+
   "score_job_match": {
     system_prompt: `You are a technical recruiter and career advisor. Your task is to evaluate how well a job opportunity matches a candidate's profile, skills, and preferences.
 
@@ -733,12 +756,13 @@ Use the applicant's information to write a cover letter that highlights relevant
 - Provide thoughtful suggestions and guidance rather than ready-to-copy answers
 - Hiring managers have limited time - be respectful of that
 - Help the applicant customize and personalize their response
-- Be concise and helpful. Keep answers to 2-3 short paragraphs maximum`,
+- Be concise and helpful. Keep answers to 2-3 short paragraphs maximum
+- IMPORTANT: Output ONLY the cover letter text. Do not include any preamble, introduction, explanation, or commentary before or after the letter.`,
     user_prompt: `Please write a cover letter for the following job opportunity:
 
 \${jobDetails}
 
-Write a professional cover letter the applicant can customize and submit directly.
+Write a professional cover letter the applicant can customize and submit directly. Output ONLY the letter — no introductions, explanations, or commentary.
 
 \${additionalContext}`,
   },
@@ -764,12 +788,13 @@ Guidelines for your answer:
 - Be respectful of the recipient's time
 - Show enthusiasm without desperation
 - Provide a clear call to action
-- Keep it brief and to the point`,
+- Keep it brief and to the point
+- IMPORTANT: Output ONLY the email text. Do not include any preamble, introduction, explanation, or commentary before or after the email.`,
     user_prompt: `Please write a follow-up email for the following job opportunity:
 
 \${jobDetails}
 
-Write a professional follow-up email the applicant can customize and send directly.
+Write a professional follow-up email the applicant can customize and send directly. Output ONLY the email — no introductions, explanations, or commentary.
 
 \${additionalContext}`,
   },
@@ -796,12 +821,13 @@ Guidelines for your answer:
 - Provide thoughtful suggestions and guidance rather than ready-to-copy answers
 - Hiring managers have limited time - be respectful of that
 - Help the applicant customize and personalize their response
-- Focus on WHY they want this role, not just WHAT they can do`,
+- Focus on WHY they want this role, not just WHAT they can do
+- IMPORTANT: Output ONLY the motivation letter text. Do not include any preamble, introduction, explanation, or commentary before or after the letter.`,
     user_prompt: `Please write a motivation letter for the following job opportunity:
 
 \${jobDetails}
 
-Write a professional motivation letter the applicant can customize and submit directly.
+Write a professional motivation letter the applicant can customize and submit directly. Output ONLY the letter — no introductions, explanations, or commentary.
 
 \${additionalContext}`,
   },
@@ -954,12 +980,13 @@ Guidelines for your answer:
 - Reinforce enthusiasm for the opportunity
 - Reference specific topics discussed if mentioned
 - Keep it warm but professional
-- Be brief and respectful of their time`,
+- Be brief and respectful of their time
+- IMPORTANT: Output ONLY the thank you letter text. Do not include any preamble, introduction, explanation, or commentary before or after the letter.`,
     user_prompt: `Please write a thank you letter for the following job opportunity:
 
 \${jobDetails}
 
-Write a professional thank you letter the applicant can customize and send directly.
+Write a professional thank you letter the applicant can customize and send directly. Output ONLY the letter — no introductions, explanations, or commentary.
 
 \${additionalContext}`,
   },

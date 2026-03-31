@@ -240,12 +240,50 @@ export const estimateSalaryExpectationsSchema = z.object({
 });
 
 /**
+ * Preprocess to normalize letter key names from LLMs that use alternative names
+ * (e.g. "coverLetter", "cover_letter", "motivationLetter", "content", "email", "text")
+ */
+const normalizeLetterKey = (val: unknown) => {
+  if (val && typeof val === "object" && !("letter" in val)) {
+    const obj = val as Record<string, unknown>;
+    // Find the first string value that looks like the letter content
+    const altKeys = [
+      "coverLetter", "cover_letter",
+      "motivationLetter", "motivation_letter",
+      "followUpEmail", "follow_up_email",
+      "thankYouLetter", "thank_you_letter",
+      "content", "email", "text", "body",
+      "revisedLetter", "revised_letter",
+    ];
+    for (const key of altKeys) {
+      if (key in obj && typeof obj[key] === "string") {
+        return { ...obj, letter: obj[key] };
+      }
+    }
+  }
+  return val;
+};
+
+/**
+ * Schema for letter generation prompts (cover letter, motivation letter, etc.)
+ * Returns the letter text only, no preamble or commentary.
+ */
+export const writeLetterSchema = z.preprocess(normalizeLetterKey, z.object({
+  letter: z.string().describe("The complete letter text, ready to use. No preamble or commentary."),
+}));
+
+/**
+ * Schema for letter followup prompts (feedback-based revisions)
+ * Returns the revised letter plus a short summary of changes.
+ */
+export const followupLetterSchema = z.preprocess(normalizeLetterKey, z.object({
+  letter: z.string().describe("The complete revised letter text, ready to use. No preamble or commentary."),
+  summary: z.string().describe("A brief 1-2 sentence summary of what was changed and why."),
+}));
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
- *
- * NOTE: Only prompts with structured output are included here.
- * Text-only prompts (write_cover_letter, write_motivation_letter, etc.)
- * are not included as they don't use structured JSON output.
  */
 export const aiPromptSchemas = {
   extract_job_data: extractJobDataSchema,
@@ -256,6 +294,11 @@ export const aiPromptSchemas = {
   find_next_page_button: findNextPageButtonSchema,
   check_login_state: checkLoginStateSchema,
   estimate_salary_expectations: estimateSalaryExpectationsSchema,
+  write_cover_letter: writeLetterSchema,
+  write_motivation_letter: writeLetterSchema,
+  write_follow_up_email: writeLetterSchema,
+  write_thank_you_letter: writeLetterSchema,
+  followup_letter: followupLetterSchema,
 } as const;
 
 /**

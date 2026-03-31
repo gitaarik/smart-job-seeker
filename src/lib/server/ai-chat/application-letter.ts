@@ -186,14 +186,27 @@ export async function generateApplicationLetter(
 
   // Update the application_letter record (try block for database update)
   try {
+    // Extract just the letter text from structured JSON response
+    let letterContent = aiChat.response;
+    if (letterContent) {
+      try {
+        const parsed = JSON.parse(letterContent);
+        if (parsed && typeof parsed.letter === "string") {
+          letterContent = parsed.letter;
+        }
+      } catch {
+        // Not JSON, use raw response as-is
+      }
+    }
+
     const updateData: Record<string, unknown> = {
       ai_chat: aiChat.id,
       ai_chat_response: aiChat.response,
     };
 
-    // For "generate" mode, also set the content to the AI response
+    // For "generate" mode, also set the content to the letter text
     if (mode === "generate") {
-      updateData.content = aiChat.response;
+      updateData.content = letterContent;
     }
 
     await db.application_letters.update({

@@ -32,6 +32,7 @@ export async function createFollowupAiChat(
   followupRequest: string,
   options?: {
     includeOriginalContext?: boolean;
+    promptType?: string;
   },
 ): Promise<{
   success: boolean;
@@ -48,6 +49,7 @@ export async function createFollowupAiChat(
   };
 }> {
   const includeOriginalContext = options?.includeOriginalContext ?? false;
+  const promptType = options?.promptType ?? "followup";
 
   // Step 1: Fetch parent ai_chats record (try block for database query)
   let parent;
@@ -119,8 +121,22 @@ export async function createFollowupAiChat(
     originalUserPrompt = escapePlaceholders(parent.user_prompt);
   }
 
+  // Extract letter text from structured JSON responses (e.g. { letter: "...", summary: "..." })
+  // so the next followup sees the actual letter, not raw JSON
+  let previousResponse = parent.response;
+  if (previousResponse) {
+    try {
+      const parsed = JSON.parse(previousResponse);
+      if (parsed && typeof parsed.letter === "string") {
+        previousResponse = parsed.letter;
+      }
+    } catch {
+      // Not JSON, use as-is
+    }
+  }
+
   const customVariables: Record<string, unknown> = {
-    previousResponse: parent.response,
+    previousResponse,
     followupRequest: followupRequest,
     originalSystemPrompt: originalSystemPrompt,
     originalUserPrompt: originalUserPrompt,
@@ -131,7 +147,7 @@ export async function createFollowupAiChat(
   try {
     result = await createAndGenerateAiChat(
       parent.profile,
-      "followup",
+      promptType,
       customVariables,
       parentAiChatId,
     );
