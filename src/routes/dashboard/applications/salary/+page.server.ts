@@ -38,6 +38,7 @@ export const actions: Actions = {
     const company_type = formData.get("company_type") as string;
     const employment_type = formData.get("employment_type") as string;
     const work_arrangement = formData.get("work_arrangement") as string;
+    const experience_level = formData.get("experience_level") as string;
     const region = formData.get("region") as string;
     const currency = formData.get("currency") as string;
     const hourly_rate = formData.get("hourly_rate") as string;
@@ -62,6 +63,7 @@ export const actions: Actions = {
         company_type,
         employment_type,
         work_arrangement,
+        experience_level: experience_level || null,
         region,
         currency: currency || "EUR",
         hourly_rate: hourly_rate ? parseInt(hourly_rate) : null,
@@ -94,6 +96,7 @@ export const actions: Actions = {
     const company_type = formData.get("company_type") as string;
     const employment_type = formData.get("employment_type") as string;
     const work_arrangement = formData.get("work_arrangement") as string;
+    const experience_level = formData.get("experience_level") as string;
     const region = formData.get("region") as string;
     const currency = formData.get("currency") as string;
     const hourly_rate = formData.get("hourly_rate") as string;
@@ -126,6 +129,7 @@ export const actions: Actions = {
         company_type,
         employment_type,
         work_arrangement,
+        experience_level: experience_level || null,
         region,
         currency: currency || "EUR",
         hourly_rate: hourly_rate ? parseInt(hourly_rate) : null,

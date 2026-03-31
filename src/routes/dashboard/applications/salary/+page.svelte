@@ -21,7 +21,36 @@
   let showAddForm = $state(false);
   let deleteId = $state<number | null>(null);
 
+  // --- Option definitions ---
+
+  const employmentTypes = [
+    { value: "any", label: "Any" },
+    { value: "full_time", label: "Full-time" },
+    { value: "part_time", label: "Part-time" },
+    { value: "contract", label: "Contract" },
+    { value: "temporary", label: "Temporary" },
+    { value: "freelance", label: "Freelance" },
+    { value: "internship", label: "Internship" },
+  ];
+
+  const workArrangements = [
+    { value: "any", label: "Any" },
+    { value: "remote", label: "Remote" },
+    { value: "hybrid", label: "Hybrid" },
+    { value: "onsite", label: "On-site" },
+  ];
+
+  const experienceLevels = [
+    { value: "any", label: "Any" },
+    { value: "junior", label: "Junior" },
+    { value: "mid", label: "Mid" },
+    { value: "senior", label: "Senior" },
+    { value: "lead", label: "Lead" },
+    { value: "principal", label: "Principal" },
+  ];
+
   const companyTypes = [
+    { value: "any", label: "Any" },
     { value: "startup", label: "Startup" },
     { value: "scaleup", label: "Scale-up" },
     { value: "corporate", label: "Corporate" },
@@ -29,16 +58,16 @@
     { value: "consultancy", label: "Consultancy" },
   ];
 
-  const employmentTypes = [
-    { value: "employee", label: "Employee" },
-    { value: "freelance", label: "Freelance" },
-    { value: "contract", label: "Contract" },
-  ];
-
-  const workArrangements = [
-    { value: "remote", label: "Remote" },
-    { value: "hybrid", label: "Hybrid" },
-    { value: "onsite", label: "On-site" },
+  const regions = [
+    { value: "Global", label: "Global" },
+    { value: "US", label: "US" },
+    { value: "UK", label: "UK" },
+    { value: "Western Europe", label: "Western Europe" },
+    { value: "Eastern Europe", label: "Eastern Europe" },
+    { value: "Middle East", label: "Middle East" },
+    { value: "Asia Pacific", label: "Asia Pacific" },
+    { value: "Latin America", label: "Latin America" },
+    { value: "Africa", label: "Africa" },
   ];
 
   const currencies = [
@@ -47,36 +76,95 @@
     { value: "GBP", label: "GBP (£)" },
   ];
 
-  // Form states for new entry
-  let newJobTitle = $state("");
-  let newCompanyType = $state("startup");
-  let newEmploymentType = $state("employee");
-  let newWorkArrangement = $state("remote");
-  let newRegion = $state("");
+  // --- Multi-select toggle logic ---
+
+  type OptionDef = { value: string; label: string };
+
+  /** The "all" value is always the first option in each list */
+  let flashField = $state<string | null>(null);
+
+  function toggleOption(
+    set: Set<string>,
+    value: string,
+    options: OptionDef[],
+    fieldName?: string,
+  ): Set<string> {
+    const allValue = options[0].value;
+    const specificOptions = options.slice(1);
+
+    // Clicking the "all" option
+    if (value === allValue) {
+      return set.has(allValue) ? new Set() : new Set([allValue]);
+    }
+
+    // Clicking a specific option — remove "all"
+    set.delete(allValue);
+    if (set.has(value)) {
+      set.delete(value);
+    } else {
+      set.add(value);
+    }
+
+    // All specific options checked → collapse to "all"
+    if (set.size === specificOptions.length && specificOptions.every((o) => set.has(o.value))) {
+      if (fieldName) {
+        flashField = fieldName;
+        setTimeout(() => (flashField = null), 700);
+      }
+      return new Set([allValue]);
+    }
+    return new Set(set);
+  }
+
+  function serializeSet(set: Set<string>): string {
+    return [...set].join(", ");
+  }
+
+  function deserializeSet(value: string | null | undefined, fallback: string): Set<string> {
+    if (!value) return new Set([fallback]);
+    return new Set(value.split(", ").filter(Boolean));
+  }
+
+  function getLabels(
+    set: Set<string>,
+    options: OptionDef[],
+  ): string {
+    return [...set].map((v) => options.find((o) => o.value === v)?.label || v).join(", ");
+  }
+
+  // --- Tag color classes (consistent with JobCard.svelte) ---
+
+  const tagColors: Record<string, string> = {
+    employment_type: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700",
+    work_arrangement: "border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]",
+    experience_level: "border-purple-500/20 bg-purple-500/10 text-purple-700",
+    company_type: "border-amber-500/20 bg-amber-500/10 text-amber-700",
+    region: "border-sky-500/20 bg-sky-500/10 text-sky-700",
+  };
+
+  // --- Form states ---
+
+  let newEmploymentType = $state<Set<string>>(new Set(["any"]));
+  let newWorkArrangement = $state<Set<string>>(new Set(["any"]));
+  let newExperienceLevel = $state<Set<string>>(new Set(["any"]));
+  let newCompanyType = $state<Set<string>>(new Set(["any"]));
+  let newRegions = $state<Set<string>>(new Set(["Global"]));
   let newCurrency = $state("EUR");
   let newHourlyRate = $state("");
   let newDailyRate = $state("");
   let newMonthSalary = $state("");
   let newYearSalary = $state("");
 
-  // Form states for editing
-  let editJobTitle = $state("");
-  let editCompanyType = $state("");
-  let editEmploymentType = $state("");
-  let editWorkArrangement = $state("");
-  let editRegion = $state("");
+  let editEmploymentType = $state<Set<string>>(new Set());
+  let editWorkArrangement = $state<Set<string>>(new Set());
+  let editExperienceLevel = $state<Set<string>>(new Set());
+  let editCompanyType = $state<Set<string>>(new Set());
+  let editRegions = $state<Set<string>>(new Set());
   let editCurrency = $state("");
   let editHourlyRate = $state("");
   let editDailyRate = $state("");
   let editMonthSalary = $state("");
   let editYearSalary = $state("");
-
-  function getLabel(
-    value: string,
-    options: { value: string; label: string }[],
-  ): string {
-    return options.find((o) => o.value === value)?.label || value;
-  }
 
   function formatCurrency(amount: number | null, currency: string): string {
     if (!amount) return "-";
@@ -89,11 +177,11 @@
 
   function startEdit(exp: (typeof salaryExpectations)[0]) {
     editingId = exp.id;
-    editJobTitle = exp.job_title || "";
-    editCompanyType = exp.company_type || "startup";
-    editEmploymentType = exp.employment_type || "employee";
-    editWorkArrangement = exp.work_arrangement || "remote";
-    editRegion = exp.region || "";
+    editEmploymentType = deserializeSet(exp.employment_type, "any");
+    editWorkArrangement = deserializeSet(exp.work_arrangement, "any");
+    editExperienceLevel = deserializeSet(exp.experience_level, "any");
+    editCompanyType = deserializeSet(exp.company_type, "any");
+    editRegions = deserializeSet(exp.region, "Global");
     editCurrency = exp.currency || "EUR";
     editHourlyRate = exp.hourly_rate?.toString() || "";
     editDailyRate = exp.daily_rate?.toString() || "";
@@ -107,11 +195,11 @@
 
   function resetAddForm() {
     showAddForm = false;
-    newJobTitle = "";
-    newCompanyType = "startup";
-    newEmploymentType = "employee";
-    newWorkArrangement = "remote";
-    newRegion = "";
+    newEmploymentType = new Set(["any"]);
+    newWorkArrangement = new Set(["any"]);
+    newExperienceLevel = new Set(["any"]);
+    newCompanyType = new Set(["any"]);
+    newRegions = new Set(["Global"]);
     newCurrency = "EUR";
     newHourlyRate = "";
     newDailyRate = "";
@@ -150,6 +238,63 @@
   }
 </script>
 
+{#snippet checkboxChips(
+  name: string,
+  options: OptionDef[],
+  selected: Set<string>,
+  onToggle: (value: string) => void,
+)}
+  <div class="flex flex-wrap gap-2">
+    {#each options as opt, i}
+      <button
+        type="button"
+        onclick={() => onToggle(opt.value)}
+        class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {selected.has(opt.value)
+          ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+          : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'} {i === 0 && flashField === name ? 'chip-flash' : ''}"
+      >
+        <span class="w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 {selected.has(opt.value)
+          ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]'
+          : 'border-[var(--dash-border)]'}">
+          {#if selected.has(opt.value)}
+            <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 text-white" />
+          {/if}
+        </span>
+        {opt.label}
+      </button>
+    {/each}
+  </div>
+{/snippet}
+
+{#snippet chipField(
+  label: string,
+  name: string,
+  options: OptionDef[],
+  selected: Set<string>,
+  onToggle: (value: string) => void,
+  required?: boolean,
+)}
+  <div>
+    <label class="block text-sm font-medium text-[var(--dash-text)] mb-2">
+      {label} {#if required}<span class="text-[var(--dash-error)]">*</span>{/if}
+    </label>
+    <input type="hidden" {name} value={serializeSet(selected)} />
+    {@render checkboxChips(name, options, selected, onToggle)}
+  </div>
+{/snippet}
+
+{#snippet viewTags(
+  raw: string | null | undefined,
+  options: OptionDef[],
+  fieldName: string,
+)}
+  {#each [...deserializeSet(raw, options[0].value)].filter((v) => v !== options[0].value) as value}
+    <span class="text-xs px-2 py-0.5 rounded border {tagColors[fieldName]}">
+      {options.find((o) => o.value === value)?.label || value}
+    </span>
+  {/each}
+{/snippet}
+
 <div class="space-y-6">
   <SectionHeader
     title="Salary Expectations"
@@ -179,190 +324,61 @@
         Add Salary Expectation
       </h3>
       <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              for="new-job-title"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Job Title
-            </label>
-            <input
-              type="text"
-              id="new-job-title"
-              name="job_title"
-              bind:value={newJobTitle}
-              placeholder="e.g., Senior Frontend Developer"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
+        {@render chipField("Employment Type", "employment_type", employmentTypes, newEmploymentType,
+          (v) => (newEmploymentType = toggleOption(newEmploymentType, v, employmentTypes, "employment_type")), true)}
 
-          <div>
-            <label
-              for="new-region"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Region <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <input
-              type="text"
-              id="new-region"
-              name="region"
-              bind:value={newRegion}
-              placeholder="e.g., Netherlands, Europe, Global"
-              required
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
+        {@render chipField("Work Arrangement", "work_arrangement", workArrangements, newWorkArrangement,
+          (v) => (newWorkArrangement = toggleOption(newWorkArrangement, v, workArrangements, "work_arrangement")), true)}
 
-          <div>
-            <label
-              for="new-company-type"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Company Type <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <select
-              id="new-company-type"
-              name="company_type"
-              bind:value={newCompanyType}
-              required
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            >
-              {#each companyTypes as type}
-                <option value={type.value}>{type.label}</option>
-              {/each}
-            </select>
-          </div>
+        {@render chipField("Experience Level", "experience_level", experienceLevels, newExperienceLevel,
+          (v) => (newExperienceLevel = toggleOption(newExperienceLevel, v, experienceLevels, "experience_level")))}
 
-          <div>
-            <label
-              for="new-employment-type"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Employment Type <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <select
-              id="new-employment-type"
-              name="employment_type"
-              bind:value={newEmploymentType}
-              required
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            >
-              {#each employmentTypes as type}
-                <option value={type.value}>{type.label}</option>
-              {/each}
-            </select>
-          </div>
+        {@render chipField("Company Type", "company_type", companyTypes, newCompanyType,
+          (v) => (newCompanyType = toggleOption(newCompanyType, v, companyTypes, "company_type")), true)}
 
-          <div>
-            <label
-              for="new-work-arrangement"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Work Arrangement <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <select
-              id="new-work-arrangement"
-              name="work_arrangement"
-              bind:value={newWorkArrangement}
-              required
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            >
-              {#each workArrangements as arr}
-                <option value={arr.value}>{arr.label}</option>
-              {/each}
-            </select>
-          </div>
+        {@render chipField("Region", "region", regions, newRegions,
+          (v) => (newRegions = toggleOption(newRegions, v, regions, "region")), true)}
 
-          <div>
-            <label
-              for="new-currency"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Currency
-            </label>
-            <select
-              id="new-currency"
-              name="currency"
-              bind:value={newCurrency}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            >
-              {#each currencies as curr}
-                <option value={curr.value}>{curr.label}</option>
-              {/each}
-            </select>
-          </div>
-        </div>
-
+        <!-- Rates -->
         <div class="border-t border-[var(--dash-border)] pt-4 mt-4">
-          <p class="text-sm font-medium text-[var(--dash-text)] mb-3">
-            Rate/Salary (fill in at least one)
-          </p>
+          <h4 class="text-base font-semibold text-[var(--dash-text)] mb-3">Rate/Salary</h4>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-[var(--dash-text)] mb-2">Currency</label>
+            <input type="hidden" name="currency" value={newCurrency} />
+            <div class="inline-flex rounded-lg border border-[var(--dash-border)] overflow-hidden">
+              {#each currencies as opt, i}
+                <button
+                  type="button"
+                  onclick={() => (newCurrency = opt.value)}
+                  class="px-3 py-1.5 text-sm transition-colors {newCurrency === opt.value
+                    ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] font-medium'
+                    : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}"
+                >
+                  {opt.label}
+                </button>
+              {/each}
+            </div>
+          </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label
-                for="new-hourly-rate"
-                class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-              >
-                Hourly Rate
-              </label>
-              <input
-                type="number"
-                id="new-hourly-rate"
-                name="hourly_rate"
-                bind:value={newHourlyRate}
-                placeholder="0"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
+              <label for="new-hourly-rate" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Hourly Rate</label>
+              <input type="number" id="new-hourly-rate" name="hourly_rate" bind:value={newHourlyRate} placeholder="0"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
             </div>
             <div>
-              <label
-                for="new-daily-rate"
-                class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-              >
-                Daily Rate
-              </label>
-              <input
-                type="number"
-                id="new-daily-rate"
-                name="daily_rate"
-                bind:value={newDailyRate}
-                placeholder="0"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
+              <label for="new-daily-rate" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Daily Rate</label>
+              <input type="number" id="new-daily-rate" name="daily_rate" bind:value={newDailyRate} placeholder="0"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
             </div>
             <div>
-              <label
-                for="new-month-salary"
-                class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-              >
-                Monthly Salary
-              </label>
-              <input
-                type="number"
-                id="new-month-salary"
-                name="month_salary"
-                bind:value={newMonthSalary}
-                placeholder="0"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
+              <label for="new-month-salary" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Monthly Salary</label>
+              <input type="number" id="new-month-salary" name="month_salary" bind:value={newMonthSalary} placeholder="0"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
             </div>
             <div>
-              <label
-                for="new-year-salary"
-                class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-              >
-                Annual Salary
-              </label>
-              <input
-                type="number"
-                id="new-year-salary"
-                name="year_salary"
-                bind:value={newYearSalary}
-                placeholder="0"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
+              <label for="new-year-salary" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Annual Salary</label>
+              <input type="number" id="new-year-salary" name="year_salary" bind:value={newYearSalary} placeholder="0"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
             </div>
           </div>
         </div>
@@ -372,13 +388,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors text-sm"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors text-sm"
         >
           Add Expectation
         </button>
@@ -408,177 +424,62 @@
             >
               <input type="hidden" name="id" value={exp.id} />
               <div class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      for="edit-job-title-{exp.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Job Title
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-job-title-{exp.id}"
-                      name="job_title"
-                      bind:value={editJobTitle}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
+                {@render chipField("Employment Type", "employment_type", employmentTypes, editEmploymentType,
+                  (v) => (editEmploymentType = toggleOption(editEmploymentType, v, employmentTypes, "employment_type")))}
 
-                  <div>
-                    <label
-                      for="edit-region-{exp.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Region <span class="text-[var(--dash-error)]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-region-{exp.id}"
-                      name="region"
-                      bind:value={editRegion}
-                      required
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
+                {@render chipField("Work Arrangement", "work_arrangement", workArrangements, editWorkArrangement,
+                  (v) => (editWorkArrangement = toggleOption(editWorkArrangement, v, workArrangements, "work_arrangement")))}
 
-                  <div>
-                    <label
-                      for="edit-company-type-{exp.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Company Type
-                    </label>
-                    <select
-                      id="edit-company-type-{exp.id}"
-                      name="company_type"
-                      bind:value={editCompanyType}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    >
-                      {#each companyTypes as type}
-                        <option value={type.value}>{type.label}</option>
+                {@render chipField("Experience Level", "experience_level", experienceLevels, editExperienceLevel,
+                  (v) => (editExperienceLevel = toggleOption(editExperienceLevel, v, experienceLevels, "experience_level")))}
+
+                {@render chipField("Company Type", "company_type", companyTypes, editCompanyType,
+                  (v) => (editCompanyType = toggleOption(editCompanyType, v, companyTypes, "company_type")))}
+
+                {@render chipField("Region", "region", regions, editRegions,
+                  (v) => (editRegions = toggleOption(editRegions, v, regions, "region")))}
+
+                <!-- Rates -->
+                <div class="border-t border-[var(--dash-border)] pt-4 mt-4">
+                  <h4 class="text-base font-semibold text-[var(--dash-text)] mb-3">Rate/Salary</h4>
+                  <div class="mb-3">
+                    <label class="block text-sm font-medium text-[var(--dash-text)] mb-2">Currency</label>
+                    <input type="hidden" name="currency" value={editCurrency} />
+                    <div class="inline-flex rounded-lg border border-[var(--dash-border)] overflow-hidden">
+                      {#each currencies as opt, i}
+                        <button
+                          type="button"
+                          onclick={() => (editCurrency = opt.value)}
+                          class="px-3 py-1.5 text-sm transition-colors {editCurrency === opt.value
+                            ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] font-medium'
+                            : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}"
+                        >
+                          {opt.label}
+                        </button>
                       {/each}
-                    </select>
+                    </div>
                   </div>
-
-                  <div>
-                    <label
-                      for="edit-employment-type-{exp.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Employment Type
-                    </label>
-                    <select
-                      id="edit-employment-type-{exp.id}"
-                      name="employment_type"
-                      bind:value={editEmploymentType}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    >
-                      {#each employmentTypes as type}
-                        <option value={type.value}>{type.label}</option>
-                      {/each}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-work-arrangement-{exp.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Work Arrangement
-                    </label>
-                    <select
-                      id="edit-work-arrangement-{exp.id}"
-                      name="work_arrangement"
-                      bind:value={editWorkArrangement}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    >
-                      {#each workArrangements as arr}
-                        <option value={arr.value}>{arr.label}</option>
-                      {/each}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-currency-{exp.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Currency
-                    </label>
-                    <select
-                      id="edit-currency-{exp.id}"
-                      name="currency"
-                      bind:value={editCurrency}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    >
-                      {#each currencies as curr}
-                        <option value={curr.value}>{curr.label}</option>
-                      {/each}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label
-                      for="edit-hourly-{exp.id}"
-                      class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      Hourly Rate
-                    </label>
-                    <input
-                      type="number"
-                      id="edit-hourly-{exp.id}"
-                      name="hourly_rate"
-                      bind:value={editHourlyRate}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="edit-daily-{exp.id}"
-                      class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      Daily Rate
-                    </label>
-                    <input
-                      type="number"
-                      id="edit-daily-{exp.id}"
-                      name="daily_rate"
-                      bind:value={editDailyRate}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="edit-monthly-{exp.id}"
-                      class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      Monthly Salary
-                    </label>
-                    <input
-                      type="number"
-                      id="edit-monthly-{exp.id}"
-                      name="month_salary"
-                      bind:value={editMonthSalary}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="edit-yearly-{exp.id}"
-                      class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      Annual Salary
-                    </label>
-                    <input
-                      type="number"
-                      id="edit-yearly-{exp.id}"
-                      name="year_salary"
-                      bind:value={editYearSalary}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label for="edit-hourly-{exp.id}" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Hourly Rate</label>
+                      <input type="number" id="edit-hourly-{exp.id}" name="hourly_rate" bind:value={editHourlyRate}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
+                    </div>
+                    <div>
+                      <label for="edit-daily-{exp.id}" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Daily Rate</label>
+                      <input type="number" id="edit-daily-{exp.id}" name="daily_rate" bind:value={editDailyRate}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
+                    </div>
+                    <div>
+                      <label for="edit-monthly-{exp.id}" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Monthly Salary</label>
+                      <input type="number" id="edit-monthly-{exp.id}" name="month_salary" bind:value={editMonthSalary}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
+                    </div>
+                    <div>
+                      <label for="edit-yearly-{exp.id}" class="block text-sm text-[var(--dash-text-secondary)] mb-1">Annual Salary</label>
+                      <input type="number" id="edit-yearly-{exp.id}" name="year_salary" bind:value={editYearSalary}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -603,77 +504,40 @@
             </form>
           {:else}
             <!-- View Mode -->
-            <div class="flex items-start justify-between">
-              <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
-                >
-                  <FontAwesomeIcon
-                    icon={faMoneyBillWave}
-                    class="w-5 h-5 text-green-600"
-                  />
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  {@render viewTags(exp.employment_type, employmentTypes, "employment_type")}
+                  {@render viewTags(exp.work_arrangement, workArrangements, "work_arrangement")}
+                  {@render viewTags(exp.experience_level, experienceLevels, "experience_level")}
+                  {@render viewTags(exp.company_type, companyTypes, "company_type")}
+                  {@render viewTags(exp.region, regions, "region")}
                 </div>
-                <div>
-                  <h3 class="font-medium text-[var(--dash-text)]">
-                    {exp.job_title || "Any Position"}
-                  </h3>
-                  <p class="text-sm text-[var(--dash-text-secondary)]">
-                    {getLabel(exp.company_type, companyTypes)} •
-                    {getLabel(exp.employment_type, employmentTypes)} •
-                    {
-                      getLabel(
-                        exp.work_arrangement,
-                        workArrangements,
-                      )
-                    } •
-                    {exp.region}
-                  </p>
-                  <div class="flex flex-wrap gap-3 mt-2 text-sm">
-                    {#if exp.hourly_rate}
-                      <span class="text-[var(--dash-text)]">
-                        {
-                          formatCurrency(
-                            exp.hourly_rate,
-                            exp.currency || "EUR",
-                          )
-                        }/hr
-                      </span>
-                    {/if}
-                    {#if exp.daily_rate}
-                      <span class="text-[var(--dash-text)]">
-                        {
-                          formatCurrency(
-                            exp.daily_rate,
-                            exp.currency || "EUR",
-                          )
-                        }/day
-                      </span>
-                    {/if}
-                    {#if exp.month_salary}
-                      <span class="text-[var(--dash-text)]">
-                        {
-                          formatCurrency(
-                            exp.month_salary,
-                            exp.currency || "EUR",
-                          )
-                        }/mo
-                      </span>
-                    {/if}
-                    {#if exp.year_salary}
-                      <span class="text-[var(--dash-text)]">
-                        {
-                          formatCurrency(
-                            exp.year_salary,
-                            exp.currency || "EUR",
-                          )
-                        }/yr
-                      </span>
-                    {/if}
-                  </div>
+                <div class="flex flex-wrap gap-3 mt-2 text-sm">
+                  {#if exp.hourly_rate}
+                    <span class="text-[var(--dash-text)]">
+                      {formatCurrency(exp.hourly_rate, exp.currency || "EUR")}/hr
+                    </span>
+                  {/if}
+                  {#if exp.daily_rate}
+                    <span class="text-[var(--dash-text)]">
+                      {formatCurrency(exp.daily_rate, exp.currency || "EUR")}/day
+                    </span>
+                  {/if}
+                  {#if exp.month_salary}
+                    <span class="text-[var(--dash-text)]">
+                      {formatCurrency(exp.month_salary, exp.currency || "EUR")}/mo
+                    </span>
+                  {/if}
+                  {#if exp.year_salary}
+                    <span class="text-[var(--dash-text)]">
+                      {formatCurrency(exp.year_salary, exp.currency || "EUR")}/yr
+                    </span>
+                  {/if}
                 </div>
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1 flex-shrink-0">
                 <button
                   type="button"
                   onclick={() => startEdit(exp)}
@@ -720,3 +584,15 @@
     }
   }}
 />
+
+<style>
+  :global(.chip-flash) {
+    animation: chip-highlight 700ms ease-out;
+  }
+
+  @keyframes chip-highlight {
+    0% { box-shadow: 0 0 0 0 var(--dash-primary); }
+    30% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--dash-primary) 40%, transparent); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+</style>

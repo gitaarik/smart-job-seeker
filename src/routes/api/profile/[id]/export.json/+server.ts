@@ -236,6 +236,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           company_type: true,
           employment_type: true,
           work_arrangement: true,
+          experience_level: true,
           region: true,
           hourly_rate: true,
           month_salary: true,

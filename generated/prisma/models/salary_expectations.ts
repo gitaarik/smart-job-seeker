@@ -55,6 +55,7 @@ export type Salary_expectationsMinAggregateOutputType = {
   company_type: string | null
   employment_type: string | null
   work_arrangement: string | null
+  experience_level: string | null
   region: string | null
   hourly_rate: number | null
   month_salary: number | null
@@ -73,6 +74,7 @@ export type Salary_expectationsMaxAggregateOutputType = {
   company_type: string | null
   employment_type: string | null
   work_arrangement: string | null
+  experience_level: string | null
   region: string | null
   hourly_rate: number | null
   month_salary: number | null
@@ -91,6 +93,7 @@ export type Salary_expectationsCountAggregateOutputType = {
   company_type: number
   employment_type: number
   work_arrangement: number
+  experience_level: number
   region: number
   hourly_rate: number
   month_salary: number
@@ -131,6 +134,7 @@ export type Salary_expectationsMinAggregateInputType = {
   company_type?: true
   employment_type?: true
   work_arrangement?: true
+  experience_level?: true
   region?: true
   hourly_rate?: true
   month_salary?: true
@@ -149,6 +153,7 @@ export type Salary_expectationsMaxAggregateInputType = {
   company_type?: true
   employment_type?: true
   work_arrangement?: true
+  experience_level?: true
   region?: true
   hourly_rate?: true
   month_salary?: true
@@ -167,6 +172,7 @@ export type Salary_expectationsCountAggregateInputType = {
   company_type?: true
   employment_type?: true
   work_arrangement?: true
+  experience_level?: true
   region?: true
   hourly_rate?: true
   month_salary?: true
@@ -272,6 +278,7 @@ export type Salary_expectationsGroupByOutputType = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level: string | null
   region: string
   hourly_rate: number | null
   month_salary: number | null
@@ -313,6 +320,7 @@ export type salary_expectationsWhereInput = {
   company_type?: Prisma.StringFilter<"salary_expectations"> | string
   employment_type?: Prisma.StringFilter<"salary_expectations"> | string
   work_arrangement?: Prisma.StringFilter<"salary_expectations"> | string
+  experience_level?: Prisma.StringNullableFilter<"salary_expectations"> | string | null
   region?: Prisma.StringFilter<"salary_expectations"> | string
   hourly_rate?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   month_salary?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
@@ -332,6 +340,7 @@ export type salary_expectationsOrderByWithRelationInput = {
   company_type?: Prisma.SortOrder
   employment_type?: Prisma.SortOrder
   work_arrangement?: Prisma.SortOrder
+  experience_level?: Prisma.SortOrderInput | Prisma.SortOrder
   region?: Prisma.SortOrder
   hourly_rate?: Prisma.SortOrderInput | Prisma.SortOrder
   month_salary?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -354,6 +363,7 @@ export type salary_expectationsWhereUniqueInput = Prisma.AtLeast<{
   company_type?: Prisma.StringFilter<"salary_expectations"> | string
   employment_type?: Prisma.StringFilter<"salary_expectations"> | string
   work_arrangement?: Prisma.StringFilter<"salary_expectations"> | string
+  experience_level?: Prisma.StringNullableFilter<"salary_expectations"> | string | null
   region?: Prisma.StringFilter<"salary_expectations"> | string
   hourly_rate?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   month_salary?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
@@ -373,6 +383,7 @@ export type salary_expectationsOrderByWithAggregationInput = {
   company_type?: Prisma.SortOrder
   employment_type?: Prisma.SortOrder
   work_arrangement?: Prisma.SortOrder
+  experience_level?: Prisma.SortOrderInput | Prisma.SortOrder
   region?: Prisma.SortOrder
   hourly_rate?: Prisma.SortOrderInput | Prisma.SortOrder
   month_salary?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -399,6 +410,7 @@ export type salary_expectationsScalarWhereWithAggregatesInput = {
   company_type?: Prisma.StringWithAggregatesFilter<"salary_expectations"> | string
   employment_type?: Prisma.StringWithAggregatesFilter<"salary_expectations"> | string
   work_arrangement?: Prisma.StringWithAggregatesFilter<"salary_expectations"> | string
+  experience_level?: Prisma.StringNullableWithAggregatesFilter<"salary_expectations"> | string | null
   region?: Prisma.StringWithAggregatesFilter<"salary_expectations"> | string
   hourly_rate?: Prisma.IntNullableWithAggregatesFilter<"salary_expectations"> | number | null
   month_salary?: Prisma.IntNullableWithAggregatesFilter<"salary_expectations"> | number | null
@@ -416,6 +428,7 @@ export type salary_expectationsCreateInput = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level?: string | null
   region: string
   hourly_rate?: number | null
   month_salary?: number | null
@@ -434,6 +447,7 @@ export type salary_expectationsUncheckedCreateInput = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level?: string | null
   region: string
   hourly_rate?: number | null
   month_salary?: number | null
@@ -451,6 +465,7 @@ export type salary_expectationsUpdateInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -469,6 +484,7 @@ export type salary_expectationsUncheckedUpdateInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -487,6 +503,7 @@ export type salary_expectationsCreateManyInput = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level?: string | null
   region: string
   hourly_rate?: number | null
   month_salary?: number | null
@@ -504,6 +521,7 @@ export type salary_expectationsUpdateManyMutationInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -521,6 +539,7 @@ export type salary_expectationsUncheckedUpdateManyInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -549,6 +568,7 @@ export type salary_expectationsCountOrderByAggregateInput = {
   company_type?: Prisma.SortOrder
   employment_type?: Prisma.SortOrder
   work_arrangement?: Prisma.SortOrder
+  experience_level?: Prisma.SortOrder
   region?: Prisma.SortOrder
   hourly_rate?: Prisma.SortOrder
   month_salary?: Prisma.SortOrder
@@ -577,6 +597,7 @@ export type salary_expectationsMaxOrderByAggregateInput = {
   company_type?: Prisma.SortOrder
   employment_type?: Prisma.SortOrder
   work_arrangement?: Prisma.SortOrder
+  experience_level?: Prisma.SortOrder
   region?: Prisma.SortOrder
   hourly_rate?: Prisma.SortOrder
   month_salary?: Prisma.SortOrder
@@ -595,6 +616,7 @@ export type salary_expectationsMinOrderByAggregateInput = {
   company_type?: Prisma.SortOrder
   employment_type?: Prisma.SortOrder
   work_arrangement?: Prisma.SortOrder
+  experience_level?: Prisma.SortOrder
   region?: Prisma.SortOrder
   hourly_rate?: Prisma.SortOrder
   month_salary?: Prisma.SortOrder
@@ -664,6 +686,7 @@ export type salary_expectationsCreateWithoutProfilesInput = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level?: string | null
   region: string
   hourly_rate?: number | null
   month_salary?: number | null
@@ -681,6 +704,7 @@ export type salary_expectationsUncheckedCreateWithoutProfilesInput = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level?: string | null
   region: string
   hourly_rate?: number | null
   month_salary?: number | null
@@ -727,6 +751,7 @@ export type salary_expectationsScalarWhereInput = {
   company_type?: Prisma.StringFilter<"salary_expectations"> | string
   employment_type?: Prisma.StringFilter<"salary_expectations"> | string
   work_arrangement?: Prisma.StringFilter<"salary_expectations"> | string
+  experience_level?: Prisma.StringNullableFilter<"salary_expectations"> | string | null
   region?: Prisma.StringFilter<"salary_expectations"> | string
   hourly_rate?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   month_salary?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
@@ -745,6 +770,7 @@ export type salary_expectationsCreateManyProfilesInput = {
   company_type: string
   employment_type: string
   work_arrangement: string
+  experience_level?: string | null
   region: string
   hourly_rate?: number | null
   month_salary?: number | null
@@ -761,6 +787,7 @@ export type salary_expectationsUpdateWithoutProfilesInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -778,6 +805,7 @@ export type salary_expectationsUncheckedUpdateWithoutProfilesInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -795,6 +823,7 @@ export type salary_expectationsUncheckedUpdateManyWithoutProfilesInput = {
   company_type?: Prisma.StringFieldUpdateOperationsInput | string
   employment_type?: Prisma.StringFieldUpdateOperationsInput | string
   work_arrangement?: Prisma.StringFieldUpdateOperationsInput | string
+  experience_level?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.StringFieldUpdateOperationsInput | string
   hourly_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -814,6 +843,7 @@ export type salary_expectationsSelect<ExtArgs extends runtime.Types.Extensions.I
   company_type?: boolean
   employment_type?: boolean
   work_arrangement?: boolean
+  experience_level?: boolean
   region?: boolean
   hourly_rate?: boolean
   month_salary?: boolean
@@ -833,6 +863,7 @@ export type salary_expectationsSelectCreateManyAndReturn<ExtArgs extends runtime
   company_type?: boolean
   employment_type?: boolean
   work_arrangement?: boolean
+  experience_level?: boolean
   region?: boolean
   hourly_rate?: boolean
   month_salary?: boolean
@@ -852,6 +883,7 @@ export type salary_expectationsSelectUpdateManyAndReturn<ExtArgs extends runtime
   company_type?: boolean
   employment_type?: boolean
   work_arrangement?: boolean
+  experience_level?: boolean
   region?: boolean
   hourly_rate?: boolean
   month_salary?: boolean
@@ -871,6 +903,7 @@ export type salary_expectationsSelectScalar = {
   company_type?: boolean
   employment_type?: boolean
   work_arrangement?: boolean
+  experience_level?: boolean
   region?: boolean
   hourly_rate?: boolean
   month_salary?: boolean
@@ -880,7 +913,7 @@ export type salary_expectationsSelectScalar = {
   currency?: boolean
 }
 
-export type salary_expectationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sort" | "date_created" | "date_updated" | "job_title" | "company_type" | "employment_type" | "work_arrangement" | "region" | "hourly_rate" | "month_salary" | "year_salary" | "daily_rate" | "profile" | "currency", ExtArgs["result"]["salary_expectations"]>
+export type salary_expectationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sort" | "date_created" | "date_updated" | "job_title" | "company_type" | "employment_type" | "work_arrangement" | "experience_level" | "region" | "hourly_rate" | "month_salary" | "year_salary" | "daily_rate" | "profile" | "currency", ExtArgs["result"]["salary_expectations"]>
 export type salary_expectationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
@@ -905,6 +938,7 @@ export type $salary_expectationsPayload<ExtArgs extends runtime.Types.Extensions
     company_type: string
     employment_type: string
     work_arrangement: string
+    experience_level: string | null
     region: string
     hourly_rate: number | null
     month_salary: number | null
@@ -1344,6 +1378,7 @@ export interface salary_expectationsFieldRefs {
   readonly company_type: Prisma.FieldRef<"salary_expectations", 'String'>
   readonly employment_type: Prisma.FieldRef<"salary_expectations", 'String'>
   readonly work_arrangement: Prisma.FieldRef<"salary_expectations", 'String'>
+  readonly experience_level: Prisma.FieldRef<"salary_expectations", 'String'>
   readonly region: Prisma.FieldRef<"salary_expectations", 'String'>
   readonly hourly_rate: Prisma.FieldRef<"salary_expectations", 'Int'>
   readonly month_salary: Prisma.FieldRef<"salary_expectations", 'Int'>

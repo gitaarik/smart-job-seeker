@@ -268,6 +268,7 @@ export interface ExportedSalaryExpectation {
   company_type?: string;
   employment_type?: string;
   work_arrangement?: string;
+  experience_level?: string;
   region?: string;
   hourly_rate?: number | null;
   month_salary?: number | null;

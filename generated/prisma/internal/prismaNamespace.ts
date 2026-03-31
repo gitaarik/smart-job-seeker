@@ -7915,6 +7915,7 @@ export const Salary_expectationsScalarFieldEnum = {
   company_type: 'company_type',
   employment_type: 'employment_type',
   work_arrangement: 'work_arrangement',
+  experience_level: 'experience_level',
   region: 'region',
   hourly_rate: 'hourly_rate',
   month_salary: 'month_salary',

@@ -76,9 +76,19 @@ export const actions: Actions = {
     const region = formData.get("region") as string;
     const currency = formData.get("currency") as string;
 
+    const experience_level = formData.get("experience_level") as string;
+
     if (!employment_type || !work_arrangement || !company_type || !region) {
       return fail(400, { error: "All parameters are required for estimation" });
     }
+
+    const experienceLevelLabels: Record<string, string> = {
+      junior: "Junior",
+      mid: "Mid-level",
+      senior: "Senior",
+      lead: "Lead",
+      principal: "Principal",
+    };
 
     // Fetch existing salary expectations to give the LLM context
     const existing = await db.salary_expectations.findMany({
@@ -93,14 +103,18 @@ export const actions: Actions = {
           if (e.daily_rate) rates.push(`${e.daily_rate}/day`);
           if (e.month_salary) rates.push(`${e.month_salary}/mo`);
           if (e.year_salary) rates.push(`${e.year_salary}/yr`);
-          return `- ${e.employment_type}, ${e.work_arrangement}, ${e.company_type}, ${e.region} (${e.currency}): ${rates.join(", ")}${e.job_title ? ` [${e.job_title}]` : ""}`;
+          return `- ${e.employment_type}, ${e.work_arrangement}${e.experience_level ? `, ${e.experience_level}` : ""}, ${e.company_type}, ${e.region} (${e.currency}): ${rates.join(", ")}${e.job_title ? ` [${e.job_title}]` : ""}`;
         }).join("\n")
       : "No existing salary expectations configured.";
 
     const employmentTypeLabels: Record<string, string> = {
-      employee: "Employee",
-      freelance: "Freelance",
+      any: "Any",
+      full_time: "Full-time",
+      part_time: "Part-time",
       contract: "Contract",
+      temporary: "Temporary",
+      freelance: "Freelance",
+      internship: "Internship",
     };
     const workArrangementLabels: Record<string, string> = {
       remote: "Remote",
@@ -119,6 +133,7 @@ export const actions: Actions = {
       existingSalaryExpectations: existingSummary,
       employmentType: employmentTypeLabels[employment_type] || employment_type,
       workArrangement: workArrangementLabels[work_arrangement] || work_arrangement,
+      experienceLevel: experienceLevelLabels[experience_level] || experience_level || "Not specified",
       companyType: companyTypeLabels[company_type] || company_type,
       region,
       currency: currency || "EUR",

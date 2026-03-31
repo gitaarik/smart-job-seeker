@@ -1074,6 +1074,7 @@ model salary_expectations {
   company_type     String    @db.VarChar(255)
   employment_type  String    @db.VarChar(255)
   work_arrangement String    @db.VarChar(255)
+  experience_level String?   @db.VarChar(255)
   region           String    @db.VarChar(255)
   hourly_rate      Int?
   month_salary     Int?

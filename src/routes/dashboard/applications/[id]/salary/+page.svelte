@@ -59,11 +59,7 @@
 
   /** Map a job type string to a salary employment type using the taxonomy */
   function toSalaryEmploymentType(jobType: string): string {
-    const canonical = jobTypeNormalize.get(jobType.toLowerCase()) ?? jobType.toLowerCase();
-    if (canonical === "contract") return "contract";
-    if (canonical === "freelance") return "freelance";
-    // full_time, part_time, internship, etc. → employee
-    return "employee";
+    return jobTypeNormalize.get(jobType.toLowerCase()) ?? jobType.toLowerCase();
   }
 
   /** Infer a single default filter value from a job's array field.
@@ -126,9 +122,13 @@
   };
 
   const employmentTypeLabels: Record<string, string> = {
-    employee: "Employee",
-    freelance: "Freelance",
+    any: "Any",
+    full_time: "Full-time",
+    part_time: "Part-time",
     contract: "Contract",
+    temporary: "Temporary",
+    freelance: "Freelance",
+    internship: "Internship",
   };
 
   const workArrangementLabels: Record<string, string> = {

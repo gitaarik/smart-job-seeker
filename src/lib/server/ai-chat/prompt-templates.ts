@@ -937,6 +937,7 @@ Guidelines:
 - If existing salary expectations are provided, use them as reference points and adjust for the differences in parameters
 - Consider the employment type: freelancers and contractors typically earn 20-50% more per hour/day than employees to account for benefits, taxes, and gaps between projects
 - Consider the work arrangement: remote roles may vary by region, onsite roles in expensive cities tend to pay more
+- Consider the experience level: junior roles pay significantly less than senior/lead/principal roles
 - Consider the company type: startups may pay less base but offer equity, corporates pay more stability, agencies and consultancies vary
 - Consider the region: adjust for cost of living and local market rates
 - All rates should be in the specified currency
@@ -946,6 +947,7 @@ Guidelines:
 
 - **Employment Type:** \${employmentType}
 - **Work Arrangement:** \${workArrangement}
+- **Experience Level:** \${experienceLevel}
 - **Company Type:** \${companyType}
 - **Region:** \${region}
 - **Currency:** \${currency}

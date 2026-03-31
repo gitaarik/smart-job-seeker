@@ -599,6 +599,7 @@ async function importFullAccountEntities(
         company_type: se.company_type || "",
         employment_type: se.employment_type || "",
         work_arrangement: se.work_arrangement || "",
+        experience_level: se.experience_level || null,
         region: se.region || "",
         hourly_rate: se.hourly_rate ?? null,
         month_salary: se.month_salary ?? null,

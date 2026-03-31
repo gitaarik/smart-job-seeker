@@ -177,6 +177,7 @@ export interface ExportedProfile {
       company_type?: string;
       employment_type?: string;
       work_arrangement?: string;
+      experience_level?: string;
       region?: string;
       hourly_rate?: number | null;
       month_salary?: number | null;
@@ -373,6 +374,7 @@ export async function buildProfileJsonExport(
           company_type: true,
           employment_type: true,
           work_arrangement: true,
+          experience_level: true,
           region: true,
           hourly_rate: true,
           month_salary: true,
