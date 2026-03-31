@@ -95,8 +95,8 @@ else
     echo "Restoring from smart backup..."
     db_query -f /db-dumps/smart.sql
   else
-    echo "ERROR: No backup found. Cannot initialize database."
-    exit 1
+    echo "=== No backup found, creating tables with prisma db push ==="
+    cd /app && npx dotenvx run -- prisma db push --accept-data-loss
   fi
 fi
 
