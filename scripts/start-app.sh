@@ -83,7 +83,7 @@ elif [ "$DB_RESTORE" = "true" ]; then
   echo "  Restore complete! Refresh your browser.  "
   echo "============================================"
 
-elif db_query -c "SELECT 1 FROM profiles LIMIT 1" > /dev/null 2>&1; then
+elif db_query -c "SELECT 1 FROM search_task_runs LIMIT 1" > /dev/null 2>&1; then
   echo "=== App tables already exist, skipping initialization ==="
 else
   echo "=== App tables not found, initializing database ==="
