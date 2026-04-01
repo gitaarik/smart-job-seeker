@@ -254,6 +254,7 @@ export const followupRequestSchema = z.object({
   includeOriginalContext: z.boolean().optional().default(false),
   updateContent: z.boolean().optional().default(false),
   mode: z.enum(["feedback", "review"]).optional(),
+  replaceVersionId: z.number().int().positive().optional(),
 });
 
 /**

@@ -3,48 +3,23 @@ import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../../../profile/utils";
 
+/**
+ * source values for letter_versions:
+ * - "manual_edit" — user edited and saved manually
+ * - "ai_generation" — AI generated the letter
+ * - "ai_revision" — AI revised the letter based on feedback
+ * - "ai_review" — AI reviewed (feedback only, content is the user's version that was reviewed)
+ * - "ai_advice" — AI gave recommendations (no letter content)
+ */
+
 export type ConversationEntry = {
-  type: "generation" | "advice" | "feedback" | "review";
-  request?: string;
-  response: string;
-  summary?: string;
-  revisedLetter?: string;
-  /** The original letter text that was reviewed (stored from ai_chat context) */
-  originalLetter?: string;
+  versionId: number;
+  type: "manual_edit" | "ai_generation" | "ai_revision" | "ai_review" | "ai_advice";
+  content?: string | null;
+  aiFeedback?: string | null;
+  userRequest?: string | null;
   date: Date | null;
 };
-
-/** Parse a structured JSON letter response ({ letter, summary? }) */
-function parseLetterResponse(response: string): { letter: string; summary?: string } {
-  try {
-    const parsed = JSON.parse(response);
-    if (parsed && typeof parsed.letter === "string") {
-      return {
-        letter: parsed.letter,
-        summary: typeof parsed.summary === "string" ? parsed.summary : undefined,
-      };
-    }
-  } catch {
-    // Not JSON, use raw response
-  }
-  return { letter: response };
-}
-
-/** Parse a structured review response ({ feedback, revisedLetter }) */
-function parseReviewResponse(response: string): { feedback: string; revisedLetter?: string } {
-  try {
-    const parsed = JSON.parse(response);
-    if (parsed && typeof parsed.feedback === "string") {
-      return {
-        feedback: parsed.feedback,
-        revisedLetter: typeof parsed.revisedLetter === "string" ? parsed.revisedLetter : undefined,
-      };
-    }
-  } catch {
-    // Not JSON, use raw response as feedback
-  }
-  return { feedback: response };
-}
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -63,101 +38,28 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     error(404, "Letter not found");
   }
 
-  // Build conversation history by walking the ai_chats followup_to chain
-  const conversation: ConversationEntry[] = [];
+  // Build conversation from letter_versions table
+  const versions = await db.letter_versions.findMany({
+    where: { letter: letterId },
+    orderBy: { id: "asc" },
+    select: {
+      id: true,
+      date_created: true,
+      content: true,
+      source: true,
+      ai_feedback: true,
+      user_request: true,
+    },
+  });
 
-  if (letter.ai_chat) {
-    // Collect the chain of ai_chats from current back to root
-    const chain: Array<{
-      id: number;
-      response: string | null;
-      context: unknown;
-      followup_to: number | null;
-      date_created: Date | null;
-    }> = [];
-
-    let currentId: number | null = letter.ai_chat;
-    while (currentId) {
-      const chat = await db.ai_chats.findUnique({
-        where: { id: currentId },
-        select: {
-          id: true,
-          response: true,
-          context: true,
-          followup_to: true,
-          date_created: true,
-        },
-      });
-      if (!chat) break;
-      chain.push(chat);
-      currentId = chat.followup_to;
-    }
-
-    // Reverse so oldest is first
-    chain.reverse();
-
-    for (const chat of chain) {
-      const ctx = (chat.context as Record<string, unknown>) || {};
-
-      if (chat.followup_to === null) {
-        // Root: initial generation, advice, or review
-        if (chat.response) {
-          const mode = (ctx.generationMode as string) || (ctx.letterContent ? "review" : "generate");
-          if (mode === "review") {
-            const { feedback, revisedLetter } = parseReviewResponse(chat.response);
-            conversation.push({
-              type: "review",
-              response: feedback,
-              revisedLetter,
-              originalLetter: (ctx.letterContent as string) || undefined,
-              date: chat.date_created,
-            });
-          } else if (mode === "advice") {
-            conversation.push({
-              type: "advice",
-              response: chat.response,
-              date: chat.date_created,
-            });
-          } else {
-            const { letter } = parseLetterResponse(chat.response);
-            conversation.push({
-              type: "generation",
-              response: letter,
-              date: chat.date_created,
-            });
-          }
-        }
-      } else {
-        // Followup: has a followupRequest in context
-        const request = (ctx.followupRequest as string) || undefined;
-        const isReview = (ctx.generationMode as string) === "review"
-          || request?.toLowerCase().includes("review my changes");
-        if (chat.response) {
-          if (!isReview) {
-            // Feedback mode: parse letter and changes summary
-            const { letter, summary } = parseLetterResponse(chat.response);
-            conversation.push({
-              type: "feedback",
-              request,
-              response: letter,
-              summary,
-              date: chat.date_created,
-            });
-          } else {
-            const { feedback, revisedLetter } = parseReviewResponse(chat.response);
-            conversation.push({
-              type: "review",
-              request,
-              response: feedback,
-              revisedLetter,
-              originalLetter: (ctx.letterContent as string) || undefined,
-              date: chat.date_created,
-            });
-          }
-        }
-      }
-    }
-  }
+  const conversation: ConversationEntry[] = versions.map((v) => ({
+    versionId: v.id,
+    type: v.source as ConversationEntry["type"],
+    content: v.content,
+    aiFeedback: v.ai_feedback,
+    userRequest: v.user_request,
+    date: v.date_created,
+  }));
 
   return { letter, conversation };
 };
@@ -189,6 +91,10 @@ export const actions: Actions = {
     const formData = await request.formData();
     const content = formData.get("content") as string;
     const status = formData.get("status") as string;
+    const source = (formData.get("source") as string) || "manual_edit";
+
+    // Only record a version if content actually changed
+    const contentChanged = (content || null) !== (letter.content || null);
 
     await db.application_letters.update({
       where: { id: letterId },
@@ -198,6 +104,16 @@ export const actions: Actions = {
         date_updated: new Date(),
       },
     });
+
+    if (contentChanged && content) {
+      await db.letter_versions.create({
+        data: {
+          letter: letterId,
+          content,
+          source,
+        },
+      });
+    }
 
     return { success: true };
   },

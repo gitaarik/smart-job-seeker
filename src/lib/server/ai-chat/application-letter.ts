@@ -10,6 +10,14 @@ import { getFieldChoiceLabel } from "../directus/field-labels";
 /**
  * Map letter types to their corresponding AI chat prompt request types
  */
+/** Profile data fields relevant for letter generation — excludes salary, cheat sheets, etc. */
+const LETTER_PROFILE_FIELDS = [
+  "name", "title", "headline", "subtitle", "summary", "location",
+  "core_stack", "highlights",
+  "work_experiences", "side_projects", "education",
+  "tech_skill_categories", "languages",
+];
+
 const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
   cover_letter: {
     generate: "write_cover_letter",
@@ -122,44 +130,35 @@ export async function generateApplicationLetter(
     };
   }
 
-  // Build job context (object operations and field label lookup)
-  const jobDetails: Record<string, string> = {
-    position: job.title || "Not specified",
-    job_description: job.job_description || "Not specified",
-  };
-
+  // Build job context as readable text
+  const jobDetailLines: string[] = [
+    `**Position:** ${job.title || "Not specified"}`,
+  ];
+  if (job.job_poster) {
+    jobDetailLines.push(`**Company:** ${job.job_poster}`);
+  }
   if (job.company_description) {
-    job.company = job.company_description;
+    jobDetailLines.push(`**About the company:** ${job.company_description}`);
   }
   if (job.import_source) {
     try {
-      jobDetails.source = await getFieldChoiceLabel(
-        "jobs",
-        "import_source",
-        job.import_source,
-      );
-    } catch (error) {
-      // Non-critical error, continue with default value
-      jobDetails.source = job.import_source;
+      const sourceLabel = await getFieldChoiceLabel("jobs", "import_source", job.import_source);
+      jobDetailLines.push(`**Source:** ${sourceLabel}`);
+    } catch {
+      // Non-critical, skip
     }
   }
-  if (job.job_poster) {
-    jobDetails.postedBy = job.job_poster;
-  }
-  if (job.date_posted) {
-    jobDetails.datePosted = job.date_posted.toISOString();
-  }
+  jobDetailLines.push("", "**Job Description:**", job.job_description || "Not specified");
+
+  const jobDetailsText = jobDetailLines.join("\n");
 
   // Create custom variables (object construction outside try block)
   const customVariables: Record<string, unknown> = {
     jobDescription: job.job_description || "",
-    jobDetails: jobDetails,
+    jobDetails: jobDetailsText,
     generationMode: mode,
+    additionalContext: additionalContext || "",
   };
-
-  if (additionalContext) {
-    customVariables.additionalContext = additionalContext;
-  }
 
   // For review mode, include the user's letter content
   if (mode === "review" && letter.content) {
@@ -173,6 +172,8 @@ export async function generateApplicationLetter(
       profileId,
       promptType,
       customVariables,
+      undefined,
+      { profileDataFields: LETTER_PROFILE_FIELDS },
     );
   } catch (error) {
     const errorMessage = error instanceof Error
@@ -196,13 +197,17 @@ export async function generateApplicationLetter(
 
   // Update the application_letter record (try block for database update)
   try {
-    // Extract just the letter text from structured JSON response
+    // Extract letter content and feedback from structured JSON response
     let letterContent = aiChat.response;
+    let aiFeedback: string | null = null;
     if (letterContent) {
       try {
         const parsed = JSON.parse(letterContent);
         if (parsed && typeof parsed.letter === "string") {
           letterContent = parsed.letter;
+        } else if (parsed && typeof parsed.feedback === "string") {
+          aiFeedback = parsed.feedback;
+          letterContent = typeof parsed.revisedLetter === "string" ? parsed.revisedLetter : null;
         }
       } catch {
         // Not JSON, use raw response as-is
@@ -223,6 +228,38 @@ export async function generateApplicationLetter(
       where: { id: letterId },
       data: updateData,
     });
+
+    // Record version in letter_versions
+    if (mode === "review") {
+      await db.letter_versions.create({
+        data: {
+          letter: letterId,
+          content: letterContent,
+          source: "ai_review",
+          ai_chat: aiChat.id,
+          ai_feedback: aiFeedback,
+        },
+      });
+    } else if (mode === "advice") {
+      await db.letter_versions.create({
+        data: {
+          letter: letterId,
+          content: null,
+          source: "ai_advice",
+          ai_chat: aiChat.id,
+          ai_feedback: aiChat.response,
+        },
+      });
+    } else if (mode === "generate" && letterContent) {
+      await db.letter_versions.create({
+        data: {
+          letter: letterId,
+          content: letterContent,
+          source: "ai_generation",
+          ai_chat: aiChat.id,
+        },
+      });
+    }
   } catch (error) {
     const errorMessage = error instanceof Error
       ? error.message

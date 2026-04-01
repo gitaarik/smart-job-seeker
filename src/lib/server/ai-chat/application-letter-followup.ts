@@ -5,6 +5,14 @@
 import { db } from "$lib/server/db";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 
+/** Profile data fields relevant for letter followups */
+const LETTER_PROFILE_FIELDS = [
+  "name", "title", "headline", "subtitle", "summary", "location",
+  "core_stack", "highlights",
+  "work_experiences", "side_projects", "education",
+  "tech_skill_categories", "languages",
+];
+
 /** Maps letter_type to the review_* prompt template name */
 const LETTER_TYPE_TO_REVIEW_PROMPT: Record<string, string> = {
   cover_letter: "review_cover_letter",
@@ -34,6 +42,15 @@ function parseLetterResponse(response: string | null): { letter: string | null; 
   return { letter: response, summary: null };
 }
 
+/** Format job data as readable text for prompts */
+function formatJobDetails(job: { title: string | null; job_description: string | null; company_description: string | null; job_poster: string | null }): string {
+  const lines: string[] = [`**Position:** ${job.title || "Not specified"}`];
+  if (job.job_poster) lines.push(`**Company:** ${job.job_poster}`);
+  if (job.company_description) lines.push(`**About the company:** ${job.company_description}`);
+  lines.push("", "**Job Description:**", job.job_description || "Not specified");
+  return lines.join("\n");
+}
+
 export async function createApplicationLetterFollowup(
   letterId: number,
   followupRequest: string,
@@ -41,10 +58,10 @@ export async function createApplicationLetterFollowup(
   updateContent?: boolean,
   mode?: "feedback" | "review",
 ): Promise<FollowupResult> {
-  // For review mode, look up the letter type and fetch context for the review prompt
+  // For review or followup_letter mode, look up letter and job context
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
-  if (mode === "review") {
+  if (mode === "review" || updateContent) {
     const letterRecord = await db.application_letters.findUnique({
       where: { id: letterId },
       select: {
@@ -65,22 +82,26 @@ export async function createApplicationLetterFollowup(
       },
     });
     if (letterRecord) {
-      promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] || undefined;
       const job = letterRecord.applications?.jobs;
-      extraVariables = {
-        generationMode: "review",
-        letterContent: letterRecord.content || "",
-        jobDetails: job ? {
-          position: job.title || "Not specified",
-          job_description: job.job_description || "Not specified",
-          ...(job.company_description ? { company_description: job.company_description } : {}),
-          ...(job.job_poster ? { postedBy: job.job_poster } : {}),
-        } : {},
-        additionalContext: "",
-      };
+      const jobDetailsText = job ? formatJobDetails(job) : "";
+
+      if (mode === "review") {
+        promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] || undefined;
+        extraVariables = {
+          generationMode: "review",
+          letterContent: letterRecord.content || "",
+          jobDetails: jobDetailsText,
+          additionalContext: "",
+        };
+      } else {
+        // followup_letter — new slimmed-down prompt needs job + letter directly
+        promptType = "followup_letter";
+        extraVariables = {
+          letterContent: letterRecord.content || "",
+          jobDetails: jobDetailsText,
+        };
+      }
     }
-  } else if (updateContent) {
-    promptType = "followup_letter";
   }
 
   return createEntityFollowup({
@@ -91,25 +112,64 @@ export async function createApplicationLetterFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    profileDataFields: LETTER_PROFILE_FIELDS,
     fetchEntity: (id) =>
       db.application_letters.findUnique({
         where: { id },
         select: { id: true, ai_chat: true },
       }),
-    updateEntity: (id, aiChatId, aiChatResponse) => {
+    updateEntity: async (id, aiChatId, aiChatResponse) => {
       // For feedback mode, parse out the letter from any summary
       const { letter } = updateContent
         ? parseLetterResponse(aiChatResponse)
         : { letter: aiChatResponse };
 
-      return db.application_letters.update({
+      await db.application_letters.update({
         where: { id },
         data: {
           ai_chat: aiChatId,
           ai_chat_response: aiChatResponse,
           ...(updateContent ? { content: letter } : {}),
         },
-      }).then(() => {});
+      });
+
+      // Record version in letter_versions
+      if (mode === "review") {
+        // Parse review response for feedback + revisedLetter
+        let aiFeedback: string | null = null;
+        let revisedLetter: string | null = null;
+        if (aiChatResponse) {
+          try {
+            const parsed = JSON.parse(aiChatResponse);
+            if (parsed && typeof parsed.feedback === "string") {
+              aiFeedback = parsed.feedback;
+              revisedLetter = typeof parsed.revisedLetter === "string" ? parsed.revisedLetter : null;
+            }
+          } catch {
+            aiFeedback = aiChatResponse;
+          }
+        }
+        await db.letter_versions.create({
+          data: {
+            letter: id,
+            content: revisedLetter,
+            source: "ai_review",
+            ai_chat: aiChatId,
+            ai_feedback: aiFeedback,
+            user_request: followupRequest,
+          },
+        });
+      } else if (updateContent && letter) {
+        await db.letter_versions.create({
+          data: {
+            letter: id,
+            content: letter,
+            source: "ai_revision",
+            ai_chat: aiChatId,
+            user_request: followupRequest,
+          },
+        });
+      }
     },
   });
 }

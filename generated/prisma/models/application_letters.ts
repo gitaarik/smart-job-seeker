@@ -258,6 +258,7 @@ export type application_lettersWhereInput = {
   ai_chat_response?: Prisma.StringNullableFilter<"application_letters"> | string | null
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   applications?: Prisma.XOR<Prisma.ApplicationsScalarRelationFilter, Prisma.applicationsWhereInput>
+  letter_versions?: Prisma.Letter_versionsListRelationFilter
 }
 
 export type application_lettersOrderByWithRelationInput = {
@@ -272,6 +273,7 @@ export type application_lettersOrderByWithRelationInput = {
   ai_chat_response?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsOrderByWithRelationInput
   applications?: Prisma.applicationsOrderByWithRelationInput
+  letter_versions?: Prisma.letter_versionsOrderByRelationAggregateInput
 }
 
 export type application_lettersWhereUniqueInput = Prisma.AtLeast<{
@@ -289,6 +291,7 @@ export type application_lettersWhereUniqueInput = Prisma.AtLeast<{
   ai_chat_response?: Prisma.StringNullableFilter<"application_letters"> | string | null
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   applications?: Prisma.XOR<Prisma.ApplicationsScalarRelationFilter, Prisma.applicationsWhereInput>
+  letter_versions?: Prisma.Letter_versionsListRelationFilter
 }, "id">
 
 export type application_lettersOrderByWithAggregationInput = {
@@ -332,6 +335,7 @@ export type application_lettersCreateInput = {
   ai_chat_response?: string | null
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsCreateNestedOneWithoutApplication_letters_application_letters_ai_chatToai_chatInput
   applications: Prisma.applicationsCreateNestedOneWithoutApplication_lettersInput
+  letter_versions?: Prisma.letter_versionsCreateNestedManyWithoutApplication_lettersInput
 }
 
 export type application_lettersUncheckedCreateInput = {
@@ -344,6 +348,7 @@ export type application_lettersUncheckedCreateInput = {
   ai_chat?: number | null
   status?: string
   ai_chat_response?: string | null
+  letter_versions?: Prisma.letter_versionsUncheckedCreateNestedManyWithoutApplication_lettersInput
 }
 
 export type application_lettersUpdateInput = {
@@ -355,6 +360,7 @@ export type application_lettersUpdateInput = {
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsUpdateOneWithoutApplication_letters_application_letters_ai_chatToai_chatNestedInput
   applications?: Prisma.applicationsUpdateOneRequiredWithoutApplication_lettersNestedInput
+  letter_versions?: Prisma.letter_versionsUpdateManyWithoutApplication_lettersNestedInput
 }
 
 export type application_lettersUncheckedUpdateInput = {
@@ -367,6 +373,7 @@ export type application_lettersUncheckedUpdateInput = {
   ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letter_versions?: Prisma.letter_versionsUncheckedUpdateManyWithoutApplication_lettersNestedInput
 }
 
 export type application_lettersCreateManyInput = {
@@ -450,6 +457,11 @@ export type application_lettersSumOrderByAggregateInput = {
   ai_chat?: Prisma.SortOrder
 }
 
+export type Application_lettersScalarRelationFilter = {
+  is?: Prisma.application_lettersWhereInput
+  isNot?: Prisma.application_lettersWhereInput
+}
+
 export type Application_lettersListRelationFilter = {
   every?: Prisma.application_lettersWhereInput
   some?: Prisma.application_lettersWhereInput
@@ -458,6 +470,20 @@ export type Application_lettersListRelationFilter = {
 
 export type application_lettersOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type application_lettersCreateNestedOneWithoutLetter_versionsInput = {
+  create?: Prisma.XOR<Prisma.application_lettersCreateWithoutLetter_versionsInput, Prisma.application_lettersUncheckedCreateWithoutLetter_versionsInput>
+  connectOrCreate?: Prisma.application_lettersCreateOrConnectWithoutLetter_versionsInput
+  connect?: Prisma.application_lettersWhereUniqueInput
+}
+
+export type application_lettersUpdateOneRequiredWithoutLetter_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.application_lettersCreateWithoutLetter_versionsInput, Prisma.application_lettersUncheckedCreateWithoutLetter_versionsInput>
+  connectOrCreate?: Prisma.application_lettersCreateOrConnectWithoutLetter_versionsInput
+  upsert?: Prisma.application_lettersUpsertWithoutLetter_versionsInput
+  connect?: Prisma.application_lettersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.application_lettersUpdateToOneWithWhereWithoutLetter_versionsInput, Prisma.application_lettersUpdateWithoutLetter_versionsInput>, Prisma.application_lettersUncheckedUpdateWithoutLetter_versionsInput>
 }
 
 export type application_lettersCreateNestedManyWithoutApplicationsInput = {
@@ -544,6 +570,68 @@ export type application_lettersUncheckedUpdateManyWithoutAi_chat_application_let
   deleteMany?: Prisma.application_lettersScalarWhereInput | Prisma.application_lettersScalarWhereInput[]
 }
 
+export type application_lettersCreateWithoutLetter_versionsInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  letter_type?: string
+  content?: string | null
+  status?: string
+  ai_chat_response?: string | null
+  ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsCreateNestedOneWithoutApplication_letters_application_letters_ai_chatToai_chatInput
+  applications: Prisma.applicationsCreateNestedOneWithoutApplication_lettersInput
+}
+
+export type application_lettersUncheckedCreateWithoutLetter_versionsInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  application: number
+  letter_type?: string
+  content?: string | null
+  ai_chat?: number | null
+  status?: string
+  ai_chat_response?: string | null
+}
+
+export type application_lettersCreateOrConnectWithoutLetter_versionsInput = {
+  where: Prisma.application_lettersWhereUniqueInput
+  create: Prisma.XOR<Prisma.application_lettersCreateWithoutLetter_versionsInput, Prisma.application_lettersUncheckedCreateWithoutLetter_versionsInput>
+}
+
+export type application_lettersUpsertWithoutLetter_versionsInput = {
+  update: Prisma.XOR<Prisma.application_lettersUpdateWithoutLetter_versionsInput, Prisma.application_lettersUncheckedUpdateWithoutLetter_versionsInput>
+  create: Prisma.XOR<Prisma.application_lettersCreateWithoutLetter_versionsInput, Prisma.application_lettersUncheckedCreateWithoutLetter_versionsInput>
+  where?: Prisma.application_lettersWhereInput
+}
+
+export type application_lettersUpdateToOneWithWhereWithoutLetter_versionsInput = {
+  where?: Prisma.application_lettersWhereInput
+  data: Prisma.XOR<Prisma.application_lettersUpdateWithoutLetter_versionsInput, Prisma.application_lettersUncheckedUpdateWithoutLetter_versionsInput>
+}
+
+export type application_lettersUpdateWithoutLetter_versionsInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  letter_type?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsUpdateOneWithoutApplication_letters_application_letters_ai_chatToai_chatNestedInput
+  applications?: Prisma.applicationsUpdateOneRequiredWithoutApplication_lettersNestedInput
+}
+
+export type application_lettersUncheckedUpdateWithoutLetter_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  application?: Prisma.IntFieldUpdateOperationsInput | number
+  letter_type?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
 export type application_lettersCreateWithoutApplicationsInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -552,6 +640,7 @@ export type application_lettersCreateWithoutApplicationsInput = {
   status?: string
   ai_chat_response?: string | null
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsCreateNestedOneWithoutApplication_letters_application_letters_ai_chatToai_chatInput
+  letter_versions?: Prisma.letter_versionsCreateNestedManyWithoutApplication_lettersInput
 }
 
 export type application_lettersUncheckedCreateWithoutApplicationsInput = {
@@ -563,6 +652,7 @@ export type application_lettersUncheckedCreateWithoutApplicationsInput = {
   ai_chat?: number | null
   status?: string
   ai_chat_response?: string | null
+  letter_versions?: Prisma.letter_versionsUncheckedCreateNestedManyWithoutApplication_lettersInput
 }
 
 export type application_lettersCreateOrConnectWithoutApplicationsInput = {
@@ -614,6 +704,7 @@ export type application_lettersCreateWithoutAi_chat_application_letters_ai_chatT
   status?: string
   ai_chat_response?: string | null
   applications: Prisma.applicationsCreateNestedOneWithoutApplication_lettersInput
+  letter_versions?: Prisma.letter_versionsCreateNestedManyWithoutApplication_lettersInput
 }
 
 export type application_lettersUncheckedCreateWithoutAi_chat_application_letters_ai_chatToai_chatInput = {
@@ -625,6 +716,7 @@ export type application_lettersUncheckedCreateWithoutAi_chat_application_letters
   content?: string | null
   status?: string
   ai_chat_response?: string | null
+  letter_versions?: Prisma.letter_versionsUncheckedCreateNestedManyWithoutApplication_lettersInput
 }
 
 export type application_lettersCreateOrConnectWithoutAi_chat_application_letters_ai_chatToai_chatInput = {
@@ -672,6 +764,7 @@ export type application_lettersUpdateWithoutApplicationsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat_application_letters_ai_chatToai_chat?: Prisma.ai_chatsUpdateOneWithoutApplication_letters_application_letters_ai_chatToai_chatNestedInput
+  letter_versions?: Prisma.letter_versionsUpdateManyWithoutApplication_lettersNestedInput
 }
 
 export type application_lettersUncheckedUpdateWithoutApplicationsInput = {
@@ -683,6 +776,7 @@ export type application_lettersUncheckedUpdateWithoutApplicationsInput = {
   ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letter_versions?: Prisma.letter_versionsUncheckedUpdateManyWithoutApplication_lettersNestedInput
 }
 
 export type application_lettersUncheckedUpdateManyWithoutApplicationsInput = {
@@ -715,6 +809,7 @@ export type application_lettersUpdateWithoutAi_chat_application_letters_ai_chatT
   status?: Prisma.StringFieldUpdateOperationsInput | string
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateOneRequiredWithoutApplication_lettersNestedInput
+  letter_versions?: Prisma.letter_versionsUpdateManyWithoutApplication_lettersNestedInput
 }
 
 export type application_lettersUncheckedUpdateWithoutAi_chat_application_letters_ai_chatToai_chatInput = {
@@ -726,6 +821,7 @@ export type application_lettersUncheckedUpdateWithoutAi_chat_application_letters
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letter_versions?: Prisma.letter_versionsUncheckedUpdateManyWithoutApplication_lettersNestedInput
 }
 
 export type application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatInput = {
@@ -740,6 +836,35 @@ export type application_lettersUncheckedUpdateManyWithoutAi_chat_application_let
 }
 
 
+/**
+ * Count Type Application_lettersCountOutputType
+ */
+
+export type Application_lettersCountOutputType = {
+  letter_versions: number
+}
+
+export type Application_lettersCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  letter_versions?: boolean | Application_lettersCountOutputTypeCountLetter_versionsArgs
+}
+
+/**
+ * Application_lettersCountOutputType without action
+ */
+export type Application_lettersCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Application_lettersCountOutputType
+   */
+  select?: Prisma.Application_lettersCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Application_lettersCountOutputType without action
+ */
+export type Application_lettersCountOutputTypeCountLetter_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.letter_versionsWhereInput
+}
+
 
 export type application_lettersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -753,6 +878,8 @@ export type application_lettersSelect<ExtArgs extends runtime.Types.Extensions.I
   ai_chat_response?: boolean
   ai_chat_application_letters_ai_chatToai_chat?: boolean | Prisma.application_letters$ai_chat_application_letters_ai_chatToai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.applicationsDefaultArgs<ExtArgs>
+  letter_versions?: boolean | Prisma.application_letters$letter_versionsArgs<ExtArgs>
+  _count?: boolean | Prisma.Application_lettersCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["application_letters"]>
 
 export type application_lettersSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -799,6 +926,8 @@ export type application_lettersOmit<ExtArgs extends runtime.Types.Extensions.Int
 export type application_lettersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat_application_letters_ai_chatToai_chat?: boolean | Prisma.application_letters$ai_chat_application_letters_ai_chatToai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.applicationsDefaultArgs<ExtArgs>
+  letter_versions?: boolean | Prisma.application_letters$letter_versionsArgs<ExtArgs>
+  _count?: boolean | Prisma.Application_lettersCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type application_lettersIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat_application_letters_ai_chatToai_chat?: boolean | Prisma.application_letters$ai_chat_application_letters_ai_chatToai_chatArgs<ExtArgs>
@@ -814,6 +943,7 @@ export type $application_lettersPayload<ExtArgs extends runtime.Types.Extensions
   objects: {
     ai_chat_application_letters_ai_chatToai_chat: Prisma.$ai_chatsPayload<ExtArgs> | null
     applications: Prisma.$applicationsPayload<ExtArgs>
+    letter_versions: Prisma.$letter_versionsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1221,6 +1351,7 @@ export interface Prisma__application_lettersClient<T, Null = never, ExtArgs exte
   readonly [Symbol.toStringTag]: "PrismaPromise"
   ai_chat_application_letters_ai_chatToai_chat<T extends Prisma.application_letters$ai_chat_application_letters_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.application_letters$ai_chat_application_letters_ai_chatToai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatsClient<runtime.Types.Result.GetResult<Prisma.$ai_chatsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   applications<T extends Prisma.applicationsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applicationsDefaultArgs<ExtArgs>>): Prisma.Prisma__applicationsClient<runtime.Types.Result.GetResult<Prisma.$applicationsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  letter_versions<T extends Prisma.application_letters$letter_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.application_letters$letter_versionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$letter_versionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1671,6 +1802,30 @@ export type application_letters$ai_chat_application_letters_ai_chatToai_chatArgs
    */
   include?: Prisma.ai_chatsInclude<ExtArgs> | null
   where?: Prisma.ai_chatsWhereInput
+}
+
+/**
+ * application_letters.letter_versions
+ */
+export type application_letters$letter_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the letter_versions
+   */
+  select?: Prisma.letter_versionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the letter_versions
+   */
+  omit?: Prisma.letter_versionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.letter_versionsInclude<ExtArgs> | null
+  where?: Prisma.letter_versionsWhereInput
+  orderBy?: Prisma.letter_versionsOrderByWithRelationInput | Prisma.letter_versionsOrderByWithRelationInput[]
+  cursor?: Prisma.letter_versionsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Letter_versionsScalarFieldEnum | Prisma.Letter_versionsScalarFieldEnum[]
 }
 
 /**

@@ -32,6 +32,7 @@ export async function createEntityFollowup(opts: {
   includeOriginalContext?: boolean;
   promptType?: string;
   customVariables?: Record<string, unknown>;
+  profileDataFields?: string[];
   fetchEntity: (id: number) => Promise<{ id: number; ai_chat: number | null } | null>;
   updateEntity: (id: number, aiChatId: number, aiChatResponse: string | null) => Promise<void>;
 }): Promise<FollowupResult> {
@@ -68,7 +69,7 @@ export async function createEntityFollowup(opts: {
     result = await createFollowupAiChat(
       entity.ai_chat,
       followupRequest,
-      { includeOriginalContext, promptType, customVariables },
+      { includeOriginalContext, promptType, customVariables, profileDataFields: opts.profileDataFields },
     );
   } catch (error) {
     return {

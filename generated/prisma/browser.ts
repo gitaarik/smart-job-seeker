@@ -38,6 +38,11 @@ export type application_status_log = Prisma.application_status_logModel
  */
 export type application_letters = Prisma.application_lettersModel
 /**
+ * Model letter_versions
+ * 
+ */
+export type letter_versions = Prisma.letter_versionsModel
+/**
  * Model application_questions
  * 
  */

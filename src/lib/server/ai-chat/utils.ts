@@ -148,6 +148,10 @@ export async function createAndGenerateAiChat(
   promptKey: string,
   customVariables?: Record<string, unknown>,
   followupTo?: number,
+  options?: {
+    /** Top-level profile data keys to include. If omitted, all data is included. */
+    profileDataFields?: string[];
+  },
 ): Promise<{
   success: boolean;
   message: string;
@@ -185,10 +189,47 @@ export async function createAndGenerateAiChat(
 
     // Step 3: Parse schema and data from JSON strings to objects
     // These will be stored as raw JSON in context, but stringified for interpolation
-    const schemaJson = collectedData?.schema
+    let schemaJson = collectedData?.schema
       ? JSON.parse(collectedData.schema)
       : {};
-    const dataJson = collectedData?.data ? JSON.parse(collectedData.data) : {};
+    let dataJson = collectedData?.data ? JSON.parse(collectedData.data) : {};
+
+    // Step 3b: Filter to requested profile data fields if specified
+    const profileDataFields = options?.profileDataFields;
+    if (profileDataFields) {
+      if (profileDataFields.length === 0) {
+        // Empty array = include no profile data
+        dataJson = {};
+        schemaJson = {};
+      } else {
+        const fieldSet = new Set(profileDataFields);
+
+        // Filter data: keep only requested top-level keys
+        const filteredData: Record<string, unknown> = {};
+        for (const key of profileDataFields) {
+          if (key in dataJson) {
+            filteredData[key] = dataJson[key];
+          }
+        }
+        dataJson = filteredData;
+
+        // Filter schema: keep only matching fields and relations
+        if (schemaJson.fields || schemaJson.relations) {
+          const filteredSchema: Record<string, unknown> = { ...schemaJson };
+          if (schemaJson.fields) {
+            filteredSchema.fields = Object.fromEntries(
+              Object.entries(schemaJson.fields).filter(([k]) => fieldSet.has(k)),
+            );
+          }
+          if (schemaJson.relations) {
+            filteredSchema.relations = Object.fromEntries(
+              Object.entries(schemaJson.relations).filter(([k]) => fieldSet.has(k)),
+            );
+          }
+          schemaJson = filteredSchema;
+        }
+      }
+    }
 
     // Step 4: Prepare context (raw variables as JSON objects)
     const context = {
@@ -199,8 +240,8 @@ export async function createAndGenerateAiChat(
 
     // Step 5: Prepare variables for interpolation (stringified for prompts)
     const interpolationVariables: Record<string, string> = {
-      schema: collectedData?.schema || "{}",
-      data: collectedData?.data || "{}",
+      schema: JSON.stringify(schemaJson, null, 2),
+      data: JSON.stringify(dataJson, null, 2),
       ...(customVariables
         ? Object.fromEntries(
           Object.entries(customVariables).map(([key, value]) => [

@@ -23,10 +23,39 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     return json({ success: false, message: "Letter not found" }, { status: 404 });
   }
 
-  const { followupRequest, includeOriginalContext, updateContent, mode } = parseBody(
+  const { followupRequest, includeOriginalContext, updateContent, mode, replaceVersionId } = parseBody(
     followupRequestSchema,
     await request.json(),
   );
+
+  // If replacing a version, delete it and all subsequent versions first
+  if (replaceVersionId) {
+    // Verify the version belongs to this letter
+    const version = await db.letter_versions.findFirst({
+      where: { id: replaceVersionId, letter: letterId },
+    });
+    if (!version) {
+      return json({ success: false, message: "Version not found" }, { status: 404 });
+    }
+    // Delete this version and all versions after it
+    await db.letter_versions.deleteMany({
+      where: { letter: letterId, id: { gte: replaceVersionId } },
+    });
+
+    // Restore ai_chat pointer to the previous version's ai_chat (or the last remaining version's)
+    const lastVersion = await db.letter_versions.findFirst({
+      where: { letter: letterId },
+      orderBy: { id: "desc" },
+      select: { ai_chat: true, content: true },
+    });
+    await db.application_letters.update({
+      where: { id: letterId },
+      data: {
+        ai_chat: lastVersion?.ai_chat ?? null,
+        content: lastVersion?.content ?? letter.content,
+      },
+    });
+  }
 
   const result = await createApplicationLetterFollowup(
     letterId,

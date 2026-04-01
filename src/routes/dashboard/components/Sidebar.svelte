@@ -229,6 +229,11 @@
           icon: faRobot,
         },
         {
+          label: "AI Chats",
+          href: "/dashboard/admin/ai-chats",
+          icon: faComments,
+        },
+        {
           label: "Style Guide",
           href: "/dashboard/admin/style-guide",
           icon: faPalette,

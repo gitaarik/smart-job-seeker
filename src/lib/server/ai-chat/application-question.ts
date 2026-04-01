@@ -6,6 +6,15 @@
 import { db } from "$lib/server/db";
 import { createAndGenerateAiChat } from "./utils";
 
+/** Profile data fields relevant for answering application questions */
+const QUESTION_PROFILE_FIELDS = [
+  "name", "title", "headline", "subtitle", "summary", "location",
+  "core_stack", "highlights",
+  "work_experiences", "side_projects", "education",
+  "tech_skill_categories", "languages",
+  "project_stories", "references",
+];
+
 /**
  * Generate answer for a single application question
  * Steps:
@@ -65,6 +74,8 @@ export async function generateApplicationQuestionAnswer(
         jobDescription: jobDescription,
         question: question.question,
       },
+      undefined,
+      { profileDataFields: QUESTION_PROFILE_FIELDS },
     );
   } catch (error) {
     const errorMessage = error instanceof Error

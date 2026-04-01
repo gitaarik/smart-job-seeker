@@ -34,6 +34,7 @@ export async function createFollowupAiChat(
     includeOriginalContext?: boolean;
     promptType?: string;
     customVariables?: Record<string, unknown>;
+    profileDataFields?: string[];
   },
 ): Promise<{
   success: boolean;
@@ -63,6 +64,7 @@ export async function createFollowupAiChat(
         response: true,
         system_prompt: true,
         user_prompt: true,
+        followup_to: true,
       },
     });
   } catch (error) {
@@ -91,35 +93,59 @@ export async function createFollowupAiChat(
     };
   }
 
-  // Step 3: Prepare custom variables (string operations outside try block)
-  const parentContext = (parent.context as Record<string, unknown>) || {};
+  // Step 3: Walk up the followup chain to find the root (original) ai_chat.
+  // This prevents prompt stacking: each followup always gets the clean original
+  // context instead of nested copies of previous followup prompts.
+  let root = parent;
+  if (includeOriginalContext && parent.followup_to) {
+    let currentId = parent.followup_to;
+    // Walk up the chain (with a safety limit to prevent infinite loops)
+    for (let i = 0; i < 50 && currentId; i++) {
+      const ancestor = await db.ai_chats.findUnique({
+        where: { id: currentId },
+        select: {
+          context: true,
+          system_prompt: true,
+          user_prompt: true,
+          followup_to: true,
+        },
+      });
+      if (!ancestor) break;
+      root = { ...root, context: ancestor.context, system_prompt: ancestor.system_prompt, user_prompt: ancestor.user_prompt };
+      currentId = ancestor.followup_to;
+    }
+  }
+
+  // Step 4: Prepare custom variables
+  // Use the ROOT chat's context and prompts (clean original), but the PARENT's response (most recent)
+  const rootContext = (root.context as Record<string, unknown>) || {};
 
   let originalSystemPrompt: string;
   let originalUserPrompt: string;
 
   if (includeOriginalContext) {
-    // Convert parent context to string format for interpolation
-    const parentContextForInterpolation: Record<string, string> = Object
+    // Convert root context to string format for interpolation
+    const rootContextForInterpolation: Record<string, string> = Object
       .fromEntries(
-        Object.entries(parentContext).map(([key, value]) => [
+        Object.entries(rootContext).map(([key, value]) => [
           key,
           typeof value === "string" ? value : JSON.stringify(value, null, 2),
         ]),
       );
 
-    // Manually interpolate placeholders using parent's context
+    // Interpolate the ROOT's prompts with its own context
     originalSystemPrompt = interpolatePrompt(
-      parent.system_prompt,
-      parentContextForInterpolation,
+      root.system_prompt,
+      rootContextForInterpolation,
     );
     originalUserPrompt = interpolatePrompt(
-      parent.user_prompt,
-      parentContextForInterpolation,
+      root.user_prompt,
+      rootContextForInterpolation,
     );
   } else {
     // Escape placeholders to prevent auto-interpolation
-    originalSystemPrompt = escapePlaceholders(parent.system_prompt);
-    originalUserPrompt = escapePlaceholders(parent.user_prompt);
+    originalSystemPrompt = escapePlaceholders(root.system_prompt);
+    originalUserPrompt = escapePlaceholders(root.user_prompt);
   }
 
   // Extract letter text from structured JSON responses (e.g. { letter: "...", summary: "..." })
@@ -152,6 +178,7 @@ export async function createFollowupAiChat(
       promptType,
       customVariables,
       parentAiChatId,
+      { profileDataFields: options?.profileDataFields ?? [] }
     );
   } catch (error) {
     const errorMessage = error instanceof Error

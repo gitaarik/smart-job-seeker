@@ -55,6 +55,7 @@ export const ModelName = {
   application_activity_log: 'application_activity_log',
   application_status_log: 'application_status_log',
   application_letters: 'application_letters',
+  letter_versions: 'letter_versions',
   application_questions: 'application_questions',
   applications: 'applications',
   applications_files: 'applications_files',
@@ -213,6 +214,20 @@ export const Application_lettersScalarFieldEnum = {
 } as const
 
 export type Application_lettersScalarFieldEnum = (typeof Application_lettersScalarFieldEnum)[keyof typeof Application_lettersScalarFieldEnum]
+
+
+export const Letter_versionsScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  letter: 'letter',
+  content: 'content',
+  source: 'source',
+  ai_chat: 'ai_chat',
+  ai_feedback: 'ai_feedback',
+  user_request: 'user_request'
+} as const
+
+export type Letter_versionsScalarFieldEnum = (typeof Letter_versionsScalarFieldEnum)[keyof typeof Letter_versionsScalarFieldEnum]
 
 
 export const Application_questionsScalarFieldEnum = {
