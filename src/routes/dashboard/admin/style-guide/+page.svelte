@@ -1,5 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { getAllIcons } from "$lib/data/job-icons";
+  import CategoryPill from "$lib/components/CategoryPill.svelte";
   import {
     faArrowLeft,
     faArrowRight,
@@ -700,6 +702,61 @@
           {/each}
         </div>
         <p class="text-xs text-[var(--dash-text-muted)] mt-3">Selected: <code class="text-[var(--dash-primary)]">{[...checkboxValues].join(", ")}</code></p>
+      </Card>
+    </div>
+  </section>
+
+  <!-- Category Tag Pills -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Category Tag Pills</h2>
+    <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
+      Colored tag pills with icons used on job cards, job detail pages, salary expectations, and match config. Each category has a distinct color. Icons resolve via the job taxonomy, handling non-canonical forms automatically.
+    </p>
+    <div class="space-y-3">
+      <!-- Job Types -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Job Type <span class="text-xs font-normal text-[var(--dash-text-muted)]">— emerald</span></h3>
+        <div class="flex flex-wrap gap-2">
+          {#each getAllIcons("job_type") as { value }}
+            <CategoryPill category="job_type" {value} />
+          {/each}
+        </div>
+      </Card>
+
+      <!-- Work Location -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Work Location <span class="text-xs font-normal text-[var(--dash-text-muted)]">— primary (blue)</span></h3>
+        <div class="flex flex-wrap gap-2">
+          {#each getAllIcons("work_location") as { value }}
+            <CategoryPill category="work_location" {value} />
+          {/each}
+        </div>
+      </Card>
+
+      <!-- Experience Level -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Experience Level <span class="text-xs font-normal text-[var(--dash-text-muted)]">— purple</span></h3>
+        <div class="flex flex-wrap gap-2">
+          {#each getAllIcons("experience_level") as { value }}
+            <CategoryPill category="experience_level" {value} />
+          {/each}
+        </div>
+      </Card>
+
+      <!-- Usage -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-3">Usage</h3>
+        <div class="space-y-3">
+          <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
+            import CategoryPill from "$lib/components/CategoryPill.svelte";
+          </div>
+          <div class="text-xs font-mono text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-3 rounded overflow-x-auto">
+            &lt;CategoryPill category="job_type" value="full_time" /&gt;
+          </div>
+          <p class="text-xs text-[var(--dash-text-muted)]">
+            Normalizes non-canonical values (e.g. "Full-time", "contractor", "medior") through the job taxonomy automatically.
+          </p>
+        </div>
       </Card>
     </div>
   </section>

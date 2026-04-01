@@ -1,8 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faSliders } from "@fortawesome/free-solid-svg-icons";
-  import { formatExperienceLevel, formatJobType, formatWorkLocation } from "$lib/format";
-  import { JOB_TYPE_ICONS, WORK_LOCATION_ICONS, EXPERIENCE_LEVEL_ICONS } from "$lib/data/job-icons";
+  import CategoryPill from "$lib/components/CategoryPill.svelte";
   import Card from "./Card.svelte";
 
   interface MatchConfig {
@@ -61,10 +60,7 @@
         {#if workLocations.length > 0}
           <div class="flex flex-wrap gap-1.5">
             {#each workLocations as loc}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-[var(--dash-primary)]/20 bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
-                {#if WORK_LOCATION_ICONS[loc]}<FontAwesomeIcon icon={WORK_LOCATION_ICONS[loc]} class="w-2.5 h-2.5" />{/if}
-                {formatWorkLocation(loc)}
-              </span>
+              <CategoryPill category="work_location" value={loc} />
             {/each}
           </div>
         {:else}
@@ -76,10 +72,7 @@
         {#if jobTypes.length > 0}
           <div class="flex flex-wrap gap-1.5">
             {#each jobTypes as type}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-700">
-                {#if JOB_TYPE_ICONS[type]}<FontAwesomeIcon icon={JOB_TYPE_ICONS[type]} class="w-2.5 h-2.5" />{/if}
-                {formatJobType(type)}
-              </span>
+              <CategoryPill category="job_type" value={type} />
             {/each}
           </div>
         {:else}
@@ -91,10 +84,7 @@
         {#if experienceLevels.length > 0}
           <div class="flex flex-wrap gap-1.5">
             {#each experienceLevels as level}
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/10 text-purple-700">
-                {#if EXPERIENCE_LEVEL_ICONS[level]}<FontAwesomeIcon icon={EXPERIENCE_LEVEL_ICONS[level]} class="w-2.5 h-2.5" />{/if}
-                {formatExperienceLevel(level)}
-              </span>
+              <CategoryPill category="experience_level" value={level} />
             {/each}
           </div>
         {:else}
