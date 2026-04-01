@@ -14,18 +14,22 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
   cover_letter: {
     generate: "write_cover_letter",
     advice: "advise_cover_letter",
+    review: "review_cover_letter",
   },
   motivation_letter: {
     generate: "write_motivation_letter",
     advice: "advise_motivation_letter",
+    review: "review_motivation_letter",
   },
   follow_up_email: {
     generate: "write_follow_up_email",
     advice: "advise_follow_up_email",
+    review: "review_follow_up_email",
   },
   thank_you_letter: {
     generate: "write_thank_you_letter",
     advice: "advise_thank_you_letter",
+    review: "review_thank_you_letter",
   },
 };
 
@@ -46,7 +50,7 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
 export async function generateApplicationLetter(
   letterId: number,
   additionalContext?: string,
-  mode: "generate" | "advice" = "generate",
+  mode: "generate" | "advice" | "review" = "generate",
 ): Promise<{
   success: boolean;
   message: string;
@@ -150,10 +154,16 @@ export async function generateApplicationLetter(
   const customVariables: Record<string, unknown> = {
     jobDescription: job.job_description || "",
     jobDetails: jobDetails,
+    generationMode: mode,
   };
 
   if (additionalContext) {
     customVariables.additionalContext = additionalContext;
+  }
+
+  // For review mode, include the user's letter content
+  if (mode === "review" && letter.content) {
+    customVariables.letterContent = letter.content;
   }
 
   // Generate AI chat (try block for async operation)

@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../../../profile/utils";
 
 export type ConversationEntry = {
-  type: "generation" | "feedback" | "review";
+  type: "generation" | "advice" | "feedback" | "review";
   request?: string;
   response: string;
   summary?: string;
@@ -81,14 +81,29 @@ export const load: PageServerLoad = async ({ parent, params }) => {
       const ctx = (chat.context as Record<string, unknown>) || {};
 
       if (chat.followup_to === null) {
-        // Root: initial generation
+        // Root: initial generation, advice, or review
         if (chat.response) {
-          const { letter } = parseLetterResponse(chat.response);
-          conversation.push({
-            type: "generation",
-            response: letter,
-            date: chat.date_created,
-          });
+          const mode = (ctx.generationMode as string) || (ctx.letterContent ? "review" : "generate");
+          if (mode === "review") {
+            conversation.push({
+              type: "review",
+              response: chat.response,
+              date: chat.date_created,
+            });
+          } else if (mode === "advice") {
+            conversation.push({
+              type: "advice",
+              response: chat.response,
+              date: chat.date_created,
+            });
+          } else {
+            const { letter } = parseLetterResponse(chat.response);
+            conversation.push({
+              type: "generation",
+              response: letter,
+              date: chat.date_created,
+            });
+          }
         }
       } else {
         // Followup: has a followupRequest in context
