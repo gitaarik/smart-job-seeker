@@ -282,6 +282,15 @@ export const followupLetterSchema = z.preprocess(normalizeLetterKey, z.object({
 }));
 
 /**
+ * Schema for letter review prompts
+ * Returns feedback (markdown) and a revised version of the letter.
+ */
+export const reviewLetterSchema = z.object({
+  feedback: z.string().describe("A single markdown string with concise, friendly feedback. What works, what to improve, with specific suggestions. NOT an array — one cohesive markdown text."),
+  revisedLetter: z.string().describe("The complete revised letter text incorporating all suggestions. Plain text, ready to use as-is. No markdown formatting, no preamble."),
+});
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  */
@@ -299,6 +308,10 @@ export const aiPromptSchemas = {
   write_follow_up_email: writeLetterSchema,
   write_thank_you_letter: writeLetterSchema,
   followup_letter: followupLetterSchema,
+  review_cover_letter: reviewLetterSchema,
+  review_motivation_letter: reviewLetterSchema,
+  review_follow_up_email: reviewLetterSchema,
+  review_thank_you_letter: reviewLetterSchema,
 } as const;
 
 /**

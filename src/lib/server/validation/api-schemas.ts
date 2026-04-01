@@ -253,6 +253,7 @@ export const followupRequestSchema = z.object({
   followupRequest: requiredTrimmedString("Follow-up request", 5000),
   includeOriginalContext: z.boolean().optional().default(false),
   updateContent: z.boolean().optional().default(false),
+  mode: z.enum(["feedback", "review"]).optional(),
 });
 
 /**

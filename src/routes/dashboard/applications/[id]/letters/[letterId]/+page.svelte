@@ -8,6 +8,8 @@
   import {
     faArrowLeft,
     faCheck,
+    faChevronDown,
+    faChevronRight,
     faComments,
     faPencil,
     faRobot,
@@ -25,6 +27,24 @@
   let conversation = $derived(data.conversation);
   let appId = $derived($page.params.id);
   let showHistory = $state(false);
+
+  // Compute the starting version number for each conversation entry.
+  // Each entry may produce 1 or 2 versions (e.g. a review has originalLetter + revisedLetter).
+  let entryVersionNums = $derived.by(() => {
+    const nums: number[] = [];
+    let ver = 1;
+    for (const entry of conversation) {
+      nums.push(ver);
+      // Count how many versions this entry contributes
+      if (entry.originalLetter || (entry.type !== "review" && entry.type !== "advice" && !entry.revisedLetter)) {
+        ver++; // the original/generated letter is a version
+      }
+      if (entry.revisedLetter) {
+        ver++; // the revised letter is another version
+      }
+    }
+    return nums;
+  });
   let pageTop: HTMLElement;
 
   const letterTypes: Record<string, string> = {
@@ -75,10 +95,12 @@
       if (result.type === "success") {
         isEditing = false;
         if (letter.ai_chat) {
-          // Has existing chat — use followup
+          // Has existing chat — use followup with review mode for structured output
           await sendFollowup(
             "I've updated my letter. Please review my changes and give me concise feedback: what works well, what could be improved, and any specific suggestions.",
             true,
+            false,
+            "review",
           );
         } else {
           // No chat yet — use the review generate mode
@@ -114,11 +136,11 @@
     }
   }
 
-  async function sendFollowup(text: string, includeContext: boolean = true, updateContent: boolean = false) {
+  async function sendFollowup(text: string, includeContext: boolean = true, updateContent: boolean = false, mode?: "feedback" | "review") {
     if (!text.trim()) return;
 
     generating = true;
-    generatingMode = "followup";
+    generatingMode = mode === "review" ? "review" : "followup";
     aiError = null;
 
     try {
@@ -129,6 +151,7 @@
           followupRequest: text,
           includeOriginalContext: includeContext,
           updateContent,
+          ...(mode ? { mode } : {}),
         }),
       });
       const result = await response.json();
@@ -211,9 +234,96 @@
     </div>
   {/if}
 
+  {#snippet conversationEntry(entry: ConversationEntry, versionNum: number, isLast: boolean)}
+    <!-- User message bubble -->
+    {#if entry.originalLetter}
+      <div class="ml-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+            <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5 text-blue-600" />
+          </div>
+          <p class="text-xs text-[var(--dash-text-muted)]">Your version</p>
+        </div>
+        <details class="mt-4 rounded bg-blue-500/10 group/v">
+          <summary class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)] hover:bg-blue-500/15 hover:text-[var(--dash-primary)] cursor-pointer transition-colors rounded">
+            <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5 transition-transform group-open/v:rotate-90" />
+            Version {versionNum}
+          </summary>
+          <pre class="px-3 pt-2 pb-3 whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{entry.originalLetter}</pre>
+        </details>
+      </div>
+    {:else if entry.request}
+      <div class="ml-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+            <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5 text-blue-600" />
+          </div>
+          <p class="text-xs text-[var(--dash-text-muted)]">
+            {entry.type === "review" ? "Manual edit — AI review requested" : "Your feedback"}
+          </p>
+        </div>
+        <p class="text-sm text-[var(--dash-text)]">{entry.request}</p>
+      </div>
+    {/if}
+    <!-- AI response bubble -->
+    <div class="rounded-lg border border-purple-500/20 bg-purple-500/5 p-3">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-5 h-5 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+          <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5 text-purple-600" />
+        </div>
+        <p class="text-xs text-[var(--dash-text-muted)]">
+          {entryLabel(entry)}
+          {#if entry.date}
+            <span class="ml-1">&middot; {formatDate(entry.date)}</span>
+          {/if}
+        </p>
+      </div>
+      {#if entry.summary}
+        <p class="text-sm text-[var(--dash-text)] mb-1">{entry.summary}</p>
+      {:else if entry.type === "review" || entry.type === "advice"}
+        <p class="text-sm text-[var(--dash-text)] mb-1">{entry.response}</p>
+      {:else if entry.type === "generation"}
+        <p class="text-sm text-[var(--dash-text)]">Letter generated.</p>
+      {:else}
+        <p class="text-sm text-[var(--dash-text)]">Letter updated based on your feedback.</p>
+      {/if}
+      {#if entry.revisedLetter}
+        <details class="mt-4 rounded bg-purple-500/10 group/v">
+          <summary class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)] hover:bg-purple-500/15 hover:text-[var(--dash-primary)] cursor-pointer transition-colors rounded">
+            <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5 transition-transform group-open/v:rotate-90" />
+            Version {versionNum + 1}
+          </summary>
+          <pre class="px-3 pt-2 pb-3 whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{entry.revisedLetter}</pre>
+        </details>
+        {#if isLast}
+          <form method="POST" action="?/update" use:enhance={() => async ({ result, update }) => { await update(); if (result.type === "success") scrollToTop(); }} class="mt-2">
+            <input type="hidden" name="content" value={entry.revisedLetter} />
+            <input type="hidden" name="status" value={letter.status || "draft"} />
+            <button
+              type="submit"
+              class="px-2 py-1 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors flex items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+              Continue with this
+            </button>
+          </form>
+        {/if}
+      {:else if entry.type !== "review" && entry.type !== "advice"}
+        <details class="mt-4 rounded bg-purple-500/10 group/v">
+          <summary class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)] hover:bg-purple-500/15 hover:text-[var(--dash-primary)] cursor-pointer transition-colors rounded">
+            <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5 transition-transform group-open/v:rotate-90" />
+            Version {versionNum}
+          </summary>
+          <pre class="px-3 pt-2 pb-3 whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{entry.response}</pre>
+        </details>
+      {/if}
+    </div>
+  {/snippet}
+
   <!-- Timeline: all conversation entries -->
   {#if conversation.length > 0}
-    <Card padding="md">
+    {@const lastEntry = conversation[conversation.length - 1]}
+    <div class="space-y-3">
       <!-- History toggle -->
       {#if conversation.length > 1}
         <button
@@ -227,96 +337,16 @@
 
       <!-- Expanded history -->
       {#if showHistory && conversation.length > 1}
-        <div class="space-y-3 mb-4 pb-4 border-b border-[var(--dash-border)]">
+        <div class="space-y-3">
           {#each conversation.slice(0, -1) as entry, i}
-            {#if entry.request}
-              <div class="flex gap-3">
-                <div class="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5 text-blue-600" />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs text-[var(--dash-text-muted)] mb-0.5">
-                    {entry.type === "review" ? "Manual edit — AI review requested" : "Your feedback"}
-                  </p>
-                  <p class="text-xs text-[var(--dash-text)]">{entry.request}</p>
-                </div>
-              </div>
-            {/if}
-            <div class="flex gap-3">
-              <div class="w-5 h-5 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5 text-purple-600" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs text-[var(--dash-text-muted)] mb-0.5">
-                  {entryLabel(entry)}
-                  {#if entry.date}
-                    <span class="ml-1">&middot; {formatDate(entry.date)}</span>
-                  {/if}
-                </p>
-                {#if entry.type === "review" || entry.type === "advice"}
-                  <div class="prose prose-xs max-w-none text-[var(--dash-text-secondary)] [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:mb-0.5 [&_p]:mb-1 [&_strong]:font-semibold text-xs">
-                    {@html marked(entry.response)}
-                  </div>
-                {:else}
-                  {#if entry.summary}
-                    <p class="text-xs text-[var(--dash-text-secondary)] mb-1">{entry.summary}</p>
-                  {/if}
-                  <details>
-                    <summary class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] cursor-pointer">
-                      Show version {i + 1}
-                    </summary>
-                    <pre class="mt-1 whitespace-pre-wrap text-xs text-[var(--dash-text-secondary)] bg-[var(--dash-bg)] p-2 rounded-lg overflow-x-auto max-h-36 overflow-y-auto">{entry.response}</pre>
-                  </details>
-                {/if}
-              </div>
-            </div>
-            {#if i < conversation.length - 2}
-              <div class="ml-2.5 border-l border-[var(--dash-border)] h-1"></div>
-            {/if}
+            {@render conversationEntry(entry, entryVersionNums[i], false)}
           {/each}
         </div>
       {/if}
 
       <!-- Last entry (always visible) -->
-      {@const lastEntry = conversation[conversation.length - 1]}
-      {#if lastEntry.request}
-        <div class="flex gap-3 mb-3">
-          <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <FontAwesomeIcon icon={faPencil} class="w-3 h-3 text-blue-600" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs text-[var(--dash-text-muted)] mb-1">
-              {lastEntry.type === "review" ? "Manual edit — AI review requested" : "Your feedback"}
-            </p>
-            <p class="text-sm text-[var(--dash-text)]">{lastEntry.request}</p>
-          </div>
-        </div>
-      {/if}
-      <div class="flex gap-3">
-        <div class="w-6 h-6 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <FontAwesomeIcon icon={faRobot} class="w-3 h-3 text-purple-600" />
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-xs text-[var(--dash-text-muted)] mb-1">
-            {entryLabel(lastEntry)}
-            {#if lastEntry.date}
-              <span class="ml-1">&middot; {formatDate(lastEntry.date)}</span>
-            {/if}
-          </p>
-          {#if lastEntry.type === "review" || lastEntry.type === "advice"}
-            <div class="prose prose-sm max-w-none text-[var(--dash-text)] [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_p]:mb-2 [&_strong]:font-semibold">
-              {@html marked(lastEntry.response)}
-            </div>
-          {:else if lastEntry.summary}
-            <p class="text-sm text-[var(--dash-text-secondary)]">{lastEntry.summary}</p>
-          {:else if lastEntry.type === "generation"}
-            <p class="text-xs text-[var(--dash-text-muted)]">Letter generated.</p>
-          {:else}
-            <p class="text-xs text-[var(--dash-text-muted)]">Letter updated based on your feedback.</p>
-          {/if}
-        </div>
-      </div>
-    </Card>
+      {@render conversationEntry(lastEntry, entryVersionNums[conversation.length - 1], true)}
+    </div>
   {/if}
 
   {#if isEditing}

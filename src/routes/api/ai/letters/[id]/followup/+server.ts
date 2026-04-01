@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     return json({ success: false, message: "Letter not found" }, { status: 404 });
   }
 
-  const { followupRequest, includeOriginalContext, updateContent } = parseBody(
+  const { followupRequest, includeOriginalContext, updateContent, mode } = parseBody(
     followupRequestSchema,
     await request.json(),
   );
@@ -33,6 +33,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     followupRequest,
     includeOriginalContext,
     updateContent,
+    mode,
   );
 
   if (!result.success) {

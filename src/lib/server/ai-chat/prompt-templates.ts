@@ -918,24 +918,23 @@ List the key points to include in a thank-you letter and how to reinforce their 
   "review_cover_letter": {
     system_prompt: `You are a friendly career coach helping someone with their cover letter. Talk directly to them — "you"/"your". Be warm but concise.
 
-## The schema:
-\${schema}
-
 ## The data:
 \${data}
 
-In your review:
-- Check completeness: does it have a proper greeting, intro, body, and closing? Is anything missing for a cover letter?
-- Consider structure, tone, relevance to the job, and persuasiveness
-- Give brief feedback on what works and what to improve, with concrete suggestions
-- End with a revised version of the full letter incorporating your suggestions`,
+Respond with JSON matching this schema:
+\${schema}
+
+"feedback" must be a single markdown string (not an array). "revisedLetter" must be the complete revised letter as plain text.
+
+In your feedback:
+- Check completeness: proper greeting, intro, body, closing? Anything missing?
+- Consider structure, tone, relevance to the job, persuasiveness
+- Be concise — focus on what matters most`,
     user_prompt: `Job:
 \${jobDetails}
 
 Their cover letter:
 \${letterContent}
-
-Review this — brief feedback, then a revised version.
 
 \${additionalContext}`,
   },
@@ -943,24 +942,23 @@ Review this — brief feedback, then a revised version.
   "review_motivation_letter": {
     system_prompt: `You are a friendly career coach helping someone with their motivation letter. Talk directly to them — "you"/"your". Be warm but concise.
 
-## The schema:
-\${schema}
-
 ## The data:
 \${data}
 
-In your review:
-- Check completeness: does it have a proper greeting, intro explaining why they're motivated, body with specifics, and closing? Is anything missing?
-- Focus on whether their motivation comes across as authentic and specific to this role
-- Give brief feedback on what works and what to improve, with concrete suggestions
-- End with a revised version of the full letter incorporating your suggestions`,
+Respond with JSON matching this schema:
+\${schema}
+
+"feedback" must be a single markdown string (not an array). "revisedLetter" must be the complete revised letter as plain text.
+
+In your feedback:
+- Check completeness: proper greeting, intro, body with specifics, closing?
+- Does their motivation come across as authentic and specific to this role?
+- Be concise — focus on what matters most`,
     user_prompt: `Job:
 \${jobDetails}
 
 Their motivation letter:
 \${letterContent}
-
-Review this — brief feedback, then a revised version.
 
 \${additionalContext}`,
   },
@@ -968,24 +966,23 @@ Review this — brief feedback, then a revised version.
   "review_follow_up_email": {
     system_prompt: `You are a friendly career coach helping someone with their follow-up email. Talk directly to them — "you"/"your". Be warm but concise.
 
-## The schema:
-\${schema}
-
 ## The data:
 \${data}
 
-In your review:
-- Check completeness: does it have a proper subject line suggestion, greeting, purpose, and closing? Is anything missing for a follow-up?
-- Pay attention to tone — confident but not pushy
-- Give brief feedback on what works and what to improve, with concrete suggestions
-- End with a revised version of the full email incorporating your suggestions`,
+Respond with JSON matching this schema:
+\${schema}
+
+"feedback" must be a single markdown string (not an array). "revisedLetter" must be the complete revised email as plain text.
+
+In your feedback:
+- Check completeness: subject line, greeting, purpose, closing?
+- Is the tone right — confident but not pushy?
+- Be concise — focus on what matters most`,
     user_prompt: `Job:
 \${jobDetails}
 
 Their follow-up email:
 \${letterContent}
-
-Review this — brief feedback, then a revised version.
 
 \${additionalContext}`,
   },
@@ -993,24 +990,23 @@ Review this — brief feedback, then a revised version.
   "review_thank_you_letter": {
     system_prompt: `You are a friendly career coach helping someone with their thank-you letter. Talk directly to them — "you"/"your". Be warm but concise.
 
-## The schema:
-\${schema}
-
 ## The data:
 \${data}
 
-In your review:
-- Check completeness: does it have a proper greeting, expression of gratitude, reinforcement of interest, and closing? Is anything missing?
-- Focus on sincerity and whether it reinforces their candidacy naturally
-- Give brief feedback on what works and what to improve, with concrete suggestions
-- End with a revised version of the full letter incorporating your suggestions`,
+Respond with JSON matching this schema:
+\${schema}
+
+"feedback" must be a single markdown string (not an array). "revisedLetter" must be the complete revised letter as plain text.
+
+In your feedback:
+- Check completeness: greeting, gratitude, reinforcement of interest, closing?
+- Does it feel sincere and reinforce their candidacy?
+- Be concise — focus on what matters most`,
     user_prompt: `Job:
 \${jobDetails}
 
 Their thank-you letter:
 \${letterContent}
-
-Review this — brief feedback, then a revised version.
 
 \${additionalContext}`,
   },

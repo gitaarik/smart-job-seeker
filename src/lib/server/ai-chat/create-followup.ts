@@ -33,6 +33,7 @@ export async function createFollowupAiChat(
   options?: {
     includeOriginalContext?: boolean;
     promptType?: string;
+    customVariables?: Record<string, unknown>;
   },
 ): Promise<{
   success: boolean;
@@ -140,6 +141,7 @@ export async function createFollowupAiChat(
     followupRequest: followupRequest,
     originalSystemPrompt: originalSystemPrompt,
     originalUserPrompt: originalUserPrompt,
+    ...options?.customVariables,
   };
 
   // Step 4: Call createAndGenerateAiChat (try block for async operation)

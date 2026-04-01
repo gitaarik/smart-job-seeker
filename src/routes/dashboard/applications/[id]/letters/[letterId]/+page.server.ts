@@ -8,6 +8,9 @@ export type ConversationEntry = {
   request?: string;
   response: string;
   summary?: string;
+  revisedLetter?: string;
+  /** The original letter text that was reviewed (stored from ai_chat context) */
+  originalLetter?: string;
   date: Date | null;
 };
 
@@ -25,6 +28,22 @@ function parseLetterResponse(response: string): { letter: string; summary?: stri
     // Not JSON, use raw response
   }
   return { letter: response };
+}
+
+/** Parse a structured review response ({ feedback, revisedLetter }) */
+function parseReviewResponse(response: string): { feedback: string; revisedLetter?: string } {
+  try {
+    const parsed = JSON.parse(response);
+    if (parsed && typeof parsed.feedback === "string") {
+      return {
+        feedback: parsed.feedback,
+        revisedLetter: typeof parsed.revisedLetter === "string" ? parsed.revisedLetter : undefined,
+      };
+    }
+  } catch {
+    // Not JSON, use raw response as feedback
+  }
+  return { feedback: response };
 }
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -85,9 +104,12 @@ export const load: PageServerLoad = async ({ parent, params }) => {
         if (chat.response) {
           const mode = (ctx.generationMode as string) || (ctx.letterContent ? "review" : "generate");
           if (mode === "review") {
+            const { feedback, revisedLetter } = parseReviewResponse(chat.response);
             conversation.push({
               type: "review",
-              response: chat.response,
+              response: feedback,
+              revisedLetter,
+              originalLetter: (ctx.letterContent as string) || undefined,
               date: chat.date_created,
             });
           } else if (mode === "advice") {
@@ -108,7 +130,8 @@ export const load: PageServerLoad = async ({ parent, params }) => {
       } else {
         // Followup: has a followupRequest in context
         const request = (ctx.followupRequest as string) || undefined;
-        const isReview = request?.toLowerCase().includes("review my changes");
+        const isReview = (ctx.generationMode as string) === "review"
+          || request?.toLowerCase().includes("review my changes");
         if (chat.response) {
           if (!isReview) {
             // Feedback mode: parse letter and changes summary
@@ -121,10 +144,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
               date: chat.date_created,
             });
           } else {
+            const { feedback, revisedLetter } = parseReviewResponse(chat.response);
             conversation.push({
               type: "review",
               request,
-              response: chat.response,
+              response: feedback,
+              revisedLetter,
+              originalLetter: (ctx.letterContent as string) || undefined,
               date: chat.date_created,
             });
           }
