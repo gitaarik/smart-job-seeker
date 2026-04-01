@@ -274,20 +274,20 @@ export const writeLetterSchema = z.preprocess(normalizeLetterKey, z.object({
 
 /**
  * Schema for letter followup prompts (feedback-based revisions)
- * Returns the revised letter plus a short summary of changes.
+ * Returns the revised letter plus brief feedback on the user's version.
  */
 export const followupLetterSchema = z.preprocess(normalizeLetterKey, z.object({
-  letter: z.string().describe("The complete revised letter text, ready to use. No preamble or commentary."),
-  summary: z.string().describe("A brief 1-2 sentence summary of what was changed and why."),
+  letter: z.string().nullable().describe("The complete revised letter text, ready to use. Include ONLY when substantive changes are needed. Set to null when the letter is good and only minor tweaks are needed. No preamble or commentary."),
+  feedback: z.string().describe("Brief, friendly feedback on the user's current letter — what works well, what you improved, and any tips. 2-3 sentences max."),
 }));
 
 /**
  * Schema for letter review prompts
- * Returns feedback (markdown) and a revised version of the letter.
+ * Returns feedback (markdown) and optionally a revised version of the letter.
  */
 export const reviewLetterSchema = z.object({
   feedback: z.string().describe("A single markdown string with concise, friendly feedback. What works, what to improve, with specific suggestions. NOT an array — one cohesive markdown text."),
-  revisedLetter: z.string().describe("The complete revised letter text incorporating all suggestions. Plain text, ready to use as-is. No markdown formatting, no preamble."),
+  revisedLetter: z.string().nullable().describe("The complete revised letter text incorporating suggestions. Include ONLY when substantive changes are needed. Set to null when the letter is good and feedback is minor (e.g. small tweaks the user can make themselves). Plain text, ready to use as-is. No markdown formatting, no preamble."),
 });
 
 /**

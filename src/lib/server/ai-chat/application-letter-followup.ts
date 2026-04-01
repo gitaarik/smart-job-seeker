@@ -23,23 +23,23 @@ const LETTER_TYPE_TO_REVIEW_PROMPT: Record<string, string> = {
 
 /**
  * Parse a structured JSON letter response.
- * Expects { letter: string, summary?: string } from structured output.
+ * Expects { letter: string, feedback?: string } from structured output.
  * Falls back to treating the whole response as the letter if not JSON.
  */
-function parseLetterResponse(response: string | null): { letter: string | null; summary: string | null } {
-  if (!response) return { letter: null, summary: null };
+function parseLetterResponse(response: string | null): { letter: string | null; feedback: string | null } {
+  if (!response) return { letter: null, feedback: null };
   try {
     const parsed = JSON.parse(response);
-    if (parsed && typeof parsed.letter === "string") {
+    if (parsed && (typeof parsed.letter === "string" || typeof parsed.feedback === "string")) {
       return {
-        letter: parsed.letter,
-        summary: typeof parsed.summary === "string" ? parsed.summary : null,
+        letter: typeof parsed.letter === "string" ? parsed.letter : null,
+        feedback: typeof parsed.feedback === "string" ? parsed.feedback : null,
       };
     }
   } catch {
     // Not JSON, use raw response
   }
-  return { letter: response, summary: null };
+  return { letter: response, feedback: null };
 }
 
 /** Format job data as readable text for prompts */
@@ -85,19 +85,27 @@ export async function createApplicationLetterFollowup(
       const job = letterRecord.applications?.jobs;
       const jobDetailsText = job ? formatJobDetails(job) : "";
 
+      // Get the latest letter content: check letter_versions first, fall back to application_letters.content
+      const latestVersion = await db.letter_versions.findFirst({
+        where: { letter: letterId, content: { not: null } },
+        orderBy: { id: "desc" },
+        select: { content: true },
+      });
+      const currentLetterContent = latestVersion?.content || letterRecord.content || "";
+
       if (mode === "review") {
         promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] || undefined;
         extraVariables = {
           generationMode: "review",
-          letterContent: letterRecord.content || "",
+          letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
           additionalContext: "",
         };
       } else {
-        // followup_letter — new slimmed-down prompt needs job + letter directly
+        // followup_letter — needs job + latest letter directly
         promptType = "followup_letter";
         extraVariables = {
-          letterContent: letterRecord.content || "",
+          letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
         };
       }
@@ -119,17 +127,16 @@ export async function createApplicationLetterFollowup(
         select: { id: true, ai_chat: true },
       }),
     updateEntity: async (id, aiChatId, aiChatResponse) => {
-      // Parse structured response (letter + summary)
-      const { letter, summary } = updateContent
+      // Parse structured response (letter + feedback)
+      const { letter, feedback: revisionFeedback } = updateContent
         ? parseLetterResponse(aiChatResponse)
-        : { letter: aiChatResponse, summary: null };
+        : { letter: aiChatResponse, feedback: null };
 
       await db.application_letters.update({
         where: { id },
         data: {
           ai_chat: aiChatId,
           ai_chat_response: aiChatResponse,
-          ...(updateContent ? { content: letter } : {}),
         },
       });
 
@@ -166,7 +173,7 @@ export async function createApplicationLetterFollowup(
             content: letter,
             source: "ai_revision",
             ai_chat: aiChatId,
-            ai_feedback: summary,
+            ai_feedback: revisionFeedback,
             user_request: followupRequest,
           },
         });

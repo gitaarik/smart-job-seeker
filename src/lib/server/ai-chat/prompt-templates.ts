@@ -650,8 +650,7 @@ Return JSON with:
 \${letterContent}
 
 ## Rules:
-- Output the COMPLETE revised letter — no preamble or commentary
-- Include a brief 1-2 sentence summary of what you changed and why
+- Respond with JSON containing "feedback" (brief, friendly feedback on the user's current letter: what works well, what you improved, and any tips — 2-3 sentences) and "letter" (the complete revised letter, or null if only minor tweaks are needed)
 - When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences`,
     user_prompt: `\${followupRequest}`,
   },
@@ -868,7 +867,7 @@ List the key points to include in a thank-you letter and how to reinforce their 
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text, incorporating your suggestions
+- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good and only minor tweaks are needed that the user can do themselves
 
 In your feedback:
 - Check completeness: proper greeting, intro, body, closing? Anything missing?
@@ -894,7 +893,7 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text, incorporating your suggestions
+- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good and only minor tweaks are needed that the user can do themselves
 
 In your feedback:
 - Check completeness: proper greeting, intro, body with specifics, closing?
@@ -919,7 +918,7 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised email as plain text, incorporating your suggestions
+- "revisedLetter": the complete revised email as plain text incorporating your suggestions, OR null if the email is already good and only minor tweaks are needed that the user can do themselves
 
 In your feedback:
 - Check completeness: subject line, greeting, purpose, closing?
@@ -944,7 +943,7 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text, incorporating your suggestions
+- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good and only minor tweaks are needed that the user can do themselves
 
 In your feedback:
 - Check completeness: greeting, gratitude, reinforcement of interest, closing?

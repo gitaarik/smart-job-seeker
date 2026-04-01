@@ -52,7 +52,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
       where: { id: letterId },
       data: {
         ai_chat: lastVersion?.ai_chat ?? null,
-        content: lastVersion?.content ?? letter.content,
       },
     });
   }
