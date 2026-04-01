@@ -119,10 +119,10 @@ export async function createApplicationLetterFollowup(
         select: { id: true, ai_chat: true },
       }),
     updateEntity: async (id, aiChatId, aiChatResponse) => {
-      // For feedback mode, parse out the letter from any summary
-      const { letter } = updateContent
+      // Parse structured response (letter + summary)
+      const { letter, summary } = updateContent
         ? parseLetterResponse(aiChatResponse)
-        : { letter: aiChatResponse };
+        : { letter: aiChatResponse, summary: null };
 
       await db.application_letters.update({
         where: { id },
@@ -166,6 +166,7 @@ export async function createApplicationLetterFollowup(
             content: letter,
             source: "ai_revision",
             ai_chat: aiChatId,
+            ai_feedback: summary,
             user_request: followupRequest,
           },
         });

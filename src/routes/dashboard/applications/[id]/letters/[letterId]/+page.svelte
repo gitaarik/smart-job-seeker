@@ -244,6 +244,61 @@
     {@const iconColor = userEntry ? "text-blue-600" : "text-purple-600"}
     {@const detailsBg = userEntry ? "bg-blue-500/10" : "bg-purple-500/10"}
     {@const detailsHoverBg = userEntry ? "hover:bg-blue-500/15" : "hover:bg-purple-500/15"}
+    {#if entry.userRequest}
+      <div class="ml-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
+        <div class="flex items-center justify-between mb-0.5">
+          <div class="flex items-center gap-1.5">
+            <div class="w-4 h-4 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+              <FontAwesomeIcon icon={faPencil} class="w-2 h-2 text-blue-600" />
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)]">Your feedback</p>
+          </div>
+          {#if editingFeedbackIndex !== entryIndex && !generating}
+            <button
+              type="button"
+              onclick={() => { editingFeedbackIndex = entryIndex; editingFeedbackText = entry.userRequest!; }}
+              class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-2 h-2" />
+              Edit
+            </button>
+          {/if}
+        </div>
+        {#if editingFeedbackIndex === entryIndex}
+          <textarea
+            bind:value={editingFeedbackText}
+            rows={3}
+            disabled={generating}
+            class="w-full px-2 py-1.5 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50 mt-1"
+          ></textarea>
+          <div class="flex items-center gap-1.5 mt-1.5">
+            <button
+              type="button"
+              onclick={() => sendFollowup(editingFeedbackText, true, true, undefined, entry.versionId)}
+              disabled={generating || !editingFeedbackText.trim()}
+              class="px-2 py-1 text-xs bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              {#if generating && generatingMode === "followup"}
+                <Spinner size="w-2.5 h-2.5" />
+                Resending...
+              {:else}
+                Resend
+              {/if}
+            </button>
+            <button
+              type="button"
+              onclick={() => { editingFeedbackIndex = null; }}
+              disabled={generating}
+              class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        {:else}
+          <p class="text-sm text-[var(--dash-text)]">{entry.userRequest}</p>
+        {/if}
+      </div>
+    {/if}
     <div class="{userEntry ? 'ml-6' : ''} rounded-lg border {borderColor} {bgColor} p-3">
       <div class="flex items-center gap-2 mb-1">
         <div class="w-5 h-5 rounded-full {iconBg} flex items-center justify-center flex-shrink-0">
@@ -256,61 +311,6 @@
           {/if}
         </p>
       </div>
-      {#if entry.userRequest}
-        <div class="ml-6 mb-2 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
-          <div class="flex items-center justify-between mb-0.5">
-            <div class="flex items-center gap-1.5">
-              <div class="w-4 h-4 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                <FontAwesomeIcon icon={faPencil} class="w-2 h-2 text-blue-600" />
-              </div>
-              <p class="text-xs text-[var(--dash-text-muted)]">Your feedback</p>
-            </div>
-            {#if editingFeedbackIndex !== entryIndex && !generating}
-              <button
-                type="button"
-                onclick={() => { editingFeedbackIndex = entryIndex; editingFeedbackText = entry.userRequest!; }}
-                class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1"
-              >
-                <FontAwesomeIcon icon={faPencil} class="w-2 h-2" />
-                Edit
-              </button>
-            {/if}
-          </div>
-          {#if editingFeedbackIndex === entryIndex}
-            <textarea
-              bind:value={editingFeedbackText}
-              rows={3}
-              disabled={generating}
-              class="w-full px-2 py-1.5 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50 mt-1"
-            ></textarea>
-            <div class="flex items-center gap-1.5 mt-1.5">
-              <button
-                type="button"
-                onclick={() => sendFollowup(editingFeedbackText, true, true, undefined, entry.versionId)}
-                disabled={generating || !editingFeedbackText.trim()}
-                class="px-2 py-1 text-xs bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-              >
-                {#if generating && generatingMode === "followup"}
-                  <Spinner size="w-2.5 h-2.5" />
-                  Resending...
-                {:else}
-                  Resend
-                {/if}
-              </button>
-              <button
-                type="button"
-                onclick={() => { editingFeedbackIndex = null; }}
-                disabled={generating}
-                class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          {:else}
-            <p class="text-sm text-[var(--dash-text)]">{entry.userRequest}</p>
-          {/if}
-        </div>
-      {/if}
       {#if entry.aiFeedback}
         <p class="text-sm text-[var(--dash-text)] mb-1">{entry.aiFeedback}</p>
       {/if}
