@@ -645,13 +645,18 @@ Return JSON with:
 
 \${jobDetails}
 
+## Previous Feedback:
+
+\${conversationHistory}
+
 ## Current Letter:
 
 \${letterContent}
 
 ## Rules:
 - Respond with JSON containing "feedback" (brief, friendly feedback on the user's current letter: what works well, what you improved, and any tips — 2-3 sentences) and "letter" (the complete revised letter, or null if only minor tweaks are needed)
-- When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences`,
+- When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences
+- Consider the previous feedback history to avoid repeating suggestions and to maintain continuity`,
     user_prompt: `\${followupRequest}`,
   },
 

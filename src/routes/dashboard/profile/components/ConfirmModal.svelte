@@ -82,7 +82,7 @@
           <h3 id="modal-title" class="text-lg font-semibold text-[var(--dash-text)] mb-2">
             {title}
           </h3>
-          <p class="text-[var(--dash-text-secondary)] text-sm">{message}</p>
+          <p class="text-[var(--dash-text-secondary)] text-sm whitespace-pre-line">{message}</p>
         </div>
       </div>
 

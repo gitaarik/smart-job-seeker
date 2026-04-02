@@ -278,7 +278,7 @@ export const writeLetterSchema = z.preprocess(normalizeLetterKey, z.object({
  */
 export const followupLetterSchema = z.preprocess(normalizeLetterKey, z.object({
   letter: z.string().nullable().describe("The complete revised letter text, ready to use. Include ONLY when substantive changes are needed. Set to null when the letter is good and only minor tweaks are needed. No preamble or commentary."),
-  feedback: z.string().describe("Brief, friendly feedback on the user's current letter — what works well, what you improved, and any tips. 2-3 sentences max."),
+  feedback: z.string().optional().describe("Brief, friendly feedback on the user's current letter — what works well, what you improved, and any tips. 2-3 sentences max."),
 }));
 
 /**

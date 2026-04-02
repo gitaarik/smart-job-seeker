@@ -42,6 +42,30 @@ function parseLetterResponse(response: string | null): { letter: string | null; 
   return { letter: response, feedback: null };
 }
 
+/** Build a condensed conversation history from previous letter versions */
+async function buildConversationHistory(letterId: number): Promise<string> {
+  const versions = await db.letter_versions.findMany({
+    where: {
+      letter: letterId,
+      OR: [
+        { user_request: { not: null } },
+        { ai_feedback: { not: null } },
+      ],
+    },
+    orderBy: { id: "asc" },
+    select: { user_request: true, ai_feedback: true },
+  });
+
+  if (versions.length === 0) return "";
+
+  const lines: string[] = [];
+  for (const v of versions) {
+    if (v.user_request) lines.push(`**User:** ${v.user_request}`);
+    if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
+  }
+  return lines.join("\n\n");
+}
+
 /** Format job data as readable text for prompts */
 function formatJobDetails(job: { title: string | null; job_description: string | null; company_description: string | null; job_poster: string | null }): string {
   const lines: string[] = [`**Position:** ${job.title || "Not specified"}`];
@@ -94,19 +118,24 @@ export async function createApplicationLetterFollowup(
       const currentLetterContent = latestVersion?.content || letterRecord.content || "";
 
       if (mode === "review") {
+        const conversationHistory = await buildConversationHistory(letterId);
         promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] || undefined;
         extraVariables = {
           generationMode: "review",
           letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
-          additionalContext: "",
+          additionalContext: conversationHistory
+            ? `## Previous conversation context:\n\nThe user has been iterating on this letter with AI assistance. Consider this history when reviewing — respect the direction they've taken and avoid re-suggesting things that were intentionally changed or omitted during the conversation.\n\n${conversationHistory}`
+            : "",
         };
       } else {
-        // followup_letter — needs job + latest letter directly
+        // followup_letter — needs job + latest letter + conversation history
+        const conversationHistory = await buildConversationHistory(letterId);
         promptType = "followup_letter";
         extraVariables = {
           letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
+          conversationHistory,
         };
       }
     }

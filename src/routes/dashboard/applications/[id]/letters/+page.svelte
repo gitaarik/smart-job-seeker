@@ -243,50 +243,47 @@
   <!-- Add Letter Form -->
   {#if showAddLetter}
     <Card padding="md">
-      <form method="POST" action="?/createLetter" use:enhance={handleAddSubmit}>
-        <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Letter</h3>
-        <input type="hidden" name="letter_type" value={newLetterType} />
-        <div class="space-y-3">
-          <div>
-            <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Letter Type</p>
-            <div class="flex flex-wrap gap-2">
-              {#each Object.entries(letterTypes) as [value, label]}
-                <button
-                  type="button"
-                  onclick={() => (newLetterType = value)}
-                  class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {newLetterType === value
-                    ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
-                    : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
-                >
-                  <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {newLetterType === value
-                    ? 'border-[var(--dash-primary)]'
-                    : 'border-[var(--dash-border)]'}">
-                    {#if newLetterType === value}
-                      <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
-                    {/if}
-                  </span>
-                  {label}
-                </button>
-              {/each}
-            </div>
-          </div>
-          <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              onclick={() => (showAddLetter = false)}
-              class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-            >
-              Add Letter
-            </button>
+      <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Letter</h3>
+      <div class="space-y-3">
+        <div>
+          <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Letter Type</p>
+          <div class="flex flex-wrap gap-2">
+            {#each Object.entries(letterTypes) as [value, label]}
+              <button
+                type="button"
+                onclick={() => (newLetterType = value)}
+                class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {newLetterType === value
+                  ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+              >
+                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {newLetterType === value
+                  ? 'border-[var(--dash-primary)]'
+                  : 'border-[var(--dash-border)]'}">
+                  {#if newLetterType === value}
+                    <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                  {/if}
+                </span>
+                {label}
+              </button>
+            {/each}
           </div>
         </div>
-      </form>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            onclick={() => (showAddLetter = false)}
+            class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+          >
+            Cancel
+          </button>
+          <a
+            href="/dashboard/applications/{app.id}/letters/new?type={newLetterType}"
+            class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+          >
+            Add Letter
+          </a>
+        </div>
+      </div>
     </Card>
   {/if}
 

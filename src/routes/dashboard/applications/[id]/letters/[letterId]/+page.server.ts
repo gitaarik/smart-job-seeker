@@ -21,9 +21,28 @@ export type ConversationEntry = {
   date: Date | null;
 };
 
-export const load: PageServerLoad = async ({ parent, params }) => {
+export const load: PageServerLoad = async ({ parent, params, url }) => {
   const layoutData = await parent();
   const application = layoutData.application;
+
+  // Handle "new" letter (not yet created in DB)
+  if (params.letterId === "new") {
+    const letterType = url.searchParams.get("type") || "cover_letter";
+    return {
+      isNew: true,
+      letter: {
+        id: 0,
+        letter_type: letterType,
+        status: "draft",
+        content: null,
+        ai_chat: null,
+        ai_chat_response: null,
+        date_created: new Date(),
+        date_updated: null,
+      },
+      conversation: [],
+    };
+  }
 
   const letterId = parseInt(params.letterId);
   if (isNaN(letterId)) {
@@ -61,10 +80,56 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     date: v.date_created,
   }));
 
-  return { letter, conversation };
+  return { isNew: false, letter, conversation };
 };
 
 export const actions: Actions = {
+  create: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const existing = await db.applications.findFirst({
+      where: { id: appId, profile: profileId },
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    const formData = await request.formData();
+    const letterType = formData.get("letter_type") as string;
+    const content = formData.get("content") as string | null;
+    const source = (formData.get("source") as string) || "manual_edit";
+
+    if (!letterType) return fail(400, { error: "Letter type is required" });
+
+    const newLetter = await db.application_letters.create({
+      data: {
+        application: appId,
+        letter_type: letterType,
+        content: content || null,
+        status: "draft",
+        date_created: new Date(),
+      },
+    });
+
+    // If content was provided, also create a version
+    if (content) {
+      await db.letter_versions.create({
+        data: {
+          letter: newLetter.id,
+          content,
+          source,
+        },
+      });
+    }
+
+    redirect(303, `/dashboard/applications/${appId}/letters/${newLetter.id}`);
+  },
+
   update: async ({ request, locals, cookies, params }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });
@@ -92,6 +157,20 @@ export const actions: Actions = {
     const content = formData.get("content") as string;
     const status = formData.get("status") as string;
     const source = (formData.get("source") as string) || "manual_edit";
+    const deleteAfterVersionId = formData.get("deleteAfterVersionId");
+
+    // If saving a previous version, delete all versions after it first
+    if (deleteAfterVersionId) {
+      const afterId = parseInt(deleteAfterVersionId as string);
+      if (!isNaN(afterId)) {
+        await db.letter_versions.deleteMany({
+          where: {
+            letter: letterId,
+            id: { gt: afterId },
+          },
+        });
+      }
+    }
 
     // Only record a version if content actually changed
     const contentChanged = (content || null) !== (letter.content || null);

@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { fail, redirect } from "@sveltejs/kit";
+import { fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../../profile/utils";
 
@@ -8,40 +8,6 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-  createLetter: async ({ request, locals, cookies, params }) => {
-    const user = locals.user;
-    if (!user) return fail(401, { error: "Not authenticated" });
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) return fail(400, { error: "No profile selected" });
-
-    const appId = parseInt(params.id);
-    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
-
-    const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
-    });
-    if (!existing) return fail(404, { error: "Application not found" });
-
-    const formData = await request.formData();
-    const letter_type = formData.get("letter_type") as string;
-
-    if (!letter_type) {
-      return fail(400, { error: "Letter type is required" });
-    }
-
-    const newLetter = await db.application_letters.create({
-      data: {
-        application: appId,
-        letter_type,
-        status: "draft",
-        date_created: new Date(),
-      },
-    });
-
-    redirect(303, `/dashboard/applications/${appId}/letters/${newLetter.id}`);
-  },
-
   createQuestion: async ({ request, locals, cookies, params }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });

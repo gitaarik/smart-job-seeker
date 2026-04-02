@@ -2,14 +2,16 @@
   import type { ActionData, PageData } from "./$types";
   import type { ConversationEntry } from "./+page.server";
   import { enhance } from "$app/forms";
-  import { invalidateAll } from "$app/navigation";
+  import { afterNavigate, goto, invalidateAll } from "$app/navigation";
+  import { tick } from "svelte";
   import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
     faCheck,
-    faChevronRight,
     faComments,
+    faEye,
+    faEyeSlash,
     faPencil,
     faRobot,
     faTrash,
@@ -22,10 +24,8 @@
 
   let letter = $derived(data.letter);
   let conversation = $derived(data.conversation);
+  let isNew = $derived(data.isNew);
   let appId = $derived($page.params.id);
-  let showHistory = $state(false);
-  // When true, expand penultimate version too (set after actions, not on fresh page load)
-  let expandPenultimate = $state(false);
 
   // Compute version numbers: only entries with content get a version number
   let entryVersionNums = $derived.by(() => {
@@ -65,36 +65,207 @@
   let editingFeedbackIndex = $state<number | null>(null);
   let editingFeedbackText = $state("");
 
+  // Scroll target
+  let lastEntryEl = $state<HTMLElement | null>(null);
+
   // Delete
   let showDeleteConfirm = $state(false);
 
-  function startEdit(content?: string, index?: number) {
+  // Confirm dialog for saving a previous version (will remove later entries)
+  let showOverwriteConfirm = $state(false);
+  let pendingOverwriteForm = $state<HTMLFormElement | null>(null);
+
+  // Diff view state: manually toggled on/off overrides auto-show
+  let diffShown = $state(new Set<number>());
+  let diffHidden = $state(new Set<number>());
+
+  type DiffSegment = { type: "same" | "added" | "removed"; text: string };
+
+  // Scroll to last entry on page load / navigation
+  afterNavigate(async () => {
+    await tick();
+    lastEntryEl?.scrollIntoView({ block: "start" });
+  });
+
+  function computeDiff(oldText: string, newText: string): DiffSegment[] {
+    const oldWords = oldText.split(/(\s+)/);
+    const newWords = newText.split(/(\s+)/);
+    const m = oldWords.length, n = newWords.length;
+
+    // LCS via DP (optimized for typical letter sizes)
+    const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = oldWords[i - 1] === newWords[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+
+    // Backtrack to build diff
+    const segments: DiffSegment[] = [];
+    let i = m, j = n;
+    const raw: { type: DiffSegment["type"]; text: string }[] = [];
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && oldWords[i - 1] === newWords[j - 1]) {
+        raw.push({ type: "same", text: oldWords[i - 1] });
+        i--; j--;
+      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        raw.push({ type: "added", text: newWords[j - 1] });
+        j--;
+      } else {
+        raw.push({ type: "removed", text: oldWords[i - 1] });
+        i--;
+      }
+    }
+    raw.reverse();
+
+    // Merge consecutive segments of the same type
+    for (const seg of raw) {
+      if (segments.length > 0 && segments[segments.length - 1].type === seg.type) {
+        segments[segments.length - 1].text += seg.text;
+      } else {
+        segments.push({ ...seg });
+      }
+    }
+    return segments;
+  }
+
+  function getPreviousContent(entryIndex: number): string | null {
+    for (let i = entryIndex - 1; i >= 0; i--) {
+      if (conversation[i].content) return conversation[i].content!;
+    }
+    return null;
+  }
+
+  function isSmallDiff(segments: DiffSegment[]): boolean {
+    let changedChars = 0;
+    let totalChars = 0;
+    for (const seg of segments) {
+      totalChars += seg.text.length;
+      if (seg.type !== "same") changedChars += seg.text.length;
+    }
+    return totalChars > 0 && changedChars / totalChars < 0.3;
+  }
+
+  function shouldAutoShowDiff(entryIndex: number): boolean {
+    const prev = getPreviousContent(entryIndex);
+    if (!prev) return false;
+    const entry = conversation[entryIndex];
+    if (!entry.content) return false;
+    const segments = computeDiff(prev, entry.content);
+    return isSmallDiff(segments);
+  }
+
+  function toggleDiff(entryIndex: number, currentlyShowing: boolean) {
+    if (currentlyShowing) {
+      diffShown.delete(entryIndex);
+      diffHidden.add(entryIndex);
+    } else {
+      diffHidden.delete(entryIndex);
+      diffShown.add(entryIndex);
+    }
+    diffShown = new Set(diffShown);
+    diffHidden = new Set(diffHidden);
+  }
+
+  async function startEdit(content?: string, index?: number) {
     editContent = content ?? letter.content ?? "";
     editStatus = letter.status || "draft";
     editingIndex = index ?? -1;
+    await tick();
+    const textarea = document.querySelector<HTMLTextAreaElement>('textarea[name="content"]');
+    if (textarea) {
+      const rect = textarea.getBoundingClientRect();
+      if (rect.top < 0 || rect.bottom > window.innerHeight) {
+        textarea.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
   }
 
   function cancelEdit() {
     editingIndex = null;
   }
 
+  function isEditingPreviousVersion(): boolean {
+    if (editingIndex === null || editingIndex === -1) return false;
+    // Check if there are entries with content after this one
+    for (let i = editingIndex + 1; i < conversation.length; i++) {
+      if (conversation[i].content || conversation[i].aiFeedback || conversation[i].userRequest) return true;
+    }
+    return false;
+  }
+
+  function handleSaveClick(formEl: HTMLFormElement) {
+    if (isEditingPreviousVersion()) {
+      pendingOverwriteForm = formEl;
+      showOverwriteConfirm = true;
+    } else {
+      formEl.requestSubmit();
+    }
+  }
+
+  function confirmOverwrite() {
+    showOverwriteConfirm = false;
+    if (pendingOverwriteForm) {
+      // Add the versionId to delete after
+      const entry = conversation[editingIndex!];
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "deleteAfterVersionId";
+      input.value = String(entry.versionId);
+      pendingOverwriteForm.appendChild(input);
+      pendingOverwriteForm.requestSubmit();
+      pendingOverwriteForm = null;
+    }
+  }
+
   function handleSave() {
-    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
+    return async ({ result, update }: { result: { type: string; location?: string }; update: () => Promise<void> }) => {
+      if (result.type === "redirect" && result.location) {
+        await goto(result.location, { replaceState: true });
+        return;
+      }
       await update();
       if (result.type === "success") {
         editingIndex = null;
-        expandPenultimate = true;
+        await tick();
+        lastEntryEl?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     };
   }
 
+  /** Create the DB record for a new letter and navigate to the real URL. Returns the new letter ID. */
+  async function ensureLetterExists(): Promise<number> {
+    if (!isNew) return letter.id;
+
+    const response = await fetch("/api/ai/letters/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        applicationId: parseInt(appId),
+        letterType: letter.letter_type,
+      }),
+    });
+    const result = await response.json();
+    if (!result.success || !result.letterId) {
+      throw new Error(result.message || "Failed to create letter");
+    }
+
+    // Navigate to the real URL so subsequent actions and page data work
+    await goto(`/dashboard/applications/${appId}/letters/${result.letterId}`, { replaceState: true });
+    return result.letterId;
+  }
+
   async function reviewVersion(content: string) {
-    // Save the content first so the review prompt sees it
+    // Create record if new, then save content so the review prompt sees it
+    const letterId = await ensureLetterExists();
+
     const formData = new FormData();
     formData.set("content", content);
     formData.set("status", letter.status || "draft");
     formData.set("source", "manual_edit");
-    await fetch(`?/update`, { method: "POST", body: formData });
+    await fetch(`/dashboard/applications/${appId}/letters/${letterId}?/update`, { method: "POST", body: formData });
     await invalidateAll();
 
     if (letter.ai_chat) {
@@ -115,7 +286,8 @@
     aiError = null;
 
     try {
-      const response = await fetch(`/api/ai/letters/${letter.id}/generate`, {
+      const letterId = await ensureLetterExists();
+      const response = await fetch(`/api/ai/letters/${letterId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode }),
@@ -126,7 +298,9 @@
         return;
       }
       await invalidateAll();
-      expandPenultimate = true;
+
+      await tick();
+      lastEntryEl?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch {
       aiError = "Network error. Please try again.";
     } finally {
@@ -143,7 +317,8 @@
     aiError = null;
 
     try {
-      const response = await fetch(`/api/ai/letters/${letter.id}/followup`, {
+      const letterId = await ensureLetterExists();
+      const response = await fetch(`/api/ai/letters/${letterId}/followup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,7 +337,9 @@
       feedbackText = "";
       editingFeedbackIndex = null;
       await invalidateAll();
-      expandPenultimate = true;
+
+      await tick();
+      lastEntryEl?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch {
       aiError = "Network error. Please try again.";
     } finally {
@@ -228,6 +405,16 @@
         {/if}
       </div>
     </div>
+    {#if !isNew}
+      <button
+        type="button"
+        onclick={() => (showDeleteConfirm = true)}
+        class="px-3 py-1.5 text-xs border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-colors flex items-center gap-1.5"
+      >
+        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+        Delete
+      </button>
+    {/if}
   </div>
 
   {#if form?.error || aiError}
@@ -236,19 +423,19 @@
     </div>
   {/if}
 
-  {#snippet conversationEntry(entry: ConversationEntry, versionNum: number, isLast: boolean, isPenultimate: boolean, entryIndex: number)}
+  {#snippet conversationEntry(entry: ConversationEntry, versionNum: number, isLast: boolean, entryIndex: number)}
     {@const userEntry = isUserEntry(entry)}
     {@const borderColor = userEntry ? "border-blue-500/20" : "border-purple-500/20"}
-    {@const bgColor = userEntry ? "bg-blue-500/5" : "bg-purple-500/5"}
-    {@const iconBg = userEntry ? "bg-blue-500/10" : "bg-purple-500/10"}
+    {@const bgColor = userEntry ? "bg-blue-500/10" : "bg-purple-500/10"}
+    {@const versionBgColor = userEntry ? "bg-blue-500/15" : "bg-purple-500/15"}
+    {@const iconBg = userEntry ? "bg-blue-500/15" : "bg-purple-500/15"}
     {@const iconColor = userEntry ? "text-blue-600" : "text-purple-600"}
-    {@const detailsBg = userEntry ? "bg-blue-500/10" : "bg-purple-500/10"}
-    {@const detailsHoverBg = userEntry ? "hover:bg-blue-500/15" : "hover:bg-purple-500/15"}
+    <div class="space-y-3">
     {#if entry.userRequest}
-      <div class="ml-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
+      <div class="ml-6 rounded-lg border border-blue-500/20 bg-blue-500/10 p-2">
         <div class="flex items-center justify-between mb-0.5">
           <div class="flex items-center gap-1.5">
-            <div class="w-4 h-4 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+            <div class="w-4 h-4 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0">
               <FontAwesomeIcon icon={faPencil} class="w-2 h-2 text-blue-600" />
             </div>
             <p class="text-xs text-[var(--dash-text-muted)]">Your feedback</p>
@@ -295,42 +482,106 @@
             </button>
           </div>
         {:else}
-          <p class="text-sm text-[var(--dash-text)]">{entry.userRequest}</p>
+          <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{entry.userRequest}</p>
         {/if}
       </div>
     {/if}
-    <div class="{userEntry ? 'ml-6' : ''} rounded-lg border {borderColor} {bgColor} p-3">
-      <div class="flex items-center gap-2 mb-1">
-        <div class="w-5 h-5 rounded-full {iconBg} flex items-center justify-center flex-shrink-0">
-          <FontAwesomeIcon icon={userEntry ? faPencil : faRobot} class="w-2.5 h-2.5 {iconColor}" />
+    <!-- AI feedback bubble (separate from version) -->
+    {#if !userEntry && entry.aiFeedback}
+      <div class="rounded-lg border {borderColor} {bgColor} p-3">
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-5 h-5 rounded-full {iconBg} flex items-center justify-center flex-shrink-0">
+            <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5 {iconColor}" />
+          </div>
+          <p class="text-xs text-[var(--dash-text-muted)]">
+            {entryLabel(entry)}
+            {#if entry.date}
+              <span class="ml-1">&middot; {formatDate(entry.date)}</span>
+            {/if}
+          </p>
         </div>
-        <p class="text-xs text-[var(--dash-text-muted)]">
-          {entryLabel(entry)}
-          {#if entry.date}
-            <span class="ml-1">&middot; {formatDate(entry.date)}</span>
-          {/if}
-        </p>
-      </div>
-      {#if entry.aiFeedback}
         <p class="text-sm text-[var(--dash-text)] mb-1">{entry.aiFeedback}</p>
-      {/if}
-      {#if entry.content}
-        <details class="mt-4 rounded {detailsBg} group/v" open={isLast || (isPenultimate && expandPenultimate) || editingIndex === entryIndex}>
-          <summary class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)] {detailsHoverBg} hover:text-[var(--dash-primary)] cursor-pointer transition-colors rounded">
-            <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5 transition-transform group-open/v:rotate-90" />
-            Version {versionNum}{#if entry.type === "ai_revision" || entry.type === "ai_review" || entry.type === "ai_generation"} <span class="normal-case font-normal">(AI revised)</span>{/if}
-          </summary>
-          <div class="px-3 pt-2 pb-3">
-            {#if editingIndex === entryIndex}
-              <form method="POST" action="?/update" use:enhance={handleSave}>
-                <textarea
-                  name="content"
-                  bind:value={editContent}
-                  rows={14}
-                  class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-                ></textarea>
-                <input type="hidden" name="status" value={editStatus} />
-                <div class="flex items-center gap-1.5 mt-2">
+        {#if !entry.content && !isEditing}
+          <button
+            type="button"
+            onclick={() => sendFollowup("Please revise the letter based on your feedback above.", true, true)}
+            disabled={generating}
+            class="mt-1 px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            {#if generating && generatingMode === "followup"}
+              <Spinner size="w-2.5 h-2.5" />
+              Generating...
+            {:else}
+              <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
+              Generate revision from this feedback
+            {/if}
+          </button>
+        {/if}
+        <!-- Feedback input on last feedback-only entry -->
+        {#if isLast && !entry.content && !isEditing && letter.ai_chat}
+          <div class="mt-3 pt-3 border-t {borderColor} space-y-2">
+            <textarea
+              bind:value={feedbackText}
+              placeholder="Tell the AI what to change, improve, or adjust..."
+              rows={3}
+              disabled={generating}
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
+            ></textarea>
+            <div class="flex items-center justify-end">
+              <button
+                type="button"
+                onclick={() => sendFollowup(feedbackText, true, true)}
+                disabled={generating || !feedbackText.trim()}
+                class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {#if generating && generatingMode === "followup"}
+                  <Spinner size="w-3 h-3" />
+                  Generating...
+                {:else}
+                  Send feedback
+                {/if}
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
+    <!-- Version box: standalone for user edits, separate bubble for AI entries -->
+    {#if entry.content}
+      <div class="{userEntry ? 'ml-6' : ''} rounded-lg border {borderColor} {versionBgColor}">
+        <div class="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)]">
+          {#if userEntry}
+            <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5 {iconColor}" />
+          {:else}
+            <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5 {iconColor}" />
+          {/if}
+          Version {versionNum}{#if !userEntry} <span class="normal-case font-normal">(AI revised)</span>{/if}
+          {#if entry.date}
+            <span class="normal-case font-normal text-[var(--dash-text-muted)]">&middot; {formatDate(entry.date)}</span>
+          {/if}
+        </div>
+        <div class="px-3 pb-3">
+          {#if editingIndex === entryIndex}
+            {@const editingPrevious = isEditingPreviousVersion()}
+            <form method="POST" action="?/update" use:enhance={handleSave}>
+              <textarea
+                name="content"
+                bind:value={editContent}
+                rows={14}
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
+              ></textarea>
+              <input type="hidden" name="status" value={editStatus} />
+              <div class="flex items-center gap-1.5 mt-2">
+                {#if editingPrevious}
+                  <button
+                    type="button"
+                    disabled={!editContent.trim()}
+                    onclick={(e) => handleSaveClick(e.currentTarget.closest("form")!)}
+                    class="px-2 py-1 text-xs bg-amber-500/80 text-white rounded hover:bg-amber-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    Save & continue here
+                  </button>
+                {:else}
                   <button
                     type="submit"
                     disabled={!editContent.trim()}
@@ -338,108 +589,120 @@
                   >
                     Save
                   </button>
-                  <button
-                    type="button"
-                    onclick={cancelEdit}
-                    class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+                {/if}
+                <button
+                  type="button"
+                  onclick={cancelEdit}
+                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          {:else}
+            {@const hasPrevious = getPreviousContent(entryIndex) !== null}
+            {@const showingDiff = hasPrevious && (diffShown.has(entryIndex) || (!diffHidden.has(entryIndex) && shouldAutoShowDiff(entryIndex)))}
+            {#if hasPrevious && !isEditing}
+              <div class="flex justify-end mb-1">
+                <button
+                  type="button"
+                  onclick={() => toggleDiff(entryIndex, showingDiff)}
+                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+                >
+                  <FontAwesomeIcon icon={showingDiff ? faEyeSlash : faEye} class="w-2.5 h-2.5" />
+                  {showingDiff ? "Hide changes" : "Show changes"}
+                </button>
+              </div>
+            {/if}
+            {#if showingDiff}
+              {@const prevContent = getPreviousContent(entryIndex)}
+              {@const segments = computeDiff(prevContent || "", entry.content || "")}
+              <pre class="whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{#each segments as seg}{#if seg.type === "added"}<span class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">{seg.text}</span>{:else if seg.type === "removed"}<span class="bg-red-500/20 text-red-700 dark:text-red-300 line-through">{seg.text}</span>{:else}{seg.text}{/if}{/each}</pre>
             {:else}
               <pre class="whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{entry.content}</pre>
-              {#if !isEditing}
-                <div class="flex items-center gap-1.5 mt-2">
+            {/if}
+            {#if !isEditing}
+              {#if hasPrevious}
+                <div class="flex justify-end mt-2">
                   <button
                     type="button"
-                    onclick={() => startEdit(entry.content ?? undefined, entryIndex)}
+                    onclick={() => toggleDiff(entryIndex, showingDiff)}
                     class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
                   >
-                    <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
-                    Edit
+                    <FontAwesomeIcon icon={showingDiff ? faEyeSlash : faEye} class="w-2.5 h-2.5" />
+                    {showingDiff ? "Hide changes" : "Show changes"}
                   </button>
-                  {#if entry.type !== "ai_revision" && entry.type !== "ai_review" && entry.type !== "ai_generation"}
-                    <button
-                      type="button"
-                      onclick={() => reviewVersion(entry.content!)}
-                      disabled={generating}
-                      class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                    >
-                      {#if generating && generatingMode === "review"}
-                        <Spinner size="w-2.5 h-2.5" />
-                      {:else}
-                        <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
-                      {/if}
-                      AI review
-                    </button>
-                  {/if}
                 </div>
               {/if}
+              <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--dash-border)]/50">
+                <button
+                  type="button"
+                  onclick={() => startEdit(entry.content ?? undefined, entryIndex)}
+                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+                >
+                  <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
+                  Edit
+                </button>
+                {#if entry.type !== "ai_revision" && entry.type !== "ai_review" && entry.type !== "ai_generation"}
+                  <button
+                    type="button"
+                    onclick={() => reviewVersion(entry.content!)}
+                    disabled={generating}
+                    class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    {#if generating && generatingMode === "review"}
+                      <Spinner size="w-2.5 h-2.5" />
+                    {:else}
+                      <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
+                    {/if}
+                    AI review
+                  </button>
+                {/if}
+              </div>
             {/if}
-          </div>
-        </details>
-      {/if}
-      <!-- Feedback input on last entry -->
-      {#if isLast && !isEditing && letter.ai_chat}
-        <div class="mt-3 pt-3 border-t {borderColor} space-y-2">
-          <textarea
-            bind:value={feedbackText}
-            placeholder="Tell the AI what to change, improve, or adjust..."
-            rows={3}
-            disabled={generating}
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
-          ></textarea>
-          <div class="flex items-center justify-end">
-            <button
-              type="button"
-              onclick={() => sendFollowup(feedbackText, true, true)}
-              disabled={generating || !feedbackText.trim()}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-            >
-              {#if generating && generatingMode === "followup"}
-                <Spinner size="w-3 h-3" />
-                Generating...
-              {:else}
-                Send feedback
-              {/if}
-            </button>
-          </div>
+          {/if}
         </div>
-      {/if}
+      </div>
+    {/if}
+    <!-- Feedback input on last entry with content -->
+    {#if isLast && entry.content && !isEditing && letter.ai_chat}
+      <div class="mt-3 space-y-2">
+        <textarea
+          bind:value={feedbackText}
+          placeholder="Tell the AI what to change, improve, or adjust..."
+          rows={3}
+          disabled={generating}
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
+        ></textarea>
+        <div class="flex items-center justify-end">
+          <button
+            type="button"
+            onclick={() => sendFollowup(feedbackText, true, true)}
+            disabled={generating || !feedbackText.trim()}
+            class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+          >
+            {#if generating && generatingMode === "followup"}
+              <Spinner size="w-3 h-3" />
+              Generating...
+            {:else}
+              Send feedback
+            {/if}
+          </button>
+        </div>
+      </div>
+    {/if}
     </div>
   {/snippet}
 
   <!-- Timeline -->
   {#if conversation.length > 0}
-    {@const lastEntry = conversation[conversation.length - 1]}
     <div class="space-y-3">
-      {#if conversation.length <= 2}
-        <!-- Show all entries when there are only 1-2 -->
-        {#each conversation.slice(0, -1) as entry, i}
-          {@render conversationEntry(entry, entryVersionNums[i], false, i === conversation.length - 2, i)}
-        {/each}
-      {:else}
-        <!-- Collapsible history for 3+ entries -->
-        <button
-          type="button"
-          onclick={() => { showHistory = !showHistory; }}
-          class="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg border border-[var(--dash-border)] text-xs font-medium text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-primary)] transition-colors"
-        >
-          <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5 transition-transform {showHistory ? 'rotate-90' : ''}" />
-          {showHistory ? "Hide" : "Show"} full history ({conversation.length} entries)
-        </button>
-
-        {#if showHistory}
-          <div class="space-y-3">
-            {#each conversation.slice(0, -1) as entry, i}
-              {@render conversationEntry(entry, entryVersionNums[i], false, i === conversation.length - 2, i)}
-            {/each}
-          </div>
-        {/if}
-      {/if}
-
-      {@render conversationEntry(lastEntry, entryVersionNums[conversation.length - 1], true, false, conversation.length - 1)}
+      {#each conversation.slice(0, -1) as entry, i}
+        {@render conversationEntry(entry, entryVersionNums[i], false, i)}
+      {/each}
+      <div bind:this={lastEntryEl} class="scroll-mt-16">
+        {@render conversationEntry(conversation[conversation.length - 1], entryVersionNums[conversation.length - 1], true, conversation.length - 1)}
+      </div>
     </div>
   {/if}
 
@@ -477,7 +740,10 @@
         </button>
       </div>
 
-      <form method="POST" action="?/update" use:enhance={handleSave}>
+      <form method="POST" action={isNew ? "?/create" : "?/update"} use:enhance={handleSave}>
+        {#if isNew}
+          <input type="hidden" name="letter_type" value={letter.letter_type} />
+        {/if}
         <input type="hidden" name="status" value={editStatus} />
         <div>
           <label for="new-content" class="block text-sm font-medium text-[var(--dash-text)] mb-1">Write your letter</label>
@@ -490,15 +756,7 @@
             class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
           ></textarea>
         </div>
-        <div class="flex items-center justify-between mt-4">
-          <button
-            type="button"
-            onclick={() => (showDeleteConfirm = true)}
-            class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
-          >
-            <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-            Delete
-          </button>
+        <div class="flex items-center justify-end mt-4">
           <button
             type="submit"
             disabled={!editContent.trim()}
@@ -533,7 +791,7 @@
 <ConfirmModal
   isOpen={showDeleteConfirm}
   title="Delete Letter"
-  message="Are you sure you want to delete this letter? This action cannot be undone."
+  message={"Are you sure you want to delete this letter?\n\nAll versions, feedback, and revision history will be permanently removed. This cannot be undone."}
   onCancel={() => (showDeleteConfirm = false)}
   onConfirm={() => {
     showDeleteConfirm = false;
@@ -543,4 +801,14 @@
     document.body.appendChild(form);
     form.submit();
   }}
+/>
+
+<!-- Overwrite Previous Version Confirmation Modal -->
+<ConfirmModal
+  isOpen={showOverwriteConfirm}
+  title="Save Previous Version"
+  message="Saving this version will remove all feedback and versions that came after it. This cannot be undone."
+  confirmLabel="Save & continue here"
+  onCancel={() => { showOverwriteConfirm = false; pendingOverwriteForm = null; }}
+  onConfirm={confirmOverwrite}
 />
