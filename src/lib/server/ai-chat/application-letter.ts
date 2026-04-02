@@ -135,7 +135,7 @@ export async function generateApplicationLetter(
     `**Position:** ${job.title || "Not specified"}`,
   ];
   if (job.job_poster) {
-    jobDetailLines.push(`**Company:** ${job.job_poster}`);
+    jobDetailLines.push(`**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`);
   }
   if (job.company_description) {
     jobDetailLines.push(`**About the company:** ${job.company_description}`);
@@ -143,7 +143,7 @@ export async function generateApplicationLetter(
   if (job.import_source) {
     try {
       const sourceLabel = await getFieldChoiceLabel("jobs", "import_source", job.import_source);
-      jobDetailLines.push(`**Source:** ${sourceLabel}`);
+      jobDetailLines.push(`**Source:** ${sourceLabel} (this is the job platform where the listing was found — NOT the employer)`);
     } catch {
       // Non-critical, skip
     }

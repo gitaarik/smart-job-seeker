@@ -69,7 +69,7 @@ async function buildConversationHistory(letterId: number): Promise<string> {
 /** Format job data as readable text for prompts */
 function formatJobDetails(job: { title: string | null; job_description: string | null; company_description: string | null; job_poster: string | null }): string {
   const lines: string[] = [`**Position:** ${job.title || "Not specified"}`];
-  if (job.job_poster) lines.push(`**Company:** ${job.job_poster}`);
+  if (job.job_poster) lines.push(`**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`);
   if (job.company_description) lines.push(`**About the company:** ${job.company_description}`);
   lines.push("", "**Job Description:**", job.job_description || "Not specified");
   return lines.join("\n");

@@ -790,76 +790,83 @@ Provide your analysis in JSON format with:
   },
 
   "advise_cover_letter": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, provide a concise list of what to highlight in a cover letter.
+    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their cover letter.
 
 ## Applicant Profile:
 \${data}
 
 Rules:
-- Be very concise — short bullet points only, no prose
+- Focus on THIS specific job — what from their profile matches what the employer is looking for?
+- Short bullet points only, no prose
 - Only reference things actually in their profile
+- Skip generic cover letter advice — they know the basics
 - Do NOT write the letter itself`,
     user_prompt: `## Job:
 
 \${jobDetails}
 
-List what to highlight and in what order for a cover letter. Keep it short — just the key points to cover, which specific experiences/skills to mention, and a suggested structure (e.g. "open with X, then Y, close with Z").
+What specific experiences, skills, and achievements from their profile should they highlight for THIS role? Which job requirements can they address directly? Give a brief suggested angle or hook.
 
 \${additionalContext}`,
   },
 
   "advise_motivation_letter": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, provide a concise list of what to highlight in a motivation letter.
+    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their motivation letter.
 
 ## Applicant Profile:
 \${data}
 
 Rules:
-- Be very concise — short bullet points only, no prose
-- Focus on WHY they want this role, not just what they can do
+- Focus on THIS specific job — what genuine connection points exist between their background and this role?
+- Short bullet points only, no prose
 - Only reference things actually in their profile
+- Skip generic motivation letter advice — they know the basics
 - Do NOT write the letter itself`,
     user_prompt: `## Job:
 
 \${jobDetails}
 
-List what to highlight and in what order for a motivation letter. Keep it short — key motivations to express, which experiences show genuine interest, and a suggested structure.
+What specific aspects of this role or company align with their background and trajectory? Which experiences show genuine motivation for THIS position? Give a brief suggested angle.
 
 \${additionalContext}`,
   },
 
   "advise_follow_up_email": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, provide concise advice for a follow-up email.
+    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their follow-up email.
 
 ## Applicant Profile:
 \${data}
 
 Rules:
-- Be very concise — short bullet points only, no prose
+- Focus on THIS specific job — what can they reference or reinforce?
+- Short bullet points only, no prose
+- Skip generic follow-up advice — they know the basics
 - Do NOT write the email itself`,
     user_prompt: `## Job:
 
 \${jobDetails}
 
-List the key points to include in a follow-up email, the right tone, and anything to avoid. Keep it very short.
+What specific points should they mention or reinforce in a follow-up for THIS role? Any particular value they can add or reference?
 
 \${additionalContext}`,
   },
 
   "advise_thank_you_letter": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, provide concise advice for a thank-you letter.
+    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their thank-you letter.
 
 ## Applicant Profile:
 \${data}
 
 Rules:
-- Be very concise — short bullet points only, no prose
+- Focus on THIS specific job — what can they reinforce about their fit?
+- Short bullet points only, no prose
+- Skip generic thank-you advice — they know the basics
 - Do NOT write the letter itself`,
     user_prompt: `## Job:
 
 \${jobDetails}
 
-List the key points to include in a thank-you letter and how to reinforce their candidacy. Keep it very short.
+What specific strengths for THIS role should they reinforce? Any particular points to reference that tie their experience to the position?
 
 \${additionalContext}`,
   },
@@ -872,9 +879,10 @@ List the key points to include in a thank-you letter and how to reinforce their 
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good and only minor tweaks are needed that the user can do themselves
+- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
 
 In your feedback:
+- If the letter is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
 - Check completeness: proper greeting, intro, body, closing? Anything missing?
 - Does the letter match specific job requirements to their actual experience?
 - Consider structure, tone, relevance to the job, persuasiveness
@@ -898,9 +906,10 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good and only minor tweaks are needed that the user can do themselves
+- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
 
 In your feedback:
+- If the letter is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
 - Check completeness: proper greeting, intro, body with specifics, closing?
 - Does their motivation come across as authentic and specific to this role?
 - Be concise — focus on what matters most`,
@@ -923,9 +932,10 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised email as plain text incorporating your suggestions, OR null if the email is already good and only minor tweaks are needed that the user can do themselves
+- "revisedLetter": the complete revised email as plain text incorporating your suggestions, OR null if the email is already good
 
 In your feedback:
+- If the email is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
 - Check completeness: subject line, greeting, purpose, closing?
 - Is the tone right — confident but not pushy?
 - Be concise — focus on what matters most`,
@@ -948,9 +958,10 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good and only minor tweaks are needed that the user can do themselves
+- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
 
 In your feedback:
+- If the letter is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
 - Check completeness: greeting, gratitude, reinforcement of interest, closing?
 - Does it feel sincere and reinforce their candidacy?
 - Be concise — focus on what matters most`,

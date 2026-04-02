@@ -29,6 +29,12 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
       },
       application_letters: {
         orderBy: { date_created: "desc" },
+        include: {
+          letter_versions: {
+            orderBy: { id: "asc" },
+            select: { id: true, source: true, content: true },
+          },
+        },
       },
       application_questions: {
         orderBy: { sort: "asc" },

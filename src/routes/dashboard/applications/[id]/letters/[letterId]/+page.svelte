@@ -16,6 +16,7 @@
     faRobot,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import { marked } from "marked";
   import Card from "../../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import ConfirmModal from "../../../../profile/components/ConfirmModal.svelte";
@@ -88,11 +89,12 @@
   });
 
   function computeDiff(oldText: string, newText: string): DiffSegment[] {
-    const oldWords = oldText.split(/(\s+)/);
-    const newWords = newText.split(/(\s+)/);
+    // Split into words only (ignore whitespace for comparison)
+    const oldWords = oldText.split(/\s+/).filter(Boolean);
+    const newWords = newText.split(/\s+/).filter(Boolean);
     const m = oldWords.length, n = newWords.length;
 
-    // LCS via DP (optimized for typical letter sizes)
+    // LCS via DP
     const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
     for (let i = 1; i <= m; i++) {
       for (let j = 1; j <= n; j++) {
@@ -102,10 +104,9 @@
       }
     }
 
-    // Backtrack to build diff
-    const segments: DiffSegment[] = [];
-    let i = m, j = n;
+    // Backtrack to build word-level diff
     const raw: { type: DiffSegment["type"]; text: string }[] = [];
+    let i = m, j = n;
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && oldWords[i - 1] === newWords[j - 1]) {
         raw.push({ type: "same", text: oldWords[i - 1] });
@@ -120,12 +121,32 @@
     }
     raw.reverse();
 
-    // Merge consecutive segments of the same type
+    // Build whitespace map from new text: whitespace before each word
+    const newParts = newText.split(/(\s+)/);
+    const newSpaces: string[] = [];
+    let ws = "";
+    for (const part of newParts) {
+      if (/^\s*$/.test(part)) { ws += part; }
+      else { newSpaces.push(ws); ws = ""; }
+    }
+
+    // Merge consecutive same-type words with new text's whitespace
+    const segments: DiffSegment[] = [];
+    let nIdx = 0; // position in new text words
     for (const seg of raw) {
-      if (segments.length > 0 && segments[segments.length - 1].type === seg.type) {
-        segments[segments.length - 1].text += seg.text;
+      // Use new text's whitespace for added/same words; simple space for removed
+      let space: string;
+      if (seg.type === "removed") {
+        space = segments.length > 0 ? " " : "";
       } else {
-        segments.push({ ...seg });
+        space = nIdx > 0 ? (newSpaces[nIdx] || " ") : (newSpaces[0] || "");
+        nIdx++;
+      }
+
+      if (segments.length > 0 && segments[segments.length - 1].type === seg.type) {
+        segments[segments.length - 1].text += space + seg.text;
+      } else {
+        segments.push({ type: seg.type, text: (segments.length > 0 ? space : "") + seg.text });
       }
     }
     return segments;
@@ -258,25 +279,39 @@
   }
 
   async function reviewVersion(content: string) {
-    // Create record if new, then save content so the review prompt sees it
-    const letterId = await ensureLetterExists();
+    generating = true;
+    generatingMode = "review";
+    aiError = null;
 
-    const formData = new FormData();
-    formData.set("content", content);
-    formData.set("status", letter.status || "draft");
-    formData.set("source", "manual_edit");
-    await fetch(`/dashboard/applications/${appId}/letters/${letterId}?/update`, { method: "POST", body: formData });
-    await invalidateAll();
+    try {
+      const letterId = await ensureLetterExists();
 
-    if (letter.ai_chat) {
-      await sendFollowup(
-        "I've updated my letter. Please review my changes and give me concise feedback: what works well, what could be improved, and any specific suggestions.",
-        true,
-        false,
-        "review",
-      );
-    } else {
-      await generateAi("review");
+      // Only save if the content differs from the latest version (avoid duplicate entries)
+      const latestContent = conversation.findLast((e) => e.content)?.content;
+      if (content !== latestContent) {
+        const formData = new FormData();
+        formData.set("content", content);
+        formData.set("status", letter.status || "draft");
+        formData.set("source", "manual_edit");
+        await fetch(`/dashboard/applications/${appId}/letters/${letterId}?/update`, { method: "POST", body: formData });
+        await invalidateAll();
+      }
+
+      if (letter.ai_chat) {
+        await sendFollowup(
+          "Please review my letter and give me concise feedback: what works well, what could be improved, and any specific suggestions.",
+          true,
+          false,
+          "review",
+        );
+      } else {
+        await generateAi("review");
+      }
+    } catch {
+      aiError = "Network error. Please try again.";
+    } finally {
+      generating = false;
+      generatingMode = null;
     }
   }
 
@@ -500,8 +535,9 @@
             {/if}
           </p>
         </div>
-        <p class="text-sm text-[var(--dash-text)] mb-1">{entry.aiFeedback}</p>
-        {#if !entry.content && !isEditing}
+        <div class="ai-feedback text-sm text-[var(--dash-text)] mb-1">{@html marked(entry.aiFeedback)}</div>
+        {#if !entry.content && !isEditing && entry.type !== "ai_advice"}
+          {@const hasExistingVersion = conversation.some((e) => e.content)}
           <button
             type="button"
             onclick={() => sendFollowup("Please revise the letter based on your feedback above.", true, true)}
@@ -516,34 +552,76 @@
               Generate revision from this feedback
             {/if}
           </button>
-        {/if}
-        <!-- Feedback input on last feedback-only entry -->
-        {#if isLast && !entry.content && !isEditing && letter.ai_chat}
-          <div class="mt-3 pt-3 border-t {borderColor} space-y-2">
-            <textarea
-              bind:value={feedbackText}
-              placeholder="Tell the AI what to change, improve, or adjust..."
-              rows={3}
-              disabled={generating}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
-            ></textarea>
-            <div class="flex items-center justify-end">
-              <button
-                type="button"
-                onclick={() => sendFollowup(feedbackText, true, true)}
-                disabled={generating || !feedbackText.trim()}
-                class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-              >
-                {#if generating && generatingMode === "followup"}
-                  <Spinner size="w-3 h-3" />
-                  Generating...
-                {:else}
-                  Send feedback
-                {/if}
-              </button>
+          <!-- Feedback input on last review-only entry (no revised version) -->
+          {#if isLast && hasExistingVersion && letter.ai_chat}
+            <div class="mt-3 pt-3 border-t {borderColor} space-y-2">
+              <textarea
+                bind:value={feedbackText}
+                placeholder="Tell the AI what to change, improve, or adjust..."
+                rows={3}
+                disabled={generating}
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
+              ></textarea>
+              <div class="flex items-center justify-end">
+                <button
+                  type="button"
+                  onclick={() => sendFollowup(feedbackText, true, true)}
+                  disabled={generating || !feedbackText.trim()}
+                  class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  {#if generating && generatingMode === "followup"}
+                    <Spinner size="w-3 h-3" />
+                    Generating...
+                  {:else}
+                    Send feedback
+                  {/if}
+                </button>
+              </div>
             </div>
-          </div>
+          {/if}
         {/if}
+      </div>
+    {/if}
+    <!-- Write area after advice when no version exists yet -->
+    {#if isLast && entry.type === "ai_advice" && !conversation.some((e) => e.content)}
+      <div class="mt-1">
+        <form method="POST" action={isNew ? "?/create" : "?/update"} use:enhance={handleSave}>
+          {#if isNew}
+            <input type="hidden" name="letter_type" value={letter.letter_type} />
+          {/if}
+          <input type="hidden" name="status" value={editStatus} />
+          <textarea
+            name="content"
+            bind:value={editContent}
+            rows={14}
+            placeholder="Write your {(letterTypes[letter.letter_type] || letter.letter_type).toLowerCase()} here..."
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
+          ></textarea>
+          <div class="flex items-center justify-end gap-2 mt-2">
+            <button
+              type="button"
+              onclick={() => reviewVersion(editContent)}
+              disabled={generating || !editContent.trim()}
+              class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              {#if generating && generatingMode === "review"}
+                <Spinner size="w-3 h-3" />
+                Reviewing...
+              {:else}
+                <FontAwesomeIcon icon={faRobot} class="w-3 h-3" />
+                AI review
+              {/if}
+            </button>
+            <button
+              type="submit"
+              disabled={!editContent.trim()}
+              class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+              Save
+            </button>
+          </div>
+        </form>
       </div>
     {/if}
     <!-- Version box: standalone for user edits, separate bubble for AI entries -->
@@ -643,7 +721,7 @@
                   <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
                   Edit
                 </button>
-                {#if entry.type !== "ai_revision" && entry.type !== "ai_review" && entry.type !== "ai_generation"}
+                {#if isLast}
                   <button
                     type="button"
                     onclick={() => reviewVersion(entry.content!)}
@@ -664,8 +742,8 @@
         </div>
       </div>
     {/if}
-    <!-- Feedback input on last entry with content -->
-    {#if isLast && entry.content && !isEditing && letter.ai_chat}
+    <!-- Feedback input after last AI-generated version -->
+    {#if isLast && entry.content && !isEditing && letter.ai_chat && (entry.type === "ai_revision" || entry.type === "ai_review" || entry.type === "ai_generation")}
       <div class="mt-3 space-y-2">
         <textarea
           bind:value={feedbackText}
@@ -721,7 +799,7 @@
             Generating...
           {:else}
             <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
-            Generate with AI
+            AI generate
           {/if}
         </button>
         <button
@@ -735,7 +813,7 @@
             Generating...
           {:else}
             <FontAwesomeIcon icon={faComments} class="w-3.5 h-3.5" />
-            Get AI recommendations
+            AI advice
           {/if}
         </button>
       </div>
@@ -756,7 +834,21 @@
             class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
           ></textarea>
         </div>
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center justify-end gap-2 mt-4">
+          <button
+            type="button"
+            onclick={() => reviewVersion(editContent)}
+            disabled={generating || !editContent.trim()}
+            class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+          >
+            {#if generating}
+              <Spinner size="w-3 h-3" />
+              Reviewing...
+            {:else}
+              <FontAwesomeIcon icon={faRobot} class="w-3 h-3" />
+              AI review
+            {/if}
+          </button>
           <button
             type="submit"
             disabled={!editContent.trim()}
@@ -766,23 +858,6 @@
             Save
           </button>
         </div>
-      </form>
-      <div class="mt-3 pt-3 border-t border-[var(--dash-border)]">
-        <button
-          type="button"
-          onclick={() => reviewVersion(editContent)}
-          disabled={generating || !editContent.trim()}
-          class="w-full px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-        >
-          {#if generating}
-            <Spinner size="w-3 h-3" />
-            Saving & reviewing...
-          {:else}
-            <FontAwesomeIcon icon={faRobot} class="w-3 h-3" />
-            Save & get AI review
-          {/if}
-        </button>
-      </div>
     </Card>
   {/if}
 </div>
@@ -812,3 +887,35 @@
   onCancel={() => { showOverwriteConfirm = false; pendingOverwriteForm = null; }}
   onConfirm={confirmOverwrite}
 />
+
+<style>
+  :global(.ai-feedback p) {
+    margin-bottom: 0.5rem;
+  }
+  :global(.ai-feedback p:last-child) {
+    margin-bottom: 0;
+  }
+  :global(.ai-feedback ul),
+  :global(.ai-feedback ol) {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+  :global(.ai-feedback ul) {
+    list-style-type: disc;
+  }
+  :global(.ai-feedback ol) {
+    list-style-type: decimal;
+  }
+  :global(.ai-feedback li) {
+    margin-bottom: 0.25rem;
+  }
+  :global(.ai-feedback strong) {
+    font-weight: 600;
+  }
+  :global(.ai-feedback h1),
+  :global(.ai-feedback h2),
+  :global(.ai-feedback h3) {
+    font-weight: 600;
+    margin: 0.75rem 0 0.25rem;
+  }
+</style>

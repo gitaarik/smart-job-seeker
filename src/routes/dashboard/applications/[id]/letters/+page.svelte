@@ -9,6 +9,7 @@
     faChevronDown,
     faChevronUp,
     faEnvelope,
+    faPen,
     faPlus,
     faQuestionCircle,
     faRobot,
@@ -363,9 +364,28 @@
         {@const hasContent = isLetter ? !!(item as LetterItem).content : !!(item as QuestionItem).answer}
 
         {#if isLetter}
-          <!-- Letter Card: non-expandable, with Write/Edit link in footer -->
+          {@const letterItem = item as LetterItem}
+          {@const versions = letterItem.letter_versions || []}
+          {@const versionCount = versions.filter((v: { content: string | null }) => v.content).length}
+          {@const firstContentVersion = versions.find((v: { content: string | null }) => v.content)}
+          {@const isAiStarted = firstContentVersion
+            ? firstContentVersion.source === "ai_generation"
+            : !!letterItem.ai_chat}
+          {@const latestContent = (() => {
+            for (let i = versions.length - 1; i >= 0; i--) {
+              if (versions[i].content) return versions[i].content;
+            }
+            return letterItem.content;
+          })()}
+          {@const isExpanded = expandedId === itemId}
+          <!-- Letter Card: expandable with text preview -->
           <Card class="overflow-hidden">
-            <div class="p-4">
+            <button
+              type="button"
+              onclick={() => toggleExpand(itemId)}
+              class="w-full p-4 text-left {latestContent ? 'hover:bg-[var(--dash-bg)]' : ''} transition-colors"
+              disabled={!latestContent}
+            >
               <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)]">
                   <FontAwesomeIcon icon={faEnvelope} class="w-5 h-5 text-blue-600" />
@@ -373,34 +393,57 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
                     <h3 class="font-medium text-[var(--dash-text)] truncate">
-                      {letterTypes[(item as LetterItem).letter_type] || (item as LetterItem).letter_type}
+                      {letterTypes[letterItem.letter_type] || letterItem.letter_type}
                     </h3>
                     <span
-                      class="text-xs px-2 py-0.5 rounded-full capitalize {(item as LetterItem).status === 'ready'
+                      class="text-xs px-2 py-0.5 rounded-full capitalize {letterItem.status === 'ready'
                         ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
-                        : (item as LetterItem).status === 'sent'
+                        : letterItem.status === 'sent'
                         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                         : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
                     >
-                      {(item as LetterItem).status}
+                      {letterItem.status}
                     </span>
                   </div>
                   <p class="text-sm text-[var(--dash-text-secondary)]">
                     {formatDate(item.date_updated || item.date_created)}
-                    {#if !(item as LetterItem).content}
+                    {#if latestContent}
+                      <span class="mx-1">&middot;</span>
+                      <span class="inline-flex items-center gap-1">
+                        <FontAwesomeIcon icon={isAiStarted ? faRobot : faPen} class="w-3 h-3" />
+                        {isAiStarted ? "AI generated" : "Self-written"}
+                      </span>
+                      {#if versionCount > 1}
+                        <span class="mx-1">&middot;</span>
+                        <span>{versionCount} versions</span>
+                      {/if}
+                    {:else}
                       <span class="mx-1">&middot;</span>
                       <span class="text-[var(--dash-text-muted)] italic">No content yet</span>
                     {/if}
                   </p>
                 </div>
+                {#if latestContent}
+                  <FontAwesomeIcon
+                    icon={isExpanded ? faChevronUp : faChevronDown}
+                    class="w-4 h-4 text-[var(--dash-text-secondary)] flex-shrink-0"
+                  />
+                {/if}
               </div>
-            </div>
+            </button>
+
+            {#if isExpanded && latestContent}
+              <div class="border-t border-[var(--dash-border)] px-4 py-3">
+                <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap line-clamp-8">{latestContent}</p>
+              </div>
+            {/if}
+
             <div class="border-t border-[var(--dash-border)] px-4 py-2 flex justify-end md:justify-start items-center gap-2">
               <a
                 href="/dashboard/applications/{app.id}/letters/{item.id}"
                 class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
               >
-                {(item as LetterItem).content ? "Edit" : "Write"}
+                {letterItem.content ? "Edit" : "Write"}
                 <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
               </a>
             </div>
