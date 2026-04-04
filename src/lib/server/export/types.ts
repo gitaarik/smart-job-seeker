@@ -262,6 +262,7 @@ export interface ExportedCheatSheet {
   content?: string;
 }
 
+/** @deprecated Legacy format — kept for backward-compatible imports */
 export interface ExportedSalaryExpectation {
   sort?: number | null;
   job_title?: string;
@@ -274,6 +275,13 @@ export interface ExportedSalaryExpectation {
   month_salary?: number | null;
   year_salary?: number | null;
   daily_rate?: number | null;
+}
+
+export interface ExportedSalarySettings {
+  base_rate?: number | null;
+  currency?: string;
+  adjustments?: Record<string, Record<string, number>>;
+  region_overrides?: Record<string, number>;
 }
 
 export interface ExportedJobPreferences {
@@ -339,7 +347,9 @@ export interface FullExportData extends ExportEnvelope {
   profile: ExportedProfileData;
   project_stories: ExportedProjectStory[];
   cheat_sheets: ExportedCheatSheet[];
-  salary_expectations: ExportedSalaryExpectation[];
+  salary_settings?: ExportedSalarySettings;
+  /** @deprecated Legacy format — kept for backward-compatible imports */
+  salary_expectations?: ExportedSalaryExpectation[];
   job_preferences?: ExportedJobPreferences;
   saved_jobs?: ExportedSavedJob[];
   job_matches?: ExportedJobMatch[];

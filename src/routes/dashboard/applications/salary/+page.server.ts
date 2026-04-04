@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../profile/utils";
+import type { Prisma } from "../../../../../generated/prisma/client";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -10,19 +11,30 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const salaryExpectations = await db.salary_expectations.findMany({
-    where: { profile: layoutData.selectedProfile.id },
-    orderBy: { sort: "asc" },
+  const profile = await db.profiles.findUnique({
+    where: { id: layoutData.selectedProfile.id },
+    select: {
+      id: true,
+      salary_base_rate: true,
+      salary_currency: true,
+      salary_adjustments: true,
+      salary_region_overrides: true,
+    },
   });
 
   return {
-    salaryExpectations,
+    salarySettings: {
+      baseRate: profile?.salary_base_rate ?? null,
+      currency: profile?.salary_currency ?? "EUR",
+      adjustments: (profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
+      regionOverrides: (profile?.salary_region_overrides as Record<string, number> | null) ?? {},
+    },
     profileId: layoutData.selectedProfile.id,
   };
 };
 
 export const actions: Actions = {
-  create: async ({ request, locals, cookies }) => {
+  save: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
@@ -34,143 +46,43 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
-    const job_title = formData.get("job_title") as string;
-    const company_type = formData.get("company_type") as string;
-    const employment_type = formData.get("employment_type") as string;
-    const work_arrangement = formData.get("work_arrangement") as string;
-    const experience_level = formData.get("experience_level") as string;
-    const region = formData.get("region") as string;
+    const baseRate = formData.get("base_rate") as string;
     const currency = formData.get("currency") as string;
-    const hourly_rate = formData.get("hourly_rate") as string;
-    const daily_rate = formData.get("daily_rate") as string;
-    const month_salary = formData.get("month_salary") as string;
-    const year_salary = formData.get("year_salary") as string;
+    const adjustmentsJson = formData.get("adjustments") as string;
+    const regionOverridesJson = formData.get("region_overrides") as string;
 
-    if (!company_type || !employment_type || !work_arrangement || !region) {
-      return fail(400, {
-        error: "Company type, employment type, work arrangement, and region are required",
-      });
+    if (!baseRate || isNaN(parseInt(baseRate)) || parseInt(baseRate) < 0) {
+      return fail(400, { error: "A valid base hourly rate is required" });
     }
 
-    const lastItem = await db.salary_expectations.findFirst({
-      where: { profile: profileId },
-      orderBy: { sort: "desc" },
-    });
+    let adjustments: Record<string, Record<string, number>> = {};
+    let regionOverrides: Record<string, number> = {};
 
-    await db.salary_expectations.create({
+    try {
+      if (adjustmentsJson) {
+        adjustments = JSON.parse(adjustmentsJson);
+      }
+    } catch {
+      return fail(400, { error: "Invalid adjustments format" });
+    }
+
+    try {
+      if (regionOverridesJson) {
+        regionOverrides = JSON.parse(regionOverridesJson);
+      }
+    } catch {
+      return fail(400, { error: "Invalid region overrides format" });
+    }
+
+    await db.profiles.update({
+      where: { id: profileId },
       data: {
-        job_title: job_title?.trim() || null,
-        company_type,
-        employment_type,
-        work_arrangement,
-        experience_level: experience_level || null,
-        region,
-        currency: currency || "EUR",
-        hourly_rate: hourly_rate ? parseInt(hourly_rate) : null,
-        daily_rate: daily_rate ? parseInt(daily_rate) : null,
-        month_salary: month_salary ? parseInt(month_salary) : null,
-        year_salary: year_salary ? parseInt(year_salary) : null,
-        profile: profileId,
-        sort: (lastItem?.sort ?? -1) + 1,
-        date_created: new Date(),
-      },
-    });
-
-    return { success: true };
-  },
-
-  update: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const id = parseInt(formData.get("id") as string);
-    const job_title = formData.get("job_title") as string;
-    const company_type = formData.get("company_type") as string;
-    const employment_type = formData.get("employment_type") as string;
-    const work_arrangement = formData.get("work_arrangement") as string;
-    const experience_level = formData.get("experience_level") as string;
-    const region = formData.get("region") as string;
-    const currency = formData.get("currency") as string;
-    const hourly_rate = formData.get("hourly_rate") as string;
-    const daily_rate = formData.get("daily_rate") as string;
-    const month_salary = formData.get("month_salary") as string;
-    const year_salary = formData.get("year_salary") as string;
-
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid salary expectation ID" });
-    }
-
-    if (!company_type || !employment_type || !work_arrangement || !region) {
-      return fail(400, {
-        error: "Company type, employment type, work arrangement, and region are required",
-      });
-    }
-
-    const existing = await db.salary_expectations.findFirst({
-      where: { id, profile: profileId },
-    });
-
-    if (!existing) {
-      return fail(404, { error: "Salary expectation not found" });
-    }
-
-    await db.salary_expectations.update({
-      where: { id },
-      data: {
-        job_title: job_title?.trim() || null,
-        company_type,
-        employment_type,
-        work_arrangement,
-        experience_level: experience_level || null,
-        region,
-        currency: currency || "EUR",
-        hourly_rate: hourly_rate ? parseInt(hourly_rate) : null,
-        daily_rate: daily_rate ? parseInt(daily_rate) : null,
-        month_salary: month_salary ? parseInt(month_salary) : null,
-        year_salary: year_salary ? parseInt(year_salary) : null,
+        salary_base_rate: parseInt(baseRate),
+        salary_currency: currency || "EUR",
+        salary_adjustments: adjustments as unknown as Prisma.InputJsonValue,
+        salary_region_overrides: regionOverrides as unknown as Prisma.InputJsonValue,
         date_updated: new Date(),
       },
-    });
-
-    return { success: true };
-  },
-
-  delete: async ({ request, locals, cookies }) => {
-    const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
-
-    const formData = await request.formData();
-    const id = parseInt(formData.get("id") as string);
-
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid salary expectation ID" });
-    }
-
-    const existing = await db.salary_expectations.findFirst({
-      where: { id, profile: profileId },
-    });
-
-    if (!existing) {
-      return fail(404, { error: "Salary expectation not found" });
-    }
-
-    await db.salary_expectations.delete({
-      where: { id },
     });
 
     return { success: true };

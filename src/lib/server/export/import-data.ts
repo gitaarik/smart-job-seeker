@@ -589,22 +589,16 @@ async function importFullAccountEntities(
     });
   }
 
-  // Salary expectations
-  for (const se of data.salary_expectations ?? []) {
-    await dbDirect.salary_expectations.create({
+  // Salary settings (new format)
+  if (data.salary_settings) {
+    const ss = data.salary_settings;
+    await dbDirect.profiles.update({
+      where: { id: profileId },
       data: {
-        profile: profileId,
-        sort: se.sort ?? null,
-        job_title: se.job_title || null,
-        company_type: se.company_type || "",
-        employment_type: se.employment_type || "",
-        work_arrangement: se.work_arrangement || "",
-        experience_level: se.experience_level || null,
-        region: se.region || "",
-        hourly_rate: se.hourly_rate ?? null,
-        month_salary: se.month_salary ?? null,
-        year_salary: se.year_salary ?? null,
-        daily_rate: se.daily_rate ?? null,
+        salary_base_rate: ss.base_rate ?? null,
+        salary_currency: ss.currency ?? "EUR",
+        salary_adjustments: ss.adjustments ? (ss.adjustments as Prisma.InputJsonValue) : undefined,
+        salary_region_overrides: ss.region_overrides ? (ss.region_overrides as Prisma.InputJsonValue) : undefined,
       },
     });
   }

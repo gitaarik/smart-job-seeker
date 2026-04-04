@@ -9,7 +9,7 @@ import type {
   MediaFile,
   ExportedProjectStory,
   ExportedCheatSheet,
-  ExportedSalaryExpectation,
+  ExportedSalarySettings,
   ExportedApplication,
 } from "./types";
 
@@ -27,7 +27,7 @@ export async function buildFullExport(
   );
 
   // Fetch additional data
-  const [projectStories, cheatSheets, salaryExpectations, applications] =
+  const [projectStories, cheatSheets, profile, applications] =
     await Promise.all([
       // Project stories
       dbDirect.project_stories.findMany({
@@ -56,23 +56,15 @@ export async function buildFullExport(
         orderBy: { sort: "asc" },
       }),
 
-      // Salary expectations
-      dbDirect.salary_expectations.findMany({
-        where: { profile: profileId },
+      // Profile salary settings
+      dbDirect.profiles.findUnique({
+        where: { id: profileId },
         select: {
-          sort: true,
-          job_title: true,
-          company_type: true,
-          employment_type: true,
-          work_arrangement: true,
-          experience_level: true,
-          region: true,
-          hourly_rate: true,
-          month_salary: true,
-          year_salary: true,
-          daily_rate: true,
+          salary_base_rate: true,
+          salary_currency: true,
+          salary_adjustments: true,
+          salary_region_overrides: true,
         },
-        orderBy: { sort: "asc" },
       }),
 
       // Applications with related data
@@ -124,20 +116,13 @@ export async function buildFullExport(
     content: cs.content || undefined,
   }));
 
-  // Transform salary expectations
-  const exportedSalaryExpectations: ExportedSalaryExpectation[] =
-    salaryExpectations.map((se) => ({
-      sort: se.sort,
-      job_title: se.job_title || undefined,
-      company_type: se.company_type || undefined,
-      employment_type: se.employment_type || undefined,
-      work_arrangement: se.work_arrangement || undefined,
-      region: se.region || undefined,
-      hourly_rate: se.hourly_rate ? Number(se.hourly_rate) : null,
-      month_salary: se.month_salary ? Number(se.month_salary) : null,
-      year_salary: se.year_salary ? Number(se.year_salary) : null,
-      daily_rate: se.daily_rate ? Number(se.daily_rate) : null,
-    }));
+  // Transform salary settings
+  const exportedSalarySettings: ExportedSalarySettings = {
+    base_rate: profile?.salary_base_rate ?? null,
+    currency: profile?.salary_currency ?? "EUR",
+    adjustments: (profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? undefined,
+    region_overrides: (profile?.salary_region_overrides as Record<string, number> | null) ?? undefined,
+  };
 
   // Transform applications
   const exportedApplications: ExportedApplication[] = applications.map(
@@ -174,7 +159,7 @@ export async function buildFullExport(
     profile: profileExport.profile,
     project_stories: exportedProjectStories,
     cheat_sheets: exportedCheatSheets,
-    salary_expectations: exportedSalaryExpectations,
+    salary_settings: exportedSalarySettings,
     applications: exportedApplications,
   };
 

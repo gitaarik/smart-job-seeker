@@ -439,9 +439,11 @@
           </div>
           {#if job?.salary_min || job?.salary_max}
             <div class="flex items-center justify-between text-sm">
-              <span class="text-[var(--dash-text-secondary)]">Job Range</span>
+              <span class="text-[var(--dash-text-secondary)]">{job.salary_min && job.salary_max && Number(job.salary_min) === Number(job.salary_max) ? "Salary Indication" : "Job Range"}</span>
               <span class="text-[var(--dash-text)] font-medium">
-                {#if job.salary_min && job.salary_max}
+                {#if job.salary_min && job.salary_max && Number(job.salary_min) === Number(job.salary_max)}
+                  {formatCurrency(job.salary_min, job.salary_currency, job.salary_period)}
+                {:else if job.salary_min && job.salary_max}
                   {
                     formatCurrency(job.salary_min, job.salary_currency, job.salary_period)
                   }

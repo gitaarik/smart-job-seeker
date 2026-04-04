@@ -32,7 +32,12 @@ interface ExportedProfile {
     project_stories: Array<any>;
     application_questions?: Array<any>;
     cheat_sheets: Array<any>;
-    salary_expectations: Array<any>;
+    salary_settings?: {
+      base_rate?: number | null;
+      currency?: string;
+      adjustments?: Record<string, Record<string, number>>;
+      region_overrides?: Record<string, number>;
+    };
   };
 }
 
@@ -229,22 +234,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         select: { sort: true, title: true, content: true },
         orderBy: { sort: "asc" },
       },
-      salary_expectations: {
-        select: {
-          sort: true,
-          job_title: true,
-          company_type: true,
-          employment_type: true,
-          work_arrangement: true,
-          experience_level: true,
-          region: true,
-          hourly_rate: true,
-          month_salary: true,
-          year_salary: true,
-          daily_rate: true,
-        },
-        orderBy: { sort: "asc" },
-      },
     },
   });
 
@@ -335,7 +324,12 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       project_stories: baseProfile.project_stories,
       application_questions: baseProfile.application_questions,
       cheat_sheets: baseProfile.cheat_sheets,
-      salary_expectations: baseProfile.salary_expectations,
+      salary_settings: baseProfile.salary_base_rate ? {
+        base_rate: baseProfile.salary_base_rate,
+        currency: baseProfile.salary_currency ?? "EUR",
+        adjustments: baseProfile.salary_adjustments as Record<string, Record<string, number>> | undefined,
+        region_overrides: baseProfile.salary_region_overrides as Record<string, number> | undefined,
+      } : undefined,
     },
   };
 

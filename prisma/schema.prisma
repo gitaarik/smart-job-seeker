@@ -1003,6 +1003,10 @@ model profiles {
   ui_preferences                                                    Json?                   @default("{}")
   browser_country_code                                              String?                 @db.VarChar(10)
   browser_profile_id                                                String?                 @db.VarChar(100)
+  salary_base_rate                                                  Int?
+  salary_currency                                                   String?                 @default("EUR") @db.VarChar(10)
+  salary_adjustments                                                Json?                   @db.Json
+  salary_region_overrides                                           Json?                   @db.Json
   ai_chats                                                          ai_chats[]
   api_keys                                                          api_keys[]
   applications                                                      applications[]

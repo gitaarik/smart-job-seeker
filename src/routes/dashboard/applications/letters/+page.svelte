@@ -8,6 +8,7 @@
     faChevronDown,
     faChevronUp,
     faEnvelope,
+    faLayerGroup,
     faQuestionCircle,
     faRobot,
     faTimes,
@@ -18,6 +19,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
+  import FilterTabs from "../../components/FilterTabs.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -40,21 +42,15 @@
   // AI generation states
   let generatingIds = $state<Set<string>>(new Set());
   let aiError = $state<string | null>(null);
-  let followupText = $state<Record<string, string>>({});
-  let followupIncludeContext = $state<Record<string, boolean>>({});
-  let showFollowup = $state<Record<string, boolean>>({});
-
   const typeFilters = [
-    { value: "all", label: "All" },
-    { value: "letters", label: "Letters" },
-    { value: "questions", label: "Questions" },
+    { value: "all", label: "All", icon: faLayerGroup },
+    { value: "letters", label: "Letters", icon: faEnvelope },
+    { value: "questions", label: "Questions", icon: faQuestionCircle },
   ];
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
     motivation_letter: "Motivation Letter",
-    follow_up: "Follow-up",
-    thank_you: "Thank You",
   };
 
   function getItemId(item: (typeof items)[0]): string {
@@ -150,44 +146,6 @@
     }
   }
 
-  async function sendFollowup(item: (typeof items)[0]) {
-    const itemId = getItemId(item);
-    const isLetter = item.itemType === "letter";
-    const text = followupText[itemId]?.trim();
-    if (!text) return;
-
-    const url = isLetter
-      ? `/api/ai/letters/${item.id}/followup`
-      : `/api/ai/questions/${item.id}/followup`;
-
-    generatingIds.add(itemId);
-    generatingIds = new Set(generatingIds);
-    aiError = null;
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          followupRequest: text,
-          includeOriginalContext: followupIncludeContext[itemId] || false,
-        }),
-      });
-      const result = await response.json();
-      if (!result.success) {
-        aiError = result.message || "Follow-up failed";
-        return;
-      }
-      followupText[itemId] = "";
-      showFollowup[itemId] = false;
-      await invalidateAll();
-    } catch {
-      aiError = "Network error. Please try again.";
-    } finally {
-      generatingIds.delete(itemId);
-      generatingIds = new Set(generatingIds);
-    }
-  }
 </script>
 
 <div class="space-y-6">
@@ -205,22 +163,7 @@
   {/if}
 
   <!-- Type Filter -->
-  <div class="flex flex-wrap gap-2">
-    {#each typeFilters as filter}
-      <button
-        type="button"
-        onclick={() => filterByType(filter.value)}
-        class="
-          px-3 py-1.5 text-sm rounded-lg transition-colors {currentType ===
-          filter.value
-          ? 'bg-[var(--dash-primary)] text-white'
-          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
-        "
-      >
-        {filter.label}
-      </button>
-    {/each}
-  </div>
+  <FilterTabs filters={typeFilters} value={currentType} onchange={filterByType} />
 
   <!-- Items List -->
   {#if items.length === 0}
@@ -511,54 +454,7 @@
                       {/if}
                       {isGenerating(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
                     </button>
-                    {#if hasAiChat}
-                      <button
-                        type="button"
-                        onclick={() => (showFollowup[itemId] = !showFollowup[itemId])}
-                        disabled={isGenerating(itemId)}
-                        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                      >
-                        Follow-up
-                      </button>
-                    {/if}
                   </div>
-
-                  <!-- Follow-up Section -->
-                  {#if showFollowup[itemId]}
-                    <div class="pt-2 space-y-2">
-                      <textarea
-                        bind:value={followupText[itemId]}
-                        placeholder="Ask AI to refine the {isLetter ? 'letter' : 'answer'}..."
-                        rows={3}
-                        disabled={isGenerating(itemId)}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
-                      ></textarea>
-                      <div class="flex items-center justify-between">
-                        <label class="flex items-center gap-2 text-sm text-[var(--dash-text-secondary)]">
-                          <input
-                            type="checkbox"
-                            bind:checked={followupIncludeContext[itemId]}
-                            disabled={isGenerating(itemId)}
-                            class="rounded"
-                          />
-                          Include original context
-                        </label>
-                        <button
-                          type="button"
-                          onclick={() => sendFollowup(item)}
-                          disabled={isGenerating(itemId) || !followupText[itemId]?.trim()}
-                          class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                        >
-                          {#if isGenerating(itemId)}
-                            <Spinner size="w-3.5 h-3.5" />
-                            Generating...
-                          {:else}
-                            Send Follow-up
-                          {/if}
-                        </button>
-                      </div>
-                    </div>
-                  {/if}
                 </div>
               {/if}
             </div>

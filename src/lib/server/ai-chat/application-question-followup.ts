@@ -24,7 +24,7 @@ export async function createApplicationQuestionFollowup(
     updateEntity: (id, aiChatId, aiChatResponse) =>
       db.application_questions.update({
         where: { id },
-        data: { ai_chat: aiChatId, ai_chat_response: aiChatResponse },
+        data: { ai_chat: aiChatId, ai_chat_response: aiChatResponse, answer: aiChatResponse },
       }).then(() => {}),
   });
 }

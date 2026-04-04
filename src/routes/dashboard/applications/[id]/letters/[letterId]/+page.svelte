@@ -46,8 +46,6 @@
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
     motivation_letter: "Motivation Letter",
-    follow_up: "Follow-up",
-    thank_you: "Thank You",
   };
 
   // Inline edit state: tracks which version is being edited (by index), or -1 for new letter
@@ -787,7 +785,22 @@
   {#if !letter.content && conversation.length === 0}
     <!-- Empty State: no content, no history -->
     <Card padding="md">
-      <div class="flex flex-wrap gap-2 mb-4">
+      <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Start with AI</h3>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onclick={() => generateAi("advice")}
+          disabled={generating}
+          class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+        >
+          {#if generating && generatingMode === "advice"}
+            <Spinner size="w-3.5 h-3.5" />
+            Generating...
+          {:else}
+            <FontAwesomeIcon icon={faComments} class="w-3.5 h-3.5" />
+            AI advice
+          {/if}
+        </button>
         <button
           type="button"
           onclick={() => generateAi("generate")}
@@ -802,29 +815,17 @@
             AI generate
           {/if}
         </button>
-        <button
-          type="button"
-          onclick={() => generateAi("advice")}
-          disabled={generating}
-          class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-        >
-          {#if generating && generatingMode === "advice"}
-            <Spinner size="w-3.5 h-3.5" />
-            Generating...
-          {:else}
-            <FontAwesomeIcon icon={faComments} class="w-3.5 h-3.5" />
-            AI advice
-          {/if}
-        </button>
       </div>
+    </Card>
 
+    <Card padding="md">
       <form method="POST" action={isNew ? "?/create" : "?/update"} use:enhance={handleSave}>
         {#if isNew}
           <input type="hidden" name="letter_type" value={letter.letter_type} />
         {/if}
         <input type="hidden" name="status" value={editStatus} />
         <div>
-          <label for="new-content" class="block text-sm font-medium text-[var(--dash-text)] mb-1">Write your letter</label>
+          <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Or write it yourself</h3>
           <textarea
             id="new-content"
             name="content"
@@ -858,6 +859,7 @@
             Save
           </button>
         </div>
+      </form>
     </Card>
   {/if}
 </div>

@@ -60,7 +60,11 @@
       add("References", p.references);
       add("Project stories", p.project_stories);
       add("Cheat sheets", p.cheat_sheets);
-      add("Salary expectations", p.salary_expectations);
+      if (p.salary_settings) {
+        counts.push({ label: "Salary settings", count: 1 });
+      } else {
+        add("Salary expectations", p.salary_expectations);
+      }
 
       preview = {
         name: p.name || "Unnamed profile",

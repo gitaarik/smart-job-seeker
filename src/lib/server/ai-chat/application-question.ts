@@ -104,6 +104,7 @@ export async function generateApplicationQuestionAnswer(
       data: {
         ai_chat: aiChat.id,
         ai_chat_response: aiChat.response,
+        answer: aiChat.response,
       },
     });
   } catch (error) {

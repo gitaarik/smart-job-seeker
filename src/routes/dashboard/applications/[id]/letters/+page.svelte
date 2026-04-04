@@ -9,6 +9,7 @@
     faChevronDown,
     faChevronUp,
     faEnvelope,
+    faLayerGroup,
     faPen,
     faPlus,
     faQuestionCircle,
@@ -20,6 +21,7 @@
   import Card from "../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
+  import FilterTabs from "../../../components/FilterTabs.svelte";
   import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -32,8 +34,8 @@
   let expandedId = $state<string | null>(null);
   let editingId = $state<string | null>(null);
   let deleteItem = $state<{ id: number; type: "letter" | "question" } | null>(null);
-  let showAddLetter = $state(false);
   let showAddQuestion = $state(false);
+  let showAddMenu = $state(false);
 
   // Edit states (for questions only)
   let editAnswer = $state("");
@@ -41,12 +43,7 @@
   // AI generation states (for questions only)
   let generatingIds = $state<Set<string>>(new Set());
   let aiError = $state<string | null>(null);
-  let followupText = $state<Record<string, string>>({});
-  let followupIncludeContext = $state<Record<string, boolean>>({});
-  let showFollowup = $state<Record<string, boolean>>({});
-
   // Add form states
-  let newLetterType = $state("cover_letter");
   let newQuestion = $state("");
 
   type LetterItem = (typeof letters)[0] & { itemType: "letter" };
@@ -70,14 +67,12 @@
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
     motivation_letter: "Motivation Letter",
-    follow_up: "Follow-up",
-    thank_you: "Thank You",
   };
 
   const typeFilters = [
-    { value: "all", label: "All" },
-    { value: "letters", label: "Letters" },
-    { value: "questions", label: "Questions" },
+    { value: "all", label: "All", icon: faLayerGroup },
+    { value: "letters", label: "Letters", icon: faEnvelope },
+    { value: "questions", label: "Questions", icon: faQuestionCircle },
   ];
 
   function getItemId(item: Item): string {
@@ -119,9 +114,7 @@
     return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
       await update();
       if (result.type === "success") {
-        showAddLetter = false;
         showAddQuestion = false;
-        newLetterType = "cover_letter";
         newQuestion = "";
       }
     };
@@ -155,42 +148,14 @@
     }
   }
 
-  async function sendFollowup(item: Item) {
-    const itemId = getItemId(item);
-    const text = followupText[itemId]?.trim();
-    if (!text) return;
-
-    const url = `/api/ai/questions/${item.id}/followup`;
-
-    generatingIds.add(itemId);
-    generatingIds = new Set(generatingIds);
-    aiError = null;
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          followupRequest: text,
-          includeOriginalContext: followupIncludeContext[itemId] || false,
-        }),
-      });
-      const result = await response.json();
-      if (!result.success) {
-        aiError = result.message || "Follow-up failed";
-        return;
-      }
-      followupText[itemId] = "";
-      showFollowup[itemId] = false;
-      await invalidateAll();
-    } catch {
-      aiError = "Network error. Please try again.";
-    } finally {
-      generatingIds.delete(itemId);
-      generatingIds = new Set(generatingIds);
+  function handleClickOutside(e: MouseEvent) {
+    if (showAddMenu && !(e.target as HTMLElement).closest("[data-add-menu]")) {
+      showAddMenu = false;
     }
   }
 </script>
+
+<svelte:window onclick={handleClickOutside} />
 
 <div class="space-y-6">
   {#if form?.error || aiError}
@@ -199,93 +164,49 @@
     </div>
   {/if}
 
-  <!-- Header with Add buttons (only shown when there are items) -->
+  <!-- Header with filter + add button (only shown when there are items) -->
   {#if letters.length > 0 || questions.length > 0}
     <div class="flex items-center justify-between flex-wrap gap-3">
       {#if letters.length > 0 && questions.length > 0}
-        <div class="flex flex-wrap gap-2">
-          {#each typeFilters as filter}
-            <button
-              type="button"
-              onclick={() => (currentType = filter.value)}
-              class="px-3 py-1.5 text-sm rounded-lg transition-colors {currentType === filter.value
-                ? 'bg-[var(--dash-primary)] text-white'
-                : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}"
-            >
-              {filter.label}
-            </button>
-          {/each}
-        </div>
+        <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => (currentType = v)} />
       {:else}
         <div></div>
       {/if}
 
-      <div class="flex gap-2">
+      <div class="relative" data-add-menu>
         <button
           type="button"
-          onclick={() => { showAddLetter = true; showAddQuestion = false; }}
-          class="flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+          onclick={() => (showAddMenu = !showAddMenu)}
+          class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
-          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-          Letter
+          <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+          <span class="hidden sm:inline">Add</span>
         </button>
-        <button
-          type="button"
-          onclick={() => { showAddQuestion = true; showAddLetter = false; }}
-          class="flex items-center gap-2 px-3 py-1.5 text-sm border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-          Question
-        </button>
+        {#if showAddMenu}
+          <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
+            {#each Object.entries(letterTypes) as [value, label]}
+              <a
+                href="/dashboard/applications/{app.id}/letters/new?type={value}"
+                class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+                onclick={() => (showAddMenu = false)}
+              >
+                <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 opacity-50" />
+                {label}
+              </a>
+            {/each}
+            <div class="border-t border-[var(--dash-border)] my-1"></div>
+            <button
+              type="button"
+              onclick={() => { showAddQuestion = true; showAddMenu = false; }}
+              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+            >
+              <FontAwesomeIcon icon={faQuestionCircle} class="w-3.5 h-3.5 opacity-50" />
+              Application Question
+            </button>
+          </div>
+        {/if}
       </div>
     </div>
-  {/if}
-
-  <!-- Add Letter Form -->
-  {#if showAddLetter}
-    <Card padding="md">
-      <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Letter</h3>
-      <div class="space-y-3">
-        <div>
-          <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Letter Type</p>
-          <div class="flex flex-wrap gap-2">
-            {#each Object.entries(letterTypes) as [value, label]}
-              <button
-                type="button"
-                onclick={() => (newLetterType = value)}
-                class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {newLetterType === value
-                  ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
-              >
-                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {newLetterType === value
-                  ? 'border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if newLetterType === value}
-                    <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
-                  {/if}
-                </span>
-                {label}
-              </button>
-            {/each}
-          </div>
-        </div>
-        <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            onclick={() => (showAddLetter = false)}
-            class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-          >
-            Cancel
-          </button>
-          <a
-            href="/dashboard/applications/{app.id}/letters/new?type={newLetterType}"
-            class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-          >
-            Add Letter
-          </a>
-        </div>
-      </div>
-    </Card>
   {/if}
 
   <!-- Add Question Form -->
@@ -327,7 +248,7 @@
   {/if}
 
   <!-- Items List -->
-  {#if items.length === 0 && !showAddLetter && !showAddQuestion}
+  {#if items.length === 0 && !showAddQuestion}
     <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div class="w-16 h-16 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mb-4">
         <FontAwesomeIcon icon={faEnvelope} class="w-8 h-8 text-[var(--dash-text-muted)]" />
@@ -336,23 +257,38 @@
       <p class="text-sm text-[var(--dash-text-secondary)] max-w-md mb-6">
         Add cover letters, motivation texts, or answer application questions to prepare your application.
       </p>
-      <div class="flex gap-3">
+      <div class="relative inline-block" data-add-menu>
         <button
           type="button"
-          onclick={() => { showAddLetter = true; showAddQuestion = false; }}
+          onclick={() => (showAddMenu = !showAddMenu)}
           class="flex items-center gap-2 px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           <FontAwesomeIcon icon={faPlus} class="w-3.5 h-3.5" />
-          Add Letter
+          Add
         </button>
-        <button
-          type="button"
-          onclick={() => { showAddQuestion = true; showAddLetter = false; }}
-          class="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          <FontAwesomeIcon icon={faPlus} class="w-3.5 h-3.5" />
-          Add Question
-        </button>
+        {#if showAddMenu}
+          <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
+            {#each Object.entries(letterTypes) as [value, label]}
+              <a
+                href="/dashboard/applications/{app.id}/letters/new?type={value}"
+                class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+                onclick={() => (showAddMenu = false)}
+              >
+                <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 opacity-50" />
+                {label}
+              </a>
+            {/each}
+            <div class="border-t border-[var(--dash-border)] my-1"></div>
+            <button
+              type="button"
+              onclick={() => { showAddQuestion = true; showAddMenu = false; }}
+              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+            >
+              <FontAwesomeIcon icon={faQuestionCircle} class="w-3.5 h-3.5 opacity-50" />
+              Application Question
+            </button>
+          </div>
+        {/if}
       </div>
     </div>
   {:else}
@@ -562,54 +498,7 @@
                         {/if}
                         {generatingIds.has(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
                       </button>
-                      {#if hasAiChat}
-                        <button
-                          type="button"
-                          onclick={() => (showFollowup[itemId] = !showFollowup[itemId])}
-                          disabled={generatingIds.has(itemId)}
-                          class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                        >
-                          Follow-up
-                        </button>
-                      {/if}
                     </div>
-
-                    <!-- Follow-up Section -->
-                    {#if showFollowup[itemId]}
-                      <div class="pt-2 space-y-2">
-                        <textarea
-                          bind:value={followupText[itemId]}
-                          placeholder="Ask AI to refine the answer..."
-                          rows={3}
-                          disabled={generatingIds.has(itemId)}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
-                        ></textarea>
-                        <div class="flex items-center justify-between">
-                          <label class="flex items-center gap-2 text-sm text-[var(--dash-text-secondary)]">
-                            <input
-                              type="checkbox"
-                              bind:checked={followupIncludeContext[itemId]}
-                              disabled={generatingIds.has(itemId)}
-                              class="rounded"
-                            />
-                            Include original context
-                          </label>
-                          <button
-                            type="button"
-                            onclick={() => sendFollowup(item)}
-                            disabled={generatingIds.has(itemId) || !followupText[itemId]?.trim()}
-                            class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                          >
-                            {#if generatingIds.has(itemId)}
-                              <Spinner size="w-3.5 h-3.5" />
-                              Generating...
-                            {:else}
-                              Send Follow-up
-                            {/if}
-                          </button>
-                        </div>
-                      </div>
-                    {/if}
                   </div>
                 {/if}
               </div>
