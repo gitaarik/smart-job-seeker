@@ -18,9 +18,11 @@ import {
 import type { ResumeData } from "$lib/server/resume/types";
 import { uploadFileToDirectus } from "$lib/server/directus/files";
 import { logImportEvent } from "$lib/server/import-log";
+import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
+  await requireUsage(user.id, "resume_parses");
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
@@ -59,6 +61,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       const parsedData = mapJsonResumeToInternal(jsonData);
 
       await logImportEvent(user, "parse", { fileName: file.name, fileFormat: "JSON Resume", parsedData, fileId: jsonFileId });
+      await incrementUsage(user.id, "resume_parses");
 
       return json({
         success: true,
@@ -104,6 +107,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const parsedData = await parseResumeWithLLM(text);
 
     await logImportEvent(user, "parse", { fileName: file.name, fileFormat: getFormatName(file.type), parsedData, fileId });
+    await incrementUsage(user.id, "resume_parses");
 
     return json({
       success: true,

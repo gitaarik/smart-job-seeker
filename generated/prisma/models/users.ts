@@ -224,6 +224,10 @@ export type usersWhereInput = {
   is_approved?: Prisma.BoolFilter<"users"> | boolean
   accounts?: Prisma.AccountsListRelationFilter
   sessions?: Prisma.SessionsListRelationFilter
+  billing_customer?: Prisma.XOR<Prisma.Billing_customersNullableScalarRelationFilter, Prisma.billing_customersWhereInput> | null
+  subscriptions?: Prisma.SubscriptionsListRelationFilter
+  credit_purchases?: Prisma.Credit_purchasesListRelationFilter
+  usage_counters?: Prisma.Usage_countersListRelationFilter
 }
 
 export type usersOrderByWithRelationInput = {
@@ -239,6 +243,10 @@ export type usersOrderByWithRelationInput = {
   is_approved?: Prisma.SortOrder
   accounts?: Prisma.accountsOrderByRelationAggregateInput
   sessions?: Prisma.sessionsOrderByRelationAggregateInput
+  billing_customer?: Prisma.billing_customersOrderByWithRelationInput
+  subscriptions?: Prisma.subscriptionsOrderByRelationAggregateInput
+  credit_purchases?: Prisma.credit_purchasesOrderByRelationAggregateInput
+  usage_counters?: Prisma.usage_countersOrderByRelationAggregateInput
 }
 
 export type usersWhereUniqueInput = Prisma.AtLeast<{
@@ -257,6 +265,10 @@ export type usersWhereUniqueInput = Prisma.AtLeast<{
   is_approved?: Prisma.BoolFilter<"users"> | boolean
   accounts?: Prisma.AccountsListRelationFilter
   sessions?: Prisma.SessionsListRelationFilter
+  billing_customer?: Prisma.XOR<Prisma.Billing_customersNullableScalarRelationFilter, Prisma.billing_customersWhereInput> | null
+  subscriptions?: Prisma.SubscriptionsListRelationFilter
+  credit_purchases?: Prisma.Credit_purchasesListRelationFilter
+  usage_counters?: Prisma.Usage_countersListRelationFilter
 }, "id">
 
 export type usersOrderByWithAggregationInput = {
@@ -304,6 +316,10 @@ export type usersCreateInput = {
   is_approved?: boolean
   accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
   sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersCreateNestedManyWithoutUserInput
 }
 
 export type usersUncheckedCreateInput = {
@@ -319,6 +335,10 @@ export type usersUncheckedCreateInput = {
   is_approved?: boolean
   accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersUncheckedCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsUncheckedCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type usersUpdateInput = {
@@ -334,6 +354,10 @@ export type usersUpdateInput = {
   is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
   sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUpdateManyWithoutUserNestedInput
 }
 
 export type usersUncheckedUpdateInput = {
@@ -349,6 +373,10 @@ export type usersUncheckedUpdateInput = {
   is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUncheckedUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUncheckedUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type usersCreateManyInput = {
@@ -462,6 +490,62 @@ export type usersUpdateOneRequiredWithoutSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutSessionsInput, Prisma.usersUpdateWithoutSessionsInput>, Prisma.usersUncheckedUpdateWithoutSessionsInput>
 }
 
+export type usersCreateNestedOneWithoutBilling_customerInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutBilling_customerInput, Prisma.usersUncheckedCreateWithoutBilling_customerInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutBilling_customerInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutBilling_customerNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutBilling_customerInput, Prisma.usersUncheckedCreateWithoutBilling_customerInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutBilling_customerInput
+  upsert?: Prisma.usersUpsertWithoutBilling_customerInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutBilling_customerInput, Prisma.usersUpdateWithoutBilling_customerInput>, Prisma.usersUncheckedUpdateWithoutBilling_customerInput>
+}
+
+export type usersCreateNestedOneWithoutSubscriptionsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutSubscriptionsInput, Prisma.usersUncheckedCreateWithoutSubscriptionsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutSubscriptionsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutSubscriptionsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutSubscriptionsInput, Prisma.usersUncheckedCreateWithoutSubscriptionsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutSubscriptionsInput
+  upsert?: Prisma.usersUpsertWithoutSubscriptionsInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutSubscriptionsInput, Prisma.usersUpdateWithoutSubscriptionsInput>, Prisma.usersUncheckedUpdateWithoutSubscriptionsInput>
+}
+
+export type usersCreateNestedOneWithoutCredit_purchasesInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutCredit_purchasesInput, Prisma.usersUncheckedCreateWithoutCredit_purchasesInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutCredit_purchasesInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutCredit_purchasesNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutCredit_purchasesInput, Prisma.usersUncheckedCreateWithoutCredit_purchasesInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutCredit_purchasesInput
+  upsert?: Prisma.usersUpsertWithoutCredit_purchasesInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutCredit_purchasesInput, Prisma.usersUpdateWithoutCredit_purchasesInput>, Prisma.usersUncheckedUpdateWithoutCredit_purchasesInput>
+}
+
+export type usersCreateNestedOneWithoutUsage_countersInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutUsage_countersInput, Prisma.usersUncheckedCreateWithoutUsage_countersInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutUsage_countersInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutUsage_countersNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutUsage_countersInput, Prisma.usersUncheckedCreateWithoutUsage_countersInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutUsage_countersInput
+  upsert?: Prisma.usersUpsertWithoutUsage_countersInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutUsage_countersInput, Prisma.usersUpdateWithoutUsage_countersInput>, Prisma.usersUncheckedUpdateWithoutUsage_countersInput>
+}
+
 export type usersCreateWithoutAccountsInput = {
   id: string
   email: string
@@ -474,6 +558,10 @@ export type usersCreateWithoutAccountsInput = {
   is_staff?: boolean
   is_approved?: boolean
   sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersCreateNestedManyWithoutUserInput
 }
 
 export type usersUncheckedCreateWithoutAccountsInput = {
@@ -488,6 +576,10 @@ export type usersUncheckedCreateWithoutAccountsInput = {
   is_staff?: boolean
   is_approved?: boolean
   sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersUncheckedCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsUncheckedCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type usersCreateOrConnectWithoutAccountsInput = {
@@ -518,6 +610,10 @@ export type usersUpdateWithoutAccountsInput = {
   is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
   is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUpdateManyWithoutUserNestedInput
 }
 
 export type usersUncheckedUpdateWithoutAccountsInput = {
@@ -532,6 +628,10 @@ export type usersUncheckedUpdateWithoutAccountsInput = {
   is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
   is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUncheckedUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUncheckedUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type usersCreateWithoutSessionsInput = {
@@ -546,6 +646,10 @@ export type usersCreateWithoutSessionsInput = {
   is_staff?: boolean
   is_approved?: boolean
   accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersCreateNestedManyWithoutUserInput
 }
 
 export type usersUncheckedCreateWithoutSessionsInput = {
@@ -560,6 +664,10 @@ export type usersUncheckedCreateWithoutSessionsInput = {
   is_staff?: boolean
   is_approved?: boolean
   accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersUncheckedCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsUncheckedCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type usersCreateOrConnectWithoutSessionsInput = {
@@ -590,6 +698,10 @@ export type usersUpdateWithoutSessionsInput = {
   is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
   is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUpdateManyWithoutUserNestedInput
 }
 
 export type usersUncheckedUpdateWithoutSessionsInput = {
@@ -604,6 +716,362 @@ export type usersUncheckedUpdateWithoutSessionsInput = {
   is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
   is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUncheckedUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUncheckedUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type usersCreateWithoutBilling_customerInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
+  subscriptions?: Prisma.subscriptionsCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersCreateNestedManyWithoutUserInput
+}
+
+export type usersUncheckedCreateWithoutBilling_customerInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
+  subscriptions?: Prisma.subscriptionsUncheckedCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type usersCreateOrConnectWithoutBilling_customerInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutBilling_customerInput, Prisma.usersUncheckedCreateWithoutBilling_customerInput>
+}
+
+export type usersUpsertWithoutBilling_customerInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutBilling_customerInput, Prisma.usersUncheckedUpdateWithoutBilling_customerInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutBilling_customerInput, Prisma.usersUncheckedCreateWithoutBilling_customerInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutBilling_customerInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutBilling_customerInput, Prisma.usersUncheckedUpdateWithoutBilling_customerInput>
+}
+
+export type usersUpdateWithoutBilling_customerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUpdateManyWithoutUserNestedInput
+}
+
+export type usersUncheckedUpdateWithoutBilling_customerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUncheckedUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type usersCreateWithoutSubscriptionsInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersCreateNestedOneWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersCreateNestedManyWithoutUserInput
+}
+
+export type usersUncheckedCreateWithoutSubscriptionsInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersUncheckedCreateNestedOneWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type usersCreateOrConnectWithoutSubscriptionsInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutSubscriptionsInput, Prisma.usersUncheckedCreateWithoutSubscriptionsInput>
+}
+
+export type usersUpsertWithoutSubscriptionsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutSubscriptionsInput, Prisma.usersUncheckedUpdateWithoutSubscriptionsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutSubscriptionsInput, Prisma.usersUncheckedCreateWithoutSubscriptionsInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutSubscriptionsInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutSubscriptionsInput, Prisma.usersUncheckedUpdateWithoutSubscriptionsInput>
+}
+
+export type usersUpdateWithoutSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUpdateOneWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUpdateManyWithoutUserNestedInput
+}
+
+export type usersUncheckedUpdateWithoutSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUncheckedUpdateOneWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type usersCreateWithoutCredit_purchasesInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersCreateNestedManyWithoutUserInput
+}
+
+export type usersUncheckedCreateWithoutCredit_purchasesInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersUncheckedCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsUncheckedCreateNestedManyWithoutUserInput
+  usage_counters?: Prisma.usage_countersUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type usersCreateOrConnectWithoutCredit_purchasesInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutCredit_purchasesInput, Prisma.usersUncheckedCreateWithoutCredit_purchasesInput>
+}
+
+export type usersUpsertWithoutCredit_purchasesInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutCredit_purchasesInput, Prisma.usersUncheckedUpdateWithoutCredit_purchasesInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutCredit_purchasesInput, Prisma.usersUncheckedCreateWithoutCredit_purchasesInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutCredit_purchasesInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutCredit_purchasesInput, Prisma.usersUncheckedUpdateWithoutCredit_purchasesInput>
+}
+
+export type usersUpdateWithoutCredit_purchasesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUpdateManyWithoutUserNestedInput
+}
+
+export type usersUncheckedUpdateWithoutCredit_purchasesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUncheckedUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUncheckedUpdateManyWithoutUserNestedInput
+  usage_counters?: Prisma.usage_countersUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type usersCreateWithoutUsage_countersInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesCreateNestedManyWithoutUserInput
+}
+
+export type usersUncheckedCreateWithoutUsage_countersInput = {
+  id: string
+  email: string
+  emailVerified?: boolean | null
+  name?: string | null
+  image?: string | null
+  createdAt?: Date | string | null
+  updatedAt?: Date | string | null
+  is_admin?: boolean
+  is_staff?: boolean
+  is_approved?: boolean
+  accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
+  billing_customer?: Prisma.billing_customersUncheckedCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.subscriptionsUncheckedCreateNestedManyWithoutUserInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type usersCreateOrConnectWithoutUsage_countersInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutUsage_countersInput, Prisma.usersUncheckedCreateWithoutUsage_countersInput>
+}
+
+export type usersUpsertWithoutUsage_countersInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutUsage_countersInput, Prisma.usersUncheckedUpdateWithoutUsage_countersInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutUsage_countersInput, Prisma.usersUncheckedCreateWithoutUsage_countersInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutUsage_countersInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutUsage_countersInput, Prisma.usersUncheckedUpdateWithoutUsage_countersInput>
+}
+
+export type usersUpdateWithoutUsage_countersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUpdateManyWithoutUserNestedInput
+}
+
+export type usersUncheckedUpdateWithoutUsage_countersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_staff?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
+  billing_customer?: Prisma.billing_customersUncheckedUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.subscriptionsUncheckedUpdateManyWithoutUserNestedInput
+  credit_purchases?: Prisma.credit_purchasesUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -614,11 +1082,17 @@ export type usersUncheckedUpdateWithoutSessionsInput = {
 export type UsersCountOutputType = {
   accounts: number
   sessions: number
+  subscriptions: number
+  credit_purchases: number
+  usage_counters: number
 }
 
 export type UsersCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | UsersCountOutputTypeCountAccountsArgs
   sessions?: boolean | UsersCountOutputTypeCountSessionsArgs
+  subscriptions?: boolean | UsersCountOutputTypeCountSubscriptionsArgs
+  credit_purchases?: boolean | UsersCountOutputTypeCountCredit_purchasesArgs
+  usage_counters?: boolean | UsersCountOutputTypeCountUsage_countersArgs
 }
 
 /**
@@ -645,6 +1119,27 @@ export type UsersCountOutputTypeCountSessionsArgs<ExtArgs extends runtime.Types.
   where?: Prisma.sessionsWhereInput
 }
 
+/**
+ * UsersCountOutputType without action
+ */
+export type UsersCountOutputTypeCountSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.subscriptionsWhereInput
+}
+
+/**
+ * UsersCountOutputType without action
+ */
+export type UsersCountOutputTypeCountCredit_purchasesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.credit_purchasesWhereInput
+}
+
+/**
+ * UsersCountOutputType without action
+ */
+export type UsersCountOutputTypeCountUsage_countersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.usage_countersWhereInput
+}
+
 
 export type usersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -659,6 +1154,10 @@ export type usersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   is_approved?: boolean
   accounts?: boolean | Prisma.users$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.users$sessionsArgs<ExtArgs>
+  billing_customer?: boolean | Prisma.users$billing_customerArgs<ExtArgs>
+  subscriptions?: boolean | Prisma.users$subscriptionsArgs<ExtArgs>
+  credit_purchases?: boolean | Prisma.users$credit_purchasesArgs<ExtArgs>
+  usage_counters?: boolean | Prisma.users$usage_countersArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["users"]>
 
@@ -705,6 +1204,10 @@ export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
 export type usersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.users$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.users$sessionsArgs<ExtArgs>
+  billing_customer?: boolean | Prisma.users$billing_customerArgs<ExtArgs>
+  subscriptions?: boolean | Prisma.users$subscriptionsArgs<ExtArgs>
+  credit_purchases?: boolean | Prisma.users$credit_purchasesArgs<ExtArgs>
+  usage_counters?: boolean | Prisma.users$usage_countersArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type usersIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -715,6 +1218,10 @@ export type $usersPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   objects: {
     accounts: Prisma.$accountsPayload<ExtArgs>[]
     sessions: Prisma.$sessionsPayload<ExtArgs>[]
+    billing_customer: Prisma.$billing_customersPayload<ExtArgs> | null
+    subscriptions: Prisma.$subscriptionsPayload<ExtArgs>[]
+    credit_purchases: Prisma.$credit_purchasesPayload<ExtArgs>[]
+    usage_counters: Prisma.$usage_countersPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1123,6 +1630,10 @@ export interface Prisma__usersClient<T, Null = never, ExtArgs extends runtime.Ty
   readonly [Symbol.toStringTag]: "PrismaPromise"
   accounts<T extends Prisma.users$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$accountsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sessions<T extends Prisma.users$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$sessionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  billing_customer<T extends Prisma.users$billing_customerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$billing_customerArgs<ExtArgs>>): Prisma.Prisma__billing_customersClient<runtime.Types.Result.GetResult<Prisma.$billing_customersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  subscriptions<T extends Prisma.users$subscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$subscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$subscriptionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  credit_purchases<T extends Prisma.users$credit_purchasesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$credit_purchasesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$credit_purchasesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  usage_counters<T extends Prisma.users$usage_countersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$usage_countersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$usage_countersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1595,6 +2106,97 @@ export type users$sessionsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.SessionsScalarFieldEnum | Prisma.SessionsScalarFieldEnum[]
+}
+
+/**
+ * users.billing_customer
+ */
+export type users$billing_customerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the billing_customers
+   */
+  select?: Prisma.billing_customersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the billing_customers
+   */
+  omit?: Prisma.billing_customersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.billing_customersInclude<ExtArgs> | null
+  where?: Prisma.billing_customersWhereInput
+}
+
+/**
+ * users.subscriptions
+ */
+export type users$subscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the subscriptions
+   */
+  select?: Prisma.subscriptionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the subscriptions
+   */
+  omit?: Prisma.subscriptionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.subscriptionsInclude<ExtArgs> | null
+  where?: Prisma.subscriptionsWhereInput
+  orderBy?: Prisma.subscriptionsOrderByWithRelationInput | Prisma.subscriptionsOrderByWithRelationInput[]
+  cursor?: Prisma.subscriptionsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SubscriptionsScalarFieldEnum | Prisma.SubscriptionsScalarFieldEnum[]
+}
+
+/**
+ * users.credit_purchases
+ */
+export type users$credit_purchasesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the credit_purchases
+   */
+  select?: Prisma.credit_purchasesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the credit_purchases
+   */
+  omit?: Prisma.credit_purchasesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.credit_purchasesInclude<ExtArgs> | null
+  where?: Prisma.credit_purchasesWhereInput
+  orderBy?: Prisma.credit_purchasesOrderByWithRelationInput | Prisma.credit_purchasesOrderByWithRelationInput[]
+  cursor?: Prisma.credit_purchasesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Credit_purchasesScalarFieldEnum | Prisma.Credit_purchasesScalarFieldEnum[]
+}
+
+/**
+ * users.usage_counters
+ */
+export type users$usage_countersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the usage_counters
+   */
+  select?: Prisma.usage_countersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the usage_counters
+   */
+  omit?: Prisma.usage_countersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.usage_countersInclude<ExtArgs> | null
+  where?: Prisma.usage_countersWhereInput
+  orderBy?: Prisma.usage_countersOrderByWithRelationInput | Prisma.usage_countersOrderByWithRelationInput[]
+  cursor?: Prisma.usage_countersWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Usage_countersScalarFieldEnum | Prisma.Usage_countersScalarFieldEnum[]
 }
 
 /**

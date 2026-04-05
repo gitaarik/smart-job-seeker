@@ -472,7 +472,11 @@ export const ModelName = {
   scraper_agent_iterations: 'scraper_agent_iterations',
   import_logs: 'import_logs',
   user_feedback: 'user_feedback',
-  user_feedback_files: 'user_feedback_files'
+  user_feedback_files: 'user_feedback_files',
+  billing_customers: 'billing_customers',
+  subscriptions: 'subscriptions',
+  credit_purchases: 'credit_purchases',
+  usage_counters: 'usage_counters'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -488,7 +492,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_status_log" | "application_letters" | "letter_versions" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_match_history" | "job_statuses" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations" | "import_logs" | "user_feedback" | "user_feedback_files"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_status_log" | "application_letters" | "letter_versions" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_match_history" | "job_statuses" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations" | "import_logs" | "user_feedback" | "user_feedback_files" | "billing_customers" | "subscriptions" | "credit_purchases" | "usage_counters"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -7078,6 +7082,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    billing_customers: {
+      payload: Prisma.$billing_customersPayload<ExtArgs>
+      fields: Prisma.billing_customersFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.billing_customersFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.billing_customersFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>
+        }
+        findFirst: {
+          args: Prisma.billing_customersFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.billing_customersFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>
+        }
+        findMany: {
+          args: Prisma.billing_customersFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>[]
+        }
+        create: {
+          args: Prisma.billing_customersCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>
+        }
+        createMany: {
+          args: Prisma.billing_customersCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.billing_customersCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>[]
+        }
+        delete: {
+          args: Prisma.billing_customersDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>
+        }
+        update: {
+          args: Prisma.billing_customersUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>
+        }
+        deleteMany: {
+          args: Prisma.billing_customersDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.billing_customersUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.billing_customersUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>[]
+        }
+        upsert: {
+          args: Prisma.billing_customersUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$billing_customersPayload>
+        }
+        aggregate: {
+          args: Prisma.Billing_customersAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBilling_customers>
+        }
+        groupBy: {
+          args: Prisma.billing_customersGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Billing_customersGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.billing_customersCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Billing_customersCountAggregateOutputType> | number
+        }
+      }
+    }
+    subscriptions: {
+      payload: Prisma.$subscriptionsPayload<ExtArgs>
+      fields: Prisma.subscriptionsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.subscriptionsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.subscriptionsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>
+        }
+        findFirst: {
+          args: Prisma.subscriptionsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.subscriptionsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>
+        }
+        findMany: {
+          args: Prisma.subscriptionsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>[]
+        }
+        create: {
+          args: Prisma.subscriptionsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>
+        }
+        createMany: {
+          args: Prisma.subscriptionsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.subscriptionsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>[]
+        }
+        delete: {
+          args: Prisma.subscriptionsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>
+        }
+        update: {
+          args: Prisma.subscriptionsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>
+        }
+        deleteMany: {
+          args: Prisma.subscriptionsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.subscriptionsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.subscriptionsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>[]
+        }
+        upsert: {
+          args: Prisma.subscriptionsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$subscriptionsPayload>
+        }
+        aggregate: {
+          args: Prisma.SubscriptionsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSubscriptions>
+        }
+        groupBy: {
+          args: Prisma.subscriptionsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubscriptionsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.subscriptionsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubscriptionsCountAggregateOutputType> | number
+        }
+      }
+    }
+    credit_purchases: {
+      payload: Prisma.$credit_purchasesPayload<ExtArgs>
+      fields: Prisma.credit_purchasesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.credit_purchasesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.credit_purchasesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>
+        }
+        findFirst: {
+          args: Prisma.credit_purchasesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.credit_purchasesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>
+        }
+        findMany: {
+          args: Prisma.credit_purchasesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>[]
+        }
+        create: {
+          args: Prisma.credit_purchasesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>
+        }
+        createMany: {
+          args: Prisma.credit_purchasesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.credit_purchasesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>[]
+        }
+        delete: {
+          args: Prisma.credit_purchasesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>
+        }
+        update: {
+          args: Prisma.credit_purchasesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>
+        }
+        deleteMany: {
+          args: Prisma.credit_purchasesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.credit_purchasesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.credit_purchasesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>[]
+        }
+        upsert: {
+          args: Prisma.credit_purchasesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_purchasesPayload>
+        }
+        aggregate: {
+          args: Prisma.Credit_purchasesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCredit_purchases>
+        }
+        groupBy: {
+          args: Prisma.credit_purchasesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Credit_purchasesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.credit_purchasesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Credit_purchasesCountAggregateOutputType> | number
+        }
+      }
+    }
+    usage_counters: {
+      payload: Prisma.$usage_countersPayload<ExtArgs>
+      fields: Prisma.usage_countersFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.usage_countersFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.usage_countersFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>
+        }
+        findFirst: {
+          args: Prisma.usage_countersFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.usage_countersFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>
+        }
+        findMany: {
+          args: Prisma.usage_countersFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>[]
+        }
+        create: {
+          args: Prisma.usage_countersCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>
+        }
+        createMany: {
+          args: Prisma.usage_countersCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.usage_countersCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>[]
+        }
+        delete: {
+          args: Prisma.usage_countersDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>
+        }
+        update: {
+          args: Prisma.usage_countersUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>
+        }
+        deleteMany: {
+          args: Prisma.usage_countersDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.usage_countersUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.usage_countersUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>[]
+        }
+        upsert: {
+          args: Prisma.usage_countersUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$usage_countersPayload>
+        }
+        aggregate: {
+          args: Prisma.Usage_countersAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUsage_counters>
+        }
+        groupBy: {
+          args: Prisma.usage_countersGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Usage_countersGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.usage_countersCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Usage_countersCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -8670,6 +8970,65 @@ export const User_feedback_filesScalarFieldEnum = {
 export type User_feedback_filesScalarFieldEnum = (typeof User_feedback_filesScalarFieldEnum)[keyof typeof User_feedback_filesScalarFieldEnum]
 
 
+export const Billing_customersScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  stripe_customer_id: 'stripe_customer_id',
+  date_created: 'date_created'
+} as const
+
+export type Billing_customersScalarFieldEnum = (typeof Billing_customersScalarFieldEnum)[keyof typeof Billing_customersScalarFieldEnum]
+
+
+export const SubscriptionsScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  stripe_subscription_id: 'stripe_subscription_id',
+  stripe_price_id: 'stripe_price_id',
+  plan: 'plan',
+  status: 'status',
+  current_period_start: 'current_period_start',
+  current_period_end: 'current_period_end',
+  cancel_at_period_end: 'cancel_at_period_end',
+  date_created: 'date_created',
+  date_updated: 'date_updated'
+} as const
+
+export type SubscriptionsScalarFieldEnum = (typeof SubscriptionsScalarFieldEnum)[keyof typeof SubscriptionsScalarFieldEnum]
+
+
+export const Credit_purchasesScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  stripe_payment_intent_id: 'stripe_payment_intent_id',
+  pack_type: 'pack_type',
+  amount_cents: 'amount_cents',
+  period: 'period',
+  date_created: 'date_created'
+} as const
+
+export type Credit_purchasesScalarFieldEnum = (typeof Credit_purchasesScalarFieldEnum)[keyof typeof Credit_purchasesScalarFieldEnum]
+
+
+export const Usage_countersScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  period: 'period',
+  ai_generations: 'ai_generations',
+  ai_followups: 'ai_followups',
+  job_matches: 'job_matches',
+  scrape_runs: 'scrape_runs',
+  pdf_exports: 'pdf_exports',
+  resume_parses: 'resume_parses',
+  extra_ai_generations: 'extra_ai_generations',
+  extra_ai_followups: 'extra_ai_followups',
+  extra_job_matches: 'extra_job_matches',
+  extra_scrape_runs: 'extra_scrape_runs'
+} as const
+
+export type Usage_countersScalarFieldEnum = (typeof Usage_countersScalarFieldEnum)[keyof typeof Usage_countersScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -9005,6 +9364,10 @@ export type GlobalOmitConfig = {
   import_logs?: Prisma.import_logsOmit
   user_feedback?: Prisma.user_feedbackOmit
   user_feedback_files?: Prisma.user_feedback_filesOmit
+  billing_customers?: Prisma.billing_customersOmit
+  subscriptions?: Prisma.subscriptionsOmit
+  credit_purchases?: Prisma.credit_purchasesOmit
+  usage_counters?: Prisma.usage_countersOmit
 }
 
 /* Types for Logging */

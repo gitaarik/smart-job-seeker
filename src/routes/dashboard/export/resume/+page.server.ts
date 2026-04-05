@@ -3,6 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../profile/utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
+import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -121,6 +122,8 @@ export const actions: Actions = {
       }
     }
 
+    await requireUsage(user.id, "pdf_exports");
+    await incrementUsage(user.id, "pdf_exports");
     generateVersionPdfs(profileId, slug.trim()).catch(console.error);
 
     return { success: true };
@@ -142,6 +145,8 @@ export const actions: Actions = {
     });
     if (!version) return fail(404, { error: "Version not found" });
 
+    await requireUsage(user.id, "pdf_exports");
+    await incrementUsage(user.id, "pdf_exports");
     generateVersionPdfs(profileId, slug).catch(console.error);
 
     return { success: true, generatedSlug: slug };

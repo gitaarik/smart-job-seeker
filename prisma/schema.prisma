@@ -1371,18 +1371,22 @@ model sessions {
 }
 
 model users {
-  id            String     @id
-  email         String     @db.VarChar(255)
-  emailVerified Boolean?   @default(false)
-  name          String?    @db.VarChar(255)
-  image         String?    @db.VarChar(255)
-  createdAt     DateTime?  @db.Timestamptz(6)
-  updatedAt     DateTime?  @db.Timestamptz(6)
-  is_admin      Boolean    @default(false)
-  is_staff      Boolean    @default(false)
-  is_approved   Boolean    @default(false)
-  accounts      accounts[]
-  sessions      sessions[]
+  id                 String               @id
+  email              String               @db.VarChar(255)
+  emailVerified      Boolean?             @default(false)
+  name               String?              @db.VarChar(255)
+  image              String?              @db.VarChar(255)
+  createdAt          DateTime?            @db.Timestamptz(6)
+  updatedAt          DateTime?            @db.Timestamptz(6)
+  is_admin           Boolean              @default(false)
+  is_staff           Boolean              @default(false)
+  is_approved        Boolean              @default(false)
+  accounts           accounts[]
+  sessions           sessions[]
+  billing_customer   billing_customers?
+  subscriptions      subscriptions[]
+  credit_purchases   credit_purchases[]
+  usage_counters     usage_counters[]
 }
 
 model verifications {
@@ -1606,4 +1610,64 @@ model user_feedback_files {
   directus_files    directus_files  @relation(fields: [directus_files_id], references: [id], onDelete: Cascade)
 
   @@index([user_feedback_id], map: "user_feedback_files_feedback_idx")
+}
+
+model billing_customers {
+  id                 Int       @id @default(autoincrement())
+  user_id            String    @unique
+  stripe_customer_id String    @unique @db.VarChar(255)
+  date_created       DateTime? @default(now()) @db.Timestamptz(6)
+  user               users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model subscriptions {
+  id                      Int       @id @default(autoincrement())
+  user_id                 String
+  stripe_subscription_id  String    @unique @db.VarChar(255)
+  stripe_price_id         String    @db.VarChar(255)
+  plan                    String    @db.VarChar(50)
+  status                  String    @default("active") @db.VarChar(50)
+  current_period_start    DateTime  @db.Timestamptz(6)
+  current_period_end      DateTime  @db.Timestamptz(6)
+  cancel_at_period_end    Boolean   @default(false)
+  date_created            DateTime? @default(now()) @db.Timestamptz(6)
+  date_updated            DateTime? @db.Timestamptz(6)
+  user                    users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "subscriptions_user_id_idx")
+  @@index([status], map: "subscriptions_status_idx")
+}
+
+model credit_purchases {
+  id                       Int       @id @default(autoincrement())
+  user_id                  String
+  stripe_payment_intent_id String?   @db.VarChar(255)
+  pack_type                String    @db.VarChar(50)
+  amount_cents             Int
+  period                   String    @db.VarChar(7)
+  date_created             DateTime? @default(now()) @db.Timestamptz(6)
+  user                     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "credit_purchases_user_id_idx")
+}
+
+model usage_counters {
+  id                   Int     @id @default(autoincrement())
+  user_id              String
+  period               String  @db.VarChar(7)
+  ai_generations       Int     @default(0)
+  ai_followups         Int     @default(0)
+  job_matches          Int     @default(0)
+  scrape_runs          Int     @default(0)
+  pdf_exports          Int     @default(0)
+  resume_parses        Int     @default(0)
+  extra_ai_generations Int     @default(0)
+  extra_ai_followups   Int     @default(0)
+  extra_job_matches    Int     @default(0)
+  extra_scrape_runs    Int     @default(0)
+  user                 users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, period])
+  @@index([user_id], map: "usage_counters_user_id_idx")
+  @@index([period], map: "usage_counters_period_idx")
 }

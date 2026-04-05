@@ -139,7 +139,11 @@ export const ModelName = {
   scraper_agent_iterations: 'scraper_agent_iterations',
   import_logs: 'import_logs',
   user_feedback: 'user_feedback',
-  user_feedback_files: 'user_feedback_files'
+  user_feedback_files: 'user_feedback_files',
+  billing_customers: 'billing_customers',
+  subscriptions: 'subscriptions',
+  credit_purchases: 'credit_purchases',
+  usage_counters: 'usage_counters'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1709,6 +1713,65 @@ export const User_feedback_filesScalarFieldEnum = {
 } as const
 
 export type User_feedback_filesScalarFieldEnum = (typeof User_feedback_filesScalarFieldEnum)[keyof typeof User_feedback_filesScalarFieldEnum]
+
+
+export const Billing_customersScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  stripe_customer_id: 'stripe_customer_id',
+  date_created: 'date_created'
+} as const
+
+export type Billing_customersScalarFieldEnum = (typeof Billing_customersScalarFieldEnum)[keyof typeof Billing_customersScalarFieldEnum]
+
+
+export const SubscriptionsScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  stripe_subscription_id: 'stripe_subscription_id',
+  stripe_price_id: 'stripe_price_id',
+  plan: 'plan',
+  status: 'status',
+  current_period_start: 'current_period_start',
+  current_period_end: 'current_period_end',
+  cancel_at_period_end: 'cancel_at_period_end',
+  date_created: 'date_created',
+  date_updated: 'date_updated'
+} as const
+
+export type SubscriptionsScalarFieldEnum = (typeof SubscriptionsScalarFieldEnum)[keyof typeof SubscriptionsScalarFieldEnum]
+
+
+export const Credit_purchasesScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  stripe_payment_intent_id: 'stripe_payment_intent_id',
+  pack_type: 'pack_type',
+  amount_cents: 'amount_cents',
+  period: 'period',
+  date_created: 'date_created'
+} as const
+
+export type Credit_purchasesScalarFieldEnum = (typeof Credit_purchasesScalarFieldEnum)[keyof typeof Credit_purchasesScalarFieldEnum]
+
+
+export const Usage_countersScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  period: 'period',
+  ai_generations: 'ai_generations',
+  ai_followups: 'ai_followups',
+  job_matches: 'job_matches',
+  scrape_runs: 'scrape_runs',
+  pdf_exports: 'pdf_exports',
+  resume_parses: 'resume_parses',
+  extra_ai_generations: 'extra_ai_generations',
+  extra_ai_followups: 'extra_ai_followups',
+  extra_job_matches: 'extra_job_matches',
+  extra_scrape_runs: 'extra_scrape_runs'
+} as const
+
+export type Usage_countersScalarFieldEnum = (typeof Usage_countersScalarFieldEnum)[keyof typeof Usage_countersScalarFieldEnum]
 
 
 export const SortOrder = {

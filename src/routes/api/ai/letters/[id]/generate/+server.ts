@@ -4,6 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { parseBody, letterGenerateSchema } from "$lib/server/validation/api-schemas";
 import { generateApplicationLetter } from "$lib/server/ai-chat/application-letter";
+import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -23,6 +24,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     return json({ success: false, message: "Letter not found" }, { status: 404 });
   }
 
+  await requireUsage(user.id, "ai_generations");
+
   const body = await request.json().catch(() => ({}));
   const { additionalContext, mode } = parseBody(letterGenerateSchema, body);
 
@@ -31,5 +34,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   if (!result.success) {
     return json(result, { status: 422 });
   }
+
+  await incrementUsage(user.id, "ai_generations");
   return json(result);
 };

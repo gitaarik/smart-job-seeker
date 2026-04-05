@@ -7,6 +7,7 @@
     faBars,
     faBookmark,
     faBriefcase,
+    faCreditCard,
     faBullseye,
     faChartBar,
     faChevronDown,
@@ -164,6 +165,11 @@
           icon: faUserFriends,
         },
       ],
+    },
+    {
+      label: "Billing",
+      href: "/dashboard/billing",
+      icon: faCreditCard,
     },
     {
       label: "Data & Settings",

@@ -4,6 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { parseBody, followupRequestSchema } from "$lib/server/validation/api-schemas";
 import { createApplicationLetterFollowup } from "$lib/server/ai-chat/application-letter-followup";
+import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -56,6 +57,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     });
   }
 
+  await requireUsage(user.id, "ai_followups");
+
   const result = await createApplicationLetterFollowup(
     letterId,
     followupRequest,
@@ -67,5 +70,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   if (!result.success) {
     return json(result, { status: 422 });
   }
+
+  await incrementUsage(user.id, "ai_followups");
   return json(result);
 };

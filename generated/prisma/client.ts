@@ -484,3 +484,23 @@ export type user_feedback = Prisma.user_feedbackModel
  * 
  */
 export type user_feedback_files = Prisma.user_feedback_filesModel
+/**
+ * Model billing_customers
+ * 
+ */
+export type billing_customers = Prisma.billing_customersModel
+/**
+ * Model subscriptions
+ * 
+ */
+export type subscriptions = Prisma.subscriptionsModel
+/**
+ * Model credit_purchases
+ * 
+ */
+export type credit_purchases = Prisma.credit_purchasesModel
+/**
+ * Model usage_counters
+ * 
+ */
+export type usage_counters = Prisma.usage_countersModel

@@ -10,6 +10,7 @@ import {
   removeActiveJob,
 } from "$lib/server/queue";
 import { config } from "$lib/server/config";
+import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
 
 // Rate limiting: minimum hours between scrapes (per job search)
 const COOLDOWN_HOURS = config.scrapeCooldownHours;
@@ -67,6 +68,11 @@ export const POST: RequestHandler = async ({ params, locals }) => {
       cooldownHours: COOLDOWN_HOURS,
       maxRuns: MAX_RUNS_PER_COOLDOWN,
     });
+  }
+
+  // Check subscription usage limit
+  if (!isStaff) {
+    await requireUsage(user.id, "scrape_runs");
   }
 
   // Check if this search is already running in BullMQ
@@ -154,6 +160,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     where: { id: run.id },
     data: { bullmq_job_id: job.id },
   });
+
+  await incrementUsage(user.id, "scrape_runs");
 
   console.log(
     `[API] Queued scrape for job search ${searchTaskId}, run ${run.id}, BullMQ job ${job.id}`,
