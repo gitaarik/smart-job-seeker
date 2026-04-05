@@ -3,7 +3,9 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faCog,
     faFileAlt,
+    faFilePdf,
     faGlobe,
     faPencil,
   } from "@fortawesome/free-solid-svg-icons";
@@ -18,6 +20,8 @@
   let publicCvVersionId = $derived(data.publicCvVersionId);
 
   let showAddForm = $state(false);
+  let generatingSlug = $state<string | null>(null);
+  let generatedSlug = $state<string | null>(null);
 
   // Form states for new entry
   let newName = $state("");
@@ -74,6 +78,16 @@
       await update();
       if (result.type === "success") {
         resetAddForm();
+      }
+    };
+  }
+
+  function handleGenerateSubmit(slug: string) {
+    generatingSlug = slug;
+    return async ({ result }: { result: { type: string }; update: () => Promise<void> }) => {
+      generatingSlug = null;
+      if (result.type === "success") {
+        generatedSlug = slug;
       }
     };
   }
@@ -287,6 +301,27 @@
                   target="_blank"
                   class="dash-link-ext"
                 >CV PDF</a>
+                {#if generatingSlug === version.slug}
+                  <span class="dash-link-ext !text-amber-600 !bg-amber-500/10 flex items-center gap-1 pointer-events-none">
+                    <FontAwesomeIcon icon={faCog} class="w-3 h-3 animate-spin" />
+                    Generating...
+                  </span>
+                {:else if generatedSlug === version.slug}
+                  <span class="text-xs text-green-600">
+                    PDFs generating — <button type="button" onclick={() => location.reload()} class="underline hover:no-underline">reload</button> in a moment
+                  </span>
+                {:else if !version.hasResumePdf || !version.hasCvPdf}
+                  <form method="POST" action="?/generateExports" use:enhance={() => handleGenerateSubmit(version.slug ?? "")} class="inline">
+                    <input type="hidden" name="slug" value={version.slug} />
+                    <button
+                      type="submit"
+                      class="dash-link-ext !text-amber-600 !bg-amber-500/10 hover:!bg-amber-500/20 flex items-center gap-1"
+                    >
+                      <FontAwesomeIcon icon={faFilePdf} class="w-3 h-3" />
+                      Generate PDFs
+                    </button>
+                  </form>
+                {/if}
               </div>
             {/if}
           {/snippet}

@@ -15,27 +15,56 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const profileExports = await db.profile_exports.findMany({
-    where: {
-      profile: layoutData.selectedProfile.id,
-      status: "published",
-      export_type: { in: ["resume", "cv"] },
-    },
-    include: {
-      directus_files: {
-        select: {
-          id: true,
-          filename_download: true,
-          type: true,
-          filesize: true,
+  const [profileExports, profileVersions] = await Promise.all([
+    db.profile_exports.findMany({
+      where: {
+        profile: layoutData.selectedProfile.id,
+        status: "published",
+        export_type: { in: ["resume", "cv"] },
+      },
+      include: {
+        directus_files: {
+          select: {
+            id: true,
+            filename_download: true,
+            type: true,
+            filesize: true,
+          },
         },
       },
-    },
-    orderBy: { date_created: "desc" },
-  });
+      orderBy: { date_created: "desc" },
+    }),
+    db.profile_versions.findMany({
+      where: {
+        profile: layoutData.selectedProfile.id,
+        status: "published",
+      },
+      select: { slug: true, name: true },
+      orderBy: { sort: "asc" },
+    }),
+  ]);
+
+  // Build version options: for each version+type combo, find the latest export file
+  type VersionOption = { slug: string; name: string; fileId: string | null };
+  const versionOptions: Record<string, VersionOption[]> = { cv: [], resume: [] };
+
+  for (const version of profileVersions) {
+    if (!version.slug || !version.name) continue;
+    for (const type of ["cv", "resume"] as const) {
+      const latestExport = profileExports.find(
+        (e) => e.export_type === type && e.description?.includes(`(${version.slug})`)
+      );
+      versionOptions[type].push({
+        slug: version.slug,
+        name: version.name,
+        fileId: latestExport?.directus_files?.id ?? null,
+      });
+    }
+  }
 
   return {
     profileExports,
+    versionOptions,
   };
 };
 
@@ -143,11 +172,13 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const fileId = (formData.get("file_id") as string) || "";
+    const cvSentThrough = (formData.get("cv_sent_through") as string) || null;
 
     await db.applications.update({
       where: { id: appId },
       data: {
         cv_file_sent: fileId || null,
+        cv_sent_through: cvSentThrough,
         date_updated: new Date(),
       },
     });

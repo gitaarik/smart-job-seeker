@@ -23,11 +23,15 @@
   let app = $derived(data.application);
   let files = $derived(app.applications_files || []);
   let cvFile = $derived(app.directus_files);
-  let profileExports = $derived(data.profileExports || []);
+  let versionOptions = $derived((data as any).versionOptions as Record<string, Array<{ slug: string; name: string; fileId: string | null }>> || { cv: [], resume: [] });
 
   let deleteFileId = $state<number | null>(null);
   let uploading = $state(false);
   let cvSaved = $state(false);
+  let docType = $state<string>(app.cv_sent_through || "cv");
+
+  let currentOptions = $derived(versionOptions[docType] || []);
+  let hasMissingExports = $derived(currentOptions.some((o) => !o.fileId));
 
   function formatFileSize(bytes: number | null): string {
     if (!bytes) return "Unknown size";
@@ -69,6 +73,7 @@
       }
     };
   }
+
 </script>
 
 <div class="space-y-6">
@@ -82,7 +87,7 @@
   <div>
     <div class="flex items-center gap-2 mb-3">
       <FontAwesomeIcon icon={faFileAlt} class="w-5 h-5 text-[var(--dash-primary)]" />
-      <h2 class="text-lg font-semibold text-[var(--dash-text)]">CV / Resume Sent</h2>
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Document Sent</h2>
     </div>
 
     <Card padding="lg">
@@ -94,8 +99,9 @@
               <p class="text-sm font-medium text-[var(--dash-text)]">{cvFile.filename_download}</p>
               <p class="text-xs text-[var(--dash-text-muted)]">
                 {formatFileSize(cvFile.filesize)}
-                {#if cvFile.type}
-                  <span class="mx-1">&middot;</span>{cvFile.type}
+                {#if app.cv_sent_through}
+                  <span class="mx-1">&middot;</span>
+                  <span class="uppercase">{app.cv_sent_through}</span>
                 {/if}
               </p>
             </div>
@@ -111,9 +117,30 @@
       {/if}
 
       <form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
-        <label for="cv-select" class="block text-sm text-[var(--dash-text-secondary)] mb-2">
-          {cvFile ? "Change CV sent" : "Select which CV/Resume you sent"}
-        </label>
+        <!-- Document type chip selector -->
+        <input type="hidden" name="cv_sent_through" value={docType} />
+        <div class="flex items-center gap-2 mb-3">
+          {#each [{ value: "cv", label: "CV" }, { value: "resume", label: "Resume" }] as opt}
+            <button
+              type="button"
+              onclick={() => (docType = opt.value)}
+              class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {docType === opt.value
+                ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+            >
+              <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {docType === opt.value
+                ? 'border-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)]'}">
+                {#if docType === opt.value}
+                  <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                {/if}
+              </span>
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+
+        <!-- File selector -->
         <div class="flex gap-2">
           <select
             id="cv-select"
@@ -121,10 +148,9 @@
             class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm"
           >
             <option value="">None</option>
-            {#each profileExports as exp}
-              <option value={exp.directus_files?.id || ""} selected={exp.directus_files?.id === app.cv_file_sent}>
-                {exp.description || exp.directus_files?.filename_download || `${exp.export_type} export`}
-                ({exp.export_type}, {exp.file_type})
+            {#each currentOptions as opt}
+              <option value={opt.fileId || ""} selected={opt.fileId === app.cv_file_sent} disabled={!opt.fileId}>
+                {opt.name}{!opt.fileId ? " (no export)" : ""}
               </option>
             {/each}
           </select>
@@ -142,6 +168,13 @@
           </button>
         </div>
       </form>
+
+      {#if hasMissingExports}
+        <p class="mt-3 pt-3 border-t border-[var(--dash-border)] text-xs text-[var(--dash-text-muted)]">
+          Some versions have no exported PDF.
+          <a href="/dashboard/export/resume" class="text-[var(--dash-primary)] hover:underline">Generate them</a>
+        </p>
+      {/if}
     </Card>
   </div>
 
