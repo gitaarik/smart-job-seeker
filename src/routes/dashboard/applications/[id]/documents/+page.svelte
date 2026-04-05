@@ -6,6 +6,7 @@
     faCheck,
     faCloudUploadAlt,
     faDownload,
+    faExternalLinkAlt,
     faFile,
     faFileAlt,
     faFilePdf,
@@ -17,21 +18,20 @@
   import Card from "../../../components/Card.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+  import { profileDocUrl } from "$lib/utils/profile-doc-url";
+  import type { DocType } from "$lib/utils/profile-doc-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
   let files = $derived(app.applications_files || []);
-  let cvFile = $derived(app.directus_files);
-  let versionOptions = $derived((data as any).versionOptions as Record<string, Array<{ slug: string; name: string; fileId: string | null }>> || { cv: [], resume: [] });
+  let versions = $derived((data as any).versions as { slug: string; name: string }[] || []);
 
   let deleteFileId = $state<number | null>(null);
   let uploading = $state(false);
   let cvSaved = $state(false);
-  let docType = $state<string>(app.cv_sent_through || "cv");
-
-  let currentOptions = $derived(versionOptions[docType] || []);
-  let hasMissingExports = $derived(currentOptions.some((o) => !o.fileId));
+  let docType = $state<string>(app.cv_sent_through || "resume");
+  let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
 
   function formatFileSize(bytes: number | null): string {
     if (!bytes) return "Unknown size";
@@ -73,7 +73,6 @@
       }
     };
   }
-
 </script>
 
 <div class="space-y-6">
@@ -87,76 +86,46 @@
   <div>
     <div class="flex items-center gap-2 mb-3">
       <FontAwesomeIcon icon={faFileAlt} class="w-5 h-5 text-[var(--dash-primary)]" />
-      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Document Sent</h2>
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Resume / CV Sent</h2>
     </div>
 
     <Card padding="lg">
-      {#if cvFile}
-        <div class="flex items-center justify-between mb-4 p-3 bg-[var(--dash-bg)] rounded-lg">
-          <div class="flex items-center gap-3">
-            <FontAwesomeIcon icon={getFileIcon(cvFile.type)} class="w-5 h-5 {getFileIconColor(cvFile.type)}" />
-            <div>
-              <p class="text-sm font-medium text-[var(--dash-text)]">{cvFile.filename_download}</p>
-              <p class="text-xs text-[var(--dash-text-muted)]">
-                {formatFileSize(cvFile.filesize)}
-                {#if app.cv_sent_through}
-                  <span class="mx-1">&middot;</span>
-                  <span class="uppercase">{app.cv_sent_through}</span>
-                {/if}
-              </p>
-            </div>
-          </div>
-          <a
-            href="?fileId={cvFile.id}"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--dash-primary)] hover:bg-[var(--dash-primary-light)] rounded-lg transition-colors"
-          >
-            <FontAwesomeIcon icon={faDownload} class="w-3.5 h-3.5" />
-            Download
-          </a>
-        </div>
-      {/if}
-
+      <p class="text-xs text-[var(--dash-text-muted)] mb-4">
+        Track which version you sent, so you can open the same one they'll have during an interview.
+      </p>
       <form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
-        <!-- Document type chip selector -->
+        <!-- Document type segmented control -->
         <input type="hidden" name="cv_sent_through" value={docType} />
-        <div class="flex items-center gap-2 mb-3">
-          {#each [{ value: "cv", label: "CV" }, { value: "resume", label: "Resume" }] as opt}
+        <div class="inline-flex rounded-lg border border-[var(--dash-border)] overflow-hidden mb-3">
+          {#each [{ value: "resume", label: "Resume" }, { value: "cv", label: "CV" }] as opt, i}
             <button
               type="button"
               onclick={() => (docType = opt.value)}
-              class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {docType === opt.value
-                ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
-                : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+              class="px-3 py-1.5 text-sm transition-colors {docType === opt.value
+                ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] font-medium'
+                : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}"
             >
-              <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {docType === opt.value
-                ? 'border-[var(--dash-primary)]'
-                : 'border-[var(--dash-border)]'}">
-                {#if docType === opt.value}
-                  <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
-                {/if}
-              </span>
               {opt.label}
             </button>
           {/each}
         </div>
 
-        <!-- File selector -->
-        <div class="flex gap-2">
+        <!-- Version selector -->
+        <div class="flex flex-col sm:flex-row gap-2">
           <select
-            id="cv-select"
-            name="file_id"
+            name="version_slug"
             class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm"
           >
             <option value="">None</option>
-            {#each currentOptions as opt}
-              <option value={opt.fileId || ""} selected={opt.fileId === app.cv_file_sent} disabled={!opt.fileId}>
-                {opt.name}{!opt.fileId ? " (no export)" : ""}
+            {#each versions as v}
+              <option value={v.slug} selected={v.slug === app.cv_version_sent}>
+                {v.name}
               </option>
             {/each}
           </select>
           <button
             type="submit"
-            class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors text-sm"
+            class="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors text-sm"
           >
             {#if cvSaved}
               <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5" />
@@ -169,11 +138,26 @@
         </div>
       </form>
 
-      {#if hasMissingExports}
-        <p class="mt-3 pt-3 border-t border-[var(--dash-border)] text-xs text-[var(--dash-text-muted)]">
-          Some versions have no exported PDF.
-          <a href="/dashboard/export/resume" class="text-[var(--dash-primary)] hover:underline">Generate them</a>
-        </p>
+      {#if app.cv_version_sent && app.cv_sent_through && profileSlug}
+        {@const dt = app.cv_sent_through as DocType}
+        <div class="flex items-center gap-3 mt-4 pt-4 border-t border-[var(--dash-border)]">
+          <a
+            href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
+            target="_blank"
+            class="dash-link-ext"
+          >
+            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+            Open {dt === "cv" ? "CV" : "Resume"}
+          </a>
+          <a
+            href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent, pdf: true })}
+            target="_blank"
+            class="dash-link-ext"
+          >
+            <FontAwesomeIcon icon={faFilePdf} class="w-3 h-3" />
+            PDF
+          </a>
+        </div>
       {/if}
     </Card>
   </div>

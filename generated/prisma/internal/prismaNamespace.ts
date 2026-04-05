@@ -7067,6 +7067,7 @@ export const ApplicationsScalarFieldEnum = {
   job: 'job',
   profile: 'profile',
   cv_sent_through: 'cv_sent_through',
+  cv_version_sent: 'cv_version_sent',
   cv_file_sent: 'cv_file_sent',
   application_sent_date: 'application_sent_date',
   discontinued_reason: 'discontinued_reason',

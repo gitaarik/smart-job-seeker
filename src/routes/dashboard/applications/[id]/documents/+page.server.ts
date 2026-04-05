@@ -15,56 +15,17 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const [profileExports, profileVersions] = await Promise.all([
-    db.profile_exports.findMany({
-      where: {
-        profile: layoutData.selectedProfile.id,
-        status: "published",
-        export_type: { in: ["resume", "cv"] },
-      },
-      include: {
-        directus_files: {
-          select: {
-            id: true,
-            filename_download: true,
-            type: true,
-            filesize: true,
-          },
-        },
-      },
-      orderBy: { date_created: "desc" },
-    }),
-    db.profile_versions.findMany({
-      where: {
-        profile: layoutData.selectedProfile.id,
-        status: "published",
-      },
-      select: { slug: true, name: true },
-      orderBy: { sort: "asc" },
-    }),
-  ]);
-
-  // Build version options: for each version+type combo, find the latest export file
-  type VersionOption = { slug: string; name: string; fileId: string | null };
-  const versionOptions: Record<string, VersionOption[]> = { cv: [], resume: [] };
-
-  for (const version of profileVersions) {
-    if (!version.slug || !version.name) continue;
-    for (const type of ["cv", "resume"] as const) {
-      const latestExport = profileExports.find(
-        (e) => e.export_type === type && e.description?.includes(`(${version.slug})`)
-      );
-      versionOptions[type].push({
-        slug: version.slug,
-        name: version.name,
-        fileId: latestExport?.directus_files?.id ?? null,
-      });
-    }
-  }
+  const profileVersions = await db.profile_versions.findMany({
+    where: {
+      profile: layoutData.selectedProfile.id,
+      status: "published",
+    },
+    select: { slug: true, name: true },
+    orderBy: { sort: "asc" },
+  });
 
   return {
-    profileExports,
-    versionOptions,
+    versions: profileVersions.filter((v) => v.slug && v.name) as { slug: string; name: string }[],
   };
 };
 
@@ -171,13 +132,13 @@ export const actions: Actions = {
     if (!existing) return fail(404, { error: "Application not found" });
 
     const formData = await request.formData();
-    const fileId = (formData.get("file_id") as string) || "";
+    const versionSlug = (formData.get("version_slug") as string) || null;
     const cvSentThrough = (formData.get("cv_sent_through") as string) || null;
 
     await db.applications.update({
       where: { id: appId },
       data: {
-        cv_file_sent: fileId || null,
+        cv_version_sent: versionSlug,
         cv_sent_through: cvSentThrough,
         date_updated: new Date(),
       },

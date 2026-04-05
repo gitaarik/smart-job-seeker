@@ -51,6 +51,7 @@ export type ApplicationsMinAggregateOutputType = {
   job: number | null
   profile: number | null
   cv_sent_through: string | null
+  cv_version_sent: string | null
   cv_file_sent: string | null
   application_sent_date: Date | null
   discontinued_reason: string | null
@@ -73,6 +74,7 @@ export type ApplicationsMaxAggregateOutputType = {
   job: number | null
   profile: number | null
   cv_sent_through: string | null
+  cv_version_sent: string | null
   cv_file_sent: string | null
   application_sent_date: Date | null
   discontinued_reason: string | null
@@ -95,6 +97,7 @@ export type ApplicationsCountAggregateOutputType = {
   job: number
   profile: number
   cv_sent_through: number
+  cv_version_sent: number
   cv_file_sent: number
   application_sent_date: number
   discontinued_reason: number
@@ -133,6 +136,7 @@ export type ApplicationsMinAggregateInputType = {
   job?: true
   profile?: true
   cv_sent_through?: true
+  cv_version_sent?: true
   cv_file_sent?: true
   application_sent_date?: true
   discontinued_reason?: true
@@ -155,6 +159,7 @@ export type ApplicationsMaxAggregateInputType = {
   job?: true
   profile?: true
   cv_sent_through?: true
+  cv_version_sent?: true
   cv_file_sent?: true
   application_sent_date?: true
   discontinued_reason?: true
@@ -177,6 +182,7 @@ export type ApplicationsCountAggregateInputType = {
   job?: true
   profile?: true
   cv_sent_through?: true
+  cv_version_sent?: true
   cv_file_sent?: true
   application_sent_date?: true
   discontinued_reason?: true
@@ -286,6 +292,7 @@ export type ApplicationsGroupByOutputType = {
   job: number | null
   profile: number
   cv_sent_through: string | null
+  cv_version_sent: string | null
   cv_file_sent: string | null
   application_sent_date: Date | null
   discontinued_reason: string | null
@@ -331,6 +338,7 @@ export type applicationsWhereInput = {
   job?: Prisma.IntNullableFilter<"applications"> | number | null
   profile?: Prisma.IntFilter<"applications"> | number
   cv_sent_through?: Prisma.StringNullableFilter<"applications"> | string | null
+  cv_version_sent?: Prisma.StringNullableFilter<"applications"> | string | null
   cv_file_sent?: Prisma.UuidNullableFilter<"applications"> | string | null
   application_sent_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   discontinued_reason?: Prisma.StringNullableFilter<"applications"> | string | null
@@ -361,6 +369,7 @@ export type applicationsOrderByWithRelationInput = {
   job?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   cv_sent_through?: Prisma.SortOrderInput | Prisma.SortOrder
+  cv_version_sent?: Prisma.SortOrderInput | Prisma.SortOrder
   cv_file_sent?: Prisma.SortOrderInput | Prisma.SortOrder
   application_sent_date?: Prisma.SortOrderInput | Prisma.SortOrder
   discontinued_reason?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -394,6 +403,7 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
   job?: Prisma.IntNullableFilter<"applications"> | number | null
   profile?: Prisma.IntFilter<"applications"> | number
   cv_sent_through?: Prisma.StringNullableFilter<"applications"> | string | null
+  cv_version_sent?: Prisma.StringNullableFilter<"applications"> | string | null
   cv_file_sent?: Prisma.UuidNullableFilter<"applications"> | string | null
   application_sent_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   discontinued_reason?: Prisma.StringNullableFilter<"applications"> | string | null
@@ -424,6 +434,7 @@ export type applicationsOrderByWithAggregationInput = {
   job?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
   cv_sent_through?: Prisma.SortOrderInput | Prisma.SortOrder
+  cv_version_sent?: Prisma.SortOrderInput | Prisma.SortOrder
   cv_file_sent?: Prisma.SortOrderInput | Prisma.SortOrder
   application_sent_date?: Prisma.SortOrderInput | Prisma.SortOrder
   discontinued_reason?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -454,6 +465,7 @@ export type applicationsScalarWhereWithAggregatesInput = {
   job?: Prisma.IntNullableWithAggregatesFilter<"applications"> | number | null
   profile?: Prisma.IntWithAggregatesFilter<"applications"> | number
   cv_sent_through?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
+  cv_version_sent?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
   cv_file_sent?: Prisma.UuidNullableWithAggregatesFilter<"applications"> | string | null
   application_sent_date?: Prisma.DateTimeNullableWithAggregatesFilter<"applications"> | Date | string | null
   discontinued_reason?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
@@ -473,6 +485,7 @@ export type applicationsCreateInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -502,6 +515,7 @@ export type applicationsUncheckedCreateInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -526,6 +540,7 @@ export type applicationsUpdateInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -555,6 +570,7 @@ export type applicationsUncheckedUpdateInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -582,6 +598,7 @@ export type applicationsCreateManyInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -601,6 +618,7 @@ export type applicationsUpdateManyMutationInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -622,6 +640,7 @@ export type applicationsUncheckedUpdateManyInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -654,6 +673,7 @@ export type applicationsCountOrderByAggregateInput = {
   job?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   cv_sent_through?: Prisma.SortOrder
+  cv_version_sent?: Prisma.SortOrder
   cv_file_sent?: Prisma.SortOrder
   application_sent_date?: Prisma.SortOrder
   discontinued_reason?: Prisma.SortOrder
@@ -683,6 +703,7 @@ export type applicationsMaxOrderByAggregateInput = {
   job?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   cv_sent_through?: Prisma.SortOrder
+  cv_version_sent?: Prisma.SortOrder
   cv_file_sent?: Prisma.SortOrder
   application_sent_date?: Prisma.SortOrder
   discontinued_reason?: Prisma.SortOrder
@@ -705,6 +726,7 @@ export type applicationsMinOrderByAggregateInput = {
   job?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   cv_sent_through?: Prisma.SortOrder
+  cv_version_sent?: Prisma.SortOrder
   cv_file_sent?: Prisma.SortOrder
   application_sent_date?: Prisma.SortOrder
   discontinued_reason?: Prisma.SortOrder
@@ -949,6 +971,7 @@ export type applicationsCreateWithoutApplication_activity_logInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -977,6 +1000,7 @@ export type applicationsUncheckedCreateWithoutApplication_activity_logInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1016,6 +1040,7 @@ export type applicationsUpdateWithoutApplication_activity_logInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1044,6 +1069,7 @@ export type applicationsUncheckedUpdateWithoutApplication_activity_logInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1067,6 +1093,7 @@ export type applicationsCreateWithoutApplication_status_logInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1095,6 +1122,7 @@ export type applicationsUncheckedCreateWithoutApplication_status_logInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1134,6 +1162,7 @@ export type applicationsUpdateWithoutApplication_status_logInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1162,6 +1191,7 @@ export type applicationsUncheckedUpdateWithoutApplication_status_logInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1185,6 +1215,7 @@ export type applicationsCreateWithoutApplication_lettersInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1213,6 +1244,7 @@ export type applicationsUncheckedCreateWithoutApplication_lettersInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1252,6 +1284,7 @@ export type applicationsUpdateWithoutApplication_lettersInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1280,6 +1313,7 @@ export type applicationsUncheckedUpdateWithoutApplication_lettersInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1303,6 +1337,7 @@ export type applicationsCreateWithoutApplication_questionsInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1331,6 +1366,7 @@ export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1370,6 +1406,7 @@ export type applicationsUpdateWithoutApplication_questionsInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1398,6 +1435,7 @@ export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1421,6 +1459,7 @@ export type applicationsCreateWithoutApplications_filesInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1449,6 +1488,7 @@ export type applicationsUncheckedCreateWithoutApplications_filesInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1488,6 +1528,7 @@ export type applicationsUpdateWithoutApplications_filesInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1516,6 +1557,7 @@ export type applicationsUncheckedUpdateWithoutApplications_filesInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1539,6 +1581,7 @@ export type applicationsCreateWithoutDirectus_filesInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1567,6 +1610,7 @@ export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1622,6 +1666,7 @@ export type applicationsScalarWhereInput = {
   job?: Prisma.IntNullableFilter<"applications"> | number | null
   profile?: Prisma.IntFilter<"applications"> | number
   cv_sent_through?: Prisma.StringNullableFilter<"applications"> | string | null
+  cv_version_sent?: Prisma.StringNullableFilter<"applications"> | string | null
   cv_file_sent?: Prisma.UuidNullableFilter<"applications"> | string | null
   application_sent_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   discontinued_reason?: Prisma.StringNullableFilter<"applications"> | string | null
@@ -1641,6 +1686,7 @@ export type applicationsCreateWithoutJobsInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1668,6 +1714,7 @@ export type applicationsUncheckedCreateWithoutJobsInput = {
   date_updated?: Date | string | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1718,6 +1765,7 @@ export type applicationsCreateWithoutProfilesInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1745,6 +1793,7 @@ export type applicationsUncheckedCreateWithoutProfilesInput = {
   date_updated?: Date | string | null
   job?: number | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1798,6 +1847,7 @@ export type applicationsCreateManyDirectus_filesInput = {
   job?: number | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
   discontinued_note?: string | null
@@ -1816,6 +1866,7 @@ export type applicationsUpdateWithoutDirectus_filesInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1844,6 +1895,7 @@ export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1870,6 +1922,7 @@ export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1890,6 +1943,7 @@ export type applicationsCreateManyJobsInput = {
   date_updated?: Date | string | null
   profile: number
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -1909,6 +1963,7 @@ export type applicationsUpdateWithoutJobsInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1936,6 +1991,7 @@ export type applicationsUncheckedUpdateWithoutJobsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1962,6 +2018,7 @@ export type applicationsUncheckedUpdateManyWithoutJobsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1983,6 +2040,7 @@ export type applicationsCreateManyProfilesInput = {
   date_updated?: Date | string | null
   job?: number | null
   cv_sent_through?: string | null
+  cv_version_sent?: string | null
   cv_file_sent?: string | null
   application_sent_date?: Date | string | null
   discontinued_reason?: string | null
@@ -2002,6 +2060,7 @@ export type applicationsUpdateWithoutProfilesInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2029,6 +2088,7 @@ export type applicationsUncheckedUpdateWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2055,6 +2115,7 @@ export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_version_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2144,6 +2205,7 @@ export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   job?: boolean
   profile?: boolean
   cv_sent_through?: boolean
+  cv_version_sent?: boolean
   cv_file_sent?: boolean
   application_sent_date?: boolean
   discontinued_reason?: boolean
@@ -2175,6 +2237,7 @@ export type applicationsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   job?: boolean
   profile?: boolean
   cv_sent_through?: boolean
+  cv_version_sent?: boolean
   cv_file_sent?: boolean
   application_sent_date?: boolean
   discontinued_reason?: boolean
@@ -2200,6 +2263,7 @@ export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   job?: boolean
   profile?: boolean
   cv_sent_through?: boolean
+  cv_version_sent?: boolean
   cv_file_sent?: boolean
   application_sent_date?: boolean
   discontinued_reason?: boolean
@@ -2225,6 +2289,7 @@ export type applicationsSelectScalar = {
   job?: boolean
   profile?: boolean
   cv_sent_through?: boolean
+  cv_version_sent?: boolean
   cv_file_sent?: boolean
   application_sent_date?: boolean
   discontinued_reason?: boolean
@@ -2236,7 +2301,7 @@ export type applicationsSelectScalar = {
   salary_period?: boolean
 }
 
-export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "status_step" | "status_action" | "status_action_date" | "date_created" | "date_updated" | "job" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "salary_expectation" | "salary_currency" | "salary_period", ExtArgs["result"]["applications"]>
+export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "status_step" | "status_action" | "status_action_date" | "date_created" | "date_updated" | "job" | "profile" | "cv_sent_through" | "cv_version_sent" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "salary_expectation" | "salary_currency" | "salary_period", ExtArgs["result"]["applications"]>
 export type applicationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
   application_status_log?: boolean | Prisma.applications$application_status_logArgs<ExtArgs>
@@ -2282,6 +2347,7 @@ export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.Intern
     job: number | null
     profile: number
     cv_sent_through: string | null
+    cv_version_sent: string | null
     cv_file_sent: string | null
     application_sent_date: Date | null
     discontinued_reason: string | null
@@ -2732,6 +2798,7 @@ export interface applicationsFieldRefs {
   readonly job: Prisma.FieldRef<"applications", 'Int'>
   readonly profile: Prisma.FieldRef<"applications", 'Int'>
   readonly cv_sent_through: Prisma.FieldRef<"applications", 'String'>
+  readonly cv_version_sent: Prisma.FieldRef<"applications", 'String'>
   readonly cv_file_sent: Prisma.FieldRef<"applications", 'String'>
   readonly application_sent_date: Prisma.FieldRef<"applications", 'DateTime'>
   readonly discontinued_reason: Prisma.FieldRef<"applications", 'String'>

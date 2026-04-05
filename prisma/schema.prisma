@@ -102,6 +102,7 @@ model applications {
   job                      Int?
   profile                  Int
   cv_sent_through          String?                    @db.VarChar(255)
+  cv_version_sent          String?                    @db.VarChar(255)
   cv_file_sent             String?                    @db.Uuid
   application_sent_date    DateTime?                  @db.Date
   discontinued_reason      String?                    @db.VarChar(255)

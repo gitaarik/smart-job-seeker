@@ -12,6 +12,7 @@
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import ItemCard from "../../profile/components/ItemCard.svelte";
+  import { profileDocUrl } from "$lib/utils/profile-doc-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -278,26 +279,26 @@
 
           {#snippet dateline()}
             {#if data.selectedProfile?.slug}
-              {@const versionParam = isPublicResume(version.id) ? "" : `?version=${encodeURIComponent(version.slug ?? "")}`}
-              {@const cvVersionParam = isPublicCv(version.id) ? "" : `?version=${encodeURIComponent(version.slug ?? "")}`}
+              {@const ps = data.selectedProfile.slug}
+              {@const vs = version.slug ?? ""}
               <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
                 <a
-                  href="/p/{data.selectedProfile.slug}/resume{versionParam}"
+                  href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id) })}
                   target="_blank"
                   class="dash-link-ext"
                 >Resume</a>
                 <a
-                  href="/p/{data.selectedProfile.slug}/resume.pdf{versionParam}"
+                  href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true })}
                   target="_blank"
                   class="dash-link-ext"
                 >Resume PDF</a>
                 <a
-                  href="/p/{data.selectedProfile.slug}/cv{cvVersionParam}"
+                  href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id) })}
                   target="_blank"
                   class="dash-link-ext"
                 >CV</a>
                 <a
-                  href="/p/{data.selectedProfile.slug}/cv.pdf{cvVersionParam}"
+                  href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true })}
                   target="_blank"
                   class="dash-link-ext"
                 >CV PDF</a>
