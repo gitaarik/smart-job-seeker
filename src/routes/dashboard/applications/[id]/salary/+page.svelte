@@ -16,22 +16,29 @@
   import {
     hourlyToRate,
     formatCurrency,
+    formatSalaryPeriod,
+    normalizeSalaryPeriod,
+    projectToHourly,
     getEffectiveRate,
     compareSalary,
     type SalaryPeriod,
     type SalaryAdjustments,
     type SalaryRegionOverrides,
   } from "$lib/salary/conversion";
+  import { isSalarySingleValue } from "$lib/format";
   import {
     JOB_TYPES,
     WORK_LOCATIONS,
+    REGIONS,
     buildNormalizeMap,
+    buildDisplayMap,
     getPatterns,
   } from "$lib/data/job-taxonomy";
 
   const jobTypeNormalize = buildNormalizeMap(JOB_TYPES);
   const workLocNormalize = buildNormalizeMap(WORK_LOCATIONS);
   const workLocPatterns = getPatterns(WORK_LOCATIONS);
+  const regionDisplayMap = buildDisplayMap(REGIONS);
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -68,6 +75,7 @@
   const periods = [
     { value: "hour", label: "Hour" },
     { value: "day", label: "Day" },
+    { value: "week", label: "Week" },
     { value: "month", label: "Month" },
     { value: "year", label: "Year" },
   ];
@@ -88,12 +96,13 @@
 
   function getPeriodLabel(period: string | null | undefined): string {
     if (!period) return "";
-    return periods.find((p) => p.value === period)?.label || period;
+    const formatted = formatSalaryPeriod(period);
+    return formatted || period;
   }
 
   function startEdit() {
     editAmount = app.salary_expectation ? String(app.salary_expectation) : "";
-    editCurrency = app.salary_currency || "EUR";
+    editCurrency = app.salary_currency || suggestedRates?.currency || "EUR";
     editPeriod = app.salary_period || "month";
     editing = true;
   }
@@ -126,14 +135,19 @@
       ctx.work_arrangement = toSalaryWorkArrangement((job.work_location as string[])[0]);
     }
 
+    if (job?.region) {
+      ctx.region = job.region;
+    }
+
     return ctx;
   });
 
   // Calculate effective rate for this job using salary settings
-  let effectiveRate = $derived.by(() => {
+  let effective = $derived.by(() => {
     if (!salarySettings.baseRate) return null;
     return getEffectiveRate(
       salarySettings.baseRate,
+      salarySettings.currency || "EUR",
       salarySettings.adjustments as SalaryAdjustments,
       salarySettings.regionOverrides as SalaryRegionOverrides,
       jobContext,
@@ -141,26 +155,27 @@
   });
 
   let suggestedRates = $derived.by(() => {
-    if (!effectiveRate) return null;
+    if (!effective) return null;
     return {
-      hourly: effectiveRate,
-      daily: hourlyToRate(effectiveRate, "day"),
-      monthly: hourlyToRate(effectiveRate, "month"),
-      yearly: hourlyToRate(effectiveRate, "year"),
+      hourly: effective.rate,
+      daily: hourlyToRate(effective.rate, "day"),
+      monthly: hourlyToRate(effective.rate, "month"),
+      yearly: hourlyToRate(effective.rate, "year"),
+      currency: effective.currency,
     };
   });
 
   // Apply suggested rate to the salary form
   function useSuggested(period: SalaryPeriod) {
     if (!suggestedRates) return;
-    const rateMap: Record<SalaryPeriod, number> = {
+    const rateMap: Record<string, number> = {
       hour: suggestedRates.hourly,
       day: suggestedRates.daily,
       month: suggestedRates.monthly,
       year: suggestedRates.yearly,
     };
     editAmount = String(rateMap[period]);
-    editCurrency = salarySettings.currency || "EUR";
+    editCurrency = suggestedRates.currency;
     editPeriod = period;
     editing = true;
   }
@@ -179,12 +194,20 @@
       job.salary_max,
       job.salary_currency,
       job.salary_period,
+      job.salary_duration_weeks,
     );
   });
 
   // Explain what adjustments are active for this job
   let activeAdjustments = $derived.by(() => {
     const parts: string[] = [];
+
+    if (jobContext.region && (salarySettings.regionOverrides as SalaryRegionOverrides)?.[jobContext.region] != null) {
+      const regionLabel = regionDisplayMap.get(jobContext.region) || jobContext.region;
+      const override = (salarySettings.regionOverrides as SalaryRegionOverrides)[jobContext.region];
+      parts.push(`${regionLabel} region: ${formatCurrency(override.rate, override.currency)}/hr base`);
+    }
+
     const adj = salarySettings.adjustments as SalaryAdjustments | null;
     if (!adj) return parts;
 
@@ -211,17 +234,105 @@
     </div>
   {/if}
 
-  <!-- Section 1: Your Ask for This Application -->
+  <!-- Section 1: Job's Salary Info -->
+  {#if jobHasSalary}
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <FontAwesomeIcon icon={faInfoCircle} class="w-5 h-5 text-[var(--dash-primary)]" />
+        <h2 class="text-lg font-semibold text-[var(--dash-text)]">
+          {isSalarySingleValue(job?.salary_min ?? null, job?.salary_max ?? null) ? "Salary Indication" : "Job's Salary Range"}
+        </h2>
+      </div>
+
+      <Card padding="lg">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div class="flex-1">
+            <div class="flex items-baseline gap-2 flex-wrap">
+              {#if job?.salary_min != null && job?.salary_max != null && job.salary_min === job.salary_max}
+                <p class="text-2xl font-bold text-[var(--dash-text)]">
+                  {formatCurrency(job.salary_min, job.salary_currency || "EUR")}
+                </p>
+              {:else if job?.salary_min != null && job?.salary_max != null}
+                <p class="text-2xl font-bold text-[var(--dash-text)]">
+                  {formatCurrency(job.salary_min, job.salary_currency || "EUR")} &ndash; {formatCurrency(job.salary_max, job.salary_currency || "EUR")}
+                </p>
+              {:else if job?.salary_min != null}
+                <p class="text-2xl font-bold text-[var(--dash-text)]">
+                  From {formatCurrency(job.salary_min, job.salary_currency || "EUR")}
+                </p>
+              {:else if job?.salary_max != null}
+                <p class="text-2xl font-bold text-[var(--dash-text)]">
+                  Up to {formatCurrency(job.salary_max, job.salary_currency || "EUR")}
+                </p>
+              {/if}
+            </div>
+            <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+              {#if job?.salary_period}
+                {normalizeSalaryPeriod(job.salary_period) === "project" ? "fixed price" : `per ${getPeriodLabel(job.salary_period)?.toLowerCase()}`}
+              {/if}
+              {#if job?.salary_duration_weeks}
+                <span class="mx-1">&middot;</span>
+                {job.salary_duration_weeks} week{job.salary_duration_weeks === 1 ? "" : "s"}
+              {/if}
+              {#if job?.salary_currency}
+                <span class="mx-1">&middot;</span>
+                {job.salary_currency}
+              {/if}
+            </p>
+            {#if normalizeSalaryPeriod(job?.salary_period) === "project" && job?.salary_duration_weeks && job?.salary_min}
+              {@const equivHourly = projectToHourly(job.salary_min, job.salary_duration_weeks)}
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                ≈ {formatCurrency(Math.round(equivHourly), job.salary_currency || "EUR")}/hr equivalent
+              </p>
+            {/if}
+          </div>
+
+          {#if app.salary_expectation && salaryComparison !== "unknown"}
+            <div class="flex-shrink-0">
+              {#if salaryComparison === "within"}
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--dash-success-light)] text-[var(--dash-success)]">
+                  <FontAwesomeIcon icon={faEquals} class="w-4 h-4" />
+                  <span class="text-sm font-medium">Your ask is within range</span>
+                </div>
+              {:else if salaryComparison === "above"}
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--dash-error-light)] text-[var(--dash-error)]">
+                  <FontAwesomeIcon icon={faArrowUp} class="w-4 h-4" />
+                  <span class="text-sm font-medium">Your ask is above range</span>
+                </div>
+              {:else if salaryComparison === "below"}
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">
+                  <FontAwesomeIcon icon={faArrowDown} class="w-4 h-4" />
+                  <span class="text-sm font-medium">Your ask is below range</span>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      </Card>
+    </div>
+  {/if}
+
+  <!-- Section 2: Your Ask -->
   <div>
-    <div class="flex items-center gap-2 mb-3">
-      <FontAwesomeIcon icon={faMoneyBillWave} class="w-5 h-5 text-[var(--dash-primary)]" />
-      <h2 class="text-lg font-semibold text-[var(--dash-text)]">
-        Your Ask for This Application
-      </h2>
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <FontAwesomeIcon icon={faMoneyBillWave} class="w-5 h-5 text-[var(--dash-primary)]" />
+        <h2 class="text-lg font-semibold text-[var(--dash-text)]">Your Ask</h2>
+      </div>
+      {#if suggestedRates}
+        <a
+          href="/dashboard/applications/salary"
+          class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+        >
+          Salary settings
+          <FontAwesomeIcon icon={faExternalLinkAlt} class="w-2.5 h-2.5" />
+        </a>
+      {/if}
     </div>
 
     <Card padding="lg">
       {#if editing}
+        <!-- Edit form -->
         <form method="POST" action="?/updateSalary" use:enhance={handleSubmit}>
           <div class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -275,6 +386,28 @@
               </div>
             </div>
 
+            {#if suggestedRates}
+              <div class="pt-2 border-t border-[var(--dash-border)]">
+                <p class="text-xs text-[var(--dash-text-muted)] mb-2">Use calculated rate:</p>
+                <div class="flex flex-wrap gap-2">
+                  {#each [
+                    { period: "hour" as SalaryPeriod, label: "Hourly", amount: suggestedRates.hourly },
+                    { period: "day" as SalaryPeriod, label: "Daily", amount: suggestedRates.daily },
+                    { period: "month" as SalaryPeriod, label: "Monthly", amount: suggestedRates.monthly },
+                    { period: "year" as SalaryPeriod, label: "Yearly", amount: suggestedRates.yearly },
+                  ] as rate}
+                    <button
+                      type="button"
+                      onclick={() => useSuggested(rate.period)}
+                      class="px-3 py-1.5 text-xs rounded-md border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors {editPeriod === rate.period && editAmount === String(rate.amount) ? 'border-[var(--dash-primary)] text-[var(--dash-primary)] bg-[var(--dash-primary)]/5' : 'text-[var(--dash-text-secondary)]'}"
+                    >
+                      {rate.label}: {formatCurrency(rate.amount, suggestedRates.currency)}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
             <div class="flex justify-end gap-2">
               <button
                 type="button"
@@ -293,6 +426,7 @@
           </div>
         </form>
       {:else if app.salary_expectation}
+        <!-- Display current ask -->
         <div class="flex items-center justify-between">
           <div>
             <p class="text-3xl font-bold text-[var(--dash-text)]">
@@ -314,165 +448,57 @@
           </button>
         </div>
       {:else}
-        <div class="text-center py-4">
-          <div class="w-12 h-12 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mx-auto mb-3">
-            <FontAwesomeIcon icon={faMoneyBillWave} class="w-6 h-6 text-[var(--dash-text-muted)]" />
-          </div>
-          <p class="text-[var(--dash-text-secondary)] mb-3">
-            No salary expectation set yet.
-            {#if suggestedRates}
-              Use your calculated rate below or set it manually.
-            {:else}
-              <a href="/dashboard/applications/salary" class="text-[var(--dash-primary)] hover:underline">Configure your salary settings</a> first, or set it manually.
-            {/if}
-          </p>
-          <button
-            type="button"
-            onclick={startEdit}
-            class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-          >
-            Set Manually
-          </button>
-        </div>
-      {/if}
-    </Card>
-  </div>
-
-  <!-- Section 2: Job's Salary Range -->
-  {#if jobHasSalary}
-    <div>
-      <div class="flex items-center gap-2 mb-3">
-        <FontAwesomeIcon icon={faInfoCircle} class="w-5 h-5 text-[var(--dash-primary)]" />
-        <h2 class="text-lg font-semibold text-[var(--dash-text)]">
-          {job?.salary_min != null && job?.salary_max != null && job.salary_min === job.salary_max ? "Salary Indication" : "Job's Salary Range"}
-        </h2>
-      </div>
-
-      <Card padding="lg">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div class="flex-1">
-            <div class="flex items-baseline gap-2 flex-wrap">
-              {#if job?.salary_min != null && job?.salary_max != null && job.salary_min === job.salary_max}
-                <p class="text-2xl font-bold text-[var(--dash-text)]">
-                  {formatCurrency(job.salary_min, job.salary_currency || "EUR")}
-                </p>
-              {:else if job?.salary_min != null && job?.salary_max != null}
-                <p class="text-2xl font-bold text-[var(--dash-text)]">
-                  {formatCurrency(job.salary_min, job.salary_currency || "EUR")} &ndash; {formatCurrency(job.salary_max, job.salary_currency || "EUR")}
-                </p>
-              {:else if job?.salary_min != null}
-                <p class="text-2xl font-bold text-[var(--dash-text)]">
-                  From {formatCurrency(job.salary_min, job.salary_currency || "EUR")}
-                </p>
-              {:else if job?.salary_max != null}
-                <p class="text-2xl font-bold text-[var(--dash-text)]">
-                  Up to {formatCurrency(job.salary_max, job.salary_currency || "EUR")}
-                </p>
-              {/if}
-            </div>
-            <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
-              {#if job?.salary_period}
-                per {getPeriodLabel(job.salary_period)?.toLowerCase()}
-              {/if}
-              {#if job?.salary_currency}
-                <span class="mx-1">&middot;</span>
-                {job.salary_currency}
-              {/if}
+        <!-- Empty state: show calculated rates to pick from, or prompt to set manually -->
+        {#if suggestedRates}
+          <div class="space-y-3">
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Choose a calculated rate or <button type="button" onclick={startEdit} class="text-[var(--dash-primary)] hover:underline">enter a custom amount</button>.
             </p>
-          </div>
-
-          {#if app.salary_expectation && salaryComparison !== "unknown"}
-            <div class="flex-shrink-0">
-              {#if salaryComparison === "within"}
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--dash-success-light)] text-[var(--dash-success)]">
-                  <FontAwesomeIcon icon={faEquals} class="w-4 h-4" />
-                  <span class="text-sm font-medium">Your ask is within range</span>
-                </div>
-              {:else if salaryComparison === "above"}
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--dash-error-light)] text-[var(--dash-error)]">
-                  <FontAwesomeIcon icon={faArrowUp} class="w-4 h-4" />
-                  <span class="text-sm font-medium">Your ask is above range</span>
-                </div>
-              {:else if salaryComparison === "below"}
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">
-                  <FontAwesomeIcon icon={faArrowDown} class="w-4 h-4" />
-                  <span class="text-sm font-medium">Your ask is below range</span>
-                </div>
-              {/if}
-            </div>
-          {/if}
-        </div>
-      </Card>
-    </div>
-  {/if}
-
-  <!-- Section 3: Calculated Rate -->
-  <div>
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-2">
-        <FontAwesomeIcon icon={faInfoCircle} class="w-5 h-5 text-[var(--dash-primary)]" />
-        <h2 class="text-lg font-semibold text-[var(--dash-text)]">
-          Your Calculated Rate
-        </h2>
-      </div>
-      <a
-        href="/dashboard/applications/salary"
-        class="flex items-center gap-1 text-sm text-[var(--dash-primary)] hover:underline"
-      >
-        Settings
-        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
-      </a>
-    </div>
-
-    {#if suggestedRates}
-      <Card padding="lg">
-        <div class="space-y-4">
-          {#if activeAdjustments.length > 0}
-            <div class="flex items-center gap-2 text-sm text-[var(--dash-text-secondary)]">
-              <FontAwesomeIcon icon={faInfoCircle} class="w-3.5 h-3.5 flex-shrink-0" />
-              <span>
+            {#if activeAdjustments.length > 0}
+              <p class="text-xs text-[var(--dash-text-muted)]">
                 Base {formatCurrency(salarySettings.baseRate!, salarySettings.currency || "EUR")}/hr
                 adjusted: {activeAdjustments.join(", ")}
-              </span>
+              </p>
+            {/if}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {#each [
+                { period: "hour" as SalaryPeriod, label: "Hourly", amount: suggestedRates.hourly },
+                { period: "day" as SalaryPeriod, label: "Daily", amount: suggestedRates.daily },
+                { period: "month" as SalaryPeriod, label: "Monthly", amount: suggestedRates.monthly },
+                { period: "year" as SalaryPeriod, label: "Yearly", amount: suggestedRates.yearly },
+              ] as rate}
+                <button
+                  type="button"
+                  onclick={() => useSuggested(rate.period)}
+                  class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/5 transition-colors text-left group"
+                >
+                  <p class="text-xs text-[var(--dash-text-muted)] mb-1">{rate.label}</p>
+                  <p class="text-lg font-semibold text-[var(--dash-text)] group-hover:text-[var(--dash-primary)]">
+                    {formatCurrency(rate.amount, suggestedRates.currency)}
+                  </p>
+                </button>
+              {/each}
             </div>
-          {/if}
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {#each [
-              { period: "hour" as SalaryPeriod, label: "Hourly", amount: suggestedRates.hourly },
-              { period: "day" as SalaryPeriod, label: "Daily", amount: suggestedRates.daily },
-              { period: "month" as SalaryPeriod, label: "Monthly", amount: suggestedRates.monthly },
-              { period: "year" as SalaryPeriod, label: "Yearly", amount: suggestedRates.yearly },
-            ] as rate}
-              <button
-                type="button"
-                onclick={() => useSuggested(rate.period)}
-                class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/5 transition-colors text-left group"
-              >
-                <p class="text-xs text-[var(--dash-text-muted)] mb-1">{rate.label}</p>
-                <p class="text-lg font-semibold text-[var(--dash-text)] group-hover:text-[var(--dash-primary)]">
-                  {formatCurrency(rate.amount, salarySettings.currency || "EUR")}
-                </p>
-                <p class="text-xs text-[var(--dash-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                  Click to use
-                </p>
-              </button>
-            {/each}
           </div>
-        </div>
-      </Card>
-    {:else}
-      <Card padding="md">
-        <div class="text-center py-4">
-          <p class="text-sm text-[var(--dash-text-muted)]">
-            No salary settings configured yet.
-            <a href="/dashboard/applications/salary" class="text-[var(--dash-primary)] hover:underline">
-              Set up your base rate and adjustments
-            </a>
-            to get calculated rates for each application.
-          </p>
-        </div>
-      </Card>
-    {/if}
+        {:else}
+          <div class="text-center py-4">
+            <div class="w-12 h-12 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mx-auto mb-3">
+              <FontAwesomeIcon icon={faMoneyBillWave} class="w-6 h-6 text-[var(--dash-text-muted)]" />
+            </div>
+            <p class="text-[var(--dash-text-secondary)] mb-3">
+              No salary expectation set yet.
+              <a href="/dashboard/applications/salary" class="text-[var(--dash-primary)] hover:underline">Configure your salary settings</a> to get calculated rates, or set it manually.
+            </p>
+            <button
+              type="button"
+              onclick={startEdit}
+              class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+            >
+              Set
+            </button>
+          </div>
+        {/if}
+      {/if}
+    </Card>
   </div>
 </div>

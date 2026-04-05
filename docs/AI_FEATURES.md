@@ -6,7 +6,6 @@
 2. [Getting Started](#getting-started)
 3. [AI Letter Generation](#ai-letter-generation)
    - [Cover Letters](#cover-letters)
-   - [Motivation Letters](#motivation-letters)
    - [Follow-up Emails](#follow-up-emails)
    - [Thank You Letters](#thank-you-letters)
 4. [AI Answer Assistant](#ai-answer-assistant)
@@ -27,8 +26,8 @@ job opportunity.
 
 ### Available AI Features
 
-- **Letter Generation** - Create cover letters, motivation letters, follow-up
-  emails, and thank-you letters customized for each application
+- **Letter Generation** - Create cover letters, follow-up emails, and
+  thank-you letters customized for each application
 - **Question Answering** - Generate answers to application questions based on
   your actual work experience and skills
 - **Iterative Refinement** - Refine and improve AI-generated content through
@@ -192,19 +191,6 @@ The AI will create a cover letter that:
 - For career changes, emphasize transferable skills
 - For senior roles, focus on leadership and strategic impact
 
-### Motivation Letters
-
-**When to use:** Academic positions, research roles, or highly specialized
-positions where explaining your motivation is crucial.
-
-**What makes it different:** Motivation letters focus more on:
-
-- Your passion for the field
-- Long-term career goals
-- Specific interest in the organization or research area
-- How the opportunity fits your professional development
-- Your potential contributions to the field
-
 ### Follow-up Emails
 
 **When to use:**
@@ -348,7 +334,6 @@ Each template has:
 ### Available Templates
 
 - `write_cover_letter` - Generate cover letters (most job applications)
-- `write_motivation_letter` - Generate motivation letters (academic/research roles)
 - `write_follow_up_email` - Generate follow-up emails (application check-ins)
 - `write_thank_you_letter` - Generate thank you letters (post-interview)
 - `answer_application_question` - Answer application questions (pre-screening)

@@ -50,7 +50,6 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
-    motivation_letter: "Motivation Letter",
   };
 
   function getItemId(item: (typeof items)[0]): string {
@@ -171,7 +170,7 @@
       icon={faEnvelope}
       title="No texts yet"
       description={currentType === "all"
-        ? "Cover letters, motivations, and question answers will appear here as you apply for jobs."
+        ? "Cover letters and question answers will appear here as you apply for jobs."
         : currentType === "letters"
         ? "No letters found. Create letters from the application's Texts tab."
         : "No questions found."}

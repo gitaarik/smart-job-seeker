@@ -31,7 +31,6 @@ describe("AI Prompt Schemas", () => {
     it("should return undefined for text-only prompts without structured output", () => {
       // These prompts return plain text, not structured JSON
       expect(getSchemaForPrompt("write_cover_letter")).toBeUndefined();
-      expect(getSchemaForPrompt("write_motivation_letter")).toBeUndefined();
       expect(getSchemaForPrompt("answer_application_question")).toBeUndefined();
     });
   });

@@ -27,45 +27,30 @@ export const load: PageServerLoad = async ({ parent }) => {
       baseRate: profile?.salary_base_rate ?? null,
       currency: profile?.salary_currency ?? "EUR",
       adjustments: (profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
-      regionOverrides: (profile?.salary_region_overrides as Record<string, number> | null) ?? {},
+      regionOverrides: (profile?.salary_region_overrides as Record<string, { rate: number; currency: string }> | null) ?? {},
     },
     profileId: layoutData.selectedProfile.id,
   };
 };
 
 export const actions: Actions = {
-  save: async ({ request, locals, cookies }) => {
+  saveRegionRates: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const baseRate = formData.get("base_rate") as string;
     const currency = formData.get("currency") as string;
-    const adjustmentsJson = formData.get("adjustments") as string;
     const regionOverridesJson = formData.get("region_overrides") as string;
 
     if (!baseRate || isNaN(parseInt(baseRate)) || parseInt(baseRate) < 0) {
       return fail(400, { error: "A valid base hourly rate is required" });
     }
 
-    let adjustments: Record<string, Record<string, number>> = {};
-    let regionOverrides: Record<string, number> = {};
-
-    try {
-      if (adjustmentsJson) {
-        adjustments = JSON.parse(adjustmentsJson);
-      }
-    } catch {
-      return fail(400, { error: "Invalid adjustments format" });
-    }
-
+    let regionOverrides: Record<string, { rate: number; currency: string }> = {};
     try {
       if (regionOverridesJson) {
         regionOverrides = JSON.parse(regionOverridesJson);
@@ -79,8 +64,37 @@ export const actions: Actions = {
       data: {
         salary_base_rate: parseInt(baseRate),
         salary_currency: currency || "EUR",
-        salary_adjustments: adjustments as unknown as Prisma.InputJsonValue,
         salary_region_overrides: regionOverrides as unknown as Prisma.InputJsonValue,
+        date_updated: new Date(),
+      },
+    });
+
+    return { success: true };
+  },
+
+  saveAdjustments: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const formData = await request.formData();
+    const adjustmentsJson = formData.get("adjustments") as string;
+
+    let adjustments: Record<string, Record<string, number>> = {};
+    try {
+      if (adjustmentsJson) {
+        adjustments = JSON.parse(adjustmentsJson);
+      }
+    } catch {
+      return fail(400, { error: "Invalid adjustments format" });
+    }
+
+    await db.profiles.update({
+      where: { id: profileId },
+      data: {
+        salary_adjustments: adjustments as unknown as Prisma.InputJsonValue,
         date_updated: new Date(),
       },
     });

@@ -7,7 +7,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import SearchTaskFields from "../../components/SearchTaskFields.svelte";
-  import { formatJobType, formatWorkLocation, searchTaskDisplayName } from "$lib/format";
+  import { formatJobType, formatWorkLocation, formatSalaryRange, searchTaskDisplayName } from "$lib/format";
   import {
     faArrowLeft,
     faBuilding,
@@ -277,6 +277,7 @@
   let isQueued = $derived(searchTask.status === "queued");
   let isStoppingStatus = $derived(searchTask.status === "stopping");
   let needsIntervention = $derived(isRunning || isBlocked);
+  let hasOtherRunning = $state(data.hasOtherRunning);
   let isCloudMode = $derived(!!liveUrl);
   let isMagicLink = $derived(
     isBlocked && searchTask.status_message?.includes("login link"),
@@ -558,25 +559,8 @@
     currency: string | null,
     period: string | null,
   ): string {
-    if (!min && !max) return "";
-    const curr = currency || "USD";
-    const formatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: curr,
-      maximumFractionDigits: 0,
-    });
-    let result = "";
-    if (min && max) {
-      result = `${formatter.format(min)} - ${formatter.format(max)}`;
-    } else if (min) {
-      result = `From ${formatter.format(min)}`;
-    } else if (max) {
-      result = `Up to ${formatter.format(max)}`;
-    }
-    if (period) {
-      result += ` / ${period}`;
-    }
-    return result;
+    const result = formatSalaryRange(min, max, currency, period);
+    return result === "Not specified" ? "" : result;
   }
 
   function truncateText(text: string | null, maxLength: number): string {
@@ -1090,7 +1074,7 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">Back to all Search Tasks</span>
+      <span class="text-sm">All Search Tasks</span>
     </a>
   </div>
   <h1 class="text-xl font-semibold text-[var(--dash-text)]">
@@ -1366,7 +1350,7 @@
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Never run</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                Click "Run Scrape" to start importing jobs
+                Click "Start" to begin importing jobs
               </p>
             </div>
           {/if}
@@ -1425,7 +1409,7 @@
                 <span>Stopping...</span>
               {:else}
                 <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
-                <span>Stop Scrape</span>
+                <span>Stop</span>
               {/if}
             </button>
           {:else}
@@ -1437,10 +1421,10 @@
             >
               {#if isStarting}
                 <Spinner size="w-4 h-4" />
-                <span>Starting...</span>
+                <span>{hasOtherRunning ? "Enqueuing..." : "Starting..."}</span>
               {:else}
                 <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
-                <span>Run Scrape</span>
+                <span>{hasOtherRunning ? "Enqueue" : "Start"}</span>
               {/if}
             </button>
           {/if}
@@ -1462,12 +1446,12 @@
       <!-- Missing config warnings -->
       {#if !searchTask.search_url}
         <p class="text-sm text-[var(--dash-warning)]">
-          No search URL configured. Please add a search URL to run scrapes.
+          No search URL configured. Please add a search URL to start scraping.
         </p>
       {/if}
       {#if !searchTask.platform}
         <p class="text-sm text-[var(--dash-warning)]">
-          No platform selected. Please select a platform to run scrapes.
+          No platform selected. Please select a platform to start scraping.
         </p>
       {/if}
     </div>
@@ -1812,7 +1796,7 @@
 
     {#if runs.length === 0}
       <div class="p-8 text-center text-[var(--dash-text-secondary)]">
-        <p>No runs yet. Click "Run Scrape" to start.</p>
+        <p>No runs yet. Click "Start" to begin.</p>
       </div>
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">

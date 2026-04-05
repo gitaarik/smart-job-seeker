@@ -250,7 +250,8 @@ Extract the following fields:
 - salary_min: Minimum salary as integer (numeric value only, e.g., 80000)
 - salary_max: Maximum salary as integer (numeric value only, e.g., 120000)
 - salary_currency: Currency code - MUST be one of: "EUR", "USD", or "GBP" (exactly as written)
-- salary_period: Pay period - MUST be one of: "hour", "day", "month", or "year" (exactly as written)
+- salary_period: Pay period - MUST be one of: "hour", "day", "week", "month", "year", or "project" (exactly as written). Use "project" for fixed-price/one-time amounts.
+- salary_duration_weeks: For project/fixed-price jobs ONLY — the estimated project duration in weeks (as a number). null for periodic salaries. Convert months to weeks (1 month ≈ 4.3 weeks). If the posting says "6 week project" → 6, "3 month contract" → 13, "2 weeks" → 2. null if duration is not mentioned.
 
 SALARY PARSING:
 Extract ALL salary components (min, max, currency, period) - do not leave any null if the information is present.
@@ -260,12 +261,14 @@ Currency symbol to code mapping:
 - € → "EUR"
 - £ → "GBP"
 
-Period format normalization (output MUST be: "hour", "day", "month", or "year"):
+Period format normalization (output MUST be: "hour", "day", "week", "month", "year", or "project"):
 - Compact formats: /hr, /hour, /h, p/h → "hour"
 - Compact formats: /day, /d, p/d → "day"
+- Compact formats: /week, /wk → "week"
 - Compact formats: /month, /mo, /mth, p/m → "month"
 - Compact formats: /year, /yr, /annum, /pa, p.a., p/a → "year"
-- Verbose formats: "per hour", "per day", "per month", "per year", "hourly", "daily", "monthly", "annually" → extract the period word
+- Fixed-price, one-time, project budget → "project"
+- Verbose formats: "per hour", "per day", "per week", "per month", "per year", "hourly", "daily", "weekly", "monthly", "annually" → extract the period word
 
 The "k" suffix means thousands - multiply by 1000:
 - "$120k" → 120000
@@ -279,6 +282,8 @@ Examples of complete salary extraction:
 - "£500–600 per day" → min=500, max=600, currency="GBP", period="day"
 - "€80,000 - €100,000 p.a." → min=80000, max=100000, currency="EUR", period="year"
 - "$150/hour" → min=150, max=150, currency="USD", period="hour"
+- "Fixed price: $5,000 for 6 weeks" → min=5000, max=5000, currency="USD", period="project", salary_duration_weeks=6
+- "Budget: €15,000 (3 month project)" → min=15000, max=15000, currency="EUR", period="project", salary_duration_weeks=13
 
 - skills_required: Array of skills explicitly marked as REQUIRED, MUST HAVE, ESSENTIAL, or listed without any qualifier
 - skills_preferred: Array of skills marked as NICE TO HAVE, PREFERRED, BONUS, DESIRED, or similar optional language
@@ -419,7 +424,8 @@ Your task:
    - salary_min (minimum salary as number only)
    - salary_max (maximum salary as number only)
    - salary_currency (currency code: USD, EUR, GBP, etc.)
-   - salary_period (time period: year, month, hour, day)
+   - salary_period (time period: year, month, week, hour, day, or "project" for fixed-price)
+   - salary_duration_weeks (for project/fixed-price only: duration in weeks as number, null otherwise)
    - skills_required (array of required skills shown as tags/labels)
    - skills_preferred (array of preferred/bonus skills if explicitly marked)
    - remote (work arrangement: Remote, Hybrid, On-site, or null)
@@ -767,28 +773,6 @@ Provide your analysis in JSON format with:
 \${additionalContext}`,
   },
 
-  "write_motivation_letter": {
-    system_prompt: `You are an expert career coach writing a motivation letter for a Software Engineer.
-
-## Applicant Profile:
-
-\${data}
-
-## Guidelines:
-
-- Focus on WHY they want this role — personal drive, passion, career trajectory — not just what they can do
-- Connect their specific background and experiences to what excites them about this opportunity
-- Sound like a real person — professional but warm and genuine
-- Only reference experience and motivation grounded in the applicant's actual data
-- Keep it compelling and concise: max 4 paragraphs
-- Output ONLY the motivation letter text, no preamble or commentary`,
-    user_prompt: `Write a motivation letter for this job:
-
-\${jobDetails}
-
-\${additionalContext}`,
-  },
-
   "advise_cover_letter": {
     system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their cover letter.
 
@@ -810,26 +794,6 @@ What specific experiences, skills, and achievements from their profile should th
 \${additionalContext}`,
   },
 
-  "advise_motivation_letter": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their motivation letter.
-
-## Applicant Profile:
-\${data}
-
-Rules:
-- Focus on THIS specific job — what genuine connection points exist between their background and this role?
-- Short bullet points only, no prose
-- Only reference things actually in their profile
-- Skip generic motivation letter advice — they know the basics
-- Do NOT write the letter itself`,
-    user_prompt: `## Job:
-
-\${jobDetails}
-
-What specific aspects of this role or company align with their background and trajectory? Which experiences show genuine motivation for THIS position? Give a brief suggested angle.
-
-\${additionalContext}`,
-  },
 
   "advise_follow_up_email": {
     system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their follow-up email.
@@ -892,32 +856,6 @@ In your feedback:
 \${jobDetails}
 
 ## Their cover letter:
-
-\${letterContent}
-
-\${additionalContext}`,
-  },
-
-  "review_motivation_letter": {
-    system_prompt: `You are a friendly career coach helping someone with their motivation letter. Talk directly to them — "you"/"your". Be warm but concise.
-
-## Applicant Profile:
-\${data}
-
-Respond with JSON containing:
-- "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
-
-In your feedback:
-- If the letter is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
-- Check completeness: proper greeting, intro, body with specifics, closing?
-- Does their motivation come across as authentic and specific to this role?
-- Be concise — focus on what matters most`,
-    user_prompt: `## Job:
-
-\${jobDetails}
-
-## Their motivation letter:
 
 \${letterContent}
 

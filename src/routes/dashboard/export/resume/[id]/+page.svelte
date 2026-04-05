@@ -65,7 +65,7 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">Back to all Resume Versions</span>
+      <span class="text-sm">All Resume Versions</span>
     </a>
   </div>
   <div class="flex items-center gap-2">

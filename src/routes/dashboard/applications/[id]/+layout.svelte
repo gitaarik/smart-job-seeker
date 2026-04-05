@@ -44,7 +44,7 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">Back to all Applications</span>
+      <span class="text-sm">All Applications</span>
     </a>
   </div>
   <h1 class="text-2xl font-bold text-[var(--dash-text)]">Application</h1>

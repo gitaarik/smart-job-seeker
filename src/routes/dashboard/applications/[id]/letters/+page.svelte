@@ -66,7 +66,6 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
-    motivation_letter: "Motivation Letter",
   };
 
   const typeFilters = [
@@ -255,7 +254,7 @@
       </div>
       <h3 class="text-lg font-medium text-[var(--dash-text)] mb-2">No texts yet</h3>
       <p class="text-sm text-[var(--dash-text-secondary)] max-w-md mb-6">
-        Add cover letters, motivation texts, or answer application questions to prepare your application.
+        Add a cover letter or answer application questions to prepare your application.
       </p>
       <div class="relative inline-block" data-add-menu>
         <button

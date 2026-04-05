@@ -81,12 +81,23 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const effectiveCountryCode = profileData?.browser_country_code || profileData?.country_code || "US";
   const geoDefaults = getGeoConfig(effectiveCountryCode);
 
+  // Check if any other search task for this profile is currently running/queued/blocked
+  const otherRunning = await db.search_tasks.findFirst({
+    where: {
+      profile: layoutData.selectedProfile.id,
+      id: { not: searchTaskId },
+      status: { in: ["running", "queued", "blocked"] },
+    },
+    select: { id: true },
+  });
+
   return {
     searchTask,
     platformCredentials,
     profileId: layoutData.selectedProfile.id,
     isStaff,
     canEditPlatformUrls,
+    hasOtherRunning: !!otherRunning,
     browserCountryCode: profileData?.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
     browserProvider: config.browserProvider,

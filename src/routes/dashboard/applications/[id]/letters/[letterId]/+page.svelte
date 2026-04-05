@@ -45,7 +45,6 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
-    motivation_letter: "Motivation Letter",
   };
 
   // Inline edit state: tracks which version is being edited (by index), or -1 for new letter
@@ -411,7 +410,7 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">Back to Texts</span>
+      <span class="text-sm">All Texts</span>
     </a>
   </div>
 
@@ -631,7 +630,7 @@
           {:else}
             <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5 {iconColor}" />
           {/if}
-          Version {versionNum}{#if !userEntry} <span class="normal-case font-normal">(AI revised)</span>{/if}
+          Version {versionNum}{#if !userEntry} <span class="normal-case font-normal">({versionNum === 1 ? "AI generated" : "AI revised"})</span>{/if}
           {#if entry.date}
             <span class="normal-case font-normal text-[var(--dash-text-muted)]">&middot; {formatDate(entry.date)}</span>
           {/if}

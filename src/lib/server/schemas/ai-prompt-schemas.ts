@@ -61,7 +61,10 @@ export const extractJobDataSchema = z.object({
     "Currency code (EUR, USD, GBP)",
   ),
   salary_period: optionalNullableString().describe(
-    "Pay period (hour, day, month, year)",
+    "Pay period (hour, day, week, month, year, project)",
+  ),
+  salary_duration_weeks: optionalNullableNumber().describe(
+    "For project/fixed-price jobs: estimated duration in weeks. null for periodic salaries.",
   ),
   skills_required: optionalNullableArray().describe(
     "Array of REQUIRED TECHNICAL skills/technologies, ordered by importance (most critical first)",
@@ -197,7 +200,10 @@ export const extractJobsFromSearchPageSchema = z.object({
         "Currency code (USD, EUR, GBP, etc.)",
       ),
       salary_period: z.string().nullable().describe(
-        "Salary period (year, month, hour, day)",
+        "Salary period (year, month, week, hour, day, project)",
+      ),
+      salary_duration_weeks: z.number().nullable().optional().describe(
+        "For project/fixed-price: duration in weeks",
       ),
       skills_required: z.array(z.string()).nullable().describe(
         "Array of REQUIRED skills, ordered by importance (most critical first)",
@@ -241,7 +247,7 @@ export const estimateSalaryExpectationsSchema = z.object({
 
 /**
  * Preprocess to normalize letter key names from LLMs that use alternative names
- * (e.g. "coverLetter", "cover_letter", "motivationLetter", "content", "email", "text")
+ * (e.g. "coverLetter", "cover_letter", "content", "email", "text")
  */
 const normalizeLetterKey = (val: unknown) => {
   if (val && typeof val === "object" && !("letter" in val)) {
@@ -249,7 +255,6 @@ const normalizeLetterKey = (val: unknown) => {
     // Find the first string value that looks like the letter content
     const altKeys = [
       "coverLetter", "cover_letter",
-      "motivationLetter", "motivation_letter",
       "followUpEmail", "follow_up_email",
       "thankYouLetter", "thank_you_letter",
       "content", "email", "text", "body",
@@ -265,7 +270,7 @@ const normalizeLetterKey = (val: unknown) => {
 };
 
 /**
- * Schema for letter generation prompts (cover letter, motivation letter, etc.)
+ * Schema for letter generation prompts (cover letter, follow-up email, etc.)
  * Returns the letter text only, no preamble or commentary.
  */
 export const writeLetterSchema = z.preprocess(normalizeLetterKey, z.object({
@@ -304,12 +309,10 @@ export const aiPromptSchemas = {
   check_login_state: checkLoginStateSchema,
   estimate_salary_expectations: estimateSalaryExpectationsSchema,
   write_cover_letter: writeLetterSchema,
-  write_motivation_letter: writeLetterSchema,
   write_follow_up_email: writeLetterSchema,
   write_thank_you_letter: writeLetterSchema,
   followup_letter: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,
-  review_motivation_letter: reviewLetterSchema,
   review_follow_up_email: reviewLetterSchema,
   review_thank_you_letter: reviewLetterSchema,
 } as const;

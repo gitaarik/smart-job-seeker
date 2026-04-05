@@ -750,14 +750,6 @@ export type scraper_agent_iterationsUncheckedUpdateManyWithoutSessionNestedInput
   deleteMany?: Prisma.scraper_agent_iterationsScalarWhereInput | Prisma.scraper_agent_iterationsScalarWhereInput[]
 }
 
-export type NullableFloatFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type scraper_agent_iterationsCreateWithoutSearch_task_runsInput = {
   iteration: number
   stage?: string | null

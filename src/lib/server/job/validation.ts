@@ -4,17 +4,20 @@
  */
 
 import { z } from "zod";
+import { normalizeSalaryPeriod, type SalaryPeriod } from "$lib/salary/conversion";
 
 /**
- * Salary period values
+ * Salary period — accepts common aliases and normalizes to canonical values.
+ * Canonical: "hour", "day", "week", "month", "year", "project"
  */
-export const salaryPeriodSchema = z.enum([
-  "yearly",
-  "monthly",
-  "weekly",
-  "hourly",
-]);
-export type SalaryPeriod = z.infer<typeof salaryPeriodSchema>;
+export const salaryPeriodSchema = z
+  .string()
+  .transform((val) => normalizeSalaryPeriod(val))
+  .refine((val): val is SalaryPeriod => val !== null, {
+    message:
+      'Invalid salary period. Use: "hour", "day", "week", "month", "year", "hourly", "daily", "weekly", "monthly", "yearly", "fixed-price", or "project"',
+  });
+export { type SalaryPeriod };
 
 /**
  * Remote work options
@@ -77,6 +80,7 @@ export const jobImportRequestSchema = z.object({
     .optional()
     .nullable(),
   salaryPeriod: salaryPeriodSchema.optional().nullable(),
+  salaryDurationWeeks: z.number().positive().optional().nullable(),
   remote: remoteOptionSchema.optional().nullable(),
   jobType: jobTypeSchema.optional().nullable(),
   experienceLevel: z

@@ -118,7 +118,8 @@ export const actions: Actions = {
     const application = await db.applications.create({
       data: {
         profile: profileId,
-        status: "draft",
+        status: "preparing",
+        status_action: "Send application",
         date_created: now,
         date_updated: now,
         application_seen_date: now,
@@ -130,7 +131,7 @@ export const actions: Actions = {
         application: application.id,
         date_created: now,
         from_status: null,
-        to_status: "draft",
+        to_status: "preparing",
         description: "Application created",
       },
     });

@@ -179,7 +179,7 @@
     title="Scraper Agent Session"
     icon={faRobot}
     backHref="/dashboard/admin/scraper-agent"
-    backLabel="Back to all Sessions"
+    backLabel="All Sessions"
   />
 
   {#if loading}

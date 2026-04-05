@@ -254,7 +254,6 @@
 
   const chipOptions = [
     { value: "cover_letter", label: "Cover Letter" },
-    { value: "motivation_letter", label: "Motivation Letter" },
     { value: "follow_up", label: "Follow-up" },
     { value: "thank_you", label: "Thank You" },
     { value: "introduction", label: "Introduction" },

@@ -206,7 +206,7 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">Back to all Side Projects</span>
+      <span class="text-sm">All Side Projects</span>
     </a>
   </div>
 

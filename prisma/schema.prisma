@@ -807,6 +807,7 @@ model jobs {
   salary_max            Int?
   salary_currency       String?                 @db.VarChar(255)
   salary_period         String?                 @db.VarChar(255)
+  salary_duration_weeks Float?
   import_error          String?
   last_scraped          DateTime?               @db.Timestamptz(6)
   office_location       String?                 @db.VarChar(255)
@@ -822,6 +823,7 @@ model jobs {
   skills_preferred      Json?                   @db.Json
   responsibilities      Json?
   soft_skills           Json?
+  region                String?                 @db.VarChar(50)
   rescrape_status       String?                 @db.VarChar(50)
   rescrape_message      String?
   rescrape_live_url     String?

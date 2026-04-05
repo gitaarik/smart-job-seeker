@@ -51,6 +51,7 @@ async function importSingleJob(
           salary_max: jobData.salaryMax,
           salary_currency: jobData.salaryCurrency,
           salary_period: jobData.salaryPeriod,
+          salary_duration_weeks: jobData.salaryDurationWeeks,
           work_location: jobData.remote ? [jobData.remote] : undefined,
           job_types: jobData.jobType ? [jobData.jobType] : undefined,
           experience_levels: jobData.experienceLevel
@@ -108,6 +109,7 @@ async function importSingleJob(
         salary_max: jobData.salaryMax,
         salary_currency: jobData.salaryCurrency,
         salary_period: jobData.salaryPeriod,
+        salary_duration_weeks: jobData.salaryDurationWeeks,
         work_location: jobData.remote ? [jobData.remote] : null,
         job_types: jobData.jobType ? [jobData.jobType] : null,
         experience_levels: jobData.experienceLevel

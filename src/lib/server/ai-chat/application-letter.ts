@@ -24,11 +24,6 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
     advice: "advise_cover_letter",
     review: "review_cover_letter",
   },
-  motivation_letter: {
-    generate: "write_motivation_letter",
-    advice: "advise_motivation_letter",
-    review: "review_motivation_letter",
-  },
   follow_up_email: {
     generate: "write_follow_up_email",
     advice: "advise_follow_up_email",

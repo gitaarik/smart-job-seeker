@@ -30,6 +30,7 @@
     getStatusColor,
     getStatusBgColor,
   } from "$lib/application-status";
+  import { formatSalaryRange, isSalarySingleValue } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -439,31 +440,9 @@
           </div>
           {#if job?.salary_min || job?.salary_max}
             <div class="flex items-center justify-between text-sm">
-              <span class="text-[var(--dash-text-secondary)]">{job.salary_min && job.salary_max && Number(job.salary_min) === Number(job.salary_max) ? "Salary Indication" : "Job Range"}</span>
+              <span class="text-[var(--dash-text-secondary)]">{isSalarySingleValue(job.salary_min, job.salary_max) ? "Salary Indication" : "Job Range"}</span>
               <span class="text-[var(--dash-text)] font-medium">
-                {#if job.salary_min && job.salary_max && Number(job.salary_min) === Number(job.salary_max)}
-                  {formatCurrency(job.salary_min, job.salary_currency, job.salary_period)}
-                {:else if job.salary_min && job.salary_max}
-                  {
-                    formatCurrency(job.salary_min, job.salary_currency, job.salary_period)
-                  }
-                  -
-                  {
-                    new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: job.salary_currency || "EUR",
-                      maximumFractionDigits: 0,
-                    }).format(Number(job.salary_max))
-                  }
-                {:else if job.salary_min}
-                  From {
-                    formatCurrency(job.salary_min, job.salary_currency, job.salary_period)
-                  }
-                {:else}
-                  Up to {
-                    formatCurrency(job.salary_max, job.salary_currency, job.salary_period)
-                  }
-                {/if}
+                {formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
               </span>
             </div>
           {/if}

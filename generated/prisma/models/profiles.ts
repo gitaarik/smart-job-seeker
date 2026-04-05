@@ -34,6 +34,7 @@ export type ProfilesAvgAggregateOutputType = {
   remote_start_year: number | null
   public_cv_version: number | null
   public_resume_version: number | null
+  salary_base_rate: number | null
 }
 
 export type ProfilesSumAggregateOutputType = {
@@ -44,6 +45,7 @@ export type ProfilesSumAggregateOutputType = {
   remote_start_year: number | null
   public_cv_version: number | null
   public_resume_version: number | null
+  salary_base_rate: number | null
 }
 
 export type ProfilesMinAggregateOutputType = {
@@ -98,6 +100,8 @@ export type ProfilesMinAggregateOutputType = {
   browser_timezone: string | null
   browser_country_code: string | null
   browser_profile_id: string | null
+  salary_base_rate: number | null
+  salary_currency: string | null
 }
 
 export type ProfilesMaxAggregateOutputType = {
@@ -152,6 +156,8 @@ export type ProfilesMaxAggregateOutputType = {
   browser_timezone: string | null
   browser_country_code: string | null
   browser_profile_id: string | null
+  salary_base_rate: number | null
+  salary_currency: string | null
 }
 
 export type ProfilesCountAggregateOutputType = {
@@ -207,6 +213,10 @@ export type ProfilesCountAggregateOutputType = {
   ui_preferences: number
   browser_country_code: number
   browser_profile_id: number
+  salary_base_rate: number
+  salary_currency: number
+  salary_adjustments: number
+  salary_region_overrides: number
   _all: number
 }
 
@@ -219,6 +229,7 @@ export type ProfilesAvgAggregateInputType = {
   remote_start_year?: true
   public_cv_version?: true
   public_resume_version?: true
+  salary_base_rate?: true
 }
 
 export type ProfilesSumAggregateInputType = {
@@ -229,6 +240,7 @@ export type ProfilesSumAggregateInputType = {
   remote_start_year?: true
   public_cv_version?: true
   public_resume_version?: true
+  salary_base_rate?: true
 }
 
 export type ProfilesMinAggregateInputType = {
@@ -283,6 +295,8 @@ export type ProfilesMinAggregateInputType = {
   browser_timezone?: true
   browser_country_code?: true
   browser_profile_id?: true
+  salary_base_rate?: true
+  salary_currency?: true
 }
 
 export type ProfilesMaxAggregateInputType = {
@@ -337,6 +351,8 @@ export type ProfilesMaxAggregateInputType = {
   browser_timezone?: true
   browser_country_code?: true
   browser_profile_id?: true
+  salary_base_rate?: true
+  salary_currency?: true
 }
 
 export type ProfilesCountAggregateInputType = {
@@ -392,6 +408,10 @@ export type ProfilesCountAggregateInputType = {
   ui_preferences?: true
   browser_country_code?: true
   browser_profile_id?: true
+  salary_base_rate?: true
+  salary_currency?: true
+  salary_adjustments?: true
+  salary_region_overrides?: true
   _all?: true
 }
 
@@ -534,6 +554,10 @@ export type ProfilesGroupByOutputType = {
   ui_preferences: runtime.JsonValue | null
   browser_country_code: string | null
   browser_profile_id: string | null
+  salary_base_rate: number | null
+  salary_currency: string | null
+  salary_adjustments: runtime.JsonValue | null
+  salary_region_overrides: runtime.JsonValue | null
   _count: ProfilesCountAggregateOutputType | null
   _avg: ProfilesAvgAggregateOutputType | null
   _sum: ProfilesSumAggregateOutputType | null
@@ -612,6 +636,10 @@ export type profilesWhereInput = {
   ui_preferences?: Prisma.JsonNullableFilter<"profiles">
   browser_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   browser_profile_id?: Prisma.StringNullableFilter<"profiles"> | string | null
+  salary_base_rate?: Prisma.IntNullableFilter<"profiles"> | number | null
+  salary_currency?: Prisma.StringNullableFilter<"profiles"> | string | null
+  salary_adjustments?: Prisma.JsonNullableFilter<"profiles">
+  salary_region_overrides?: Prisma.JsonNullableFilter<"profiles">
   ai_chats?: Prisma.Ai_chatsListRelationFilter
   api_keys?: Prisma.Api_keysListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
@@ -695,6 +723,10 @@ export type profilesOrderByWithRelationInput = {
   ui_preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   browser_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   browser_profile_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_adjustments?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_region_overrides?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chats?: Prisma.ai_chatsOrderByRelationAggregateInput
   api_keys?: Prisma.api_keysOrderByRelationAggregateInput
   applications?: Prisma.applicationsOrderByRelationAggregateInput
@@ -781,6 +813,10 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   ui_preferences?: Prisma.JsonNullableFilter<"profiles">
   browser_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   browser_profile_id?: Prisma.StringNullableFilter<"profiles"> | string | null
+  salary_base_rate?: Prisma.IntNullableFilter<"profiles"> | number | null
+  salary_currency?: Prisma.StringNullableFilter<"profiles"> | string | null
+  salary_adjustments?: Prisma.JsonNullableFilter<"profiles">
+  salary_region_overrides?: Prisma.JsonNullableFilter<"profiles">
   ai_chats?: Prisma.Ai_chatsListRelationFilter
   api_keys?: Prisma.Api_keysListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
@@ -864,6 +900,10 @@ export type profilesOrderByWithAggregationInput = {
   ui_preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   browser_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   browser_profile_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_adjustments?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_region_overrides?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profilesCountOrderByAggregateInput
   _avg?: Prisma.profilesAvgOrderByAggregateInput
   _max?: Prisma.profilesMaxOrderByAggregateInput
@@ -927,6 +967,10 @@ export type profilesScalarWhereWithAggregatesInput = {
   ui_preferences?: Prisma.JsonNullableWithAggregatesFilter<"profiles">
   browser_country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   browser_profile_id?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  salary_base_rate?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
+  salary_currency?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  salary_adjustments?: Prisma.JsonNullableWithAggregatesFilter<"profiles">
+  salary_region_overrides?: Prisma.JsonNullableWithAggregatesFilter<"profiles">
 }
 
 export type profilesCreateInput = {
@@ -978,6 +1022,10 @@ export type profilesCreateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -1061,6 +1109,10 @@ export type profilesUncheckedCreateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1137,6 +1189,10 @@ export type profilesUpdateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -1220,6 +1276,10 @@ export type profilesUncheckedUpdateInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1300,6 +1360,10 @@ export type profilesCreateManyInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesUpdateManyMutationInput = {
@@ -1351,6 +1415,10 @@ export type profilesUpdateManyMutationInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -1406,6 +1474,10 @@ export type profilesUncheckedUpdateManyInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ProfilesScalarRelationFilter = {
@@ -1481,6 +1553,10 @@ export type profilesCountOrderByAggregateInput = {
   ui_preferences?: Prisma.SortOrder
   browser_country_code?: Prisma.SortOrder
   browser_profile_id?: Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrder
+  salary_currency?: Prisma.SortOrder
+  salary_adjustments?: Prisma.SortOrder
+  salary_region_overrides?: Prisma.SortOrder
 }
 
 export type profilesAvgOrderByAggregateInput = {
@@ -1491,6 +1567,7 @@ export type profilesAvgOrderByAggregateInput = {
   remote_start_year?: Prisma.SortOrder
   public_cv_version?: Prisma.SortOrder
   public_resume_version?: Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrder
 }
 
 export type profilesMaxOrderByAggregateInput = {
@@ -1545,6 +1622,8 @@ export type profilesMaxOrderByAggregateInput = {
   browser_timezone?: Prisma.SortOrder
   browser_country_code?: Prisma.SortOrder
   browser_profile_id?: Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrder
+  salary_currency?: Prisma.SortOrder
 }
 
 export type profilesMinOrderByAggregateInput = {
@@ -1599,6 +1678,8 @@ export type profilesMinOrderByAggregateInput = {
   browser_timezone?: Prisma.SortOrder
   browser_country_code?: Prisma.SortOrder
   browser_profile_id?: Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrder
+  salary_currency?: Prisma.SortOrder
 }
 
 export type profilesSumOrderByAggregateInput = {
@@ -1609,6 +1690,7 @@ export type profilesSumOrderByAggregateInput = {
   remote_start_year?: Prisma.SortOrder
   public_cv_version?: Prisma.SortOrder
   public_resume_version?: Prisma.SortOrder
+  salary_base_rate?: Prisma.SortOrder
 }
 
 export type profilesCreateNestedOneWithoutApplicationsInput = {
@@ -2142,6 +2224,10 @@ export type profilesCreateWithoutApplicationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2224,6 +2310,10 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2315,6 +2405,10 @@ export type profilesUpdateWithoutApplicationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2397,6 +2491,10 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2472,6 +2570,10 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -2554,6 +2656,10 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2645,6 +2751,10 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -2727,6 +2837,10 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2802,6 +2916,10 @@ export type profilesCreateWithoutCollected_dataInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -2884,6 +3002,10 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2975,6 +3097,10 @@ export type profilesUpdateWithoutCollected_dataInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -3057,6 +3183,10 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3132,6 +3262,10 @@ export type profilesCreateWithoutConfigInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -3214,6 +3348,10 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3305,6 +3443,10 @@ export type profilesUpdateWithoutConfigInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -3387,6 +3529,10 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3462,6 +3608,10 @@ export type profilesCreateWithoutDirectus_filesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -3543,6 +3693,10 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3652,6 +3806,10 @@ export type profilesScalarWhereInput = {
   ui_preferences?: Prisma.JsonNullableFilter<"profiles">
   browser_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   browser_profile_id?: Prisma.StringNullableFilter<"profiles"> | string | null
+  salary_base_rate?: Prisma.IntNullableFilter<"profiles"> | number | null
+  salary_currency?: Prisma.StringNullableFilter<"profiles"> | string | null
+  salary_adjustments?: Prisma.JsonNullableFilter<"profiles">
+  salary_region_overrides?: Prisma.JsonNullableFilter<"profiles">
 }
 
 export type profilesCreateWithoutEducationInput = {
@@ -3703,6 +3861,10 @@ export type profilesCreateWithoutEducationInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -3785,6 +3947,10 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3876,6 +4042,10 @@ export type profilesUpdateWithoutEducationInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -3958,6 +4128,10 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4033,6 +4207,10 @@ export type profilesCreateWithoutHighlightsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -4115,6 +4293,10 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4206,6 +4388,10 @@ export type profilesUpdateWithoutHighlightsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -4288,6 +4474,10 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4363,6 +4553,10 @@ export type profilesCreateWithoutJob_matchesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -4445,6 +4639,10 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4536,6 +4734,10 @@ export type profilesUpdateWithoutJob_matchesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -4618,6 +4820,10 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4693,6 +4899,10 @@ export type profilesCreateWithoutJob_match_historyInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -4775,6 +4985,10 @@ export type profilesUncheckedCreateWithoutJob_match_historyInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4866,6 +5080,10 @@ export type profilesUpdateWithoutJob_match_historyInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -4948,6 +5166,10 @@ export type profilesUncheckedUpdateWithoutJob_match_historyInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5023,6 +5245,10 @@ export type profilesCreateWithoutJob_statusesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -5105,6 +5331,10 @@ export type profilesUncheckedCreateWithoutJob_statusesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5196,6 +5426,10 @@ export type profilesUpdateWithoutJob_statusesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -5278,6 +5512,10 @@ export type profilesUncheckedUpdateWithoutJob_statusesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5353,6 +5591,10 @@ export type profilesCreateWithoutLanguagesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -5435,6 +5677,10 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5526,6 +5772,10 @@ export type profilesUpdateWithoutLanguagesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -5608,6 +5858,10 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5683,6 +5937,10 @@ export type profilesCreateWithoutOs_contributionsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -5765,6 +6023,10 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5856,6 +6118,10 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -5938,6 +6204,10 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6013,6 +6283,10 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -6095,6 +6369,10 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6186,6 +6464,10 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -6268,6 +6550,10 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6343,6 +6629,10 @@ export type profilesCreateWithoutProfile_exportsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -6425,6 +6715,10 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6516,6 +6810,10 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -6598,6 +6896,10 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6673,6 +6975,10 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -6755,6 +7061,10 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6835,6 +7145,10 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -6916,6 +7230,10 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7002,6 +7320,10 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -7083,6 +7405,10 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7180,6 +7506,10 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -7262,6 +7592,10 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7369,6 +7703,10 @@ export type profilesCreateWithoutApi_keysInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7451,6 +7789,10 @@ export type profilesUncheckedCreateWithoutApi_keysInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7542,6 +7884,10 @@ export type profilesUpdateWithoutApi_keysInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7624,6 +7970,10 @@ export type profilesUncheckedUpdateWithoutApi_keysInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7699,6 +8049,10 @@ export type profilesCreateWithoutProject_storiesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -7781,6 +8135,10 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7872,6 +8230,10 @@ export type profilesUpdateWithoutProject_storiesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -7954,6 +8316,10 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8029,6 +8395,10 @@ export type profilesCreateWithoutReferencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -8111,6 +8481,10 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8202,6 +8576,10 @@ export type profilesUpdateWithoutReferencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -8284,6 +8662,10 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8359,6 +8741,10 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -8441,6 +8827,10 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8532,6 +8922,10 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -8614,6 +9008,10 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8689,6 +9087,10 @@ export type profilesCreateWithoutSide_projectsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -8771,6 +9173,10 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8862,6 +9268,10 @@ export type profilesUpdateWithoutSide_projectsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -8944,6 +9354,10 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9019,6 +9433,10 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -9101,6 +9519,10 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -9192,6 +9614,10 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -9274,6 +9700,10 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9349,6 +9779,10 @@ export type profilesCreateWithoutWork_experiencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -9431,6 +9865,10 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -9522,6 +9960,10 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -9604,6 +10046,10 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9679,6 +10125,10 @@ export type profilesCreateWithoutAi_chatsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -9761,6 +10211,10 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -9852,6 +10306,10 @@ export type profilesUpdateWithoutAi_chatsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -9934,6 +10392,10 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -10009,6 +10471,10 @@ export type profilesCreateWithoutJob_importersInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -10091,6 +10557,10 @@ export type profilesUncheckedCreateWithoutJob_importersInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -10182,6 +10652,10 @@ export type profilesUpdateWithoutJob_importersInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -10264,6 +10738,10 @@ export type profilesUncheckedUpdateWithoutJob_importersInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -10339,6 +10817,10 @@ export type profilesCreateWithoutMatch_configInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -10421,6 +10903,10 @@ export type profilesUncheckedCreateWithoutMatch_configInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -10512,6 +10998,10 @@ export type profilesUpdateWithoutMatch_configInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -10594,6 +11084,10 @@ export type profilesUncheckedUpdateWithoutMatch_configInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -10669,6 +11163,10 @@ export type profilesCreateWithoutSearch_tasksInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
@@ -10751,6 +11249,10 @@ export type profilesUncheckedCreateWithoutSearch_tasksInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   api_keys?: Prisma.api_keysUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
@@ -10842,6 +11344,10 @@ export type profilesUpdateWithoutSearch_tasksInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -10924,6 +11430,10 @@ export type profilesUncheckedUpdateWithoutSearch_tasksInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -11002,6 +11512,10 @@ export type profilesCreateManyDirectus_filesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesUpdateWithoutDirectus_filesInput = {
@@ -11053,6 +11567,10 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -11134,6 +11652,10 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -11213,6 +11735,10 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
@@ -11267,6 +11793,10 @@ export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofi
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
@@ -11321,6 +11851,10 @@ export type profilesCreateManyProfile_versions_profiles_public_resume_versionTop
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: string | null
   browser_profile_id?: string | null
+  salary_base_rate?: number | null
+  salary_currency?: string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
@@ -11372,6 +11906,10 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -11453,6 +11991,10 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -11532,6 +12074,10 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_c
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type profilesUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
@@ -11583,6 +12129,10 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
@@ -11664,6 +12214,10 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   api_keys?: Prisma.api_keysUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -11743,6 +12297,10 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_r
   ui_preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   browser_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   browser_profile_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_base_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_adjustments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  salary_region_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -12045,6 +12603,10 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   ui_preferences?: boolean
   browser_country_code?: boolean
   browser_profile_id?: boolean
+  salary_base_rate?: boolean
+  salary_currency?: boolean
+  salary_adjustments?: boolean
+  salary_region_overrides?: boolean
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   api_keys?: boolean | Prisma.profiles$api_keysArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -12129,6 +12691,10 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   ui_preferences?: boolean
   browser_country_code?: boolean
   browser_profile_id?: boolean
+  salary_base_rate?: boolean
+  salary_currency?: boolean
+  salary_adjustments?: boolean
+  salary_region_overrides?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
   profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
   profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
@@ -12187,6 +12753,10 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   ui_preferences?: boolean
   browser_country_code?: boolean
   browser_profile_id?: boolean
+  salary_base_rate?: boolean
+  salary_currency?: boolean
+  salary_adjustments?: boolean
+  salary_region_overrides?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
   profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
   profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
@@ -12245,9 +12815,13 @@ export type profilesSelectScalar = {
   ui_preferences?: boolean
   browser_country_code?: boolean
   browser_profile_id?: boolean
+  salary_base_rate?: boolean
+  salary_currency?: boolean
+  salary_adjustments?: boolean
+  salary_region_overrides?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path" | "browser_user_agent" | "browser_language" | "browser_timezone" | "ui_preferences" | "browser_country_code" | "browser_profile_id", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path" | "browser_user_agent" | "browser_language" | "browser_timezone" | "ui_preferences" | "browser_country_code" | "browser_profile_id" | "salary_base_rate" | "salary_currency" | "salary_adjustments" | "salary_region_overrides", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   api_keys?: boolean | Prisma.profiles$api_keysArgs<ExtArgs>
@@ -12375,6 +12949,10 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     ui_preferences: runtime.JsonValue | null
     browser_country_code: string | null
     browser_profile_id: string | null
+    salary_base_rate: number | null
+    salary_currency: string | null
+    salary_adjustments: runtime.JsonValue | null
+    salary_region_overrides: runtime.JsonValue | null
   }, ExtArgs["result"]["profiles"]>
   composites: {}
 }
@@ -12878,6 +13456,10 @@ export interface profilesFieldRefs {
   readonly ui_preferences: Prisma.FieldRef<"profiles", 'Json'>
   readonly browser_country_code: Prisma.FieldRef<"profiles", 'String'>
   readonly browser_profile_id: Prisma.FieldRef<"profiles", 'String'>
+  readonly salary_base_rate: Prisma.FieldRef<"profiles", 'Int'>
+  readonly salary_currency: Prisma.FieldRef<"profiles", 'String'>
+  readonly salary_adjustments: Prisma.FieldRef<"profiles", 'Json'>
+  readonly salary_region_overrides: Prisma.FieldRef<"profiles", 'Json'>
 }
     
 

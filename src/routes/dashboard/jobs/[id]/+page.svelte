@@ -26,7 +26,8 @@
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
-  import { formatJobStatus } from "$lib/format";
+  import { formatJobStatus, formatSalaryRange } from "$lib/format";
+  import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from "$lib/salary/conversion";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -103,32 +104,8 @@
     });
   }
 
-  function formatSalary(
-    min: number | null,
-    max: number | null,
-    currency: string | null,
-    period: string | null,
-  ): string {
-    if (!min && !max) return "Not specified";
-    const curr = currency || "USD";
-    const formatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: curr,
-      maximumFractionDigits: 0,
-    });
-    let result = "";
-    if (min && max) {
-      result = `${formatter.format(min)} - ${formatter.format(max)}`;
-    } else if (min) {
-      result = `From ${formatter.format(min)}`;
-    } else if (max) {
-      result = `Up to ${formatter.format(max)}`;
-    }
-    if (period) {
-      result += ` / ${period}`;
-    }
-    return result;
-  }
+  // formatSalary delegates to shared utility
+  const formatSalary = formatSalaryRange;
 
   function getRecommendationLabel(rec: string | null): string {
     switch (rec) {
@@ -162,7 +139,7 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">Back to all Jobs</span>
+      <span class="text-sm">All Jobs</span>
     </a>
   </div>
   <SectionHeader
@@ -362,7 +339,17 @@
                   job.salary_period,
                 )
               }
+              {#if job.salary_duration_weeks}
+                <span class="text-sm font-normal text-[var(--dash-text-secondary)]">
+                  ({job.salary_duration_weeks} week{job.salary_duration_weeks === 1 ? "" : "s"})
+                </span>
+              {/if}
             </p>
+            {#if normalizeSalaryPeriod(job.salary_period) === "project" && job.salary_duration_weeks && job.salary_min}
+              <p class="text-xs text-[var(--dash-text-muted)] mt-0.5 ml-6">
+                ≈ {formatCurrency(Math.round(projectToHourly(job.salary_min, job.salary_duration_weeks)), job.salary_currency || "USD")}/hr equivalent
+              </p>
+            {/if}
           </div>
           <div>
             <p class="text-sm text-[var(--dash-text-secondary)] mb-1">Posted</p>

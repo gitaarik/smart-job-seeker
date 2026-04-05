@@ -938,6 +938,7 @@ export const JobsScalarFieldEnum = {
   salary_max: 'salary_max',
   salary_currency: 'salary_currency',
   salary_period: 'salary_period',
+  salary_duration_weeks: 'salary_duration_weeks',
   import_error: 'import_error',
   last_scraped: 'last_scraped',
   office_location: 'office_location',
@@ -953,6 +954,7 @@ export const JobsScalarFieldEnum = {
   skills_preferred: 'skills_preferred',
   responsibilities: 'responsibilities',
   soft_skills: 'soft_skills',
+  region: 'region',
   rescrape_status: 'rescrape_status',
   rescrape_message: 'rescrape_message',
   rescrape_live_url: 'rescrape_live_url'
@@ -1131,7 +1133,11 @@ export const ProfilesScalarFieldEnum = {
   browser_timezone: 'browser_timezone',
   ui_preferences: 'ui_preferences',
   browser_country_code: 'browser_country_code',
-  browser_profile_id: 'browser_profile_id'
+  browser_profile_id: 'browser_profile_id',
+  salary_base_rate: 'salary_base_rate',
+  salary_currency: 'salary_currency',
+  salary_adjustments: 'salary_adjustments',
+  salary_region_overrides: 'salary_region_overrides'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

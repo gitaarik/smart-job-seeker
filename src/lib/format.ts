@@ -5,6 +5,7 @@ import {
   buildDisplayMap,
   matchPatternDisplay,
 } from "$lib/data/job-taxonomy";
+import { formatSalaryPeriod } from "$lib/salary/conversion";
 
 const jobTypeLabels = buildDisplayMap(JOB_TYPES);
 const workLocationLabels = buildDisplayMap(WORK_LOCATIONS);
@@ -47,6 +48,50 @@ export function searchTaskDisplayName(
 ): string {
   const base = platformName || "Search task";
   return note ? `${base} — ${note}` : base;
+}
+
+/**
+ * Format a salary range, handling min===max as a single value.
+ * Used on job detail pages, job cards, and application pages.
+ */
+export function formatSalaryRange(
+  min: number | null,
+  max: number | null,
+  currency: string | null,
+  period: string | null,
+): string {
+  if (!min && !max) return "Not specified";
+  const curr = currency || "USD";
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: curr,
+    maximumFractionDigits: 0,
+  });
+  let result = "";
+  if (min && max && min === max) {
+    result = formatter.format(min);
+  } else if (min && max) {
+    result = `${formatter.format(min)} – ${formatter.format(max)}`;
+  } else if (min) {
+    result = `From ${formatter.format(min)}`;
+  } else if (max) {
+    result = `Up to ${formatter.format(max)}`;
+  }
+  const label = formatSalaryPeriod(period);
+  if (label) {
+    result += ` / ${label}`;
+  }
+  return result;
+}
+
+/**
+ * Returns true when min and max are the same (single value, not a range).
+ */
+export function isSalarySingleValue(
+  min: number | null,
+  max: number | null,
+): boolean {
+  return min != null && max != null && min === max;
 }
 
 function titleCase(str: string): string {

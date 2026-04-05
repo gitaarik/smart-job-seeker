@@ -19,6 +19,7 @@
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import ScoreBadge from "./ScoreBadge.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
+  import { formatSalaryRange } from "$lib/format";
 
   interface Job {
     id: number;
@@ -98,25 +99,8 @@
     currency: string | null,
     period: string | null,
   ): string {
-    if (!min && !max) return "";
-    const curr = currency || "USD";
-    const formatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: curr,
-      maximumFractionDigits: 0,
-    });
-    let result = "";
-    if (min && max) {
-      result = `${formatter.format(min)} - ${formatter.format(max)}`;
-    } else if (min) {
-      result = `From ${formatter.format(min)}`;
-    } else if (max) {
-      result = `Up to ${formatter.format(max)}`;
-    }
-    if (period) {
-      result += ` / ${period}`;
-    }
-    return result;
+    const result = formatSalaryRange(min, max, currency, period);
+    return result === "Not specified" ? "" : result;
   }
 
   function formatDate(date: Date | string | null): string {

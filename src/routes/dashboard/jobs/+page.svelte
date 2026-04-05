@@ -26,6 +26,7 @@
     faTag,
     faTimes,
     faUser,
+    faEllipsisVertical,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -33,7 +34,7 @@
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
   import ConfirmModal from "../profile/components/ConfirmModal.svelte";
-  import { formatJobType, formatWorkLocation } from "$lib/format";
+  import { formatJobType, formatWorkLocation, formatSalaryRange } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -44,6 +45,7 @@
   let clearMatchResult = $state<{ count: number } | null>(null);
   let showClearMatchConfirm = $state(false);
   let clearMatchFormEl: HTMLFormElement;
+  let showAdvancedMenu = $state(false);
 
   let jobs = $derived(data.jobs);
   let platforms = $derived(data.platforms);
@@ -329,25 +331,8 @@
     currency: string | null,
     period: string | null,
   ): string {
-    if (!min && !max) return "";
-    const curr = currency || "USD";
-    const formatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: curr,
-      maximumFractionDigits: 0,
-    });
-    let result = "";
-    if (min && max) {
-      result = `${formatter.format(min)} - ${formatter.format(max)}`;
-    } else if (min) {
-      result = `From ${formatter.format(min)}`;
-    } else if (max) {
-      result = `Up to ${formatter.format(max)}`;
-    }
-    if (period) {
-      result += ` / ${period}`;
-    }
-    return result;
+    const result = formatSalaryRange(min, max, currency, period);
+    return result === "Not specified" ? "" : result;
   }
 
   function truncate(text: string | null, maxLength: number): string {
@@ -713,10 +698,10 @@
         <button
           type="button"
           onclick={clearFilters}
-          class="px-2.5 py-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+          class="px-2.5 py-1.5 text-xs rounded-md border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-1.5"
         >
           <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-          Clear
+          Clear filters
         </button>
       {/if}
 
@@ -739,21 +724,40 @@
           class="hidden"
         >
         </form>
-        <button
-          type="button"
-          disabled={isClearingMatches}
-          onclick={() => (showClearMatchConfirm = true)}
-          class="px-2.5 py-1.5 text-xs rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"
-          title="Clear match scoring data for jobs matching current filters, so they get re-scored"
-        >
-          {#if isClearingMatches}
-            <Spinner size="w-3 h-3" />
-            Clearing...
-          {:else}
-            <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
-            Clear match data
+        <div class="relative">
+          <button
+            type="button"
+            onclick={() => (showAdvancedMenu = !showAdvancedMenu)}
+            class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors rounded"
+            title="Advanced actions"
+          >
+            <FontAwesomeIcon icon={faEllipsisVertical} class="w-3 h-3" />
+          </button>
+          {#if showAdvancedMenu}
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+              class="fixed inset-0 z-10"
+              onclick={() => (showAdvancedMenu = false)}
+              onkeydown={(e) => e.key === "Escape" && (showAdvancedMenu = false)}
+            ></div>
+            <div class="absolute right-0 top-full mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[180px]">
+              <button
+                type="button"
+                disabled={isClearingMatches}
+                onclick={() => { showAdvancedMenu = false; showClearMatchConfirm = true; }}
+                class="w-full px-3 py-2 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-orange-600 disabled:opacity-50"
+              >
+                {#if isClearingMatches}
+                  <Spinner size="w-3 h-3" />
+                  Clearing...
+                {:else}
+                  <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
+                  Clear match data
+                {/if}
+              </button>
+            </div>
           {/if}
-        </button>
+        </div>
       {/if}
     </div>
 

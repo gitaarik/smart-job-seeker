@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       baseRate: profile?.salary_base_rate ?? null,
       currency: profile?.salary_currency ?? "EUR",
       adjustments: (profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
-      regionOverrides: (profile?.salary_region_overrides as Record<string, number> | null) ?? {},
+      regionOverrides: (profile?.salary_region_overrides as Record<string, { rate: number; currency: string }> | null) ?? {},
     },
   };
 };

@@ -30,6 +30,7 @@ export type JobsAvgAggregateOutputType = {
   id: number | null
   salary_min: number | null
   salary_max: number | null
+  salary_duration_weeks: number | null
   scrape_count: number | null
   job_platform: number | null
   ai_chat_extraction: number | null
@@ -39,6 +40,7 @@ export type JobsSumAggregateOutputType = {
   id: number | null
   salary_min: number | null
   salary_max: number | null
+  salary_duration_weeks: number | null
   scrape_count: number | null
   job_platform: number | null
   ai_chat_extraction: number | null
@@ -59,6 +61,7 @@ export type JobsMinAggregateOutputType = {
   salary_max: number | null
   salary_currency: string | null
   salary_period: string | null
+  salary_duration_weeks: number | null
   import_error: string | null
   last_scraped: Date | null
   office_location: string | null
@@ -67,6 +70,7 @@ export type JobsMinAggregateOutputType = {
   job_platform: number | null
   ai_chat_extraction: number | null
   company: string | null
+  region: string | null
   rescrape_status: string | null
   rescrape_message: string | null
   rescrape_live_url: string | null
@@ -87,6 +91,7 @@ export type JobsMaxAggregateOutputType = {
   salary_max: number | null
   salary_currency: string | null
   salary_period: string | null
+  salary_duration_weeks: number | null
   import_error: string | null
   last_scraped: Date | null
   office_location: string | null
@@ -95,6 +100,7 @@ export type JobsMaxAggregateOutputType = {
   job_platform: number | null
   ai_chat_extraction: number | null
   company: string | null
+  region: string | null
   rescrape_status: string | null
   rescrape_message: string | null
   rescrape_live_url: string | null
@@ -115,6 +121,7 @@ export type JobsCountAggregateOutputType = {
   salary_max: number
   salary_currency: number
   salary_period: number
+  salary_duration_weeks: number
   import_error: number
   last_scraped: number
   office_location: number
@@ -130,6 +137,7 @@ export type JobsCountAggregateOutputType = {
   skills_preferred: number
   responsibilities: number
   soft_skills: number
+  region: number
   rescrape_status: number
   rescrape_message: number
   rescrape_live_url: number
@@ -141,6 +149,7 @@ export type JobsAvgAggregateInputType = {
   id?: true
   salary_min?: true
   salary_max?: true
+  salary_duration_weeks?: true
   scrape_count?: true
   job_platform?: true
   ai_chat_extraction?: true
@@ -150,6 +159,7 @@ export type JobsSumAggregateInputType = {
   id?: true
   salary_min?: true
   salary_max?: true
+  salary_duration_weeks?: true
   scrape_count?: true
   job_platform?: true
   ai_chat_extraction?: true
@@ -170,6 +180,7 @@ export type JobsMinAggregateInputType = {
   salary_max?: true
   salary_currency?: true
   salary_period?: true
+  salary_duration_weeks?: true
   import_error?: true
   last_scraped?: true
   office_location?: true
@@ -178,6 +189,7 @@ export type JobsMinAggregateInputType = {
   job_platform?: true
   ai_chat_extraction?: true
   company?: true
+  region?: true
   rescrape_status?: true
   rescrape_message?: true
   rescrape_live_url?: true
@@ -198,6 +210,7 @@ export type JobsMaxAggregateInputType = {
   salary_max?: true
   salary_currency?: true
   salary_period?: true
+  salary_duration_weeks?: true
   import_error?: true
   last_scraped?: true
   office_location?: true
@@ -206,6 +219,7 @@ export type JobsMaxAggregateInputType = {
   job_platform?: true
   ai_chat_extraction?: true
   company?: true
+  region?: true
   rescrape_status?: true
   rescrape_message?: true
   rescrape_live_url?: true
@@ -226,6 +240,7 @@ export type JobsCountAggregateInputType = {
   salary_max?: true
   salary_currency?: true
   salary_period?: true
+  salary_duration_weeks?: true
   import_error?: true
   last_scraped?: true
   office_location?: true
@@ -241,6 +256,7 @@ export type JobsCountAggregateInputType = {
   skills_preferred?: true
   responsibilities?: true
   soft_skills?: true
+  region?: true
   rescrape_status?: true
   rescrape_message?: true
   rescrape_live_url?: true
@@ -348,6 +364,7 @@ export type JobsGroupByOutputType = {
   salary_max: number | null
   salary_currency: string | null
   salary_period: string | null
+  salary_duration_weeks: number | null
   import_error: string | null
   last_scraped: Date | null
   office_location: string | null
@@ -363,6 +380,7 @@ export type JobsGroupByOutputType = {
   skills_preferred: runtime.JsonValue | null
   responsibilities: runtime.JsonValue | null
   soft_skills: runtime.JsonValue | null
+  region: string | null
   rescrape_status: string | null
   rescrape_message: string | null
   rescrape_live_url: string | null
@@ -406,6 +424,7 @@ export type jobsWhereInput = {
   salary_max?: Prisma.IntNullableFilter<"jobs"> | number | null
   salary_currency?: Prisma.StringNullableFilter<"jobs"> | string | null
   salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
+  salary_duration_weeks?: Prisma.FloatNullableFilter<"jobs"> | number | null
   import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   office_location?: Prisma.StringNullableFilter<"jobs"> | string | null
@@ -421,6 +440,7 @@ export type jobsWhereInput = {
   skills_preferred?: Prisma.JsonNullableFilter<"jobs">
   responsibilities?: Prisma.JsonNullableFilter<"jobs">
   soft_skills?: Prisma.JsonNullableFilter<"jobs">
+  region?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_status?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_live_url?: Prisma.StringNullableFilter<"jobs"> | string | null
@@ -450,6 +470,7 @@ export type jobsOrderByWithRelationInput = {
   salary_max?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrderInput | Prisma.SortOrder
   import_error?: Prisma.SortOrderInput | Prisma.SortOrder
   last_scraped?: Prisma.SortOrderInput | Prisma.SortOrder
   office_location?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -465,6 +486,7 @@ export type jobsOrderByWithRelationInput = {
   skills_preferred?: Prisma.SortOrderInput | Prisma.SortOrder
   responsibilities?: Prisma.SortOrderInput | Prisma.SortOrder
   soft_skills?: Prisma.SortOrderInput | Prisma.SortOrder
+  region?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_status?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_message?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_live_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -497,6 +519,7 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   salary_max?: Prisma.IntNullableFilter<"jobs"> | number | null
   salary_currency?: Prisma.StringNullableFilter<"jobs"> | string | null
   salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
+  salary_duration_weeks?: Prisma.FloatNullableFilter<"jobs"> | number | null
   import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   office_location?: Prisma.StringNullableFilter<"jobs"> | string | null
@@ -512,6 +535,7 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   skills_preferred?: Prisma.JsonNullableFilter<"jobs">
   responsibilities?: Prisma.JsonNullableFilter<"jobs">
   soft_skills?: Prisma.JsonNullableFilter<"jobs">
+  region?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_status?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_live_url?: Prisma.StringNullableFilter<"jobs"> | string | null
@@ -541,6 +565,7 @@ export type jobsOrderByWithAggregationInput = {
   salary_max?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrderInput | Prisma.SortOrder
   import_error?: Prisma.SortOrderInput | Prisma.SortOrder
   last_scraped?: Prisma.SortOrderInput | Prisma.SortOrder
   office_location?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -556,6 +581,7 @@ export type jobsOrderByWithAggregationInput = {
   skills_preferred?: Prisma.SortOrderInput | Prisma.SortOrder
   responsibilities?: Prisma.SortOrderInput | Prisma.SortOrder
   soft_skills?: Prisma.SortOrderInput | Prisma.SortOrder
+  region?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_status?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_message?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_live_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -584,6 +610,7 @@ export type jobsScalarWhereWithAggregatesInput = {
   salary_max?: Prisma.IntNullableWithAggregatesFilter<"jobs"> | number | null
   salary_currency?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   salary_period?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
+  salary_duration_weeks?: Prisma.FloatNullableWithAggregatesFilter<"jobs"> | number | null
   import_error?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableWithAggregatesFilter<"jobs"> | Date | string | null
   office_location?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
@@ -599,6 +626,7 @@ export type jobsScalarWhereWithAggregatesInput = {
   skills_preferred?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   responsibilities?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   soft_skills?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
+  region?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   rescrape_status?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   rescrape_live_url?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
@@ -618,6 +646,7 @@ export type jobsCreateInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -631,6 +660,7 @@ export type jobsCreateInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -660,6 +690,7 @@ export type jobsUncheckedCreateInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -675,6 +706,7 @@ export type jobsUncheckedCreateInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -701,6 +733,7 @@ export type jobsUpdateInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -714,6 +747,7 @@ export type jobsUpdateInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -743,6 +777,7 @@ export type jobsUncheckedUpdateInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -758,6 +793,7 @@ export type jobsUncheckedUpdateInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -785,6 +821,7 @@ export type jobsCreateManyInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -800,6 +837,7 @@ export type jobsCreateManyInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -819,6 +857,7 @@ export type jobsUpdateManyMutationInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -832,6 +871,7 @@ export type jobsUpdateManyMutationInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -852,6 +892,7 @@ export type jobsUncheckedUpdateManyInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -867,6 +908,7 @@ export type jobsUncheckedUpdateManyInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -907,6 +949,7 @@ export type jobsCountOrderByAggregateInput = {
   salary_max?: Prisma.SortOrder
   salary_currency?: Prisma.SortOrder
   salary_period?: Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrder
   import_error?: Prisma.SortOrder
   last_scraped?: Prisma.SortOrder
   office_location?: Prisma.SortOrder
@@ -922,6 +965,7 @@ export type jobsCountOrderByAggregateInput = {
   skills_preferred?: Prisma.SortOrder
   responsibilities?: Prisma.SortOrder
   soft_skills?: Prisma.SortOrder
+  region?: Prisma.SortOrder
   rescrape_status?: Prisma.SortOrder
   rescrape_message?: Prisma.SortOrder
   rescrape_live_url?: Prisma.SortOrder
@@ -931,6 +975,7 @@ export type jobsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   salary_min?: Prisma.SortOrder
   salary_max?: Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrder
   scrape_count?: Prisma.SortOrder
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
@@ -951,6 +996,7 @@ export type jobsMaxOrderByAggregateInput = {
   salary_max?: Prisma.SortOrder
   salary_currency?: Prisma.SortOrder
   salary_period?: Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrder
   import_error?: Prisma.SortOrder
   last_scraped?: Prisma.SortOrder
   office_location?: Prisma.SortOrder
@@ -959,6 +1005,7 @@ export type jobsMaxOrderByAggregateInput = {
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
   company?: Prisma.SortOrder
+  region?: Prisma.SortOrder
   rescrape_status?: Prisma.SortOrder
   rescrape_message?: Prisma.SortOrder
   rescrape_live_url?: Prisma.SortOrder
@@ -979,6 +1026,7 @@ export type jobsMinOrderByAggregateInput = {
   salary_max?: Prisma.SortOrder
   salary_currency?: Prisma.SortOrder
   salary_period?: Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrder
   import_error?: Prisma.SortOrder
   last_scraped?: Prisma.SortOrder
   office_location?: Prisma.SortOrder
@@ -987,6 +1035,7 @@ export type jobsMinOrderByAggregateInput = {
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
   company?: Prisma.SortOrder
+  region?: Prisma.SortOrder
   rescrape_status?: Prisma.SortOrder
   rescrape_message?: Prisma.SortOrder
   rescrape_live_url?: Prisma.SortOrder
@@ -996,6 +1045,7 @@ export type jobsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   salary_min?: Prisma.SortOrder
   salary_max?: Prisma.SortOrder
+  salary_duration_weeks?: Prisma.SortOrder
   scrape_count?: Prisma.SortOrder
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
@@ -1115,6 +1165,14 @@ export type jobsUpdateOneRequiredWithoutJob_resourcesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.jobsUpdateToOneWithWhereWithoutJob_resourcesInput, Prisma.jobsUpdateWithoutJob_resourcesInput>, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
 }
 
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type jobsCreateNestedManyWithoutAi_chatInput = {
   create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
   connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
@@ -1201,6 +1259,7 @@ export type jobsCreateWithoutApplicationsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1214,6 +1273,7 @@ export type jobsCreateWithoutApplicationsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1242,6 +1302,7 @@ export type jobsUncheckedCreateWithoutApplicationsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1257,6 +1318,7 @@ export type jobsUncheckedCreateWithoutApplicationsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1298,6 +1360,7 @@ export type jobsUpdateWithoutApplicationsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1311,6 +1374,7 @@ export type jobsUpdateWithoutApplicationsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1339,6 +1403,7 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1354,6 +1419,7 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1379,6 +1445,7 @@ export type jobsCreateWithoutJob_matchesInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1392,6 +1459,7 @@ export type jobsCreateWithoutJob_matchesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1420,6 +1488,7 @@ export type jobsUncheckedCreateWithoutJob_matchesInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1435,6 +1504,7 @@ export type jobsUncheckedCreateWithoutJob_matchesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1476,6 +1546,7 @@ export type jobsUpdateWithoutJob_matchesInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1489,6 +1560,7 @@ export type jobsUpdateWithoutJob_matchesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1517,6 +1589,7 @@ export type jobsUncheckedUpdateWithoutJob_matchesInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1532,6 +1605,7 @@ export type jobsUncheckedUpdateWithoutJob_matchesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1557,6 +1631,7 @@ export type jobsCreateWithoutJob_match_historyInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1570,6 +1645,7 @@ export type jobsCreateWithoutJob_match_historyInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1598,6 +1674,7 @@ export type jobsUncheckedCreateWithoutJob_match_historyInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1613,6 +1690,7 @@ export type jobsUncheckedCreateWithoutJob_match_historyInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1654,6 +1732,7 @@ export type jobsUpdateWithoutJob_match_historyInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1667,6 +1746,7 @@ export type jobsUpdateWithoutJob_match_historyInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1695,6 +1775,7 @@ export type jobsUncheckedUpdateWithoutJob_match_historyInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1710,6 +1791,7 @@ export type jobsUncheckedUpdateWithoutJob_match_historyInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1735,6 +1817,7 @@ export type jobsCreateWithoutJob_statusesInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1748,6 +1831,7 @@ export type jobsCreateWithoutJob_statusesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1776,6 +1860,7 @@ export type jobsUncheckedCreateWithoutJob_statusesInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1791,6 +1876,7 @@ export type jobsUncheckedCreateWithoutJob_statusesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1832,6 +1918,7 @@ export type jobsUpdateWithoutJob_statusesInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1845,6 +1932,7 @@ export type jobsUpdateWithoutJob_statusesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1873,6 +1961,7 @@ export type jobsUncheckedUpdateWithoutJob_statusesInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1888,6 +1977,7 @@ export type jobsUncheckedUpdateWithoutJob_statusesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1913,6 +2003,7 @@ export type jobsCreateWithoutJob_platformsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1926,6 +2017,7 @@ export type jobsCreateWithoutJob_platformsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -1954,6 +2046,7 @@ export type jobsUncheckedCreateWithoutJob_platformsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -1968,6 +2061,7 @@ export type jobsUncheckedCreateWithoutJob_platformsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2024,6 +2118,7 @@ export type jobsScalarWhereInput = {
   salary_max?: Prisma.IntNullableFilter<"jobs"> | number | null
   salary_currency?: Prisma.StringNullableFilter<"jobs"> | string | null
   salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
+  salary_duration_weeks?: Prisma.FloatNullableFilter<"jobs"> | number | null
   import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   office_location?: Prisma.StringNullableFilter<"jobs"> | string | null
@@ -2039,6 +2134,7 @@ export type jobsScalarWhereInput = {
   skills_preferred?: Prisma.JsonNullableFilter<"jobs">
   responsibilities?: Prisma.JsonNullableFilter<"jobs">
   soft_skills?: Prisma.JsonNullableFilter<"jobs">
+  region?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_status?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_live_url?: Prisma.StringNullableFilter<"jobs"> | string | null
@@ -2058,6 +2154,7 @@ export type jobsCreateWithoutJob_resourcesInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2071,6 +2168,7 @@ export type jobsCreateWithoutJob_resourcesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2099,6 +2197,7 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2114,6 +2213,7 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2155,6 +2255,7 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2168,6 +2269,7 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2196,6 +2298,7 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2211,6 +2314,7 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2236,6 +2340,7 @@ export type jobsCreateWithoutAi_chatInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2249,6 +2354,7 @@ export type jobsCreateWithoutAi_chatInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2277,6 +2383,7 @@ export type jobsUncheckedCreateWithoutAi_chatInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2291,6 +2398,7 @@ export type jobsUncheckedCreateWithoutAi_chatInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2343,6 +2451,7 @@ export type jobsCreateWithoutJob_importersInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2356,6 +2465,7 @@ export type jobsCreateWithoutJob_importersInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2384,6 +2494,7 @@ export type jobsUncheckedCreateWithoutJob_importersInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2399,6 +2510,7 @@ export type jobsUncheckedCreateWithoutJob_importersInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2440,6 +2552,7 @@ export type jobsUpdateWithoutJob_importersInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2453,6 +2566,7 @@ export type jobsUpdateWithoutJob_importersInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2481,6 +2595,7 @@ export type jobsUncheckedUpdateWithoutJob_importersInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2496,6 +2611,7 @@ export type jobsUncheckedUpdateWithoutJob_importersInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2521,6 +2637,7 @@ export type jobsCreateWithoutSearch_task_run_itemsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2534,6 +2651,7 @@ export type jobsCreateWithoutSearch_task_run_itemsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2562,6 +2680,7 @@ export type jobsUncheckedCreateWithoutSearch_task_run_itemsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2577,6 +2696,7 @@ export type jobsUncheckedCreateWithoutSearch_task_run_itemsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2618,6 +2738,7 @@ export type jobsUpdateWithoutSearch_task_run_itemsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2631,6 +2752,7 @@ export type jobsUpdateWithoutSearch_task_run_itemsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2659,6 +2781,7 @@ export type jobsUncheckedUpdateWithoutSearch_task_run_itemsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2674,6 +2797,7 @@ export type jobsUncheckedUpdateWithoutSearch_task_run_itemsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2700,6 +2824,7 @@ export type jobsCreateManyJob_platformsInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2714,6 +2839,7 @@ export type jobsCreateManyJob_platformsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2733,6 +2859,7 @@ export type jobsUpdateWithoutJob_platformsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2746,6 +2873,7 @@ export type jobsUpdateWithoutJob_platformsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2774,6 +2902,7 @@ export type jobsUncheckedUpdateWithoutJob_platformsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2788,6 +2917,7 @@ export type jobsUncheckedUpdateWithoutJob_platformsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2815,6 +2945,7 @@ export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2829,6 +2960,7 @@ export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2849,6 +2981,7 @@ export type jobsCreateManyAi_chatInput = {
   salary_max?: number | null
   salary_currency?: string | null
   salary_period?: string | null
+  salary_duration_weeks?: number | null
   import_error?: string | null
   last_scraped?: Date | string | null
   office_location?: string | null
@@ -2863,6 +2996,7 @@ export type jobsCreateManyAi_chatInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: string | null
   rescrape_status?: string | null
   rescrape_message?: string | null
   rescrape_live_url?: string | null
@@ -2882,6 +3016,7 @@ export type jobsUpdateWithoutAi_chatInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2895,6 +3030,7 @@ export type jobsUpdateWithoutAi_chatInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2923,6 +3059,7 @@ export type jobsUncheckedUpdateWithoutAi_chatInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2937,6 +3074,7 @@ export type jobsUncheckedUpdateWithoutAi_chatInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2964,6 +3102,7 @@ export type jobsUncheckedUpdateManyWithoutAi_chatInput = {
   salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_duration_weeks?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2978,6 +3117,7 @@ export type jobsUncheckedUpdateManyWithoutAi_chatInput = {
   skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3083,6 +3223,7 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   salary_max?: boolean
   salary_currency?: boolean
   salary_period?: boolean
+  salary_duration_weeks?: boolean
   import_error?: boolean
   last_scraped?: boolean
   office_location?: boolean
@@ -3098,6 +3239,7 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   skills_preferred?: boolean
   responsibilities?: boolean
   soft_skills?: boolean
+  region?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
   rescrape_live_url?: boolean
@@ -3128,6 +3270,7 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   salary_max?: boolean
   salary_currency?: boolean
   salary_period?: boolean
+  salary_duration_weeks?: boolean
   import_error?: boolean
   last_scraped?: boolean
   office_location?: boolean
@@ -3143,6 +3286,7 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   skills_preferred?: boolean
   responsibilities?: boolean
   soft_skills?: boolean
+  region?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
   rescrape_live_url?: boolean
@@ -3165,6 +3309,7 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   salary_max?: boolean
   salary_currency?: boolean
   salary_period?: boolean
+  salary_duration_weeks?: boolean
   import_error?: boolean
   last_scraped?: boolean
   office_location?: boolean
@@ -3180,6 +3325,7 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   skills_preferred?: boolean
   responsibilities?: boolean
   soft_skills?: boolean
+  region?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
   rescrape_live_url?: boolean
@@ -3202,6 +3348,7 @@ export type jobsSelectScalar = {
   salary_max?: boolean
   salary_currency?: boolean
   salary_period?: boolean
+  salary_duration_weeks?: boolean
   import_error?: boolean
   last_scraped?: boolean
   office_location?: boolean
@@ -3217,12 +3364,13 @@ export type jobsSelectScalar = {
   skills_preferred?: boolean
   responsibilities?: boolean
   soft_skills?: boolean
+  region?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
   rescrape_live_url?: boolean
 }
 
-export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "office_location" | "scrape_count" | "job_types" | "experience_levels" | "work_location" | "source_html_stripped" | "job_platform" | "ai_chat_extraction" | "company" | "skills_required" | "skills_preferred" | "responsibilities" | "soft_skills" | "rescrape_status" | "rescrape_message" | "rescrape_live_url", ExtArgs["result"]["jobs"]>
+export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "salary_duration_weeks" | "import_error" | "last_scraped" | "office_location" | "scrape_count" | "job_types" | "experience_levels" | "work_location" | "source_html_stripped" | "job_platform" | "ai_chat_extraction" | "company" | "skills_required" | "skills_preferred" | "responsibilities" | "soft_skills" | "region" | "rescrape_status" | "rescrape_message" | "rescrape_live_url", ExtArgs["result"]["jobs"]>
 export type jobsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_importers?: boolean | Prisma.jobs$job_importersArgs<ExtArgs>
@@ -3272,6 +3420,7 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     salary_max: number | null
     salary_currency: string | null
     salary_period: string | null
+    salary_duration_weeks: number | null
     import_error: string | null
     last_scraped: Date | null
     office_location: string | null
@@ -3287,6 +3436,7 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     skills_preferred: runtime.JsonValue | null
     responsibilities: runtime.JsonValue | null
     soft_skills: runtime.JsonValue | null
+    region: string | null
     rescrape_status: string | null
     rescrape_message: string | null
     rescrape_live_url: string | null
@@ -3736,6 +3886,7 @@ export interface jobsFieldRefs {
   readonly salary_max: Prisma.FieldRef<"jobs", 'Int'>
   readonly salary_currency: Prisma.FieldRef<"jobs", 'String'>
   readonly salary_period: Prisma.FieldRef<"jobs", 'String'>
+  readonly salary_duration_weeks: Prisma.FieldRef<"jobs", 'Float'>
   readonly import_error: Prisma.FieldRef<"jobs", 'String'>
   readonly last_scraped: Prisma.FieldRef<"jobs", 'DateTime'>
   readonly office_location: Prisma.FieldRef<"jobs", 'String'>
@@ -3751,6 +3902,7 @@ export interface jobsFieldRefs {
   readonly skills_preferred: Prisma.FieldRef<"jobs", 'Json'>
   readonly responsibilities: Prisma.FieldRef<"jobs", 'Json'>
   readonly soft_skills: Prisma.FieldRef<"jobs", 'Json'>
+  readonly region: Prisma.FieldRef<"jobs", 'String'>
   readonly rescrape_status: Prisma.FieldRef<"jobs", 'String'>
   readonly rescrape_message: Prisma.FieldRef<"jobs", 'String'>
   readonly rescrape_live_url: Prisma.FieldRef<"jobs", 'String'>
