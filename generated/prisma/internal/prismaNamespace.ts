@@ -470,7 +470,9 @@ export const ModelName = {
   search_tasks_job_sites: 'search_tasks_job_sites',
   scraper_agent_sessions: 'scraper_agent_sessions',
   scraper_agent_iterations: 'scraper_agent_iterations',
-  import_logs: 'import_logs'
+  import_logs: 'import_logs',
+  user_feedback: 'user_feedback',
+  user_feedback_files: 'user_feedback_files'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -486,7 +488,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_status_log" | "application_letters" | "letter_versions" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_match_history" | "job_statuses" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations" | "import_logs"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_status_log" | "application_letters" | "letter_versions" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_match_history" | "job_statuses" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations" | "import_logs" | "user_feedback" | "user_feedback_files"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -6928,6 +6930,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    user_feedback: {
+      payload: Prisma.$user_feedbackPayload<ExtArgs>
+      fields: Prisma.user_feedbackFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.user_feedbackFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.user_feedbackFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>
+        }
+        findFirst: {
+          args: Prisma.user_feedbackFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.user_feedbackFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>
+        }
+        findMany: {
+          args: Prisma.user_feedbackFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>[]
+        }
+        create: {
+          args: Prisma.user_feedbackCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>
+        }
+        createMany: {
+          args: Prisma.user_feedbackCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.user_feedbackCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>[]
+        }
+        delete: {
+          args: Prisma.user_feedbackDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>
+        }
+        update: {
+          args: Prisma.user_feedbackUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>
+        }
+        deleteMany: {
+          args: Prisma.user_feedbackDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.user_feedbackUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.user_feedbackUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>[]
+        }
+        upsert: {
+          args: Prisma.user_feedbackUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedbackPayload>
+        }
+        aggregate: {
+          args: Prisma.User_feedbackAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUser_feedback>
+        }
+        groupBy: {
+          args: Prisma.user_feedbackGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.User_feedbackGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.user_feedbackCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.User_feedbackCountAggregateOutputType> | number
+        }
+      }
+    }
+    user_feedback_files: {
+      payload: Prisma.$user_feedback_filesPayload<ExtArgs>
+      fields: Prisma.user_feedback_filesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.user_feedback_filesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.user_feedback_filesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>
+        }
+        findFirst: {
+          args: Prisma.user_feedback_filesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.user_feedback_filesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>
+        }
+        findMany: {
+          args: Prisma.user_feedback_filesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>[]
+        }
+        create: {
+          args: Prisma.user_feedback_filesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>
+        }
+        createMany: {
+          args: Prisma.user_feedback_filesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.user_feedback_filesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>[]
+        }
+        delete: {
+          args: Prisma.user_feedback_filesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>
+        }
+        update: {
+          args: Prisma.user_feedback_filesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>
+        }
+        deleteMany: {
+          args: Prisma.user_feedback_filesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.user_feedback_filesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.user_feedback_filesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>[]
+        }
+        upsert: {
+          args: Prisma.user_feedback_filesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$user_feedback_filesPayload>
+        }
+        aggregate: {
+          args: Prisma.User_feedback_filesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUser_feedback_files>
+        }
+        groupBy: {
+          args: Prisma.user_feedback_filesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.User_feedback_filesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.user_feedback_filesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.User_feedback_filesCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -8495,6 +8645,31 @@ export const Import_logsScalarFieldEnum = {
 export type Import_logsScalarFieldEnum = (typeof Import_logsScalarFieldEnum)[keyof typeof Import_logsScalarFieldEnum]
 
 
+export const User_feedbackScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  profile_id: 'profile_id',
+  category: 'category',
+  message: 'message',
+  page_url: 'page_url',
+  status: 'status',
+  admin_note: 'admin_note',
+  date_created: 'date_created',
+  date_updated: 'date_updated'
+} as const
+
+export type User_feedbackScalarFieldEnum = (typeof User_feedbackScalarFieldEnum)[keyof typeof User_feedbackScalarFieldEnum]
+
+
+export const User_feedback_filesScalarFieldEnum = {
+  id: 'id',
+  user_feedback_id: 'user_feedback_id',
+  directus_files_id: 'directus_files_id'
+} as const
+
+export type User_feedback_filesScalarFieldEnum = (typeof User_feedback_filesScalarFieldEnum)[keyof typeof User_feedback_filesScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -8828,6 +9003,8 @@ export type GlobalOmitConfig = {
   scraper_agent_sessions?: Prisma.scraper_agent_sessionsOmit
   scraper_agent_iterations?: Prisma.scraper_agent_iterationsOmit
   import_logs?: Prisma.import_logsOmit
+  user_feedback?: Prisma.user_feedbackOmit
+  user_feedback_files?: Prisma.user_feedback_filesOmit
 }
 
 /* Types for Logging */

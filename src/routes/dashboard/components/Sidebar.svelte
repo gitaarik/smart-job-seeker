@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { sidebarState } from "./sidebar-state.svelte";
+  import { feedbackState } from "./feedback-state.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBars,
@@ -12,6 +13,7 @@
     faChevronRight,
     faCode,
     faCog,
+    faCommentDots,
     faComments,
     faDatabase,
     faDesktop,
@@ -234,6 +236,11 @@
           icon: faComments,
         },
         {
+          label: "Feedback",
+          href: "/dashboard/admin/feedback",
+          icon: faCommentDots,
+        },
+        {
           label: "Style Guide",
           href: "/dashboard/admin/style-guide",
           icon: faPalette,
@@ -405,79 +412,91 @@
     : '-translate-x-full'}
   "
 >
-  <nav class="p-3 overflow-y-auto h-full">
+  <nav class="p-3 pb-16 overflow-y-auto h-full">
     <ul class="space-y-1">
       {#each menuItems as item}
-        {#if item.children}
-          <!-- Section with children -->
-          <li>
-            <button
-              type="button"
-              onclick={() => toggleSection(item.label)}
-              class="
-                w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm text-left transition-colors {isChildActive(
-                item,
-                )
-                ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
-                : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
-              "
-            >
-              <div class="flex items-center gap-2">
+          {#if item.children}
+            <!-- Section with children -->
+            <li>
+              <button
+                type="button"
+                onclick={() => toggleSection(item.label)}
+                class="
+                  w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm text-left transition-colors {isChildActive(
+                  item,
+                  )
+                  ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                  : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
+                "
+              >
+                <div class="flex items-center gap-2">
+                  <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />
+                  <span class="font-medium">{item.label}</span>
+                </div>
+                {#if expandedSections.has(item.label)}
+                  <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3" />
+                {:else}
+                  <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3" />
+                {/if}
+              </button>
+
+              {#if expandedSections.has(item.label)}
+                <ul
+                  class="mt-1 ml-4 pl-4 border-l border-[var(--dash-border)] space-y-1"
+                >
+                  {#each item.children as child}
+                    <li>
+                      <a
+                        href={child.href}
+                        onclick={closeMobileMenu}
+                        class="
+                          flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors {isActive(
+                          child.href,
+                          )
+                          ? 'bg-[var(--dash-primary)] text-white'
+                          : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)]'}
+                        "
+                      >
+                        <FontAwesomeIcon icon={child.icon} class="w-4 h-4" />
+                        <span class="text-sm">{child.label}</span>
+                      </a>
+                    </li>
+                  {/each}
+                </ul>
+              {/if}
+            </li>
+          {:else}
+            <!-- Single item -->
+            <li>
+              <a
+                href={item.href}
+                onclick={closeMobileMenu}
+                class="
+                  flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors {isActive(
+                  item.href,
+                  )
+                  ? 'bg-[var(--dash-primary)] text-white'
+                  : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
+                "
+              >
                 <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />
                 <span class="font-medium">{item.label}</span>
-              </div>
-              {#if expandedSections.has(item.label)}
-                <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3" />
-              {:else}
-                <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3" />
-              {/if}
-            </button>
+              </a>
+            </li>
+          {/if}
+        {/each}
+      </ul>
 
-            {#if expandedSections.has(item.label)}
-              <ul
-                class="mt-1 ml-4 pl-4 border-l border-[var(--dash-border)] space-y-1"
-              >
-                {#each item.children as child}
-                  <li>
-                    <a
-                      href={child.href}
-                      onclick={closeMobileMenu}
-                      class="
-                        flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors {isActive(
-                        child.href,
-                        )
-                        ? 'bg-[var(--dash-primary)] text-white'
-                        : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)]'}
-                      "
-                    >
-                      <FontAwesomeIcon icon={child.icon} class="w-4 h-4" />
-                      <span class="text-sm">{child.label}</span>
-                    </a>
-                  </li>
-                {/each}
-              </ul>
-            {/if}
-          </li>
-        {:else}
-          <!-- Single item -->
-          <li>
-            <a
-              href={item.href}
-              onclick={closeMobileMenu}
-              class="
-                flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors {isActive(
-                item.href,
-                )
-                ? 'bg-[var(--dash-primary)] text-white'
-                : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
-              "
-            >
-              <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />
-              <span class="font-medium">{item.label}</span>
-            </a>
-          </li>
-        {/if}
-      {/each}
-    </ul>
+    <!-- Feedback button -->
+    <div class="mt-4 pt-3 border-t border-[var(--dash-border)]">
+      <button
+        type="button"
+        onclick={() => { feedbackState.open = true; feedbackState.minimized = false; closeMobileMenu(); }}
+        class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/10"
+      >
+        <FontAwesomeIcon icon={faCommentDots} class="w-4 h-4" />
+        <span>Send Feedback</span>
+      </button>
+    </div>
   </nav>
 </aside>

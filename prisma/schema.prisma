@@ -306,6 +306,7 @@ model directus_files {
   profile_exports                                                       profile_exports[]
   profiles                                                              profiles[]
   work_experiences                                                      work_experiences[]
+  user_feedback_files                                                   user_feedback_files[]
 }
 
 model directus_flows {
@@ -1576,4 +1577,33 @@ enum Role {
   USER
   ADMIN
   SUPER_ADMIN
+}
+
+model user_feedback {
+  id                  Int                   @id @default(autoincrement())
+  user_id             String
+  profile_id          Int?
+  category            String                @default("other") @db.VarChar(50)
+  message             String
+  page_url            String?               @db.VarChar(1000)
+  status              String                @default("new") @db.VarChar(50)
+  admin_note          String?
+  date_created        DateTime?             @default(now()) @db.Timestamptz(6)
+  date_updated        DateTime?             @db.Timestamptz(6)
+  user_feedback_files user_feedback_files[]
+
+  @@index([user_id], map: "user_feedback_user_id_idx")
+  @@index([status], map: "user_feedback_status_idx")
+  @@index([category], map: "user_feedback_category_idx")
+  @@index([date_created], map: "user_feedback_date_created_idx")
+}
+
+model user_feedback_files {
+  id                Int             @id @default(autoincrement())
+  user_feedback_id  Int
+  directus_files_id String          @db.Uuid
+  user_feedback     user_feedback   @relation(fields: [user_feedback_id], references: [id], onDelete: Cascade)
+  directus_files    directus_files  @relation(fields: [directus_files_id], references: [id], onDelete: Cascade)
+
+  @@index([user_feedback_id], map: "user_feedback_files_feedback_idx")
 }

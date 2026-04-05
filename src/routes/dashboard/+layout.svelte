@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import DashboardHeader from "./components/DashboardHeader.svelte";
   import Sidebar from "./components/Sidebar.svelte";
+  import FeedbackWidget from "./components/FeedbackWidget.svelte";
   import "./dashboard.css";
 
   let { children, data }: { children: Snippet; data: LayoutData } =
@@ -70,4 +71,6 @@
       {@render children()}
     </div>
   </main>
+
+  <FeedbackWidget />
 </div>

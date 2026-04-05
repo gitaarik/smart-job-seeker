@@ -137,7 +137,9 @@ export const ModelName = {
   search_tasks_job_sites: 'search_tasks_job_sites',
   scraper_agent_sessions: 'scraper_agent_sessions',
   scraper_agent_iterations: 'scraper_agent_iterations',
-  import_logs: 'import_logs'
+  import_logs: 'import_logs',
+  user_feedback: 'user_feedback',
+  user_feedback_files: 'user_feedback_files'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1682,6 +1684,31 @@ export const Import_logsScalarFieldEnum = {
 } as const
 
 export type Import_logsScalarFieldEnum = (typeof Import_logsScalarFieldEnum)[keyof typeof Import_logsScalarFieldEnum]
+
+
+export const User_feedbackScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  profile_id: 'profile_id',
+  category: 'category',
+  message: 'message',
+  page_url: 'page_url',
+  status: 'status',
+  admin_note: 'admin_note',
+  date_created: 'date_created',
+  date_updated: 'date_updated'
+} as const
+
+export type User_feedbackScalarFieldEnum = (typeof User_feedbackScalarFieldEnum)[keyof typeof User_feedbackScalarFieldEnum]
+
+
+export const User_feedback_filesScalarFieldEnum = {
+  id: 'id',
+  user_feedback_id: 'user_feedback_id',
+  directus_files_id: 'directus_files_id'
+} as const
+
+export type User_feedback_filesScalarFieldEnum = (typeof User_feedback_filesScalarFieldEnum)[keyof typeof User_feedback_filesScalarFieldEnum]
 
 
 export const SortOrder = {

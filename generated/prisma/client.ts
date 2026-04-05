@@ -474,3 +474,13 @@ export type scraper_agent_iterations = Prisma.scraper_agent_iterationsModel
  * 
  */
 export type import_logs = Prisma.import_logsModel
+/**
+ * Model user_feedback
+ * 
+ */
+export type user_feedback = Prisma.user_feedbackModel
+/**
+ * Model user_feedback_files
+ * 
+ */
+export type user_feedback_files = Prisma.user_feedback_filesModel

@@ -410,6 +410,7 @@ export type directus_filesWhereInput = {
   profile_exports?: Prisma.Profile_exportsListRelationFilter
   profiles?: Prisma.ProfilesListRelationFilter
   work_experiences?: Prisma.Work_experiencesListRelationFilter
+  user_feedback_files?: Prisma.User_feedback_filesListRelationFilter
 }
 
 export type directus_filesOrderByWithRelationInput = {
@@ -453,6 +454,7 @@ export type directus_filesOrderByWithRelationInput = {
   profile_exports?: Prisma.profile_exportsOrderByRelationAggregateInput
   profiles?: Prisma.profilesOrderByRelationAggregateInput
   work_experiences?: Prisma.work_experiencesOrderByRelationAggregateInput
+  user_feedback_files?: Prisma.user_feedback_filesOrderByRelationAggregateInput
 }
 
 export type directus_filesWhereUniqueInput = Prisma.AtLeast<{
@@ -499,6 +501,7 @@ export type directus_filesWhereUniqueInput = Prisma.AtLeast<{
   profile_exports?: Prisma.Profile_exportsListRelationFilter
   profiles?: Prisma.ProfilesListRelationFilter
   work_experiences?: Prisma.Work_experiencesListRelationFilter
+  user_feedback_files?: Prisma.User_feedback_filesListRelationFilter
 }, "id">
 
 export type directus_filesOrderByWithAggregationInput = {
@@ -605,6 +608,7 @@ export type directus_filesCreateInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateInput = {
@@ -645,6 +649,7 @@ export type directus_filesUncheckedCreateInput = {
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUpdateInput = {
@@ -685,6 +690,7 @@ export type directus_filesUpdateInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateInput = {
@@ -725,6 +731,7 @@ export type directus_filesUncheckedUpdateInput = {
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateManyInput = {
@@ -1240,6 +1247,20 @@ export type directus_filesUpdateOneWithoutWork_experiencesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutWork_experiencesInput, Prisma.directus_filesUpdateWithoutWork_experiencesInput>, Prisma.directus_filesUncheckedUpdateWithoutWork_experiencesInput>
 }
 
+export type directus_filesCreateNestedOneWithoutUser_feedback_filesInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutUser_feedback_filesInput, Prisma.directus_filesUncheckedCreateWithoutUser_feedback_filesInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutUser_feedback_filesInput
+  connect?: Prisma.directus_filesWhereUniqueInput
+}
+
+export type directus_filesUpdateOneRequiredWithoutUser_feedback_filesNestedInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutUser_feedback_filesInput, Prisma.directus_filesUncheckedCreateWithoutUser_feedback_filesInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutUser_feedback_filesInput
+  upsert?: Prisma.directus_filesUpsertWithoutUser_feedback_filesInput
+  connect?: Prisma.directus_filesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutUser_feedback_filesInput, Prisma.directus_filesUpdateWithoutUser_feedback_filesInput>, Prisma.directus_filesUncheckedUpdateWithoutUser_feedback_filesInput>
+}
+
 export type directus_filesCreateWithoutApplicationsInput = {
   id: string
   storage: string
@@ -1277,6 +1298,7 @@ export type directus_filesCreateWithoutApplicationsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutApplicationsInput = {
@@ -1316,6 +1338,7 @@ export type directus_filesUncheckedCreateWithoutApplicationsInput = {
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutApplicationsInput = {
@@ -1371,6 +1394,7 @@ export type directus_filesUpdateWithoutApplicationsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutApplicationsInput = {
@@ -1410,6 +1434,7 @@ export type directus_filesUncheckedUpdateWithoutApplicationsInput = {
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutApplications_filesInput = {
@@ -1449,6 +1474,7 @@ export type directus_filesCreateWithoutApplications_filesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutApplications_filesInput = {
@@ -1488,6 +1514,7 @@ export type directus_filesUncheckedCreateWithoutApplications_filesInput = {
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutApplications_filesInput = {
@@ -1543,6 +1570,7 @@ export type directus_filesUpdateWithoutApplications_filesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutApplications_filesInput = {
@@ -1582,6 +1610,7 @@ export type directus_filesUncheckedUpdateWithoutApplications_filesInput = {
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutDirectus_foldersInput = {
@@ -1621,6 +1650,7 @@ export type directus_filesCreateWithoutDirectus_foldersInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_foldersInput = {
@@ -1660,6 +1690,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_foldersInput = {
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_foldersInput = {
@@ -1757,6 +1788,7 @@ export type directus_filesCreateWithoutDirectus_settings_directus_settings_proje
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput = {
@@ -1796,6 +1828,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput = {
@@ -1840,6 +1873,7 @@ export type directus_filesCreateWithoutDirectus_settings_directus_settings_publi
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -1879,6 +1913,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -1923,6 +1958,7 @@ export type directus_filesCreateWithoutDirectus_settings_directus_settings_publi
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput = {
@@ -1962,6 +1998,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2006,6 +2043,7 @@ export type directus_filesCreateWithoutDirectus_settings_directus_settings_publi
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2045,6 +2083,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2100,6 +2139,7 @@ export type directus_filesUpdateWithoutDirectus_settings_directus_settings_proje
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput = {
@@ -2139,6 +2179,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUpsertWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2189,6 +2230,7 @@ export type directus_filesUpdateWithoutDirectus_settings_directus_settings_publi
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2228,6 +2270,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUpsertWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2278,6 +2321,7 @@ export type directus_filesUpdateWithoutDirectus_settings_directus_settings_publi
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2317,6 +2361,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUpsertWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2367,6 +2412,7 @@ export type directus_filesUpdateWithoutDirectus_settings_directus_settings_publi
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2406,6 +2452,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_settings_directus_setti
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput = {
@@ -2445,6 +2492,7 @@ export type directus_filesCreateWithoutDirectus_users_directus_files_modified_by
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput = {
@@ -2484,6 +2532,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_users_directus_files_mo
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput = {
@@ -2533,6 +2582,7 @@ export type directus_filesCreateWithoutDirectus_users_directus_files_uploaded_by
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput = {
@@ -2572,6 +2622,7 @@ export type directus_filesUncheckedCreateWithoutDirectus_users_directus_files_up
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput = {
@@ -2653,6 +2704,7 @@ export type directus_filesCreateWithoutEducationInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutEducationInput = {
@@ -2692,6 +2744,7 @@ export type directus_filesUncheckedCreateWithoutEducationInput = {
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutEducationInput = {
@@ -2747,6 +2800,7 @@ export type directus_filesUpdateWithoutEducationInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutEducationInput = {
@@ -2786,6 +2840,7 @@ export type directus_filesUncheckedUpdateWithoutEducationInput = {
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutJob_resourcesInput = {
@@ -2825,6 +2880,7 @@ export type directus_filesCreateWithoutJob_resourcesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutJob_resourcesInput = {
@@ -2864,6 +2920,7 @@ export type directus_filesUncheckedCreateWithoutJob_resourcesInput = {
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutJob_resourcesInput = {
@@ -2919,6 +2976,7 @@ export type directus_filesUpdateWithoutJob_resourcesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutJob_resourcesInput = {
@@ -2958,6 +3016,7 @@ export type directus_filesUncheckedUpdateWithoutJob_resourcesInput = {
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutProfile_exportsInput = {
@@ -2997,6 +3056,7 @@ export type directus_filesCreateWithoutProfile_exportsInput = {
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutProfile_exportsInput = {
@@ -3036,6 +3096,7 @@ export type directus_filesUncheckedCreateWithoutProfile_exportsInput = {
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutProfile_exportsInput = {
@@ -3091,6 +3152,7 @@ export type directus_filesUpdateWithoutProfile_exportsInput = {
   job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutProfile_exportsInput = {
@@ -3130,6 +3192,7 @@ export type directus_filesUncheckedUpdateWithoutProfile_exportsInput = {
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutProfilesInput = {
@@ -3169,6 +3232,7 @@ export type directus_filesCreateWithoutProfilesInput = {
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutProfilesInput = {
@@ -3208,6 +3272,7 @@ export type directus_filesUncheckedCreateWithoutProfilesInput = {
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutProfilesInput = {
@@ -3263,6 +3328,7 @@ export type directus_filesUpdateWithoutProfilesInput = {
   job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutProfilesInput = {
@@ -3302,6 +3368,7 @@ export type directus_filesUncheckedUpdateWithoutProfilesInput = {
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateWithoutWork_experiencesInput = {
@@ -3341,6 +3408,7 @@ export type directus_filesCreateWithoutWork_experiencesInput = {
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesUncheckedCreateWithoutWork_experiencesInput = {
@@ -3380,6 +3448,7 @@ export type directus_filesUncheckedCreateWithoutWork_experiencesInput = {
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
   profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
   profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
 }
 
 export type directus_filesCreateOrConnectWithoutWork_experiencesInput = {
@@ -3435,6 +3504,7 @@ export type directus_filesUpdateWithoutWork_experiencesInput = {
   job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutWork_experiencesInput = {
@@ -3474,6 +3544,183 @@ export type directus_filesUncheckedUpdateWithoutWork_experiencesInput = {
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesCreateWithoutUser_feedback_filesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  created_on?: Date | string
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutDirectus_filesInput
+  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
+  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesUncheckedCreateWithoutUser_feedback_filesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  folder?: string | null
+  uploaded_by?: string | null
+  created_on?: Date | string
+  modified_by?: string | null
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesCreateOrConnectWithoutUser_feedback_filesInput = {
+  where: Prisma.directus_filesWhereUniqueInput
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutUser_feedback_filesInput, Prisma.directus_filesUncheckedCreateWithoutUser_feedback_filesInput>
+}
+
+export type directus_filesUpsertWithoutUser_feedback_filesInput = {
+  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutUser_feedback_filesInput, Prisma.directus_filesUncheckedUpdateWithoutUser_feedback_filesInput>
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutUser_feedback_filesInput, Prisma.directus_filesUncheckedCreateWithoutUser_feedback_filesInput>
+  where?: Prisma.directus_filesWhereInput
+}
+
+export type directus_filesUpdateToOneWithWhereWithoutUser_feedback_filesInput = {
+  where?: Prisma.directus_filesWhereInput
+  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutUser_feedback_filesInput, Prisma.directus_filesUncheckedUpdateWithoutUser_feedback_filesInput>
+}
+
+export type directus_filesUpdateWithoutUser_feedback_filesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutDirectus_filesNestedInput
+  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
+  profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesUncheckedUpdateWithoutUser_feedback_filesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateManyDirectus_foldersInput = {
@@ -3541,6 +3788,7 @@ export type directus_filesUpdateWithoutDirectus_foldersInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_foldersInput = {
@@ -3580,6 +3828,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_foldersInput = {
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateManyWithoutDirectus_foldersInput = {
@@ -3703,6 +3952,7 @@ export type directus_filesUpdateWithoutDirectus_users_directus_files_modified_by
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput = {
@@ -3742,6 +3992,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_users_directus_files_mo
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput = {
@@ -3809,6 +4060,7 @@ export type directus_filesUpdateWithoutDirectus_users_directus_files_uploaded_by
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput = {
@@ -3848,6 +4100,7 @@ export type directus_filesUncheckedUpdateWithoutDirectus_users_directus_files_up
   profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  user_feedback_files?: Prisma.user_feedback_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput = {
@@ -3895,6 +4148,7 @@ export type Directus_filesCountOutputType = {
   profile_exports: number
   profiles: number
   work_experiences: number
+  user_feedback_files: number
 }
 
 export type Directus_filesCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3909,6 +4163,7 @@ export type Directus_filesCountOutputTypeSelect<ExtArgs extends runtime.Types.Ex
   profile_exports?: boolean | Directus_filesCountOutputTypeCountProfile_exportsArgs
   profiles?: boolean | Directus_filesCountOutputTypeCountProfilesArgs
   work_experiences?: boolean | Directus_filesCountOutputTypeCountWork_experiencesArgs
+  user_feedback_files?: boolean | Directus_filesCountOutputTypeCountUser_feedback_filesArgs
 }
 
 /**
@@ -3998,6 +4253,13 @@ export type Directus_filesCountOutputTypeCountWork_experiencesArgs<ExtArgs exten
   where?: Prisma.work_experiencesWhereInput
 }
 
+/**
+ * Directus_filesCountOutputType without action
+ */
+export type Directus_filesCountOutputTypeCountUser_feedback_filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.user_feedback_filesWhereInput
+}
+
 
 export type directus_filesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -4040,6 +4302,7 @@ export type directus_filesSelect<ExtArgs extends runtime.Types.Extensions.Intern
   profile_exports?: boolean | Prisma.directus_files$profile_exportsArgs<ExtArgs>
   profiles?: boolean | Prisma.directus_files$profilesArgs<ExtArgs>
   work_experiences?: boolean | Prisma.directus_files$work_experiencesArgs<ExtArgs>
+  user_feedback_files?: boolean | Prisma.directus_files$user_feedback_filesArgs<ExtArgs>
   _count?: boolean | Prisma.Directus_filesCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["directus_files"]>
 
@@ -4152,6 +4415,7 @@ export type directus_filesInclude<ExtArgs extends runtime.Types.Extensions.Inter
   profile_exports?: boolean | Prisma.directus_files$profile_exportsArgs<ExtArgs>
   profiles?: boolean | Prisma.directus_files$profilesArgs<ExtArgs>
   work_experiences?: boolean | Prisma.directus_files$work_experiencesArgs<ExtArgs>
+  user_feedback_files?: boolean | Prisma.directus_files$user_feedback_filesArgs<ExtArgs>
   _count?: boolean | Prisma.Directus_filesCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type directus_filesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4182,6 +4446,7 @@ export type $directus_filesPayload<ExtArgs extends runtime.Types.Extensions.Inte
     profile_exports: Prisma.$profile_exportsPayload<ExtArgs>[]
     profiles: Prisma.$profilesPayload<ExtArgs>[]
     work_experiences: Prisma.$work_experiencesPayload<ExtArgs>[]
+    user_feedback_files: Prisma.$user_feedback_filesPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -4618,6 +4883,7 @@ export interface Prisma__directus_filesClient<T, Null = never, ExtArgs extends r
   profile_exports<T extends Prisma.directus_files$profile_exportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_files$profile_exportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profile_exportsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   profiles<T extends Prisma.directus_files$profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_files$profilesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   work_experiences<T extends Prisma.directus_files$work_experiencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_files$work_experiencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$work_experiencesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  user_feedback_files<T extends Prisma.directus_files$user_feedback_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_files$user_feedback_filesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$user_feedback_filesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5387,6 +5653,30 @@ export type directus_files$work_experiencesArgs<ExtArgs extends runtime.Types.Ex
   take?: number
   skip?: number
   distinct?: Prisma.Work_experiencesScalarFieldEnum | Prisma.Work_experiencesScalarFieldEnum[]
+}
+
+/**
+ * directus_files.user_feedback_files
+ */
+export type directus_files$user_feedback_filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the user_feedback_files
+   */
+  select?: Prisma.user_feedback_filesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the user_feedback_files
+   */
+  omit?: Prisma.user_feedback_filesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.user_feedback_filesInclude<ExtArgs> | null
+  where?: Prisma.user_feedback_filesWhereInput
+  orderBy?: Prisma.user_feedback_filesOrderByWithRelationInput | Prisma.user_feedback_filesOrderByWithRelationInput[]
+  cursor?: Prisma.user_feedback_filesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.User_feedback_filesScalarFieldEnum | Prisma.User_feedback_filesScalarFieldEnum[]
 }
 
 /**
