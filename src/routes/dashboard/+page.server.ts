@@ -209,15 +209,17 @@ export const load: PageServerLoad = async ({ parent }) => {
     ),
   };
 
-  // Process top matches
-  const topMatches = topMatchesRaw.map((m) => ({
-    id: m.id,
-    score: m.score,
-    match_summary: m.match_summary,
-    matched_skills: m.matched_skills,
-    skill_match_percentage: m.skill_match_percentage,
-    job: m.jobs,
-  }));
+  // Process top matches (filter out matches where the job was deleted)
+  const topMatches = topMatchesRaw
+    .filter((m) => m.jobs != null)
+    .map((m) => ({
+      id: m.id,
+      score: m.score,
+      match_summary: m.match_summary,
+      matched_skills: m.matched_skills,
+      skill_match_percentage: m.skill_match_percentage,
+      job: m.jobs!,
+    }));
 
   return {
     profileCompleteness,

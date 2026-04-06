@@ -9,6 +9,9 @@
 #    Excludes large tables that can be regenerated:
 #    - ai_chats: LLM conversation logs (keeps last 25)
 #    - jobs: Job postings (keeps last 25)
+#    - Tables with FK refs to jobs (keeps only rows for included jobs):
+#      job_matches, job_match_history, job_importers, job_resources,
+#      job_statuses, job_search_run_items
 #    - directus_activity: Audit log (excluded)
 #    - directus_revisions: Version history (excluded)
 #
@@ -54,6 +57,11 @@ pg_dump \
   --no-privileges \
   --exclude-table-data=ai_chats \
   --exclude-table-data=jobs \
+  --exclude-table-data=job_matches \
+  --exclude-table-data=job_match_history \
+  --exclude-table-data=job_importers \
+  --exclude-table-data=job_resources \
+  --exclude-table-data=job_statuses \
   --exclude-table-data=directus_activity \
   --exclude-table-data=directus_revisions \
   > "$SMART_FILE"
@@ -107,7 +115,32 @@ COPY (SELECT * FROM jobs ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT csv, 
   echo "\\."
 } >> "$SMART_FILE"
 
-# Step 4: Re-enable FK triggers and clean up orphaned references
+# Step 4: Append job-dependent table data (only rows for included jobs)
+echo "        - Appending job-dependent table data..."
+INCLUDED_JOBS_SUBQUERY="SELECT id FROM jobs ORDER BY id DESC LIMIT 25"
+
+for TABLE_INFO in \
+  "job_matches:job" \
+  "job_match_history:job" \
+  "job_importers:job" \
+  "job_resources:job" \
+  "job_statuses:job"
+do
+  TABLE="${TABLE_INFO%%:*}"
+  FK_COL="${TABLE_INFO##*:}"
+
+  psql -c "
+COPY (SELECT * FROM ${TABLE} WHERE ${FK_COL} IN (${INCLUDED_JOBS_SUBQUERY})) TO STDOUT WITH (FORMAT csv, HEADER false, NULL 'NULL_VALUE')
+" | {
+    echo ""
+    echo "-- ${TABLE} rows for included jobs"
+    echo "COPY public.${TABLE} FROM stdin WITH (FORMAT csv, NULL 'NULL_VALUE');"
+    cat
+    echo "\\."
+  } >> "$SMART_FILE"
+done
+
+# Step 5: Re-enable FK triggers and clean up orphaned references
 {
   echo ""
   echo "-- Re-enable FK constraint triggers"
@@ -119,10 +152,11 @@ COPY (SELECT * FROM jobs ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT csv, 
   echo "  EXECUTE 'ALTER TABLE public.application_questions ENABLE TRIGGER ALL';"
   echo "END \$\$;"
   echo ""
-  echo "-- Clean up orphaned FK references to ai_chats (excluded from partial backup)"
+  echo "-- Clean up orphaned FK references (partial backup may have dangling refs)"
   echo "UPDATE public.jobs SET ai_chat_extraction = NULL WHERE ai_chat_extraction IS NOT NULL AND ai_chat_extraction NOT IN (SELECT id FROM public.ai_chats);"
   echo "UPDATE public.application_letters SET ai_chat = NULL WHERE ai_chat IS NOT NULL AND ai_chat NOT IN (SELECT id FROM public.ai_chats);"
   echo "UPDATE public.application_questions SET ai_chat = NULL WHERE ai_chat IS NOT NULL AND ai_chat NOT IN (SELECT id FROM public.ai_chats);"
+  echo "UPDATE public.applications SET job = NULL WHERE job IS NOT NULL AND job NOT IN (SELECT id FROM public.jobs);"
   echo ""
   echo "-- Reset sequences after partial data import"
   echo "SELECT setval('public.ai_chats_id_seq', COALESCE((SELECT MAX(id) FROM public.ai_chats), 1));"
