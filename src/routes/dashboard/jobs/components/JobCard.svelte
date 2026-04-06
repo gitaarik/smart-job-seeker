@@ -7,8 +7,7 @@
     faBuilding,
     faCalendar,
     faCheck,
-    faChevronDown,
-    faChevronUp,
+    faChevronRight,
     faExternalLinkAlt,
     faMapMarkerAlt,
     faMoneyBillWave,
@@ -159,10 +158,12 @@
       class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
       aria-label={isExpanded ? "Collapse" : "Expand"}
     >
-      <FontAwesomeIcon
-        icon={isExpanded ? faChevronUp : faChevronDown}
-        class="w-4 h-4"
-      />
+      <span class="inline-block transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}">
+        <FontAwesomeIcon
+          icon={faChevronRight}
+          class="w-4 h-4"
+        />
+      </span>
     </button>
   {/if}
 

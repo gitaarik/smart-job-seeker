@@ -87,7 +87,6 @@ export function getPlans(): PlanDefinition[] {
       usageExample: [
         "Import & match ~80 jobs",
         "10+ AI-generated cover letters",
-        "Several PDF exports",
       ],
     },
     {
@@ -100,7 +99,6 @@ export function getPlans(): PlanDefinition[] {
       usageExample: [
         "Import & match ~400 jobs",
         "50+ AI-generated cover letters",
-        "Dozens of PDF exports",
       ],
     },
     {
@@ -113,7 +111,6 @@ export function getPlans(): PlanDefinition[] {
       usageExample: [
         "Import & match ~1,200 jobs",
         "100+ AI-generated letters & questions",
-        "Unlimited PDF exports",
       ],
     },
     {

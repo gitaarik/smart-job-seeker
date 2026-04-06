@@ -8,7 +8,7 @@
     faBriefcase,
     faCalendar,
     faChevronDown,
-    faChevronUp,
+    faChevronRight,
     faFilter,
     faGlobe,
     faLayerGroup,
@@ -411,10 +411,12 @@
             </div>
 
             <div class="flex items-center ml-4">
-              <FontAwesomeIcon
-                icon={expandedId === app.id ? faChevronUp : faChevronDown}
-                class="w-4 h-4 text-[var(--dash-text-secondary)]"
-              />
+              <span class="inline-block transition-transform duration-200 {expandedId === app.id ? 'rotate-90' : ''}">
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  class="w-4 h-4 text-[var(--dash-text-secondary)]"
+                />
+              </span>
             </div>
           </button>
 

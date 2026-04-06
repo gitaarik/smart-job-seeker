@@ -5,8 +5,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
-    faChevronDown,
-    faChevronUp,
+    faChevronRight,
     faEnvelope,
     faLayerGroup,
     faQuestionCircle,
@@ -240,10 +239,12 @@
               </div>
             </div>
 
-            <FontAwesomeIcon
-              icon={expandedId === itemId ? faChevronUp : faChevronDown}
-              class="w-4 h-4 text-[var(--dash-text-secondary)]"
-            />
+            <span class="inline-block transition-transform duration-200 {expandedId === itemId ? 'rotate-90' : ''}">
+              <FontAwesomeIcon
+                icon={faChevronRight}
+                class="w-4 h-4 text-[var(--dash-text-secondary)]"
+              />
+            </span>
           </button>
 
           <!-- Expanded Content -->

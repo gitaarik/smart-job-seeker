@@ -6,8 +6,7 @@
   import {
     faArrowRight,
     faCheck,
-    faChevronDown,
-    faChevronUp,
+    faChevronRight,
     faEnvelope,
     faLayerGroup,
     faPen,
@@ -359,10 +358,12 @@
                   </p>
                 </div>
                 {#if latestContent}
-                  <FontAwesomeIcon
-                    icon={isExpanded ? faChevronUp : faChevronDown}
-                    class="w-4 h-4 text-[var(--dash-text-secondary)] flex-shrink-0"
-                  />
+                  <span class="inline-block transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}">
+                    <FontAwesomeIcon
+                      icon={faChevronRight}
+                      class="w-4 h-4 text-[var(--dash-text-secondary)] flex-shrink-0"
+                    />
+                  </span>
                 {/if}
               </div>
             </button>
@@ -409,10 +410,12 @@
                   </p>
                 </div>
               </div>
-              <FontAwesomeIcon
-                icon={expandedId === itemId ? faChevronUp : faChevronDown}
-                class="w-4 h-4 text-[var(--dash-text-secondary)]"
-              />
+              <span class="inline-block transition-transform duration-200 {expandedId === itemId ? 'rotate-90' : ''}">
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  class="w-4 h-4 text-[var(--dash-text-secondary)]"
+                />
+              </span>
             </button>
 
             <!-- Expanded Content -->

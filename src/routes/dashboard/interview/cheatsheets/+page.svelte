@@ -3,12 +3,9 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCheck,
-    faChevronDown,
-    faChevronUp,
+    faChevronRight,
     faFileAlt,
     faPencil,
-    faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
@@ -194,10 +191,12 @@
             class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
             aria-label={expandedId === sheet.id ? "Collapse" : "Expand"}
           >
-            <FontAwesomeIcon
-              icon={expandedId === sheet.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
+            <span class="inline-block transition-transform duration-200 {expandedId === sheet.id ? 'rotate-90' : ''}">
+              <FontAwesomeIcon
+                icon={faChevronRight}
+                class="w-4 h-4"
+              />
+            </span>
           </button>
 
           <!-- Header (clickable to expand/collapse) -->
@@ -274,22 +273,30 @@
                     </div>
                   </div>
 
-                  <div class="flex justify-end gap-2 mt-4">
+                  <div class="flex items-center mt-4">
                     <button
                       type="button"
-                      onclick={cancelEdit}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                      aria-label="Cancel"
+                      onclick={() => deleteId = sheet.id}
+                      class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5"
                     >
-                      <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+                      <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                      Delete
                     </button>
-                    <button
-                      type="submit"
-                      class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-                      aria-label="Save"
-                    >
-                      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-                    </button>
+                    <div class="flex gap-2 ml-auto">
+                      <button
+                        type="button"
+                        onclick={cancelEdit}
+                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+                      >
+                        Save
+                      </button>
+                    </div>
                   </div>
                 </form>
               {:else}
@@ -311,14 +318,6 @@
 
           <!-- Footer with action buttons -->
           <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
-            <button
-              type="button"
-              onclick={() => deleteId = sheet.id}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              Delete
-            </button>
             <button
               type="button"
               onclick={() => startEdit(sheet)}

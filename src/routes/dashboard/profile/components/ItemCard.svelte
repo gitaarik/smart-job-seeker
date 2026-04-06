@@ -1,8 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faChevronDown,
-    faChevronUp,
+    faChevronRight,
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
   import type { Snippet } from "svelte";
@@ -75,10 +74,12 @@
             class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
             aria-label={expanded ? "Collapse" : "Expand"}
           >
-            <FontAwesomeIcon
-              icon={expanded ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
+            <span class="inline-block transition-transform duration-200 {expanded ? 'rotate-90' : ''}">
+              <FontAwesomeIcon
+                icon={faChevronRight}
+                class="w-4 h-4"
+              />
+            </span>
           </button>
         {/if}
       </div>

@@ -11,6 +11,7 @@
     faChartBar,
     faChartLine,
     faChevronDown,
+    faBolt,
     faChevronRight,
     faCode,
     faCog,
@@ -31,8 +32,11 @@
     faPalette,
     faPaperPlane,
     faRobot,
+    faRocket,
     faSearch,
+    faSeedling,
     faShieldAlt,
+    faStar,
     faSliders,
     faStickyNote,
     faTimes,
@@ -43,8 +47,14 @@
     faUserTie,
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faGem } from "@fortawesome/free-regular-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+
+  const planIcons: Record<string, { icon: IconDefinition; color: string; activeColor: string }> = {
+    free: { icon: faSeedling, color: "text-green-500", activeColor: "text-green-200" },
+    starter: { icon: faRocket, color: "text-blue-500", activeColor: "text-blue-200" },
+    pro: { icon: faStar, color: "text-amber-500", activeColor: "text-amber-200" },
+    power: { icon: faBolt, color: "text-purple-500", activeColor: "text-purple-200" },
+  };
 
   interface CreditBalance {
     plan: string;
@@ -55,6 +65,8 @@
   }
 
   let { creditBalance }: { creditBalance?: CreditBalance } = $props();
+
+  let planIcon = $derived(planIcons[creditBalance?.plan ?? 'free'] ?? planIcons.free);
 
   interface MenuItem {
     label: string;
@@ -102,12 +114,12 @@
       ],
     },
     {
-      label: "Applications",
+      label: "Applying",
       href: "/dashboard/applications",
       icon: faPaperPlane,
       children: [
         {
-          label: "All Applications",
+          label: "Applications",
           href: "/dashboard/applications/active",
           icon: faPaperPlane,
         },
@@ -116,13 +128,6 @@
           href: "/dashboard/applications/salary",
           icon: faMoneyBillWave,
         },
-      ],
-    },
-    {
-      label: "Interview Prep",
-      href: "/dashboard/interview",
-      icon: faUserTie,
-      children: [
         {
           label: "Project Stories",
           href: "/dashboard/interview/stories",
@@ -516,7 +521,7 @@
           : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
         "
       >
-        <FontAwesomeIcon icon={faGem} class="w-4 h-4" />
+        <FontAwesomeIcon icon={planIcon.icon} class="w-4 h-4 {$page.url.pathname.startsWith('/dashboard/billing') ? planIcon.activeColor : planIcon.color}" />
         <span class="font-medium capitalize">{creditBalance?.plan ?? 'Free'} Plan</span>
       </a>
       {#if creditBalance}

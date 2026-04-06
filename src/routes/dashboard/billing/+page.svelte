@@ -6,7 +6,19 @@
     faArrowUp,
     faArrowDown,
     faCheck,
+    faSeedling,
+    faRocket,
+    faStar,
+    faBolt,
   } from "@fortawesome/free-solid-svg-icons";
+  import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+
+  const planIcons: Record<string, { icon: IconDefinition; color: string }> = {
+    free: { icon: faSeedling, color: "text-green-500" },
+    starter: { icon: faRocket, color: "text-blue-500" },
+    pro: { icon: faStar, color: "text-amber-500" },
+    power: { icon: faBolt, color: "text-purple-500" },
+  };
 
   let { data } = $props();
   let { subscription, plans } = $derived(data);
@@ -110,7 +122,10 @@
 
         <div class="border rounded-xl p-4 {isCurrent ? 'border-[var(--dash-primary)] ring-2 ring-[var(--dash-primary)]/20' : 'border-[var(--dash-border)]'}">
           <div class="mb-3">
-            <h3 class="text-sm font-semibold text-[var(--dash-text)]">{plan.name}</h3>
+            <div class="flex items-center gap-2 {planIcons[plan.id].color}">
+              <FontAwesomeIcon icon={planIcons[plan.id].icon} class="w-4 h-4" />
+              <h3 class="text-sm font-semibold">{plan.name}</h3>
+            </div>
             <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">{plan.description}</p>
           </div>
 
