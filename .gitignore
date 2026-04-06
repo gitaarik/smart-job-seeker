@@ -31,7 +31,7 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-/../generated/prisma
+/generated/prisma
 
 # Chrome profiles for job scraping
 chrome-profiles/
