@@ -7,9 +7,9 @@
     faBars,
     faBookmark,
     faBriefcase,
-    faCreditCard,
     faBullseye,
     faChartBar,
+    faChartLine,
     faChevronDown,
     faChevronRight,
     faCode,
@@ -43,7 +43,18 @@
     faUserTie,
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
+  import { faGem } from "@fortawesome/free-regular-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+
+  interface CreditBalance {
+    plan: string;
+    used: number;
+    allowance: number;
+    extra: number;
+    available: number;
+  }
+
+  let { creditBalance }: { creditBalance?: CreditBalance } = $props();
 
   interface MenuItem {
     label: string;
@@ -101,7 +112,7 @@
           icon: faPaperPlane,
         },
         {
-          label: "Salary Expectations",
+          label: "Salary",
           href: "/dashboard/applications/salary",
           icon: faMoneyBillWave,
         },
@@ -165,11 +176,6 @@
           icon: faUserFriends,
         },
       ],
-    },
-    {
-      label: "Billing",
-      href: "/dashboard/billing",
-      icon: faCreditCard,
     },
     {
       label: "Data & Settings",
@@ -247,6 +253,11 @@
           icon: faCommentDots,
         },
         {
+          label: "Costs",
+          href: "/dashboard/admin/costs",
+          icon: faChartLine,
+        },
+        {
           label: "Style Guide",
           href: "/dashboard/admin/style-guide",
           icon: faPalette,
@@ -255,11 +266,11 @@
     },
   ];
 
-  let menuItems = $derived(
-    ($page.data.user as { is_admin?: boolean })?.is_admin
-      ? [...baseMenuItems, ...adminMenuItems]
-      : baseMenuItems,
+  let isAdmin = $derived(
+    ($page.data.user as { is_admin?: boolean })?.is_admin ?? false,
   );
+
+  let menuItems = $derived(baseMenuItems);
 
   let mobileMenuOpen = $derived(sidebarState.mobileOpen);
   let expandedSections = $state<Set<string>>(new Set());
@@ -346,7 +357,8 @@
     const currentPath = $page.url.pathname;
     const currentSearch = $page.url.search;
 
-    for (const item of menuItems) {
+    const allItems = isAdmin ? [...menuItems, ...adminMenuItems] : menuItems;
+    for (const item of allItems) {
       if (item.children) {
         const hasActiveChild = item.children.some((child) =>
           isChildHrefActive(child.href, currentPath, currentSearch)
@@ -493,6 +505,43 @@
         {/each}
       </ul>
 
+    <!-- Plan & Credits -->
+    <div class="mt-3 pt-3 border-t border-[var(--dash-border)]">
+      <a
+        href="/dashboard/billing"
+        onclick={closeMobileMenu}
+        class="
+          flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors {$page.url.pathname.startsWith('/dashboard/billing')
+          ? 'bg-[var(--dash-primary)] text-white'
+          : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
+        "
+      >
+        <FontAwesomeIcon icon={faGem} class="w-4 h-4" />
+        <span class="font-medium capitalize">{creditBalance?.plan ?? 'Free'} Plan</span>
+      </a>
+      {#if creditBalance}
+        {@const total = creditBalance.allowance + creditBalance.extra}
+        {@const pct = total > 0 ? Math.min(100, (creditBalance.used / total) * 100) : 0}
+        <a
+          href="/dashboard/billing/usage"
+          onclick={closeMobileMenu}
+          class="block mt-1.5 mx-2.5 group"
+          title="{creditBalance.available} of {total} credits remaining"
+        >
+          <div class="flex items-center justify-between text-[10px] text-[var(--dash-text-muted)] mb-1">
+            <span>{creditBalance.available} credits left</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity">of {total}</span>
+          </div>
+          <div class="h-1 bg-[var(--dash-border)] rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all {pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-[var(--dash-primary)]'}"
+              style="width: {pct}%"
+            ></div>
+          </div>
+        </a>
+      {/if}
+    </div>
+
     <!-- Feedback button -->
     <div class="mt-4 pt-3 border-t border-[var(--dash-border)]">
       <button
@@ -504,5 +553,56 @@
         <span>Send Feedback</span>
       </button>
     </div>
+
+    <!-- Admin section -->
+    {#if isAdmin}
+      {@const adminItem = adminMenuItems[0]}
+      <div class="mt-3 pt-3 border-t border-amber-500/30">
+        <button
+          type="button"
+          onclick={() => toggleSection(adminItem.label)}
+          class="
+            w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm text-left transition-colors {isChildActive(
+            adminItem,
+            )
+            ? 'bg-amber-500/15 text-amber-500'
+            : 'text-amber-500/70 hover:bg-amber-500/10 hover:text-amber-500'}
+          "
+        >
+          <div class="flex items-center gap-2">
+            <FontAwesomeIcon icon={adminItem.icon} class="w-4 h-4" />
+            <span class="font-medium">{adminItem.label}</span>
+          </div>
+          {#if expandedSections.has(adminItem.label)}
+            <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3" />
+          {:else}
+            <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3" />
+          {/if}
+        </button>
+
+        {#if adminItem.children && expandedSections.has(adminItem.label)}
+          <ul class="mt-1 ml-4 pl-4 border-l border-amber-500/30 space-y-1">
+            {#each adminItem.children as child}
+              <li>
+                <a
+                  href={child.href}
+                  onclick={closeMobileMenu}
+                  class="
+                    flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors {isActive(
+                    child.href,
+                    )
+                    ? 'bg-amber-500 text-white'
+                    : 'text-amber-500/60 hover:bg-amber-500/10 hover:text-amber-500'}
+                  "
+                >
+                  <FontAwesomeIcon icon={child.icon} class="w-4 h-4" />
+                  <span class="text-sm">{child.label}</span>
+                </a>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
+    {/if}
   </nav>
 </aside>
