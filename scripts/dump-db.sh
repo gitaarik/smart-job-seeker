@@ -102,6 +102,14 @@ COPY (SELECT * FROM jobs ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT csv, 
 SMART_SIZE=$(du -h "$SMART_FILE" | cut -f1)
 echo "        ✓ Smart backup: db-dumps/smart.sql ($SMART_SIZE)"
 
+# Copy smart.sql to git-tracked OSS location (if running in cloud Docker setup)
+# The app container mounts cloud/ at /cloud, so /cloud/oss/db-dumps/ is the
+# git-tracked path, while /app/db-dumps/ maps to cloud/db-dumps/ (not tracked).
+if [ -d /cloud/oss/db-dumps ]; then
+  cp "$SMART_FILE" /cloud/oss/db-dumps/smart.sql
+  echo "        ✓ Copied to oss/db-dumps/smart.sql (git-tracked)"
+fi
+
 # Summary
 echo ""
 echo "═══════════════════════════════════════════════════════"
