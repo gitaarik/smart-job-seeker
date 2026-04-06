@@ -34,7 +34,7 @@ echo ""
 # ============================================================================
 FULL_FILE="$OUTPUT_DIR/full.sql"
 echo "  [1/2] Creating full backup..."
-pg_dump > "$FULL_FILE"
+pg_dump --no-owner --no-privileges > "$FULL_FILE"
 FULL_SIZE=$(du -h "$FULL_FILE" | cut -f1)
 echo "        ✓ Full backup: db-dumps/full.sql ($FULL_SIZE)"
 
@@ -46,18 +46,42 @@ echo ""
 echo "  [2/2] Creating smart backup..."
 
 # Step 1: Dump schema + data, excluding large tables
+# --no-owner: Omit OWNER TO statements (allows restore as any user)
+# --no-privileges: Omit GRANT/REVOKE statements
 echo "        - Dumping schema and core data..."
 pg_dump \
+  --no-owner \
+  --no-privileges \
   --exclude-table-data=ai_chats \
   --exclude-table-data=jobs \
   --exclude-table-data=directus_activity \
   --exclude-table-data=directus_revisions \
   > "$SMART_FILE"
 
-# Insert session_replication_role after pg_dump's \restrict command
-# (needed because we exclude ai_chats/jobs data but other tables reference them)
-# Find the line with \restrict and insert our SET command right after it
-sed -i '/^\\restrict/a\-- Disable FK constraint triggers for restore (tables reference excluded ai_chats/jobs data)\nSET session_replication_role = '\''replica'\'';' "$SMART_FILE"
+# Disable FK triggers during restore (we include partial ai_chats/jobs data,
+# but other tables may reference excluded rows during COPY)
+# Insert BEFORE any COPY/data statements — find first COPY line and inject above it.
+DISABLE_TRIGGERS=$(cat <<'TRIGGER_SQL'
+
+-- Disable FK constraint triggers for restore (partial ai_chats/jobs data)
+DO $$ BEGIN
+  SET session_replication_role = 'replica';
+EXCEPTION WHEN insufficient_privilege THEN
+  -- Non-superuser: disable triggers on tables with FK refs to excluded data
+  EXECUTE 'ALTER TABLE public.jobs DISABLE TRIGGER ALL';
+  EXECUTE 'ALTER TABLE public.application_letters DISABLE TRIGGER ALL';
+  EXECUTE 'ALTER TABLE public.application_questions DISABLE TRIGGER ALL';
+END $$;
+
+TRIGGER_SQL
+)
+# Insert before the first COPY statement (line with "^COPY ")
+FIRST_COPY_LINE=$(grep -n '^COPY ' "$SMART_FILE" | head -1 | cut -d: -f1)
+if [ -n "$FIRST_COPY_LINE" ]; then
+  # Insert the trigger-disable block before the first COPY
+  BEFORE_LINE=$((FIRST_COPY_LINE - 1))
+  sed -i "${BEFORE_LINE}r /dev/stdin" "$SMART_FILE" <<< "$DISABLE_TRIGGERS"
+fi
 
 # Step 2: Append last 25 ai_chats rows (using SELECT * for maintainability)
 echo "        - Appending last 25 ai_chats records..."
@@ -87,7 +111,13 @@ COPY (SELECT * FROM jobs ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT csv, 
 {
   echo ""
   echo "-- Re-enable FK constraint triggers"
-  echo "SET session_replication_role = 'origin';"
+  echo "DO \$\$ BEGIN"
+  echo "  SET session_replication_role = 'origin';"
+  echo "EXCEPTION WHEN insufficient_privilege THEN"
+  echo "  EXECUTE 'ALTER TABLE public.jobs ENABLE TRIGGER ALL';"
+  echo "  EXECUTE 'ALTER TABLE public.application_letters ENABLE TRIGGER ALL';"
+  echo "  EXECUTE 'ALTER TABLE public.application_questions ENABLE TRIGGER ALL';"
+  echo "END \$\$;"
   echo ""
   echo "-- Clean up orphaned FK references to ai_chats (excluded from partial backup)"
   echo "UPDATE public.jobs SET ai_chat_extraction = NULL WHERE ai_chat_extraction IS NOT NULL AND ai_chat_extraction NOT IN (SELECT id FROM public.ai_chats);"
