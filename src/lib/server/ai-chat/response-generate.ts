@@ -4,14 +4,17 @@
  */
 
 import { db } from "$lib/server/db";
+import { config } from "$lib/server/config";
 import { getInterpolatedPrompts } from "./utils";
 import {
-  generateChatCompletion,
+  generateChatCompletionTracked,
   LLMAuthenticationError,
   LLMQuotaExceededError,
   LLMRateLimitError,
 } from "$lib/server/llm";
 import { getErrorMessage } from "$lib/server/utils/errors";
+import { tokensToCost, chargeCredits } from "$lib/server/billing/credits";
+import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
 
 /**
  * Generate response for a single AI chat using LLM provider
@@ -32,17 +35,57 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       };
     }
 
-    // Generate response using generic LLM function
-    const responseContent = await generateChatCompletion([
+    // Generate response using generic LLM function with token tracking
+    const completionResult = await generateChatCompletionTracked([
       { role: "system", content: prompts.systemPrompt },
       { role: "user", content: prompts.userPrompt },
     ]);
 
-    // Update the response field
+    const usage = completionResult.usage;
+    const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
+
+    // Update the response field + token usage
     await db.ai_chats.update({
       where: { id: aiChatId },
-      data: { response: responseContent },
+      data: {
+        response: completionResult.content,
+        input_tokens: usage?.inputTokens ?? null,
+        output_tokens: usage?.outputTokens ?? null,
+        total_tokens: usage?.totalTokens ?? null,
+        credits_charged: creditsCost || null,
+      },
     });
+
+    // Charge credits
+    if (usage && creditsCost > 0) {
+      const aiChat = await db.ai_chats.findUnique({
+        where: { id: aiChatId },
+        select: { profile: true },
+      });
+      if (aiChat) {
+        const profile = await db.profiles.findUnique({
+          where: { id: aiChat.profile },
+          select: { user_id: true },
+        });
+        if (profile?.user_id) {
+          const providerCostUsd = estimateProviderCostUsd(
+            config.llmProvider, config.llmModel,
+            usage.inputTokens, usage.outputTokens,
+          );
+          await chargeCredits(
+            profile.user_id,
+            creditsCost,
+            "ai_generation",
+            `regenerate (${usage.totalTokens} tokens)`,
+            {
+              aiChatId, tokens: usage,
+              provider: config.llmProvider, model: config.llmModel,
+              providerCostUsd,
+            },
+          );
+        }
+      }
+    }
 
     return {
       success: true,

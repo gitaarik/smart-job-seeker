@@ -5,11 +5,13 @@
 import { db } from "$lib/server/db";
 import { config } from "$lib/server/config";
 import {
-  generateChatCompletion,
+  generateChatCompletionTracked,
   isFatalLLMError,
 } from "$lib/server/llm";
 import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
 import { promptTemplates } from "./prompt-templates.js";
+import { tokensToCost } from "$lib/server/billing/credits";
+import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
 
 /**
  * Interpolate variables in a prompt string
@@ -170,6 +172,22 @@ export async function createAndGenerateAiChat(
   let aiChatId: number | undefined;
 
   try {
+    // Check credits before doing any work
+    const profile = await db.profiles.findUnique({
+      where: { id: profileId },
+      select: { user_id: true },
+    });
+    if (profile?.user_id) {
+      const { getBalance } = await import("$lib/server/billing/credits");
+      const balance = await getBalance(profile.user_id);
+      if (balance.available <= 0) {
+        return {
+          success: false,
+          message: "Out of credits. Please upgrade your plan or buy extra credits.",
+        };
+      }
+    }
+
     // Step 1: Get prompt template from code
     const promptTemplate = fetchPromptTemplate(promptKey);
 
@@ -299,7 +317,7 @@ export async function createAndGenerateAiChat(
       }
       : undefined;
 
-    const responseContent = await generateChatCompletion(
+    const completionResult = await generateChatCompletionTracked(
       [
         { role: "system", content: interpolatedSystemPrompt },
         { role: "user", content: interpolatedUserPrompt },
@@ -307,15 +325,51 @@ export async function createAndGenerateAiChat(
       { structuredOutput },
     );
 
-    // Step 8: Save response (stringify if it's an object from JSON parsing)
-    const responseToSave = typeof responseContent === "string"
-      ? responseContent
-      : JSON.stringify(responseContent);
+    // Step 8: Save response + token usage
+    const responseContent = completionResult.content;
+    const responseToSave = structuredOutput
+      ? (() => { try { return JSON.stringify(JSON.parse(responseContent)); } catch { return responseContent; } })()
+      : responseContent;
+
+    const usage = completionResult.usage;
+    const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
 
     await db.ai_chats.update({
       where: { id: aiChat.id },
-      data: { response: responseToSave },
+      data: {
+        response: responseToSave,
+        input_tokens: usage?.inputTokens ?? null,
+        output_tokens: usage?.outputTokens ?? null,
+        total_tokens: usage?.totalTokens ?? null,
+        credits_charged: creditsCost || null,
+      },
     });
+
+    // Charge credits if we have a user and usage
+    if (usage && creditsCost > 0) {
+      const profile = await db.profiles.findUnique({
+        where: { id: profileId },
+        select: { user_id: true },
+      });
+      if (profile?.user_id) {
+        const { chargeCredits } = await import("$lib/server/billing/credits");
+        const providerCostUsd = estimateProviderCostUsd(
+          config.llmProvider, config.llmModel,
+          usage.inputTokens, usage.outputTokens,
+        );
+        await chargeCredits(
+          profile.user_id,
+          creditsCost,
+          "ai_generation",
+          `${promptKey} (${usage.totalTokens} tokens)`,
+          {
+            aiChatId: aiChat.id, promptKey, tokens: usage,
+            provider: config.llmProvider, model: config.llmModel,
+            providerCostUsd,
+          },
+        );
+      }
+    }
 
     // Step 9: Fetch and return the complete ai_chats record
     const completeAiChat = await db.ai_chats.findUnique({

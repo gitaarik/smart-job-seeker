@@ -4,9 +4,12 @@
  */
 
 import { z } from "zod";
-import { generateChatCompletion } from "$lib/server/llm";
+import { generateChatCompletionTracked } from "$lib/server/llm";
 import type { ChatMessage } from "$lib/server/llm";
+import { config } from "$lib/server/config";
 import type { ResumeData } from "./types";
+import { tokensToCost, chargeCredits } from "$lib/server/billing/credits";
+import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
 
 const SYSTEM_PROMPT =
   `You are a resume parser that extracts structured information from resume text.
@@ -197,6 +200,7 @@ const ResumeDataSchema = z.object({
  */
 export async function parseResumeWithLLM(
   resumeText: string,
+  userId?: string,
 ): Promise<ResumeData> {
   const userPrompt =
     `Extract structured resume data from the following text:\n\n${resumeText}`;
@@ -206,7 +210,7 @@ export async function parseResumeWithLLM(
     { role: "user", content: userPrompt },
   ];
 
-  const resumeData = await generateChatCompletion<ResumeData>(messages, {
+  const result = await generateChatCompletionTracked(messages, {
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
     maxTokens: 8192,
     temperature: 0.1,
@@ -215,6 +219,36 @@ export async function parseResumeWithLLM(
       schema: ResumeDataSchema,
     },
   });
+
+  // Charge credits for AI resume parsing
+  const usage = result.usage;
+  if (userId && usage) {
+    const creditsCost = tokensToCost(usage.totalTokens);
+    if (creditsCost > 0) {
+      const providerCostUsd = estimateProviderCostUsd(
+        config.llmProvider, config.llmModel,
+        usage.inputTokens, usage.outputTokens,
+      );
+      await chargeCredits(
+        userId,
+        creditsCost,
+        "resume_parse_ai",
+        `Resume AI parse (${usage.totalTokens} tokens)`,
+        {
+          tokens: usage,
+          provider: config.llmProvider, model: config.llmModel,
+          providerCostUsd,
+        },
+      );
+    }
+  }
+
+  let resumeData: ResumeData;
+  try {
+    resumeData = JSON.parse(result.content);
+  } catch {
+    throw new Error(`Failed to parse resume LLM response as JSON`);
+  }
 
   if (!resumeData.basics || !resumeData.basics.name) {
     console.error(
