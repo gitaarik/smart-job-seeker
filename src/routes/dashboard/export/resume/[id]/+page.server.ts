@@ -3,7 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
-import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
+import { requireCredits, chargeCredits } from "$lib/server/billing/credits";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -216,8 +216,8 @@ export const actions: Actions = {
       }
     }
 
-    await requireUsage(user.id, "pdf_exports");
-    await incrementUsage(user.id, "pdf_exports");
+    await requireCredits(user.id, 1);
+    await chargeCredits(user.id, 1, "pdf_export", "PDF export");
     generateVersionPdfs(profileId, slug.trim()).catch(console.error);
 
     return { success: true };

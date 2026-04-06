@@ -10,7 +10,7 @@ import {
   removeActiveJob,
 } from "$lib/server/queue";
 import { config } from "$lib/server/config";
-import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
+import { requireCredits } from "$lib/server/billing/credits";
 
 // Rate limiting: minimum hours between scrapes (per job search)
 const COOLDOWN_HOURS = config.scrapeCooldownHours;
@@ -70,9 +70,9 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     });
   }
 
-  // Check subscription usage limit
+  // Pre-check: user needs at least ~15 credits for a minimal scrape
   if (!isStaff) {
-    await requireUsage(user.id, "scrape_runs");
+    await requireCredits(user.id, 15);
   }
 
   // Check if this search is already running in BullMQ
@@ -161,7 +161,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     data: { bullmq_job_id: job.id },
   });
 
-  await incrementUsage(user.id, "scrape_runs");
+  // Note: actual credit charging happens in the worker after scrape completion
+  // based on dynamic factors (job count, time, cloud browser, etc.)
 
   console.log(
     `[API] Queued scrape for job search ${searchTaskId}, run ${run.id}, BullMQ job ${job.id}`,

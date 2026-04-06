@@ -261,17 +261,17 @@
 
   <!-- Expanded Content -->
   {#if isExpanded}
-    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4 relative">
-      <!-- Source button in top right -->
+    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4">
+      <!-- Source link -->
       {#if job.source_url}
         <a
           href={job.source_url}
           target="_blank"
           rel="noopener"
-          class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
+          class="text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5 truncate"
         >
-          Source
-          <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+          <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+          <span class="truncate">{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}</span>
         </a>
       {/if}
 

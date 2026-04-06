@@ -14,12 +14,15 @@ import {
 export {
   type ChatCompletionOptions,
   type ChatMessage,
+  type CompletionResult,
   generateChatCompletion,
+  generateChatCompletionTracked,
   LLMAuthenticationError,
   LLMError,
   LLMQuotaExceededError,
   LLMRateLimitError,
   type StructuredOutputConfig,
+  type TokenUsage,
 } from "./langchain.js";
 
 export { llmCache } from "./cache.js";

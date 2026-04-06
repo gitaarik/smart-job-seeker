@@ -4,12 +4,17 @@
 
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { getUsageSummary } from "$lib/server/billing/usage";
+import { getBalance } from "$lib/server/billing/credits";
+import { getActiveSubscription } from "$lib/server/billing/subscription";
 
 export const GET: RequestHandler = async ({ locals }) => {
   const user = locals.user;
   if (!user) error(401, "Not authenticated");
 
-  const summary = await getUsageSummary(user.id);
-  return json(summary);
+  const [creditBalance, subscription] = await Promise.all([
+    getBalance(user.id),
+    getActiveSubscription(user.id),
+  ]);
+
+  return json({ creditBalance, subscription });
 };

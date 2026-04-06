@@ -5,6 +5,7 @@
     faCheck,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
+  import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
 
@@ -40,6 +41,7 @@
   );
   let savedLocations = $state<string[]>(data.config?.locations || []);
   let savedMatchCommunityJobs = $state<boolean>(data.config?.match_community_jobs ?? false);
+  let savedCommunityMaxAgeDays = $state<number | null>(data.config?.community_max_age_days ?? 30);
 
   // === Current (editable) state ===
   let jobTypes = $state<string[]>([...savedJobTypes]);
@@ -47,6 +49,41 @@
   let experienceLevels = $state<string[]>([...savedExperienceLevels]);
   let locations = $state<string[]>([...savedLocations]);
   let matchCommunityJobs = $state<boolean>(savedMatchCommunityJobs);
+  let communityMaxAgeDays = $state<number | null>(savedCommunityMaxAgeDays);
+
+  // String proxy for RadioGroup binding
+  let communityMaxAgeDaysStr = $derived(communityMaxAgeDays === null ? "all" : String(communityMaxAgeDays));
+
+  // Community job counts per time window
+  let communityCounts = $state<Record<string, number> | null>(null);
+  let communityCountsLoading = $state(false);
+
+  // Community time window options
+  let communityTimeOptions = $derived([
+    { value: "7", label: communityCounts ? `7 days (${communityCounts["7"] ?? 0})` : "7 days" },
+    { value: "30", label: communityCounts ? `30 days (${communityCounts["30"] ?? 0})` : "30 days" },
+    { value: "90", label: communityCounts ? `90 days (${communityCounts["90"] ?? 0})` : "90 days" },
+    { value: "all", label: communityCounts ? `All time (${communityCounts["all"] ?? 0})` : "All time" },
+  ]);
+
+  async function fetchCommunityCounts() {
+    communityCountsLoading = true;
+    try {
+      const res = await fetch(`/api/matcher/community-counts?profileId=${data.profileId}`);
+      if (res.ok) {
+        communityCounts = await res.json();
+      }
+    } finally {
+      communityCountsLoading = false;
+    }
+  }
+
+  // Fetch counts when community toggle is turned on
+  $effect(() => {
+    if (matchCommunityJobs && !communityCounts && !communityCountsLoading) {
+      fetchCommunityCounts();
+    }
+  });
 
   // Location input
   let locationInput = $state("");
@@ -63,7 +100,10 @@
   let workLocationDirty = $derived(!arraysEqual(workLocation, savedWorkLocation));
   let experienceLevelsDirty = $derived(!arraysEqual(experienceLevels, savedExperienceLevels));
   let locationsDirty = $derived(!arraysEqual(locations, savedLocations));
-  let communityJobsDirty = $derived(matchCommunityJobs !== savedMatchCommunityJobs);
+  let communityJobsDirty = $derived(
+    matchCommunityJobs !== savedMatchCommunityJobs ||
+    communityMaxAgeDays !== savedCommunityMaxAgeDays
+  );
 
   // === First-time setup state ===
   type SetupState = "idle" | "saving" | "saved" | "error";
@@ -71,10 +111,7 @@
   let setupError = $state("");
 
   function toggleArrayValue(arr: string[], value: string): string[] {
-    if (arr.includes(value)) {
-      return arr.filter((v) => v !== value);
-    }
-    return [...arr, value];
+    return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
   }
 
   function addLocation() {
@@ -146,8 +183,23 @@
   }
 
   async function saveCommunityJobs() {
-    if (await patchField("match_community_jobs", matchCommunityJobs, (v) => (isSavingCommunityJobs = v))) {
-      savedMatchCommunityJobs = matchCommunityJobs;
+    isSavingCommunityJobs = true;
+    try {
+      const res = await fetch("/api/job-preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          match_community_jobs: matchCommunityJobs,
+          community_max_age_days: matchCommunityJobs ? communityMaxAgeDays : null,
+        }),
+      });
+      if (res.ok) {
+        savedMatchCommunityJobs = matchCommunityJobs;
+        savedCommunityMaxAgeDays = communityMaxAgeDays;
+      }
+    } finally {
+      isSavingCommunityJobs = false;
     }
   }
 
@@ -174,6 +226,7 @@
           work_location: workLocation,
           locations,
           match_community_jobs: matchCommunityJobs,
+          community_max_age_days: matchCommunityJobs ? communityMaxAgeDays : null,
         }),
       });
 
@@ -192,6 +245,7 @@
       savedExperienceLevels = [...experienceLevels];
       savedLocations = [...locations];
       savedMatchCommunityJobs = matchCommunityJobs;
+      savedCommunityMaxAgeDays = communityMaxAgeDays;
       setupState = "saved";
       setTimeout(() => (setupState = "idle"), 2000);
     } catch (error) {
@@ -230,21 +284,22 @@
     </div>
     <div class="flex flex-wrap gap-2">
       {#each data.options.jobTypes as jobType}
-        <label
-          class="cursor-pointer px-4 py-2 rounded-lg border transition-colors {jobTypes.includes(jobType)
-            ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)] text-white'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-[var(--dash-primary)]'}"
+        <button
+          type="button"
+          onclick={() => (jobTypes = toggleArrayValue(jobTypes, jobType))}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {jobTypes.includes(jobType)
+            ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+            : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
         >
-          <input
-            type="checkbox"
-            name="job_types"
-            value={jobType}
-            checked={jobTypes.includes(jobType)}
-            onchange={() => (jobTypes = toggleArrayValue(jobTypes, jobType))}
-            class="sr-only"
-          />
+          <span class="w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 {jobTypes.includes(jobType)
+            ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]'
+            : 'border-[var(--dash-border)]'}">
+            {#if jobTypes.includes(jobType)}
+              <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 text-white" />
+            {/if}
+          </span>
           {jobType}
-        </label>
+        </button>
       {/each}
     </div>
     {#if configExists && jobTypesDirty}
@@ -287,21 +342,22 @@
     </div>
     <div class="flex flex-wrap gap-2">
       {#each data.options.workLocationOptions as option}
-        <label
-          class="cursor-pointer px-4 py-2 rounded-lg border transition-colors {workLocation.includes(option)
-            ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)] text-white'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-[var(--dash-primary)]'}"
+        <button
+          type="button"
+          onclick={() => (workLocation = toggleArrayValue(workLocation, option))}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {workLocation.includes(option)
+            ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+            : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
         >
-          <input
-            type="checkbox"
-            name="work_location"
-            value={option}
-            checked={workLocation.includes(option)}
-            onchange={() => (workLocation = toggleArrayValue(workLocation, option))}
-            class="sr-only"
-          />
+          <span class="w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 {workLocation.includes(option)
+            ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]'
+            : 'border-[var(--dash-border)]'}">
+            {#if workLocation.includes(option)}
+              <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 text-white" />
+            {/if}
+          </span>
           {option}
-        </label>
+        </button>
       {/each}
     </div>
     {#if configExists && workLocationDirty}
@@ -421,21 +477,22 @@
     </div>
     <div class="flex flex-wrap gap-2">
       {#each data.options.experienceLevels as level}
-        <label
-          class="cursor-pointer px-4 py-2 rounded-lg border transition-colors {experienceLevels.includes(level)
-            ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)] text-white'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-[var(--dash-primary)]'}"
+        <button
+          type="button"
+          onclick={() => (experienceLevels = toggleArrayValue(experienceLevels, level))}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {experienceLevels.includes(level)
+            ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+            : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
         >
-          <input
-            type="checkbox"
-            name="experience_levels"
-            value={level}
-            checked={experienceLevels.includes(level)}
-            onchange={() => (experienceLevels = toggleArrayValue(experienceLevels, level))}
-            class="sr-only"
-          />
+          <span class="w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 {experienceLevels.includes(level)
+            ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]'
+            : 'border-[var(--dash-border)]'}">
+            {#if experienceLevels.includes(level)}
+              <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 text-white" />
+            {/if}
+          </span>
           {level}
-        </label>
+        </button>
       {/each}
     </div>
     {#if configExists && experienceLevelsDirty}
@@ -466,27 +523,52 @@
 
   <!-- Community Jobs -->
   <Card padding="responsive">
-    <div class="flex items-center justify-between">
-      <label class="flex items-center justify-between cursor-pointer flex-1">
-        <div>
-          <h3 class="font-medium text-[var(--dash-text)]">
-            Also match with jobs imported by other users
-          </h3>
-          <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-            When enabled, the matcher will also process jobs you didn't import yourself (your own-imported jobs are always matched first)
+    <ToggleSwitch
+      bind:checked={matchCommunityJobs}
+      label="Also match with jobs imported by other users"
+      description="When enabled, the matcher will also process jobs you didn't import yourself. This can use significantly more credits. Your own-imported jobs are always matched first."
+    />
+    {#if matchCommunityJobs}
+      <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
+        <p class="text-xs text-[var(--dash-text-muted)] mb-2">
+          Match community jobs from the last:
+        </p>
+        <div class="flex flex-wrap gap-2">
+          {#each communityTimeOptions as opt}
+            <button
+              type="button"
+              onclick={() => (communityMaxAgeDays = opt.value === "all" ? null : parseInt(opt.value))}
+              class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors {communityMaxAgeDaysStr === opt.value
+                ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+            >
+              <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center flex-shrink-0 {communityMaxAgeDaysStr === opt.value
+                ? 'border-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)]'}">
+                {#if communityMaxAgeDaysStr === opt.value}
+                  <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                {/if}
+              </span>
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+        {#if communityCountsLoading}
+          <p class="text-xs text-[var(--dash-text-muted)] mt-2 flex items-center gap-1">
+            <Spinner size="w-3 h-3" /> Loading job counts…
           </p>
-        </div>
-        <div class="relative ml-4 shrink-0">
-          <input
-            type="checkbox"
-            bind:checked={matchCommunityJobs}
-            class="sr-only peer"
-          />
-          <div class="w-11 h-6 bg-[var(--dash-border)] rounded-full peer-checked:bg-[var(--dash-primary)] transition-colors"></div>
-          <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
-        </div>
-      </label>
-    </div>
+        {:else if communityCounts}
+          {@const selectedKey = communityMaxAgeDays === null ? "all" : String(communityMaxAgeDays)}
+          {@const count = communityCounts[selectedKey] ?? 0}
+          <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+            {count} unmatched community {count === 1 ? "job" : "jobs"} to process
+            {#if count > 0}
+              (≈{count}–{count * 2} credits)
+            {/if}
+          </p>
+        {/if}
+      </div>
+    {/if}
     {#if configExists && communityJobsDirty}
       <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
         <button
@@ -504,7 +586,7 @@
         </button>
         <button
           type="button"
-          onclick={() => (matchCommunityJobs = savedMatchCommunityJobs)}
+          onclick={() => { matchCommunityJobs = savedMatchCommunityJobs; communityMaxAgeDays = savedCommunityMaxAgeDays; }}
           class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel

@@ -9,7 +9,7 @@ import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { getStripe, getStripeWebhookSecret } from "$lib/server/billing/stripe";
 import { planFromPriceId, getCreditPacks } from "$lib/server/billing/plans";
-import { getCurrentPeriod } from "$lib/server/billing/usage";
+import { addExtraCredits } from "$lib/server/billing/credits";
 import type Stripe from "stripe";
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -65,43 +65,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   if (session.mode === "payment") {
-    // One-time payment — credit purchase
+    // One-time payment — credit pack purchase
     const userId = session.metadata?.user_id;
-    const packType = session.metadata?.pack_type;
-    if (!userId || !packType) return;
+    if (!userId) return;
 
-    const pack = getCreditPacks().find((p) => p.type === packType);
+    // Match by Stripe price ID from the session's line items
+    const packs = getCreditPacks();
+    const priceId = session.metadata?.stripe_price_id;
+    const pack = packs.find((p) => p.stripePriceId === priceId) || packs[0];
     if (!pack) return;
 
-    const period = getCurrentPeriod();
-
-    await db.credit_purchases.create({
-      data: {
-        user_id: userId,
-        stripe_payment_intent_id: session.payment_intent as string,
-        pack_type: packType,
-        amount_cents: pack.priceCents,
-        period,
+    // Add credits to the user's balance
+    await addExtraCredits(
+      userId,
+      pack.credits,
+      `Credit pack purchase: ${pack.name}`,
+      {
+        stripePaymentIntent: session.payment_intent as string,
+        priceCents: pack.priceCents,
       },
-    });
-
-    // Add credits to usage counters
-    const updateData: Record<string, { increment: number }> = {};
-    for (const [key, amount] of Object.entries(pack.credits)) {
-      updateData[key] = { increment: amount };
-    }
-
-    await db.usage_counters.upsert({
-      where: { user_id_period: { user_id: userId, period } },
-      create: {
-        user_id: userId,
-        period,
-        ...Object.fromEntries(
-          Object.entries(pack.credits).map(([k, v]) => [k, v]),
-        ),
-      },
-      update: updateData,
-    });
+    );
   }
 }
 

@@ -476,7 +476,9 @@ export const ModelName = {
   billing_customers: 'billing_customers',
   subscriptions: 'subscriptions',
   credit_purchases: 'credit_purchases',
-  usage_counters: 'usage_counters'
+  usage_counters: 'usage_counters',
+  credit_balances: 'credit_balances',
+  credit_transactions: 'credit_transactions'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -492,7 +494,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_status_log" | "application_letters" | "letter_versions" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_match_history" | "job_statuses" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations" | "import_logs" | "user_feedback" | "user_feedback_files" | "billing_customers" | "subscriptions" | "credit_purchases" | "usage_counters"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_status_log" | "application_letters" | "letter_versions" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_matches" | "job_match_history" | "job_statuses" | "job_platforms" | "job_resources" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "api_keys" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications" | "job_importers" | "match_config" | "search_task_run_items" | "search_task_runs" | "search_tasks" | "search_tasks_job_sites" | "scraper_agent_sessions" | "scraper_agent_iterations" | "import_logs" | "user_feedback" | "user_feedback_files" | "billing_customers" | "subscriptions" | "credit_purchases" | "usage_counters" | "credit_balances" | "credit_transactions"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -7378,6 +7380,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    credit_balances: {
+      payload: Prisma.$credit_balancesPayload<ExtArgs>
+      fields: Prisma.credit_balancesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.credit_balancesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.credit_balancesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>
+        }
+        findFirst: {
+          args: Prisma.credit_balancesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.credit_balancesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>
+        }
+        findMany: {
+          args: Prisma.credit_balancesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>[]
+        }
+        create: {
+          args: Prisma.credit_balancesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>
+        }
+        createMany: {
+          args: Prisma.credit_balancesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.credit_balancesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>[]
+        }
+        delete: {
+          args: Prisma.credit_balancesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>
+        }
+        update: {
+          args: Prisma.credit_balancesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>
+        }
+        deleteMany: {
+          args: Prisma.credit_balancesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.credit_balancesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.credit_balancesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>[]
+        }
+        upsert: {
+          args: Prisma.credit_balancesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_balancesPayload>
+        }
+        aggregate: {
+          args: Prisma.Credit_balancesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCredit_balances>
+        }
+        groupBy: {
+          args: Prisma.credit_balancesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Credit_balancesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.credit_balancesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Credit_balancesCountAggregateOutputType> | number
+        }
+      }
+    }
+    credit_transactions: {
+      payload: Prisma.$credit_transactionsPayload<ExtArgs>
+      fields: Prisma.credit_transactionsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.credit_transactionsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.credit_transactionsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>
+        }
+        findFirst: {
+          args: Prisma.credit_transactionsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.credit_transactionsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>
+        }
+        findMany: {
+          args: Prisma.credit_transactionsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>[]
+        }
+        create: {
+          args: Prisma.credit_transactionsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>
+        }
+        createMany: {
+          args: Prisma.credit_transactionsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.credit_transactionsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>[]
+        }
+        delete: {
+          args: Prisma.credit_transactionsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>
+        }
+        update: {
+          args: Prisma.credit_transactionsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>
+        }
+        deleteMany: {
+          args: Prisma.credit_transactionsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.credit_transactionsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.credit_transactionsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>[]
+        }
+        upsert: {
+          args: Prisma.credit_transactionsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$credit_transactionsPayload>
+        }
+        aggregate: {
+          args: Prisma.Credit_transactionsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCredit_transactions>
+        }
+        groupBy: {
+          args: Prisma.credit_transactionsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Credit_transactionsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.credit_transactionsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Credit_transactionsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -8662,6 +8812,10 @@ export const Ai_chatsScalarFieldEnum = {
   provider: 'provider',
   model: 'model',
   request_type: 'request_type',
+  input_tokens: 'input_tokens',
+  output_tokens: 'output_tokens',
+  total_tokens: 'total_tokens',
+  credits_charged: 'credits_charged',
   ai_chat_template: 'ai_chat_template'
 } as const
 
@@ -9029,6 +9183,32 @@ export const Usage_countersScalarFieldEnum = {
 export type Usage_countersScalarFieldEnum = (typeof Usage_countersScalarFieldEnum)[keyof typeof Usage_countersScalarFieldEnum]
 
 
+export const Credit_balancesScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  period: 'period',
+  credits_used: 'credits_used',
+  credits_allowance: 'credits_allowance',
+  extra_credits: 'extra_credits'
+} as const
+
+export type Credit_balancesScalarFieldEnum = (typeof Credit_balancesScalarFieldEnum)[keyof typeof Credit_balancesScalarFieldEnum]
+
+
+export const Credit_transactionsScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  amount: 'amount',
+  balance_after: 'balance_after',
+  operation: 'operation',
+  description: 'description',
+  metadata: 'metadata',
+  created_at: 'created_at'
+} as const
+
+export type Credit_transactionsScalarFieldEnum = (typeof Credit_transactionsScalarFieldEnum)[keyof typeof Credit_transactionsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -9368,6 +9548,8 @@ export type GlobalOmitConfig = {
   subscriptions?: Prisma.subscriptionsOmit
   credit_purchases?: Prisma.credit_purchasesOmit
   usage_counters?: Prisma.usage_countersOmit
+  credit_balances?: Prisma.credit_balancesOmit
+  credit_transactions?: Prisma.credit_transactionsOmit
 }
 
 /* Types for Logging */

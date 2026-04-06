@@ -9,23 +9,10 @@ import { getEnv } from "$lib/tools/get-env";
 
 export type PlanId = "free" | "starter" | "pro" | "power";
 
-export type UsageFeature =
-  | "ai_generations"
-  | "ai_followups"
-  | "job_matches"
-  | "scrape_runs"
-  | "pdf_exports"
-  | "resume_parses";
-
 export interface PlanLimits {
   profiles: number;
   resumeVersions: number; // -1 = unlimited
-  aiGenerations: number;
-  aiFollowups: number;
-  jobMatches: number;
-  scrapeRuns: number;
-  pdfExports: number; // -1 = unlimited
-  resumeParses: number;
+  creditsPerMonth: number;
   extraCredits: boolean;
 }
 
@@ -36,88 +23,54 @@ export interface PlanDefinition {
   priceMonthly: number; // cents
   limits: PlanLimits;
   stripePriceId: string | null; // null for free
+  usageExample: string[]; // bullet list of example actions
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
   free: {
-    profiles: 1,
-    resumeVersions: 2,
-    aiGenerations: 10,
-    aiFollowups: 5,
-    jobMatches: 50,
-    scrapeRuns: 0,
-    pdfExports: 5,
-    resumeParses: 1,
-    extraCredits: false,
+    profiles: 2,
+    resumeVersions: -1,
+    creditsPerMonth: 1000,
+    extraCredits: true,
   },
   starter: {
-    profiles: 1,
-    resumeVersions: 5,
-    aiGenerations: 50,
-    aiFollowups: 25,
-    jobMatches: 200,
-    scrapeRuns: 5,
-    pdfExports: 20,
-    resumeParses: 3,
+    profiles: 5,
+    resumeVersions: -1,
+    creditsPerMonth: 5000,
     extraCredits: true,
   },
   pro: {
-    profiles: 3,
+    profiles: 20,
     resumeVersions: -1,
-    aiGenerations: 200,
-    aiFollowups: 100,
-    jobMatches: 1000,
-    scrapeRuns: 30,
-    pdfExports: -1,
-    resumeParses: 10,
+    creditsPerMonth: 15000,
     extraCredits: true,
   },
   power: {
-    profiles: 10,
+    profiles: -1,
     resumeVersions: -1,
-    aiGenerations: 500,
-    aiFollowups: 250,
-    jobMatches: 5000,
-    scrapeRuns: 100,
-    pdfExports: -1,
-    resumeParses: 25,
+    creditsPerMonth: 50000,
     extraCredits: true,
   },
 };
 
-/** Map from feature key to limit key in PlanLimits */
-const FEATURE_TO_LIMIT: Record<UsageFeature, keyof PlanLimits> = {
-  ai_generations: "aiGenerations",
-  ai_followups: "aiFollowups",
-  job_matches: "jobMatches",
-  scrape_runs: "scrapeRuns",
-  pdf_exports: "pdfExports",
-  resume_parses: "resumeParses",
+/**
+ * Indicative credit costs for display on the pricing page.
+ * Actual costs are dynamic — these are rough averages.
+ */
+export const CREDIT_COST_EXAMPLES = {
+  importLocal: { label: "Import & match 100 jobs (local browser)", avgCredits: 800, note: "scrape + extract + match" },
+  importCloud: { label: "Import & match 100 jobs (cloud browser)", avgCredits: 1100, note: "scrape + extract + match" },
+  aiLetters: { label: "100 AI-generated cover letters", avgCredits: 100, note: "~5k tokens each" },
+  pdfExports: { label: "100 PDF exports", avgCredits: 100, note: "1 credit each" },
+  resumeParseJSON: { label: "Resume import (JSON)", avgCredits: 0, note: "free" },
 };
-
-export function getFeatureLimit(plan: PlanId, feature: UsageFeature): number {
-  return PLAN_LIMITS[plan][FEATURE_TO_LIMIT[feature]] as number;
-}
-
-export type CreditPackType = "ai" | "matching" | "scraping";
-
-export interface CreditPack {
-  type: CreditPackType;
-  name: string;
-  description: string;
-  priceCents: number;
-  credits: Record<string, number>;
-  stripePriceId: string;
-}
 
 function loadStripePriceIds(): Record<string, string> {
   return {
     starter: getEnv("SJS_STRIPE_PRICE_STARTER", "") as string,
     pro: getEnv("SJS_STRIPE_PRICE_PRO", "") as string,
     power: getEnv("SJS_STRIPE_PRICE_POWER", "") as string,
-    creditAi: getEnv("SJS_STRIPE_PRICE_CREDIT_AI", "") as string,
-    creditMatching: getEnv("SJS_STRIPE_PRICE_CREDIT_MATCHING", "") as string,
-    creditScraping: getEnv("SJS_STRIPE_PRICE_CREDIT_SCRAPING", "") as string,
+    credits: getEnv("SJS_STRIPE_PRICE_CREDITS", "") as string,
   };
 }
 
@@ -131,6 +84,11 @@ export function getPlans(): PlanDefinition[] {
       priceMonthly: 0,
       limits: PLAN_LIMITS.free,
       stripePriceId: null,
+      usageExample: [
+        "Import & match ~80 jobs",
+        "10+ AI-generated cover letters",
+        "Several PDF exports",
+      ],
     },
     {
       id: "starter",
@@ -139,6 +97,11 @@ export function getPlans(): PlanDefinition[] {
       priceMonthly: 900,
       limits: PLAN_LIMITS.starter,
       stripePriceId: prices.starter || null,
+      usageExample: [
+        "Import & match ~400 jobs",
+        "50+ AI-generated cover letters",
+        "Dozens of PDF exports",
+      ],
     },
     {
       id: "pro",
@@ -147,6 +110,11 @@ export function getPlans(): PlanDefinition[] {
       priceMonthly: 1900,
       limits: PLAN_LIMITS.pro,
       stripePriceId: prices.pro || null,
+      usageExample: [
+        "Import & match ~1,200 jobs",
+        "100+ AI-generated letters & questions",
+        "Unlimited PDF exports",
+      ],
     },
     {
       id: "power",
@@ -155,36 +123,32 @@ export function getPlans(): PlanDefinition[] {
       priceMonthly: 3900,
       limits: PLAN_LIMITS.power,
       stripePriceId: prices.power || null,
+      usageExample: [
+        "Import & match ~4,000 jobs",
+        "Hundreds of AI generations",
+        "Effectively unlimited usage",
+      ],
     },
   ];
+}
+
+export interface CreditPack {
+  name: string;
+  description: string;
+  priceCents: number;
+  credits: number;
+  stripePriceId: string;
 }
 
 export function getCreditPacks(): CreditPack[] {
   const prices = loadStripePriceIds();
   return [
     {
-      type: "ai",
-      name: "AI Pack",
-      description: "20 AI generations + 10 follow-ups",
+      name: "100 Credits",
+      description: "Top up your balance",
       priceCents: 300,
-      credits: { extra_ai_generations: 20, extra_ai_followups: 10 },
-      stripePriceId: prices.creditAi,
-    },
-    {
-      type: "matching",
-      name: "Matching Pack",
-      description: "200 job matches",
-      priceCents: 200,
-      credits: { extra_job_matches: 200 },
-      stripePriceId: prices.creditMatching,
-    },
-    {
-      type: "scraping",
-      name: "Scraping Pack",
-      description: "10 search runs",
-      priceCents: 500,
-      credits: { extra_scrape_runs: 10 },
-      stripePriceId: prices.creditScraping,
+      credits: 100,
+      stripePriceId: prices.credits,
     },
   ];
 }

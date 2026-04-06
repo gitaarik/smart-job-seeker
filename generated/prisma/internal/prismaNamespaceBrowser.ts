@@ -143,7 +143,9 @@ export const ModelName = {
   billing_customers: 'billing_customers',
   subscriptions: 'subscriptions',
   credit_purchases: 'credit_purchases',
-  usage_counters: 'usage_counters'
+  usage_counters: 'usage_counters',
+  credit_balances: 'credit_balances',
+  credit_transactions: 'credit_transactions'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1407,6 +1409,10 @@ export const Ai_chatsScalarFieldEnum = {
   provider: 'provider',
   model: 'model',
   request_type: 'request_type',
+  input_tokens: 'input_tokens',
+  output_tokens: 'output_tokens',
+  total_tokens: 'total_tokens',
+  credits_charged: 'credits_charged',
   ai_chat_template: 'ai_chat_template'
 } as const
 
@@ -1772,6 +1778,32 @@ export const Usage_countersScalarFieldEnum = {
 } as const
 
 export type Usage_countersScalarFieldEnum = (typeof Usage_countersScalarFieldEnum)[keyof typeof Usage_countersScalarFieldEnum]
+
+
+export const Credit_balancesScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  period: 'period',
+  credits_used: 'credits_used',
+  credits_allowance: 'credits_allowance',
+  extra_credits: 'extra_credits'
+} as const
+
+export type Credit_balancesScalarFieldEnum = (typeof Credit_balancesScalarFieldEnum)[keyof typeof Credit_balancesScalarFieldEnum]
+
+
+export const Credit_transactionsScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  amount: 'amount',
+  balance_after: 'balance_after',
+  operation: 'operation',
+  description: 'description',
+  metadata: 'metadata',
+  created_at: 'created_at'
+} as const
+
+export type Credit_transactionsScalarFieldEnum = (typeof Credit_transactionsScalarFieldEnum)[keyof typeof Credit_transactionsScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -504,3 +504,13 @@ export type credit_purchases = Prisma.credit_purchasesModel
  * 
  */
 export type usage_counters = Prisma.usage_countersModel
+/**
+ * Model credit_balances
+ * 
+ */
+export type credit_balances = Prisma.credit_balancesModel
+/**
+ * Model credit_transactions
+ * 
+ */
+export type credit_transactions = Prisma.credit_transactionsModel

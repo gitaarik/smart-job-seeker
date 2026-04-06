@@ -38,10 +38,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: {
         user_id: user.id,
-        pack_type: pack.type,
+        stripe_price_id: priceId,
       },
-      success_url: `${baseUrl}/dashboard/billing?success=credits`,
-      cancel_url: `${baseUrl}/dashboard/billing`,
+      success_url: `${baseUrl}/dashboard/billing/usage?success=credits`,
+      cancel_url: `${baseUrl}/dashboard/billing/usage`,
     });
 
     return json({ url: session.url });

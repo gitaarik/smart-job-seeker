@@ -6,7 +6,7 @@ import { jobPreferencesPatchSchema, jobPreferencesSchema, parseBody } from "$lib
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const { profile_id, job_types, experience_levels, work_location, locations, remote_only, match_community_jobs } =
+  const { profile_id, job_types, experience_levels, work_location, locations, remote_only, match_community_jobs, community_max_age_days } =
     parseBody(jobPreferencesSchema, await request.json());
 
   // Verify the profile belongs to this user
@@ -33,6 +33,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     locations: locations && locations.length > 0 ? locations : null,
     ...(remote_only !== undefined && { remote_only }),
     ...(match_community_jobs !== undefined && { match_community_jobs }),
+    ...(community_max_age_days !== undefined && { community_max_age_days }),
     date_updated: new Date(),
   };
 
@@ -104,6 +105,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     data.remote_only = fields.remote_only;
   if (fields.match_community_jobs !== undefined)
     data.match_community_jobs = fields.match_community_jobs;
+  if (fields.community_max_age_days !== undefined)
+    data.community_max_age_days = fields.community_max_age_days;
 
   const result = await db.match_config.update({
     where: { id: existing.id },

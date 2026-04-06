@@ -390,6 +390,49 @@ function handleGeminiSystemMessageLimit(
 }
 
 /**
+ * Token usage from an LLM call
+ */
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+/**
+ * Result from an LLM call including content and token usage
+ */
+export interface CompletionResult {
+  content: string;
+  usage: TokenUsage | null;
+}
+
+/** Extract token usage from a LangChain AIMessage response */
+function extractTokenUsage(result: any): TokenUsage | null {
+  // LangChain stores usage in usage_metadata (standard) or response_metadata
+  const usage = result?.usage_metadata;
+  if (usage) {
+    return {
+      inputTokens: usage.input_tokens ?? 0,
+      outputTokens: usage.output_tokens ?? 0,
+      totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+    };
+  }
+
+  // Fallback: some providers put it in response_metadata
+  const respMeta = result?.response_metadata;
+  if (respMeta?.tokenUsage) {
+    const tu = respMeta.tokenUsage;
+    return {
+      inputTokens: tu.promptTokens ?? tu.input_tokens ?? 0,
+      outputTokens: tu.completionTokens ?? tu.output_tokens ?? 0,
+      totalTokens: tu.totalTokens ?? tu.total_tokens ?? 0,
+    };
+  }
+
+  return null;
+}
+
+/**
  * Generate chat completion using LangChain
  */
 async function generateWithLangChain(
@@ -398,7 +441,7 @@ async function generateWithLangChain(
   maxTokens: number,
   temperature: number,
   structuredOutput?: StructuredOutputConfig,
-): Promise<string> {
+): Promise<CompletionResult> {
   const provider = config.llmProvider;
 
   try {
@@ -554,9 +597,10 @@ async function generateWithLangChain(
         }
 
         // Validate against Zod schema
+        const usage = extractTokenUsage(result);
         try {
           const validated = zodSchema.parse(normalizedParsed);
-          return JSON.stringify(validated);
+          return { content: JSON.stringify(validated), usage };
         } catch (zodError) {
           const errorMsg = zodError instanceof Error
             ? zodError.message
@@ -569,14 +613,16 @@ async function generateWithLangChain(
         }
       }
 
-      // For other providers, use withStructuredOutput
+      // For other providers, use withStructuredOutput (includeRaw for token usage)
       const structuredModel = chatModel.withStructuredOutput(zodSchema, {
         name: structuredOutput.name,
+        includeRaw: true,
       });
 
-      const result = await structuredModel.invoke(langChainMessages);
+      const { raw, parsed: result } = await structuredModel.invoke(langChainMessages);
+      const usage = extractTokenUsage(raw);
       try {
-        return JSON.stringify(result);
+        return { content: JSON.stringify(result), usage };
       } catch (stringifyError) {
         const errorMsg = stringifyError instanceof Error
           ? stringifyError.message
@@ -597,6 +643,7 @@ async function generateWithLangChain(
     // Regular text completion
     const result = await chatModel.invoke(langChainMessages);
     const responseContent = result.content;
+    const usage = extractTokenUsage(result);
 
     if (typeof responseContent !== "string") {
       throw new Error("Expected string response from LangChain model");
@@ -606,10 +653,58 @@ async function generateWithLangChain(
       throw new Error(`No content returned from ${provider}`);
     }
 
-    return responseContent;
+    return { content: responseContent, usage };
   } catch (error) {
     handleLLMError(error, provider, model);
   }
+}
+
+/**
+ * Generate chat completion with token usage tracking.
+ * Returns both the content and token usage for credit billing.
+ */
+export async function generateChatCompletionTracked(
+  messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
+): Promise<CompletionResult> {
+  const {
+    model = config.llmModel,
+    maxTokens = 8192,
+    temperature = 0.7,
+    structuredOutput,
+  } = options;
+
+  // Check cache first (cached = no usage, already billed)
+  const cacheKey = generateCacheKey(messages, options);
+  const cachedResponse = llmCache.get(cacheKey, model);
+
+  if (cachedResponse) {
+    return { content: cachedResponse, usage: null };
+  }
+
+  // Make completion request with retry logic
+  const result = await withRetry(
+    async () => {
+      return await generateWithLangChain(
+        messages,
+        model,
+        maxTokens,
+        temperature,
+        structuredOutput,
+      );
+    },
+    {
+      maxAttempts: config.retryMaxAttempts,
+      initialDelay: config.retryInitialDelay,
+      maxDelay: config.retryMaxDelay,
+      shouldRetry: isRetryableError,
+    },
+  );
+
+  // Cache the raw content
+  llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
+
+  return result;
 }
 
 /**
@@ -634,66 +729,23 @@ export async function generateChatCompletion(
   messages: ChatMessage[],
   options: ChatCompletionOptions = {},
 ): Promise<string> {
-  const {
-    model = config.llmModel,
-    maxTokens = 8192,
-    temperature = 0.7,
-    structuredOutput,
-  } = options;
-
-  // Check cache first
-  const cacheKey = generateCacheKey(messages, options);
-  const cachedResponse = llmCache.get(cacheKey, model);
-
-  if (cachedResponse) {
-    if (structuredOutput) {
-      return JSON.parse(cachedResponse);
-    }
-    return cachedResponse;
-  }
-
-  // Make completion request with retry logic
-  const content = await withRetry(
-    async () => {
-      return await generateWithLangChain(
-        messages,
-        model,
-        maxTokens,
-        temperature,
-        structuredOutput,
-      );
-    },
-    {
-      maxAttempts: config.retryMaxAttempts,
-      initialDelay: config.retryInitialDelay,
-      maxDelay: config.retryMaxDelay,
-      shouldRetry: isRetryableError,
-    },
-  );
+  const result = await generateChatCompletionTracked(messages, options);
 
   // Parse JSON if structuredOutput was provided
-  if (structuredOutput) {
+  if (options.structuredOutput) {
     try {
-      const parsed = JSON.parse(content);
-
-      // Cache the raw response
-      llmCache.set(cacheKey, content, model, config.llmCacheTTL);
-
-      return parsed;
+      return JSON.parse(result.content);
     } catch (error) {
-      const parseError = new Error(
+      const model = options.model ?? config.llmModel;
+      throw new Error(
         `Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
           error instanceof Error ? error.message : String(error)
-        }\nResponse was: ${content.substring(0, 500)}${
-          content.length > 500 ? "..." : ""
+        }\nResponse was: ${result.content.substring(0, 500)}${
+          result.content.length > 500 ? "..." : ""
         }`,
       );
-      throw parseError;
     }
   }
 
-  // Cache the successful response
-  llmCache.set(cacheKey, content, model, config.llmCacheTTL);
-
-  return content;
+  return result.content;
 }

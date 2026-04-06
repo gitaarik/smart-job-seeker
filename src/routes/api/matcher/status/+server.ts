@@ -42,12 +42,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   });
 
   const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
+  const communityMaxAgeDays = (matchConfig as Record<string, unknown> | null)?.community_max_age_days as number | null ?? null;
 
   // Run all queries in parallel
   const [counts, eligibleUnmatched, matcherState, matcherAlive, recentMatches] = await Promise
     .all([
-      getMatchCounts(profileId, matchCommunityJobs),
-      getEligibleUnmatchedCount(profileId, matchCommunityJobs, matchConfig),
+      getMatchCounts(profileId, matchCommunityJobs, communityMaxAgeDays),
+      getEligibleUnmatchedCount(profileId, matchCommunityJobs, matchConfig ? { ...matchConfig, community_max_age_days: communityMaxAgeDays } : null),
       getMatcherState(profileId),
       isMatcherAlive(),
       db.job_matches.findMany({

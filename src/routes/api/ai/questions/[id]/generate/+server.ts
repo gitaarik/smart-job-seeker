@@ -3,7 +3,7 @@ import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
-import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
+import { requireCredits } from "$lib/server/billing/credits";
 
 export const POST: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     return json({ success: false, message: "Question not found" }, { status: 404 });
   }
 
-  await requireUsage(user.id, "ai_generations");
+  await requireCredits(user.id, 5);
 
   const result = await generateApplicationQuestionAnswer(questionId);
 
@@ -31,6 +31,5 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     return json(result, { status: 422 });
   }
 
-  await incrementUsage(user.id, "ai_generations");
   return json(result);
 };

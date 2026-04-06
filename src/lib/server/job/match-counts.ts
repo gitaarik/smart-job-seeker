@@ -23,11 +23,24 @@ export interface MatchCounts {
 /**
  * Build FROM + WHERE fragments scoped by match_community_jobs setting.
  * When match_community_jobs is off, only jobs imported by this profile are visible.
+ * When community_max_age_days is set, community jobs older than that are excluded
+ * (own-imported jobs are always included regardless of age).
  */
-export function buildVisibilityScope(profileId: number, matchCommunityJobs: boolean) {
+export function buildVisibilityScope(
+  profileId: number,
+  matchCommunityJobs: boolean,
+  communityMaxAgeDays?: number | null,
+) {
   const ownershipFilter = matchCommunityJobs
     ? Prisma.empty
     : Prisma.sql`AND ji.id IS NOT NULL`;
+
+  // When community matching is on with an age limit, include:
+  // - all own-imported jobs (ji.id IS NOT NULL), regardless of age
+  // - community jobs only if created within the age window
+  const ageFilter = matchCommunityJobs && communityMaxAgeDays
+    ? Prisma.sql`AND (ji.id IS NOT NULL OR j.date_created >= NOW() - MAKE_INTERVAL(days => ${communityMaxAgeDays}))`
+    : Prisma.empty;
 
   return {
     from: Prisma.sql`
@@ -35,7 +48,8 @@ export function buildVisibilityScope(profileId: number, matchCommunityJobs: bool
       LEFT JOIN job_importers ji ON j.id = ji.job AND ji.profile = ${profileId}`,
     where: Prisma.sql`
       WHERE j.status != 'archived'
-      ${ownershipFilter}`,
+      ${ownershipFilter}
+      ${ageFilter}`,
   };
 }
 
@@ -46,8 +60,9 @@ export function buildVisibilityScope(profileId: number, matchCommunityJobs: bool
 export async function getMatchCounts(
   profileId: number,
   matchCommunityJobs: boolean,
+  communityMaxAgeDays?: number | null,
 ): Promise<MatchCounts> {
-  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs);
+  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, communityMaxAgeDays);
 
   const result = await db.$queryRaw<{
     total: number;
@@ -88,7 +103,7 @@ export async function getMatchCounts(
 export async function getEligibleUnmatchedCount(
   profileId: number,
   matchCommunityJobs: boolean,
-  matchConfig: { work_location: unknown; job_types: unknown } | null,
+  matchConfig: { work_location: unknown; job_types: unknown; community_max_age_days?: number | null } | null,
 ): Promise<number> {
   const workLocations = matchConfig?.work_location as string[] | null;
   const jobTypes = matchConfig?.job_types as string[] | null;
@@ -98,7 +113,7 @@ export async function getEligibleUnmatchedCount(
     return 0;
   }
 
-  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs);
+  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, matchConfig?.community_max_age_days);
   const eligibilityFilter = buildEligibilityFilter(
     { work_location: workLocations, job_types: jobTypes },
     profileSkills,
@@ -114,4 +129,35 @@ export async function getEligibleUnmatchedCount(
   `;
 
   return result[0]?.cnt ?? 0;
+}
+
+/**
+ * Count unmatched community jobs for multiple time windows at once.
+ * Returns a map of { days: count } for the given windows, plus null for "all time".
+ * Only counts community jobs (excludes own-imported jobs from the count).
+ */
+export async function getCommunityJobCountsByWindow(
+  profileId: number,
+  windows: (number | null)[],
+): Promise<Map<number | null, number>> {
+  const result = await db.$queryRaw<{ days: number | null; cnt: number }[]>`
+    SELECT
+      w.days,
+      COUNT(DISTINCT j.id)::int AS cnt
+    FROM UNNEST(${windows.map((w) => w ?? -1)}::int[]) AS w(days)
+    LEFT JOIN jobs j ON j.status != 'archived'
+      AND j.id NOT IN (SELECT ji.job FROM job_importers ji WHERE ji.profile = ${profileId})
+      AND (w.days = -1 OR j.date_created >= NOW() - MAKE_INTERVAL(days => w.days))
+    LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+    WHERE jm.id IS NULL
+    GROUP BY w.days
+    ORDER BY w.days
+  `;
+
+  const map = new Map<number | null, number>();
+  for (const row of result) {
+    const key = row.days === -1 ? null : row.days;
+    map.set(key, row.cnt);
+  }
+  return map;
 }

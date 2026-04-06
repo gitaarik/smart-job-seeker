@@ -97,7 +97,7 @@ export const actions: Actions = {
       const text = await extractTextFromFile(buffer, file.type);
 
       // Parse with LLM
-      const parsedData = await parseResumeWithLLM(text);
+      const parsedData = await parseResumeWithLLM(text, user.id);
 
       return {
         success: true,

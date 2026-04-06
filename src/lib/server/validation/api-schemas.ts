@@ -50,6 +50,7 @@ export const jobPreferencesSchema = z.object({
   locations: z.array(z.string()).optional().nullable(),
   remote_only: z.boolean().optional(),
   match_community_jobs: z.boolean().optional(),
+  community_max_age_days: z.number().int().positive().nullable().optional(),
 });
 
 export const jobPreferencesPatchSchema = z.object({
@@ -60,6 +61,7 @@ export const jobPreferencesPatchSchema = z.object({
   locations: z.array(z.string()).optional().nullable(),
   remote_only: z.boolean().optional(),
   match_community_jobs: z.boolean().optional(),
+  community_max_age_days: z.number().int().positive().nullable().optional(),
 });
 
 // Platform create

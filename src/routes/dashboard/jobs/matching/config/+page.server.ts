@@ -41,6 +41,7 @@ export const load: PageServerLoad = async ({ parent }) => {
           locations: (config.locations as string[]) || [],
           remote_only: config.remote_only,
           match_community_jobs: config.match_community_jobs,
+          community_max_age_days: (config as Record<string, unknown>).community_max_age_days as number | null ?? null,
         }
       : null,
     options: {

@@ -127,7 +127,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   try {
     const text = await extractTextFromFile(buffer, mimeType);
-    const parsedData = await parseResumeWithLLM(text);
+    const parsedData = await parseResumeWithLLM(text, user.id);
 
     await logImportEvent(user, "parse", {
       fileName,

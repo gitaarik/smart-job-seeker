@@ -9,6 +9,7 @@ import type { PlanId } from "./plans";
 export interface ActiveSubscription {
   plan: PlanId;
   status: string;
+  currentPeriodStart: Date | null;
   currentPeriodEnd: Date | null;
   cancelAtPeriodEnd: boolean;
   stripeSubscriptionId: string | null;
@@ -32,6 +33,7 @@ export async function getActiveSubscription(
     return {
       plan: "free",
       status: "active",
+      currentPeriodStart: null,
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
       stripeSubscriptionId: null,
@@ -41,6 +43,7 @@ export async function getActiveSubscription(
   return {
     plan: sub.plan as PlanId,
     status: sub.status,
+    currentPeriodStart: sub.current_period_start,
     currentPeriodEnd: sub.current_period_end,
     cancelAtPeriodEnd: sub.cancel_at_period_end,
     stripeSubscriptionId: sub.stripe_subscription_id,

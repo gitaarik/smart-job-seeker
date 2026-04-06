@@ -220,8 +220,34 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex flex-col gap-2 mt-4 items-start">
-          <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col gap-2 mt-4 sm:items-start">
+          {#if data.existingApplication}
+            <a
+              href="/dashboard/applications/{data.existingApplication.id}"
+              class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-success)] bg-[var(--dash-success-light)] text-[var(--dash-success)] hover:bg-[var(--dash-success)] hover:text-white transition-colors whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
+              View Application
+              <span class="text-xs capitalize">({data.existingApplication.status})</span>
+            </a>
+          {:else}
+            <form
+              method="POST"
+              action="?/startApplication"
+              use:enhance
+              class="w-full sm:w-auto"
+            >
+              <button
+                type="submit"
+                class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
+                Start Application
+              </button>
+            </form>
+          {/if}
+
+          <div class="flex items-center gap-2">
             <form
               method="POST"
               action={isSaved ? "?/unsaveJob" : "?/saveJob"}
@@ -232,12 +258,13 @@
                   isSaving = false;
                 };
               }}
+              class="flex-1 sm:flex-initial"
             >
               <button
                 type="submit"
                 disabled={isSaving}
                 class="
-                  flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {isSaved
+                  w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {isSaved
                   ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
                   : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'} disabled:opacity-50
                 "
@@ -259,13 +286,13 @@
                   await update();
                 };
               }}
-              class="inline"
+              class="flex-1 sm:flex-initial"
             >
               <input type="hidden" name="status" value="rejected" />
               <button
                 type="submit"
                 class="
-                  flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {jobStatus === 'rejected'
+                  w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {jobStatus === 'rejected'
                   ? 'bg-red-500 text-white border-red-500'
                   : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
                 "
@@ -275,45 +302,20 @@
                 Not Interested
               </button>
             </form>
-
-            {#if job.source_url}
-              <a
-                href={job.source_url}
-                target="_blank"
-                rel="noopener"
-                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-                Source
-              </a>
-            {/if}
-
-            {#if data.existingApplication}
-              <a
-                href="/dashboard/applications/{data.existingApplication.id}"
-                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-success)] bg-[var(--dash-success-light)] text-[var(--dash-success)] hover:bg-[var(--dash-success)] hover:text-white transition-colors whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
-                View Application
-                <span class="text-xs capitalize">({data.existingApplication.status})</span>
-              </a>
-            {:else}
-              <form
-                method="POST"
-                action="?/startApplication"
-                use:enhance
-              >
-                <button
-                  type="submit"
-                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-primary)] text-[var(--dash-primary)] hover:bg-[var(--dash-primary)] hover:text-white transition-colors whitespace-nowrap"
-                >
-                  <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
-                  Start Application
-                </button>
-              </form>
-            {/if}
           </div>
         </div>
+
+        {#if job.source_url}
+          <a
+            href={job.source_url}
+            target="_blank"
+            rel="noopener"
+            class="text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5 truncate mt-4"
+          >
+            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+            <span class="truncate">{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}</span>
+          </a>
+        {/if}
       </Card>
 
       <!-- Salary & Details -->

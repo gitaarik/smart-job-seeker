@@ -30,6 +30,10 @@ export type Ai_chatsAvgAggregateOutputType = {
   id: number | null
   profile: number | null
   followup_to: number | null
+  input_tokens: number | null
+  output_tokens: number | null
+  total_tokens: number | null
+  credits_charged: number | null
   ai_chat_template: number | null
 }
 
@@ -37,6 +41,10 @@ export type Ai_chatsSumAggregateOutputType = {
   id: number | null
   profile: number | null
   followup_to: number | null
+  input_tokens: number | null
+  output_tokens: number | null
+  total_tokens: number | null
+  credits_charged: number | null
   ai_chat_template: number | null
 }
 
@@ -54,6 +62,10 @@ export type Ai_chatsMinAggregateOutputType = {
   provider: string | null
   model: string | null
   request_type: string | null
+  input_tokens: number | null
+  output_tokens: number | null
+  total_tokens: number | null
+  credits_charged: number | null
   ai_chat_template: number | null
 }
 
@@ -71,6 +83,10 @@ export type Ai_chatsMaxAggregateOutputType = {
   provider: string | null
   model: string | null
   request_type: string | null
+  input_tokens: number | null
+  output_tokens: number | null
+  total_tokens: number | null
+  credits_charged: number | null
   ai_chat_template: number | null
 }
 
@@ -89,6 +105,10 @@ export type Ai_chatsCountAggregateOutputType = {
   provider: number
   model: number
   request_type: number
+  input_tokens: number
+  output_tokens: number
+  total_tokens: number
+  credits_charged: number
   ai_chat_template: number
   _all: number
 }
@@ -98,6 +118,10 @@ export type Ai_chatsAvgAggregateInputType = {
   id?: true
   profile?: true
   followup_to?: true
+  input_tokens?: true
+  output_tokens?: true
+  total_tokens?: true
+  credits_charged?: true
   ai_chat_template?: true
 }
 
@@ -105,6 +129,10 @@ export type Ai_chatsSumAggregateInputType = {
   id?: true
   profile?: true
   followup_to?: true
+  input_tokens?: true
+  output_tokens?: true
+  total_tokens?: true
+  credits_charged?: true
   ai_chat_template?: true
 }
 
@@ -122,6 +150,10 @@ export type Ai_chatsMinAggregateInputType = {
   provider?: true
   model?: true
   request_type?: true
+  input_tokens?: true
+  output_tokens?: true
+  total_tokens?: true
+  credits_charged?: true
   ai_chat_template?: true
 }
 
@@ -139,6 +171,10 @@ export type Ai_chatsMaxAggregateInputType = {
   provider?: true
   model?: true
   request_type?: true
+  input_tokens?: true
+  output_tokens?: true
+  total_tokens?: true
+  credits_charged?: true
   ai_chat_template?: true
 }
 
@@ -157,6 +193,10 @@ export type Ai_chatsCountAggregateInputType = {
   provider?: true
   model?: true
   request_type?: true
+  input_tokens?: true
+  output_tokens?: true
+  total_tokens?: true
+  credits_charged?: true
   ai_chat_template?: true
   _all?: true
 }
@@ -262,6 +302,10 @@ export type Ai_chatsGroupByOutputType = {
   provider: string | null
   model: string | null
   request_type: string | null
+  input_tokens: number | null
+  output_tokens: number | null
+  total_tokens: number | null
+  credits_charged: number | null
   ai_chat_template: number | null
   _count: Ai_chatsCountAggregateOutputType | null
   _avg: Ai_chatsAvgAggregateOutputType | null
@@ -303,6 +347,10 @@ export type ai_chatsWhereInput = {
   provider?: Prisma.StringNullableFilter<"ai_chats"> | string | null
   model?: Prisma.StringNullableFilter<"ai_chats"> | string | null
   request_type?: Prisma.StringNullableFilter<"ai_chats"> | string | null
+  input_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  output_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  total_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  credits_charged?: Prisma.IntNullableFilter<"ai_chats"> | number | null
   ai_chat_template?: Prisma.IntNullableFilter<"ai_chats"> | number | null
   ai_chat_templates?: Prisma.XOR<Prisma.Ai_chat_templatesNullableScalarRelationFilter, Prisma.ai_chat_templatesWhereInput> | null
   ai_chats?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
@@ -330,6 +378,10 @@ export type ai_chatsOrderByWithRelationInput = {
   provider?: Prisma.SortOrderInput | Prisma.SortOrder
   model?: Prisma.SortOrderInput | Prisma.SortOrder
   request_type?: Prisma.SortOrderInput | Prisma.SortOrder
+  input_tokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  output_tokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  total_tokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  credits_charged?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_templates?: Prisma.ai_chat_templatesOrderByWithRelationInput
   ai_chats?: Prisma.ai_chatsOrderByWithRelationInput
@@ -360,6 +412,10 @@ export type ai_chatsWhereUniqueInput = Prisma.AtLeast<{
   provider?: Prisma.StringNullableFilter<"ai_chats"> | string | null
   model?: Prisma.StringNullableFilter<"ai_chats"> | string | null
   request_type?: Prisma.StringNullableFilter<"ai_chats"> | string | null
+  input_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  output_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  total_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  credits_charged?: Prisma.IntNullableFilter<"ai_chats"> | number | null
   ai_chat_template?: Prisma.IntNullableFilter<"ai_chats"> | number | null
   ai_chat_templates?: Prisma.XOR<Prisma.Ai_chat_templatesNullableScalarRelationFilter, Prisma.ai_chat_templatesWhereInput> | null
   ai_chats?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
@@ -387,6 +443,10 @@ export type ai_chatsOrderByWithAggregationInput = {
   provider?: Prisma.SortOrderInput | Prisma.SortOrder
   model?: Prisma.SortOrderInput | Prisma.SortOrder
   request_type?: Prisma.SortOrderInput | Prisma.SortOrder
+  input_tokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  output_tokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  total_tokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  credits_charged?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ai_chatsCountOrderByAggregateInput
   _avg?: Prisma.ai_chatsAvgOrderByAggregateInput
@@ -413,6 +473,10 @@ export type ai_chatsScalarWhereWithAggregatesInput = {
   provider?: Prisma.StringNullableWithAggregatesFilter<"ai_chats"> | string | null
   model?: Prisma.StringNullableWithAggregatesFilter<"ai_chats"> | string | null
   request_type?: Prisma.StringNullableWithAggregatesFilter<"ai_chats"> | string | null
+  input_tokens?: Prisma.IntNullableWithAggregatesFilter<"ai_chats"> | number | null
+  output_tokens?: Prisma.IntNullableWithAggregatesFilter<"ai_chats"> | number | null
+  total_tokens?: Prisma.IntNullableWithAggregatesFilter<"ai_chats"> | number | null
+  credits_charged?: Prisma.IntNullableWithAggregatesFilter<"ai_chats"> | number | null
   ai_chat_template?: Prisma.IntNullableWithAggregatesFilter<"ai_chats"> | number | null
 }
 
@@ -428,6 +492,10 @@ export type ai_chatsCreateInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -454,6 +522,10 @@ export type ai_chatsUncheckedCreateInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -475,6 +547,10 @@ export type ai_chatsUpdateInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -501,6 +577,10 @@ export type ai_chatsUncheckedUpdateInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -525,6 +605,10 @@ export type ai_chatsCreateManyInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
 }
 
@@ -540,6 +624,10 @@ export type ai_chatsUpdateManyMutationInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ai_chatsUncheckedUpdateManyInput = {
@@ -557,6 +645,10 @@ export type ai_chatsUncheckedUpdateManyInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
@@ -590,6 +682,10 @@ export type ai_chatsCountOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   model?: Prisma.SortOrder
   request_type?: Prisma.SortOrder
+  input_tokens?: Prisma.SortOrder
+  output_tokens?: Prisma.SortOrder
+  total_tokens?: Prisma.SortOrder
+  credits_charged?: Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrder
 }
 
@@ -597,6 +693,10 @@ export type ai_chatsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   followup_to?: Prisma.SortOrder
+  input_tokens?: Prisma.SortOrder
+  output_tokens?: Prisma.SortOrder
+  total_tokens?: Prisma.SortOrder
+  credits_charged?: Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrder
 }
 
@@ -614,6 +714,10 @@ export type ai_chatsMaxOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   model?: Prisma.SortOrder
   request_type?: Prisma.SortOrder
+  input_tokens?: Prisma.SortOrder
+  output_tokens?: Prisma.SortOrder
+  total_tokens?: Prisma.SortOrder
+  credits_charged?: Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrder
 }
 
@@ -631,6 +735,10 @@ export type ai_chatsMinOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   model?: Prisma.SortOrder
   request_type?: Prisma.SortOrder
+  input_tokens?: Prisma.SortOrder
+  output_tokens?: Prisma.SortOrder
+  total_tokens?: Prisma.SortOrder
+  credits_charged?: Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrder
 }
 
@@ -638,6 +746,10 @@ export type ai_chatsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   followup_to?: Prisma.SortOrder
+  input_tokens?: Prisma.SortOrder
+  output_tokens?: Prisma.SortOrder
+  total_tokens?: Prisma.SortOrder
+  credits_charged?: Prisma.SortOrder
   ai_chat_template?: Prisma.SortOrder
 }
 
@@ -875,6 +987,10 @@ export type ai_chatsCreateWithoutApplication_letters_application_letters_ai_chat
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -900,6 +1016,10 @@ export type ai_chatsUncheckedCreateWithoutApplication_letters_application_letter
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
@@ -936,6 +1056,10 @@ export type ai_chatsUpdateWithoutApplication_letters_application_letters_ai_chat
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -961,6 +1085,10 @@ export type ai_chatsUncheckedUpdateWithoutApplication_letters_application_letter
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
@@ -981,6 +1109,10 @@ export type ai_chatsCreateWithoutLetter_versions_letter_versions_ai_chatToai_cha
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -1006,6 +1138,10 @@ export type ai_chatsUncheckedCreateWithoutLetter_versions_letter_versions_ai_cha
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -1042,6 +1178,10 @@ export type ai_chatsUpdateWithoutLetter_versions_letter_versions_ai_chatToai_cha
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -1067,6 +1207,10 @@ export type ai_chatsUncheckedUpdateWithoutLetter_versions_letter_versions_ai_cha
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -1087,6 +1231,10 @@ export type ai_chatsCreateWithoutApplication_questions_application_questions_ai_
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -1112,6 +1260,10 @@ export type ai_chatsUncheckedCreateWithoutApplication_questions_application_ques
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -1148,6 +1300,10 @@ export type ai_chatsUpdateWithoutApplication_questions_application_questions_ai_
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -1173,6 +1329,10 @@ export type ai_chatsUncheckedUpdateWithoutApplication_questions_application_ques
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -1193,6 +1353,10 @@ export type ai_chatsCreateWithoutJob_matchesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -1218,6 +1382,10 @@ export type ai_chatsUncheckedCreateWithoutJob_matchesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -1254,6 +1422,10 @@ export type ai_chatsUpdateWithoutJob_matchesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -1279,6 +1451,10 @@ export type ai_chatsUncheckedUpdateWithoutJob_matchesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -1299,6 +1475,10 @@ export type ai_chatsCreateWithoutJobsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -1324,6 +1504,10 @@ export type ai_chatsUncheckedCreateWithoutJobsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -1360,6 +1544,10 @@ export type ai_chatsUpdateWithoutJobsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -1385,6 +1573,10 @@ export type ai_chatsUncheckedUpdateWithoutJobsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -1405,6 +1597,10 @@ export type ai_chatsCreateWithoutProfilesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
@@ -1429,6 +1625,10 @@ export type ai_chatsUncheckedCreateWithoutProfilesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -1482,6 +1682,10 @@ export type ai_chatsScalarWhereInput = {
   provider?: Prisma.StringNullableFilter<"ai_chats"> | string | null
   model?: Prisma.StringNullableFilter<"ai_chats"> | string | null
   request_type?: Prisma.StringNullableFilter<"ai_chats"> | string | null
+  input_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  output_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  total_tokens?: Prisma.IntNullableFilter<"ai_chats"> | number | null
+  credits_charged?: Prisma.IntNullableFilter<"ai_chats"> | number | null
   ai_chat_template?: Prisma.IntNullableFilter<"ai_chats"> | number | null
 }
 
@@ -1497,6 +1701,10 @@ export type ai_chatsCreateWithoutOther_ai_chatsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatsInput
@@ -1522,6 +1730,10 @@ export type ai_chatsUncheckedCreateWithoutOther_ai_chatsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
@@ -1547,6 +1759,10 @@ export type ai_chatsCreateWithoutAi_chatsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_templates?: Prisma.ai_chat_templatesCreateNestedOneWithoutAi_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatsInput
@@ -1571,6 +1787,10 @@ export type ai_chatsUncheckedCreateWithoutAi_chatsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
@@ -1613,6 +1833,10 @@ export type ai_chatsUpdateWithoutOther_ai_chatsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatsNestedInput
@@ -1638,6 +1862,10 @@ export type ai_chatsUncheckedUpdateWithoutOther_ai_chatsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
@@ -1674,6 +1902,10 @@ export type ai_chatsCreateWithoutAi_chat_templatesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chats?: Prisma.ai_chatsCreateNestedOneWithoutOther_ai_chatsInput
   other_ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutAi_chatsInput
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatsInput
@@ -1699,6 +1931,10 @@ export type ai_chatsUncheckedCreateWithoutAi_chat_templatesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutAi_chatsInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
@@ -1747,6 +1983,10 @@ export type ai_chatsCreateManyProfilesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
 }
 
@@ -1762,6 +2002,10 @@ export type ai_chatsUpdateWithoutProfilesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
@@ -1786,6 +2030,10 @@ export type ai_chatsUncheckedUpdateWithoutProfilesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -1809,6 +2057,10 @@ export type ai_chatsUncheckedUpdateManyWithoutProfilesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
@@ -1826,6 +2078,10 @@ export type ai_chatsCreateManyAi_chatsInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
   ai_chat_template?: number | null
 }
 
@@ -1841,6 +2097,10 @@ export type ai_chatsUpdateWithoutAi_chatsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_templates?: Prisma.ai_chat_templatesUpdateOneWithoutAi_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatsNestedInput
@@ -1865,6 +2125,10 @@ export type ai_chatsUncheckedUpdateWithoutAi_chatsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
@@ -1888,6 +2152,10 @@ export type ai_chatsUncheckedUpdateManyWithoutAi_chatsInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_template?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
@@ -1906,6 +2174,10 @@ export type ai_chatsCreateManyAi_chat_templatesInput = {
   provider?: string | null
   model?: string | null
   request_type?: string | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  total_tokens?: number | null
+  credits_charged?: number | null
 }
 
 export type ai_chatsUpdateWithoutAi_chat_templatesInput = {
@@ -1920,6 +2192,10 @@ export type ai_chatsUpdateWithoutAi_chat_templatesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chats?: Prisma.ai_chatsUpdateOneWithoutOther_ai_chatsNestedInput
   other_ai_chats?: Prisma.ai_chatsUpdateManyWithoutAi_chatsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatsNestedInput
@@ -1945,6 +2221,10 @@ export type ai_chatsUncheckedUpdateWithoutAi_chat_templatesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutAi_chatsNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
@@ -1968,6 +2248,10 @@ export type ai_chatsUncheckedUpdateManyWithoutAi_chat_templatesInput = {
   provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  input_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  output_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  total_tokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  credits_charged?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -2061,6 +2345,10 @@ export type ai_chatsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   provider?: boolean
   model?: boolean
   request_type?: boolean
+  input_tokens?: boolean
+  output_tokens?: boolean
+  total_tokens?: boolean
+  credits_charged?: boolean
   ai_chat_template?: boolean
   ai_chat_templates?: boolean | Prisma.ai_chats$ai_chat_templatesArgs<ExtArgs>
   ai_chats?: boolean | Prisma.ai_chats$ai_chatsArgs<ExtArgs>
@@ -2089,6 +2377,10 @@ export type ai_chatsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   provider?: boolean
   model?: boolean
   request_type?: boolean
+  input_tokens?: boolean
+  output_tokens?: boolean
+  total_tokens?: boolean
+  credits_charged?: boolean
   ai_chat_template?: boolean
   ai_chat_templates?: boolean | Prisma.ai_chats$ai_chat_templatesArgs<ExtArgs>
   ai_chats?: boolean | Prisma.ai_chats$ai_chatsArgs<ExtArgs>
@@ -2110,6 +2402,10 @@ export type ai_chatsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   provider?: boolean
   model?: boolean
   request_type?: boolean
+  input_tokens?: boolean
+  output_tokens?: boolean
+  total_tokens?: boolean
+  credits_charged?: boolean
   ai_chat_template?: boolean
   ai_chat_templates?: boolean | Prisma.ai_chats$ai_chat_templatesArgs<ExtArgs>
   ai_chats?: boolean | Prisma.ai_chats$ai_chatsArgs<ExtArgs>
@@ -2131,10 +2427,14 @@ export type ai_chatsSelectScalar = {
   provider?: boolean
   model?: boolean
   request_type?: boolean
+  input_tokens?: boolean
+  output_tokens?: boolean
+  total_tokens?: boolean
+  credits_charged?: boolean
   ai_chat_template?: boolean
 }
 
-export type ai_chatsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "profile" | "system_prompt" | "user_prompt" | "full_prompt" | "response" | "context" | "followup_to" | "error" | "provider" | "model" | "request_type" | "ai_chat_template", ExtArgs["result"]["ai_chats"]>
+export type ai_chatsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "profile" | "system_prompt" | "user_prompt" | "full_prompt" | "response" | "context" | "followup_to" | "error" | "provider" | "model" | "request_type" | "input_tokens" | "output_tokens" | "total_tokens" | "credits_charged" | "ai_chat_template", ExtArgs["result"]["ai_chats"]>
 export type ai_chatsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat_templates?: boolean | Prisma.ai_chats$ai_chat_templatesArgs<ExtArgs>
   ai_chats?: boolean | Prisma.ai_chats$ai_chatsArgs<ExtArgs>
@@ -2186,6 +2486,10 @@ export type $ai_chatsPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     provider: string | null
     model: string | null
     request_type: string | null
+    input_tokens: number | null
+    output_tokens: number | null
+    total_tokens: number | null
+    credits_charged: number | null
     ai_chat_template: number | null
   }, ExtArgs["result"]["ai_chats"]>
   composites: {}
@@ -2633,6 +2937,10 @@ export interface ai_chatsFieldRefs {
   readonly provider: Prisma.FieldRef<"ai_chats", 'String'>
   readonly model: Prisma.FieldRef<"ai_chats", 'String'>
   readonly request_type: Prisma.FieldRef<"ai_chats", 'String'>
+  readonly input_tokens: Prisma.FieldRef<"ai_chats", 'Int'>
+  readonly output_tokens: Prisma.FieldRef<"ai_chats", 'Int'>
+  readonly total_tokens: Prisma.FieldRef<"ai_chats", 'Int'>
+  readonly credits_charged: Prisma.FieldRef<"ai_chats", 'Int'>
   readonly ai_chat_template: Prisma.FieldRef<"ai_chats", 'Int'>
 }
     

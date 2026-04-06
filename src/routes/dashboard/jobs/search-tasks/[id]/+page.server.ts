@@ -3,6 +3,7 @@ import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { config } from "$lib/server/config";
+import { getActiveSubscription } from "$lib/server/billing/subscription";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -91,6 +92,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     select: { id: true },
   });
 
+  const subscription = user ? await getActiveSubscription(user.id) : null;
+
   return {
     searchTask,
     platformCredentials,
@@ -98,6 +101,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     isStaff,
     canEditPlatformUrls,
     hasOtherRunning: !!otherRunning,
+    subscriptionRenewDate: subscription?.currentPeriodEnd ?? null,
     browserCountryCode: profileData?.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
     browserProvider: config.browserProvider,

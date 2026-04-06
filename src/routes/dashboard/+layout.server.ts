@@ -3,6 +3,7 @@ import { requireAuth } from "$lib/server/auth/guards";
 import { redirect } from "@sveltejs/kit";
 import { getProfilesByUserId } from "$lib/server/profile/user-profiles";
 import { dbDirect as db } from "$lib/server/db";
+import { getBalance } from "$lib/server/billing/credits";
 
 export const load: LayoutServerLoad = async (event) => {
   // Require authentication - redirects to /login?redirect=/dashboard
@@ -65,10 +66,13 @@ export const load: LayoutServerLoad = async (event) => {
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
+  const creditBalance = await getBalance(user.id);
+
   return {
     user,
     profiles,
     selectedProfile,
     adminUser,
+    creditBalance,
   };
 };

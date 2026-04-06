@@ -18,11 +18,12 @@ import {
 import type { ResumeData } from "$lib/server/resume/types";
 import { uploadFileToDirectus } from "$lib/server/directus/files";
 import { logImportEvent } from "$lib/server/import-log";
-import { requireUsage, incrementUsage } from "$lib/server/billing/usage";
+import { requireCredits } from "$lib/server/billing/credits";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
-  await requireUsage(user.id, "resume_parses");
+  // AI resume parse costs ~3 credits; JSON import is free (handled separately below)
+  await requireCredits(user.id, 3);
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
@@ -61,7 +62,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       const parsedData = mapJsonResumeToInternal(jsonData);
 
       await logImportEvent(user, "parse", { fileName: file.name, fileFormat: "JSON Resume", parsedData, fileId: jsonFileId });
-      await incrementUsage(user.id, "resume_parses");
+  
 
       return json({
         success: true,
@@ -104,10 +105,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const text = await extractTextFromFile(buffer, file.type);
 
     // Parse with LLM
-    const parsedData = await parseResumeWithLLM(text);
+    const parsedData = await parseResumeWithLLM(text, user.id);
 
     await logImportEvent(user, "parse", { fileName: file.name, fileFormat: getFormatName(file.type), parsedData, fileId });
-    await incrementUsage(user.id, "resume_parses");
+
 
     return json({
       success: true,

@@ -1,6 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { Prisma } from "../../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
@@ -36,10 +35,25 @@ export const load: PageServerLoad = async ({ parent }) => {
     pendingInvites.map((v) => v.identifier.replace("invite:", "")),
   );
 
+  // Fetch active subscriptions to show plan per user
+  const activeSubs = await db.subscriptions.findMany({
+    where: { status: { in: ["active", "trialing", "past_due"] } },
+    orderBy: { date_created: "desc" },
+    select: { user_id: true, plan: true },
+  });
+
+  const userPlanMap = new Map<string, string>();
+  for (const sub of activeSubs) {
+    if (!userPlanMap.has(sub.user_id)) {
+      userPlanMap.set(sub.user_id, sub.plan);
+    }
+  }
+
   const usersWithProfiles = users.map((u) => ({
     ...u,
     profileCount: profileCountMap.get(u.id) ?? 0,
     hasInvite: invitedEmails.has(u.email),
+    plan: userPlanMap.get(u.id) ?? "free",
   }));
 
   return { users: usersWithProfiles };
@@ -161,144 +175,6 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  send_invite: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
-
-    const formData = await request.formData();
-    const id = formData.get("id") as string;
-
-    if (!id) {
-      return fail(400, { error: "User ID is required" });
-    }
-
-    const user = await db.users.findUnique({ where: { id } });
-    if (!user) {
-      return fail(404, { error: "User not found" });
-    }
-
-    // Delete any existing invite for this email
-    await db.verifications.deleteMany({
-      where: { identifier: `invite:${user.email}` },
-    });
-
-    const token = crypto.randomUUID();
-    const inviteData = JSON.stringify({
-      token,
-      name: user.name || "",
-      is_approved: user.is_approved,
-      is_staff: user.is_staff,
-      is_admin: user.is_admin,
-    });
-
-    await db.verifications.create({
-      data: {
-        id: crypto.randomUUID(),
-        identifier: `invite:${user.email}`,
-        value: inviteData,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(),
-      },
-    });
-
-    const baseUrl = getEnv("SJS_APP_URL_HOST", "http://localhost:5173");
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "You're invited to Smart Job Seeker",
-        html: `
-          <h2>You've been invited!</h2>
-          <p>You've been invited to join Smart Job Seeker.</p>
-          <p>Click the link below to set up your account:</p>
-          <p><a href="${baseUrl}/signup/invite?token=${token}">Accept Invitation & Set Password</a></p>
-          <p>This invitation expires in 7 days.</p>
-        `,
-      });
-    } catch (e: unknown) {
-      await db.verifications.deleteMany({
-        where: { identifier: `invite:${user.email}` },
-      });
-      const message = e instanceof Error ? e.message : "Failed to send email";
-      return fail(500, { error: `Invite email failed: ${message}` });
-    }
-
-    return { success: true };
-  },
-
-  update: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
-
-    const formData = await request.formData();
-    const id = formData.get("id") as string;
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const is_approved = formData.get("is_approved") === "on";
-    const is_staff = formData.get("is_staff") === "on";
-    const is_admin = formData.get("is_admin") === "on";
-
-    if (!id) {
-      return fail(400, { error: "User ID is required" });
-    }
-
-    if (!email?.trim()) {
-      return fail(400, { error: "Email is required" });
-    }
-
-    // Prevent admin from removing their own admin flag
-    if (id === locals.user.id && !is_admin) {
-      return fail(400, { error: "Cannot remove your own admin status" });
-    }
-
-    const existing = await db.users.findUnique({ where: { id } });
-    if (!existing) {
-      return fail(404, { error: "User not found" });
-    }
-
-    await db.users.update({
-      where: { id },
-      data: {
-        name: name?.trim() || null,
-        email: email.trim(),
-        is_approved,
-        is_staff,
-        is_admin,
-        updatedAt: new Date(),
-      },
-    });
-
-    return { success: true };
-  },
-
-  impersonate: async ({ request, locals, cookies }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
-
-    const formData = await request.formData();
-    const id = formData.get("id") as string;
-
-    if (!id) {
-      return fail(400, { error: "User ID is required" });
-    }
-
-    const targetUser = await db.users.findUnique({ where: { id } });
-    if (!targetUser) {
-      return fail(404, { error: "User not found" });
-    }
-
-    cookies.set("sjs_impersonate", id, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60, // 1 hour
-    });
-
-    redirect(302, "/dashboard");
-  },
-
   stop_impersonate: async ({ locals, cookies }) => {
     if (!locals.user?.is_admin && !locals.adminUser?.is_admin) {
       return fail(403, { error: "Admin access required" });
@@ -306,77 +182,5 @@ export const actions: Actions = {
 
     cookies.delete("sjs_impersonate", { path: "/" });
     redirect(302, "/dashboard/admin/users");
-  },
-
-  clear_matches: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
-
-    const formData = await request.formData();
-    const userId = formData.get("id") as string;
-
-    if (!userId) {
-      return fail(400, { error: "User ID is required" });
-    }
-
-    const user = await db.users.findUnique({ where: { id: userId } });
-    if (!user) {
-      return fail(404, { error: "User not found" });
-    }
-
-    // Get all profile IDs for this user
-    const profiles = await db.profiles.findMany({
-      where: { user_id: userId },
-      select: { id: true },
-    });
-
-    if (profiles.length === 0) {
-      return fail(400, { error: "User has no profiles" });
-    }
-
-    const profileIds = profiles.map((p) => p.id);
-
-    // Delete match rows so jobs get re-scored from scratch
-    const result = await db.$queryRaw<{ cnt: bigint }[]>`
-      WITH deleted AS (
-        DELETE FROM job_matches
-        WHERE profile IN (${Prisma.join(profileIds)})
-        AND reasoning IS NOT NULL
-        RETURNING id
-      )
-      SELECT COUNT(*) as cnt FROM deleted
-    `;
-
-    return { success: true, clearedCount: Number(result[0]?.cnt ?? 0) };
-  },
-
-  delete: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
-
-    const formData = await request.formData();
-    const id = formData.get("id") as string;
-
-    if (!id) {
-      return fail(400, { error: "User ID is required" });
-    }
-
-    if (id === locals.user.id) {
-      return fail(400, { error: "Cannot delete your own account" });
-    }
-
-    const existing = await db.users.findUnique({ where: { id } });
-    if (!existing) {
-      return fail(404, { error: "User not found" });
-    }
-
-    // Delete sessions and accounts first (cascade)
-    await db.sessions.deleteMany({ where: { userId: id } });
-    await db.accounts.deleteMany({ where: { userId: id } });
-    await db.users.delete({ where: { id } });
-
-    return { success: true };
   },
 };

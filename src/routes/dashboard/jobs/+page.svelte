@@ -18,7 +18,6 @@
     faChevronLeft,
     faChevronRight,
     faLocationDot,
-    faMoneyBillWave,
     faSearch,
     faSitemap,
     faStar as faStarSolid,
@@ -34,7 +33,6 @@
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
   import ConfirmModal from "../profile/components/ConfirmModal.svelte";
-  import { formatJobType, formatWorkLocation, formatSalaryRange } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -323,16 +321,6 @@
       day: "numeric",
       year: "numeric",
     });
-  }
-
-  function formatSalary(
-    min: number | null,
-    max: number | null,
-    currency: string | null,
-    period: string | null,
-  ): string {
-    const result = formatSalaryRange(min, max, currency, period);
-    return result === "Not specified" ? "" : result;
   }
 
   function truncate(text: string | null, maxLength: number): string {
@@ -843,69 +831,13 @@
           onToggleRejected={(rejected) => toggleRejected(job.id, rejected)}
         >
           {#snippet expandedContent()}
-            <!-- Job Info Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {#if job.salary_min || job.salary_max}
-                <div>
-                  <p
-                    class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                  >
-                    Salary
-                  </p>
-                  <p
-                    class="font-medium text-[var(--dash-text)] flex items-center gap-1"
-                  >
-                    <FontAwesomeIcon
-                      icon={faMoneyBillWave}
-                      class="w-4 h-4 text-[var(--dash-success)]"
-                    />
-                    {formatSalary(
-                      job.salary_min,
-                      job.salary_max,
-                      job.salary_currency,
-                      job.salary_period,
-                    )}
-                  </p>
-                </div>
-              {/if}
-              {#if job.job_types && Array.isArray(job.job_types) && job.job_types.length > 0}
-                <div>
-                  <p
-                    class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                  >
-                    Job Type
-                  </p>
-                  <p class="font-medium text-[var(--dash-text)]">
-                    {job.job_types.map(formatJobType).join(", ")}
-                  </p>
-                </div>
-              {/if}
-              {#if job.work_location && Array.isArray(job.work_location) && job.work_location.length > 0}
-                <div>
-                  <p
-                    class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
-                  >
-                    Work Location
-                  </p>
-                  <p class="font-medium text-[var(--dash-text)]">
-                    {job.work_location.map(formatWorkLocation).join(", ")}
-                  </p>
-                </div>
-              {/if}
-            </div>
-
             <!-- Skills -->
             {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
-              <div>
+              <div class="mt-1">
                 <p
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
                 >
                   Required Skills
-                  {#if getMatch(job.id)?.skill_match_percentage}
-                    <span class="text-[var(--dash-info)] font-medium ml-2 normal-case">
-                      {getMatch(job.id)!.skill_match_percentage}% match
-                    </span>
-                  {/if}
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}
@@ -942,7 +874,7 @@
             {/if}
 
             {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
-              <div>
+              <div class="mt-1">
                 <p
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
                 >
@@ -984,7 +916,7 @@
 
             <!-- Description Preview -->
             {#if job.job_description}
-              <div>
+              <div class="mt-1">
                 <p
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
                 >
