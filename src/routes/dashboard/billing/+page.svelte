@@ -17,7 +17,7 @@
     explorer: { icon: faCompass, color: "text-green-500" },
     seeker: { icon: faBinoculars, color: "text-blue-500" },
     hunter: { icon: faCrosshairs, color: "text-amber-500" },
-    agency: { icon: faBuilding, color: "text-purple-500" },
+    contractor: { icon: faBuilding, color: "text-purple-500" },
   };
 
   let { data } = $props();

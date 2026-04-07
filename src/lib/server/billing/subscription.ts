@@ -11,7 +11,8 @@ const LEGACY_PLAN_MAP: Record<string, PlanId> = {
   free: "explorer",
   starter: "seeker",
   pro: "hunter",
-  power: "agency",
+  power: "contractor",
+  agency: "contractor",
 };
 
 function normalizePlanId(plan: string): PlanId {

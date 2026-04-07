@@ -7,7 +7,7 @@
 
 import { getEnv } from "$lib/tools/get-env";
 
-export type PlanId = "explorer" | "seeker" | "hunter" | "agency";
+export type PlanId = "explorer" | "seeker" | "hunter" | "contractor";
 
 export interface PlanLimits {
   profiles: number;
@@ -45,7 +45,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     creditsPerMonth: 15000,
     extraCredits: true,
   },
-  agency: {
+  contractor: {
     profiles: -1,
     resumeVersions: -1,
     creditsPerMonth: 50000,
@@ -69,7 +69,7 @@ function loadStripePriceIds(): Record<string, string> {
   return {
     seeker: getEnv("SJS_STRIPE_PRICE_SEEKER", "") as string,
     hunter: getEnv("SJS_STRIPE_PRICE_HUNTER", "") as string,
-    agency: getEnv("SJS_STRIPE_PRICE_AGENCY", "") as string,
+    contractor: getEnv("SJS_STRIPE_PRICE_CONTRACTOR", "") as string,
     credits: getEnv("SJS_STRIPE_PRICE_CREDITS", "") as string,
   };
 }
@@ -114,12 +114,12 @@ export function getPlans(): PlanDefinition[] {
       ],
     },
     {
-      id: "agency",
-      name: "Agency",
-      description: "For recruiters, agencies, and power users",
+      id: "contractor",
+      name: "Contractor",
+      description: "For freelancers, recruiters, and agencies",
       priceMonthly: 3900,
-      limits: PLAN_LIMITS.agency,
-      stripePriceId: prices.agency || null,
+      limits: PLAN_LIMITS.contractor,
+      stripePriceId: prices.contractor || null,
       usageExample: [
         "Import & match ~4,000 jobs",
         "200+ AI-assisted applications",

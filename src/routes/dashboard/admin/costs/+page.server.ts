@@ -137,7 +137,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     explorer: 0,
     seeker: 9,
     hunter: 19,
-    agency: 39,
+    contractor: 39,
   };
 
   const planStats = Array.from(planStatsMap.values())
@@ -151,7 +151,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       revenueUsd: s.users.size * (planPrices[s.plan] ?? 0),
     }))
     .sort((a, b) => {
-      const order = ["explorer", "seeker", "hunter", "agency"];
+      const order = ["explorer", "seeker", "hunter", "contractor"];
       return order.indexOf(a.plan) - order.indexOf(b.plan);
     });
 

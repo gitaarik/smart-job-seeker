@@ -53,7 +53,7 @@
     explorer: { icon: faCompass, color: "text-green-500", activeColor: "text-green-200" },
     seeker: { icon: faBinoculars, color: "text-blue-500", activeColor: "text-blue-200" },
     hunter: { icon: faCrosshairs, color: "text-amber-500", activeColor: "text-amber-200" },
-    agency: { icon: faBuilding, color: "text-purple-500", activeColor: "text-purple-200" },
+    contractor: { icon: faBuilding, color: "text-purple-500", activeColor: "text-purple-200" },
   };
 
   interface CreditBalance {
