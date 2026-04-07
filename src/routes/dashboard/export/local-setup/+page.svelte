@@ -37,11 +37,11 @@
   async function pollTunnelStatus() {
     try {
       const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
-      const data = await res.json();
-      tunnelConnected = data.connected === true;
-      tunnelVersion = data.clientVersion || null;
-      tunnelConnectedAt = data.connectedAt || null;
-      tunnelStatus = data.connected ? "connected" : "disconnected";
+      const status = await res.json();
+      tunnelConnected = status.connected === true;
+      tunnelVersion = status.clientVersion || null;
+      tunnelConnectedAt = status.connectedAt || null;
+      tunnelStatus = status.connected ? "connected" : "disconnected";
     } catch {
       tunnelStatus = "unavailable";
       tunnelConnected = false;
