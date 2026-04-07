@@ -92,7 +92,7 @@ export function getPlans(): PlanDefinition[] {
     {
       id: "seeker",
       name: "Seeker",
-      description: "For occasional job seekers and students",
+      description: "For occasional job seekers",
       priceMonthly: 900,
       limits: PLAN_LIMITS.seeker,
       stripePriceId: prices.seeker || null,
