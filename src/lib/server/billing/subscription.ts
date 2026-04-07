@@ -31,7 +31,7 @@ export async function getActiveSubscription(
 
   if (!sub) {
     return {
-      plan: "free",
+      plan: "explorer",
       status: "active",
       currentPeriodStart: null,
       currentPeriodEnd: null,

@@ -6,18 +6,18 @@
     faArrowUp,
     faArrowDown,
     faCheck,
-    faSeedling,
-    faRocket,
-    faStar,
-    faBolt,
+    faCompass,
+    faBinoculars,
+    faCrosshairs,
+    faBuilding,
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
   const planIcons: Record<string, { icon: IconDefinition; color: string }> = {
-    free: { icon: faSeedling, color: "text-green-500" },
-    starter: { icon: faRocket, color: "text-blue-500" },
-    pro: { icon: faStar, color: "text-amber-500" },
-    power: { icon: faBolt, color: "text-purple-500" },
+    explorer: { icon: faCompass, color: "text-green-500" },
+    seeker: { icon: faBinoculars, color: "text-blue-500" },
+    hunter: { icon: faCrosshairs, color: "text-amber-500" },
+    agency: { icon: faBuilding, color: "text-purple-500" },
   };
 
   let { data } = $props();
@@ -98,7 +98,7 @@
           {/if}
         </div>
       </div>
-      {#if subscription.plan !== "free"}
+      {#if subscription.plan !== "explorer"}
         <button
           onclick={openPortal}
           disabled={loading === "portal"}
@@ -158,7 +158,7 @@
             <div class="w-full px-3 py-1.5 text-sm text-center text-[var(--dash-primary)] font-medium bg-[var(--dash-primary)]/10 rounded-lg">
               Current Plan
             </div>
-          {:else if plan.id === "free"}
+          {:else if plan.id === "explorer"}
             <!-- Can't "buy" free — they cancel via portal -->
           {:else if plan.stripePriceId}
             <button

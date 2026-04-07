@@ -109,7 +109,7 @@ export const actions: Actions = {
 
     const userId = params.id;
 
-    if (plan === "free") {
+    if (plan === "explorer") {
       // Cancel any active subscription
       await db.subscriptions.updateMany({
         where: {

@@ -11,10 +11,13 @@
     faChartBar,
     faChartLine,
     faChevronDown,
-    faBolt,
+    faBinoculars,
+    faBuilding,
     faChevronRight,
     faCode,
     faCog,
+    faCompass,
+    faCrosshairs,
     faCommentDots,
     faComments,
     faDatabase,
@@ -32,11 +35,8 @@
     faPalette,
     faPaperPlane,
     faRobot,
-    faRocket,
     faSearch,
-    faSeedling,
     faShieldAlt,
-    faStar,
     faSliders,
     faStickyNote,
     faTimes,
@@ -50,10 +50,10 @@
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
   const planIcons: Record<string, { icon: IconDefinition; color: string; activeColor: string }> = {
-    free: { icon: faSeedling, color: "text-green-500", activeColor: "text-green-200" },
-    starter: { icon: faRocket, color: "text-blue-500", activeColor: "text-blue-200" },
-    pro: { icon: faStar, color: "text-amber-500", activeColor: "text-amber-200" },
-    power: { icon: faBolt, color: "text-purple-500", activeColor: "text-purple-200" },
+    explorer: { icon: faCompass, color: "text-green-500", activeColor: "text-green-200" },
+    seeker: { icon: faBinoculars, color: "text-blue-500", activeColor: "text-blue-200" },
+    hunter: { icon: faCrosshairs, color: "text-amber-500", activeColor: "text-amber-200" },
+    agency: { icon: faBuilding, color: "text-purple-500", activeColor: "text-purple-200" },
   };
 
   interface CreditBalance {
@@ -66,7 +66,7 @@
 
   let { creditBalance }: { creditBalance?: CreditBalance } = $props();
 
-  let planIcon = $derived(planIcons[creditBalance?.plan ?? 'free'] ?? planIcons.free);
+  let planIcon = $derived(planIcons[creditBalance?.plan ?? 'explorer'] ?? planIcons.explorer);
 
   interface MenuItem {
     label: string;

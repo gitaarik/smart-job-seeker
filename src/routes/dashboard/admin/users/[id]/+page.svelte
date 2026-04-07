@@ -328,7 +328,7 @@
                 {/each}
               </select>
             </div>
-            {#if subPlan !== "free"}
+            {#if subPlan !== "explorer"}
               <div>
                 <label
                   for="sub-expires"

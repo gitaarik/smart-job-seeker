@@ -112,7 +112,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       user_id: customer.user_id,
       stripe_subscription_id: subscription.id,
       stripe_price_id: priceId || "",
-      plan: plan || "free",
+      plan: plan || "explorer",
       status: subscription.status,
       current_period_start: new Date(periodStart * 1000),
       current_period_end: new Date(periodEnd * 1000),
@@ -120,7 +120,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     },
     update: {
       stripe_price_id: priceId || "",
-      plan: plan || "free",
+      plan: plan || "explorer",
       status: subscription.status,
       current_period_start: new Date(periodStart * 1000),
       current_period_end: new Date(periodEnd * 1000),

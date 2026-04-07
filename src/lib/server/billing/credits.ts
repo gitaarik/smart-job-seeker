@@ -41,7 +41,7 @@ async function getUserPeriod(userId: string): Promise<{
   const sub = await getActiveSubscription(userId);
 
   // Paid user with a Stripe billing cycle
-  if (sub.plan !== "free" && sub.currentPeriodStart) {
+  if (sub.plan !== "explorer" && sub.currentPeriodStart) {
     return {
       periodKey: formatPeriodDate(sub.currentPeriodStart),
       periodEnd: sub.currentPeriodEnd ?? new Date(sub.currentPeriodStart.getTime() + FREE_PERIOD_DAYS * 86400000),

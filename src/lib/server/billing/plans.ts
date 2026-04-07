@@ -7,7 +7,7 @@
 
 import { getEnv } from "$lib/tools/get-env";
 
-export type PlanId = "free" | "starter" | "pro" | "power";
+export type PlanId = "explorer" | "seeker" | "hunter" | "agency";
 
 export interface PlanLimits {
   profiles: number;
@@ -27,25 +27,25 @@ export interface PlanDefinition {
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
-  free: {
+  explorer: {
     profiles: 2,
     resumeVersions: -1,
     creditsPerMonth: 1000,
     extraCredits: true,
   },
-  starter: {
+  seeker: {
     profiles: 5,
     resumeVersions: -1,
     creditsPerMonth: 5000,
     extraCredits: true,
   },
-  pro: {
+  hunter: {
     profiles: 20,
     resumeVersions: -1,
     creditsPerMonth: 15000,
     extraCredits: true,
   },
-  power: {
+  agency: {
     profiles: -1,
     resumeVersions: -1,
     creditsPerMonth: 50000,
@@ -67,9 +67,9 @@ export const CREDIT_COST_EXAMPLES = {
 
 function loadStripePriceIds(): Record<string, string> {
   return {
-    starter: getEnv("SJS_STRIPE_PRICE_STARTER", "") as string,
-    pro: getEnv("SJS_STRIPE_PRICE_PRO", "") as string,
-    power: getEnv("SJS_STRIPE_PRICE_POWER", "") as string,
+    seeker: getEnv("SJS_STRIPE_PRICE_SEEKER", "") as string,
+    hunter: getEnv("SJS_STRIPE_PRICE_HUNTER", "") as string,
+    agency: getEnv("SJS_STRIPE_PRICE_AGENCY", "") as string,
     credits: getEnv("SJS_STRIPE_PRICE_CREDITS", "") as string,
   };
 }
@@ -78,11 +78,11 @@ export function getPlans(): PlanDefinition[] {
   const prices = loadStripePriceIds();
   return [
     {
-      id: "free",
-      name: "Free",
-      description: "Get started with basic features",
+      id: "explorer",
+      name: "Explorer",
+      description: "Try it out, explore how it works",
       priceMonthly: 0,
-      limits: PLAN_LIMITS.free,
+      limits: PLAN_LIMITS.explorer,
       stripePriceId: null,
       usageExample: [
         "Import & match ~80 jobs",
@@ -90,36 +90,36 @@ export function getPlans(): PlanDefinition[] {
       ],
     },
     {
-      id: "starter",
-      name: "Starter",
-      description: "For active job seekers",
+      id: "seeker",
+      name: "Seeker",
+      description: "For occasional job seekers and students",
       priceMonthly: 900,
-      limits: PLAN_LIMITS.starter,
-      stripePriceId: prices.starter || null,
+      limits: PLAN_LIMITS.seeker,
+      stripePriceId: prices.seeker || null,
       usageExample: [
         "Import & match ~400 jobs",
         "50+ AI-generated cover letters",
       ],
     },
     {
-      id: "pro",
-      name: "Pro",
-      description: "For serious job seekers",
+      id: "hunter",
+      name: "Hunter",
+      description: "For active, daily job seekers",
       priceMonthly: 1900,
-      limits: PLAN_LIMITS.pro,
-      stripePriceId: prices.pro || null,
+      limits: PLAN_LIMITS.hunter,
+      stripePriceId: prices.hunter || null,
       usageExample: [
         "Import & match ~1,200 jobs",
         "100+ AI-generated letters & questions",
       ],
     },
     {
-      id: "power",
-      name: "Power",
-      description: "For power users and freelancers",
+      id: "agency",
+      name: "Agency",
+      description: "For recruiters, agencies, and power users",
       priceMonthly: 3900,
-      limits: PLAN_LIMITS.power,
-      stripePriceId: prices.power || null,
+      limits: PLAN_LIMITS.agency,
+      stripePriceId: prices.agency || null,
       usageExample: [
         "Import & match ~4,000 jobs",
         "Hundreds of AI generations",

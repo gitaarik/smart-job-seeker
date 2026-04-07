@@ -134,10 +134,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Plan revenue (monthly price in USD)
   const planPrices: Record<string, number> = {
-    free: 0,
-    starter: 9,
-    pro: 19,
-    power: 39,
+    explorer: 0,
+    seeker: 9,
+    hunter: 19,
+    agency: 39,
   };
 
   const planStats = Array.from(planStatsMap.values())
@@ -151,7 +151,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       revenueUsd: s.users.size * (planPrices[s.plan] ?? 0),
     }))
     .sort((a, b) => {
-      const order = ["free", "starter", "pro", "power"];
+      const order = ["explorer", "seeker", "hunter", "agency"];
       return order.indexOf(a.plan) - order.indexOf(b.plan);
     });
 
