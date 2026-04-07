@@ -35,6 +35,11 @@ export function getEnv(
   // Option 3: Required (default behavior) - throw if missing/empty
   const value = process.env[envVar];
   if (!value) {
+    // During SvelteKit's postbuild analysis, all server modules are imported
+    // to analyse routes. Return a placeholder instead of crashing the build.
+    if (process.env.SJS_BUILDING === "true") {
+      return `__build_placeholder_${envVar}__`;
+    }
     throw new Error(`Environment variable ${envVar} is not set`);
   }
   return value;

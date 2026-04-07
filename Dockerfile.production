@@ -22,10 +22,11 @@ RUN npm ci --ignore-scripts --include=dev --legacy-peer-deps
 COPY . .
 RUN npx svelte-kit sync
 
-# Prisma generate and vite build import server modules that read env vars
-# at build time (postbuild analysis). Use dummy values — no real DB needed.
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV SJS_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# SvelteKit's postbuild analysis imports all server modules, triggering
+# getEnv() calls. SJS_BUILDING makes getEnv() return placeholders instead
+# of throwing. DATABASE_URL is needed by Prisma's datasource block.
+ENV SJS_BUILDING="true" \
+    DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 RUN npx vite build
