@@ -24,7 +24,7 @@ RUN npx svelte-kit sync
 
 # SvelteKit's postbuild analysis imports all server modules, triggering
 # getEnv() calls. SJS_BUILDING makes getEnv() return placeholders instead
-# of throwing. DATABASE_URL is needed by Prisma's datasource block.
+# of throwing. DATABASE_URL is needed by prisma.config.ts at build time.
 ENV SJS_BUILDING="true" \
     DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
@@ -52,6 +52,7 @@ COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build /app/generated ./generated
 COPY --from=build /app/scripts ./scripts
 
