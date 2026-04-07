@@ -10,6 +10,8 @@
     faCircle,
     faCopy,
     faDesktop,
+    faEye,
+    faEyeSlash,
     faKey,
     faPlus,
     faTimes,
@@ -30,6 +32,7 @@
   let newlyCreatedKey = $state<string | null>(null);
   let showNewKey = $state(false);
   let copiedKeyId = $state<number | null>(null);
+  let visibleKeyId = $state<number | null>(null);
   let errorMessage = $state<string | null>(null);
 
   // Tunnel status polling
@@ -387,35 +390,64 @@
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
         {#each apiKeys as key (key.id)}
-          <div class="flex items-center justify-between p-4">
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : 'bg-[var(--dash-success)]'}`}></div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <p class="font-medium text-[var(--dash-text)] truncate">{key.name}</p>
-                  {#if key.revoked}
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
-                      Revoked
-                    </span>
-                  {/if}
+          <div class="p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : 'bg-[var(--dash-success)]'}`}></div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <p class="font-medium text-[var(--dash-text)] truncate">{key.name}</p>
+                    {#if key.revoked}
+                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                        Revoked
+                      </span>
+                    {/if}
+                  </div>
+                  <p class="text-xs text-[var(--dash-text-muted)]">
+                    Created {formatDate(key.date_created)}
+                    {#if key.last_used}
+                      &middot; Last used {formatDate(key.last_used)}
+                    {/if}
+                  </p>
                 </div>
-                <p class="text-xs text-[var(--dash-text-muted)]">
-                  Created {formatDate(key.date_created)}
-                  {#if key.last_used}
-                    &middot; Last used {formatDate(key.last_used)}
-                  {/if}
-                </p>
+              </div>
+              <div class="flex items-center gap-1">
+                {#if key.key_plain && !key.revoked}
+                  <button
+                    type="button"
+                    onclick={() => { visibleKeyId = visibleKeyId === key.id ? null : key.id; }}
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                    title={visibleKeyId === key.id ? "Hide key" : "Show key"}
+                  >
+                    <FontAwesomeIcon icon={visibleKeyId === key.id ? faEyeSlash : faEye} class="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => copyToClipboard(key.key_plain, key.id)}
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                    title="Copy key"
+                  >
+                    <FontAwesomeIcon icon={copiedKeyId === key.id ? faCheck : faCopy} class="w-4 h-4 {copiedKeyId === key.id ? 'text-[var(--dash-success)]' : ''}" />
+                  </button>
+                {/if}
+                {#if !key.revoked}
+                  <button
+                    type="button"
+                    onclick={() => revokeApiKey(key.id)}
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                    title="Revoke key"
+                  >
+                    <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+                  </button>
+                {/if}
               </div>
             </div>
-            {#if !key.revoked}
-              <button
-                type="button"
-                onclick={() => revokeApiKey(key.id)}
-                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                title="Revoke key"
-              >
-                <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-              </button>
+            {#if visibleKeyId === key.id && key.key_plain}
+              <div class="mt-2 ml-5">
+                <code class="text-xs bg-[var(--dash-bg)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono select-all text-[var(--dash-text-secondary)]">
+                  {key.key_plain}
+                </code>
+              </div>
             {/if}
           </div>
         {/each}

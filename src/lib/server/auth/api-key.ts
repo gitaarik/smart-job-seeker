@@ -186,6 +186,7 @@ export async function createApiKey(
       profile: profileId,
       name,
       key_hash: hash,
+      key_plain: key,
       expires_at: expiresAt,
     },
     select: { id: true },
@@ -229,6 +230,7 @@ export async function listApiKeys(profileId: number) {
     select: {
       id: true,
       name: true,
+      key_plain: true,
       date_created: true,
       expires_at: true,
       last_used: true,

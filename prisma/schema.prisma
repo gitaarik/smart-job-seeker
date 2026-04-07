@@ -1048,6 +1048,7 @@ model api_keys {
   profile      Int
   name         String    @db.VarChar(255)
   key_hash     String    @unique @db.VarChar(64)
+  key_plain    String?   @db.VarChar(100)
   date_created DateTime? @default(now()) @db.Timestamptz(6)
   expires_at   DateTime? @db.Timestamptz(6)
   last_used    DateTime? @db.Timestamptz(6)
