@@ -6,6 +6,18 @@ import { dbDirect as db } from "$lib/server/db";
 import { getStripe } from "./stripe";
 import type { PlanId } from "./plans";
 
+/** Map legacy plan IDs (pre-v0.4.9) to current names */
+const LEGACY_PLAN_MAP: Record<string, PlanId> = {
+  free: "explorer",
+  starter: "seeker",
+  pro: "hunter",
+  power: "agency",
+};
+
+function normalizePlanId(plan: string): PlanId {
+  return LEGACY_PLAN_MAP[plan] ?? plan as PlanId;
+}
+
 export interface ActiveSubscription {
   plan: PlanId;
   status: string;
@@ -41,7 +53,7 @@ export async function getActiveSubscription(
   }
 
   return {
-    plan: sub.plan as PlanId,
+    plan: normalizePlanId(sub.plan),
     status: sub.status,
     currentPeriodStart: sub.current_period_start,
     currentPeriodEnd: sub.current_period_end,
