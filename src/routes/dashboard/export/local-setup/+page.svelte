@@ -262,7 +262,7 @@
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">3</span>
         <div>
           <p class="text-[var(--dash-text)]">Connect the desktop app</p>
-          <p>In the app, select the <strong>{typeof window !== 'undefined' && window.location.host.startsWith('dev2.') ? 'Dev' : 'Preview'}</strong> server and enter your API key.</p>
+          <p>In the app, select the <strong>{typeof window !== 'undefined' && window.location.host.startsWith('preview.') ? 'Preview' : 'Dev'}</strong> server and enter your API key.</p>
         </div>
       </li>
       <li class="flex gap-3">
