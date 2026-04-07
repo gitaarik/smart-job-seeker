@@ -30,7 +30,6 @@
   let newKeyName = $state("");
   let isCreating = $state(false);
   let newlyCreatedKey = $state<string | null>(null);
-  let showNewKey = $state(false);
   let copiedKeyId = $state<number | null>(null);
   let visibleKeyId = $state<number | null>(null);
   let errorMessage = $state<string | null>(null);
@@ -85,7 +84,6 @@
       }
 
       newlyCreatedKey = result.key;
-      showNewKey = false;
       newKeyName = "";
       showAddForm = false;
       await invalidateAll();
@@ -280,36 +278,12 @@
   <!-- Newly Created Key Banner -->
   {#if newlyCreatedKey}
     <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="font-medium text-[var(--dash-success)]">API Key Created</p>
-          <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
-            Copy this key now — it won't be shown again.
-          </p>
-          <div class="mt-2 flex items-center gap-2">
-            <code class="text-sm bg-[var(--dash-card)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono select-all">
-              {showNewKey ? newlyCreatedKey : '•'.repeat(20)}
-            </code>
-            <button
-              type="button"
-              onclick={() => { showNewKey = !showNewKey; }}
-              class="px-3 py-1.5 text-sm border border-[var(--dash-border)] text-[var(--dash-text-secondary)] rounded hover:bg-[var(--dash-bg)] transition-colors"
-            >
-              {showNewKey ? 'Hide' : 'Show'}
-            </button>
-            <button
-              type="button"
-              onclick={() => copyToClipboard(newlyCreatedKey!)}
-              class="px-3 py-1.5 text-sm bg-[var(--dash-success)] text-white rounded hover:opacity-90 transition-colors"
-            >
-              Copy
-            </button>
-          </div>
-        </div>
+      <div class="flex items-center justify-between">
+        <p class="font-medium text-[var(--dash-success)]">API key created. You can view and copy it from the list below.</p>
         <button
           type="button"
           onclick={() => { newlyCreatedKey = null; }}
-          class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+          class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] ml-4 flex-shrink-0"
         >
           <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
         </button>
