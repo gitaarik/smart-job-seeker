@@ -55,8 +55,6 @@ export interface AppConfig {
   redisPort: number;
 
   // Scraping
-  scrapeCooldownHours: number;
-  scrapeMaxRunsPerCooldown: number;
   browserProvider: string;
   defaultBrowserProvider: string;
   defaultMaxJobs: number | null;
@@ -161,8 +159,6 @@ function loadConfig(): AppConfig {
     redisPort: parseInt(getEnv("REDIS_PORT", "6379"), 10),
 
     // Scraping
-    scrapeCooldownHours: parseInt(getEnv("SJS_SCRAPE_COOLDOWN_HOURS", "6"), 10),
-    scrapeMaxRunsPerCooldown: parseInt(getEnv("SJS_SCRAPE_MAX_RUNS_PER_COOLDOWN", "1"), 10),
     browserProvider: getEnv("SJS_BROWSER_PROVIDER", "local"),
     defaultBrowserProvider: getEnv("SJS_DEFAULT_BROWSER_PROVIDER", "local"),
     defaultMaxJobs: (() => {

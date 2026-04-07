@@ -9,12 +9,7 @@ import {
   removeWaitingJob,
   removeActiveJob,
 } from "$lib/server/queue";
-import { config } from "$lib/server/config";
 import { requireCredits } from "$lib/server/billing/credits";
-
-// Rate limiting: minimum hours between scrapes (per job search)
-const COOLDOWN_HOURS = config.scrapeCooldownHours;
-const MAX_RUNS_PER_COOLDOWN = config.scrapeMaxRunsPerCooldown;
 
 /**
  * POST /api/search-tasks/[id]/run
@@ -26,7 +21,6 @@ const MAX_RUNS_PER_COOLDOWN = config.scrapeMaxRunsPerCooldown;
  * - { status: 'queued', runId: N } - Job has been queued
  * - { status: 'already_running' } - This search is already running
  * - { status: 'already_queued' } - This search is already in queue
- * - { status: 'rate_limited', recentRunCount, cooldownHours } - Too many recent runs
  */
 export const POST: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
@@ -51,24 +45,6 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   const isStaff = !!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
-
-  // Rate limiting: count recent runs within cooldown period
-  const cooldownSince = new Date(Date.now() - COOLDOWN_HOURS * 60 * 60 * 1000);
-  const recentRunCount = await db.search_task_runs.count({
-    where: {
-      search_task_id: searchTaskId,
-      started_at: { gte: cooldownSince },
-    },
-  });
-
-  if (recentRunCount >= MAX_RUNS_PER_COOLDOWN && !isStaff) {
-    return json({
-      status: "rate_limited",
-      recentRunCount,
-      cooldownHours: COOLDOWN_HOURS,
-      maxRuns: MAX_RUNS_PER_COOLDOWN,
-    });
-  }
 
   // Pre-check: user needs at least ~15 credits for a minimal scrape
   if (!isStaff) {
@@ -173,10 +149,6 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     runId: run.id,
     jobId: job.id,
     vncUrl: "/vnc/vnc.html?autoconnect=true",
-    // Include run count for staff awareness
-    ...(isStaff && recentRunCount >= MAX_RUNS_PER_COOLDOWN
-      ? { recentRunCount, cooldownHours: COOLDOWN_HOURS }
-      : {}),
   });
 };
 
