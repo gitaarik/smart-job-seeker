@@ -5,6 +5,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
+    faChevronDown,
+    faChevronUp,
     faCircle,
     faCopy,
     faDesktop,
@@ -13,6 +15,7 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -21,6 +24,7 @@
 
   let apiKeys = $state(data.apiKeys);
   let showAddForm = $state(false);
+  let showManualInstall = $state(false);
   let newKeyName = $state("");
   let isCreating = $state(false);
   let newlyCreatedKey = $state<string | null>(null);
@@ -192,35 +196,70 @@
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">1</span>
         <div>
-          <p class="text-[var(--dash-text)]">Create an API key below</p>
-          <p>This authenticates your desktop app with the server.</p>
+          <p class="text-[var(--dash-text)]">Install the desktop app</p>
+          <p>Download the installer for your platform from <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">GitHub Releases</a>:</p>
+          <div class="mt-2 space-y-1.5 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-[var(--dash-text-secondary)] w-16">macOS</span>
+              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.dmg</a>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[var(--dash-text-secondary)] w-16">Windows</span>
+              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.exe installer</a>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[var(--dash-text-secondary)] w-16">Linux</span>
+              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.deb</a>
+              <span class="text-[var(--dash-text-secondary)]">or</span>
+              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.AppImage</a>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">A compatible browser will be downloaded automatically on first launch.</p>
+
+          <!-- Manual install toggle -->
+          <button
+            type="button"
+            onclick={() => { showManualInstall = !showManualInstall; }}
+            class="mt-2 flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+          >
+            <FontAwesomeIcon icon={showManualInstall ? faChevronUp : faChevronDown} class="w-2.5 h-2.5" />
+            <span>Manual install from source</span>
+          </button>
+
+          {#if showManualInstall}
+            <div class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2">
+              <p>Requires <a href="https://nodejs.org/" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Node.js 20+</a> and <a href="https://www.rust-lang.org/tools/install" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Rust</a>. Clone the repo and build:</p>
+              <div class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5">
+                <div>git clone https://github.com/gitaarik/sjs-desktop.git</div>
+                <div>cd sjs-desktop</div>
+                <div>npm install && npm run ui:install</div>
+                <div>npm run tauri:build</div>
+              </div>
+              <p>The installer will be in <code class="bg-[var(--dash-card)] px-1 rounded">src-tauri/target/release/bundle/</code>.</p>
+            </div>
+          {/if}
+
+          <!-- Source code link -->
+          <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+            <a href="https://github.com/gitaarik/sjs-desktop" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors">
+              <FontAwesomeIcon icon={faGithub} class="w-3 h-3" />
+              <span>View on GitHub</span>
+            </a>
+          </p>
         </div>
       </li>
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">2</span>
         <div>
-          <p class="text-[var(--dash-text)]">Install the desktop app</p>
-          <p>Make sure you have <a href="https://www.google.com/chrome/" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Google Chrome</a> and <a href="https://nodejs.org/" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Node.js</a> installed, then run:</p>
-          <div class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 font-mono text-xs">
-            <code>npx sjs-desktop</code>
-          </div>
+          <p class="text-[var(--dash-text)]">Create an API key below</p>
+          <p>This authenticates your desktop app with the server.</p>
         </div>
       </li>
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">3</span>
         <div>
-          <p class="text-[var(--dash-text)]">Enter the server URL and API key</p>
-          <p>When prompted, enter:</p>
-          <div class="mt-2 space-y-1">
-            <div class="bg-[var(--dash-bg)] rounded-lg p-3 font-mono text-xs flex items-center gap-2">
-              <span class="text-[var(--dash-text-muted)]">Server URL:</span>
-              <code>wss://{typeof window !== 'undefined' ? window.location.host : 'smartjobseeker.com'}/tunnel</code>
-            </div>
-            <div class="bg-[var(--dash-bg)] rounded-lg p-3 font-mono text-xs flex items-center gap-2">
-              <span class="text-[var(--dash-text-muted)]">API key:</span>
-              <code>your-api-key-from-below</code>
-            </div>
-          </div>
+          <p class="text-[var(--dash-text)]">Connect the desktop app</p>
+          <p>In the app, select the <strong>{typeof window !== 'undefined' && window.location.host.startsWith('dev2.') ? 'Dev' : typeof window !== 'undefined' && window.location.host.startsWith('dev.') ? 'Preview' : 'Production'}</strong> server and enter your API key.</p>
         </div>
       </li>
       <li class="flex gap-3">
