@@ -1,7 +1,7 @@
 {
   "name": "smart-job-seeker",
   "private": true,
-  "version": "0.4.31",
+  "version": "0.4.32",
   "type": "module",
   "scripts": {
     "dev": "docker compose up",
