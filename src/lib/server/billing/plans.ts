@@ -86,7 +86,7 @@ export function getPlans(): PlanDefinition[] {
       stripePriceId: null,
       usageExample: [
         "Import & match ~80 jobs",
-        "10+ AI-generated cover letters",
+        "5+ AI-assisted applications",
       ],
     },
     {
@@ -98,7 +98,7 @@ export function getPlans(): PlanDefinition[] {
       stripePriceId: prices.seeker || null,
       usageExample: [
         "Import & match ~400 jobs",
-        "50+ AI-generated cover letters",
+        "20+ AI-assisted applications",
       ],
     },
     {
@@ -110,7 +110,7 @@ export function getPlans(): PlanDefinition[] {
       stripePriceId: prices.hunter || null,
       usageExample: [
         "Import & match ~1,200 jobs",
-        "100+ AI-generated letters & questions",
+        "50+ AI-assisted applications",
       ],
     },
     {
@@ -122,8 +122,7 @@ export function getPlans(): PlanDefinition[] {
       stripePriceId: prices.agency || null,
       usageExample: [
         "Import & match ~4,000 jobs",
-        "Hundreds of AI generations",
-        "Effectively unlimited usage",
+        "200+ AI-assisted applications",
       ],
     },
   ];

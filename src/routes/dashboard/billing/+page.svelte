@@ -126,7 +126,7 @@
               <FontAwesomeIcon icon={planIcons[plan.id].icon} class="w-4 h-4" />
               <h3 class="text-sm font-semibold">{plan.name}</h3>
             </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">{plan.description}</p>
+            <p class="text-xs text-[var(--dash-text-secondary)] mt-0.5">{plan.description}</p>
           </div>
 
           <div class="mb-4">
@@ -134,7 +134,7 @@
               <span class="text-2xl font-bold text-[var(--dash-text)]">Free</span>
             {:else}
               <span class="text-2xl font-bold text-[var(--dash-text)]">{formatPrice(plan.priceMonthly)}</span>
-              <span class="text-xs text-[var(--dash-text-muted)]">/month</span>
+              <span class="text-xs text-[var(--dash-text-secondary)]">/month</span>
             {/if}
           </div>
 
@@ -146,7 +146,7 @@
               <div class="text-[var(--dash-text)]">
                 <span class="font-semibold">{plan.limits.creditsPerMonth.toLocaleString()}</span> credits/mo
               </div>
-              <ul class="mt-1 ml-3 space-y-0.5 text-[var(--dash-text-muted)] list-disc">
+              <ul class="mt-1 ml-3 space-y-0.5 text-[var(--dash-text-secondary)] list-disc">
                 {#each plan.usageExample as example}
                   <li>{example}</li>
                 {/each}
