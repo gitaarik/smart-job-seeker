@@ -22,9 +22,10 @@ RUN npm ci --ignore-scripts --include=dev --legacy-peer-deps
 COPY . .
 RUN npx svelte-kit sync
 
-# Prisma generate only needs the schema (not a real DB), but the datasource
-# block requires DATABASE_URL to be set. Use a dummy value.
+# Prisma generate and vite build import server modules that read env vars
+# at build time (postbuild analysis). Use dummy values — no real DB needed.
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV SJS_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 RUN npx vite build
