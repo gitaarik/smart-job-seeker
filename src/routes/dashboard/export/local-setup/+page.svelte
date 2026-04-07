@@ -28,6 +28,7 @@
   let newKeyName = $state("");
   let isCreating = $state(false);
   let newlyCreatedKey = $state<string | null>(null);
+  let showNewKey = $state(false);
   let copiedKeyId = $state<number | null>(null);
   let errorMessage = $state<string | null>(null);
 
@@ -81,6 +82,7 @@
       }
 
       newlyCreatedKey = result.key;
+      showNewKey = false;
       newKeyName = "";
       showAddForm = false;
       await invalidateAll();
@@ -283,8 +285,15 @@
           </p>
           <div class="mt-2 flex items-center gap-2">
             <code class="text-sm bg-[var(--dash-card)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono select-all">
-              {newlyCreatedKey}
+              {showNewKey ? newlyCreatedKey : '•'.repeat(20)}
             </code>
+            <button
+              type="button"
+              onclick={() => { showNewKey = !showNewKey; }}
+              class="px-3 py-1.5 text-sm border border-[var(--dash-border)] text-[var(--dash-text-secondary)] rounded hover:bg-[var(--dash-bg)] transition-colors"
+            >
+              {showNewKey ? 'Hide' : 'Show'}
+            </button>
             <button
               type="button"
               onclick={() => copyToClipboard(newlyCreatedKey!)}
