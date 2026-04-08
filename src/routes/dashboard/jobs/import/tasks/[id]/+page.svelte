@@ -102,7 +102,7 @@
         method: "DELETE",
       });
       if (res.ok) {
-        goto("/dashboard/jobs/matching/import");
+        goto("/dashboard/jobs/import/tasks");
       }
     } finally {
       isDeleting = false;
@@ -1055,7 +1055,7 @@
   <!-- Header -->
   <div>
     <a
-      href="/dashboard/jobs/matching/import"
+      href="/dashboard/jobs/import/tasks"
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
@@ -1345,7 +1345,7 @@
             {#if desktopConnected}
               Desktop app connected
             {:else}
-              Desktop app not connected — <a href="/dashboard/jobs/matching/local-scraping" class="underline hover:text-amber-700">Setup guide</a>
+              Desktop app not connected — <a href="/dashboard/jobs/import/local-scraping" class="underline hover:text-amber-700">Setup guide</a>
             {/if}
           </div>
         {/if}

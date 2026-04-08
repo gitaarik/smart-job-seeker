@@ -8,10 +8,10 @@
   let { children }: { children: Snippet } = $props();
 
   const tabs = [
-    { label: "Job Import", href: "/dashboard/jobs/matching/import", icon: faSearch },
-    { label: "Match Config", href: "/dashboard/jobs/matching/config", icon: faSliders },
-    { label: "Match Progress", href: "/dashboard/jobs/matching/progress", icon: faChartBar },
-    { label: "Local Scraping", href: "/dashboard/jobs/matching/local-scraping", icon: faDesktop },
+    { label: "Job Import", href: "/dashboard/jobs/import/tasks", icon: faSearch },
+    { label: "Match Config", href: "/dashboard/jobs/import/config", icon: faSliders },
+    { label: "Match Progress", href: "/dashboard/jobs/import/progress", icon: faChartBar },
+    { label: "Local Scraping", href: "/dashboard/jobs/import/local-scraping", icon: faDesktop },
   ];
 
   function isTabActive(href: string): boolean {

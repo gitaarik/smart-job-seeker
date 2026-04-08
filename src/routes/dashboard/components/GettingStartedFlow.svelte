@@ -40,7 +40,7 @@
       description:
         "Tell us what you're looking for: job types, work arrangements, locations, and experience levels.",
       done: completeness.hasMatchConfig,
-      href: "/dashboard/jobs/matching/config",
+      href: "/dashboard/jobs/import/config",
       actionLabel: "Set Preferences",
     },
     {
@@ -49,7 +49,7 @@
       description:
         "Add search tasks that automatically scrape job boards for new listings matching your criteria.",
       done: hasSearchTasks,
-      href: "/dashboard/jobs/matching/import",
+      href: "/dashboard/jobs/import/tasks",
       actionLabel: "Add Search",
     },
     {

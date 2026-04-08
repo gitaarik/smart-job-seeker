@@ -84,7 +84,7 @@
       </div>
     </div>
     <a
-      href="/dashboard/jobs/matching/import"
+      href="/dashboard/jobs/import/tasks"
       class="px-2.5 py-1 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0"
     >
       {searchTasks.totalCount === 0 ? "Add" : "Manage"}
@@ -135,7 +135,7 @@
       {/each}
       {#if searchTasks.totalCount > 4}
         <a
-          href="/dashboard/jobs/matching/import"
+          href="/dashboard/jobs/import/tasks"
           class="text-xs text-[var(--dash-primary)] hover:underline"
         >
           +{searchTasks.totalCount - 4} more

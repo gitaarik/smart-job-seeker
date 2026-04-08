@@ -82,7 +82,7 @@
       children: [
         {
           label: "Import Jobs",
-          href: "/dashboard/jobs/matching",
+          href: "/dashboard/jobs/import",
           icon: faBullseye,
         },
         {
