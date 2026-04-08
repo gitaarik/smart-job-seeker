@@ -2,7 +2,7 @@ import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
-import { getSelectedProfileId } from "../../../profile/utils";
+import { getSelectedProfileId } from "../../../../profile/utils";
 import { getFileFromDirectus } from "$lib/server/directus/files";
 
 export const GET: RequestHandler = async ({ url, locals, cookies }) => {
