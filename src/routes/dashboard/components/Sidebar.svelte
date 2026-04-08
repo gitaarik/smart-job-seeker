@@ -81,8 +81,8 @@
       icon: faSearch,
       children: [
         {
-          label: "Search Tasks",
-          href: "/dashboard/jobs/search-tasks",
+          label: "Job Import",
+          href: "/dashboard/jobs/job-import",
           icon: faSearch,
         },
         {

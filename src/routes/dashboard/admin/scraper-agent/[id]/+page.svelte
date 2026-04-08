@@ -219,7 +219,7 @@
             {/if}
           </div>
           <a
-            href="/dashboard/jobs/search-tasks/{session.searchTaskId}"
+            href="/dashboard/jobs/job-import/{session.searchTaskId}"
             class="inline-flex items-center gap-1.5 text-sm text-[var(--dash-primary)] hover:underline"
           >
             {session.searchTaskName}

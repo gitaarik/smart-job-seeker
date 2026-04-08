@@ -131,7 +131,7 @@
     </div>
   {/if}
 
-  <!-- Search Tasks & Match Config -->
+  <!-- Job Import & Match Config -->
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     {#if searchTasks}
       <SearchTasksSummary {searchTasks} />

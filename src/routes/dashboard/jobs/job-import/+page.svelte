@@ -237,10 +237,10 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Search Tasks"
+    title="Job Import"
     icon={faSearch}
     showAddButton={!showAddForm && searchTasks.length > 0}
-    addLabel="Add Search"
+    addLabel="Add Import"
     onAdd={() => (showAddForm = true)}
   />
 
@@ -367,7 +367,7 @@
       {#each sortedSearchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
         <a
-          href="/dashboard/jobs/search-tasks/{search.id}"
+          href="/dashboard/jobs/job-import/{search.id}"
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
         >
           <div class="flex items-start gap-3">

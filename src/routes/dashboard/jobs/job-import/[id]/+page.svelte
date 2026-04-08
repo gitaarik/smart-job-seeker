@@ -102,7 +102,7 @@
         method: "DELETE",
       });
       if (res.ok) {
-        goto("/dashboard/jobs/search-tasks");
+        goto("/dashboard/jobs/job-import");
       }
     } finally {
       isDeleting = false;
@@ -1055,15 +1055,15 @@
   <!-- Header -->
   <div>
     <a
-      href="/dashboard/jobs/search-tasks"
+      href="/dashboard/jobs/job-import"
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">All Search Tasks</span>
+      <span class="text-sm">All Job Imports</span>
     </a>
   </div>
   <h1 class="text-xl font-semibold text-[var(--dash-text)]">
-    Search Task
+    Job Import
   </h1>
 
   <!-- Scrape Configuration -->

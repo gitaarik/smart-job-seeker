@@ -363,7 +363,7 @@
                   {/if}
                   <span class="text-xs font-medium {statusColor(run.status)} uppercase">{run.status}</span>
                   <a
-                    href="/dashboard/jobs/search-tasks/{run.searchTask.id}"
+                    href="/dashboard/jobs/job-import/{run.searchTask.id}"
                     class="text-sm font-medium text-[var(--dash-text)] hover:text-[var(--dash-primary)] truncate"
                   >
                     {run.searchTask.name}
