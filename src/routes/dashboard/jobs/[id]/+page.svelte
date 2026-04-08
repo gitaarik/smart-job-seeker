@@ -799,7 +799,7 @@
 <ConfirmModal
   isOpen={showRematchConfirm}
   title="Re-match Job"
-  message="This will re-run AI matching for this job, replacing the current match result. This uses AI credits."
+  message="This will re-run AI matching for this job, replacing the current match result. This uses AI usage."
   confirmLabel="Re-match"
   variant="primary"
   onCancel={() => (showRematchConfirm = false)}

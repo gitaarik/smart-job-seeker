@@ -11,7 +11,7 @@
   import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
   import type { ResumeData } from "$lib/server/resume/types";
   import { convertExportToResumeData } from "$lib/resume/convert-export";
-  import Card from "../../../components/Card.svelte";
+  import Card from "../../../../components/Card.svelte";
 
   interface Props {
     isLoading: boolean;

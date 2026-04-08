@@ -492,7 +492,7 @@
             {rematchType === "matched"
               ? "This will re-run AI matching for jobs that currently have a match score. Existing scores will be replaced."
               : "This will re-run AI matching for jobs that currently have no match."}
-            This uses AI credits and may take a while.
+            This uses AI usage and may take a while.
           </p>
 
           <label class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">

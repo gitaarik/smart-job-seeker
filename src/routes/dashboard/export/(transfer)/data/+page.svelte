@@ -9,9 +9,8 @@
     faUser,
     faLayerGroup,
   } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../components/Card.svelte";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import EmptyState from "../../profile/components/EmptyState.svelte";
+  import Card from "../../../components/Card.svelte";
+  import EmptyState from "../../../profile/components/EmptyState.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -91,8 +90,6 @@
 </script>
 
 <div class="space-y-6">
-  <SectionHeader title="Export Data" icon={faDatabase} />
-
   {#if form?.error}
     <div
       class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"

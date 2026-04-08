@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect, isRedirect } from "@sveltejs/kit";
-import { getSelectedProfileId } from "../../profile/utils";
+import { getSelectedProfileId } from "../../../profile/utils";
 import {
   importExportData,
   validateExportData,

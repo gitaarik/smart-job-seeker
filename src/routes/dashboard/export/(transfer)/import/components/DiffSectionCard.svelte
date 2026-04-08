@@ -5,7 +5,7 @@
     faChevronUp,
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-  import Card from "../../../components/Card.svelte";
+  import Card from "../../../../components/Card.svelte";
 
   interface Props {
     title: string;

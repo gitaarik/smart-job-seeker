@@ -22,10 +22,9 @@
     faComments,
     faDatabase,
     faDesktop,
-    faDownload,
     faEnvelope,
+    faExchangeAlt,
     faFileAlt,
-    faFileImport,
     faGlobe,
     faGraduationCap,
     faHome,
@@ -73,6 +72,7 @@
     href: string;
     icon: IconDefinition;
     children?: MenuItem[];
+    alsoActiveFor?: string[];
   }
 
   const baseMenuItems: MenuItem[] = [
@@ -198,14 +198,10 @@
           icon: faLink,
         },
         {
-          label: "Export Data",
-          href: "/dashboard/export/data",
-          icon: faDownload,
-        },
-        {
-          label: "Import Data",
+          label: "Import & Export",
           href: "/dashboard/export/import",
-          icon: faFileImport,
+          icon: faExchangeAlt,
+          alsoActiveFor: ["/dashboard/export/data"],
         },
         {
           label: "Local Scraping",
@@ -385,18 +381,20 @@
     expandedSections = newSet;
   }
 
-  function isActive(href: string): boolean {
+  function isActive(href: string, alsoActiveFor?: string[]): boolean {
     const currentPath = $page.url.pathname;
     const currentSearch = $page.url.search;
     if (href === "/dashboard") {
       return currentPath === "/dashboard";
     }
-    return isChildHrefActive(href, currentPath, currentSearch);
+    if (isChildHrefActive(href, currentPath, currentSearch)) return true;
+    if (alsoActiveFor?.some((p) => isChildHrefActive(p, currentPath, currentSearch))) return true;
+    return false;
   }
 
   function isChildActive(item: MenuItem): boolean {
     if (!item.children) return false;
-    return item.children.some((child) => isActive(child.href));
+    return item.children.some((child) => isActive(child.href, child.alsoActiveFor));
   }
 
   function closeMobileMenu() {
@@ -474,7 +472,7 @@
                         onclick={closeMobileMenu}
                         class="
                           flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors {isActive(
-                          child.href,
+                          child.href, child.alsoActiveFor,
                           )
                           ? 'bg-[var(--dash-primary)] text-white'
                           : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)]'}
@@ -496,7 +494,7 @@
                 onclick={closeMobileMenu}
                 class="
                   flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors {isActive(
-                  item.href,
+                  item.href, item.alsoActiveFor,
                   )
                   ? 'bg-[var(--dash-primary)] text-white'
                   : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
@@ -510,7 +508,7 @@
         {/each}
       </ul>
 
-    <!-- Plan & Credits -->
+    <!-- Plan & Usage -->
     <div class="mt-3 pt-3 border-t border-[var(--dash-border)]">
       <a
         href="/dashboard/billing"
@@ -526,21 +524,22 @@
       </a>
       {#if creditBalance}
         {@const total = creditBalance.allowance + creditBalance.extra}
-        {@const pct = total > 0 ? Math.min(100, (creditBalance.used / total) * 100) : 0}
+        {@const usedPct = total > 0 ? Math.min(100, Math.round((creditBalance.used / total) * 100)) : 0}
+        {@const daysLeft = creditBalance.periodEnd ? Math.max(0, Math.ceil((new Date(creditBalance.periodEnd).getTime() - Date.now()) / 86400000)) : null}
         <a
-          href="/dashboard/billing/usage"
+          href="/dashboard/billing"
           onclick={closeMobileMenu}
           class="block mt-1.5 mx-2.5 group"
-          title="{creditBalance.available} of {total} credits remaining"
+          title="{usedPct}% used{daysLeft != null ? ` · resets in ${daysLeft}d` : ''}"
         >
-          <div class="flex items-center justify-between text-[10px] text-[var(--dash-text-muted)] mb-1">
-            <span>{creditBalance.available} credits left</span>
-            <span class="opacity-0 group-hover:opacity-100 transition-opacity">of {total}</span>
+          <div class="flex items-center justify-between text-[10px] text-[var(--dash-text-secondary)] mb-1">
+            <span>{usedPct}% used</span>
+            {#if daysLeft != null}<span>resets in {daysLeft}d</span>{/if}
           </div>
           <div class="h-1 bg-[var(--dash-border)] rounded-full overflow-hidden">
             <div
-              class="h-full rounded-full transition-all {pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-[var(--dash-primary)]'}"
-              style="width: {pct}%"
+              class="h-full rounded-full transition-all {usedPct >= 90 ? 'bg-red-500' : usedPct >= 75 ? 'bg-amber-500' : 'bg-[var(--dash-primary)]'}"
+              style="width: {usedPct}%"
             ></div>
           </div>
         </a>
@@ -594,7 +593,7 @@
                   onclick={closeMobileMenu}
                   class="
                     flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors {isActive(
-                    child.href,
+                    child.href, child.alsoActiveFor,
                     )
                     ? 'bg-amber-500 text-white'
                     : 'text-amber-500/60 hover:bg-amber-500/10 hover:text-amber-500'}

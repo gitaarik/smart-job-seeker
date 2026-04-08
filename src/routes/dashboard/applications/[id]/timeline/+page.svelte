@@ -12,7 +12,6 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../../components/Card.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
   import { getStatusLabel, getStatusColor, getStatusBgColor } from "$lib/application-status";
@@ -107,7 +106,7 @@
 
   <!-- Add Event Form -->
   {#if showAddForm}
-    <Card padding="md">
+    <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-4">
       <form method="POST" action="?/create" use:enhance={handleAddSubmit}>
         <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Timeline Event</h3>
         <div class="space-y-3">
@@ -142,7 +141,7 @@
           </div>
         </div>
       </form>
-    </Card>
+    </div>
   {/if}
 
   <!-- Timeline -->
@@ -171,7 +170,7 @@
             <div class="flex-1 min-w-0 -mt-0.5">
               {#if editingId === entry.id}
                 <!-- Edit Mode -->
-                <Card padding="md">
+                <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-4">
                   <form method="POST" action="?/update" use:enhance={handleEditSubmit}>
                     <input type="hidden" name="id" value={entry.id} />
                     <div class="space-y-3">
@@ -195,7 +194,7 @@
                       </div>
                     </div>
                   </form>
-                </Card>
+                </div>
               {:else}
                 <!-- View Mode -->
                 <div class="flex items-start justify-between gap-2">

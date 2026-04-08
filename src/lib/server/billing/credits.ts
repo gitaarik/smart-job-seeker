@@ -170,7 +170,7 @@ export async function requireCredits(
   const balance = await getBalance(userId);
   if (balance.available < estimatedCost) {
     error(403, {
-      message: `Not enough credits (${balance.available} available, ${estimatedCost} needed). Upgrade your plan or buy extra credits.`,
+      message: `Not enough usage remaining (${balance.available} available, ${estimatedCost} needed). Upgrade your plan or top up usage.`,
     });
   }
 }

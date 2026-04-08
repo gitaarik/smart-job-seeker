@@ -526,7 +526,7 @@
     <ToggleSwitch
       bind:checked={matchCommunityJobs}
       label="Also match with jobs imported by other users"
-      description="When enabled, the matcher will also process jobs you didn't import yourself. This can use significantly more credits. Your own-imported jobs are always matched first."
+      description="When enabled, the matcher will also process jobs you didn't import yourself. This can use significantly more usage. Your own-imported jobs are always matched first."
     />
     {#if matchCommunityJobs}
       <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
@@ -563,7 +563,7 @@
           <p class="text-xs text-[var(--dash-text-muted)] mt-2">
             {count} unmatched community {count === 1 ? "job" : "jobs"} to process
             {#if count > 0}
-              (≈{count}–{count * 2} credits)
+              (≈{count}–{count * 2} usage)
             {/if}
           </p>
         {/if}

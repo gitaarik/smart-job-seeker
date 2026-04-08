@@ -12,7 +12,6 @@
     faMoneyBillWave,
     faPencil,
   } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../../components/Card.svelte";
   import {
     hourlyToRate,
     formatCurrency,
@@ -244,7 +243,7 @@
         </h2>
       </div>
 
-      <Card padding="lg">
+      <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
           <div class="flex-1">
             <div class="flex items-baseline gap-2 flex-wrap">
@@ -308,9 +307,11 @@
             </div>
           {/if}
         </div>
-      </Card>
+      </div>
     </div>
   {/if}
+
+  <hr class="border-[var(--dash-border)] sm:hidden" />
 
   <!-- Section 2: Your Ask -->
   <div>
@@ -330,7 +331,7 @@
       {/if}
     </div>
 
-    <Card padding="lg">
+    <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
       {#if editing}
         <!-- Edit form -->
         <form method="POST" action="?/updateSalary" use:enhance={handleSubmit}>
@@ -499,6 +500,6 @@
           </div>
         {/if}
       {/if}
-    </Card>
+    </div>
   </div>
 </div>

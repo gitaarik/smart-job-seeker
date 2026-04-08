@@ -11,6 +11,7 @@
     faMoneyBillWave,
   } from "@fortawesome/free-solid-svg-icons";
   import type { Snippet } from "svelte";
+  import TabNav from "../../components/TabNav.svelte";
 
   let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -18,21 +19,20 @@
 
   const basePath = $derived(`/dashboard/applications/${app.id}`);
 
-  const tabs = [
-    { label: "Overview", href: "", icon: faClipboardList },
-    { label: "Texts", href: "/letters", icon: faEnvelope },
-    { label: "Salary", href: "/salary", icon: faMoneyBillWave },
-    { label: "Documents", href: "/documents", icon: faFileAlt },
-    { label: "Timeline", href: "/timeline", icon: faHistory },
-  ];
+  const tabs = $derived([
+    { label: "Overview", href: basePath, icon: faClipboardList },
+    { label: "Texts", href: `${basePath}/letters`, icon: faEnvelope },
+    { label: "Salary", href: `${basePath}/salary`, icon: faMoneyBillWave },
+    { label: "Documents", href: `${basePath}/documents`, icon: faFileAlt },
+    { label: "Timeline", href: `${basePath}/timeline`, icon: faHistory },
+  ]);
 
-  function isTabActive(tabHref: string): boolean {
+  function isTabActive(href: string): boolean {
     const currentPath = $page.url.pathname;
-    const fullHref = basePath + tabHref;
-    if (tabHref === "") {
+    if (href === basePath) {
       return currentPath === basePath;
     }
-    return currentPath.startsWith(fullHref);
+    return currentPath.startsWith(href);
   }
 </script>
 
@@ -49,23 +49,7 @@
   </div>
   <h1 class="text-2xl font-bold text-[var(--dash-text)]">Application</h1>
 
-  <!-- Tab Navigation -->
-  <div class="flex gap-1 border-b border-[var(--dash-border)] overflow-x-auto">
-    {#each tabs as tab}
-      <a
-        href="{basePath}{tab.href}"
-        class="
-          flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors
-          {isTabActive(tab.href)
-          ? 'border-[var(--dash-primary)] text-[var(--dash-primary)]'
-          : 'border-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-border)]'}
-        "
-      >
-        <FontAwesomeIcon icon={tab.icon} class="w-4 h-4" />
-        {tab.label}
-      </a>
-    {/each}
-  </div>
+  <TabNav {tabs} isActive={isTabActive}>
+    {@render children()}
+  </TabNav>
 </div>
-
-{@render children()}

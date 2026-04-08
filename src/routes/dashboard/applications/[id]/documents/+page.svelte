@@ -15,7 +15,6 @@
     faSave,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../../components/Card.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
@@ -89,7 +88,7 @@
       <h2 class="text-lg font-semibold text-[var(--dash-text)]">Resume / CV Sent</h2>
     </div>
 
-    <Card padding="lg">
+    <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
       <p class="text-xs text-[var(--dash-text-muted)] mb-4">
         Track which version you sent, so you can open the same one they'll have during an interview.
       </p>
@@ -159,8 +158,10 @@
           </a>
         </div>
       {/if}
-    </Card>
+    </div>
   </div>
+
+  <hr class="border-[var(--dash-border)] sm:hidden" />
 
   <!-- Section 2: Attached Files -->
   <div>
@@ -170,7 +171,7 @@
     </div>
 
     <!-- Upload Form -->
-    <Card padding="md">
+    <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-4">
       <form
         method="POST"
         action="?/uploadFile"
@@ -202,7 +203,7 @@
           <p class="text-sm text-[var(--dash-text-secondary)] mt-2">Uploading...</p>
         {/if}
       </form>
-    </Card>
+    </div>
 
     <!-- File List -->
     {#if files.length === 0}
@@ -218,7 +219,7 @@
         {#each files as fileRecord (fileRecord.id)}
           {@const file = fileRecord.directus_files}
           {#if file}
-            <Card padding="sm">
+            <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3 min-w-0">
                   <FontAwesomeIcon icon={getFileIcon(file.type)} class="w-5 h-5 {getFileIconColor(file.type)} flex-shrink-0" />
@@ -250,7 +251,7 @@
                   </button>
                 </div>
               </div>
-            </Card>
+            </div>
           {/if}
         {/each}
       </div>

@@ -4,15 +4,13 @@
   import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faFileImport,
     faBug,
     faChevronDown,
     faChevronRight,
     faDownload,
     faRotateRight,
   } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import Card from "../../components/Card.svelte";
+  import Card from "../../../components/Card.svelte";
 
   import StepUpload from "./components/StepUpload.svelte";
   import StepDiffReview from "./components/StepDiffReview.svelte";
@@ -152,11 +150,6 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <SectionHeader
-    title={showDiffReview ? "Review Changes" : "Import Data"}
-    icon={faFileImport}
-  />
-
   {#if showDiffReview && incomingData}
     <StepDiffReview
       {currentData}

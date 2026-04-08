@@ -40,8 +40,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         user_id: user.id,
         stripe_price_id: priceId,
       },
-      success_url: `${baseUrl}/dashboard/billing/usage?success=credits`,
-      cancel_url: `${baseUrl}/dashboard/billing/usage`,
+      success_url: `${baseUrl}/dashboard/billing?success=credits`,
+      cancel_url: `${baseUrl}/dashboard/billing`,
     });
 
     return json({ url: session.url });

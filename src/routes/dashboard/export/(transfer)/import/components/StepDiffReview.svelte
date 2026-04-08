@@ -32,7 +32,7 @@
   import DiffSectionCard from "./DiffSectionCard.svelte";
   import DiffFieldRow from "./DiffFieldRow.svelte";
   import DiffItemRow from "./DiffItemRow.svelte";
-  import Card from "../../../components/Card.svelte";
+  import Card from "../../../../components/Card.svelte";
 
   interface Props {
     currentData: ResumeData;
