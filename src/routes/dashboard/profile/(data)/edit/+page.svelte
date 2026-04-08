@@ -16,6 +16,8 @@
     faPython,
     faStackOverflow,
   } from "@fortawesome/free-brands-svg-icons";
+  import SectionHeader from "../../components/SectionHeader.svelte";
+  import Card from "../../../components/Card.svelte";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import CountrySelect from "../../../jobs/components/CountrySelect.svelte";
@@ -114,8 +116,10 @@
 </script>
 
 <div class="space-y-6">
+  <SectionHeader title="Basic Info" icon={faUser} />
+
   <!-- Profile Photo Section -->
-  <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
       <FontAwesomeIcon icon={faCamera} class="w-5 h-5 text-[var(--dash-primary)]" />
       Profile Photo
@@ -130,12 +134,10 @@
       onUpload={(url) => (photoUrl = url)}
       onDelete={() => (photoUrl = null)}
     />
-  </div>
-
-  <hr class="border-[var(--dash-border)] sm:hidden" />
+  </Card>
 
   <!-- Personal Information -->
-  <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
       <FontAwesomeIcon icon={faUser} class="w-5 h-5 text-[var(--dash-primary)]" />
       Personal Information
@@ -236,12 +238,10 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={personalInfoState} onClick={savePersonalInfo} />
     </div>
-  </div>
-
-  <hr class="border-[var(--dash-border)] sm:hidden" />
+  </Card>
 
   <!-- Contact Information -->
-  <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
       <FontAwesomeIcon icon={faEnvelope} class="w-5 h-5 text-[var(--dash-primary)]" />
       Contact Information
@@ -328,12 +328,10 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={contactState} onClick={saveContact} />
     </div>
-  </div>
-
-  <hr class="border-[var(--dash-border)] sm:hidden" />
+  </Card>
 
   <!-- Social Profiles -->
-  <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-6">
+  <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
       <FontAwesomeIcon icon={faGlobe} class="w-5 h-5 text-[var(--dash-primary)]" />
       Social Profiles
@@ -417,6 +415,6 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={socialState} onClick={saveSocial} />
     </div>
-  </div>
+  </Card>
 
 </div>

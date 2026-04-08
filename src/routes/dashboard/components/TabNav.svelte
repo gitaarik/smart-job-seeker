@@ -65,14 +65,16 @@
     }
     if (currentRow.length > 0) allRows.push(currentRow);
 
-    // Move the row containing the active tab to the bottom
+    // Move the row containing the active tab to the bottom,
+    // and reverse the remaining rows so they stack bottom-to-top
     const activeHref = tabs.find((t) => isActive(t.href))?.href;
     if (activeHref && allRows.length > 1) {
       const activeRowIdx = allRows.findIndex((row) =>
         row.some((t) => t.href === activeHref),
       );
-      if (activeRowIdx >= 0 && activeRowIdx < allRows.length - 1) {
+      if (activeRowIdx >= 0) {
         const [activeRow] = allRows.splice(activeRowIdx, 1);
+        allRows.reverse();
         allRows.push(activeRow);
       }
     }
@@ -89,8 +91,8 @@
     aria-hidden="true"
   >
     {#each tabs as tab}
-      <span class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap">
-        {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-4 h-4" />{/if}
+      <span class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium whitespace-nowrap">
+        {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
         {tab.label}
       </span>
     {/each}
@@ -118,34 +120,35 @@
       {@render children()}
     </div>
   {:else if rows}
-    <!-- Multi-row: bookmark tabs with active row at bottom -->
-    <!-- Left border connects top rows to content panel -->
-    <div class="border-l border-[var(--dash-border)]/40 rounded-tl-lg">
-      {#each rows as row, rowIdx}
-        {@const isBottomRow = rowIdx === rows.length - 1}
-        <div class="flex {isBottomRow ? 'border-b-2 border-[var(--dash-border)]' : ''} -ml-px">
-          {#each row as tab, tabIdx}
-            {@const active = isActive(tab.href)}
-            <a
-              href={tab.href}
-              class="
-                flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors
-                {tabIdx > 0 ? '-ml-px' : ''}
-                {isBottomRow ? '-mb-0.5' : ''}
-                {active
-                ? 'bg-[var(--dash-card)] border border-[var(--dash-border)] border-b-[var(--dash-card)] text-[var(--dash-primary)] z-10'
-                : 'bg-[var(--dash-card)]/30 border-x border-t border-[var(--dash-border)]/40 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
-              "
-            >
-              {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
-              {tab.label}
-            </a>
-          {/each}
-        </div>
-      {/each}
+    <!-- Multi-row: bookmark tabs with padded rows, full-width border -->
+    <div class="relative">
+      <div class="px-4">
+        {#each rows as row, rowIdx}
+          {@const isBottomRow = rowIdx === rows.length - 1}
+          <div class="flex {isBottomRow ? 'relative z-10' : ''}">
+            {#each row as tab, tabIdx}
+              {@const active = isActive(tab.href)}
+              <a
+                href={tab.href}
+                class="
+                  flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap
+                  {tabIdx > 0 ? '-ml-px' : ''}
+                  {isBottomRow ? 'mb-[-2px]' : ''}
+                  {active
+                  ? 'bg-[var(--dash-bg)] border border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)] z-10'
+                  : 'bg-[var(--dash-card)]/30 border-x border-t border-[var(--dash-border)]/40 border-b-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
+                "
+              >
+                {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
+                {tab.label}
+              </a>
+            {/each}
+          </div>
+        {/each}
+      </div>
+      <div class="border-b-2 border-[var(--dash-border)]"></div>
     </div>
-    <!-- Content panel matching the active tab -->
-    <div class="bg-[var(--dash-card)] border-x border-b border-[var(--dash-border)] rounded-b-xl p-4 -mt-px">
+    <div class="mt-6">
       {@render children()}
     </div>
   {/if}

@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { invalidateAll } from "$app/navigation";
+  import { faCode } from "@fortawesome/free-solid-svg-icons";
+  import SectionHeader from "../../components/SectionHeader.svelte";
   import SkillCategoriesEditor from "../../../components/SkillCategoriesEditor.svelte";
   import type { CategoryItem } from "../../../components/SkillCategoriesEditor.svelte";
   import type { SkillItem } from "../../../components/SkillTagsEditor.svelte";
@@ -130,6 +132,8 @@
 </script>
 
 <div class="space-y-6">
+  <SectionHeader title="Skills" icon={faCode} />
+
   {#if form?.error}
     <div
       class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"

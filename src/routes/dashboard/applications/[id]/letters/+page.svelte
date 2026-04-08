@@ -17,6 +17,7 @@
     faTrash,
     faXmark,
   } from "@fortawesome/free-solid-svg-icons";
+  import Card from "../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
   import FilterTabs from "../../../components/FilterTabs.svelte";
@@ -161,15 +162,16 @@
     </div>
   {/if}
 
-  <!-- Header with filter + add button (only shown when there are items) -->
-  {#if letters.length > 0 || questions.length > 0}
-    <div class="flex items-center justify-between flex-wrap gap-3">
+  <!-- Header with title, filter + add button -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <FontAwesomeIcon icon={faEnvelope} class="w-7 h-7 text-[var(--dash-primary)]" />
+      <h2 class="text-2xl font-bold text-[var(--dash-text)]">Texts</h2>
       {#if letters.length > 0 && questions.length > 0}
         <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => (currentType = v)} />
-      {:else}
-        <div></div>
       {/if}
-
+    </div>
+    {#if letters.length > 0 || questions.length > 0}
       <div class="relative" data-add-menu>
         <button
           type="button"
@@ -203,12 +205,12 @@
           </div>
         {/if}
       </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
 
   <!-- Add Question Form -->
   {#if showAddQuestion}
-    <div class="sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)] sm:p-4">
+    <Card padding="md">
       <form method="POST" action="?/createQuestion" use:enhance={handleAddSubmit}>
         <h3 class="font-medium text-[var(--dash-text)] mb-3">Add Question</h3>
         <div class="space-y-3">
@@ -241,7 +243,7 @@
           </div>
         </div>
       </form>
-    </div>
+    </Card>
   {/if}
 
   <!-- Items List -->
@@ -312,7 +314,7 @@
           })()}
           {@const isExpanded = expandedId === itemId}
           <!-- Letter Card: expandable with text preview -->
-          <div class="overflow-hidden sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)]">
+          <Card class="overflow-hidden">
             <button
               type="button"
               onclick={() => toggleExpand(itemId)}
@@ -382,10 +384,10 @@
                 <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
               </a>
             </div>
-          </div>
+          </Card>
         {:else}
           <!-- Question Card: expandable with inline editing -->
-          <div class="overflow-hidden sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)]">
+          <Card class="overflow-hidden">
             <!-- Header -->
             <button
               type="button"
@@ -504,7 +506,7 @@
                 {/if}
               </div>
             {/if}
-          </div>
+          </Card>
         {/if}
       {/each}
     </div>

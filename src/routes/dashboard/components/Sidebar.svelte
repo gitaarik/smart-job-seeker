@@ -151,7 +151,6 @@
             "/dashboard/profile/side-projects",
             "/dashboard/profile/languages",
             "/dashboard/profile/references",
-            "/dashboard/profile/highlights",
           ],
         },
         {
