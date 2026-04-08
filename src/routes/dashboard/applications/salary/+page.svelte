@@ -262,7 +262,7 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Salary Settings"
+    title="Salary Prep"
     icon={faMoneyBillWave}
   />
 

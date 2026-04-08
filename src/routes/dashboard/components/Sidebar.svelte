@@ -113,7 +113,7 @@
           icon: faPaperPlane,
         },
         {
-          label: "Salary",
+          label: "Salary Prep",
           href: "/dashboard/applications/salary",
           icon: faMoneyBillWave,
         },
