@@ -34,7 +34,6 @@
     faSearch,
     faShieldAlt,
     faSliders,
-    faStickyNote,
     faTimes,
     faTrash,
     faUser,
@@ -124,14 +123,9 @@
           icon: faMoneyBillWave,
         },
         {
-          label: "Project Stories",
+          label: "Interview Prep",
           href: "/dashboard/interview/stories",
           icon: faComments,
-        },
-        {
-          label: "Cheat Sheets",
-          href: "/dashboard/interview/cheatsheets",
-          icon: faStickyNote,
         },
       ],
     },

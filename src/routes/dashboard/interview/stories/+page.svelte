@@ -4,23 +4,73 @@
   import {
     faBook,
     faChevronRight,
+    faFileAlt,
+    faLayerGroup,
     faPencil,
+    faPlus,
+    faStickyNote,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
+  import FilterTabs from "../../components/FilterTabs.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import SimpleEditor from "$lib/components/SimpleEditor.svelte";
   import { invalidateAll } from "$app/navigation";
 
   let { data }: { data: PageData } = $props();
 
+  let cheatsheets = $derived(data.cheatsheets);
   let stories = $derived(data.stories);
-  let expandedId = $state<number | null>(null);
-  let editingId = $state<number | null>(null);
-  let showAddForm = $state(false);
-  let deleteId = $state<number | null>(null);
+
+  // Filter state
+  let currentType = $state("all");
+  const typeFilters = [
+    { value: "all", label: "All", icon: faLayerGroup },
+    { value: "cheatsheets", label: "Cheat Sheets", icon: faStickyNote },
+    { value: "stories", label: "Project Stories", icon: faBook },
+  ];
+
+  // Shared state
+  let expandedKey = $state<string | null>(null);
+  let editingKey = $state<string | null>(null);
+  let showAddMenu = $state(false);
+  let showAddCheatSheet = $state(false);
+  let showAddStory = $state(false);
+
+  // Delete state
+  let deleteKey = $state<string | null>(null);
+  let deleteType = $state<"cheatsheet" | "story">("cheatsheet");
+
+  // Save states
+  type SaveState = "idle" | "saving" | "saved" | "error";
+  let addSaveState = $state<SaveState>("idle");
+  let editSaveState = $state<SaveState>("idle");
+  let errorMessage = $state("");
+
+  // Cheat sheet form states
+  let newSheetTitle = $state("");
+  let newSheetContent = $state("");
+  let editSheetTitle = $state("");
+  let editSheetContent = $state("");
+
+  // Story form states
+  let newStoryTitle = $state("");
+  let newStoryCategory = $state("");
+  let newStorySituation = $state("");
+  let newStoryTask = $state("");
+  let newStoryAction = $state("");
+  let newStoryResult = $state("");
+  let newStoryReflection = $state("");
+  let editStoryTitle = $state("");
+  let editStoryCategory = $state("");
+  let editStorySituation = $state("");
+  let editStoryTask = $state("");
+  let editStoryAction = $state("");
+  let editStoryResult = $state("");
+  let editStoryReflection = $state("");
 
   const categories = [
     { value: "leadership", label: "Leadership" },
@@ -33,188 +83,288 @@
     { value: "achievement", label: "Achievement" },
   ];
 
-  // Form states for new entry
-  let newTitle = $state("");
-  let newCategory = $state("");
-  let newSituation = $state("");
-  let newTask = $state("");
-  let newAction = $state("");
-  let newResult = $state("");
-  let newReflection = $state("");
+  // Combined filtered list
+  type CheatSheetItem = (typeof cheatsheets)[0] & { itemType: "cheatsheet"; key: string };
+  type StoryItem = (typeof stories)[0] & { itemType: "story"; key: string };
+  type Item = CheatSheetItem | StoryItem;
 
-  // Form states for editing
-  let editTitle = $state("");
-  let editCategory = $state("");
-  let editSituation = $state("");
-  let editTask = $state("");
-  let editAction = $state("");
-  let editResult = $state("");
-  let editReflection = $state("");
+  let filteredItems = $derived.by(() => {
+    const sheets: Item[] = cheatsheets.map((s) => ({ ...s, itemType: "cheatsheet" as const, key: `cs-${s.id}` }));
+    const storyItems: Item[] = stories.map((s) => ({ ...s, itemType: "story" as const, key: `st-${s.id}` }));
 
-  // Save states
-  type SaveState = "idle" | "saving" | "saved" | "error";
-  let addSaveState = $state<SaveState>("idle");
-  let editSaveState = $state<SaveState>("idle");
-  let errorMessage = $state("");
+    if (currentType === "cheatsheets") return sheets;
+    if (currentType === "stories") return storyItems;
+    return [...sheets, ...storyItems];
+  });
 
-  function toggleExpand(id: number) {
-    if (editingId === id) return;
-    expandedId = expandedId === id ? null : id;
+  let hasAnyItems = $derived(cheatsheets.length > 0 || stories.length > 0);
+
+  // Toggle expand/collapse
+  function toggleExpand(key: string) {
+    if (editingKey === key) return;
+    expandedKey = expandedKey === key ? null : key;
   }
 
-  function startEdit(story: (typeof stories)[0]) {
-    editingId = story.id;
-    expandedId = story.id;
-    editTitle = story.title || "";
-    editCategory = story.category || "";
-    editSituation = story.situation || "";
-    editTask = story.task || "";
-    editAction = story.action || "";
-    editResult = story.result || "";
-    editReflection = story.reflection || "";
+  // --- Cheat sheet CRUD ---
+  function startEditSheet(sheet: (typeof cheatsheets)[0]) {
+    const key = `cs-${sheet.id}`;
+    editingKey = key;
+    expandedKey = key;
+    editSheetTitle = sheet.title || "";
+    editSheetContent = sheet.content || "";
     editSaveState = "idle";
   }
 
-  function cancelEdit() {
-    editingId = null;
-    editSaveState = "idle";
-  }
-
-  function resetAddForm() {
-    showAddForm = false;
-    newTitle = "";
-    newCategory = "";
-    newSituation = "";
-    newTask = "";
-    newAction = "";
-    newResult = "";
-    newReflection = "";
+  function resetAddSheetForm() {
+    showAddCheatSheet = false;
+    newSheetTitle = "";
+    newSheetContent = "";
     addSaveState = "idle";
     errorMessage = "";
   }
 
-  async function saveNewStory() {
-    if (!newTitle.trim()) {
+  async function saveNewSheet() {
+    if (!newSheetTitle.trim()) {
       errorMessage = "Title is required";
       addSaveState = "error";
       setTimeout(() => (addSaveState = "idle"), 2000);
       return;
     }
-
     addSaveState = "saving";
     errorMessage = "";
+    try {
+      const response = await fetch("/api/cheat-sheets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          title: newSheetTitle,
+          content: newSheetContent,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        errorMessage = err.message || err.error || "Failed to create cheat sheet";
+        addSaveState = "error";
+        setTimeout(() => (addSaveState = "idle"), 2000);
+        return;
+      }
+      addSaveState = "saved";
+      await invalidateAll();
+      setTimeout(() => resetAddSheetForm(), 500);
+    } catch {
+      errorMessage = "Failed to create cheat sheet";
+      addSaveState = "error";
+      setTimeout(() => (addSaveState = "idle"), 2000);
+    }
+  }
 
+  async function saveEditedSheet(id: number) {
+    if (!editSheetTitle.trim()) {
+      errorMessage = "Title is required";
+      editSaveState = "error";
+      setTimeout(() => (editSaveState = "idle"), 2000);
+      return;
+    }
+    editSaveState = "saving";
+    errorMessage = "";
+    try {
+      const response = await fetch("/api/cheat-sheets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          id,
+          title: editSheetTitle,
+          content: editSheetContent,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        errorMessage = err.message || err.error || "Failed to update cheat sheet";
+        editSaveState = "error";
+        setTimeout(() => (editSaveState = "idle"), 2000);
+        return;
+      }
+      editSaveState = "saved";
+      await invalidateAll();
+      setTimeout(() => {
+        editingKey = null;
+        editSaveState = "idle";
+      }, 500);
+    } catch {
+      errorMessage = "Failed to update cheat sheet";
+      editSaveState = "error";
+      setTimeout(() => (editSaveState = "idle"), 2000);
+    }
+  }
+
+  async function deleteSheet(id: number) {
+    try {
+      const response = await fetch("/api/cheat-sheets", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile_id: data.profileId, id }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        errorMessage = err.message || err.error || "Failed to delete cheat sheet";
+        return;
+      }
+      await invalidateAll();
+      deleteKey = null;
+    } catch {
+      errorMessage = "Failed to delete cheat sheet";
+    }
+  }
+
+  // --- Story CRUD ---
+  function startEditStory(story: (typeof stories)[0]) {
+    const key = `st-${story.id}`;
+    editingKey = key;
+    expandedKey = key;
+    editStoryTitle = story.title || "";
+    editStoryCategory = story.category || "";
+    editStorySituation = story.situation || "";
+    editStoryTask = story.task || "";
+    editStoryAction = story.action || "";
+    editStoryResult = story.result || "";
+    editStoryReflection = story.reflection || "";
+    editSaveState = "idle";
+  }
+
+  function resetAddStoryForm() {
+    showAddStory = false;
+    newStoryTitle = "";
+    newStoryCategory = "";
+    newStorySituation = "";
+    newStoryTask = "";
+    newStoryAction = "";
+    newStoryResult = "";
+    newStoryReflection = "";
+    addSaveState = "idle";
+    errorMessage = "";
+  }
+
+  async function saveNewStory() {
+    if (!newStoryTitle.trim()) {
+      errorMessage = "Title is required";
+      addSaveState = "error";
+      setTimeout(() => (addSaveState = "idle"), 2000);
+      return;
+    }
+    addSaveState = "saving";
+    errorMessage = "";
     try {
       const response = await fetch("/api/interview-stories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profile_id: data.profileId,
-          title: newTitle,
-          category: newCategory,
-          situation: newSituation,
-          task: newTask,
-          action: newAction,
-          result: newResult,
-          reflection: newReflection,
+          title: newStoryTitle,
+          category: newStoryCategory,
+          situation: newStorySituation,
+          task: newStoryTask,
+          action: newStoryAction,
+          result: newStoryResult,
+          reflection: newStoryReflection,
         }),
       });
-
       if (!response.ok) {
-        const error = await response.json();
-        errorMessage = error.message || error.error || "Failed to create story";
+        const err = await response.json();
+        errorMessage = err.message || err.error || "Failed to create story";
         addSaveState = "error";
         setTimeout(() => (addSaveState = "idle"), 2000);
         return;
       }
-
       addSaveState = "saved";
       await invalidateAll();
-      setTimeout(() => {
-        resetAddForm();
-      }, 500);
-    } catch (error) {
-      console.error("Save failed:", error);
+      setTimeout(() => resetAddStoryForm(), 500);
+    } catch {
       errorMessage = "Failed to create story";
       addSaveState = "error";
       setTimeout(() => (addSaveState = "idle"), 2000);
     }
   }
 
-  async function saveEditedStory() {
-    if (!editTitle.trim()) {
+  async function saveEditedStory(id: number) {
+    if (!editStoryTitle.trim()) {
       errorMessage = "Title is required";
       editSaveState = "error";
       setTimeout(() => (editSaveState = "idle"), 2000);
       return;
     }
-
     editSaveState = "saving";
     errorMessage = "";
-
     try {
       const response = await fetch("/api/interview-stories", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profile_id: data.profileId,
-          id: editingId,
-          title: editTitle,
-          category: editCategory,
-          situation: editSituation,
-          task: editTask,
-          action: editAction,
-          result: editResult,
-          reflection: editReflection,
+          id,
+          title: editStoryTitle,
+          category: editStoryCategory,
+          situation: editStorySituation,
+          task: editStoryTask,
+          action: editStoryAction,
+          result: editStoryResult,
+          reflection: editStoryReflection,
         }),
       });
-
       if (!response.ok) {
-        const error = await response.json();
-        errorMessage = error.message || error.error || "Failed to update story";
+        const err = await response.json();
+        errorMessage = err.message || err.error || "Failed to update story";
         editSaveState = "error";
         setTimeout(() => (editSaveState = "idle"), 2000);
         return;
       }
-
       editSaveState = "saved";
       await invalidateAll();
       setTimeout(() => {
-        editingId = null;
+        editingKey = null;
         editSaveState = "idle";
       }, 500);
-    } catch (error) {
-      console.error("Save failed:", error);
+    } catch {
       errorMessage = "Failed to update story";
       editSaveState = "error";
       setTimeout(() => (editSaveState = "idle"), 2000);
     }
   }
 
-  async function deleteStory() {
-    if (deleteId === null) return;
-
+  async function deleteStory(id: number) {
     try {
       const response = await fetch("/api/interview-stories", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile_id: data.profileId,
-          id: deleteId,
-        }),
+        body: JSON.stringify({ profile_id: data.profileId, id }),
       });
-
       if (!response.ok) {
-        const error = await response.json();
-        errorMessage = error.message || error.error || "Failed to delete story";
+        const err = await response.json();
+        errorMessage = err.message || err.error || "Failed to delete story";
         return;
       }
-
       await invalidateAll();
-      deleteId = null;
-    } catch (error) {
-      console.error("Delete failed:", error);
+      deleteKey = null;
+    } catch {
       errorMessage = "Failed to delete story";
+    }
+  }
+
+  // Shared helpers
+  function cancelEdit() {
+    editingKey = null;
+    editSaveState = "idle";
+  }
+
+  function handleDelete() {
+    if (!deleteKey) return;
+    if (deleteType === "cheatsheet") {
+      const id = parseInt(deleteKey.replace("cs-", ""));
+      deleteSheet(id);
+    } else {
+      const id = parseInt(deleteKey.replace("st-", ""));
+      deleteStory(id);
     }
   }
 
@@ -223,166 +373,158 @@
     const category = categories.find((c) => c.value === value);
     return category?.label || value;
   }
+
+  function handleClickOutside(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (!target.closest("[data-add-menu]")) {
+      showAddMenu = false;
+    }
+  }
 </script>
 
+<svelte:window onclick={handleClickOutside} />
+
 <div class="space-y-6">
-  <SectionHeader
-    title="Project Stories"
-    icon={faBook}
-    showAddButton={!showAddForm && stories.length > 0}
-    addLabel="Add Story"
-    onAdd={() => (showAddForm = true)}
-  />
+  <!-- Header with title, filters, and add button -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <FontAwesomeIcon icon={faBook} class="w-7 h-7 text-[var(--dash-primary)]" />
+      <h2 class="text-2xl font-bold text-[var(--dash-text)]">Interview Prep</h2>
+      {#if cheatsheets.length > 0 && stories.length > 0}
+        <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => (currentType = v)} />
+      {/if}
+    </div>
+    {#if hasAnyItems}
+      <div class="relative" data-add-menu>
+        <button
+          type="button"
+          onclick={() => (showAddMenu = !showAddMenu)}
+          class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+          <span class="hidden sm:inline">Add</span>
+        </button>
+        {#if showAddMenu}
+          <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
+            <button
+              type="button"
+              onclick={() => { showAddCheatSheet = true; showAddMenu = false; }}
+              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+            >
+              <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
+              Cheat Sheet
+            </button>
+            <button
+              type="button"
+              onclick={() => { showAddStory = true; showAddMenu = false; }}
+              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+            >
+              <FontAwesomeIcon icon={faBook} class="w-3.5 h-3.5 opacity-50" />
+              Project Story
+            </button>
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
 
   {#if errorMessage && (addSaveState === "error" || editSaveState === "error")}
-    <div
-      class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
-    >
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
       <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
     </div>
   {/if}
 
-  <!-- Add Form -->
-  {#if showAddForm}
-    <div
-      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
-    >
-      <h3 class="font-medium text-[var(--dash-text)] mb-4">
-        Add New Project Story
-      </h3>
+  <!-- Add Cheat Sheet Form -->
+  {#if showAddCheatSheet}
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4">
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Cheat Sheet</h3>
+      <div class="space-y-4">
+        <div>
+          <label for="new-sheet-title" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            Title <span class="text-[var(--dash-error)]">*</span>
+          </label>
+          <input
+            type="text"
+            id="new-sheet-title"
+            bind:value={newSheetTitle}
+            placeholder="e.g., System Design Interview Topics"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-[var(--dash-text)] mb-1">Content</label>
+          <input type="hidden" name="content" value={newSheetContent} />
+          <SimpleEditor bind:content={newSheetContent} placeholder="Add your notes, key points, or reference material..." />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button type="button" onclick={resetAddSheetForm}
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">
+          Cancel
+        </button>
+        <SectionSaveButton state={addSaveState} onClick={saveNewSheet} />
+      </div>
+    </div>
+  {/if}
+
+  <!-- Add Story Form -->
+  {#if showAddStory}
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4">
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Project Story</h3>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label
-              for="new-title"
-              class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-            >
+            <label for="new-story-title" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">
               Title <span class="text-[var(--dash-error)]">*</span>
             </label>
-            <input
-              type="text"
-              id="new-title"
-              bind:value={newTitle}
+            <input type="text" id="new-story-title" bind:value={newStoryTitle}
               placeholder="e.g., Led migration to microservices"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
           </div>
-
           <div>
-            <label
-              for="new-category"
-              class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-            >
-              Category
-            </label>
-            <select
-              id="new-category"
-              bind:value={newCategory}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            >
+            <label for="new-story-category" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Category</label>
+            <select id="new-story-category" bind:value={newStoryCategory}
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent">
               <option value="">Select a category</option>
-              {#each categories as category}
-                <option value={category.value}>{category.label}</option>
+              {#each categories as cat}
+                <option value={cat.value}>{cat.label}</option>
               {/each}
             </select>
           </div>
         </div>
-
         <p class="text-sm text-[var(--dash-text-secondary)]">
           Use the STAR method to structure your story: Situation, Task, Action, Result.
         </p>
-
         <div>
-          <label
-            for="new-situation"
-            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-          >
-            Situation
-          </label>
-          <textarea
-            id="new-situation"
-            bind:value={newSituation}
-            rows={3}
-            placeholder="Describe the context and background..."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
-          ></textarea>
+          <label for="new-story-situation" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Situation</label>
+          <textarea id="new-story-situation" bind:value={newStorySituation} rows={3} placeholder="Describe the context and background..."
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"></textarea>
         </div>
-
         <div>
-          <label
-            for="new-task"
-            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-          >
-            Task
-          </label>
-          <textarea
-            id="new-task"
-            bind:value={newTask}
-            rows={2}
-            placeholder="What was your responsibility or goal?"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
-          ></textarea>
+          <label for="new-story-task" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Task</label>
+          <textarea id="new-story-task" bind:value={newStoryTask} rows={2} placeholder="What was your responsibility or goal?"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"></textarea>
         </div>
-
         <div>
-          <label
-            for="new-action"
-            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-          >
-            Action
-          </label>
-          <textarea
-            id="new-action"
-            bind:value={newAction}
-            rows={4}
-            placeholder="What specific steps did you take?"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[150px] sm:min-h-0"
-          ></textarea>
+          <label for="new-story-action" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Action</label>
+          <textarea id="new-story-action" bind:value={newStoryAction} rows={4} placeholder="What specific steps did you take?"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[150px] sm:min-h-0"></textarea>
         </div>
-
         <div>
-          <label
-            for="new-result"
-            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-          >
-            Result
-          </label>
-          <textarea
-            id="new-result"
-            bind:value={newResult}
-            rows={3}
-            placeholder="What was the outcome? Include metrics if possible."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
-          ></textarea>
+          <label for="new-story-result" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Result</label>
+          <textarea id="new-story-result" bind:value={newStoryResult} rows={3} placeholder="What was the outcome? Include metrics if possible."
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"></textarea>
         </div>
-
-        <p class="text-sm text-[var(--dash-text-secondary)]">
-          Optional: Add a reflection on what you learned from this experience.
-        </p>
-
+        <p class="text-sm text-[var(--dash-text-secondary)]">Optional: Add a reflection on what you learned from this experience.</p>
         <div>
-          <label
-            for="new-reflection"
-            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-          >
-            Reflection (optional)
-          </label>
-          <textarea
-            id="new-reflection"
-            bind:value={newReflection}
-            rows={2}
-            placeholder="What did you learn? What would you do differently?"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
-          ></textarea>
+          <label for="new-story-reflection" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Reflection (optional)</label>
+          <textarea id="new-story-reflection" bind:value={newStoryReflection} rows={2} placeholder="What did you learn? What would you do differently?"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"></textarea>
         </div>
       </div>
-
       <div class="flex justify-end gap-2 mt-4">
-        <button
-          type="button"
-          onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
+        <button type="button" onclick={resetAddStoryForm}
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">
           Cancel
         </button>
         <SectionSaveButton state={addSaveState} onClick={saveNewStory} />
@@ -390,273 +532,267 @@
     </div>
   {/if}
 
-  <!-- Stories List -->
-  {#if stories.length === 0 && !showAddForm}
+  <!-- Items List -->
+  {#if !hasAnyItems && !showAddCheatSheet && !showAddStory}
     <EmptyState
       icon={faBook}
-      title="No project stories yet"
-      description="Create STAR-format stories to prepare for behavioral interview questions. Each story captures a Situation, Task, Action, and Result."
-      actionLabel="Add First Story"
-      onAction={() => (showAddForm = true)}
+      title="No interview prep materials yet"
+      description="Create cheat sheets for quick reference or project stories using the STAR method to prepare for behavioral interview questions."
+      actionLabel="Add First Item"
+      onAction={() => (showAddMenu = true)}
     />
   {:else}
     <div class="space-y-3">
-      {#each stories as story (story.id)}
-        <Card class="overflow-hidden relative transition-all">
-          <!-- Chevron in top right corner -->
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              toggleExpand(story.id);
-            }}
-            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
-            aria-label={expandedId === story.id ? "Collapse" : "Expand"}
-          >
-            <span class="inline-block transition-transform duration-200 {expandedId === story.id ? 'rotate-90' : ''}">
-              <FontAwesomeIcon
-                icon={faChevronRight}
-                class="w-4 h-4"
-              />
-            </span>
-          </button>
+      {#each filteredItems as item (item.key)}
+        {#if item.itemType === "cheatsheet"}
+          <!-- Cheat Sheet Card -->
+          {@const sheet = item}
+          {@const isExpanded = expandedKey === item.key}
+          {@const isEditing = editingKey === item.key}
+          <Card class="overflow-hidden relative transition-all">
+            <button
+              type="button"
+              onclick={(e) => { e.stopPropagation(); toggleExpand(item.key); }}
+              class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+            >
+              <span class="inline-block transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}">
+                <FontAwesomeIcon icon={faChevronRight} class="w-4 h-4" />
+              </span>
+            </button>
 
-          <!-- Header (clickable to expand/collapse) -->
-          <button
-            type="button"
-            onclick={() => toggleExpand(story.id)}
-            class="w-full p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
-          >
-            <div class="flex items-start gap-3">
-              <!-- Desktop: Icon on the left -->
-              <div class="hidden md:flex flex-shrink-0">
-                <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                  <FontAwesomeIcon icon={faBook} class="w-6 h-6 text-blue-600" />
+            <button type="button" onclick={() => toggleExpand(item.key)}
+              class="w-full p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer">
+              <div class="flex items-start gap-3">
+                <div class="hidden md:flex flex-shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                    <FontAwesomeIcon icon={faStickyNote} class="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
+                    {sheet.title || "Untitled"}
+                  </h3>
+                  <span class="text-xs text-[var(--dash-text-muted)]">Cheat Sheet</span>
+                </div>
+                <div class="flex-shrink-0 md:hidden flex flex-col items-end">
+                  <div class="h-6 mb-1"></div>
+                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                    <FontAwesomeIcon icon={faStickyNote} class="w-6 h-6 text-purple-600" />
+                  </div>
                 </div>
               </div>
+            </button>
 
-              <div class="flex-1 min-w-0">
-                <!-- Title -->
-                <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
-                  {story.title || "Untitled Story"}
-                </h3>
-
-                <!-- Category -->
-                <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
-                  {#if story.category}
-                    <span class="px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600">
-                      {getCategoryLabel(story.category)}
-                    </span>
-                  {/if}
-                </div>
-              </div>
-
-              <!-- Mobile: Icon on the right, below chevron -->
-              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
-                <div class="h-6 mb-1"></div> <!-- Spacer for chevron -->
-                <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
-                  <FontAwesomeIcon icon={faBook} class="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-          </button>
-
-          <!-- Expanded Content -->
-          {#if expandedId === story.id}
-            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
-              {#if editingId === story.id}
-                <!-- Edit Mode -->
-                <div class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {#if isExpanded}
+              <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
+                {#if isEditing}
+                  <div class="space-y-4">
                     <div>
-                      <label
-                        for="edit-title-{story.id}"
-                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                      >
+                      <label for="edit-sheet-title-{sheet.id}" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
                         Title <span class="text-[var(--dash-error)]">*</span>
                       </label>
-                      <input
-                        type="text"
-                        id="edit-title-{story.id}"
-                        bind:value={editTitle}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
+                      <input type="text" id="edit-sheet-title-{sheet.id}" bind:value={editSheetTitle}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
                     </div>
-
                     <div>
-                      <label
-                        for="edit-category-{story.id}"
-                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                      >
-                        Category
-                      </label>
-                      <select
-                        id="edit-category-{story.id}"
-                        bind:value={editCategory}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      >
-                        <option value="">Select a category</option>
-                        {#each categories as category}
-                          <option value={category.value}>
-                            {category.label}
-                          </option>
-                        {/each}
-                      </select>
+                      <label class="block text-sm font-medium text-[var(--dash-text)] mb-1">Content</label>
+                      <input type="hidden" name="content" value={editSheetContent} />
+                      <SimpleEditor bind:content={editSheetContent} placeholder="Add your notes..." />
                     </div>
                   </div>
-
-                  <div>
-                    <label
-                      for="edit-situation-{story.id}"
-                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                    >
-                      Situation
-                    </label>
-                    <textarea
-                      id="edit-situation-{story.id}"
-                      bind:value={editSituation}
-                      rows={3}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-task-{story.id}"
-                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                    >
-                      Task
-                    </label>
-                    <textarea
-                      id="edit-task-{story.id}"
-                      bind:value={editTask}
-                      rows={2}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-action-{story.id}"
-                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                    >
-                      Action
-                    </label>
-                    <textarea
-                      id="edit-action-{story.id}"
-                      bind:value={editAction}
-                      rows={4}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[150px] sm:min-h-0"
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-result-{story.id}"
-                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                    >
-                      Result
-                    </label>
-                    <textarea
-                      id="edit-result-{story.id}"
-                      bind:value={editResult}
-                      rows={3}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label
-                      for="edit-reflection-{story.id}"
-                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                    >
-                      Reflection (optional)
-                    </label>
-                    <textarea
-                      id="edit-reflection-{story.id}"
-                      bind:value={editReflection}
-                      rows={2}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
-                    ></textarea>
-                  </div>
-                </div>
-
-                <div class="flex items-center mt-4">
-                  <button
-                    type="button"
-                    onclick={() => deleteId = story.id}
-                    class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5"
-                  >
-                    <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                    Delete
-                  </button>
-                  <div class="flex gap-2 ml-auto">
-                    <button
-                      type="button"
-                      onclick={cancelEdit}
-                      class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
+                  <div class="flex items-center mt-4">
+                    <button type="button" onclick={() => { deleteKey = item.key; deleteType = "cheatsheet"; }}
+                      class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faTrash} class="w-3 h-3" /> Delete
                     </button>
-                    <SectionSaveButton state={editSaveState} onClick={saveEditedStory} />
+                    <div class="flex gap-2 ml-auto">
+                      <button type="button" onclick={cancelEdit}
+                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">
+                        Cancel
+                      </button>
+                      <SectionSaveButton state={editSaveState} onClick={() => saveEditedSheet(sheet.id)} />
+                    </div>
+                  </div>
+                {:else}
+                  <div class="space-y-3 sm:space-y-4">
+                    {#if sheet.content}
+                      <div class="cheatsheet-content text-sm text-[var(--dash-text)]">
+                        {@html sheet.content}
+                      </div>
+                    {:else}
+                      <p class="text-[var(--dash-text-secondary)] italic">No content yet</p>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+
+            {#if !isEditing}
+              <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+                <button type="button" onclick={() => startEditSheet(sheet)}
+                  class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                  <FontAwesomeIcon icon={faPencil} class="w-3 h-3" /> Edit
+                </button>
+              </div>
+            {/if}
+          </Card>
+        {:else}
+          <!-- Story Card -->
+          {@const story = item}
+          {@const isExpanded = expandedKey === item.key}
+          {@const isEditing = editingKey === item.key}
+          <Card class="overflow-hidden relative transition-all">
+            <button
+              type="button"
+              onclick={(e) => { e.stopPropagation(); toggleExpand(item.key); }}
+              class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+            >
+              <span class="inline-block transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}">
+                <FontAwesomeIcon icon={faChevronRight} class="w-4 h-4" />
+              </span>
+            </button>
+
+            <button type="button" onclick={() => toggleExpand(item.key)}
+              class="w-full p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer">
+              <div class="flex items-start gap-3">
+                <div class="hidden md:flex flex-shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                    <FontAwesomeIcon icon={faBook} class="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
-              {:else}
-                <!-- View Mode -->
-                <div class="space-y-3 sm:space-y-4">
-                  {#if story.situation}
-                    <div>
-                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Situation</p>
-                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.situation}</p>
-                    </div>
-                  {/if}
-
-                  {#if story.task}
-                    <div>
-                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Task</p>
-                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.task}</p>
-                    </div>
-                  {/if}
-
-                  {#if story.action}
-                    <div>
-                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Action</p>
-                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.action}</p>
-                    </div>
-                  {/if}
-
-                  {#if story.result}
-                    <div>
-                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Result</p>
-                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.result}</p>
-                    </div>
-                  {/if}
-
-                  {#if story.reflection}
-                    <div>
-                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Reflection</p>
-                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.reflection}</p>
-                    </div>
-                  {/if}
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
+                    {story.title || "Untitled Story"}
+                  </h3>
+                  <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
+                    <span class="text-xs text-[var(--dash-text-muted)]">Project Story</span>
+                    {#if story.category}
+                      <span class="px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600">
+                        {getCategoryLabel(story.category)}
+                      </span>
+                    {/if}
+                  </div>
                 </div>
-              {/if}
-            </div>
-          {/if}
+                <div class="flex-shrink-0 md:hidden flex flex-col items-end">
+                  <div class="h-6 mb-1"></div>
+                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                    <FontAwesomeIcon icon={faBook} class="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+            </button>
 
-          <!-- Footer with action buttons (hidden in edit mode) -->
-          {#if editingId !== story.id}
-            <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
-              <button
-                type="button"
-                onclick={() => startEdit(story)}
-                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-                Edit
-              </button>
-            </div>
-          {/if}
-        </Card>
+            {#if isExpanded}
+              <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
+                {#if isEditing}
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label for="edit-story-title-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">
+                          Title <span class="text-[var(--dash-error)]">*</span>
+                        </label>
+                        <input type="text" id="edit-story-title-{story.id}" bind:value={editStoryTitle}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
+                      </div>
+                      <div>
+                        <label for="edit-story-category-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Category</label>
+                        <select id="edit-story-category-{story.id}" bind:value={editStoryCategory}
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent">
+                          <option value="">Select a category</option>
+                          {#each categories as cat}
+                            <option value={cat.value}>{cat.label}</option>
+                          {/each}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label for="edit-story-situation-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Situation</label>
+                      <textarea id="edit-story-situation-{story.id}" bind:value={editStorySituation} rows={3}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"></textarea>
+                    </div>
+                    <div>
+                      <label for="edit-story-task-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Task</label>
+                      <textarea id="edit-story-task-{story.id}" bind:value={editStoryTask} rows={2}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"></textarea>
+                    </div>
+                    <div>
+                      <label for="edit-story-action-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Action</label>
+                      <textarea id="edit-story-action-{story.id}" bind:value={editStoryAction} rows={4}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[150px] sm:min-h-0"></textarea>
+                    </div>
+                    <div>
+                      <label for="edit-story-result-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Result</label>
+                      <textarea id="edit-story-result-{story.id}" bind:value={editStoryResult} rows={3}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"></textarea>
+                    </div>
+                    <div>
+                      <label for="edit-story-reflection-{story.id}" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Reflection (optional)</label>
+                      <textarea id="edit-story-reflection-{story.id}" bind:value={editStoryReflection} rows={2}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"></textarea>
+                    </div>
+                  </div>
+                  <div class="flex items-center mt-4">
+                    <button type="button" onclick={() => { deleteKey = item.key; deleteType = "story"; }}
+                      class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faTrash} class="w-3 h-3" /> Delete
+                    </button>
+                    <div class="flex gap-2 ml-auto">
+                      <button type="button" onclick={cancelEdit}
+                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">
+                        Cancel
+                      </button>
+                      <SectionSaveButton state={editSaveState} onClick={() => saveEditedStory(story.id)} />
+                    </div>
+                  </div>
+                {:else}
+                  <div class="space-y-3 sm:space-y-4">
+                    {#if story.situation}
+                      <div>
+                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Situation</p>
+                        <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.situation}</p>
+                      </div>
+                    {/if}
+                    {#if story.task}
+                      <div>
+                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Task</p>
+                        <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.task}</p>
+                      </div>
+                    {/if}
+                    {#if story.action}
+                      <div>
+                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Action</p>
+                        <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.action}</p>
+                      </div>
+                    {/if}
+                    {#if story.result}
+                      <div>
+                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Result</p>
+                        <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.result}</p>
+                      </div>
+                    {/if}
+                    {#if story.reflection}
+                      <div>
+                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Reflection</p>
+                        <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.reflection}</p>
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+
+            {#if !isEditing}
+              <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+                <button type="button" onclick={() => startEditStory(story)}
+                  class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                  <FontAwesomeIcon icon={faPencil} class="w-3 h-3" /> Edit
+                </button>
+              </div>
+            {/if}
+          </Card>
+        {/if}
       {/each}
     </div>
   {/if}
@@ -664,9 +800,43 @@
 
 <!-- Delete Confirmation Modal -->
 <ConfirmModal
-  isOpen={deleteId !== null}
-  title="Delete Story"
-  message="Are you sure you want to delete this project story? This action cannot be undone."
-  onCancel={() => (deleteId = null)}
-  onConfirm={deleteStory}
+  isOpen={deleteKey !== null}
+  title={deleteType === "cheatsheet" ? "Delete Cheat Sheet" : "Delete Story"}
+  message={deleteType === "cheatsheet"
+    ? "Are you sure you want to delete this cheat sheet? This action cannot be undone."
+    : "Are you sure you want to delete this project story? This action cannot be undone."}
+  onCancel={() => (deleteKey = null)}
+  onConfirm={handleDelete}
 />
+
+<style>
+  .cheatsheet-content :global(h3) {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 0.75em;
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(p) {
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(ul),
+  .cheatsheet-content :global(ol) {
+    margin-left: 1.25em;
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(ul) {
+    list-style-type: disc;
+  }
+  .cheatsheet-content :global(ol) {
+    list-style-type: decimal;
+  }
+  .cheatsheet-content :global(li) {
+    margin-bottom: 0.25em;
+  }
+  .cheatsheet-content :global(strong) {
+    font-weight: 600;
+  }
+  .cheatsheet-content :global(em) {
+    font-style: italic;
+  }
+</style>

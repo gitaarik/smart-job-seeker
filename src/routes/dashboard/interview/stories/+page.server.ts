@@ -9,13 +9,22 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const stories = await db.project_stories.findMany({
-    where: { profile: layoutData.selectedProfile.id },
-    orderBy: { sort: "asc" },
-  });
+  const profileId = layoutData.selectedProfile.id;
+
+  const [cheatsheets, stories] = await Promise.all([
+    db.cheat_sheets.findMany({
+      where: { profile: profileId },
+      orderBy: { sort: "asc" },
+    }),
+    db.project_stories.findMany({
+      where: { profile: profileId },
+      orderBy: { sort: "asc" },
+    }),
+  ]);
 
   return {
+    cheatsheets,
     stories,
-    profileId: layoutData.selectedProfile.id,
+    profileId,
   };
 };
