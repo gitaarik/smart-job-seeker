@@ -119,7 +119,7 @@
         },
         {
           label: "Interview Prep",
-          href: "/dashboard/interview/stories",
+          href: "/dashboard/applications/interview",
           icon: faComments,
         },
       ],
@@ -167,7 +167,7 @@
         },
         {
           label: "Settings",
-          href: "/dashboard/export/delete",
+          href: "/dashboard/export/settings",
           icon: faWrench,
         },
       ],
