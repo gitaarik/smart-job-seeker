@@ -20,7 +20,7 @@
 </script>
 
 <div class="space-y-6">
-  <SectionHeader title="Import & Match" icon={faBullseye} />
+  <SectionHeader title="Import Jobs" icon={faBullseye} />
 
   <TabNav {tabs} isActive={isTabActive}>
     {@render children()}

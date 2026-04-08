@@ -194,7 +194,7 @@
             For trackable links with view limits and expiration, use <a
               href="/dashboard/profile/share"
               class="text-[var(--dash-primary)] hover:underline"
-              >Private Links</a
+              >Share Links</a
             >.
           </p>
           <div class="space-y-2">

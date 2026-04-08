@@ -23,6 +23,7 @@
     faEnvelope,
     faExchangeAlt,
     faFileAlt,
+    faWrench,
     faHome,
     faLink,
     faListCheck,
@@ -80,7 +81,7 @@
       icon: faSearch,
       children: [
         {
-          label: "Import & Match",
+          label: "Import Jobs",
           href: "/dashboard/jobs/matching",
           icon: faBullseye,
         },
@@ -147,7 +148,7 @@
           icon: faFileAlt,
         },
         {
-          label: "Private Links",
+          label: "Share Links",
           href: "/dashboard/profile/share",
           icon: faLink,
         },
@@ -167,7 +168,7 @@
         {
           label: "Settings",
           href: "/dashboard/export/delete",
-          icon: faCog,
+          icon: faWrench,
         },
       ],
     },

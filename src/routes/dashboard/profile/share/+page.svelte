@@ -189,7 +189,7 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Private Links"
+    title="Share Links"
     icon={faLink}
     showAddButton={!showAddForm && tokens.length > 0 && versions.length > 0}
     addLabel="Create Link"
