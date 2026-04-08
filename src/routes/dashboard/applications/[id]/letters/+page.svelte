@@ -4,12 +4,12 @@
   import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faArrowRight,
     faCheck,
     faChevronRight,
     faEnvelope,
     faLayerGroup,
     faPen,
+    faPencil,
     faPlus,
     faQuestionCircle,
     faRobot,
@@ -358,14 +358,24 @@
                     {/if}
                   </p>
                 </div>
-                {#if latestContent}
-                  <span class="inline-block transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}">
-                    <FontAwesomeIcon
-                      icon={faChevronRight}
-                      class="w-4 h-4 text-[var(--dash-text-secondary)] flex-shrink-0"
-                    />
-                  </span>
-                {/if}
+                <div class="flex items-center gap-1 flex-shrink-0">
+                  <a
+                    href="/dashboard/applications/{app.id}/letters/{item.id}"
+                    class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
+                    aria-label="Edit"
+                    onclick={(e) => e.stopPropagation()}
+                  >
+                    <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+                  </a>
+                  {#if latestContent}
+                    <span class="inline-block transition-transform duration-200 {isExpanded ? 'rotate-90' : ''}">
+                      <FontAwesomeIcon
+                        icon={faChevronRight}
+                        class="w-4 h-4 text-[var(--dash-text-secondary)]"
+                      />
+                    </span>
+                  {/if}
+                </div>
               </div>
             </button>
 
@@ -374,16 +384,6 @@
                 <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap line-clamp-8">{latestContent}</p>
               </div>
             {/if}
-
-            <div class="border-t border-[var(--dash-border)] px-4 py-2 flex justify-end md:justify-start items-center gap-2">
-              <a
-                href="/dashboard/applications/{app.id}/letters/{item.id}"
-                class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
-              >
-                {letterItem.content ? "Edit" : "Write"}
-                <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-              </a>
-            </div>
           </Card>
         {:else}
           <!-- Question Card: expandable with inline editing -->
@@ -411,12 +411,24 @@
                   </p>
                 </div>
               </div>
-              <span class="inline-block transition-transform duration-200 {expandedId === itemId ? 'rotate-90' : ''}">
-                <FontAwesomeIcon
-                  icon={faChevronRight}
-                  class="w-4 h-4 text-[var(--dash-text-secondary)]"
-                />
-              </span>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <span
+                  role="button"
+                  tabindex="0"
+                  onclick={(e) => { e.stopPropagation(); startEdit(item); }}
+                  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); startEdit(item); } }}
+                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
+                  aria-label="Edit"
+                >
+                  <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+                </span>
+                <span class="inline-block transition-transform duration-200 {expandedId === itemId ? 'rotate-90' : ''}">
+                  <FontAwesomeIcon
+                    icon={faChevronRight}
+                    class="w-4 h-4 text-[var(--dash-text-secondary)]"
+                  />
+                </span>
+              </div>
             </button>
 
             <!-- Expanded Content -->
@@ -481,13 +493,6 @@
 
                     <!-- Action Buttons -->
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]">
-                      <button
-                        type="button"
-                        onclick={() => startEdit(item)}
-                        class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                      >
-                        Edit
-                      </button>
                       <button
                         type="button"
                         onclick={() => generateAi(item)}
