@@ -5,7 +5,6 @@
   import {
     faArrowLeft,
     faBriefcase,
-    faCheck,
     faCode,
     faCogs,
     faFileAlt,
@@ -239,24 +238,13 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center pt-2 border-t border-[var(--dash-border)]">
+        <div class="flex justify-end pt-2 border-t border-[var(--dash-border)]">
           <button
-            type="button"
-            onclick={() => (showDeleteModal = true)}
-            class="py-2 pr-2 text-red-500 hover:text-red-600 transition-colors"
-            aria-label="Delete"
+            type="submit"
+            class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
           >
-            <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+            Save
           </button>
-          <div class="ml-auto">
-            <button
-              type="submit"
-              class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-2 text-sm font-medium"
-            >
-              <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-              Save
-            </button>
-          </div>
         </div>
       </div>
     </Card>
@@ -361,6 +349,36 @@
         {/if}
       </div>
     {/if}
+  </Card>
+
+  <!-- Danger Zone -->
+  <Card padding="lg">
+    <div class="space-y-3">
+      <div class="flex items-center gap-2 mb-2">
+        <FontAwesomeIcon
+          icon={faTrash}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+        >
+          Danger Zone
+        </h2>
+      </div>
+
+      <p class="text-sm text-[var(--dash-text-secondary)]">
+        Permanently remove this resume version. Associated share links may stop working.
+      </p>
+
+      <button
+        type="button"
+        onclick={() => showDeleteModal = true}
+        class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+      >
+        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+        Delete Version
+      </button>
+    </div>
   </Card>
 </div>
 

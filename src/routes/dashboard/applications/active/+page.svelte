@@ -4,11 +4,9 @@
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faArrowRight,
-    faBriefcase,
+    faBuilding,
     faCalendar,
     faChevronDown,
-    faChevronRight,
     faFilter,
     faGlobe,
     faLayerGroup,
@@ -16,10 +14,8 @@
     faPaperPlane,
     faPlus,
     faSearch,
-    faStickyNote,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../components/Card.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
@@ -32,7 +28,6 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let applications = $derived(data.applications);
-  let expandedId = $state<number | null>(null);
   let openDropdown = $state<string | null>(null);
 
   // Filter state synced from server data
@@ -123,9 +118,6 @@
     });
   }
 
-  function toggleExpand(id: number) {
-    expandedId = expandedId === id ? null : id;
-  }
 </script>
 
 <svelte:window onclick={handleWindowClick} />
@@ -367,77 +359,30 @@
     <div class="space-y-3">
       {#each applications as app (app.id)}
         {@const job = app.jobs}
-        <Card class="overflow-hidden">
-          <!-- Header -->
-          <button
-            type="button"
-            onclick={() => toggleExpand(app.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
-          >
-            <div class="flex items-center gap-4 flex-1 min-w-0">
-              <div
-                class="
-                  w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 {getStatusColor(
-                  app.status,
-                  )}
-                "
-              >
-                <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
-              </div>
+        <a
+          href="/dashboard/applications/{app.id}"
+          data-app-id={app.id}
+          class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden hover:border-[var(--dash-primary)] hover:ring-2 hover:ring-[var(--dash-primary)]/20 transition-all"
+        >
+          <div class="p-3 sm:p-4">
+            <div class="flex-1 min-w-0">
+              <!-- Title -->
+              <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate">
+                {job?.title || "Unknown Position"}
+              </h3>
 
-              <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-[var(--dash-text)] truncate">
-                  {job?.title || "Unknown Position"}
-                </h3>
-                <div class="mt-1 space-y-0.5">
-                  <div>
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}">
-                      {getStatusLabel(app.status)}
-                    </span>
-                  </div>
-                  {#if app.status_step}
-                    <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
-                  {/if}
-                  {#if app.status_action}
-                    <p class="text-xs text-[var(--dash-primary)] font-medium">
-                      → {app.status_action}
-                      {#if app.status_action === "Scheduled" && app.status_action_date}
-                        — {formatDate(app.status_action_date)}
-                      {/if}
-                    </p>
-                  {/if}
-                </div>
-              </div>
-            </div>
-
-            <div class="flex items-center ml-4">
-              <span class="inline-block transition-transform duration-200 {expandedId === app.id ? 'rotate-90' : ''}">
-                <FontAwesomeIcon
-                  icon={faChevronRight}
-                  class="w-4 h-4 text-[var(--dash-text-secondary)]"
-                />
-              </span>
-            </div>
-          </button>
-
-          <!-- Expanded Content -->
-          {#if expandedId === app.id}
-            <div class="border-t border-[var(--dash-border)] p-4 space-y-3">
-              <!-- Job title -->
-              <h4 class="text-lg font-bold text-[var(--dash-text)]">{job?.title || "Unknown Position"}</h4>
-
-              <!-- Job info row -->
-              <div class="flex items-center gap-3 text-sm text-[var(--dash-text-secondary)] flex-wrap">
+              <!-- Company, location, platform -->
+              <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
                 {#if job?.company}
                   <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faBriefcase} class="w-3.5 h-3.5" />
-                    {job.company}
+                    <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
+                    <span class="truncate max-w-[120px] sm:max-w-none">{job.company}</span>
                   </span>
                 {/if}
                 {#if job?.office_location}
                   <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3.5 h-3.5" />
-                    {job.office_location}
+                    <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
+                    <span class="truncate max-w-[100px] sm:max-w-none">{job.office_location}</span>
                   </span>
                 {/if}
                 {#if job?.job_platforms}
@@ -451,62 +396,37 @@
                 {/if}
               </div>
 
-              {#if job?.id}
-                <div>
-                  <a
-                    href="/dashboard/jobs/{job.id}"
-                    class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
-                  >
-                    View Job
-                    <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-                  </a>
-                </div>
-              {/if}
+              <!-- Status and action info -->
+              <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}">
+                  {getStatusLabel(app.status)}
+                </span>
+                {#if app.status_step}
+                  <span class="text-xs text-[var(--dash-text-secondary)] italic">{app.status_step}</span>
+                {/if}
+              </div>
 
-              {#if app.salary_expectation}
-                <p class="text-sm text-[var(--dash-text)]">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: app.salary_currency || "EUR",
-                    maximumFractionDigits: 0,
-                  }).format(Number(app.salary_expectation))}{#if app.salary_period} / {app.salary_period}{/if}
+              {#if app.status_action}
+                <p class="text-xs text-[var(--dash-primary)] font-medium mt-1">
+                  → {app.status_action}
+                  {#if app.status_action === "Scheduled" && app.status_action_date}
+                    — {formatDate(app.status_action_date)}
+                  {/if}
                 </p>
               {/if}
 
-              {#if app.application_note}
-                <div class="flex gap-2 px-3 py-2 rounded-lg bg-[var(--dash-bg)] border border-[var(--dash-border)]">
-                  <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 text-[var(--dash-text-muted)] mt-0.5 flex-shrink-0" />
-                  <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.application_note}</p>
+              <!-- Date -->
+              {#if app.date_created}
+                <div class="flex items-center gap-2 mt-1.5 text-xs text-[var(--dash-text-muted)]">
+                  <span class="flex items-center gap-1">
+                    <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                    {formatDate(app.date_created)}
+                  </span>
                 </div>
               {/if}
-
-              {#if app.discontinued_reason}
-                <div
-                  class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-3 text-sm"
-                >
-                  <p class="text-[var(--dash-error)] font-medium">
-                    Discontinued: {app.discontinued_reason}
-                  </p>
-                  {#if app.discontinued_note}
-                    <p class="text-[var(--dash-error)] mt-1">{app.discontinued_note}</p>
-                  {/if}
-                </div>
-              {/if}
-
             </div>
-          {/if}
-
-          <!-- Footer (always visible) -->
-          <div class="border-t border-[var(--dash-border)] px-4 py-2 flex justify-end md:justify-start items-center gap-2">
-            <a
-              href="/dashboard/applications/{app.id}"
-              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
-            >
-              Open
-              <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-            </a>
           </div>
-        </Card>
+        </a>
       {/each}
     </div>
   {/if}
