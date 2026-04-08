@@ -1,18 +1,5 @@
-import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
-import { listApiKeys } from "$lib/server/auth/api-key";
 
-export const load: PageServerLoad = async ({ parent }) => {
-  const layoutData = await parent();
-
-  if (!layoutData.selectedProfile) {
-    redirect(302, "/dashboard");
-  }
-
-  const apiKeys = await listApiKeys(layoutData.selectedProfile.id);
-
-  return {
-    apiKeys,
-    profileId: layoutData.selectedProfile.id,
-  };
+export const load = () => {
+  redirect(301, "/dashboard/jobs/matching/local-scraping");
 };

@@ -19,7 +19,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
-  import Card from "../../components/Card.svelte";
+  import Card from "../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
 
   let { data }: { data: PageData } = $props();
@@ -146,14 +146,8 @@
   }
 </script>
 
-<div class="space-y-6">
-  <!-- Header -->
-  <div class="flex items-center gap-3">
-    <FontAwesomeIcon icon={faDesktop} class="w-5 h-5 text-[var(--dash-text-secondary)]" />
-    <h1 class="text-xl font-semibold text-[var(--dash-text)]">Local Scraping Setup</h1>
-  </div>
-
-  <p class="text-[var(--dash-text-secondary)]">
+<div class="space-y-4">
+  <p class="text-sm text-[var(--dash-text-secondary)]">
     Run the desktop app on your computer to scrape from your home IP address. This avoids datacenter IP detection that can trigger CAPTCHAs.
   </p>
 

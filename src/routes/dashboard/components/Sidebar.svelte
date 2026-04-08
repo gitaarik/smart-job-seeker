@@ -20,7 +20,6 @@
     faCommentDots,
     faComments,
     faDatabase,
-    faDesktop,
     faEnvelope,
     faExchangeAlt,
     faFileAlt,
@@ -164,11 +163,6 @@
           href: "/dashboard/export/import",
           icon: faExchangeAlt,
           alsoActiveFor: ["/dashboard/export/data"],
-        },
-        {
-          label: "Local Scraping",
-          href: "/dashboard/export/local-setup",
-          icon: faDesktop,
         },
         {
           label: "Delete Profile",
