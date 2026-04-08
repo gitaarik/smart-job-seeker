@@ -2,9 +2,9 @@
   import type { ActionData, PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faArrowRight,
     faBriefcase,
     faExternalLink,
+    faPencil,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../components/SectionHeader.svelte";
   import EmptyState from "../../components/EmptyState.svelte";
@@ -326,13 +326,14 @@
 
           {/snippet}
 
-          {#snippet footer()}
+          {#snippet headerActions()}
             <a
               href="/dashboard/profile/work-experience/{exp.id}"
-              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
+              class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
+              aria-label="Edit"
+              onclick={(e) => e.stopPropagation()}
             >
-              Open
-              <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+              <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
             </a>
           {/snippet}
         </ItemCard>

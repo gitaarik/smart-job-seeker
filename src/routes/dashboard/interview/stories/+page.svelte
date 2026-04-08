@@ -44,6 +44,12 @@
   let deleteKey = $state<string | null>(null);
   let deleteType = $state<"cheatsheet" | "story">("cheatsheet");
 
+  // Discard edits confirmation
+  let showDiscardConfirm = $state(false);
+
+  // Original values for dirty checking
+  let originalValues = $state<Record<string, string>>({});
+
   // Save states
   type SaveState = "idle" | "saving" | "saved" | "error";
   let addSaveState = $state<SaveState>("idle");
@@ -100,9 +106,36 @@
   let hasAnyItems = $derived(cheatsheets.length > 0 || stories.length > 0);
 
   // Toggle expand/collapse
+  function isEditDirty(): boolean {
+    if (!editingKey) return false;
+    if (editingKey.startsWith("cs-")) {
+      return editSheetTitle !== originalValues.title || editSheetContent !== originalValues.content;
+    }
+    return editStoryTitle !== originalValues.title || editStoryCategory !== originalValues.category
+      || editStorySituation !== originalValues.situation || editStoryTask !== originalValues.task
+      || editStoryAction !== originalValues.action || editStoryResult !== originalValues.result
+      || editStoryReflection !== originalValues.reflection;
+  }
+
   function toggleExpand(key: string) {
-    if (editingKey === key) return;
+    if (editingKey === key) {
+      if (isEditDirty()) {
+        showDiscardConfirm = true;
+      } else {
+        editingKey = null;
+        editSaveState = "idle";
+        expandedKey = null;
+      }
+      return;
+    }
     expandedKey = expandedKey === key ? null : key;
+  }
+
+  function confirmDiscard() {
+    editingKey = null;
+    editSaveState = "idle";
+    expandedKey = null;
+    showDiscardConfirm = false;
   }
 
   // --- Cheat sheet CRUD ---
@@ -113,6 +146,7 @@
     editSheetTitle = sheet.title || "";
     editSheetContent = sheet.content || "";
     editSaveState = "idle";
+    originalValues = { title: editSheetTitle, content: editSheetContent };
   }
 
   function resetAddSheetForm() {
@@ -231,6 +265,11 @@
     editStoryResult = story.result || "";
     editStoryReflection = story.reflection || "";
     editSaveState = "idle";
+    originalValues = {
+      title: editStoryTitle, category: editStoryCategory,
+      situation: editStorySituation, task: editStoryTask,
+      action: editStoryAction, result: editStoryResult, reflection: editStoryReflection,
+    };
   }
 
   function resetAddStoryForm() {
@@ -385,14 +424,11 @@
 <svelte:window onclick={handleClickOutside} />
 
 <div class="space-y-6">
-  <!-- Header with title, filters, and add button -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <!-- Header with title and add button -->
+  <div class="flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <FontAwesomeIcon icon={faBook} class="w-7 h-7 text-[var(--dash-primary)]" />
       <h2 class="text-2xl font-bold text-[var(--dash-text)]">Interview Prep</h2>
-      {#if cheatsheets.length > 0 && stories.length > 0}
-        <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => (currentType = v)} />
-      {/if}
     </div>
     {#if hasAnyItems}
       <div class="relative" data-add-menu>
@@ -427,6 +463,11 @@
       </div>
     {/if}
   </div>
+
+  <!-- Filter tabs -->
+  {#if cheatsheets.length > 0 && stories.length > 0}
+    <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => (currentType = v)} />
+  {/if}
 
   {#if errorMessage && (addSaveState === "error" || editSaveState === "error")}
     <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
@@ -570,7 +611,7 @@
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
+                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-14">
                     {sheet.title || "Untitled"}
                   </h3>
                   <span class="text-xs text-[var(--dash-text-muted)]">Cheat Sheet</span>
@@ -583,6 +624,17 @@
                 </div>
               </div>
             </button>
+
+            {#if !isEditing}
+              <button
+                type="button"
+                onclick={(e) => { e.stopPropagation(); startEditSheet(sheet); }}
+                class="absolute top-3 right-10 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10 cursor-pointer"
+                aria-label="Edit"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+              </button>
+            {/if}
 
             {#if isExpanded}
               <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
@@ -628,14 +680,6 @@
               </div>
             {/if}
 
-            {#if !isEditing}
-              <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
-                <button type="button" onclick={() => startEditSheet(sheet)}
-                  class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap">
-                  <FontAwesomeIcon icon={faPencil} class="w-3 h-3" /> Edit
-                </button>
-              </div>
-            {/if}
           </Card>
         {:else}
           <!-- Story Card -->
@@ -663,7 +707,7 @@
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
+                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-14">
                     {story.title || "Untitled Story"}
                   </h3>
                   <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
@@ -683,6 +727,17 @@
                 </div>
               </div>
             </button>
+
+            {#if !isEditing}
+              <button
+                type="button"
+                onclick={(e) => { e.stopPropagation(); startEditStory(story); }}
+                class="absolute top-3 right-10 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10 cursor-pointer"
+                aria-label="Edit"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+              </button>
+            {/if}
 
             {#if isExpanded}
               <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
@@ -783,14 +838,6 @@
               </div>
             {/if}
 
-            {#if !isEditing}
-              <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
-                <button type="button" onclick={() => startEditStory(story)}
-                  class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap">
-                  <FontAwesomeIcon icon={faPencil} class="w-3 h-3" /> Edit
-                </button>
-              </div>
-            {/if}
           </Card>
         {/if}
       {/each}
@@ -807,6 +854,14 @@
     : "Are you sure you want to delete this project story? This action cannot be undone."}
   onCancel={() => (deleteKey = null)}
   onConfirm={handleDelete}
+/>
+
+<ConfirmModal
+  isOpen={showDiscardConfirm}
+  title="Discard Changes"
+  message="You have unsaved changes. Are you sure you want to discard them?"
+  onCancel={() => (showDiscardConfirm = false)}
+  onConfirm={confirmDiscard}
 />
 
 <style>

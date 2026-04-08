@@ -3,9 +3,8 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCheck,
     faGlobe,
-    faTimes,
+    faPencil,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../components/SectionHeader.svelte";
@@ -26,6 +25,9 @@
 
   let editName = $state("");
   let editProficiency = $state("");
+  let originalName = $state("");
+  let originalProficiency = $state("");
+  let showDiscardConfirm = $state(false);
 
   const proficiencyOptions = [
     { value: "native", label: "Native" },
@@ -35,17 +37,32 @@
     { value: "basic", label: "Basic" },
   ];
 
+  function isEditDirty(): boolean {
+    return editName !== originalName || editProficiency !== originalProficiency;
+  }
+
   function toggleExpand(id: number) {
     if (expandedId === id) {
-      expandedId = null;
+      if (isEditDirty()) {
+        showDiscardConfirm = true;
+      } else {
+        expandedId = null;
+      }
     } else {
       expandedId = id;
       const lang = languages.find((l) => l.id === id);
       if (lang) {
         editName = lang.name || "";
         editProficiency = lang.proficiency || "";
+        originalName = editName;
+        originalProficiency = editProficiency;
       }
     }
+  }
+
+  function confirmDiscard() {
+    expandedId = null;
+    showDiscardConfirm = false;
   }
 
   function resetAddForm() {
@@ -196,6 +213,17 @@
             {getProficiencyLabel(lang.proficiency)}
           {/snippet}
 
+          {#snippet headerActions()}
+            <button
+              type="button"
+              onclick={(e) => { e.stopPropagation(); if (expandedId !== lang.id) toggleExpand(lang.id); }}
+              class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
+              aria-label="Edit"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+            </button>
+          {/snippet}
+
           {#snippet expandedContent()}
             <form
               method="POST"
@@ -242,30 +270,27 @@
                 </div>
               </div>
 
-              <div class="flex justify-between items-center mt-4">
+              <div class="flex items-center mt-4">
                 <button
                   type="button"
                   onclick={() => { expandedId = null; deleteId = lang.id; }}
-                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+                  class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5"
                 >
-                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                  Delete
+                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" /> Delete
                 </button>
-                <div class="flex gap-2">
+                <div class="flex gap-2 ml-auto">
                   <button
                     type="button"
                     onclick={() => expandedId = null}
-                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                    aria-label="Cancel"
+                    class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
-                    <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+                    Cancel
                   </button>
                   <button
                     type="submit"
-                    class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-                    aria-label="Save"
+                    class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
                   >
-                    <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+                    Save
                   </button>
                 </div>
               </div>
@@ -297,4 +322,12 @@
       form.submit();
     }
   }}
+/>
+
+<ConfirmModal
+  isOpen={showDiscardConfirm}
+  title="Discard Changes"
+  message="You have unsaved changes. Are you sure you want to discard them?"
+  onCancel={() => (showDiscardConfirm = false)}
+  onConfirm={confirmDiscard}
 />

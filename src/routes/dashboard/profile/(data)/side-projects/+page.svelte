@@ -295,21 +295,14 @@
             {/if}
           {/snippet}
 
-          {#snippet footer()}
-            <button
-              type="button"
-              onclick={() => deleteId = project.id}
-              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              Delete
-            </button>
+          {#snippet headerActions()}
             <a
               href="/dashboard/profile/side-projects/{project.id}"
-              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
+              aria-label="Edit"
+              onclick={(e) => e.stopPropagation()}
             >
-              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-              Edit
+              <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
             </a>
           {/snippet}
         </ItemCard>
