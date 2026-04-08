@@ -13,8 +13,8 @@
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
-  import ConfirmModal from "../../components/ConfirmModal.svelte";
-  import Card from "../../../components/Card.svelte";
+  import ConfirmModal from "../../../components/ConfirmModal.svelte";
+  import Card from "../../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
 

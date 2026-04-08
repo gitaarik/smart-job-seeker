@@ -5,13 +5,13 @@
   import {
     faCheck,
     faGlobe,
+    faPlus,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../components/SectionHeader.svelte";
-  import EmptyState from "../components/EmptyState.svelte";
-  import ConfirmModal from "../components/ConfirmModal.svelte";
-  import ItemCard from "../components/ItemCard.svelte";
+  import EmptyState from "../../components/EmptyState.svelte";
+  import ConfirmModal from "../../components/ConfirmModal.svelte";
+  import ItemCard from "../../components/ItemCard.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -89,13 +89,18 @@
 </script>
 
 <div class="space-y-6">
-  <SectionHeader
-    title="Languages"
-    icon={faGlobe}
-    showAddButton={!showAddForm && languages.length > 0}
-    addLabel="Add Language"
-    onAdd={() => (showAddForm = true)}
-  />
+  {#if !showAddForm && languages.length > 0}
+    <div class="flex justify-end">
+      <button
+        type="button"
+        onclick={() => (showAddForm = true)}
+        class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+        <span class="hidden sm:inline">Add Language</span>
+      </button>
+    </div>
+  {/if}
 
   {#if form?.error}
     <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">

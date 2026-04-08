@@ -14,7 +14,6 @@
     faBinoculars,
     faBuilding,
     faChevronRight,
-    faCode,
     faCog,
     faCompass,
     faCrosshairs,
@@ -25,8 +24,6 @@
     faEnvelope,
     faExchangeAlt,
     faFileAlt,
-    faGlobe,
-    faGraduationCap,
     faHome,
     faLink,
     faListCheck,
@@ -41,10 +38,8 @@
     faTimes,
     faTrash,
     faUser,
-    faUserFriends,
     faUsers,
     faUserTie,
-    faWrench,
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -146,39 +141,18 @@
       icon: faUser,
       children: [
         {
-          label: "Basic Info",
+          label: "Profile Data",
           href: "/dashboard/profile/edit",
-          icon: faUser,
-        },
-        {
-          label: "Work Experience",
-          href: "/dashboard/profile/work-experience",
-          icon: faBriefcase,
-        },
-        {
-          label: "Education",
-          href: "/dashboard/profile/education",
-          icon: faGraduationCap,
-        },
-        {
-          label: "Skills",
-          href: "/dashboard/profile/skills",
-          icon: faWrench,
-        },
-        {
-          label: "Side Projects",
-          href: "/dashboard/profile/side-projects",
-          icon: faCode,
-        },
-        {
-          label: "Languages",
-          href: "/dashboard/profile/languages",
-          icon: faGlobe,
-        },
-        {
-          label: "References",
-          href: "/dashboard/profile/references",
-          icon: faUserFriends,
+          icon: faUserTie,
+          alsoActiveFor: [
+            "/dashboard/profile/work-experience",
+            "/dashboard/profile/education",
+            "/dashboard/profile/skills",
+            "/dashboard/profile/side-projects",
+            "/dashboard/profile/languages",
+            "/dashboard/profile/references",
+            "/dashboard/profile/highlights",
+          ],
         },
       ],
     },

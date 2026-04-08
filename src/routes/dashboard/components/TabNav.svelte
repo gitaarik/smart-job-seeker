@@ -23,10 +23,16 @@
   let containerEl = $state<HTMLDivElement | null>(null);
   let measureEl = $state<HTMLDivElement | null>(null);
   let overflows = $state(false);
+  let tabWidths = $state<number[]>([]);
 
   function measure() {
     if (!containerEl || !measureEl) return;
     overflows = measureEl.scrollWidth > containerEl.clientWidth;
+    // Measure individual tab widths for row splitting
+    if (overflows) {
+      const spans = measureEl.children;
+      tabWidths = Array.from(spans, (el) => (el as HTMLElement).offsetWidth);
+    }
   }
 
   $effect(() => {
@@ -36,20 +42,42 @@
     return () => ro.disconnect();
   });
 
-  // --- When overflowing, split into rows with active row at bottom ---
+  // --- When overflowing, split tabs into as many rows as needed ---
   let rows = $derived.by(() => {
-    if (!overflows) return null;
-    // Find where to split: try to balance rows so the wider row is at bottom.
-    // Use a simple greedy approach: fill first row until adding the next tab
-    // would make it wider than half the total count, then start row 2.
-    const split = Math.ceil(tabs.length / 2);
-    const row1 = tabs.slice(0, split);
-    const row2 = tabs.slice(split);
-    // Which row has the active tab?
-    const activeIdx = tabs.findIndex((t) => isActive(t.href));
-    const activeInRow1 = activeIdx < split;
-    // Put the active row at the bottom
-    return activeInRow1 ? [row2, row1] : [row1, row2];
+    if (!overflows || tabWidths.length === 0 || !containerEl) return null;
+    const maxWidth = containerEl.clientWidth;
+    const gap = 2; // gap-x-0.5 = 2px
+    const allRows: Tab[][] = [];
+    let currentRow: Tab[] = [];
+    let currentWidth = 0;
+
+    for (let i = 0; i < tabs.length; i++) {
+      const w = tabWidths[i] ?? 0;
+      const needed = currentRow.length > 0 ? gap + w : w;
+      if (currentRow.length > 0 && currentWidth + needed > maxWidth) {
+        allRows.push(currentRow);
+        currentRow = [tabs[i]];
+        currentWidth = w;
+      } else {
+        currentRow.push(tabs[i]);
+        currentWidth += needed;
+      }
+    }
+    if (currentRow.length > 0) allRows.push(currentRow);
+
+    // Move the row containing the active tab to the bottom
+    const activeHref = tabs.find((t) => isActive(t.href))?.href;
+    if (activeHref && allRows.length > 1) {
+      const activeRowIdx = allRows.findIndex((row) =>
+        row.some((t) => t.href === activeHref),
+      );
+      if (activeRowIdx >= 0 && activeRowIdx < allRows.length - 1) {
+        const [activeRow] = allRows.splice(activeRowIdx, 1);
+        allRows.push(activeRow);
+      }
+    }
+
+    return allRows;
   });
 </script>
 
@@ -91,35 +119,27 @@
     </div>
   {:else if rows}
     <!-- Multi-row: bookmark tabs with active row at bottom -->
-    <!-- Top row (no active tab) -->
-    <div class="flex gap-x-0.5">
-      {#each rows[0] as tab}
-        <a
-          href={tab.href}
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg border border-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50 transition-colors"
-        >
-          {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
-          {tab.label}
-        </a>
-      {/each}
-    </div>
-    <!-- Bottom row (contains active tab) -->
-    <div class="flex gap-x-0.5 border-b-2 border-[var(--dash-border)]">
-      {#each rows[1] as tab}
-        <a
-          href={tab.href}
-          class="
-            flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg -mb-0.5 transition-colors
-            {isActive(tab.href)
-            ? 'bg-[var(--dash-card)] border border-[var(--dash-border)] border-b-[var(--dash-card)] text-[var(--dash-primary)]'
-            : 'border border-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
-          "
-        >
-          {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
-          {tab.label}
-        </a>
-      {/each}
-    </div>
+    {#each rows as row, rowIdx}
+      {@const isBottomRow = rowIdx === rows.length - 1}
+      <div class="flex gap-x-0.5 {isBottomRow ? 'border-b-2 border-[var(--dash-border)]' : ''}">
+        {#each row as tab}
+          {@const active = isActive(tab.href)}
+          <a
+            href={tab.href}
+            class="
+              flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors
+              {isBottomRow ? '-mb-0.5' : ''}
+              {active
+              ? 'bg-[var(--dash-card)] border border-[var(--dash-border)] border-b-[var(--dash-card)] text-[var(--dash-primary)]'
+              : 'border border-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
+            "
+          >
+            {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
+            {tab.label}
+          </a>
+        {/each}
+      </div>
+    {/each}
     <!-- Content panel matching the active tab -->
     <div class="bg-[var(--dash-card)] border-x border-b border-[var(--dash-border)] rounded-b-xl p-4">
       {@render children()}

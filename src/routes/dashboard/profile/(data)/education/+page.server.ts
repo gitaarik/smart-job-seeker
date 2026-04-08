@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getSelectedProfileId } from "../utils";
+import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -10,20 +10,12 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const experiences = await db.work_experiences.findMany({
+  const education = await db.education.findMany({
     where: { profile: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
-    include: {
-      work_experience_achievements: {
-        orderBy: { sort: "asc" },
-      },
-      work_experience_technologies: {
-        orderBy: { sort: "asc" },
-      },
-    },
   });
 
-  return { experiences, profileId: layoutData.selectedProfile.id };
+  return { education, profileId: layoutData.selectedProfile.id };
 };
 
 export const actions: Actions = {
@@ -39,39 +31,37 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const position = formData.get("position") as string;
+    const institution = formData.get("institution") as string;
+    const area = formData.get("area") as string;
+    const study_type = formData.get("study_type") as string;
     const location = formData.get("location") as string;
-    const website = formData.get("website") as string;
-    const description = formData.get("description") as string;
-    const summary = formData.get("summary") as string;
+    const url = formData.get("url") as string;
+    const graduation_year = formData.get("graduation_year") as string;
     const start_date = formData.get("start_date") as string;
     const end_date = formData.get("end_date") as string;
+    const summary = formData.get("summary") as string;
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Company name is required" });
-    }
-
-    if (!position || position.trim().length === 0) {
-      return fail(400, { error: "Position is required" });
+    if (!institution || institution.trim().length === 0) {
+      return fail(400, { error: "Institution is required" });
     }
 
     // Get the highest sort value
-    const lastItem = await db.work_experiences.findFirst({
+    const lastItem = await db.education.findFirst({
       where: { profile: profileId },
       orderBy: { sort: "desc" },
     });
 
-    const created = await db.work_experiences.create({
+    const created = await db.education.create({
       data: {
-        name: name.trim(),
-        position: position.trim(),
-        location: location?.trim() || "",
-        website: website?.trim() || null,
-        description: description?.trim() || "",
-        summary: summary?.trim() || "",
+        institution: institution.trim(),
+        area: area?.trim() || null,
+        study_type: study_type?.trim() || null,
+        location: location?.trim() || null,
+        url: url?.trim() || null,
+        graduation_year: graduation_year ? parseInt(graduation_year) : null,
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
+        summary: summary?.trim() || null,
         profile: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
@@ -79,8 +69,8 @@ export const actions: Actions = {
       },
     });
 
-    // Redirect to edit page for the new experience
-    redirect(302, `/dashboard/profile/work-experience/${created.id}`);
+    // Redirect to edit page for the new education entry
+    redirect(302, `/dashboard/profile/education/${created.id}`);
   },
 
   delete: async ({ request, locals, cookies }) => {
@@ -98,20 +88,19 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
 
     if (isNaN(id)) {
-      return fail(400, { error: "Invalid experience ID" });
+      return fail(400, { error: "Invalid education ID" });
     }
 
     // Verify ownership
-    const existing = await db.work_experiences.findFirst({
+    const existing = await db.education.findFirst({
       where: { id, profile: profileId },
     });
 
     if (!existing) {
-      return fail(404, { error: "Experience not found" });
+      return fail(404, { error: "Education entry not found" });
     }
 
-    // Delete will cascade to achievements, technologies, projects
-    await db.work_experiences.delete({
+    await db.education.delete({
       where: { id },
     });
 

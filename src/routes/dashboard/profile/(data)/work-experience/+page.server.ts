@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getSelectedProfileId } from "../utils";
+import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -10,20 +10,20 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const projects = await db.side_projects.findMany({
+  const experiences = await db.work_experiences.findMany({
     where: { profile: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
     include: {
-      side_project_achievements: {
+      work_experience_achievements: {
         orderBy: { sort: "asc" },
       },
-      side_project_technologies: {
+      work_experience_technologies: {
         orderBy: { sort: "asc" },
       },
     },
   });
 
-  return { projects, profileId: layoutData.selectedProfile.id };
+  return { experiences, profileId: layoutData.selectedProfile.id };
 };
 
 export const actions: Actions = {
@@ -40,30 +40,36 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
-    const url = formData.get("url") as string;
-    const url_label = formData.get("url_label") as string;
+    const position = formData.get("position") as string;
+    const location = formData.get("location") as string;
+    const website = formData.get("website") as string;
+    const description = formData.get("description") as string;
     const summary = formData.get("summary") as string;
-    const stars = formData.get("stars") as string;
     const start_date = formData.get("start_date") as string;
     const end_date = formData.get("end_date") as string;
 
     if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Project name is required" });
+      return fail(400, { error: "Company name is required" });
+    }
+
+    if (!position || position.trim().length === 0) {
+      return fail(400, { error: "Position is required" });
     }
 
     // Get the highest sort value
-    const lastItem = await db.side_projects.findFirst({
+    const lastItem = await db.work_experiences.findFirst({
       where: { profile: profileId },
       orderBy: { sort: "desc" },
     });
 
-    const created = await db.side_projects.create({
+    const created = await db.work_experiences.create({
       data: {
         name: name.trim(),
-        url: url?.trim() || null,
-        url_label: url_label?.trim() || null,
-        summary: summary?.trim() || null,
-        stars: stars ? parseInt(stars) : null,
+        position: position.trim(),
+        location: location?.trim() || "",
+        website: website?.trim() || null,
+        description: description?.trim() || "",
+        summary: summary?.trim() || "",
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
         profile: profileId,
@@ -73,8 +79,8 @@ export const actions: Actions = {
       },
     });
 
-    // Redirect to edit page for the new project
-    redirect(302, `/dashboard/profile/side-projects/${created.id}`);
+    // Redirect to edit page for the new experience
+    redirect(302, `/dashboard/profile/work-experience/${created.id}`);
   },
 
   delete: async ({ request, locals, cookies }) => {
@@ -92,20 +98,20 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
 
     if (isNaN(id)) {
-      return fail(400, { error: "Invalid project ID" });
+      return fail(400, { error: "Invalid experience ID" });
     }
 
     // Verify ownership
-    const existing = await db.side_projects.findFirst({
+    const existing = await db.work_experiences.findFirst({
       where: { id, profile: profileId },
     });
 
     if (!existing) {
-      return fail(404, { error: "Project not found" });
+      return fail(404, { error: "Experience not found" });
     }
 
-    // Delete will cascade to achievements and technologies
-    await db.side_projects.delete({
+    // Delete will cascade to achievements, technologies, projects
+    await db.work_experiences.delete({
       where: { id },
     });
 

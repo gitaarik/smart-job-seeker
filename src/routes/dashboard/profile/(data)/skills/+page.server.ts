@@ -1,9 +1,9 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { Prisma } from "../../../../../generated/prisma/client.js";
+import { Prisma } from "../../../../../../generated/prisma/client.js";
 import { getFieldChoices } from "$lib/server/directus";
-import { getSelectedProfileId } from "../utils";
+import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();

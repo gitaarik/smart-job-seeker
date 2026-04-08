@@ -12,7 +12,7 @@
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
-  import Card from "../../../components/Card.svelte";
+  import Card from "../../../../components/Card.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
 

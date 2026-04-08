@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getSelectedProfileId } from "../utils";
+import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -10,12 +10,12 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const languages = await db.languages.findMany({
+  const references = await db.references.findMany({
     where: { profile: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
   });
 
-  return { languages, profileId: layoutData.selectedProfile.id };
+  return { references, profileId: layoutData.selectedProfile.id };
 };
 
 export const actions: Actions = {
@@ -31,25 +31,25 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const language_code = formData.get("language_code") as string;
-    const proficiency = formData.get("proficiency") as string;
+    const author = formData.get("author") as string;
+    const author_position = formData.get("author_position") as string;
+    const text = formData.get("text") as string;
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Language name is required" });
+    if (!author || author.trim().length === 0) {
+      return fail(400, { error: "Author name is required" });
     }
 
     // Get the highest sort value
-    const lastItem = await db.languages.findFirst({
+    const lastItem = await db.references.findFirst({
       where: { profile: profileId },
       orderBy: { sort: "desc" },
     });
 
-    await db.languages.create({
+    await db.references.create({
       data: {
-        name: name.trim(),
-        language_code: language_code?.trim() || null,
-        proficiency: proficiency || null,
+        author: author.trim(),
+        author_position: author_position?.trim() || null,
+        text: text?.trim() || null,
         profile: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
@@ -73,33 +73,33 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
-    const name = formData.get("name") as string;
-    const language_code = formData.get("language_code") as string;
-    const proficiency = formData.get("proficiency") as string;
+    const author = formData.get("author") as string;
+    const author_position = formData.get("author_position") as string;
+    const text = formData.get("text") as string;
 
     if (isNaN(id)) {
-      return fail(400, { error: "Invalid language ID" });
+      return fail(400, { error: "Invalid reference ID" });
     }
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Language name is required" });
+    if (!author || author.trim().length === 0) {
+      return fail(400, { error: "Author name is required" });
     }
 
     // Verify ownership
-    const existing = await db.languages.findFirst({
+    const existing = await db.references.findFirst({
       where: { id, profile: profileId },
     });
 
     if (!existing) {
-      return fail(404, { error: "Language not found" });
+      return fail(404, { error: "Reference not found" });
     }
 
-    await db.languages.update({
+    await db.references.update({
       where: { id },
       data: {
-        name: name.trim(),
-        language_code: language_code?.trim() || null,
-        proficiency: proficiency || null,
+        author: author.trim(),
+        author_position: author_position?.trim() || null,
+        text: text?.trim() || null,
         date_updated: new Date(),
       },
     });
@@ -122,19 +122,19 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
 
     if (isNaN(id)) {
-      return fail(400, { error: "Invalid language ID" });
+      return fail(400, { error: "Invalid reference ID" });
     }
 
     // Verify ownership
-    const existing = await db.languages.findFirst({
+    const existing = await db.references.findFirst({
       where: { id, profile: profileId },
     });
 
     if (!existing) {
-      return fail(404, { error: "Language not found" });
+      return fail(404, { error: "Reference not found" });
     }
 
-    await db.languages.delete({
+    await db.references.delete({
       where: { id },
     });
 
