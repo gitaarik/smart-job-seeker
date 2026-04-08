@@ -81,12 +81,7 @@
       icon: faSearch,
       children: [
         {
-          label: "Job Import",
-          href: "/dashboard/jobs/job-import",
-          icon: faSearch,
-        },
-        {
-          label: "Job Matching",
+          label: "Import & Match",
           href: "/dashboard/jobs/matching",
           icon: faBullseye,
         },

@@ -3,11 +3,11 @@
   import { onDestroy, onMount } from "svelte";
   import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import Card from "../../../components/Card.svelte";
+  import Card from "../../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
-  import SearchTaskFields from "../../components/SearchTaskFields.svelte";
+  import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
   import { formatJobType, formatWorkLocation, formatSalaryRange, searchTaskDisplayName } from "$lib/format";
   import {
     faArrowLeft,
@@ -102,7 +102,7 @@
         method: "DELETE",
       });
       if (res.ok) {
-        goto("/dashboard/jobs/job-import");
+        goto("/dashboard/jobs/matching/import");
       }
     } finally {
       isDeleting = false;
@@ -1055,7 +1055,7 @@
   <!-- Header -->
   <div>
     <a
-      href="/dashboard/jobs/job-import"
+      href="/dashboard/jobs/matching/import"
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />

@@ -6,6 +6,7 @@
   import {
     faDesktop,
     faExclamationTriangle,
+    faPlus,
     faSearch,
     faTimes,
     faSortAmountDown,
@@ -14,9 +15,8 @@
   import { searchTaskDisplayName } from "$lib/format";
   import Spinner from "$lib/components/Spinner.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import EmptyState from "../../profile/components/EmptyState.svelte";
-  import SearchTaskFields from "../components/SearchTaskFields.svelte";
+  import EmptyState from "../../../profile/components/EmptyState.svelte";
+  import SearchTaskFields from "../../components/SearchTaskFields.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -235,14 +235,19 @@
   }
 </script>
 
-<div class="space-y-6">
-  <SectionHeader
-    title="Job Import"
-    icon={faSearch}
-    showAddButton={!showAddForm && searchTasks.length > 0}
-    addLabel="Add Import"
-    onAdd={() => (showAddForm = true)}
-  />
+<div class="space-y-4">
+  {#if !showAddForm && searchTasks.length > 0}
+    <div class="flex justify-end">
+      <button
+        type="button"
+        onclick={() => (showAddForm = true)}
+        class="flex items-center gap-2 px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add Import
+      </button>
+    </div>
+  {/if}
 
   {#if     desktopConnected !== null && (anyTaskUsesDesktop || desktopConnected)}
     <div
@@ -367,7 +372,7 @@
       {#each sortedSearchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
         <a
-          href="/dashboard/jobs/job-import/{search.id}"
+          href="/dashboard/jobs/matching/import/{search.id}"
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
         >
           <div class="flex items-start gap-3">
