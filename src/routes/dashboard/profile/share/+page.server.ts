@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getSelectedProfileId } from "../../profile/utils";
+import { getSelectedProfileId } from "../utils";
 import {
   DEFAULT_FORMAT,
   DEFAULT_VIEW_MODE,

@@ -194,7 +194,7 @@
   {:else}
     <div class="space-y-4">
       {#each references as ref (ref.id)}
-        <ItemCard
+        <ItemCard card={false}
           id={ref.id}
           {expandedId}
           onToggle={toggleExpand}

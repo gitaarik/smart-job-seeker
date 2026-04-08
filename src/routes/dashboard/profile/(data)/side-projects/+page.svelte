@@ -236,7 +236,7 @@
   {:else}
     <div class="space-y-3">
       {#each projects as project (project.id)}
-        <ItemCard
+        <ItemCard card={false}
           id={project.id}
           {expandedId}
           onToggle={toggleExpand}

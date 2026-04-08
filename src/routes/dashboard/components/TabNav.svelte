@@ -46,7 +46,7 @@
   let rows = $derived.by(() => {
     if (!overflows || tabWidths.length === 0 || !containerEl) return null;
     const maxWidth = containerEl.clientWidth;
-    const gap = 2; // gap-x-0.5 = 2px
+    const gap = -1; // -ml-px: borders overlap by 1px
     const allRows: Tab[][] = [];
     let currentRow: Tab[] = [];
     let currentWidth = 0;
@@ -119,29 +119,33 @@
     </div>
   {:else if rows}
     <!-- Multi-row: bookmark tabs with active row at bottom -->
-    {#each rows as row, rowIdx}
-      {@const isBottomRow = rowIdx === rows.length - 1}
-      <div class="flex gap-x-0.5 {isBottomRow ? 'border-b-2 border-[var(--dash-border)]' : ''}">
-        {#each row as tab}
-          {@const active = isActive(tab.href)}
-          <a
-            href={tab.href}
-            class="
-              flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors
-              {isBottomRow ? '-mb-0.5' : ''}
-              {active
-              ? 'bg-[var(--dash-card)] border border-[var(--dash-border)] border-b-[var(--dash-card)] text-[var(--dash-primary)]'
-              : 'border border-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
-            "
-          >
-            {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
-            {tab.label}
-          </a>
-        {/each}
-      </div>
-    {/each}
+    <!-- Left border connects top rows to content panel -->
+    <div class="border-l border-[var(--dash-border)]/40 rounded-tl-lg">
+      {#each rows as row, rowIdx}
+        {@const isBottomRow = rowIdx === rows.length - 1}
+        <div class="flex {isBottomRow ? 'border-b-2 border-[var(--dash-border)]' : ''} -ml-px">
+          {#each row as tab, tabIdx}
+            {@const active = isActive(tab.href)}
+            <a
+              href={tab.href}
+              class="
+                flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors
+                {tabIdx > 0 ? '-ml-px' : ''}
+                {isBottomRow ? '-mb-0.5' : ''}
+                {active
+                ? 'bg-[var(--dash-card)] border border-[var(--dash-border)] border-b-[var(--dash-card)] text-[var(--dash-primary)] z-10'
+                : 'bg-[var(--dash-card)]/30 border-x border-t border-[var(--dash-border)]/40 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
+              "
+            >
+              {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
+              {tab.label}
+            </a>
+          {/each}
+        </div>
+      {/each}
+    </div>
     <!-- Content panel matching the active tab -->
-    <div class="bg-[var(--dash-card)] border-x border-b border-[var(--dash-border)] rounded-b-xl p-4">
+    <div class="bg-[var(--dash-card)] border-x border-b border-[var(--dash-border)] rounded-b-xl p-4 -mt-px">
       {@render children()}
     </div>
   {/if}

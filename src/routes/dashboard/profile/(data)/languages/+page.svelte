@@ -187,7 +187,7 @@
   {:else}
     <div class="space-y-3">
       {#each languages as lang (lang.id)}
-        <ItemCard
+        <ItemCard card={false}
           id={lang.id}
           {expandedId}
           onToggle={toggleExpand}

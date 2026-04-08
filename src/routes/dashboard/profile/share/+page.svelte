@@ -11,10 +11,10 @@
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import EmptyState from "../../profile/components/EmptyState.svelte";
-  import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
-  import ItemCard from "../../profile/components/ItemCard.svelte";
+  import SectionHeader from "../components/SectionHeader.svelte";
+  import EmptyState from "../components/EmptyState.svelte";
+  import ConfirmModal from "../components/ConfirmModal.svelte";
+  import ItemCard from "../components/ItemCard.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -182,7 +182,7 @@
       description="Create a resume version first before creating private links. Share links allow you to share your resume with specific people and track views."
       actionLabel="Create Resume Version"
       onAction={() => {
-        window.location.href = "/dashboard/export/resume";
+        window.location.href = "/dashboard/profile/resume";
       }}
     />
   {:else}

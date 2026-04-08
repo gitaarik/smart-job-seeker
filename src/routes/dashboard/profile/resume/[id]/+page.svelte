@@ -14,7 +14,7 @@
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
-  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+  import ConfirmModal from "../../components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -61,7 +61,7 @@
   <!-- Header with back link -->
   <div>
     <a
-      href="/dashboard/export/resume"
+      href="/dashboard/profile/resume"
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
@@ -193,7 +193,7 @@
           </h3>
           <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
             For trackable links with view limits and expiration, use <a
-              href="/dashboard/export/share"
+              href="/dashboard/profile/share"
               class="text-[var(--dash-primary)] hover:underline"
               >Private Links</a
             >.

@@ -9,9 +9,9 @@
     faGlobe,
     faPencil,
   } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import EmptyState from "../../profile/components/EmptyState.svelte";
-  import ItemCard from "../../profile/components/ItemCard.svelte";
+  import SectionHeader from "../components/SectionHeader.svelte";
+  import EmptyState from "../components/EmptyState.svelte";
+  import ItemCard from "../components/ItemCard.svelte";
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -329,7 +329,7 @@
 
           {#snippet footer()}
             <a
-              href="/dashboard/export/resume/{version.id}"
+              href="/dashboard/profile/resume/{version.id}"
               class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
             >
               <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />

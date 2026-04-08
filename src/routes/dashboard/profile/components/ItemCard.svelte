@@ -5,9 +5,10 @@
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
   import type { Snippet } from "svelte";
-
+  import Card from "../../components/Card.svelte";
 
   interface Props {
+    card?: boolean;
     id: number;
     expandedId?: number | null;
     onToggle?: (id: number) => void;
@@ -26,6 +27,7 @@
   }
 
   let {
+    card = true,
     id,
     expandedId = null,
     onToggle,
@@ -51,7 +53,7 @@
   }
 </script>
 
-<div class="overflow-hidden relative transition-all sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)]">
+{#snippet innerContent()}
   {#if editContent}
     <!-- Edit mode replaces entire card -->
     <div class="p-3 sm:p-4">
@@ -208,4 +210,14 @@
       {@render footer()}
     </div>
   {/if}
-</div>
+{/snippet}
+
+{#if card}
+  <Card class="overflow-hidden relative transition-all">
+    {@render innerContent()}
+  </Card>
+{:else}
+  <div class="overflow-hidden relative transition-all sm:bg-[var(--dash-card)] sm:rounded-lg sm:border sm:border-[var(--dash-border)]">
+    {@render innerContent()}
+  </div>
+{/if}

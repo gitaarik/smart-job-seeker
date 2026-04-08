@@ -252,7 +252,7 @@
   {:else}
     <div class="space-y-3">
       {#each experiences as exp (exp.id)}
-        <ItemCard
+        <ItemCard card={false}
           id={exp.id}
           {expandedId}
           onToggle={toggleExpand}

@@ -154,6 +154,16 @@
             "/dashboard/profile/highlights",
           ],
         },
+        {
+          label: "Resumes & CVs",
+          href: "/dashboard/profile/resume",
+          icon: faFileAlt,
+        },
+        {
+          label: "Private Links",
+          href: "/dashboard/profile/share",
+          icon: faLink,
+        },
       ],
     },
     {
@@ -161,16 +171,6 @@
       href: "/dashboard/export",
       icon: faCog,
       children: [
-        {
-          label: "Resumes & CVs",
-          href: "/dashboard/export/resume",
-          icon: faFileAlt,
-        },
-        {
-          label: "Private Links",
-          href: "/dashboard/export/share",
-          icon: faLink,
-        },
         {
           label: "Import & Export",
           href: "/dashboard/export/import",

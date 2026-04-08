@@ -1,5 +1,5 @@
 <script lang="ts">
-  // This page redirects to /dashboard/export/resume
+  // This page redirects to /dashboard/export/import
 </script>
 
 <p>Redirecting...</p>

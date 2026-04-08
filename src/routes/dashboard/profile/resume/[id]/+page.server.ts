@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getSelectedProfileId } from "../../../profile/utils";
+import { getSelectedProfileId } from "../../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { requireCredits, chargeCredits } from "$lib/server/billing/credits";
 
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   const id = parseInt(params.id);
   if (isNaN(id)) {
-    redirect(302, "/dashboard/export/resume");
+    redirect(302, "/dashboard/profile/resume");
   }
 
   const version = await db.profile_versions.findFirst({
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   });
 
   if (!version) {
-    redirect(302, "/dashboard/export/resume");
+    redirect(302, "/dashboard/profile/resume");
   }
 
   const {
@@ -281,6 +281,6 @@ export const actions: Actions = {
       where: { id },
     });
 
-    redirect(302, "/dashboard/export/resume");
+    redirect(302, "/dashboard/profile/resume");
   },
 };
