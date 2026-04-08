@@ -165,9 +165,9 @@
           alsoActiveFor: ["/dashboard/export/data"],
         },
         {
-          label: "Delete Profile",
+          label: "Settings",
           href: "/dashboard/export/delete",
-          icon: faTrash,
+          icon: faCog,
         },
       ],
     },

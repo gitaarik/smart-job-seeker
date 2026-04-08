@@ -3,6 +3,7 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faCog,
     faExclamationTriangle,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -31,7 +32,7 @@
 </script>
 
 <div class="space-y-6">
-  <SectionHeader title="Delete Profile" icon={faTrash} />
+  <SectionHeader title="Settings" icon={faCog} />
 
   <div
     class="rounded-lg border p-6 space-y-4"
