@@ -1051,6 +1051,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>{searchTaskDisplayName(searchTask.job_platforms?.name, searchTask.note)} - Job Import - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <!-- Header -->
   <div>

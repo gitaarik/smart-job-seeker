@@ -257,6 +257,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Match Config - Import Jobs - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-4">
   <p class="text-sm text-[var(--dash-text-secondary)]">
     Configure your job matching preferences. Jobs are filtered based on these settings before being scored by the

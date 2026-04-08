@@ -260,6 +260,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Salary Prep - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="Salary Prep"

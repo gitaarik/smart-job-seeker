@@ -25,6 +25,8 @@
 
   let experience = $derived(data.experience);
 
+  let pageTitle = $derived(experience.position || experience.name || 'Experience');
+
   // Section save states
   let basicSaveState = $state<SaveState>("idle");
   let techSaveState = $state<SaveState>("idle");
@@ -220,6 +222,10 @@
     deletedTechnologies = newSet;
   }
 </script>
+
+<svelte:head>
+  <title>{pageTitle} - Experience - Smart Job Seeker</title>
+</svelte:head>
 
 <div class="space-y-6">
   <!-- Header -->

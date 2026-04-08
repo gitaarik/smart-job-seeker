@@ -423,6 +423,10 @@
 
 <svelte:window onclick={handleClickOutside} />
 
+<svelte:head>
+  <title>Interview Prep - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <!-- Header with title and add button -->
   <div class="flex items-center justify-between gap-3">

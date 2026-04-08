@@ -352,6 +352,10 @@
   );
 </script>
 
+<svelte:head>
+  <title>All Jobs - Smart Job Seeker</title>
+</svelte:head>
+
 <svelte:window onclick={handleWindowClick} />
 
 <div class="space-y-6">

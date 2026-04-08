@@ -31,6 +31,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Settings - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader title="Settings" icon={faCog} />
 

@@ -21,6 +21,8 @@
 
   let education = $derived(data.education);
 
+  let pageTitle = $derived(education.institution || 'Education');
+
   // Section save state
   let basicSaveState = $state<SaveState>("idle");
 
@@ -75,6 +77,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>{pageTitle} - Education - Smart Job Seeker</title>
+</svelte:head>
 
 <div class="space-y-6">
   <!-- Header -->

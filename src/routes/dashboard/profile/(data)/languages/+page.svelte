@@ -105,6 +105,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Languages - Profile - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="Languages"

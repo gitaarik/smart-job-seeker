@@ -89,6 +89,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Export - Data & Settings - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   {#if form?.error}
     <div

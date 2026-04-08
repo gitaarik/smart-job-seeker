@@ -18,6 +18,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let version = $derived(data.version);
+  let versionTitle = $derived(version.name || version.slug || 'Version');
   let showDeleteModal = $state(false);
 
   // Form states
@@ -55,6 +56,10 @@
     return v?.name || v?.slug || null;
   }
 </script>
+
+<svelte:head>
+  <title>{versionTitle} - Resumes & CVs - Smart Job Seeker</title>
+</svelte:head>
 
 <div class="space-y-6">
   <!-- Header with back link -->

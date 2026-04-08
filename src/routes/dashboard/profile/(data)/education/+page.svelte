@@ -55,6 +55,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Education - Profile - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="Education"

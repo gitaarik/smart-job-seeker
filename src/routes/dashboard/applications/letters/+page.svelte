@@ -146,6 +146,10 @@
 
 </script>
 
+<svelte:head>
+  <title>Letter Templates - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="Texts"

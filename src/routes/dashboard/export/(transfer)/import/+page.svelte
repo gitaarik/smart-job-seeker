@@ -146,7 +146,7 @@
 </script>
 
 <svelte:head>
-  <title>Import Data - Smart Job Seeker</title>
+  <title>Import - Data & Settings - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-6">

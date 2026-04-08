@@ -125,6 +125,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{job?.title || 'Job'} - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <!-- Header with Back Button -->
   <div>

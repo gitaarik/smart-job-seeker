@@ -146,6 +146,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Local Scraping - Import Jobs - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-4">
   <p class="text-sm text-[var(--dash-text-secondary)]">
     Run the desktop app on your computer to scrape from your home IP address. This avoids datacenter IP detection that can trigger CAPTCHAs.

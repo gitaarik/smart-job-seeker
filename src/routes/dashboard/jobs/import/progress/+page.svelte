@@ -198,6 +198,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Match Progress - Import Jobs - Smart Job Seeker</title>
+</svelte:head>
+
 <div>
   {#if loading}
     <div class="flex items-center justify-center py-12">

@@ -25,6 +25,8 @@
 
   let project = $derived(data.project);
 
+  let pageTitle = $derived(project.name || 'Project');
+
   // Section save states
   let basicSaveState = $state<SaveState>("idle");
   let techSaveState = $state<SaveState>("idle");
@@ -200,6 +202,10 @@
     deletedTechnologies = newSet;
   }
 </script>
+
+<svelte:head>
+  <title>{pageTitle} - Side Projects - Smart Job Seeker</title>
+</svelte:head>
 
 <div class="space-y-6">
   <!-- Header -->

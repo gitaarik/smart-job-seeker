@@ -115,6 +115,10 @@
 
 </script>
 
+<svelte:head>
+  <title>Basic Info - Profile - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader title="Basic Info" icon={faUser} />
 

@@ -235,6 +235,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Job Import - Import Jobs - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-4">
   {#if !showAddForm && searchTasks.length > 0}
     <div class="flex justify-end">

@@ -39,6 +39,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Overview - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-5">
   <!-- Header -->
   <div

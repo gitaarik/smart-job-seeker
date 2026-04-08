@@ -91,6 +91,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Billing - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <h1 class="text-xl font-semibold text-[var(--dash-text)]">Plan & Usage</h1>
 

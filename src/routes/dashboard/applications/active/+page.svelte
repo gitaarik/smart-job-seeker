@@ -122,6 +122,10 @@
 
 <svelte:window onclick={handleWindowClick} />
 
+<svelte:head>
+  <title>Applications - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="All Applications"

@@ -98,6 +98,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>References - Profile - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="References"

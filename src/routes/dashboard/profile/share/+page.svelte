@@ -187,6 +187,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Share Links - Smart Job Seeker</title>
+</svelte:head>
+
 <div class="space-y-6">
   <SectionHeader
     title="Share Links"

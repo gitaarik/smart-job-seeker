@@ -36,6 +36,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{app.jobs?.title || 'Application'} - Applications - Smart Job Seeker</title>
+</svelte:head>
+
 <!-- Back link -->
 <div class="mb-4">
   <a
