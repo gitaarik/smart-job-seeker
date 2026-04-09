@@ -40,20 +40,19 @@
   <title>{app.jobs?.title || 'Application'} - Applications - Smart Job Seeker</title>
 </svelte:head>
 
-<!-- Back link -->
-<div class="mb-4">
-  <a
-    href="/dashboard/applications/active"
-    class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-  >
-    <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-    <span class="text-sm">All Applications</span>
-  </a>
-</div>
-
 <div class="-mx-4">
   <TabNav {tabs} isActive={isTabActive}>
     <div class="px-4 pt-3">
+      <!-- Back link -->
+      <div class="mb-4">
+        <a
+          href="/dashboard/applications/active"
+          class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+          <span class="text-sm">All Applications</span>
+        </a>
+      </div>
       {@render children()}
     </div>
   </TabNav>
