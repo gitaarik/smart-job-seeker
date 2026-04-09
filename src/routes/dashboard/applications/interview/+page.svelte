@@ -4,8 +4,8 @@
   import {
     faArrowsUpDown,
     faBook,
-    faCheck,
     faChevronRight,
+    faCircleNotch,
     faFileAlt,
     faGripVertical,
     faLayerGroup,
@@ -13,7 +13,6 @@
     faPlus,
     faStickyNote,
     faTrash,
-    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import { dragHandleZone, dragHandle } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
@@ -421,6 +420,7 @@
 
   // --- Reorder mode ---
   let reorderMode = $state(false);
+  let reorderSaving = $state(false);
   interface DndItem {
     id: string;
     item: Item;
@@ -430,14 +430,27 @@
   let reorderSnapshot = $state<Item[] | null>(null);
   const flipDurationMs = 150;
 
-  // Only allow reorder when filtering by one type and there are 2+ items
+  // Determine the effective reorder type: when only one type exists, use it
+  // even if the filter is on "all" (since filter tabs are hidden in that case)
+  let reorderType = $derived.by(() => {
+    if (currentType !== "all") return currentType;
+    const hasSheets = cheatsheets.length > 0;
+    const hasStories = stories.length > 0;
+    if (hasSheets && !hasStories) return "cheatsheets";
+    if (hasStories && !hasSheets) return "stories";
+    return "all";
+  });
+
   let canReorder = $derived(
-    (currentType === "cheatsheets" && cheatsheets.length > 1) ||
-    (currentType === "stories" && stories.length > 1)
+    (reorderType === "cheatsheets" && cheatsheets.length > 1) ||
+    (reorderType === "stories" && stories.length > 1)
   );
 
   function startReorder() {
-    const items = filteredItems;
+    // Use the resolved type so reorder works when only one type exists
+    const items = reorderType === "cheatsheets"
+      ? cheatsheets.map((s) => ({ ...s, itemType: "cheatsheet" as const, key: `cs-${s.id}` }))
+      : stories.map((s) => ({ ...s, itemType: "story" as const, key: `st-${s.id}` }));
     reorderSnapshot = [...items];
     dndItems = items.map((item) => ({
       id: String(item.id),
@@ -455,8 +468,9 @@
   }
 
   async function confirmReorder() {
+    reorderSaving = true;
     const ids = dndItems.map((d) => parseInt(d.id)).filter((id) => !isNaN(id));
-    const endpoint = currentType === "cheatsheets" ? "/api/cheat-sheets" : "/api/interview-stories";
+    const endpoint = reorderType === "cheatsheets" ? "/api/cheat-sheets" : "/api/interview-stories";
     try {
       await fetch(endpoint, {
         method: "PATCH",
@@ -467,6 +481,7 @@
     } catch {
       // silently fail
     }
+    reorderSaving = false;
     reorderSnapshot = null;
     reorderMode = false;
   }
@@ -665,22 +680,23 @@
   {:else if reorderMode}
     <!-- Reorder Mode -->
     {#snippet reorderConfirmCancel()}
-      <div class="flex justify-end gap-1">
+      <div class="flex items-center justify-end gap-2">
+        <span class="text-xs text-[var(--dash-text-muted)]">Reorder {reorderType === "cheatsheets" ? "Cheat Sheets" : "Stories"}</span>
         <button
           type="button"
           onclick={cancelReorder}
-          class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
-          aria-label="Cancel reorder"
+          class="px-3 py-1 border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-xs"
         >
-          <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+          Cancel
         </button>
         <button
           type="button"
           onclick={confirmReorder}
-          class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
-          aria-label="Confirm reorder"
+          disabled={reorderSaving}
+          class="px-3 py-1 bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors text-xs inline-flex items-center gap-1.5 disabled:opacity-70"
         >
-          <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+          {#if reorderSaving}<FontAwesomeIcon icon={faCircleNotch} spin class="w-3 h-3" />{/if}
+          Save
         </button>
       </div>
     {/snippet}

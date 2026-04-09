@@ -3,14 +3,21 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowsUpDown,
+    faCircleNotch,
+    faGripVertical,
     faPencil,
     faQuoteLeft,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
+  import { dragHandleZone, dragHandle } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
+  import { invalidateAll } from "$app/navigation";
   import SectionHeader from "../../components/SectionHeader.svelte";
   import EmptyState from "../../components/EmptyState.svelte";
   import ConfirmModal from "../../components/ConfirmModal.svelte";
   import ItemCard from "../../components/ItemCard.svelte";
+  import Card from "../../../components/Card.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -95,6 +102,56 @@
         expandedId = null;
       }
     };
+  }
+
+  // --- Reorder mode ---
+  let reorderMode = $state(false);
+  let reorderSaving = $state(false);
+  interface DndItem {
+    id: string;
+    ref: (typeof references)[0];
+    [key: string]: unknown;
+  }
+  let dndItems = $state<DndItem[]>([]);
+  const flipDurationMs = 150;
+
+  let canReorder = $derived(references.length > 1);
+
+  function startReorder() {
+    dndItems = references.map((ref) => ({
+      id: String(ref.id),
+      ref,
+    }));
+    reorderMode = true;
+  }
+
+  function handleDndConsider(e: CustomEvent<{ items: DndItem[] }>) {
+    dndItems = e.detail.items;
+  }
+
+  function handleDndFinalize(e: CustomEvent<{ items: DndItem[] }>) {
+    dndItems = e.detail.items;
+  }
+
+  async function confirmReorder() {
+    reorderSaving = true;
+    const ids = dndItems.map((d) => parseInt(d.id)).filter((id) => !isNaN(id));
+    try {
+      await fetch("/api/references", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile_id: data.profileId, order: ids }),
+      });
+      await invalidateAll();
+    } catch {
+      // silently fail
+    }
+    reorderSaving = false;
+    reorderMode = false;
+  }
+
+  function cancelReorder() {
+    reorderMode = false;
   }
 </script>
 
@@ -200,6 +257,19 @@
     </form>
   {/if}
 
+  {#if canReorder && !reorderMode && !showAddForm}
+    <div class="flex justify-end">
+      <button
+        type="button"
+        onclick={startReorder}
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:text-[var(--dash-text-secondary)]"
+      >
+        <FontAwesomeIcon icon={faArrowsUpDown} class="w-3 h-3" />
+        Reorder
+      </button>
+    </div>
+  {/if}
+
   <!-- References List -->
   {#if references.length === 0 && !showAddForm}
     <EmptyState
@@ -209,6 +279,66 @@
       actionLabel="Add First Reference"
       onAction={() => (showAddForm = true)}
     />
+  {:else if reorderMode}
+    {#snippet reorderConfirmCancel()}
+      <div class="flex items-center justify-end gap-2">
+        <span class="text-xs text-[var(--dash-text-muted)]">Reorder References</span>
+        <button
+          type="button"
+          onclick={cancelReorder}
+          class="px-3 py-1 border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-xs"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onclick={confirmReorder}
+          disabled={reorderSaving}
+          class="px-3 py-1 bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors text-xs inline-flex items-center gap-1.5 disabled:opacity-70"
+        >
+          {#if reorderSaving}<FontAwesomeIcon icon={faCircleNotch} spin class="w-3 h-3" />{/if}
+          Save
+        </button>
+      </div>
+    {/snippet}
+
+    {@render reorderConfirmCancel()}
+    <div
+      class="space-y-2 mt-2"
+      use:dragHandleZone={{ items: dndItems, flipDurationMs, type: "references" }}
+      onconsider={handleDndConsider}
+      onfinalize={handleDndFinalize}
+    >
+      {#each dndItems as dndItem (dndItem.id)}
+        <div animate:flip={{ duration: flipDurationMs }}>
+          <Card class="p-3 sm:p-4">
+            <div class="flex items-center gap-3">
+              <div use:dragHandle class="cursor-grab active:cursor-grabbing touch-none p-1 -m-1">
+                <FontAwesomeIcon
+                  icon={faGripVertical}
+                  class="w-4 h-4 text-[var(--dash-text-muted)] flex-shrink-0"
+                />
+              </div>
+              <FontAwesomeIcon
+                icon={faQuoteLeft}
+                class="w-4 h-4 text-[var(--dash-primary)] flex-shrink-0"
+              />
+              <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+                {dndItem.ref.author || "Untitled"}
+              </h3>
+              {#if dndItem.ref.author_position}
+                <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0">
+                  {dndItem.ref.author_position}
+                </span>
+              {/if}
+            </div>
+          </Card>
+        </div>
+      {/each}
+    </div>
+    <div class="mt-2">
+      {@render reorderConfirmCancel()}
+    </div>
   {:else}
     <div class="space-y-4">
       {#each references as ref (ref.id)}
