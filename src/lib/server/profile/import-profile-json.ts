@@ -59,6 +59,7 @@ export async function importProfileFromJson(
     await dbDirect.education.deleteMany({ where: { profile: overwriteProfileId } });
     await dbDirect.languages.deleteMany({ where: { profile: overwriteProfileId } });
     await dbDirect.references.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.certificates.deleteMany({ where: { profile: overwriteProfileId } });
     await dbDirect.project_stories.deleteMany({ where: { profile: overwriteProfileId } });
     await dbDirect.cheat_sheets.deleteMany({ where: { profile: overwriteProfileId } });
     await dbDirect.salary_expectations.deleteMany({ where: { profile: overwriteProfileId } });
@@ -280,6 +281,22 @@ export async function importProfileFromJson(
         author: r.author || "",
         author_position: r.author_position || null,
         text: r.text || null,
+      },
+    });
+  }
+
+  // Certificates
+  for (const cert of p.certificates ?? []) {
+    await dbDirect.certificates.create({
+      data: {
+        profile: profileId,
+        status: cert.status || "draft",
+        sort: cert.sort ?? null,
+        name: cert.name || "",
+        issuer: cert.issuer || null,
+        date: cert.date ? new Date(cert.date) : null,
+        url: cert.url || null,
+        date_created: new Date(),
       },
     });
   }

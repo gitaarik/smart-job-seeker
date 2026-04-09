@@ -156,6 +156,14 @@ export interface ExportedProfile {
       author_position?: string;
       text?: string;
     }>;
+    certificates: Array<{
+      status?: string;
+      sort?: number | null;
+      name?: string;
+      issuer?: string;
+      date?: Date | null;
+      url?: string;
+    }>;
     project_stories: Array<{
       sort?: number | null;
       title?: string;
@@ -350,6 +358,17 @@ export async function buildProfileJsonExport(
         },
         orderBy: { sort: "asc" },
       },
+      certificates: {
+        select: {
+          status: true,
+          sort: true,
+          name: true,
+          issuer: true,
+          date: true,
+          url: true,
+        },
+        orderBy: { sort: "asc" },
+      },
       project_stories: {
         select: {
           sort: true,
@@ -492,6 +511,7 @@ export async function buildProfileJsonExport(
       education: baseProfile.education,
       languages: baseProfile.languages,
       references: baseProfile.references,
+      certificates: baseProfile.certificates,
       project_stories: baseProfile.project_stories,
       cheat_sheets: baseProfile.cheat_sheets,
       salary_expectations: baseProfile.salary_expectations,

@@ -13,6 +13,7 @@ import type {
   TechSkill,
   Language,
   SideProject,
+  Certificate,
   Reference,
 } from "$lib/server/resume/types";
 
@@ -70,6 +71,7 @@ export interface ResumeDataDiff {
   skills: SkillCategoryDiff[];
   languages: ItemDiff<Language>[];
   projects: ItemDiff<SideProject>[];
+  certificates: ItemDiff<Certificate>[];
   references: ItemDiff<Reference>[];
   stats: DiffStats;
 }
@@ -92,6 +94,9 @@ export interface DiffStats {
   projectsAdded: number;
   projectsModified: number;
   projectsRemoved: number;
+  certificatesAdded: number;
+  certificatesModified: number;
+  certificatesRemoved: number;
   referencesAdded: number;
   referencesModified: number;
   referencesRemoved: number;
@@ -516,6 +521,54 @@ function diffProjects(
   return result;
 }
 
+// --- Certificates diff ---
+
+function diffCertificateItem(current: Certificate, incoming: Certificate): ItemDiff<Certificate> {
+  const fieldDiffs = [
+    diffField("name", "Name", current.name, incoming.name),
+    diffField("issuer", "Issuer", current.issuer, incoming.issuer),
+    diffField("date", "Date", current.date, incoming.date),
+    diffField("url", "URL", current.url, incoming.url),
+  ];
+
+  const hasChanges = fieldDiffs.some((d) => d.changed);
+
+  return {
+    type: hasChanges ? "modified" : "unchanged",
+    current,
+    incoming,
+    fieldDiffs,
+    enabled: hasChanges,
+  };
+}
+
+function diffCertificates(
+  current: Certificate[],
+  incoming: Certificate[],
+): ItemDiff<Certificate>[] {
+  const { matched, added, removed } = matchItems(
+    current,
+    incoming,
+    (c) => c.name,
+  );
+
+  const result: ItemDiff<Certificate>[] = [];
+
+  for (const [cur, inc] of matched) {
+    result.push(diffCertificateItem(cur, inc));
+  }
+
+  for (const item of added) {
+    result.push({ type: "added", incoming: item, enabled: true });
+  }
+
+  for (const item of removed) {
+    result.push({ type: "removed", current: item, enabled: false });
+  }
+
+  return result;
+}
+
 // --- References diff ---
 
 function diffReferenceItem(current: Reference, incoming: Reference): ItemDiff<Reference> {
@@ -588,6 +641,7 @@ function computeStats(diff: Omit<ResumeDataDiff, "stats">): DiffStats {
   const s = countDiffType(diff.skills);
   const l = countDiffType(diff.languages);
   const p = countDiffType(diff.projects);
+  const c = countDiffType(diff.certificates);
   const r = countDiffType(diff.references);
 
   return {
@@ -608,6 +662,9 @@ function computeStats(diff: Omit<ResumeDataDiff, "stats">): DiffStats {
     projectsAdded: p.added,
     projectsModified: p.modified,
     projectsRemoved: p.removed,
+    certificatesAdded: c.added,
+    certificatesModified: c.modified,
+    certificatesRemoved: c.removed,
     referencesAdded: r.added,
     referencesModified: r.modified,
     referencesRemoved: r.removed,
@@ -618,6 +675,7 @@ function computeStats(diff: Omit<ResumeDataDiff, "stats">): DiffStats {
       s.added + s.modified + s.removed +
       l.added + l.modified + l.removed +
       p.added + p.modified + p.removed +
+      c.added + c.modified + c.removed +
       r.added + r.modified + r.removed,
   };
 }
@@ -635,15 +693,16 @@ function hasData<T>(section: T[] | undefined): section is T[] {
  * Full resumes/CVs typically have at least work + skills or work + education.
  */
 function isPartialDocument(incoming: ResumeData): boolean {
-  const sections = [
+  const sections: (unknown[] | undefined)[] = [
     incoming.work,
     incoming.education,
     incoming.skills,
     incoming.languages,
     incoming.projects,
+    incoming.certificates,
     incoming.references,
   ];
-  const presentSections = sections.filter((s) => hasData(s)).length;
+  const presentSections = sections.filter((s) => s !== undefined && s.length > 0).length;
   // If 2 or fewer sections have data, treat as partial
   return presentSections <= 2;
 }
@@ -681,11 +740,14 @@ export function diffResumeData(
   const projects = hasData(incoming.projects)
     ? diffProjects(current.projects ?? [], incoming.projects)
     : [];
+  const certificates = hasData(incoming.certificates)
+    ? diffCertificates(current.certificates ?? [], incoming.certificates)
+    : [];
   const references = hasData(incoming.references)
     ? diffReferences(current.references ?? [], incoming.references)
     : [];
 
-  const result = { basics, work, education, skills, languages, projects, references };
+  const result = { basics, work, education, skills, languages, projects, certificates, references };
 
   return {
     ...result,
@@ -701,7 +763,7 @@ export function countEnabledChanges(diff: ResumeDataDiff): number {
 
   count += diff.basics.filter((d) => d.changed && d.enabled).length;
 
-  for (const section of [diff.work, diff.education, diff.languages, diff.projects, diff.references]) {
+  for (const section of [diff.work, diff.education, diff.languages, diff.projects, diff.certificates, diff.references] as { type: ItemDiffType; enabled: boolean }[][]) {
     for (const item of section) {
       if (item.type === "unchanged") continue;
       if (item.enabled) count++;

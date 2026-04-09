@@ -175,6 +175,17 @@ export async function buildProfileExport(
         },
         orderBy: { sort: "asc" },
       },
+      certificates: {
+        select: {
+          status: true,
+          sort: true,
+          name: true,
+          issuer: true,
+          date: true,
+          url: true,
+        },
+        orderBy: { sort: "asc" },
+      },
     },
   });
 
@@ -407,6 +418,15 @@ export async function buildProfileExport(
       author: r.author || undefined,
       author_position: r.author_position || undefined,
       text: r.text || undefined,
+    })),
+
+    certificates: profile.certificates.map((c) => ({
+      status: c.status || undefined,
+      sort: c.sort,
+      name: c.name || undefined,
+      issuer: c.issuer || undefined,
+      date: formatDate(c.date),
+      url: c.url || undefined,
     })),
   };
 

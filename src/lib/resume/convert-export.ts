@@ -109,6 +109,12 @@ export function convertExportToResumeData(exported: ExportedProfile): ResumeData
         proj.technologies?.filter((t) => t.name).map((t) => t.name!) || [],
       stars: proj.stars ?? undefined,
     })),
+    certificates: p.certificates?.map((c) => ({
+      name: c.name || "",
+      issuer: c.issuer,
+      date: dateToString(c.date),
+      url: c.url,
+    })),
     references: p.references?.map((r) => ({
       author: r.author || "",
       authorPosition: r.author_position,

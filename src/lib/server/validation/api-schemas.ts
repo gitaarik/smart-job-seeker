@@ -67,6 +67,27 @@ export const cheatSheetReorderSchema = z.object({
   order: z.array(positiveInt()),
 });
 
+// Languages
+
+export const languageReorderSchema = z.object({
+  profile_id: positiveInt(),
+  order: z.array(positiveInt()),
+});
+
+// References
+
+export const referenceReorderSchema = z.object({
+  profile_id: positiveInt(),
+  order: z.array(positiveInt()),
+});
+
+// Certificates
+
+export const certificateReorderSchema = z.object({
+  profile_id: positiveInt(),
+  order: z.array(positiveInt()),
+});
+
 // Job preferences
 
 export const jobPreferencesSchema = z.object({

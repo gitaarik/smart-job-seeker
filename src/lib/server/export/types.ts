@@ -100,6 +100,7 @@ export interface ExportedProfileData {
   education: ExportedEducation[];
   languages: ExportedLanguage[];
   references: ExportedReference[];
+  certificates: ExportedCertificate[];
 }
 
 export interface ExportedProfileVersion {
@@ -234,6 +235,15 @@ export interface ExportedLanguage {
   name?: string;
   language_code?: string;
   proficiency?: string;
+}
+
+export interface ExportedCertificate {
+  status?: string;
+  sort?: number | null;
+  name?: string;
+  issuer?: string;
+  date?: string | null;
+  url?: string;
 }
 
 export interface ExportedReference {

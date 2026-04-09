@@ -3,6 +3,7 @@
   import { page } from "$app/stores";
   import {
     faBriefcase,
+    faCertificate,
     faCode,
     faGlobe,
     faGraduationCap,
@@ -21,6 +22,7 @@
     { label: "Education", href: "/dashboard/profile/education", icon: faGraduationCap },
     { label: "Side Projects", href: "/dashboard/profile/side-projects", icon: faCode },
     { label: "Languages", href: "/dashboard/profile/languages", icon: faGlobe },
+    { label: "Certificates", href: "/dashboard/profile/certificates", icon: faCertificate },
     { label: "References", href: "/dashboard/profile/references", icon: faUserFriends },
   ];
 

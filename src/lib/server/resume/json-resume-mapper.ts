@@ -52,7 +52,12 @@ export interface JsonResumeSchema {
     courses?: string[];
   }>;
   awards?: Array<unknown>;
-  certificates?: Array<unknown>;
+  certificates?: Array<{
+    name?: string;
+    date?: string;
+    issuer?: string;
+    url?: string;
+  }>;
   publications?: Array<unknown>;
   skills?: Array<{
     name?: string;
@@ -171,6 +176,12 @@ export function mapJsonResumeToInternal(
       endDate: project.endDate,
       achievements: project.highlights || [],
       technologies: project.keywords || [],
+    })),
+    certificates: jsonResume.certificates?.map((cert) => ({
+      name: cert.name || "",
+      issuer: cert.issuer,
+      date: cert.date,
+      url: cert.url,
     })),
     references: jsonResume.references?.map((ref) => ({
       author: ref.name || "",

@@ -6,6 +6,7 @@
   import {
     faUser,
     faBriefcase,
+    faCertificate,
     faGraduationCap,
     faCode,
     faGlobe,
@@ -292,6 +293,37 @@
       payload.projects = projPayload;
     }
 
+    // Certificates
+    const certPayload: DiffApplyPayload["certificates"] = {
+      added: [],
+      modified: [],
+      removed: [],
+    };
+    for (const item of diff.certificates) {
+      if (!item.enabled) continue;
+      if (item.type === "added" && item.incoming) {
+        certPayload.added!.push(item.incoming);
+      } else if (item.type === "removed" && item.current) {
+        certPayload.removed!.push(item.current.name);
+      } else if (item.type === "modified" && item.current) {
+        const fields: Record<string, any> = {};
+        for (const fd of item.fieldDiffs ?? []) {
+          if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
+        }
+        certPayload.modified!.push({
+          matchKey: item.current.name,
+          fields,
+        });
+      }
+    }
+    if (
+      certPayload.added!.length > 0 ||
+      certPayload.modified!.length > 0 ||
+      certPayload.removed!.length > 0
+    ) {
+      payload.certificates = certPayload;
+    }
+
     // References
     const refPayload: DiffApplyPayload["references"] = {
       added: [],
@@ -335,6 +367,7 @@
       diff.education,
       diff.languages,
       diff.projects,
+      diff.certificates,
       diff.references,
     ]) {
       for (const item of section) {
@@ -360,6 +393,7 @@
       diff.education,
       diff.languages,
       diff.projects,
+      diff.certificates,
       diff.references,
     ]) {
       for (const item of section) item.enabled = false;
@@ -389,6 +423,7 @@
     { name: "Skills", count: incomingData.skills?.length, present: incomingData.skills !== undefined },
     { name: "Languages", count: incomingData.languages?.length, present: incomingData.languages !== undefined },
     { name: "Projects", count: incomingData.projects?.length, present: incomingData.projects !== undefined },
+    { name: "Certificates", count: incomingData.certificates?.length, present: incomingData.certificates !== undefined },
     { name: "References", count: incomingData.references?.length, present: incomingData.references !== undefined },
   ]);
 
@@ -406,6 +441,7 @@
   const partialSkills = $derived(isPartial && (incomingData.skills?.length ?? 0) > 0);
   const partialLanguages = $derived(isPartial && (incomingData.languages?.length ?? 0) > 0);
   const partialProjects = $derived(isPartial && (incomingData.projects?.length ?? 0) > 0);
+  const partialCertificates = $derived(isPartial && (incomingData.certificates?.length ?? 0) > 0);
   const partialReferences = $derived(isPartial && (incomingData.references?.length ?? 0) > 0);
 
   const showWork = $derived(diff.work.some((d) => d.type !== "unchanged") || showUnchanged || partialWork);
@@ -413,6 +449,7 @@
   const showSkills = $derived(diff.skills.some((d) => d.type !== "unchanged") || showUnchanged || partialSkills);
   const showLanguages = $derived(diff.languages.some((d) => d.type !== "unchanged") || showUnchanged || partialLanguages);
   const showProjects = $derived(diff.projects.some((d) => d.type !== "unchanged") || showUnchanged || partialProjects);
+  const showCertificates = $derived(diff.certificates.some((d) => d.type !== "unchanged") || showUnchanged || partialCertificates);
   const showReferences = $derived(diff.references.some((d) => d.type !== "unchanged") || showUnchanged || partialReferences);
 </script>
 
@@ -432,7 +469,7 @@
 
     <!-- Stats grid -->
     <div
-      class="grid grid-cols-3 md:grid-cols-7 gap-2 p-3 sm:p-4 bg-[var(--dash-bg)] rounded-lg"
+      class="grid grid-cols-4 md:grid-cols-8 gap-2 p-3 sm:p-4 bg-[var(--dash-bg)] rounded-lg"
     >
       <div class="text-center">
         <div
@@ -514,6 +551,20 @@
         </div>
         <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
           Projects
+        </div>
+      </div>
+      <div class="text-center">
+        <div
+          class="text-lg sm:text-xl font-semibold {diff.stats.certificatesAdded +
+            diff.stats.certificatesModified >
+          0
+            ? 'text-[var(--dash-primary)]'
+            : 'text-[var(--dash-text-muted)]'}"
+        >
+          {diff.stats.certificatesAdded + diff.stats.certificatesModified + diff.stats.certificatesRemoved}
+        </div>
+        <div class="text-[10px] sm:text-xs text-[var(--dash-text-muted)]">
+          Certs
         </div>
       </div>
       <div class="text-center">
@@ -750,6 +801,38 @@
             fieldDiffs={item.fieldDiffs}
             nestedDiffs={item.nestedDiffs}
             showUnchanged={showUnchanged || partialProjects}
+          />
+        {/each}
+      </div>
+    </DiffSectionCard>
+  {/if}
+
+  <!-- Certificates section -->
+  {#if showCertificates}
+    <DiffSectionCard
+      title="Certificates"
+      icon={faCertificate}
+      badge={{
+        added: diff.stats.certificatesAdded,
+        modified: diff.stats.certificatesModified,
+        removed: diff.stats.certificatesRemoved,
+      }}
+      defaultExpanded={diff.certificates.some((d) => d.type !== "unchanged") || partialCertificates}
+    >
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each diff.certificates as _, i}
+          {@const item = diff.certificates[i]}
+          <DiffItemRow
+            type={item.type}
+            title={item.type === "removed"
+              ? item.current?.name || "Certificate"
+              : item.incoming?.name || item.current?.name || "Certificate"}
+            subtitle={item.type === "removed"
+              ? item.current?.issuer
+              : item.incoming?.issuer || item.current?.issuer}
+            bind:enabled={diff.certificates[i].enabled}
+            fieldDiffs={item.fieldDiffs}
+            showUnchanged={showUnchanged || partialCertificates}
           />
         {/each}
       </div>

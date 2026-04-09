@@ -5,6 +5,7 @@
 
 import { dbDirect } from "$lib/server/db";
 import type {
+  Certificate,
   Education,
   Language,
   ProfileImportResult,
@@ -89,6 +90,7 @@ export async function createProfileFromResume(
     totalSkills: 0,
     languages: 0,
     projects: 0,
+    certificates: 0,
     references: 0,
   };
   const errors: string[] = [];
@@ -158,6 +160,20 @@ export async function createProfileFromResume(
         stats.projects++;
       } catch (e) {
         const msg = `Failed to import project "${project.name}": ${e instanceof Error ? e.message : String(e)}`;
+        console.error("[Resume Import]", msg);
+        errors.push(msg);
+      }
+    }
+  }
+
+  // Import certificates
+  if (data.certificates && data.certificates.length > 0) {
+    for (const cert of data.certificates) {
+      try {
+        await createCertificate(profile.id, cert);
+        stats.certificates++;
+      } catch (e) {
+        const msg = `Failed to import certificate "${cert.name}": ${e instanceof Error ? e.message : String(e)}`;
         console.error("[Resume Import]", msg);
         errors.push(msg);
       }
@@ -381,6 +397,26 @@ async function createSideProject(
       sort++;
     }
   }
+}
+
+async function createCertificate(
+  profileId: number,
+  cert: Certificate,
+): Promise<void> {
+  await dbDirect.certificates.create({
+    data: {
+      name: cert.name,
+      issuer: cert.issuer || null,
+      date: parseDate(cert.date),
+      url: cert.url || null,
+      status: "draft",
+      sort: 0,
+      date_created: new Date(),
+      profiles: {
+        connect: { id: profileId },
+      },
+    },
+  });
 }
 
 async function createReference(

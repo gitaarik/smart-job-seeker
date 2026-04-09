@@ -69,6 +69,9 @@ Return a JSON object with this exact structure:
       "technologies": ["Tech1"]
     }
   ],
+  "certificates": [
+    { "name": "Certificate Name", "issuer": "Issuing Organization", "date": "YYYY-MM-DD", "url": "https://..." }
+  ],
   "references": [
     { "author": "Name", "authorPosition": "Their Title", "text": "Reference text" }
   ]
@@ -175,6 +178,13 @@ const SideProjectSchema = z.object({
   ),
 });
 
+const CertificateSchema = z.object({
+  name: nullableString,
+  issuer: nullableString,
+  date: nullableString,
+  url: nullableString,
+});
+
 const ReferenceSchema = z.object({
   author: nullableString,
   authorPosition: nullableString,
@@ -191,6 +201,7 @@ const ResumeDataSchema = z.object({
   skills: nullableArray(SkillCategorySchema),
   languages: nullableArray(LanguageSchema),
   projects: nullableArray(SideProjectSchema),
+  certificates: nullableArray(CertificateSchema),
   references: nullableArray(ReferenceSchema),
 });
 
@@ -293,6 +304,10 @@ export async function parseResumeWithLLM(
       .filter((r) => r.author)
       .map((r) => ({ ...r, text: r.text || "" }));
     if (resumeData.references.length === 0) resumeData.references = undefined;
+  }
+  if (resumeData.certificates) {
+    resumeData.certificates = resumeData.certificates.filter((c) => c.name);
+    if (resumeData.certificates.length === 0) resumeData.certificates = undefined;
   }
 
   return resumeData as ResumeData;

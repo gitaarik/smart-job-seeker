@@ -843,6 +843,22 @@ model jobs {
   @@index([source_url])
 }
 
+model certificates {
+  id           Int       @id @default(autoincrement())
+  status       String    @default("draft") @db.VarChar(255)
+  sort         Int?
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  name         String    @db.VarChar(255)
+  issuer       String?   @db.VarChar(255)
+  date         DateTime? @db.Date
+  url          String?   @db.VarChar(255)
+  profile      Int
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "certificates_profile_foreign")
+
+  @@index([profile], map: "idx_certificates_profile")
+}
+
 model languages {
   id            Int       @id @default(autoincrement())
   status        String    @default("draft") @db.VarChar(255)
@@ -1014,6 +1030,7 @@ model profiles {
   ai_chats                                                          ai_chats[]
   api_keys                                                          api_keys[]
   applications                                                      applications[]
+  certificates                                                      certificates[]
   cheat_sheets                                                      cheat_sheets[]
   collected_data                                                    collected_data[]
   config                                                            config[]

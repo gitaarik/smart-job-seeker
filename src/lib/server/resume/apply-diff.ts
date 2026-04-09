@@ -12,6 +12,7 @@ import type {
   SkillCategory,
   Language,
   SideProject,
+  Certificate,
   Reference,
 } from "./types";
 
@@ -78,6 +79,15 @@ export interface DiffApplyPayload {
       removeAchievements?: string[];
       addTechnologies?: string[];
       removeTechnologies?: string[];
+    }>;
+    removed?: string[];
+  };
+  /** Certificate changes */
+  certificates?: {
+    added?: Certificate[];
+    modified?: Array<{
+      matchKey: string; // certificate name
+      fields: Partial<Certificate>;
     }>;
     removed?: string[];
   };
@@ -579,6 +589,49 @@ export async function applyDiffToProfile(
       await dbDirect.side_project_achievements.deleteMany({ where: { side_project: existing.id } });
       await dbDirect.side_project_technologies.deleteMany({ where: { side_project: existing.id } });
       await dbDirect.side_projects.delete({ where: { id: existing.id } });
+    }
+  }
+
+  // --- Apply certificate changes ---
+  if (payload.certificates) {
+    for (const c of payload.certificates.added ?? []) {
+      await dbDirect.certificates.create({
+        data: {
+          profile: profileId,
+          status: "draft",
+          name: c.name || "",
+          issuer: c.issuer || null,
+          date: parseDate(c.date),
+          url: c.url || null,
+          sort: 0,
+          date_created: new Date(),
+        },
+      });
+    }
+
+    for (const mod of payload.certificates.modified ?? []) {
+      const existing = await dbDirect.certificates.findFirst({
+        where: { profile: profileId, name: mod.matchKey },
+        select: { id: true },
+      });
+      if (!existing) continue;
+
+      const updateData: Record<string, unknown> = {};
+      if (mod.fields.name !== undefined) updateData.name = mod.fields.name || "";
+      if (mod.fields.issuer !== undefined) updateData.issuer = mod.fields.issuer || null;
+      if (mod.fields.date !== undefined) updateData.date = parseDate(mod.fields.date);
+      if (mod.fields.url !== undefined) updateData.url = mod.fields.url || null;
+
+      if (Object.keys(updateData).length > 0) {
+        updateData.date_updated = new Date();
+        await dbDirect.certificates.update({ where: { id: existing.id }, data: updateData });
+      }
+    }
+
+    for (const name of payload.certificates.removed ?? []) {
+      await dbDirect.certificates.deleteMany({
+        where: { profile: profileId, name },
+      });
     }
   }
 

@@ -99,6 +99,16 @@ export interface SideProject {
 }
 
 /**
+ * Professional certificate
+ */
+export interface Certificate {
+  name: string;
+  issuer?: string;
+  date?: string;
+  url?: string;
+}
+
+/**
  * Professional reference
  */
 export interface Reference {
@@ -117,6 +127,7 @@ export interface ResumeData {
   skills?: SkillCategory[];
   languages?: Language[];
   projects?: SideProject[];
+  certificates?: Certificate[];
   references?: Reference[];
 }
 
@@ -134,6 +145,7 @@ export interface ProfileImportResult {
     totalSkills?: number;
     languages?: number;
     projects?: number;
+    certificates?: number;
     references?: number;
   };
   errors?: string[];
