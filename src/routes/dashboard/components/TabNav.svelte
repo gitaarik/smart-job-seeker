@@ -173,22 +173,22 @@
         {@const rowsBelow = rowCount - 1 - rowIdx}
         {@const isBottomRow = rowsBelow === 0}
         <div
-          class="flex items-start relative px-4"
-          style="z-index: {isBottomRow ? rowCount + 1 : rowIdx + 1}; margin-bottom: {isBottomRow ? 0 : -rowsBelow * rowH}px;"
+          class="flex items-start px-4"
+          style="margin-bottom: {isBottomRow ? 0 : -rowsBelow * rowH}px;"
         >
           {#each row as tab, tabIdx}
             {@const active = isActive(tab.href)}
             <a
               href={tab.href}
               class="
-                flex items-center gap-1.5 px-3 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap
+                flex items-center gap-1.5 px-3 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap relative
                 {tabIdx > 0 ? '-ml-px' : ''}
-                {isBottomRow && active ? 'mb-[-2px]' : ''}
+                {active ? 'mb-[-2px]' : ''}
                 {active
-                ? 'bg-[var(--dash-bg)] border border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)] z-10'
-                : 'bg-[var(--dash-bg)] border-x border-t border-[var(--dash-border)]/40 border-b-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
+                ? 'bg-[var(--dash-bg)] border border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-x border-t border-[var(--dash-border)] border-b-transparent text-[var(--dash-text)] hover:bg-[var(--dash-card)]'}
               "
-              style="padding-top: 6px; padding-bottom: {rowsBelow * rowH + 6}px;"
+              style="z-index: {active ? rowCount + 2 : rowIdx + 1}; padding-top: 6px; padding-bottom: {rowsBelow * rowH + (active ? 8 : 6)}px;"
             >
               {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
               {tab.label}
