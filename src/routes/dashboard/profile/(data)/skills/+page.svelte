@@ -129,6 +129,15 @@
       order: JSON.stringify(ids),
     });
   }
+
+  function handleCategoryReorder(cats: CategoryItem[]) {
+    const ids = cats
+      .map((c) => (c as DbCategoryItem).id)
+      .filter(Boolean);
+    postAction("reorderCategories", {
+      order: JSON.stringify(ids),
+    });
+  }
 </script>
 
 <svelte:head>
@@ -158,6 +167,7 @@
       onskillupdate={handleSkillUpdate}
       onskillremove={handleSkillRemove}
       onskillreorder={handleSkillReorder}
+      oncategoryreorder={handleCategoryReorder}
     />
   </div>
 </div>

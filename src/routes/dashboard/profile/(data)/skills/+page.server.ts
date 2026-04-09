@@ -309,6 +309,40 @@ export const actions: Actions = {
     return { success: true };
   },
 
+  reorderCategories: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const orderJson = formData.get("order") as string;
+
+    let order: number[];
+    try {
+      order = JSON.parse(orderJson);
+    } catch {
+      return fail(400, { error: "Invalid order data" });
+    }
+
+    // Update sort field for each category
+    await Promise.all(
+      order.map((categoryId, index) =>
+        db.tech_skill_categories.updateMany({
+          where: { id: categoryId, profile: profileId },
+          data: { sort: index, date_updated: new Date() },
+        })
+      ),
+    );
+
+    return { success: true };
+  },
+
   deleteSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {

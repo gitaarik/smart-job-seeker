@@ -1,14 +1,19 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowsUpDown,
     faCheck,
     faChevronDown,
     faChevronUp,
+    faGripVertical,
     faPencil,
     faPlus,
     faTimes,
     faTrash,
+    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
+  import { dragHandleZone, dragHandle } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
   import Card from "./Card.svelte";
   import SkillTagsEditor from "./SkillTagsEditor.svelte";
   import type { LevelOption, SkillItem } from "./SkillTagsEditor.svelte";
@@ -30,6 +35,7 @@
     onskillupdate?: (category: CategoryItem, skill: SkillItem) => void;
     onskillremove?: (category: CategoryItem, skill: SkillItem) => void;
     onskillreorder?: (category: CategoryItem, skills: SkillItem[]) => void;
+    oncategoryreorder?: (categories: CategoryItem[]) => void;
   }
 
   let {
@@ -44,6 +50,7 @@
     onskillupdate,
     onskillremove,
     onskillreorder,
+    oncategoryreorder,
   }: Props = $props();
 
   // Shared toggle state across all categories
@@ -51,6 +58,62 @@
   let showExperience = $state(false);
   let showVersionTags = $state(false);
   let reorderMode = $state(false);
+
+  // Category reorder mode
+  let categoryReorderMode = $state(false);
+  let categoryReorderSnapshot = $state<CategoryItem[] | null>(null);
+
+  interface DndCategoryItem {
+    id: string;
+    category: CategoryItem;
+    [key: string]: unknown;
+  }
+
+  let dndCategories = $state<DndCategoryItem[]>([]);
+
+  const catFlipDurationMs = 150;
+
+  function handleCatDndConsider(e: CustomEvent<{ items: DndCategoryItem[] }>) {
+    dndCategories = e.detail.items;
+  }
+
+  function handleCatDndFinalize(e: CustomEvent<{ items: DndCategoryItem[] }>) {
+    dndCategories = e.detail.items;
+    categories = dndCategories.map((d) => d.category);
+  }
+
+  function startCategoryReorder() {
+    categoryReorderSnapshot = categories.map((c) => ({ ...c }));
+    dndCategories = categories.map((c, i) => ({
+      id: (c as { id?: number }).id ? String((c as { id?: number }).id) : `cat-${i}`,
+      category: c,
+    }));
+    categoryReorderMode = true;
+  }
+
+  function confirmCategoryReorder() {
+    // Rebuild categories from dndCategories to ensure correct order
+    const reordered = dndCategories.map((d) => {
+      // Preserve the original DB id on the category object, since
+      // svelte-dnd-action may clone items and lose nested properties
+      const cat = { ...d.category };
+      const numId = parseInt(d.id);
+      if (!isNaN(numId)) (cat as CategoryItem & { id: number }).id = numId;
+      return cat;
+    });
+    categories = reordered;
+    oncategoryreorder?.(reordered);
+    categoryReorderSnapshot = null;
+    categoryReorderMode = false;
+  }
+
+  function cancelCategoryReorder() {
+    if (categoryReorderSnapshot) {
+      categories = categoryReorderSnapshot;
+    }
+    categoryReorderSnapshot = null;
+    categoryReorderMode = false;
+  }
 
   // Determine which toggles are relevant across all categories
   let allSkills = $derived(categories.flatMap((c) => c.skills));
@@ -171,6 +234,27 @@
     }
   }
 </script>
+
+{#snippet reorderConfirmCancel()}
+  <div class="flex justify-end gap-1">
+    <button
+      type="button"
+      onclick={cancelCategoryReorder}
+      class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
+      aria-label="Cancel reorder"
+    >
+      <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+    </button>
+    <button
+      type="button"
+      onclick={confirmCategoryReorder}
+      class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
+      aria-label="Confirm reorder"
+    >
+      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+    </button>
+  </div>
+{/snippet}
 
 {#snippet categoryHeader(categoryIndex: number)}
   {#if editingNameIndex === categoryIndex}
@@ -315,31 +399,82 @@
     </div>
   </div>
 {:else}
-  {#each categories as category, categoryIndex}
-    <Card class="p-3 sm:p-4">
-      <div class="flex items-center justify-between mb-3 gap-2">
-        {@render categoryHeader(categoryIndex)}
-        <button
-          type="button"
-          onclick={() => removeCategory(categoryIndex)}
-          class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
-          aria-label="Remove category"
-        >
-          <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-          <span class="hidden sm:inline">Remove</span>
-        </button>
-      </div>
+  {#if oncategoryreorder && categories.length > 1}
+    <div class="flex justify-end mb-2">
+      <button
+        type="button"
+        onclick={() => categoryReorderMode ? cancelCategoryReorder() : startCategoryReorder()}
+        class="
+          inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors {categoryReorderMode
+          ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+          : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:text-[var(--dash-text-secondary)]'}
+        "
+      >
+        <FontAwesomeIcon icon={faArrowsUpDown} class="w-3 h-3" />
+        Reorder Categories
+      </button>
+    </div>
+  {/if}
 
-      {@render categorySkills(categoryIndex)}
-    </Card>
-  {/each}
+  {#if categoryReorderMode}
+    {@render reorderConfirmCancel()}
+    <div
+      class="space-y-2 mt-2"
+      use:dragHandleZone={{ items: dndCategories, flipDurationMs: catFlipDurationMs, type: "categories" }}
+      onconsider={handleCatDndConsider}
+      onfinalize={handleCatDndFinalize}
+    >
+      {#each dndCategories as item (item.id)}
+        <div animate:flip={{ duration: catFlipDurationMs }}>
+          <Card class="p-3 sm:p-4">
+            <div class="flex items-center gap-3">
+              <div use:dragHandle class="cursor-grab active:cursor-grabbing touch-none p-1 -m-1">
+                <FontAwesomeIcon
+                  icon={faGripVertical}
+                  class="w-4 h-4 text-[var(--dash-text-muted)] flex-shrink-0"
+                />
+              </div>
+              <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+                {item.category.name || "Untitled category"}
+              </h3>
+              <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0">
+                {item.category.skills.length} skill{item.category.skills.length === 1 ? "" : "s"}
+              </span>
+            </div>
+          </Card>
+        </div>
+      {/each}
+    </div>
+    <div class="mt-2">
+      {@render reorderConfirmCancel()}
+    </div>
+  {:else}
+    {#each categories as category, categoryIndex}
+      <Card class="p-3 sm:p-4">
+        <div class="flex items-center justify-between mb-3 gap-2">
+          {@render categoryHeader(categoryIndex)}
+          <button
+            type="button"
+            onclick={() => removeCategory(categoryIndex)}
+            class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
+            aria-label="Remove category"
+          >
+            <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+            <span class="hidden sm:inline">Remove</span>
+          </button>
+        </div>
 
-  <button
-    type="button"
-    onclick={() => addCategory()}
-    class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
-  >
-    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-    Add category
-  </button>
+        {@render categorySkills(categoryIndex)}
+      </Card>
+    {/each}
+
+    <button
+      type="button"
+      onclick={() => addCategory()}
+      class="w-full py-2 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] border border-dashed border-[var(--dash-border)] rounded-lg hover:border-[var(--dash-primary)]/40 transition-colors flex items-center justify-center gap-1"
+    >
+      <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+      Add category
+    </button>
+  {/if}
 {/if}
