@@ -1761,6 +1761,24 @@
 
       <!-- Active run details (jobs/logs) shown inline in status card -->
       {#if featuredRun}
+        <div class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
+          <span>Run</span>
+          <span class="font-mono">#{featuredRun.id}</span>
+          <button
+            type="button"
+            onclick={() => copyRunId(featuredRun!.id)}
+            class="p-0.5 cursor-pointer text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+            aria-label="Copy run ID"
+          >
+            <FontAwesomeIcon
+              icon={copiedRunId === featuredRun.id ? faCheck : faCopy}
+              class="w-3 h-3 {copiedRunId === featuredRun.id ? 'text-green-600' : ''}"
+            />
+          </button>
+          {#if copiedRunId === featuredRun.id}
+            <span class="text-green-600">Copied!</span>
+          {/if}
+        </div>
         {@render runDetails(featuredRun, true)}
       {/if}
 
@@ -2217,6 +2235,9 @@
                       class="w-3 h-3 {copiedRunId === run.id ? 'text-green-600' : ''}"
                     />
                   </span>
+                  {#if copiedRunId === run.id}
+                    <span class="text-xs text-green-600">Copied!</span>
+                  {/if}
                 </div>
                 {#if run.settings}
                   <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
