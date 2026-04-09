@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
     db.profiles.findUniqueOrThrow({
       where: { id: profileId },
-      select: { ui_preferences: true },
+      select: { ui_preferences: true, browser_country_code: true, country_code: true },
     }),
   ]);
 
@@ -38,6 +38,8 @@ export const load: PageServerLoad = async ({ parent }) => {
     serverBrowserProvider: config.browserProvider,
     defaultBrowserProvider: config.defaultBrowserProvider,
     defaultMaxJobs: config.defaultMaxJobs,
+    browserCountryCode: profile.browser_country_code ?? "",
+    defaultCountryCode: profile.country_code ?? "",
   };
 };
 
@@ -210,7 +212,16 @@ export const actions: Actions = {
     const skipExisting = skipExistingRaw === "true";
     const keepMinimized = keepMinimizedRaw === "false" ? false : true;
 
-    await db.search_tasks.create({
+    // Browser location
+    const browserCountryCode = formData.get("browser_country_code") as string;
+    if (browserCountryCode) {
+      await db.profiles.update({
+        where: { id: profileId },
+        data: { browser_country_code: browserCountryCode.trim().toUpperCase() || null },
+      });
+    }
+
+    const newTask = await db.search_tasks.create({
       data: {
         note: note?.trim() || null,
         search_url: search_url.trim(),
@@ -232,7 +243,7 @@ export const actions: Actions = {
       },
     });
 
-    return { success: true };
+    return { success: true, taskId: newTask.id };
   },
 
   update: async ({ request, locals, cookies }) => {

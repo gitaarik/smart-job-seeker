@@ -1443,20 +1443,20 @@
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
       <span class="text-sm">All Import Tasks</span>
     </a>
-    <span class="text-[var(--dash-text-muted)]">·</span>
+    <span class="text-lg text-[var(--dash-text-muted)]">·</span>
     {#if searchTask.job_platforms}
-      <PlatformLogo platformUrl={searchTask.job_platforms.url} size="w-4 h-4" />
-      <span class="text-sm font-medium text-[var(--dash-text)] shrink-0">{searchTask.job_platforms.name}</span>
+      <PlatformLogo platformUrl={searchTask.job_platforms.url} size="w-5 h-5" />
+      <span class="text-lg font-medium text-[var(--dash-text)] shrink-0">{searchTask.job_platforms.name}</span>
     {/if}
     {#if isEditingNote}
-      <span class="text-[var(--dash-text-secondary)]">—</span>
+      <span class="text-lg text-[var(--dash-text-secondary)]">—</span>
       <div class="flex items-center gap-2 flex-1 min-w-0">
         <input
           type="text"
           bind:value={editNoteInput}
           autocomplete="off"
           placeholder="e.g., Remote only, senior roles"
-          class="flex-1 min-w-0 px-2 py-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          class="flex-1 min-w-0 px-2 py-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded text-[var(--dash-text)] text-base focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           onkeydown={(e) => {
             if (e.key === "Enter") saveHeader();
             if (e.key === "Escape") cancelEditNote();
@@ -1465,7 +1465,7 @@
         <button
           onclick={saveHeader}
           disabled={isSavingHeader}
-          class="flex items-center gap-1 px-2 py-1 bg-[var(--dash-primary)] text-white rounded text-xs hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 shrink-0"
+          class="flex items-center gap-1 px-2 py-1 bg-[var(--dash-primary)] text-white rounded text-sm hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 shrink-0"
         >
           {#if isSavingHeader}
             <Spinner size="w-3 h-3" />
@@ -1474,22 +1474,22 @@
         </button>
         <button
           onclick={cancelEditNote}
-          class="px-2 py-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-xs transition-colors shrink-0"
+          class="px-2 py-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-sm transition-colors shrink-0"
         >
           Cancel
         </button>
       </div>
     {:else}
       {#if searchTask.note}
-        <span class="text-[var(--dash-text-secondary)]">—</span>
-        <span class="text-sm text-[var(--dash-text-secondary)] truncate">{searchTask.note}</span>
+        <span class="text-lg text-[var(--dash-text-secondary)]">—</span>
+        <span class="text-lg text-[var(--dash-text-secondary)] truncate">{searchTask.note}</span>
       {/if}
       <button
         onclick={() => { isEditingNote = true; }}
         class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
         title="Edit note"
       >
-        <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+        <FontAwesomeIcon icon={faPencil} class="w-3.5 h-3.5" />
       </button>
     {/if}
   </div>

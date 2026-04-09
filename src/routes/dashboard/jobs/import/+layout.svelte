@@ -19,10 +19,14 @@
   }
 </script>
 
-<div class="space-y-6">
-  <SectionHeader title="Import Jobs" icon={faBullseye} />
+<div class="-mx-4">
+  <div class="px-4">
+    <SectionHeader title="Import Jobs" icon={faBullseye} />
+  </div>
 
   <TabNav {tabs} isActive={isTabActive}>
-    {@render children()}
+    <div class="px-4 pt-3">
+      {@render children()}
+    </div>
   </TabNav>
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { onMount } from "svelte";
   import {
@@ -50,12 +51,17 @@
           const nameB = b.job_platforms?.name?.toLowerCase() ?? "";
           return nameA.localeCompare(nameB);
         });
-      case "last_run":
+      case "last_run": {
+        const activeStatuses = ["running", "queued", "blocked", "stopping"];
         return tasks.sort((a, b) => {
+          const aActive = activeStatuses.includes(a.status ?? "") ? 1 : 0;
+          const bActive = activeStatuses.includes(b.status ?? "") ? 1 : 0;
+          if (aActive !== bActive) return bActive - aActive;
           const dateA = a.last_run ? new Date(a.last_run).getTime() : 0;
           const dateB = b.last_run ? new Date(b.last_run).getTime() : 0;
           return dateB - dateA;
         });
+      }
       case "added":
       default:
         return tasks.sort((a, b) => {
@@ -194,14 +200,13 @@
   function handleAddSubmit() {
     return async ({
       result,
-      update,
     }: {
-      result: { type: string };
+      result: { type: string; data?: { taskId?: number } };
       update: () => Promise<void>;
     }) => {
-      await update();
-      if (result.type === "success") {
+      if (result.type === "success" && result.data?.taskId) {
         resetAddForm();
+        goto(`/dashboard/jobs/import/tasks/${result.data.taskId}`);
       }
     };
   }
@@ -309,7 +314,7 @@
       class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
       <h3 class="font-medium text-[var(--dash-text)] mb-4">
-        Add New Job Search
+        Add Import Task
       </h3>
       <div class="space-y-4">
         <SearchTaskFields
@@ -318,6 +323,8 @@
           serverBrowserProvider={data.serverBrowserProvider}
           defaultBrowserProvider={data.defaultBrowserProvider}
           defaultMaxJobs={data.defaultMaxJobs}
+          browserCountryCode={data.browserCountryCode}
+          defaultCountryCode={data.defaultCountryCode}
           bind:searchUrl={newSearchUrl}
           bind:searchTerm={newSearchTerm}
           bind:loginPageUrl={newLoginPageUrl}
@@ -329,19 +336,18 @@
 
         <!-- Optional note -->
         <div>
-          <label
-            for="new-note"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          <h3
+            class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
           >
-            Note <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
-          </label>
+            Note <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
+          </h3>
           <input
             type="text"
             id="new-note"
             name="note"
             bind:value={newNote}
             placeholder="e.g., Remote only, senior roles"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
           />
         </div>
       </div>
@@ -358,7 +364,7 @@
           type="submit"
           class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
-          Add Search
+          Add Task
         </button>
       </div>
     </form>

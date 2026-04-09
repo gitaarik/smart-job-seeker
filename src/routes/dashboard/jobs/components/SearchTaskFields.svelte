@@ -107,6 +107,9 @@
     defaultBrowserProvider || null,
   );
 
+  // ── Add-mode browser country ──
+  let addBrowserCountryCode = $state(initialBrowserCountryCode);
+
   // ── Add-mode scraping options ──
   let addMaxJobsEnabled = $state(defaultMaxJobs != null);
   let addMaxJobsInput = $state(defaultMaxJobs?.toString() ?? "");
@@ -933,14 +936,13 @@
           <!-- Credentials -->
           {#if isAdd}
             <div class="border-t border-[var(--dash-border)] pt-3">
-              <label
-                class="block text-sm font-medium text-[var(--dash-text)] mb-2"
+              <h3
+                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
               >
-                <FontAwesomeIcon icon={faKey} class="w-4 h-4 mr-1" />
                 Login Credentials
-                <span class="text-[var(--dash-text-muted)] font-normal"
+                <span class="font-normal text-[var(--dash-text-muted)]"
                 >(optional)</span>
-              </label>
+              </h3>
 
               <select
                 name="credential_id"
@@ -949,7 +951,7 @@
                   handleCredentialSelection(
                     (e.target as HTMLSelectElement).value,
                   )}
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
               >
                 <option value="none">No auto-login</option>
                 {#each existingCredentials as cred}
@@ -975,7 +977,7 @@
                       name="new_credential_username"
                       bind:value={newCredUsername}
                       placeholder="your@email.com"
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                     />
                   </div>
                   <div>
@@ -992,7 +994,7 @@
                         name="new_credential_password"
                         bind:value={newCredPassword}
                         placeholder="Enter password"
-                        class="w-full px-3 py-2 pr-10 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                        class="w-full px-2 py-1 pr-8 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                       />
                       <button
                         type="button"
@@ -1373,7 +1375,19 @@
                 Browser Location
               </h3>
             </div>
-            {#if isEdit}
+            {#if isAdd}
+              <div class="flex-1">
+                <CountrySelect
+                  bind:value={addBrowserCountryCode}
+                  fallback={defaultCountryCode}
+                />
+              </div>
+              <input
+                type="hidden"
+                name="browser_country_code"
+                value={addBrowserCountryCode}
+              />
+            {:else}
               <div class="flex items-center gap-2">
                 <div class="flex-1">
                   <CountrySelect
