@@ -2,6 +2,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faArrowLeft, faPlus } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+  import type { Snippet } from "svelte";
 
   interface Props {
     title: string;
@@ -11,6 +12,7 @@
     showAddButton?: boolean;
     addLabel?: string;
     onAdd?: () => void;
+    actions?: Snippet;
   }
 
   let {
@@ -21,6 +23,7 @@
     showAddButton = false,
     addLabel = "Add New",
     onAdd,
+    actions,
   }: Props = $props();
 </script>
 
@@ -51,15 +54,22 @@
       <h1 class="text-2xl font-bold text-[var(--dash-text)]">{title}</h1>
     </div>
 
-    {#if showAddButton}
-      <button
-        type="button"
-        onclick={onAdd}
-        class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
-        <span class="hidden sm:inline">{addLabel}</span>
-      </button>
+    {#if actions || showAddButton}
+      <div class="flex items-center gap-2">
+        {#if actions}
+          {@render actions()}
+        {/if}
+        {#if showAddButton}
+          <button
+            type="button"
+            onclick={onAdd}
+            class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+          >
+            <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+            <span class="hidden sm:inline">{addLabel}</span>
+          </button>
+        {/if}
+      </div>
     {/if}
   </div>
 </div>

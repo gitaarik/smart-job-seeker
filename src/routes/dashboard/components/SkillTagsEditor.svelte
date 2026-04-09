@@ -2,6 +2,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
+    faCircleNotch,
     faGripVertical,
     faPlus,
     faTags,
@@ -50,7 +51,7 @@
 
   let {
     skills = $bindable(),
-    levelOptions = defaultLevelOptions,
+    levelOptions: _levelOptions = defaultLevelOptions,
     versionSlugs = [],
     hasAnyLevel,
     hasAnyExperience,
@@ -65,6 +66,8 @@
     onreorder,
   }: Props = $props();
 
+  let levelOptions = $derived(_levelOptions.length > 0 ? _levelOptions : defaultLevelOptions);
+
   // When used standalone (without parent), derive visibility from local skills
   let showLevelToggle = $derived(hasAnyLevel ?? skills.some((s) => s.level));
   let showExperienceToggle = $derived(hasAnyExperience ?? skills.some((s) => s.yearsExperience));
@@ -75,6 +78,7 @@
   let editingIsNew = $state(false);
 
   let reorderSnapshot = $state<SkillItem[] | null>(null);
+  let reorderSaving = $state(false);
 
   // When reorderMode is toggled externally (from another category), take/restore snapshot
   let prevReorderMode = $state(false);
@@ -410,28 +414,32 @@
       </div>
     {/each}
   </div>
-  <div class="flex justify-end gap-1 mt-2">
+  <div class="flex items-center justify-end gap-2 mt-2">
+    <span class="text-xs text-[var(--dash-text-muted)]">Reorder Skills</span>
     <button
       type="button"
       onclick={() => {
         if (reorderSnapshot) skills = reorderSnapshot;
         reorderSnapshot = null;
+        reorderMode = false;
       }}
-      class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
-      aria-label="Cancel reorder"
+      class="px-3 py-1 border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-xs"
     >
-      <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+      Cancel
     </button>
     <button
       type="button"
       onclick={() => {
+        reorderSaving = true;
         onreorder?.(skills);
         reorderSnapshot = null;
+        reorderSaving = false;
       }}
-      class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
-      aria-label="Confirm reorder"
+      disabled={reorderSaving}
+      class="px-3 py-1 bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors text-xs inline-flex items-center gap-1.5 disabled:opacity-70"
     >
-      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+      {#if reorderSaving}<FontAwesomeIcon icon={faCircleNotch} spin class="w-3 h-3" />{/if}
+      Save
     </button>
   </div>
 {:else}

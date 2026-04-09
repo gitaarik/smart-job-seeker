@@ -1,16 +1,15 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faArrowsUpDown,
     faCheck,
     faChevronDown,
     faChevronUp,
+    faCircleNotch,
     faGripVertical,
     faPencil,
     faPlus,
     faTimes,
     faTrash,
-    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import { dragHandleZone, dragHandle } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
@@ -28,6 +27,7 @@
     levelOptions?: LevelOption[];
     versionSlugs?: string[];
     compact?: boolean;
+    canCategoryReorder?: boolean;
     oncreate?: (category: CategoryItem) => void;
     onrename?: (category: CategoryItem) => void;
     onremove?: (category: CategoryItem) => void;
@@ -43,6 +43,7 @@
     levelOptions,
     versionSlugs = [],
     compact = false,
+    canCategoryReorder = $bindable(false),
     oncreate,
     onrename,
     onremove,
@@ -53,6 +54,11 @@
     oncategoryreorder,
   }: Props = $props();
 
+  // Expose whether category reorder is available to parent
+  $effect(() => {
+    canCategoryReorder = !!oncategoryreorder && categories.length > 1 && !categoryReorderMode;
+  });
+
   // Shared toggle state across all categories
   let showLevel = $state(false);
   let showExperience = $state(false);
@@ -61,6 +67,7 @@
 
   // Category reorder mode
   let categoryReorderMode = $state(false);
+  let categoryReorderSaving = $state(false);
   let categoryReorderSnapshot = $state<CategoryItem[] | null>(null);
 
   interface DndCategoryItem {
@@ -82,7 +89,7 @@
     categories = dndCategories.map((d) => d.category);
   }
 
-  function startCategoryReorder() {
+  export function startCategoryReorder() {
     categoryReorderSnapshot = categories.map((c) => ({ ...c }));
     dndCategories = categories.map((c, i) => ({
       id: (c as { id?: number }).id ? String((c as { id?: number }).id) : `cat-${i}`,
@@ -92,6 +99,7 @@
   }
 
   function confirmCategoryReorder() {
+    categoryReorderSaving = true;
     // Rebuild categories from dndCategories to ensure correct order
     const reordered = dndCategories.map((d) => {
       // Preserve the original DB id on the category object, since
@@ -103,6 +111,7 @@
     });
     categories = reordered;
     oncategoryreorder?.(reordered);
+    categoryReorderSaving = false;
     categoryReorderSnapshot = null;
     categoryReorderMode = false;
   }
@@ -236,22 +245,23 @@
 </script>
 
 {#snippet reorderConfirmCancel()}
-  <div class="flex justify-end gap-1">
+  <div class="flex items-center justify-end gap-2">
+    <span class="text-xs text-[var(--dash-text-muted)]">Reorder Categories</span>
     <button
       type="button"
       onclick={cancelCategoryReorder}
-      class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
-      aria-label="Cancel reorder"
+      class="px-3 py-1 border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-xs"
     >
-      <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+      Cancel
     </button>
     <button
       type="button"
       onclick={confirmCategoryReorder}
-      class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
-      aria-label="Confirm reorder"
+      disabled={categoryReorderSaving}
+      class="px-3 py-1 bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors text-xs inline-flex items-center gap-1.5 disabled:opacity-70"
     >
-      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+      {#if categoryReorderSaving}<FontAwesomeIcon icon={faCircleNotch} spin class="w-3 h-3" />{/if}
+      Save
     </button>
   </div>
 {/snippet}
@@ -399,23 +409,6 @@
     </div>
   </div>
 {:else}
-  {#if oncategoryreorder && categories.length > 1}
-    <div class="flex justify-end mb-2">
-      <button
-        type="button"
-        onclick={() => categoryReorderMode ? cancelCategoryReorder() : startCategoryReorder()}
-        class="
-          inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors {categoryReorderMode
-          ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
-          : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:text-[var(--dash-text-secondary)]'}
-        "
-      >
-        <FontAwesomeIcon icon={faArrowsUpDown} class="w-3 h-3" />
-        Reorder Categories
-      </button>
-    </div>
-  {/if}
-
   {#if categoryReorderMode}
     {@render reorderConfirmCancel()}
     <div

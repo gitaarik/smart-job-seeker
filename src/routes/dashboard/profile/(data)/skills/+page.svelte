@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { invalidateAll } from "$app/navigation";
-  import { faCode } from "@fortawesome/free-solid-svg-icons";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faArrowsUpDown, faCode } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../components/SectionHeader.svelte";
   import SkillCategoriesEditor from "../../../components/SkillCategoriesEditor.svelte";
   import type { CategoryItem } from "../../../components/SkillCategoriesEditor.svelte";
@@ -51,6 +52,8 @@
   }
 
   let mappedCategories = $state(mapCategories(data.categories));
+  let canCategoryReorder = $state(false);
+  let editorRef: SkillCategoriesEditor;
 
   $effect(() => {
     mappedCategories = mapCategories(data.categories);
@@ -145,7 +148,20 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <SectionHeader title="Skills" icon={faCode} />
+  <SectionHeader title="Skills" icon={faCode}>
+    {#snippet actions()}
+      {#if canCategoryReorder}
+        <button
+          type="button"
+          onclick={() => editorRef.startCategoryReorder()}
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:text-[var(--dash-text-secondary)]"
+        >
+          <FontAwesomeIcon icon={faArrowsUpDown} class="w-3 h-3" />
+          Reorder
+        </button>
+      {/if}
+    {/snippet}
+  </SectionHeader>
 
   {#if form?.error}
     <div
@@ -157,7 +173,9 @@
 
   <div class="space-y-4">
     <SkillCategoriesEditor
+      bind:this={editorRef}
       bind:categories={mappedCategories}
+      bind:canCategoryReorder
       levelOptions={data.levelOptions}
       {versionSlugs}
       oncreate={handleCategoryCreate}
