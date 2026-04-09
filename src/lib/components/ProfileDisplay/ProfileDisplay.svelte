@@ -405,6 +405,21 @@
     <br><br>
   </section>
 
+  {#if profile.certificates && profile.certificates.length > 0}
+    <!-- Certificates -->
+    <section class="my-3 break-inside-avoid">
+      <h2 class="text-sm font-bold h-5">CERTIFICATES<br><br></h2>
+
+      <hr class="mt-1 mb-2" />
+
+      {#each profile.certificates as cert, index (index)}
+        <div>
+          <span class="font-bold">{cert.name}</span>{#if cert.issuer} — {cert.issuer}{/if}{#if cert.date}, {new Date(cert.date).getFullYear()}{/if}
+        </div>
+      {/each}
+    </section>
+  {/if}
+
   <!-- Languages -->
   <section class="my-3 break-inside-avoid">
     <h2 class="text-sm font-bold h-5">LANGUAGES<br><br></h2>
@@ -420,21 +435,6 @@
       </div>
     {/each}
   </section>
-
-  {#if profile.certificates && profile.certificates.length > 0}
-    <!-- Certificates -->
-    <section class="my-3 break-inside-avoid">
-      <h2 class="text-sm font-bold h-5">CERTIFICATES<br><br></h2>
-
-      <hr class="mt-1 mb-2" />
-
-      {#each profile.certificates as cert, index (index)}
-        <div>
-          <span class="font-bold">{cert.name}</span>{#if cert.issuer} — {cert.issuer}{/if}{#if cert.date}, {new Date(cert.date).getFullYear()}{/if}
-        </div>
-      {/each}
-    </section>
-  {/if}
 
   {#if toggles.includes("nationality")}
     <!-- Nationality -->
