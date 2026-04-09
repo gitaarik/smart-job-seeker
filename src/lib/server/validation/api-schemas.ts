@@ -40,6 +40,11 @@ export const interviewStoryDeleteSchema = z.object({
   id: positiveInt(),
 });
 
+export const interviewStoryReorderSchema = z.object({
+  profile_id: positiveInt(),
+  order: z.array(positiveInt()),
+});
+
 // Cheat sheets
 
 export const cheatSheetCreateSchema = z.object({
@@ -55,6 +60,11 @@ export const cheatSheetUpdateSchema = cheatSheetCreateSchema.extend({
 export const cheatSheetDeleteSchema = z.object({
   profile_id: positiveInt(),
   id: positiveInt(),
+});
+
+export const cheatSheetReorderSchema = z.object({
+  profile_id: positiveInt(),
+  order: z.array(positiveInt()),
 });
 
 // Job preferences

@@ -5,6 +5,7 @@ import {
   interviewStoryCreateSchema,
   interviewStoryUpdateSchema,
   interviewStoryDeleteSchema,
+  interviewStoryReorderSchema,
   parseBody,
 } from "$lib/server/validation/api-schemas";
 
@@ -86,6 +87,32 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   });
 
   return json({ success: true, story });
+};
+
+export const PATCH: RequestHandler = async ({ request, locals }) => {
+  const user = requireAuth(locals);
+
+  const { profile_id, order } =
+    parseBody(interviewStoryReorderSchema, await request.json());
+
+  const profile = await db.profiles.findFirst({
+    where: { id: profile_id, user_id: user.id },
+  });
+
+  if (!profile) {
+    return json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  await Promise.all(
+    order.map((id, index) =>
+      db.project_stories.updateMany({
+        where: { id, profile: profile_id },
+        data: { sort: index, date_updated: new Date() },
+      })
+    ),
+  );
+
+  return json({ success: true });
 };
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {

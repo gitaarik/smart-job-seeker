@@ -5,6 +5,7 @@ import {
   cheatSheetCreateSchema,
   cheatSheetUpdateSchema,
   cheatSheetDeleteSchema,
+  cheatSheetReorderSchema,
   parseBody,
 } from "$lib/server/validation/api-schemas";
 
@@ -72,6 +73,32 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   });
 
   return json({ success: true, sheet });
+};
+
+export const PATCH: RequestHandler = async ({ request, locals }) => {
+  const user = requireAuth(locals);
+
+  const { profile_id, order } =
+    parseBody(cheatSheetReorderSchema, await request.json());
+
+  const profile = await db.profiles.findFirst({
+    where: { id: profile_id, user_id: user.id },
+  });
+
+  if (!profile) {
+    return json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  await Promise.all(
+    order.map((id, index) =>
+      db.cheat_sheets.updateMany({
+        where: { id, profile: profile_id },
+        data: { sort: index, date_updated: new Date() },
+      })
+    ),
+  );
+
+  return json({ success: true });
 };
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {

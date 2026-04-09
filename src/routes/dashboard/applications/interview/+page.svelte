@@ -2,15 +2,21 @@
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowsUpDown,
     faBook,
+    faCheck,
     faChevronRight,
     faFileAlt,
+    faGripVertical,
     faLayerGroup,
     faPencil,
     faPlus,
     faStickyNote,
     faTrash,
+    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
+  import { dragHandleZone, dragHandle } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
@@ -413,6 +419,63 @@
     return category?.label || value;
   }
 
+  // --- Reorder mode ---
+  let reorderMode = $state(false);
+  interface DndItem {
+    id: string;
+    item: Item;
+    [key: string]: unknown;
+  }
+  let dndItems = $state<DndItem[]>([]);
+  let reorderSnapshot = $state<Item[] | null>(null);
+  const flipDurationMs = 150;
+
+  // Only allow reorder when filtering by one type and there are 2+ items
+  let canReorder = $derived(
+    (currentType === "cheatsheets" && cheatsheets.length > 1) ||
+    (currentType === "stories" && stories.length > 1)
+  );
+
+  function startReorder() {
+    const items = filteredItems;
+    reorderSnapshot = [...items];
+    dndItems = items.map((item) => ({
+      id: String(item.id),
+      item,
+    }));
+    reorderMode = true;
+  }
+
+  function handleDndConsider(e: CustomEvent<{ items: DndItem[] }>) {
+    dndItems = e.detail.items;
+  }
+
+  function handleDndFinalize(e: CustomEvent<{ items: DndItem[] }>) {
+    dndItems = e.detail.items;
+  }
+
+  async function confirmReorder() {
+    const ids = dndItems.map((d) => parseInt(d.id)).filter((id) => !isNaN(id));
+    const endpoint = currentType === "cheatsheets" ? "/api/cheat-sheets" : "/api/interview-stories";
+    try {
+      await fetch(endpoint, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile_id: data.profileId, order: ids }),
+      });
+      await invalidateAll();
+    } catch {
+      // silently fail
+    }
+    reorderSnapshot = null;
+    reorderMode = false;
+  }
+
+  function cancelReorder() {
+    reorderSnapshot = null;
+    reorderMode = false;
+  }
+
   function handleClickOutside(e: MouseEvent) {
     const target = e.target as HTMLElement;
     if (!target.closest("[data-add-menu]")) {
@@ -470,7 +533,20 @@
 
   <!-- Filter tabs -->
   {#if cheatsheets.length > 0 && stories.length > 0}
-    <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => (currentType = v)} />
+    <FilterTabs filters={typeFilters} value={currentType} onchange={(v) => { currentType = v; if (reorderMode) cancelReorder(); }} />
+  {/if}
+
+  {#if canReorder && !reorderMode}
+    <div class="flex justify-end">
+      <button
+        type="button"
+        onclick={startReorder}
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:text-[var(--dash-text-secondary)]"
+      >
+        <FontAwesomeIcon icon={faArrowsUpDown} class="w-3 h-3" />
+        Reorder
+      </button>
+    </div>
   {/if}
 
   {#if errorMessage && (addSaveState === "error" || editSaveState === "error")}
@@ -586,6 +662,64 @@
       actionLabel="Add First Item"
       onAction={() => (showAddMenu = true)}
     />
+  {:else if reorderMode}
+    <!-- Reorder Mode -->
+    {#snippet reorderConfirmCancel()}
+      <div class="flex justify-end gap-1">
+        <button
+          type="button"
+          onclick={cancelReorder}
+          class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] rounded transition-colors"
+          aria-label="Cancel reorder"
+        >
+          <FontAwesomeIcon icon={faXmark} class="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onclick={confirmReorder}
+          class="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
+          aria-label="Confirm reorder"
+        >
+          <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+        </button>
+      </div>
+    {/snippet}
+
+    {@render reorderConfirmCancel()}
+    <div
+      class="space-y-2 mt-2"
+      use:dragHandleZone={{ items: dndItems, flipDurationMs, type: "interview-items" }}
+      onconsider={handleDndConsider}
+      onfinalize={handleDndFinalize}
+    >
+      {#each dndItems as dndItem (dndItem.id)}
+        <div animate:flip={{ duration: flipDurationMs }}>
+          <Card class="p-3 sm:p-4">
+            <div class="flex items-center gap-3">
+              <div use:dragHandle class="cursor-grab active:cursor-grabbing touch-none p-1 -m-1">
+                <FontAwesomeIcon
+                  icon={faGripVertical}
+                  class="w-4 h-4 text-[var(--dash-text-muted)] flex-shrink-0"
+                />
+              </div>
+              <FontAwesomeIcon
+                icon={dndItem.item.itemType === "cheatsheet" ? faStickyNote : faBook}
+                class="w-4 h-4 {dndItem.item.itemType === 'cheatsheet' ? 'text-purple-600' : 'text-blue-600'} flex-shrink-0"
+              />
+              <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+                {dndItem.item.title || "Untitled"}
+              </h3>
+              <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0">
+                {dndItem.item.itemType === "cheatsheet" ? "Cheat Sheet" : "Story"}
+              </span>
+            </div>
+          </Card>
+        </div>
+      {/each}
+    </div>
+    <div class="mt-2">
+      {@render reorderConfirmCancel()}
+    </div>
   {:else}
     <div class="space-y-3">
       {#each filteredItems as item (item.key)}
