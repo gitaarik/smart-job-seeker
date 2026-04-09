@@ -1164,7 +1164,7 @@
               {#each runItems[run.id].items as item (item.id)}
                 <div
                   data-item-status={item.status}
-                  class={`${getItemStatusBg(item.status)}`}
+                  class={`${getItemStatusBg(item.status)} ${expandedItemId === item.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}`}
                 >
                   <!-- Item header (clickable for completed items with job details) -->
                   <button
@@ -2125,7 +2125,7 @@
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
         {#each historyRuns as run (run.id)}
-          <div class="bg-[var(--dash-card)]">
+          <div class="bg-[var(--dash-card)] {expandedRunId === run.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}">
             <!-- Run header (clickable) -->
             <button
               onclick={() => toggleRunExpanded(run.id)}
