@@ -45,7 +45,8 @@
   // --- When overflowing, split tabs into as many rows as needed ---
   let rows = $derived.by(() => {
     if (!overflows || tabWidths.length === 0 || !containerEl) return null;
-    const maxWidth = containerEl.clientWidth;
+    // Subtract px-4 (1rem each side = 32px) used by the multi-row wrapper
+    const maxWidth = containerEl.clientWidth - 32;
     const gap = -1; // -ml-px: borders overlap by 1px
     const allRows: Tab[][] = [];
     let currentRow: Tab[] = [];
