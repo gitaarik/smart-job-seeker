@@ -34,6 +34,7 @@ const PROFILE_INCLUDE = {
     orderBy: { sort: "asc" as const },
   },
   references: { orderBy: { sort: "asc" as const } },
+  certificates: { orderBy: { sort: "asc" as const } },
   profile_versions_profile_versions_profileToprofiles: {
     select: {
       id: true,
