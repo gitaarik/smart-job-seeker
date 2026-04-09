@@ -7,7 +7,7 @@ import { chromium } from "patchright";
 const CLOUD_BROWSER_BASE = "wss://cloudbrowser.gologin.com";
 
 /**
- * POST /api/search-tasks/[id]/runs/[runId]/navigate-url
+ * POST /api/import-tasks/[id]/runs/[runId]/navigate-url
  *
  * Navigate the cloud browser to a URL via CDP.
  * Used for magic link login: the user receives a login link via email

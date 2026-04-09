@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
- * PATCH /api/search-tasks/[id]/ui-preferences
+ * PATCH /api/import-tasks/[id]/ui-preferences
  *
  * Merge key/value pairs into the job search's ui_preferences JSONB column.
  * Body: { [key: string]: any }

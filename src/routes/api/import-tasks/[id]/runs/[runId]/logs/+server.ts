@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
- * GET /api/search-tasks/[id]/runs/[runId]/logs
+ * GET /api/import-tasks/[id]/runs/[runId]/logs
  *
  * Get logs for a specific run.
  * Supports pagination and filtering by timestamp for live updates.

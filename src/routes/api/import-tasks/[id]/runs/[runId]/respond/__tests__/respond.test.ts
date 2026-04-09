@@ -1,6 +1,6 @@
 /**
  * Tests for Scraper Respond API
- * POST /api/search-tasks/[id]/runs/[runId]/respond
+ * POST /api/import-tasks/[id]/runs/[runId]/respond
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,7 +32,7 @@ function createEvent(body: any, opts: {
   return {
     params: opts.params ?? { id: "1", runId: "10" },
     locals: { user: opts.user === undefined ? { id: "user-1" } : opts.user, session: null },
-    request: new Request("http://localhost/api/search-tasks/1/runs/10/respond", {
+    request: new Request("http://localhost/api/import-tasks/1/runs/10/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -40,7 +40,7 @@ function createEvent(body: any, opts: {
   } as any;
 }
 
-describe("POST /api/search-tasks/[id]/runs/[runId]/respond", () => {
+describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRunsUpdate.mockResolvedValue({});

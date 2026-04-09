@@ -5,7 +5,7 @@ import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 /**
- * PATCH /api/search-tasks/[id]
+ * PATCH /api/import-tasks/[id]
  *
  * Update job search settings (e.g. max_jobs).
  */
@@ -83,7 +83,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 };
 
 /**
- * DELETE /api/search-tasks/[id]
+ * DELETE /api/import-tasks/[id]
  *
  * Delete a job search task.
  */

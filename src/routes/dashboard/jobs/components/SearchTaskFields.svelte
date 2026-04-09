@@ -130,7 +130,7 @@
     sectionOpen[section] = !isOpen;
     if (isEdit && searchTaskId) {
       const key = `task_sections_${section}`;
-      fetch(`/api/search-tasks/${searchTaskId}/ui-preferences`, {
+      fetch(`/api/import-tasks/${searchTaskId}/ui-preferences`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [key]: !isOpen }),
@@ -292,7 +292,7 @@
 
   // ── Edit-mode save functions ──
   async function patchSearchTask(body: Record<string, unknown>) {
-    await fetch(`/api/search-tasks/${searchTaskId}`, {
+    await fetch(`/api/import-tasks/${searchTaskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

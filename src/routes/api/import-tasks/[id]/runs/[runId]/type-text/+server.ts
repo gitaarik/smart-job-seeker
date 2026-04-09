@@ -7,7 +7,7 @@ import { chromium } from "patchright";
 const CLOUD_BROWSER_BASE = "wss://cloudbrowser.gologin.com";
 
 /**
- * POST /api/search-tasks/[id]/runs/[runId]/type-text
+ * POST /api/import-tasks/[id]/runs/[runId]/type-text
  *
  * Type text into the browser's currently focused input field via CDP.
  * Used for entering 2FA codes, security codes, etc. on mobile where

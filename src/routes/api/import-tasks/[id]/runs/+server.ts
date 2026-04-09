@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
- * GET /api/search-tasks/[id]/runs
+ * GET /api/import-tasks/[id]/runs
  *
  * List all runs for a job search, ordered by most recent first.
  */

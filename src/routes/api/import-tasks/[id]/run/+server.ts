@@ -12,7 +12,7 @@ import {
 import { requireCredits } from "$lib/server/billing/credits";
 
 /**
- * POST /api/search-tasks/[id]/run
+ * POST /api/import-tasks/[id]/run
  *
  * Triggers a scrape for the given job search.
  * Creates a run record and adds the job to the BullMQ queue.
@@ -153,7 +153,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 };
 
 /**
- * DELETE /api/search-tasks/[id]/run
+ * DELETE /api/import-tasks/[id]/run
  *
  * Cancel a running or queued scrape.
  * GoLogin session cleanup is handled by the worker's failed event handler.
@@ -256,7 +256,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 };
 
 /**
- * GET /api/search-tasks/[id]/run
+ * GET /api/import-tasks/[id]/run
  *
  * Get the current scrape status for polling
  */

@@ -1,7 +1,7 @@
 /**
  * Run Items API
  *
- * GET /api/search-tasks/[id]/runs/[runId]/items
+ * GET /api/import-tasks/[id]/runs/[runId]/items
  * Returns the list of jobs discovered during a scraper run with their processing status.
  */
 

@@ -51,7 +51,7 @@
       const newNote = editNoteInput.trim();
 
       if (newNote !== (searchTask.note ?? "")) {
-        await fetch(`/api/search-tasks/${searchTask.id}`, {
+        await fetch(`/api/import-tasks/${searchTask.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ note: newNote }),
@@ -83,7 +83,7 @@
 
   function toggleSettingsSection() {
     settingsOpen = !settingsOpen;
-    fetch(`/api/search-tasks/${data.searchTask.id}/ui-preferences`, {
+    fetch(`/api/import-tasks/${data.searchTask.id}/ui-preferences`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ task_sections_settings: settingsOpen }),
@@ -97,7 +97,7 @@
   async function deleteTask() {
     isDeleting = true;
     try {
-      const res = await fetch(`/api/search-tasks/${searchTask.id}`, {
+      const res = await fetch(`/api/import-tasks/${searchTask.id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -453,7 +453,7 @@
   async function loadRuns() {
     try {
       const response = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs?limit=10`,
+        `/api/import-tasks/${searchTask.id}/runs?limit=10`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -472,7 +472,7 @@
 
     try {
       const response = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${runId}/logs?level=${logLevelFilter}`,
+        `/api/import-tasks/${searchTask.id}/runs/${runId}/logs?level=${logLevelFilter}`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -492,7 +492,7 @@
 
     try {
       const response = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${runId}/items`,
+        `/api/import-tasks/${searchTask.id}/runs/${runId}/items`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -672,7 +672,7 @@
 
       try {
         let url =
-          `/api/search-tasks/${searchTask.id}/runs/${runId}/logs?level=${logLevelFilter}`;
+          `/api/import-tasks/${searchTask.id}/runs/${runId}/logs?level=${logLevelFilter}`;
         if (lastTimestamp) {
           url += `&after=${encodeURIComponent(lastTimestamp)}`;
         }
@@ -706,7 +706,7 @@
 
     try {
       const response = await fetch(
-        `/api/search-tasks/${searchTask.id}/run`,
+        `/api/import-tasks/${searchTask.id}/run`,
         {
           method: "POST",
         },
@@ -760,7 +760,7 @@
     pollInterval = setInterval(async () => {
       try {
         const response = await fetch(
-          `/api/search-tasks/${searchTask.id}/run`,
+          `/api/import-tasks/${searchTask.id}/run`,
         );
         const result = await response.json();
 
@@ -809,7 +809,7 @@
 
     try {
       const response = await fetch(
-        `/api/search-tasks/${searchTask.id}/run`,
+        `/api/import-tasks/${searchTask.id}/run`,
         {
           method: "DELETE",
         },
@@ -858,7 +858,7 @@
 
     try {
       const res = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/respond`,
+        `/api/import-tasks/${searchTask.id}/runs/${currentRunId}/respond`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -900,7 +900,7 @@
 
     try {
       const res = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
+        `/api/import-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -937,7 +937,7 @@
     typeTextMessage = null;
     try {
       const res = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
+        `/api/import-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -964,7 +964,7 @@
     typeTextMessage = null;
     try {
       const res = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
+        `/api/import-tasks/${searchTask.id}/runs/${currentRunId}/type-text`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -993,7 +993,7 @@
 
     try {
       const res = await fetch(
-        `/api/search-tasks/${searchTask.id}/runs/${currentRunId}/navigate-url`,
+        `/api/import-tasks/${searchTask.id}/runs/${currentRunId}/navigate-url`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

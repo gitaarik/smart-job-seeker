@@ -10,7 +10,7 @@ const VALID_RESPONSES = ["continue", "skip", "cancel"] as const;
 type UserResponse = (typeof VALID_RESPONSES)[number];
 
 /**
- * POST /api/search-tasks/[id]/runs/[runId]/respond
+ * POST /api/import-tasks/[id]/runs/[runId]/respond
  *
  * Submit user feedback to a running scraper job.
  * The scraper polls for this response during intervention waits.
