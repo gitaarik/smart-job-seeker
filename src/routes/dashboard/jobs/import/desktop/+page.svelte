@@ -147,7 +147,7 @@
 </script>
 
 <svelte:head>
-  <title>Local Scraping - Import Jobs - Smart Job Seeker</title>
+  <title>Desktop Import - Import Jobs - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-4">

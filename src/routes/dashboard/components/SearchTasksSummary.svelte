@@ -77,7 +77,7 @@
         />
       </div>
       <div>
-        <p class="text-sm font-medium text-[var(--dash-text)]">Job Import</p>
+        <p class="text-sm font-medium text-[var(--dash-text)]">Import Tasks</p>
         <p class="text-xs text-[var(--dash-text-secondary)]">
           {searchTasks.activeCount} active / {searchTasks.totalCount} total
         </p>

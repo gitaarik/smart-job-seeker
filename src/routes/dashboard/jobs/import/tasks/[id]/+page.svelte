@@ -1052,7 +1052,7 @@
 </script>
 
 <svelte:head>
-  <title>{searchTaskDisplayName(searchTask.job_platforms?.name, searchTask.note)} - Job Import - Smart Job Seeker</title>
+  <title>{searchTaskDisplayName(searchTask.job_platforms?.name, searchTask.note)} - Import Tasks - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -1063,11 +1063,11 @@
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">All Job Imports</span>
+      <span class="text-sm">All Import Tasks</span>
     </a>
   </div>
   <h1 class="text-xl font-semibold text-[var(--dash-text)]">
-    Job Import
+    Import Task
   </h1>
 
   <!-- Scrape Configuration -->
@@ -1349,7 +1349,7 @@
             {#if desktopConnected}
               Desktop app connected
             {:else}
-              Desktop app not connected — <a href="/dashboard/jobs/import/local-scraping" class="underline hover:text-amber-700">Setup guide</a>
+              Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-amber-700">Setup guide</a>
             {/if}
           </div>
         {/if}

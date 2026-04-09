@@ -236,7 +236,7 @@
 </script>
 
 <svelte:head>
-  <title>Job Import - Import Jobs - Smart Job Seeker</title>
+  <title>Import Tasks - Import Jobs - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-4">
@@ -264,7 +264,7 @@
       {#if desktopConnected}
         Desktop app connected
       {:else}
-        Desktop app not connected — <a href="/dashboard/jobs/import/local-scraping" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
+        Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
       {/if}
     </div>
   {/if}

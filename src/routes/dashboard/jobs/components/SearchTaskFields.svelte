@@ -1353,7 +1353,7 @@
             {#if desktopConnected}
               Desktop app connected
             {:else}
-              Desktop app not connected — <a href="/dashboard/jobs/import/local-scraping" class="underline hover:text-amber-700">Setup guide</a>
+              Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-amber-700">Setup guide</a>
             {/if}
           </div>
         {/if}
