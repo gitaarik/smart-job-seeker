@@ -73,18 +73,12 @@
 
     // Distribute tabs evenly across numRows using dynamic programming.
     // Find split points that minimize the max row width.
-    // splits[r] = optimal first-tab index for row r (0-indexed rows)
-    // We need (numRows - 1) split points for tabs[0..n)
     const n = tabs.length;
     if (numRows >= n) {
-      // Edge case: more rows than tabs, one tab per row
       const allRows = tabs.map((t) => [t]);
       return reorderForActiveTab(allRows);
     }
 
-    // DP: dp[i][r] = minimum "max row width" achievable for tabs[0..i) using r rows
-    // We only need to find the split points, so track choices too.
-    // For small tab counts this is fine.
     const INF = 1e9;
     const dp: number[][] = Array.from({ length: n + 1 }, () => Array(numRows + 1).fill(INF));
     const choice: number[][] = Array.from({ length: n + 1 }, () => Array(numRows + 1).fill(0));
@@ -92,10 +86,9 @@
 
     for (let r = 1; r <= numRows; r++) {
       for (let i = r; i <= n; i++) {
-        // Try placing tabs[j..i) in row r
         for (let j = r - 1; j < i; j++) {
           const w = rowWidth(j, i);
-          if (w > maxWidth && j < i - 1) continue; // row too wide (allow single-tab overflow)
+          if (w > maxWidth && j < i - 1) continue;
           const cost = Math.max(dp[j][r - 1], w);
           if (cost < dp[i][r]) {
             dp[i][r] = cost;
@@ -172,33 +165,38 @@
       {@render children()}
     </div>
   {:else if rows}
-    <!-- Multi-row: bookmark tabs with padded rows, full-width border -->
+    <!-- Multi-row: tabs stretch down to bottom border, lower rows overlap upper -->
+    {@const rowCount = rows.length}
+    {@const rowH = 32}
     <div class="relative">
-      <div class="px-4">
-        {#each rows as row, rowIdx}
-          {@const isBottomRow = rowIdx === rows.length - 1}
-          <div class="flex {isBottomRow ? 'relative z-10' : ''}">
-            {#each row as tab, tabIdx}
-              {@const active = isActive(tab.href)}
-              <a
-                href={tab.href}
-                class="
-                  flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap
-                  {tabIdx > 0 ? '-ml-px' : ''}
-                  {isBottomRow ? 'mb-[-2px]' : ''}
-                  {active
-                  ? 'bg-[var(--dash-bg)] border border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)] z-10'
-                  : 'bg-[var(--dash-card)]/30 border-x border-t border-[var(--dash-border)]/40 border-b-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
-                "
-              >
-                {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
-                {tab.label}
-              </a>
-            {/each}
-          </div>
-        {/each}
-      </div>
-      <div class="border-b-2 border-[var(--dash-border)]"></div>
+      {#each rows as row, rowIdx}
+        {@const rowsBelow = rowCount - 1 - rowIdx}
+        {@const isBottomRow = rowsBelow === 0}
+        <div
+          class="flex items-start relative px-4"
+          style="z-index: {isBottomRow ? rowCount + 1 : rowIdx + 1}; margin-bottom: {isBottomRow ? 0 : -rowsBelow * rowH}px;"
+        >
+          {#each row as tab, tabIdx}
+            {@const active = isActive(tab.href)}
+            <a
+              href={tab.href}
+              class="
+                flex items-center gap-1.5 px-3 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap
+                {tabIdx > 0 ? '-ml-px' : ''}
+                {isBottomRow && active ? 'mb-[-2px]' : ''}
+                {active
+                ? 'bg-[var(--dash-bg)] border border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)] z-10'
+                : 'bg-[var(--dash-bg)] border-x border-t border-[var(--dash-border)]/40 border-b-transparent text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-card)]/50'}
+              "
+              style="padding-top: 6px; padding-bottom: {rowsBelow * rowH + 6}px;"
+            >
+              {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
+              {tab.label}
+            </a>
+          {/each}
+        </div>
+      {/each}
+      <div class="border-b-2 border-[var(--dash-border)] relative" style="z-index: {rowCount};"></div>
     </div>
     <div class="mt-6">
       {@render children()}
