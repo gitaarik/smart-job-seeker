@@ -42,32 +42,84 @@
     return () => ro.disconnect();
   });
 
-  // --- When overflowing, split tabs into as many rows as needed ---
+  // --- When overflowing, split tabs evenly across rows ---
   let rows = $derived.by(() => {
     if (!overflows || tabWidths.length === 0 || !containerEl) return null;
     // Subtract px-4 (1rem each side = 32px) used by the multi-row wrapper
     const maxWidth = containerEl.clientWidth - 32;
     const gap = -1; // -ml-px: borders overlap by 1px
-    const allRows: Tab[][] = [];
-    let currentRow: Tab[] = [];
-    let currentWidth = 0;
 
+    // Helper: compute total width of tabs[start..end) in a row
+    const rowWidth = (start: number, end: number) => {
+      let w = 0;
+      for (let i = start; i < end; i++) {
+        w += tabWidths[i] + (i > start ? gap : 0);
+      }
+      return w;
+    };
+
+    // First, determine how many rows we need via greedy pass
+    let numRows = 1;
+    let curWidth = 0;
     for (let i = 0; i < tabs.length; i++) {
-      const w = tabWidths[i] ?? 0;
-      const needed = currentRow.length > 0 ? gap + w : w;
-      if (currentRow.length > 0 && currentWidth + needed > maxWidth) {
-        allRows.push(currentRow);
-        currentRow = [tabs[i]];
-        currentWidth = w;
+      const needed = i > 0 && curWidth > 0 ? gap + tabWidths[i] : tabWidths[i];
+      if (curWidth > 0 && curWidth + needed > maxWidth) {
+        numRows++;
+        curWidth = tabWidths[i];
       } else {
-        currentRow.push(tabs[i]);
-        currentWidth += needed;
+        curWidth += needed;
       }
     }
-    if (currentRow.length > 0) allRows.push(currentRow);
 
-    // Move the row containing the active tab to the bottom,
-    // and reverse the remaining rows so they stack bottom-to-top
+    // Distribute tabs evenly across numRows using dynamic programming.
+    // Find split points that minimize the max row width.
+    // splits[r] = optimal first-tab index for row r (0-indexed rows)
+    // We need (numRows - 1) split points for tabs[0..n)
+    const n = tabs.length;
+    if (numRows >= n) {
+      // Edge case: more rows than tabs, one tab per row
+      const allRows = tabs.map((t) => [t]);
+      return reorderForActiveTab(allRows);
+    }
+
+    // DP: dp[i][r] = minimum "max row width" achievable for tabs[0..i) using r rows
+    // We only need to find the split points, so track choices too.
+    // For small tab counts this is fine.
+    const INF = 1e9;
+    const dp: number[][] = Array.from({ length: n + 1 }, () => Array(numRows + 1).fill(INF));
+    const choice: number[][] = Array.from({ length: n + 1 }, () => Array(numRows + 1).fill(0));
+    dp[0][0] = 0;
+
+    for (let r = 1; r <= numRows; r++) {
+      for (let i = r; i <= n; i++) {
+        // Try placing tabs[j..i) in row r
+        for (let j = r - 1; j < i; j++) {
+          const w = rowWidth(j, i);
+          if (w > maxWidth && j < i - 1) continue; // row too wide (allow single-tab overflow)
+          const cost = Math.max(dp[j][r - 1], w);
+          if (cost < dp[i][r]) {
+            dp[i][r] = cost;
+            choice[i][r] = j;
+          }
+        }
+      }
+    }
+
+    // Reconstruct split points
+    const allRows: Tab[][] = [];
+    let end = n;
+    for (let r = numRows; r >= 1; r--) {
+      const start = choice[end][r];
+      allRows.unshift(tabs.slice(start, end));
+      end = start;
+    }
+
+    return reorderForActiveTab(allRows);
+  });
+
+  // Move the row containing the active tab to the bottom,
+  // and reverse the remaining rows so they stack bottom-to-top
+  function reorderForActiveTab(allRows: Tab[][]): Tab[][] {
     const activeHref = tabs.find((t) => isActive(t.href))?.href;
     if (activeHref && allRows.length > 1) {
       const activeRowIdx = allRows.findIndex((row) =>
@@ -79,9 +131,8 @@
         allRows.push(activeRow);
       }
     }
-
     return allRows;
-  });
+  }
 </script>
 
 <!-- Hidden measurement row — rendered offscreen to measure natural tab widths -->
@@ -92,8 +143,8 @@
     aria-hidden="true"
   >
     {#each tabs as tab}
-      <span class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium whitespace-nowrap">
-        {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
+      <span class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap">
+        {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-4 h-4" />{/if}
         {tab.label}
       </span>
     {/each}
