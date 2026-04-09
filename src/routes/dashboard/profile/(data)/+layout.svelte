@@ -19,10 +19,10 @@
     { label: "Basic Info", href: "/dashboard/profile/edit", icon: faUser },
     { label: "Skills", href: "/dashboard/profile/skills", icon: faWrench },
     { label: "Experience", href: "/dashboard/profile/work-experience", icon: faBriefcase },
-    { label: "Education", href: "/dashboard/profile/education", icon: faGraduationCap },
     { label: "Side Projects", href: "/dashboard/profile/side-projects", icon: faCode },
-    { label: "Languages", href: "/dashboard/profile/languages", icon: faGlobe },
+    { label: "Education", href: "/dashboard/profile/education", icon: faGraduationCap },
     { label: "Certificates", href: "/dashboard/profile/certificates", icon: faCertificate },
+    { label: "Languages", href: "/dashboard/profile/languages", icon: faGlobe },
     { label: "References", href: "/dashboard/profile/references", icon: faUserFriends },
   ];
 
