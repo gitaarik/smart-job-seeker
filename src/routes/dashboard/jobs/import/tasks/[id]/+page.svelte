@@ -32,6 +32,7 @@
     faPlay,
     faPlus,
     faStop,
+    faTerminal,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -126,6 +127,8 @@
   let isSendingFeedback = $state(false);
   let errorMessage = $state<string | null>(null);
   let showBrowser = $state(false);
+  let showBrowserLogs = $state(false);
+  let browserLogRef = $state<HTMLElement | null>(null);
   let liveUrl = $state<string | null>(null);
   let pollInterval: ReturnType<typeof setInterval> | null = null;
   let currentRunId = $state<number | null>(null);
@@ -1048,6 +1051,20 @@
     startLogPolling(run.id);
   });
 
+  // Auto-scroll browser popup logs to bottom
+  $effect(() => {
+    if (!showBrowserLogs || !featuredRunId || !browserLogRef) return;
+    const logs = runLogs[featuredRunId];
+    if (!logs || logs.length === 0) return;
+    // Access logs.length to create a reactive dependency
+    void logs.length;
+    requestAnimationFrame(() => {
+      if (browserLogRef) {
+        browserLogRef.scrollTop = browserLogRef.scrollHeight;
+      }
+    });
+  });
+
   onMount(() => {
     // Load runs history
     loadRuns();
@@ -1904,6 +1921,18 @@
               </a>
             {/if}
             <button
+              onclick={() => (showBrowserLogs = !showBrowserLogs)}
+              class="
+                px-2 py-1 text-xs rounded transition-colors {showBrowserLogs
+                ? 'bg-[var(--dash-primary)] text-white'
+                : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
+              "
+              title={showBrowserLogs ? "Hide logs" : "Show logs"}
+            >
+              <FontAwesomeIcon icon={faTerminal} class="w-3 h-3 mr-1" />
+              Logs
+            </button>
+            <button
               onclick={() => {
                 showBrowser = false;
                 if (screencastEnabled) toggleScreencast();
@@ -1914,7 +1943,8 @@
             </button>
           </div>
         </div>
-        <div class="relative w-full" style="padding-bottom: 56.25%">
+        <!-- Browser view (hidden but kept in DOM when logs tab is active) -->
+        <div class="relative w-full {showBrowserLogs ? 'hidden' : ''}" style="padding-bottom: 56.25%">
           {#if screencastEnabled && screencastSrc}
             <img
               src={screencastSrc}
@@ -1977,6 +2007,65 @@
             </div>
           {/if}
         </div>
+        <!-- Logs view (same size as browser, shown when logs tab is active) -->
+        {#if showBrowserLogs}
+          <div class="relative w-full flex flex-col" style="padding-bottom: 56.25%">
+            <div class="absolute inset-0 flex flex-col">
+              <div class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)] border-b border-[var(--dash-border)] shrink-0">
+                <div class="flex items-center gap-2">
+                  <select
+                    bind:value={logLevelFilter}
+                    onchange={() => {
+                      if (featuredRunId) {
+                        runLogs[featuredRunId] = [];
+                        loadRunLogs(featuredRunId);
+                      }
+                    }}
+                    class="text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+                  >
+                    <option value="debug">Debug</option>
+                    <option value="info">Info</option>
+                    <option value="warn">Warn</option>
+                    <option value="error">Error</option>
+                  </select>
+                </div>
+                {#if featuredRunId && loadingLogs[featuredRunId]}
+                  <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+                {/if}
+              </div>
+              <div
+                bind:this={browserLogRef}
+                class="overflow-y-auto flex-1 bg-[var(--dash-card)]"
+              >
+                {#if !featuredRunId || !runLogs[featuredRunId] || runLogs[featuredRunId].length === 0}
+                  <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+                    {#if featuredRunId && loadingLogs[featuredRunId]}
+                      Loading logs...
+                    {:else}
+                      No logs available
+                    {/if}
+                  </div>
+                {:else}
+                  <div class="p-2 space-y-0.5 font-mono text-xs">
+                    {#each runLogs[featuredRunId] as log (log.id)}
+                      <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
+                        <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </span>
+                        <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
+                          {log.level}
+                        </span>
+                        <span class="text-[var(--dash-text)] break-all">
+                          {log.message}
+                        </span>
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            </div>
+          </div>
+        {/if}
         <div
           class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]"
         >
