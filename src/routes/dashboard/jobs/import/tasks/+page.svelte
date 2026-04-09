@@ -241,31 +241,54 @@
 
 <div class="space-y-4">
   {#if !showAddForm && searchTasks.length > 0}
-    <div class="flex justify-end">
-      <button
-        type="button"
-        onclick={() => (showAddForm = true)}
-        class="flex items-center gap-2 px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Add Import
-      </button>
-    </div>
-  {/if}
-
-  {#if     desktopConnected !== null && (anyTaskUsesDesktop || desktopConnected)}
-    <div
-      class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]"
-    >
-      <span
-        class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : 'bg-[var(--dash-text-muted)]'}"
-      ></span>
-      <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-      {#if desktopConnected}
-        Desktop app connected
-      {:else}
-        Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
+    <div class="flex items-center gap-4 flex-wrap">
+      {#if desktopConnected !== null && (anyTaskUsesDesktop || desktopConnected)}
+        <div
+          class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]"
+        >
+          <span
+            class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : 'bg-[var(--dash-text-muted)]'}"
+          ></span>
+          <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+          {#if desktopConnected}
+            Desktop app connected
+          {:else}
+            Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
+          {/if}
+        </div>
       {/if}
+
+      {#if searchTasks.length > 1}
+        <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
+          <FontAwesomeIcon icon={faSortAmountDown} class="w-3 h-3" />
+          {#each [
+            { value: "added", label: "Date added" },
+            { value: "last_run", label: "Last run" },
+            { value: "alpha", label: "A–Z" },
+          ] as opt}
+            <button
+              type="button"
+              onclick={() => setSortBy(opt.value as SortOption)}
+              class="px-2 py-0.5 rounded-full transition-colors {sortBy === opt.value
+                ? 'bg-[var(--dash-primary)] text-white'
+                : 'bg-[var(--dash-bg)] hover:bg-[var(--dash-border)]'}"
+            >
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+      {/if}
+
+      <div class="ml-auto">
+        <button
+          type="button"
+          onclick={() => (showAddForm = true)}
+          class="flex items-center gap-2 px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add Import
+        </button>
+      </div>
     </div>
   {/if}
 
@@ -350,28 +373,7 @@
       actionLabel="Add First Search"
       onAction={() => (showAddForm = true)}
     />
-  {:else}
-    {#if searchTasks.length > 1}
-      <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
-        <FontAwesomeIcon icon={faSortAmountDown} class="w-3 h-3" />
-        {#each [
-          { value: "added", label: "Date added" },
-          { value: "last_run", label: "Last run" },
-          { value: "alpha", label: "A–Z" },
-        ] as opt}
-          <button
-            type="button"
-            onclick={() => setSortBy(opt.value as SortOption)}
-            class="px-2 py-0.5 rounded-full transition-colors {sortBy === opt.value
-              ? 'bg-[var(--dash-primary)] text-white'
-              : 'bg-[var(--dash-bg)] hover:bg-[var(--dash-border)]'}"
-          >
-            {opt.label}
-          </button>
-        {/each}
-      </div>
-    {/if}
-
+  {:else if !showAddForm}
     <div class="space-y-3">
       {#each sortedSearchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}

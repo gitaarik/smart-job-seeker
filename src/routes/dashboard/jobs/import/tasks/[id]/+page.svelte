@@ -41,7 +41,7 @@
   let searchTask = $state(data.searchTask);
 
   // Header editing state (note)
-  let isEditingHeader = $state(false);
+  let isEditingNote = $state(false);
   let editNoteInput = $state(searchTask.note ?? "");
   let isSavingHeader = $state(false);
 
@@ -58,8 +58,7 @@
         });
         searchTask.note = newNote || null;
       }
-
-      isEditingHeader = false;
+      isEditingNote = false;
     } catch (err) {
       console.error("Failed to save header:", err);
     } finally {
@@ -67,9 +66,9 @@
     }
   }
 
-  function cancelEditHeader() {
+  function cancelEditNote() {
     editNoteInput = searchTask.note ?? "";
-    isEditingHeader = false;
+    isEditingNote = false;
   }
 
   // Settings section (danger zone) — collapsed by default
@@ -237,8 +236,8 @@
   $effect(() => {
     if (data.searchTask.id === currentSearchTaskId) return;
     currentSearchTaskId = data.searchTask.id;
-    // Reset header editing
-    isEditingHeader = false;
+    // Reset note input
+    isEditingNote = false;
     editNoteInput = data.searchTask.note ?? "";
     // Reset settings section
     settingsOpen = (() => {
@@ -1057,108 +1056,69 @@
 
 <div class="space-y-6">
   <!-- Header -->
-  <div>
+  <div class="flex items-center gap-3">
     <a
       href="/dashboard/jobs/import/tasks"
-      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors shrink-0"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
       <span class="text-sm">All Import Tasks</span>
     </a>
+    <span class="text-[var(--dash-text-muted)]">·</span>
+    {#if searchTask.job_platforms}
+      <PlatformLogo platformUrl={searchTask.job_platforms.url} size="w-4 h-4" />
+      <span class="text-sm font-medium text-[var(--dash-text)] shrink-0">{searchTask.job_platforms.name}</span>
+    {/if}
+    {#if isEditingNote}
+      <span class="text-[var(--dash-text-secondary)]">—</span>
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        <input
+          type="text"
+          bind:value={editNoteInput}
+          autocomplete="off"
+          placeholder="e.g., Remote only, senior roles"
+          class="flex-1 min-w-0 px-2 py-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          onkeydown={(e) => {
+            if (e.key === "Enter") saveHeader();
+            if (e.key === "Escape") cancelEditNote();
+          }}
+        />
+        <button
+          onclick={saveHeader}
+          disabled={isSavingHeader}
+          class="flex items-center gap-1 px-2 py-1 bg-[var(--dash-primary)] text-white rounded text-xs hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 shrink-0"
+        >
+          {#if isSavingHeader}
+            <Spinner size="w-3 h-3" />
+          {/if}
+          Save
+        </button>
+        <button
+          onclick={cancelEditNote}
+          class="px-2 py-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-xs transition-colors shrink-0"
+        >
+          Cancel
+        </button>
+      </div>
+    {:else}
+      {#if searchTask.note}
+        <span class="text-[var(--dash-text-secondary)]">—</span>
+        <span class="text-sm text-[var(--dash-text-secondary)] truncate">{searchTask.note}</span>
+      {/if}
+      <button
+        onclick={() => { isEditingNote = true; }}
+        class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
+        title="Edit note"
+      >
+        <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+      </button>
+    {/if}
   </div>
-  <h1 class="text-xl font-semibold text-[var(--dash-text)]">
-    Import Task
-  </h1>
 
   <!-- Scrape Configuration -->
   <Card padding="lg">
     <!-- Scrape Status (full-width) -->
     <div class="space-y-4 pb-6 mb-6 border-b border-[var(--dash-border)]">
-      {#if isEditingHeader}
-        <div class="space-y-3">
-          {#if searchTask.job_platforms}
-            <div>
-              <label
-                class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >Platform</label>
-              <p class="text-sm text-[var(--dash-text)] flex items-center gap-1.5">
-                <PlatformLogo
-                  platformUrl={searchTask.job_platforms.url}
-                  size="w-4 h-4"
-                />
-                {searchTask.job_platforms.name}
-              </p>
-            </div>
-          {/if}
-          <div>
-            <label
-              for="edit-task-note"
-              class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-            >Note</label>
-            <input
-              id="edit-task-note"
-              type="text"
-              bind:value={editNoteInput}
-              autocomplete="off"
-              placeholder="e.g., Remote only, senior roles"
-              class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              onkeydown={(e) => {
-                if (e.key === "Enter") saveHeader();
-                if (e.key === "Escape") cancelEditHeader();
-              }}
-            />
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              onclick={saveHeader}
-              disabled={isSavingHeader}
-              class="flex items-center gap-2 px-3 py-1.5 bg-[var(--dash-primary)] text-white rounded-lg text-sm hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
-            >
-              {#if isSavingHeader}
-                <Spinner size="w-3 h-3" />
-              {/if}
-              Save
-            </button>
-            <button
-              onclick={cancelEditHeader}
-              class="px-3 py-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-sm transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      {:else}
-        <div class="flex items-start justify-between gap-2">
-          <h2 class="text-lg font-semibold text-[var(--dash-text)]">
-            <span class="inline-flex items-center gap-2">
-              {#if searchTask.job_platforms}
-                <PlatformLogo
-                  platformUrl={searchTask.job_platforms.url}
-                  size="w-5 h-5"
-                />
-              {/if}
-              {searchTask.job_platforms?.name || "Search task"}
-            </span>
-            {#if searchTask.note}
-              <span class="hidden sm:inline text-[var(--dash-text-secondary)] font-normal"> — {searchTask.note}</span>
-              <br class="sm:hidden" />
-              <span
-                class="sm:hidden text-[var(--dash-text-secondary)] font-normal text-base pl-[calc(1.25rem+0.5rem)]"
-              >{searchTask.note}</span>
-            {/if}
-          </h2>
-          <button
-            onclick={() => {
-              isEditingHeader = true;
-            }}
-            class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
-            title="Edit note"
-          >
-            <FontAwesomeIcon icon={faPencil} class="w-3.5 h-3.5" />
-          </button>
-        </div>
-      {/if}
-
       {#if errorMessage}
         <div
           class="p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg"

@@ -1042,6 +1042,7 @@
         {/if}
       </div>
     {/if}
+
   </div>
 
   <!-- Right column: Scraping Options & Browser Control -->
