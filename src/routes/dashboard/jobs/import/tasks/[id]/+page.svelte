@@ -225,6 +225,19 @@
     Record<number, ReturnType<typeof setInterval>>
   >({});
   let runTabView = $state<Record<number, "jobs" | "logs">>({}); // Tab view per run
+
+  // Featured run = shown in the status card instead of history.
+  // Stays there for the lifetime of this page session (even after completing).
+  // On page load, we pick the currently active run (if any). Once set, it sticks.
+  const activeRunStatuses = ["running", "queued", "blocked", "stopping"];
+  let featuredRunId = $state<number | null>(null);
+  $effect(() => {
+    if (featuredRunId !== null) return; // already locked in
+    const active = runs.find((r) => activeRunStatuses.includes(r.status));
+    if (active) featuredRunId = active.id;
+  });
+  let featuredRun = $derived(featuredRunId !== null ? (runs.find((r) => r.id === featuredRunId) ?? null) : null);
+  let historyRuns = $derived(runs.filter((r) => r.id !== featuredRunId));
   let logLevelFilter = $state<"debug" | "info" | "warn" | "error">("info");
 
   // Log auto-scroll: track container refs and whether user has scrolled up
@@ -258,6 +271,7 @@
     currentRunId = null;
     runs = [];
     expandedRunId = null;
+    featuredRunId = null;
     // Reload runs for the new search task
     loadRuns();
     // Restart polling if needed
@@ -737,11 +751,10 @@
       // Reload runs to show the new one
       await loadRuns();
 
-      // Expand the new run to show logs and jobs
+      // Feature this run in the status card (items/logs auto-loaded by $effect)
       if (result.runId) {
-        expandedRunId = result.runId;
-        startLogPolling(result.runId);
-        startItemPolling(result.runId);
+        featuredRunId = result.runId;
+        runTabView[result.runId] = "jobs";
       }
 
       // Start polling for status updates
@@ -1023,6 +1036,18 @@
 
   let desktopPollInterval: ReturnType<typeof setInterval> | null = null;
 
+  // Auto-load items/logs for the featured run shown in the status card
+  $effect(() => {
+    const run = featuredRun;
+    if (!run) return;
+    // Load items and logs if not already loaded
+    if (!runItems[run.id] && !loadingItems[run.id]) loadRunItems(run.id);
+    if (!runLogs[run.id] && !loadingLogs[run.id]) loadRunLogs(run.id);
+    // Start polling if not already
+    startItemPolling(run.id);
+    startLogPolling(run.id);
+  });
+
   onMount(() => {
     // Load runs history
     loadRuns();
@@ -1049,6 +1074,360 @@
     );
   });
 </script>
+
+{#snippet runDetails(run: Run, standalone: boolean = false)}
+  <div class="{standalone ? 'border border-[var(--dash-border)] rounded-lg overflow-hidden' : 'border-t border-[var(--dash-border)]'} bg-[var(--dash-bg)]">
+    <!-- Tab buttons -->
+    <div class="flex border-b border-[var(--dash-border)]">
+      <button
+        onclick={() => {
+          runTabView[run.id] = "jobs";
+          scrollJobsToProcessing(run.id);
+        }}
+        class={`px-4 py-2 text-sm font-medium transition-colors ${
+          !runTabView[run.id] ||
+            runTabView[run.id] === "jobs"
+            ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]"
+            : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+        }`}
+      >
+        Jobs
+        {#if runItems[run.id]?.stats}
+          <span class="ml-1 text-xs text-[var(--dash-text-muted)]">
+            ({runItems[run.id].stats.completed}/{
+              runItems[run.id].stats.total
+            })
+          </span>
+        {/if}
+      </button>
+      <button
+        onclick={() => {
+          runTabView[run.id] = "logs";
+          logAutoScroll[run.id] = true;
+          scrollLogToBottom(run.id);
+        }}
+        class={`px-4 py-2 text-sm font-medium transition-colors ${
+          runTabView[run.id] === "logs"
+            ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]"
+            : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+        }`}
+      >
+        Logs
+      </button>
+    </div>
+
+      <!-- Jobs view -->
+      {#if !runTabView[run.id] || runTabView[run.id] === "jobs"}
+        <div class="flex items-center justify-between px-4 py-2">
+          <div class="flex items-center gap-3">
+            {#if runItems[run.id]?.stats}
+              {@const stats = runItems[run.id].stats}
+              <div class="flex gap-3 text-xs">
+                <span class="text-[var(--dash-text-muted)]">{stats.total} total</span>
+                {#if stats.completed > 0}
+                  <span class="text-[var(--dash-success)]">{stats.completed} imported</span>
+                {/if}
+                {#if stats.processing > 0}
+                  <span class="text-[var(--dash-primary)]">{stats.processing} processing</span>
+                {/if}
+                {#if stats.pending > 0}
+                  <span class="text-[var(--dash-text-muted)]">{stats.pending} pending</span>
+                {/if}
+                {#if stats.skipped > 0}
+                  <span class="text-[var(--dash-warning)]">{stats.skipped} skipped</span>
+                {/if}
+                {#if stats.error > 0}
+                  <span class="text-[var(--dash-error)]">{stats.error} errors</span>
+                {/if}
+              </div>
+            {/if}
+          </div>
+          {#if loadingItems[run.id]}
+            <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+          {/if}
+        </div>
+
+        <div
+          data-jobs-container={run.id}
+          class="border-t border-[var(--dash-border)] max-h-80 overflow-y-auto"
+        >
+          {#if !runItems[run.id]?.items || runItems[run.id].items.length === 0}
+            <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+              {#if loadingItems[run.id]}
+                Loading jobs...
+              {:else}
+                No jobs discovered yet
+              {/if}
+            </div>
+          {:else}
+            <div class="divide-y divide-[var(--dash-border)]">
+              {#each runItems[run.id].items as item (item.id)}
+                <div
+                  data-item-status={item.status}
+                  class={`${getItemStatusBg(item.status)}`}
+                >
+                  <!-- Item header (clickable for completed items with job details) -->
+                  <button
+                    type="button"
+                    onclick={() =>
+                      item.jobs &&
+                      toggleItemExpanded(item.id)}
+                    class={`w-full flex items-start sm:items-center gap-2 sm:gap-3 px-3 py-2 text-left transition-all ${
+                      item.jobs
+                        ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+                        : "cursor-default"
+                    }`}
+                    disabled={!item.jobs}
+                  >
+                    <!-- Position + status indicator -->
+                    <div class="flex items-center gap-2 pt-0.5 sm:pt-0 shrink-0">
+                      <span class="text-xs text-[var(--dash-text-muted)] w-5 text-right">
+                        {item.position}
+                      </span>
+                      <div
+                        class={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          item.status === "completed"
+                            ? "bg-[var(--dash-success)]"
+                            : item.status === "processing"
+                            ? "bg-[var(--dash-primary)] animate-pulse"
+                            : item.status === "skipped"
+                            ? "bg-[var(--dash-warning)]"
+                            : item.status === "error"
+                            ? "bg-[var(--dash-error)]"
+                            : "bg-[var(--dash-text-muted)]"
+                        }`}
+                      >
+                      </div>
+                    </div>
+
+                    <!-- Job info -->
+                    <div class="flex-1 min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        {#if item.job_id && item.status === "completed"}
+                          <span class="text-sm font-medium text-[var(--dash-primary)]">
+                            {item.jobs?.title || item.title || "Untitled"}
+                          </span>
+                        {:else}
+                          <span class="text-sm font-medium text-[var(--dash-text)]">
+                            {item.title || "Untitled"}
+                          </span>
+                        {/if}
+                        {#if item.was_created === true}
+                          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success)] text-white shrink-0">new</span>
+                        {:else if item.was_created === false && item.status === "completed"}
+                          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)] shrink-0">updated</span>
+                        {/if}
+                        <!-- Status badge + chevron: inline on sm+, hidden here on mobile -->
+                        <span
+                          class={`hidden sm:inline text-xs capitalize shrink-0 ${getItemStatusColor(item.status)}`}
+                        >
+                          {item.status}
+                        </span>
+                        {#if item.jobs}
+                          <FontAwesomeIcon
+                            icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
+                            class="hidden sm:block w-3 h-3 text-[var(--dash-text-muted)] shrink-0"
+                          />
+                        {/if}
+                      </div>
+                      <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]">
+                        {#if item.jobs?.company || item.company}
+                          <span class="flex items-center gap-1">
+                            <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
+                            {item.jobs?.company || item.company}
+                          </span>
+                        {/if}
+                        {#if item.jobs?.office_location || item.location}
+                          <span class="flex items-center gap-1">
+                            <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
+                            {item.jobs?.office_location || item.location}
+                          </span>
+                        {/if}
+                        <!-- Status badge on mobile: shown in meta row -->
+                        <span
+                          class={`sm:hidden text-xs capitalize ${getItemStatusColor(item.status)}`}
+                        >
+                          {item.status}
+                        </span>
+                        {#if item.jobs}
+                          <FontAwesomeIcon
+                            icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
+                            class="sm:hidden w-3 h-3 text-[var(--dash-text-muted)]"
+                          />
+                        {/if}
+                      </div>
+                      {#if item.status_message && (item.status === "skipped" || item.status === "error" || item.status === "cancelled")}
+                        <div class={`text-xs mt-0.5 ${getItemStatusColor(item.status)}`}>
+                          {item.status_message}
+                        </div>
+                      {/if}
+                    </div>
+                  </button>
+
+                  <!-- Expanded job details -->
+                  {#if expandedItemId === item.id && item.jobs}
+                    {@const job = item.jobs}
+                    {@const workLocs = Array.isArray(job.work_location) ? job.work_location : []}
+                    {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
+                    {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
+                    {@const salaryText = formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
+                    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status)}">
+                      <!-- Category pills -->
+                      {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          {#each workLocs as loc}
+                            <CategoryPill category="work_location" value={loc} />
+                          {/each}
+                          {#each jobTyps as type}
+                            <CategoryPill category="job_type" value={type} />
+                          {/each}
+                          {#each expLvls as level}
+                            <CategoryPill category="experience_level" value={level} />
+                          {/each}
+                        </div>
+                      {/if}
+
+                      <!-- Salary and date -->
+                      {#if salaryText || job.date_posted || job.date_created}
+                        <div class="flex items-center gap-3 text-xs sm:text-sm flex-wrap">
+                          {#if salaryText}
+                            <span class="flex items-center gap-1 text-[var(--dash-success)]">
+                              <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
+                              {salaryText}
+                            </span>
+                          {/if}
+                          {#if job.date_posted || job.date_created}
+                            <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
+                              <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                              {formatDate(job.date_posted || job.date_created)}
+                            </span>
+                          {/if}
+                        </div>
+                      {/if}
+
+                      <!-- Skills -->
+                      {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
+                        <div>
+                          <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Required Skills</p>
+                          <div class="flex flex-wrap gap-1">
+                            {#each job.skills_required.slice(0, 12) as skill}
+                              <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">{skill}</span>
+                            {/each}
+                            {#if job.skills_required.length > 12}
+                              <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">+{job.skills_required.length - 12} more</span>
+                            {/if}
+                          </div>
+                        </div>
+                      {/if}
+
+                      {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
+                        <div>
+                          <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Preferred Skills</p>
+                          <div class="flex flex-wrap gap-1">
+                            {#each job.skills_preferred.slice(0, 12) as skill}
+                              <span class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded">{skill}</span>
+                            {/each}
+                            {#if job.skills_preferred.length > 12}
+                              <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">+{job.skills_preferred.length - 12} more</span>
+                            {/if}
+                          </div>
+                        </div>
+                      {/if}
+
+                      <!-- Description Preview -->
+                      {#if job.job_description}
+                        <div>
+                          <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Description</p>
+                          <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{truncateText(job.job_description, 300)}</p>
+                        </div>
+                      {/if}
+
+                      <!-- Footer with links -->
+                      <div class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]">
+                        <a
+                          href="/dashboard/jobs/{job.id}"
+                          class="text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+                        >
+                          <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
+                          View details
+                        </a>
+                        {#if job.source_url}
+                          <a
+                            href={job.source_url}
+                            target="_blank"
+                            rel="noopener"
+                            class="hover:text-[var(--dash-primary)] flex items-center gap-1"
+                          >
+                            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+                            Source
+                          </a>
+                        {/if}
+                      </div>
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {:else if runTabView[run.id] === "logs"}
+        <!-- Logs view -->
+        <div class="flex items-center justify-between px-4 py-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-[var(--dash-text)]">Logs</span>
+            <select
+              bind:value={logLevelFilter}
+              onchange={() => {
+                runLogs[run.id] = [];
+                loadRunLogs(run.id);
+              }}
+              class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+            >
+              <option value="debug">Debug</option>
+              <option value="info">Info</option>
+              <option value="warn">Warn</option>
+              <option value="error">Error</option>
+            </select>
+          </div>
+          {#if loadingLogs[run.id]}
+            <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+          {/if}
+        </div>
+
+        <div
+          bind:this={logContainerRefs[run.id]}
+          onscroll={(e) => handleLogScroll(run.id, e)}
+          class="border-t border-[var(--dash-border)] max-h-64 overflow-y-auto"
+        >
+          {#if !runLogs[run.id] || runLogs[run.id].length === 0}
+            <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+              {#if loadingLogs[run.id]}
+                Loading logs...
+              {:else}
+                No logs available
+              {/if}
+            </div>
+          {:else}
+            <div class="p-2 space-y-0.5 font-mono text-xs">
+              {#each runLogs[run.id] as log (log.id)}
+                <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
+                  <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </span>
+                  <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
+                    {log.level}
+                  </span>
+                  <span class="text-[var(--dash-text)] break-all">
+                    {log.message}
+                  </span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
+  </div>
+{/snippet}
 
 <svelte:head>
   <title>{searchTaskDisplayName(searchTask.job_platforms?.name, searchTask.note)} - Import Tasks - Smart Job Seeker</title>
@@ -1115,10 +1494,9 @@
     {/if}
   </div>
 
-  <!-- Scrape Configuration -->
+  <!-- Scrape Status -->
   <Card padding="lg">
-    <!-- Scrape Status (full-width) -->
-    <div class="space-y-4 pb-6 mb-6 border-b border-[var(--dash-border)]">
+    <div class="space-y-3">
       {#if errorMessage}
         <div
           class="p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg"
@@ -1127,9 +1505,7 @@
         </div>
       {/if}
 
-      <!-- Status Display -->
-      <div class="p-4 bg-[var(--dash-bg-inset)] rounded-lg space-y-3">
-        <div class="flex items-center gap-3 min-w-0">
+      <div class="flex items-center gap-3 min-w-0">
           {#if searchTask.status === "queued"}
             <div
               class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
@@ -1382,7 +1758,11 @@
             <span class="text-sm">Browser View</span>
           </button>
         </div>
-      </div>
+
+      <!-- Active run details (jobs/logs) shown inline in status card -->
+      {#if featuredRun}
+        {@render runDetails(featuredRun, true)}
+      {/if}
 
       <!-- Missing config warnings -->
       {#if !searchTask.search_url}
@@ -1396,7 +1776,10 @@
         </p>
       {/if}
     </div>
+  </Card>
 
+  <!-- Scrape Configuration -->
+  <Card padding="lg">
     {#key data.searchTask.id}
       <SearchTaskFields
         mode="edit"
@@ -1735,13 +2118,13 @@
       <h2 class="font-medium text-[var(--dash-text)]">Run History</h2>
     </div>
 
-    {#if runs.length === 0}
+    {#if historyRuns.length === 0}
       <div class="p-8 text-center text-[var(--dash-text-secondary)]">
-        <p>No runs yet. Click "Start" to begin.</p>
+        <p>No completed runs yet.</p>
       </div>
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
-        {#each runs as run (run.id)}
+        {#each historyRuns as run (run.id)}
           <div class="bg-[var(--dash-card)]">
             <!-- Run header (clickable) -->
             <button
@@ -1869,474 +2252,7 @@
 
             <!-- Expanded details (tabs: Items / Logs) -->
             {#if expandedRunId === run.id}
-              <div
-                class="border-t border-[var(--dash-border)] bg-[var(--dash-bg)]"
-              >
-                <!-- Tab buttons -->
-                <div class="flex border-b border-[var(--dash-border)]">
-                  <button
-                    onclick={() => {
-                      runTabView[run.id] = "jobs";
-                      scrollJobsToProcessing(run.id);
-                    }}
-                    class={`px-4 py-2 text-sm font-medium transition-colors ${
-                      !runTabView[run.id] ||
-                        runTabView[run.id] === "jobs"
-                        ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]"
-                        : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-                    }`}
-                  >
-                    Jobs
-                    {#if runItems[run.id]?.stats}
-                      <span class="ml-1 text-xs text-[var(--dash-text-muted)]">
-                        ({runItems[run.id].stats.completed}/{
-                          runItems[run.id].stats.total
-                        })
-                      </span>
-                    {/if}
-                  </button>
-                  <button
-                    onclick={() => {
-                      runTabView[run.id] = "logs";
-                      logAutoScroll[run.id] = true;
-                      scrollLogToBottom(run.id);
-                    }}
-                    class={`px-4 py-2 text-sm font-medium transition-colors ${
-                      runTabView[run.id] === "logs"
-                        ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]"
-                        : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-                    }`}
-                  >
-                    Logs
-                  </button>
-                </div>
-
-                <div class="p-4">
-                  <!-- Jobs view -->
-                  {#if               !runTabView[run.id] ||
-                runTabView[run.id] === "jobs"}
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="text-sm font-medium text-[var(--dash-text)]"
-                      >Discovered Jobs</span>
-                      {#if loadingItems[run.id]}
-                        <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-                      {/if}
-                    </div>
-
-                    <!-- Stats bar -->
-                    {#if runItems[run.id]?.stats}
-                      {@const stats = runItems[run.id].stats}
-                      <div class="flex gap-3 mb-3 text-xs">
-                        <span class="text-[var(--dash-text-muted)]">{
-                            stats.total
-                          } total</span>
-                        {#if stats.completed > 0}
-                          <span class="text-[var(--dash-success)]">{
-                              stats.completed
-                            } imported</span>
-                        {/if}
-                        {#if stats.processing > 0}
-                          <span class="text-[var(--dash-primary)]">{
-                              stats.processing
-                            } processing</span>
-                        {/if}
-                        {#if stats.pending > 0}
-                          <span class="text-[var(--dash-text-muted)]">{
-                              stats.pending
-                            } pending</span>
-                        {/if}
-                        {#if stats.skipped > 0}
-                          <span class="text-[var(--dash-warning)]">{
-                              stats.skipped
-                            } skipped</span>
-                        {/if}
-                        {#if stats.error > 0}
-                          <span class="text-[var(--dash-error)]">{stats.error}
-                            errors</span>
-                        {/if}
-                      </div>
-                    {/if}
-
-                    <div
-                      data-jobs-container={run.id}
-                      class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-80 overflow-y-auto"
-                    >
-                      {#if                 !runItems[run.id]?.items ||
-                  runItems[run.id].items.length === 0}
-                        <div
-                          class="p-4 text-sm text-[var(--dash-text-muted)] text-center"
-                        >
-                          {#if loadingItems[run.id]}
-                            Loading jobs...
-                          {:else}
-                            No jobs discovered yet
-                          {/if}
-                        </div>
-                      {:else}
-                        <div class="divide-y divide-[var(--dash-border)]">
-                          {#each runItems[run.id].items as item (item.id)}
-                            <div
-                              data-item-status={item.status}
-                              class={`${getItemStatusBg(item.status)}`}
-                            >
-                              <!-- Item header (clickable for completed items with job details) -->
-                              <button
-                                type="button"
-                                onclick={() =>
-                                  item.jobs &&
-                                  toggleItemExpanded(item.id)}
-                                class={`w-full flex items-start sm:items-center gap-2 sm:gap-3 px-3 py-2 text-left transition-all ${
-                                  item.jobs
-                                    ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
-                                    : "cursor-default"
-                                }`}
-                                disabled={!item.jobs}
-                              >
-                                <!-- Position + status indicator -->
-                                <div class="flex items-center gap-2 pt-0.5 sm:pt-0 shrink-0">
-                                  <span
-                                    class="text-xs text-[var(--dash-text-muted)] w-5 text-right"
-                                  >
-                                    {item.position}
-                                  </span>
-                                  <div
-                                    class={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                      item.status === "completed"
-                                        ? "bg-[var(--dash-success)]"
-                                        : item.status === "processing"
-                                        ? "bg-[var(--dash-primary)] animate-pulse"
-                                        : item.status === "skipped"
-                                        ? "bg-[var(--dash-warning)]"
-                                        : item.status === "error"
-                                        ? "bg-[var(--dash-error)]"
-                                        : "bg-[var(--dash-text-muted)]"
-                                    }`}
-                                  >
-                                  </div>
-                                </div>
-
-                                <!-- Job info -->
-                                <div class="flex-1 min-w-0">
-                                  <div class="flex flex-wrap items-center gap-2">
-                                    {#if                           item.job_id &&
-                            item.status ===
-                              "completed"}
-                                      <span
-                                        class="text-sm font-medium text-[var(--dash-primary)]"
-                                      >
-                                        {
-                                          item.jobs?.title ||
-                                            item.title ||
-                                            "Untitled"
-                                        }
-                                      </span>
-                                    {:else}
-                                      <span
-                                        class="text-sm font-medium text-[var(--dash-text)]"
-                                      >
-                                        {
-                                          item.title ||
-                                            "Untitled"
-                                        }
-                                      </span>
-                                    {/if}
-                                    {#if                           item.was_created === true}
-                                      <span
-                                        class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success)] text-white shrink-0"
-                                      >new</span>
-                                    {:else if                           item.was_created ===
-                              false &&
-                            item.status ===
-                              "completed"}
-                                      <span
-                                        class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)] shrink-0"
-                                      >updated</span>
-                                    {/if}
-                                    <!-- Status badge + chevron: inline on sm+, hidden here on mobile -->
-                                    <span
-                                      class={`hidden sm:inline text-xs capitalize shrink-0 ${
-                                        getItemStatusColor(item.status)
-                                      }`}
-                                    >
-                                      {item.status}
-                                    </span>
-                                    {#if item.jobs}
-                                      <FontAwesomeIcon
-                                        icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
-                                        class="hidden sm:block w-3 h-3 text-[var(--dash-text-muted)] shrink-0"
-                                      />
-                                    {/if}
-                                  </div>
-                                  <div
-                                    class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]"
-                                  >
-                                    {#if                           item.jobs?.company ||
-                            item.company}
-                                      <span class="flex items-center gap-1">
-                                        <FontAwesomeIcon
-                                          icon={faBuilding}
-                                          class="w-3 h-3"
-                                        />
-                                        {
-                                          item.jobs?.company ||
-                                            item.company
-                                        }
-                                      </span>
-                                    {/if}
-                                    {#if                           item.jobs
-                            ?.office_location ||
-                            item.location}
-                                      <span class="flex items-center gap-1">
-                                        <FontAwesomeIcon
-                                          icon={faMapMarkerAlt}
-                                          class="w-3 h-3"
-                                        />
-                                        {
-                                          item.jobs
-                                            ?.office_location ||
-                                            item.location
-                                        }
-                                      </span>
-                                    {/if}
-                                    <!-- Status badge on mobile: shown in meta row -->
-                                    <span
-                                      class={`sm:hidden text-xs capitalize ${
-                                        getItemStatusColor(item.status)
-                                      }`}
-                                    >
-                                      {item.status}
-                                    </span>
-                                    {#if item.jobs}
-                                      <FontAwesomeIcon
-                                        icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
-                                        class="sm:hidden w-3 h-3 text-[var(--dash-text-muted)]"
-                                      />
-                                    {/if}
-                                  </div>
-                                  {#if                         item.status_message &&
-                          (item.status === "skipped" ||
-                            item.status === "error" ||
-                            item.status ===
-                              "cancelled")}
-                                    <div
-                                      class={`text-xs mt-0.5 ${
-                                        getItemStatusColor(
-                                          item.status,
-                                        )
-                                      }`}
-                                    >
-                                      {item.status_message}
-                                    </div>
-                                  {/if}
-                                </div>
-                              </button>
-
-                              <!-- Expanded job details -->
-                              {#if                     expandedItemId === item.id &&
-                      item.jobs}
-                                {@const job = item.jobs}
-                                {@const workLocs = Array.isArray(job.work_location) ? job.work_location : []}
-                                {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
-                                {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
-                                {@const salaryText = formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-                                <div
-                                  class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status)}"
-                                >
-                                  <!-- Category pills -->
-                                  {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                      {#each workLocs as loc}
-                                        <CategoryPill category="work_location" value={loc} />
-                                      {/each}
-                                      {#each jobTyps as type}
-                                        <CategoryPill category="job_type" value={type} />
-                                      {/each}
-                                      {#each expLvls as level}
-                                        <CategoryPill category="experience_level" value={level} />
-                                      {/each}
-                                    </div>
-                                  {/if}
-
-                                  <!-- Salary and date -->
-                                  {#if salaryText || job.date_posted || job.date_created}
-                                    <div class="flex items-center gap-3 text-xs sm:text-sm flex-wrap">
-                                      {#if salaryText}
-                                        <span class="flex items-center gap-1 text-[var(--dash-success)]">
-                                          <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
-                                          {salaryText}
-                                        </span>
-                                      {/if}
-                                      {#if job.date_posted || job.date_created}
-                                        <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
-                                          <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                                          {formatDate(job.date_posted || job.date_created)}
-                                        </span>
-                                      {/if}
-                                    </div>
-                                  {/if}
-
-                                  <!-- Skills -->
-                                  {#if                       job.skills_required &&
-                        Array.isArray(job.skills_required) &&
-                        job.skills_required.length > 0}
-                                    <div>
-                                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
-                                        Required Skills
-                                      </p>
-                                      <div class="flex flex-wrap gap-1">
-                                        {#each job.skills_required.slice(0, 12) as skill}
-                                          <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
-                                            {skill}
-                                          </span>
-                                        {/each}
-                                        {#if job.skills_required.length > 12}
-                                          <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
-                                            +{job.skills_required.length - 12} more
-                                          </span>
-                                        {/if}
-                                      </div>
-                                    </div>
-                                  {/if}
-
-                                  {#if                       job.skills_preferred &&
-                        Array.isArray(job.skills_preferred) &&
-                        job.skills_preferred.length > 0}
-                                    <div>
-                                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
-                                        Preferred Skills
-                                      </p>
-                                      <div class="flex flex-wrap gap-1">
-                                        {#each job.skills_preferred.slice(0, 12) as skill}
-                                          <span class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded">
-                                            {skill}
-                                          </span>
-                                        {/each}
-                                        {#if job.skills_preferred.length > 12}
-                                          <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
-                                            +{job.skills_preferred.length - 12} more
-                                          </span>
-                                        {/if}
-                                      </div>
-                                    </div>
-                                  {/if}
-
-                                  <!-- Description Preview -->
-                                  {#if job.job_description}
-                                    <div>
-                                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
-                                        Description
-                                      </p>
-                                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
-                                        {truncateText(job.job_description, 300)}
-                                      </p>
-                                    </div>
-                                  {/if}
-
-                                  <!-- Footer with links -->
-                                  <div
-                                    class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]"
-                                  >
-                                    <a
-                                      href="/dashboard/jobs/{job.id}"
-                                      class="text-[var(--dash-primary)] hover:underline flex items-center gap-1"
-                                    >
-                                      <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
-                                      View details
-                                    </a>
-                                    {#if job.source_url}
-                                      <a
-                                        href={job.source_url}
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="hover:text-[var(--dash-primary)] flex items-center gap-1"
-                                      >
-                                        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
-                                        Source
-                                      </a>
-                                    {/if}
-                                  </div>
-                                </div>
-                              {/if}
-                            </div>
-                          {/each}
-                        </div>
-                      {/if}
-                    </div>
-                  {:else if runTabView[run.id] === "logs"}
-                    <!-- Logs view -->
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-2">
-                        <span
-                          class="text-sm font-medium text-[var(--dash-text)]"
-                        >Logs</span>
-                        <select
-                          bind:value={logLevelFilter}
-                          onchange={() => {
-                            // Clear and reload logs with new filter
-                            runLogs[run.id] = [];
-                            loadRunLogs(run.id);
-                          }}
-                          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
-                        >
-                          <option value="debug">Debug</option>
-                          <option value="info">Info</option>
-                          <option value="warn">Warn</option>
-                          <option value="error">Error</option>
-                        </select>
-                      </div>
-                      {#if loadingLogs[run.id]}
-                        <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-                      {/if}
-                    </div>
-
-                    <div
-                      bind:this={logContainerRefs[run.id]}
-                      onscroll={(e) => handleLogScroll(run.id, e)}
-                      class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto"
-                    >
-                      {#if                 !runLogs[run.id] ||
-                  runLogs[run.id].length === 0}
-                        <div
-                          class="p-4 text-sm text-[var(--dash-text-muted)] text-center"
-                        >
-                          {#if loadingLogs[run.id]}
-                            Loading logs...
-                          {:else}
-                            No logs available
-                          {/if}
-                        </div>
-                      {:else}
-                        <div class="p-2 space-y-0.5 font-mono text-xs">
-                          {#each runLogs[run.id] as log (log.id)}
-                            <div
-                              class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
-                            >
-                              <span
-                                class="text-[var(--dash-text-muted)] whitespace-nowrap"
-                              >
-                                {
-                                  new Date(log.timestamp)
-                                    .toLocaleTimeString()
-                                }
-                              </span>
-                              <span
-                                class={`uppercase w-12 ${
-                                  getLogLevelColor(log.level)
-                                }`}
-                              >
-                                {log.level}
-                              </span>
-                              <span class="text-[var(--dash-text)] break-all">
-                                {log.message}
-                              </span>
-                            </div>
-                          {/each}
-                        </div>
-                      {/if}
-                    </div>
-                  {/if}
-                </div>
-              </div>
+              {@render runDetails(run)}
             {/if}
           </div>
         {/each}
