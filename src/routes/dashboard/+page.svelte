@@ -1,9 +1,13 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { page } from "$app/stores";
+  import { replaceState } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowRight,
+    faCheckCircle,
     faPaperPlane,
+    faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import MatchStatsGrid from "./components/MatchStatsGrid.svelte";
   import SearchTasksSummary from "./components/SearchTasksSummary.svelte";
@@ -17,6 +21,15 @@
   } from "$lib/application-status";
 
   let { data }: { data: PageData } = $props();
+
+  let showCreatedBanner = $state($page.url.searchParams.get("created") === "true");
+
+  // Clear the created param from URL so it doesn't persist on refresh
+  if (showCreatedBanner) {
+    const url = new URL($page.url);
+    url.searchParams.delete("created");
+    replaceState(url, {});
+  }
 
   const completeness = $derived(data.profileCompleteness);
   const matchConfig = $derived(data.matchConfig);
@@ -59,6 +72,29 @@
       </p>
     </div>
   </div>
+
+  <!-- Profile Created Banner -->
+  {#if showCreatedBanner}
+    <div class="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-800">
+      <FontAwesomeIcon icon={faCheckCircle} class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-green-800 dark:text-green-200">
+          Profile created successfully!
+        </p>
+        <p class="text-sm text-green-700 dark:text-green-300 mt-1">
+          Your profile has been set up with all its data. You can review and edit it on the
+          <a href="/dashboard/profile/edit" class="underline font-medium hover:text-green-900 dark:hover:text-green-100">profile data page</a>.
+        </p>
+      </div>
+      <button
+        type="button"
+        onclick={() => showCreatedBanner = false}
+        class="flex-shrink-0 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+      >
+        <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+      </button>
+    </div>
+  {/if}
 
   <!-- Getting Started (shown when not fully set up yet) -->
   {#if completeness && !hasMatches}

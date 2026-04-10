@@ -172,7 +172,7 @@ export const actions: Actions = {
       console.warn("[create] import warnings:", result.errors);
     }
 
-    redirect(303, `/dashboard?profile=${result.profileId}`);
+    redirect(303, `/dashboard?profile=${result.profileId}&created=true`);
   },
 
   /**
@@ -221,7 +221,7 @@ export const actions: Actions = {
       },
     });
 
-    redirect(303, `/dashboard?profile=${profile.id}`);
+    redirect(303, `/dashboard?profile=${profile.id}&created=true`);
   },
 
   /**
@@ -271,6 +271,6 @@ export const actions: Actions = {
       return fail(500, { error: message });
     }
 
-    redirect(303, `/dashboard?profile=${result.profileId}`);
+    redirect(303, `/dashboard?profile=${result.profileId}&created=true`);
   },
 };
