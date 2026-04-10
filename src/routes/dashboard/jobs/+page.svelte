@@ -159,7 +159,7 @@
     selectedStatuses.has("saved")
       ? "Saved Jobs"
       : minScoreFilter === "unmatched"
-        ? "Not Yet Matched"
+        ? "Not Yet Scored"
         : minScoreFilter === "0"
           ? "No Match"
           : minScoreFilter
@@ -374,7 +374,7 @@
       class="bg-green-50 border border-green-400 rounded-lg p-4 dark:bg-green-900/20 dark:border-green-600 flex items-center justify-between"
     >
       <p class="text-green-700 text-sm dark:text-green-400">
-        Cleared match data for {clearMatchResult.count} job{clearMatchResult.count === 1 ? "" : "s"}. They will be re-scored on next match run.
+        Cleared score data for {clearMatchResult.count} job{clearMatchResult.count === 1 ? "" : "s"}. They will be re-scored in the next matcher cycle.
       </p>
       <button
         type="button"
@@ -403,7 +403,7 @@
           {minScoreFilter ? {
             "90": "Score 90+", "80": "Score 80+", "70": "Score 70+",
             "60": "Score 60+", "50": "Score 50+", "1-49": "Score < 50",
-            "1": "Score > 0", "0": "No match", "unmatched": "Unmatched",
+            "1": "Score > 0", "0": "No match", "unmatched": "Not scored",
           }[minScoreFilter] || "Score" : "Score"}
           {#if !minScoreFilter}
             <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
@@ -421,7 +421,7 @@
               { value: "1-49", label: "Score < 50" },
               { value: "1", label: "Score > 0" },
               { value: "0", label: "No match" },
-              { value: "unmatched", label: "Not yet matched" },
+              { value: "unmatched", label: "Not yet scored" },
             ] as opt}
               <button
                 type="button"
@@ -744,7 +744,7 @@
                   Clearing...
                 {:else}
                   <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
-                  Clear match data
+                  Clear score data
                 {/if}
               </button>
             </div>
@@ -1005,9 +1005,9 @@
 
 <ConfirmModal
   isOpen={showClearMatchConfirm}
-  title="Clear Match Data"
-  message="This will delete all match data for jobs matching your current filters. They will be re-scored on the next match run."
-  confirmLabel="Clear Match Data"
+  title="Clear Score Data"
+  message="This will delete all score data for jobs matching your current filters. They will be re-scored in the next matcher cycle."
+  confirmLabel="Clear Score Data"
   onCancel={() => (showClearMatchConfirm = false)}
   onConfirm={() => {
     showClearMatchConfirm = false;

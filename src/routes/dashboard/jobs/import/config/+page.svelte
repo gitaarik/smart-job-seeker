@@ -7,7 +7,6 @@
   import Card from "../../../components/Card.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
-  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -26,22 +25,19 @@
     return sortedA.every((v, i) => v === sortedB[i]);
   }
 
-  // Whether config exists (first-time setup uses PUT, updates use PATCH)
-  let configExists = $state(data.config !== null);
-
   // === Saved state (what's on the server) ===
   let savedJobTypes = $state<string[]>(
-    normalizeToOptions(data.config?.job_types || [], data.options.jobTypes),
+    normalizeToOptions(data.config.job_types || [], data.options.jobTypes),
   );
   let savedWorkLocation = $state<string[]>(
-    normalizeToOptions(data.config?.work_location || [], data.options.workLocationOptions),
+    normalizeToOptions(data.config.work_location || [], data.options.workLocationOptions),
   );
   let savedExperienceLevels = $state<string[]>(
-    normalizeToOptions(data.config?.experience_levels || [], data.options.experienceLevels),
+    normalizeToOptions(data.config.experience_levels || [], data.options.experienceLevels),
   );
-  let savedLocations = $state<string[]>(data.config?.locations || []);
-  let savedMatchCommunityJobs = $state<boolean>(data.config?.match_community_jobs ?? false);
-  let savedCommunityMaxAgeDays = $state<number | null>(data.config?.community_max_age_days ?? 30);
+  let savedLocations = $state<string[]>(data.config.locations || []);
+  let savedMatchCommunityJobs = $state<boolean>(data.config.match_community_jobs ?? false);
+  let savedCommunityMaxAgeDays = $state<number | null>(data.config.community_max_age_days ?? 30);
 
   // === Current (editable) state ===
   let jobTypes = $state<string[]>([...savedJobTypes]);
@@ -104,11 +100,6 @@
     matchCommunityJobs !== savedMatchCommunityJobs ||
     communityMaxAgeDays !== savedCommunityMaxAgeDays
   );
-
-  // === First-time setup state ===
-  type SetupState = "idle" | "saving" | "saved" | "error";
-  let setupState = $state<SetupState>("idle");
-  let setupError = $state("");
 
   function toggleArrayValue(arr: string[], value: string): string[] {
     return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -203,58 +194,6 @@
     }
   }
 
-  // === First-time create (PUT) ===
-  async function createConfig() {
-    if (jobTypes.length === 0 || workLocation.length === 0) {
-      setupError = "Please select at least one job type and one work location option";
-      setupState = "error";
-      setTimeout(() => (setupState = "idle"), 2000);
-      return;
-    }
-
-    setupState = "saving";
-    setupError = "";
-
-    try {
-      const response = await fetch("/api/job-preferences", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile_id: data.profileId,
-          job_types: jobTypes,
-          experience_levels: experienceLevels,
-          work_location: workLocation,
-          locations,
-          match_community_jobs: matchCommunityJobs,
-          community_max_age_days: matchCommunityJobs ? communityMaxAgeDays : null,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        setupError = error.message || error.error || "Failed to save config";
-        setupState = "error";
-        setTimeout(() => (setupState = "idle"), 2000);
-        return;
-      }
-
-      // Switch to inline-save mode
-      configExists = true;
-      savedJobTypes = [...jobTypes];
-      savedWorkLocation = [...workLocation];
-      savedExperienceLevels = [...experienceLevels];
-      savedLocations = [...locations];
-      savedMatchCommunityJobs = matchCommunityJobs;
-      savedCommunityMaxAgeDays = communityMaxAgeDays;
-      setupState = "saved";
-      setTimeout(() => (setupState = "idle"), 2000);
-    } catch (error) {
-      console.error("Save failed:", error);
-      setupError = "Failed to save config";
-      setupState = "error";
-      setTimeout(() => (setupState = "idle"), 2000);
-    }
-  }
 </script>
 
 <svelte:head>
@@ -263,16 +202,10 @@
 
 <div class="space-y-4">
   <p class="text-sm text-[var(--dash-text-secondary)]">
-    Configure your job matching preferences. Jobs are filtered based on these settings before being scored by the
-    AI. Jobs must have at least one matching skill and meet your job type
-    and work location criteria to be considered.
+    Configure your job scoring preferences. Jobs are filtered based on these settings before being scored by the
+    AI. Jobs must have at least one overlapping skill and meet your job type
+    and work location criteria to be considered for scoring.
   </p>
-
-  {#if !configExists && setupError && setupState === "error"}
-    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
-      <p class="text-[var(--dash-error)] text-sm">{setupError}</p>
-    </div>
-  {/if}
 
   <!-- Job Types -->
   <Card padding="responsive">
@@ -306,7 +239,7 @@
         </button>
       {/each}
     </div>
-    {#if configExists && jobTypesDirty}
+    {#if jobTypesDirty}
       <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
         <button
           type="button"
@@ -364,7 +297,7 @@
         </button>
       {/each}
     </div>
-    {#if configExists && workLocationDirty}
+    {#if workLocationDirty}
       <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
         <button
           type="button"
@@ -390,15 +323,16 @@
     {/if}
   </Card>
 
-  <!-- Preferred Locations (only show when hybrid or on-site is saved) -->
-  {#if savedWorkLocation.length > 1 || (savedWorkLocation.length === 1 && savedWorkLocation[0] !== "Remote")}
+  <!-- Preferred Locations (only show when hybrid or on-site is selected) -->
+  {#if workLocation.length > 1 || (workLocation.length === 1 && workLocation[0] !== "Remote")}
     <Card padding="responsive">
       <div class="flex items-start gap-2 mb-4">
         <div>
           <h3 class="font-medium text-[var(--dash-text)]">Preferred Locations</h3>
           <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-            The AI matches based on the location text, not geolocation.
+            Location is compared as text, not geolocation.
             Only relevant for hybrid and on-site jobs.
+            Geo-based location filtering is planned for a future update.
           </p>
         </div>
       </div>
@@ -442,7 +376,7 @@
         </button>
       </div>
 
-      {#if configExists && locationsDirty}
+      {#if locationsDirty}
         <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
           <button
             type="button"
@@ -475,7 +409,7 @@
       <div>
         <h3 class="font-medium text-[var(--dash-text)]">Experience Levels</h3>
         <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-          Optional - leave empty to match all experience levels
+          Optional — leave empty to include all experience levels
         </p>
       </div>
     </div>
@@ -499,7 +433,7 @@
         </button>
       {/each}
     </div>
-    {#if configExists && experienceLevelsDirty}
+    {#if experienceLevelsDirty}
       <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
         <button
           type="button"
@@ -529,13 +463,13 @@
   <Card padding="responsive">
     <ToggleSwitch
       bind:checked={matchCommunityJobs}
-      label="Also match with jobs imported by other users"
-      description="When enabled, the matcher will also process jobs you didn't import yourself. This can cause significantly more usage on your plan. Your own-imported jobs are always matched first."
+      label="Also score jobs imported by other users"
+      description="When enabled, community jobs will also be filtered and scored against your profile. Only jobs that pass your filters are scored by the AI — scoring uses less usage per job than importing. Your own jobs are always scored first."
     />
     {#if matchCommunityJobs}
       <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
         <p class="text-xs text-[var(--dash-text-muted)] mb-2">
-          Match community jobs from the last:
+          Include community jobs from the last:
         </p>
         <div class="flex flex-wrap gap-2">
           {#each communityTimeOptions as opt}
@@ -565,7 +499,7 @@
           {@const selectedKey = communityMaxAgeDays === null ? "all" : String(communityMaxAgeDays)}
           {@const count = communityCounts[selectedKey] ?? 0}
           <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-            {count} unmatched community {count === 1 ? "job" : "jobs"} to process
+            {count} unscored community {count === 1 ? "job" : "jobs"} to process
             {#if count > 0}
               (≈{count}–{count * 2} usage)
             {/if}
@@ -573,7 +507,7 @@
         {/if}
       </div>
     {/if}
-    {#if configExists && communityJobsDirty}
+    {#if communityJobsDirty}
       <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
         <button
           type="button"
@@ -599,10 +533,4 @@
     {/if}
   </Card>
 
-  <!-- First-time setup: single create button -->
-  {#if !configExists}
-    <div class="flex justify-end">
-      <SectionSaveButton state={setupState} onClick={createConfig} label="Create Config" />
-    </div>
-  {/if}
 </div>

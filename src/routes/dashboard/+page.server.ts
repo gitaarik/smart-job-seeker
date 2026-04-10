@@ -194,7 +194,9 @@ export const load: PageServerLoad = async ({ parent }) => {
   const profileCompleteness = {
     hasSkills: totalSkills > 0,
     skillCount: totalSkills,
-    hasMatchConfig: matchConfig !== null,
+    hasMatchConfig: matchConfig !== null
+      && ((matchConfig.job_types as string[]) ?? []).length > 0
+      && ((matchConfig.work_location as string[]) ?? []).length > 0,
     hasWorkExperience,
     hasEducation,
     hasExperienceOrEducation: hasWorkExperience || hasEducation,

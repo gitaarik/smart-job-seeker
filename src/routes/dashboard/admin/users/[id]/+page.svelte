@@ -516,9 +516,9 @@
 <!-- Clear Matches Confirmation Modal -->
 <ConfirmModal
   isOpen={showClearMatchesConfirm}
-  title="Clear Match Data"
-  message="This will delete all match data for this user's jobs. They will be re-scored on the next match run."
-  confirmLabel="Clear Match Data"
+  title="Clear Score Data"
+  message="This will delete all score data for this user's jobs. They will be re-scored in the next matcher cycle."
+  confirmLabel="Clear Score Data"
   onCancel={() => (showClearMatchesConfirm = false)}
   onConfirm={() => {
     clearingMatches = true;

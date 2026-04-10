@@ -460,7 +460,7 @@
   <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
     <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-      These images are used for your portfolio display. They are not required for job search or matching.
+      These images are used for your portfolio display. They are not required for job search or scoring.
     </p>
     <div class="flex gap-6">
       <div class="max-w-xs">

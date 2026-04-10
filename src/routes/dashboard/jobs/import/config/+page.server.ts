@@ -26,24 +26,32 @@ const WORK_LOCATION_OPTIONS = ["Remote", "Hybrid", "On-site"];
 export const load: PageServerLoad = async ({ parent }) => {
   const { profileId } = await parent();
 
-  // Get existing config for this profile
-  const config = await db.match_config.findFirst({
+  // Get or auto-create config for this profile
+  let config = await db.match_config.findFirst({
     where: { profile: profileId },
   });
 
+  if (!config) {
+    config = await db.match_config.create({
+      data: {
+        profile: profileId,
+        date_created: new Date(),
+        date_updated: new Date(),
+      },
+    });
+  }
+
   return {
-    config: config
-      ? {
-          id: config.id,
-          job_types: (config.job_types as string[]) || [],
-          experience_levels: (config.experience_levels as string[]) || [],
-          work_location: (config.work_location as string[]) || [],
-          locations: (config.locations as string[]) || [],
-          remote_only: config.remote_only,
-          match_community_jobs: config.match_community_jobs,
-          community_max_age_days: (config as Record<string, unknown>).community_max_age_days as number | null ?? null,
-        }
-      : null,
+    config: {
+      id: config.id,
+      job_types: (config.job_types as string[]) || [],
+      experience_levels: (config.experience_levels as string[]) || [],
+      work_location: (config.work_location as string[]) || [],
+      locations: (config.locations as string[]) || [],
+      remote_only: config.remote_only,
+      match_community_jobs: config.match_community_jobs,
+      community_max_age_days: (config as Record<string, unknown>).community_max_age_days as number | null ?? null,
+    },
     options: {
       jobTypes: JOB_TYPES,
       experienceLevels: EXPERIENCE_LEVELS,

@@ -509,7 +509,7 @@
             match.recommendation === "filtered_out"}
           <!-- Filtered out - didn't pass eligibility -->
           <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
-            This job was filtered out before AI scoring because it doesn't match
+            This job was filtered out before AI scoring because it doesn't fit
             your profile preferences.
           </p>
 
@@ -582,7 +582,7 @@
         {:else}
           <!-- Not yet matched -->
           <p class="text-sm text-[var(--dash-text-muted)]">
-            This job hasn't been matched against your profile yet.
+            This job hasn't been scored against your profile yet.
           </p>
         {/if}
       </Card>
@@ -619,7 +619,7 @@
                   if (result.type === "failure") {
                     rematchError =
                       (result.data as { error?: string })?.error ||
-                      "Re-match failed";
+                      "Scoring failed";
                     isRematching = false;
                   } else {
                     await update();
@@ -634,8 +634,8 @@
                 disabled={isRematching}
                 class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
                 title={match?.reasoning
-                  ? "Re-run AI matching for this job"
-                  : "Run AI matching for this job"}
+                  ? "Re-run AI scoring for this job"
+                  : "Run AI scoring for this job"}
               >
                 {#if isRematching}
                   <Spinner size="w-4 h-4" />
@@ -647,10 +647,10 @@
                 {/if}
                 {
                   isRematching
-                    ? "Matching..."
+                    ? "Scoring..."
                     : match?.reasoning
-                    ? "Re-match"
-                    : "Check Match"
+                    ? "Re-score"
+                    : "Score"
                 }
               </button>
             </form>
@@ -662,7 +662,7 @@
               class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg"
             >
               <p class="text-sm text-[var(--dash-error)]">
-                <strong>Re-match failed:</strong> {rematchError}
+                <strong>Scoring failed:</strong> {rematchError}
               </p>
             </div>
           {/if}
@@ -802,9 +802,9 @@
 
 <ConfirmModal
   isOpen={showRematchConfirm}
-  title="Re-match Job"
-  message="This will re-run AI matching for this job, replacing the current match result. This uses AI usage."
-  confirmLabel="Re-match"
+  title="Re-score Job"
+  message="This will re-run AI scoring for this job, replacing the current score. This uses AI usage."
+  confirmLabel="Re-score"
   variant="primary"
   onCancel={() => (showRematchConfirm = false)}
   onConfirm={() => {

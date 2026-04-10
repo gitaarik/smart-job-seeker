@@ -224,7 +224,7 @@
               class="inline-flex whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] disabled:opacity-50 transition-colors"
             >
               {#if rematching}<Spinner size="w-3 h-3" />{:else}<FontAwesomeIcon icon={faRotate} class="w-3 h-3" />{/if}
-              Re-match
+              Re-score
             </button>
           </div>
         {/if}
@@ -251,7 +251,7 @@
               class="inline-flex whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] disabled:opacity-50 transition-colors"
             >
               {#if rematching}<Spinner size="w-3 h-3" />{:else}<FontAwesomeIcon icon={faRotate} class="w-3 h-3" />{/if}
-              Re-match
+              Re-score
             </button>
           </div>
         {/if}
@@ -259,7 +259,7 @@
 
       <!-- Not yet matched -->
       <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
-        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Not Yet Matched</div>
+        <div class="text-sm text-[var(--dash-text-secondary)] mb-1">Not Yet Scored</div>
         <div class="text-2xl font-bold text-[var(--dash-warning)]">{unmatchedCount}</div>
         <div class="text-xs text-[var(--dash-text-muted)]">waiting to be processed</div>
         {#if unmatchedCount > 0}
@@ -320,7 +320,7 @@
           <div class="bg-[var(--dash-bg)] rounded-lg p-3 border border-[var(--dash-primary)]/20">
             <div class="flex items-center gap-2 mb-1">
               <Spinner size="w-4 h-4" color="var(--dash-primary)" />
-              <span class="text-sm font-medium text-[var(--dash-text)]">Currently matching:</span>
+              <span class="text-sm font-medium text-[var(--dash-text)]">Currently scoring:</span>
             </div>
             <div class="ml-6">
               <a
@@ -347,7 +347,7 @@
         {#if matcherState}
           <div class="flex gap-4 mt-3 text-xs text-[var(--dash-text-muted)]">
             <span>Cycles: {matcherState.totalCycles}</span>
-            <span>Matched this session: {matcherState.totalMatched}</span>
+            <span>Scored this session: {matcherState.totalMatched}</span>
           </div>
         {/if}
       {:else if isWaitingForMatcher}
@@ -359,7 +359,7 @@
           <span class="text-sm text-[var(--dash-warning)]">Waiting for matcher</span>
         </div>
         <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-          The matcher is currently processing another profile. Your jobs will be matched in the next cycle.
+          The matcher is currently processing another profile. Your jobs will be scored in the next cycle.
         </p>
       {:else if matcherAlive}
         <div class="flex items-center gap-2">
@@ -376,7 +376,7 @@
         </div>
         <p class="text-xs text-[var(--dash-text-muted)] mt-2">
           The matcher runs automatically in the background when the worker is active.
-          It picks up new unmatched jobs every 30 seconds.
+          It picks up new unscored jobs every 30 seconds.
         </p>
       {/if}
     </div>
@@ -385,7 +385,7 @@
     <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-medium text-[var(--dash-text)]">
-          Recently Matched Jobs
+          Recently Scored Jobs
         </h3>
         <div class="flex items-center gap-4">
           <label class="flex items-center gap-1.5 cursor-pointer">
@@ -406,7 +406,7 @@
 
       {#if recentMatches.length === 0}
         <p class="text-sm text-[var(--dash-text-muted)] py-4 text-center">
-          No matches yet. Jobs will appear here as they're matched with your profile.
+          No scored jobs yet. Jobs will appear here as they're scored against your profile.
         </p>
       {:else}
         <div class="space-y-2 max-h-[600px] overflow-y-auto">
@@ -490,12 +490,12 @@
         </div>
         <div class="flex-1">
           <h3 id="rematch-modal-title" class="text-lg font-semibold text-[var(--dash-text)] mb-2">
-            {rematchType === "matched" ? "Re-match Matched Jobs" : "Re-match No-Match Jobs"}
+            {rematchType === "matched" ? "Re-score Matched Jobs" : "Re-score Unmatched Jobs"}
           </h3>
           <p class="text-[var(--dash-text-secondary)] text-sm mb-4">
             {rematchType === "matched"
-              ? "This will re-run AI matching for jobs that currently have a match score. Existing scores will be replaced."
-              : "This will re-run AI matching for jobs that currently have no match."}
+              ? "This will re-run AI scoring for jobs that currently have a score. Existing scores will be replaced."
+              : "This will re-run AI scoring for jobs that currently have no match."}
             This uses AI usage and may take a while.
           </p>
 
@@ -529,7 +529,7 @@
           onclick={doRematch}
           class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors"
         >
-          Re-match
+          Re-score
         </button>
       </div>
     </div>

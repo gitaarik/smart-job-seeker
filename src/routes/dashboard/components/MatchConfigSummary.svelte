@@ -26,6 +26,7 @@
   const experienceLevels = $derived(asStringArray(matchConfig?.experience_levels));
   const workLocations = $derived(asStringArray(matchConfig?.work_location));
   const locations = $derived(asStringArray(matchConfig?.locations));
+  const isConfigured = $derived(jobTypes.length > 0 && workLocations.length > 0);
 </script>
 
 <Card padding="md">
@@ -45,11 +46,11 @@
       href="/dashboard/jobs/import/config"
       class="px-2.5 py-1 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0"
     >
-      {matchConfig ? "Edit" : "Configure"}
+      {isConfigured ? "Edit" : "Configure"}
     </a>
   </div>
 
-  {#if !matchConfig}
+  {#if !isConfigured}
     <p class="text-xs text-[var(--dash-text-secondary)]">
       No match config set yet. Configure what types of jobs you're looking for.
     </p>

@@ -311,7 +311,7 @@
     <EmptyState
       icon={faCertificate}
       title="No certificates yet"
-      description="Add professional certifications to strengthen your profile and match with jobs that require them."
+      description="Add professional certifications to strengthen your profile and improve scoring for jobs that require them."
       actionLabel="Add First Certificate"
       onAction={() => (showAddForm = true)}
     />
