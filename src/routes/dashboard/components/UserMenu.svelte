@@ -6,6 +6,7 @@
     faSignOutAlt,
   } from "@fortawesome/free-solid-svg-icons";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+  import { sidebarState } from "./sidebar-state.svelte";
 
   interface Props {
     user: { id: string; name: string | null; email: string };
@@ -29,7 +30,7 @@
 
 <div class="user-menu relative">
   <button
-    onclick={() => (isOpen = !isOpen)}
+    onclick={() => { isOpen = !isOpen; if (isOpen) sidebarState.mobileOpen = false; }}
     class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors"
   >
     <div

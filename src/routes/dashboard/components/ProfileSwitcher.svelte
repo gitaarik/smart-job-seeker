@@ -8,6 +8,7 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import type { ProfileSummary } from "$lib/server/profile/user-profiles";
+  import { sidebarState } from "./sidebar-state.svelte";
 
   interface Props {
     profiles: ProfileSummary[];
@@ -35,7 +36,7 @@
 
 <div class="profile-switcher relative">
   <button
-    onclick={() => (isOpen = !isOpen)}
+    onclick={() => { isOpen = !isOpen; if (isOpen) sidebarState.mobileOpen = false; }}
     class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
   >
     <FontAwesomeIcon icon={faUser} class="w-4 h-4 text-[var(--dash-chrome-text)]" />
