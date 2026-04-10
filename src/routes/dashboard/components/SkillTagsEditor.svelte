@@ -182,11 +182,39 @@
     beginner: "bg-gray-500/15 text-gray-600 border-gray-500/30",
   };
 
+  // Track whether we pushed a history entry for the current popup
+  let historyPushed = $state(false);
+
+  function pushEditHistory() {
+    history.pushState({ skillEdit: true }, "");
+    historyPushed = true;
+  }
+
+  function popEditHistory() {
+    if (historyPushed) {
+      historyPushed = false;
+      history.back();
+    }
+  }
+
+  function handlePopState(e: PopStateEvent) {
+    if (editingIndex !== null) {
+      historyPushed = false; // Already popped by the browser
+      confirmEditing();
+    }
+  }
+
+  $effect(() => {
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  });
+
   function startEditing(index: number) {
     if (reorderMode) return;
     editingSnapshot = { ...skills[index], tags: skills[index].tags ? [...skills[index].tags] : null };
     editingIsNew = false;
     editingIndex = index;
+    pushEditHistory();
   }
 
   function addSkill() {
@@ -194,6 +222,7 @@
     editingIndex = skills.length - 1;
     editingSnapshot = null;
     editingIsNew = true;
+    pushEditHistory();
   }
 
   function confirmEditing() {
@@ -208,6 +237,7 @@
     }
     editingIndex = null;
     editingSnapshot = null;
+    popEditHistory();
   }
 
   function cancelEditing() {
@@ -219,6 +249,7 @@
     }
     editingIndex = null;
     editingSnapshot = null;
+    popEditHistory();
   }
 
   function removeSkill(index: number) {
@@ -227,6 +258,7 @@
     skills = skills.filter((_, i) => i !== index);
     if (editingIndex === index) {
       editingIndex = null;
+      popEditHistory();
     }
     onremove?.(removed);
   }
@@ -349,27 +381,29 @@
       Versions
     </button>
   {/if}
-  <button
-    type="button"
-    onclick={() => {
-      if (!reorderMode) {
-        if (editingIndex !== null) confirmEditing();
-        reorderSnapshot = skills.map((s) => ({ ...s }));
-        reorderMode = true;
-      } else {
-        // Clicking the toggle again = cancel all reordering
-        reorderMode = false;
-      }
-    }}
-    class="
-      inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {reorderMode
-      ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
-      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
-    "
-  >
-    <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {reorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
-    Reorder
-  </button>
+  {#if skills.length > 1}
+    <button
+      type="button"
+      onclick={() => {
+        if (!reorderMode) {
+          if (editingIndex !== null) confirmEditing();
+          reorderSnapshot = skills.map((s) => ({ ...s }));
+          reorderMode = true;
+        } else {
+          // Clicking the toggle again = cancel all reordering
+          reorderMode = false;
+        }
+      }}
+      class="
+        inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {reorderMode
+        ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}
+      "
+    >
+      <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {reorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+      Reorder
+    </button>
+  {/if}
 </div>
 
 {#if reorderMode}
