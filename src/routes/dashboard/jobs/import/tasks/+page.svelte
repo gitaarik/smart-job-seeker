@@ -484,6 +484,14 @@
                     Inactive
                   </span>
                 {/if}
+                {#if search.schedule_interval_hours}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 whitespace-nowrap"
+                    title="Scheduled every {search.schedule_interval_hours} hours"
+                  >
+                    Every {search.schedule_interval_hours}h
+                  </span>
+                {/if}
               </div>
 
               <!-- Status info -->

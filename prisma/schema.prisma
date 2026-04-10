@@ -1517,6 +1517,8 @@ model search_tasks {
   skip_first             Int?
   stop_after_duplicates  Int?
   keep_minimized         Boolean?                 @default(true)
+  schedule_interval_hours Int?
+  next_scheduled_run     DateTime?                @db.Timestamptz(6)
   ui_preferences         Json?                    @default("{}")
   extracted_jobs_json    String?
   search_task_runs         search_task_runs[]

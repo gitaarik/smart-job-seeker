@@ -221,6 +221,10 @@ export const actions: Actions = {
       });
     }
 
+    // Schedule
+    const scheduleRaw = formData.get("schedule_interval_hours") as string;
+    const scheduleIntervalHours = scheduleRaw ? parseInt(scheduleRaw) : null;
+
     const newTask = await db.search_tasks.create({
       data: {
         note: note?.trim() || null,
@@ -239,6 +243,10 @@ export const actions: Actions = {
           : stopAfterDuplicates,
         skip_existing: skipExisting,
         keep_minimized: keepMinimized,
+        schedule_interval_hours: scheduleIntervalHours && !isNaN(scheduleIntervalHours) ? scheduleIntervalHours : null,
+        next_scheduled_run: scheduleIntervalHours && !isNaN(scheduleIntervalHours)
+          ? new Date(Date.now() + scheduleIntervalHours * 3600_000)
+          : null,
         date_created: new Date(),
       },
     });

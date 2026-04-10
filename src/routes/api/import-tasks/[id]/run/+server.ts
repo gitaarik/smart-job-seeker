@@ -293,5 +293,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     liveUrl: latestRun?.live_url || searchTask.live_url,
     currentRunId: latestRun?.id,
     currentRunStatus: latestRun?.status,
+    nextScheduledRun: (searchTask as Record<string, unknown>).next_scheduled_run ?? null,
   });
 };

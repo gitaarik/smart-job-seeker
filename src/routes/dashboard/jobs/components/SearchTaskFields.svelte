@@ -119,6 +119,17 @@
   let addStopAfterDuplicatesInput = $state("5");
   let addSkipExisting = $state(true);
   let addKeepMinimized = $state(true);
+  let addScheduleInterval = $state("");
+
+  // Schedule options (shared)
+  const SCHEDULE_OPTIONS = [
+    { value: "", label: "Off" },
+    { value: "6", label: "Every 6 hours" },
+    { value: "12", label: "Every 12 hours" },
+    { value: "24", label: "Every 24 hours" },
+    { value: "48", label: "Every 2 days" },
+    { value: "72", label: "Every 3 days" },
+  ];
 
   // ── Edit-mode state ──
   // Collapsible sections
@@ -244,6 +255,17 @@
     isEdit && keepMinimized !== savedKeepMinimized,
   );
   let isSavingKeepMinimized = $state(false);
+
+  // Schedule (edit)
+  let scheduleIntervalInput = $state<string>(
+    searchTask?.schedule_interval_hours?.toString() ?? "",
+  );
+  let isSavingSchedule = $state(false);
+  let scheduleDirty = $derived(
+    isEdit &&
+      (scheduleIntervalInput || "") !==
+        (searchTask?.schedule_interval_hours?.toString() ?? ""),
+  );
 
   // Browser location (edit)
   let editBrowserCountryCode = $state(initialBrowserCountryCode);
@@ -427,6 +449,19 @@
     }
   }
 
+  async function saveSchedule() {
+    isSavingSchedule = true;
+    try {
+      const val = scheduleIntervalInput ? parseInt(scheduleIntervalInput) : null;
+      await patchSearchTask({ schedule_interval_hours: val });
+      searchTask.schedule_interval_hours = val;
+    } catch (err) {
+      console.error("Failed to save schedule:", err);
+    } finally {
+      isSavingSchedule = false;
+    }
+  }
+
   async function saveBrowserCountryCode() {
     isSavingBrowserCountry = true;
     try {
@@ -517,6 +552,7 @@
     savedBrowserProvider = newData.searchTask.browser_provider ?? null;
     keepMinimized = newData.searchTask.keep_minimized ?? true;
     savedKeepMinimized = newData.searchTask.keep_minimized ?? true;
+    scheduleIntervalInput = newData.searchTask.schedule_interval_hours?.toString() ?? "";
     editBrowserCountryCode = newData.browserCountryCode;
     savedBrowserCountryCode = newData.browserCountryCode;
     browserLanguage = newData.browserFingerprint.language;
@@ -570,6 +606,7 @@
       savedBrowserProvider = searchTask.browser_provider ?? null;
       keepMinimized = searchTask.keep_minimized ?? true;
       savedKeepMinimized = searchTask.keep_minimized ?? true;
+      scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ?? "";
       editBrowserCountryCode = initialBrowserCountryCode;
       savedBrowserCountryCode = initialBrowserCountryCode;
       browserLanguage = browserFingerprint.language;
@@ -1292,6 +1329,39 @@
         </div>
       </div>
     {/if}
+
+    <!-- Schedule -->
+    <div class="flex items-center flex-wrap gap-3">
+      <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">
+        Auto-run
+      </span>
+      {#if isAdd}
+        <select
+          name="schedule_interval_hours"
+          bind:value={addScheduleInterval}
+          class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        >
+          {#each SCHEDULE_OPTIONS as opt}
+            <option value={opt.value}>{opt.label}</option>
+          {/each}
+        </select>
+      {:else}
+        <select
+          bind:value={scheduleIntervalInput}
+          class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        >
+          {#each SCHEDULE_OPTIONS as opt}
+            <option value={opt.value}>{opt.label}</option>
+          {/each}
+        </select>
+        {@render saveCancel(
+          scheduleDirty,
+          isSavingSchedule,
+          saveSchedule,
+          () => (scheduleIntervalInput = searchTask?.schedule_interval_hours?.toString() ?? ""),
+        )}
+      {/if}
+    </div>
 
     <!-- Browser Control -->
     <hr class="border-[var(--dash-border)] mt-4" />

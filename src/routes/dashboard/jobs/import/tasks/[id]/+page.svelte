@@ -784,6 +784,9 @@
         searchTask.status_message = result.statusMessage;
         searchTask.last_run = result.lastRun;
         searchTask.last_run_jobs_found = result.jobsFound;
+        if (result.nextScheduledRun !== undefined) {
+          searchTask.next_scheduled_run = result.nextScheduledRun;
+        }
         liveUrl = result.liveUrl || null;
         currentRunId = result.currentRunId || null;
 
@@ -1689,6 +1692,25 @@
           {/if}
         </div>
 
+        {#if searchTask.schedule_interval_hours}
+          <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)] mt-2">
+            <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+            <span>
+              Auto-runs every {searchTask.schedule_interval_hours}h
+              {#if searchTask.next_scheduled_run}
+                {@const nextRun = new Date(searchTask.next_scheduled_run)}
+                {@const diffMs = nextRun.getTime() - Date.now()}
+                {#if diffMs <= 0}
+                  — next run due now
+                {:else}
+                  {@const diffMins = Math.floor(diffMs / 60000)}
+                  {@const diffHours = Math.floor(diffMs / 3600000)}
+                  — next run in {diffHours > 0 ? `${diffHours}h ${diffMins % 60}m` : `${diffMins}m`}
+                {/if}
+              {/if}
+            </span>
+          </div>
+        {/if}
 
         {#if           desktopConnected !== null &&
             (isTunnelMode || desktopConnected)}

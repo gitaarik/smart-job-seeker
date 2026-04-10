@@ -171,6 +171,12 @@ export const searchTaskUpdateSchema = z.object({
   ]).optional(),
   browser_provider: z.enum(["hosted", "local"]).optional().nullable(),
   keep_minimized: z.boolean().optional(),
+  schedule_interval_hours: z.union([
+    z.null(),
+    z.number().int().refine((n) => [6, 12, 24, 48, 72].includes(n), {
+      message: "schedule_interval_hours must be 6, 12, 24, 48, or 72",
+    }),
+  ]).optional(),
 });
 
 // Platform update
