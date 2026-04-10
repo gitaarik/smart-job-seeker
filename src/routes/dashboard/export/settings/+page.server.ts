@@ -60,15 +60,22 @@ export const actions: Actions = {
       return fail(400, { error: "Cannot delete your last profile" });
     }
 
+    // Find the next profile to switch to before deleting
+    const nextProfile = await db.profiles.findFirst({
+      where: { user_id: user.id, id: { not: profileId } },
+      select: { id: true },
+      orderBy: { id: "asc" },
+    });
+
     // Delete the profile (cascades to related records)
     await db.profiles.delete({
       where: { id: profileId },
     });
 
-    // Clear the selected profile cookie
-    cookies.delete("selected_profile", { path: "/" });
+    // Clear the selected profile cookie so the layout auto-selects another
+    cookies.delete("selected_profile_id", { path: "/dashboard" });
 
-    // Redirect to dashboard (will auto-select another profile)
-    redirect(302, "/dashboard");
+    // Redirect to dashboard overview with the next profile selected
+    redirect(303, `/dashboard?profile=${nextProfile!.id}`);
   },
 };

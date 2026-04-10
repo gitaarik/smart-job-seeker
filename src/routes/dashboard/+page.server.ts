@@ -68,6 +68,7 @@ export const load: PageServerLoad = async ({ parent }) => {
           },
         },
         work_experiences: { select: { id: true } },
+        education: { select: { id: true } },
       },
     }),
 
@@ -187,11 +188,16 @@ export const load: PageServerLoad = async ({ parent }) => {
       0,
     ) ?? 0;
 
+  const hasWorkExperience = (profileData?.work_experiences?.length ?? 0) > 0;
+  const hasEducation = (profileData?.education?.length ?? 0) > 0;
+
   const profileCompleteness = {
     hasSkills: totalSkills > 0,
     skillCount: totalSkills,
     hasMatchConfig: matchConfig !== null,
-    hasWorkExperience: (profileData?.work_experiences?.length ?? 0) > 0,
+    hasWorkExperience,
+    hasEducation,
+    hasExperienceOrEducation: hasWorkExperience || hasEducation,
     hasTitle: !!profileData?.title,
     hasHeadline: !!profileData?.headline,
     hasLocation: !!(profileData?.city && profileData?.country_code),

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCog,
@@ -83,9 +84,11 @@
       action="?/delete"
       use:enhance={() => {
         isLoading = true;
-        return async ({ result, update }) => {
+        return async ({ result }) => {
           isLoading = false;
-          await update();
+          if (result.type === "redirect") {
+            await goto(result.location, { replaceState: true });
+          }
         };
       }}
       class="space-y-4"

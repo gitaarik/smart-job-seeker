@@ -11,6 +11,8 @@
     skillCount: number;
     hasMatchConfig: boolean;
     hasWorkExperience: boolean;
+    hasEducation: boolean;
+    hasExperienceOrEducation: boolean;
     hasTitle: boolean;
     hasHeadline: boolean;
     hasLocation: boolean;
@@ -24,15 +26,41 @@
 
   let { completeness, hasSearchTasks, hasMatches }: Props = $props();
 
+  const profileComplete = $derived(completeness.hasSkills && completeness.hasExperienceOrEducation);
+
+  const profileMissing = $derived(() => {
+    const missing: string[] = [];
+    if (!completeness.hasSkills) missing.push("at least one tech skill");
+    if (!completeness.hasExperienceOrEducation) missing.push("at least one work experience or education item");
+    return missing;
+  });
+
+  const profileDescription = $derived(
+    profileComplete
+      ? "Your profile has the essentials covered."
+      : `To get good matches, add ${profileMissing().join(" and ")}.`,
+  );
+
+  const profileHref = $derived(
+    !completeness.hasSkills
+      ? "/dashboard/profile/skills"
+      : "/dashboard/profile/edit",
+  );
+
+  const profileActionLabel = $derived(
+    !completeness.hasSkills
+      ? "Add Skills"
+      : "Edit Profile",
+  );
+
   const steps = $derived([
     {
       number: 1,
-      title: "Add your tech skills",
-      description:
-        "The AI matcher compares your skills against job requirements. Add at least a few key skills to get started.",
-      done: completeness.hasSkills,
-      href: "/dashboard/profile/skills",
-      actionLabel: "Add Skills",
+      title: "Complete your profile",
+      description: profileDescription,
+      done: profileComplete,
+      href: profileHref,
+      actionLabel: profileActionLabel,
     },
     {
       number: 2,
