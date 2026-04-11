@@ -602,6 +602,32 @@ async function generateWithLangChain(
           const validated = zodSchema.parse(normalizedParsed);
           return { content: JSON.stringify(validated), usage };
         } catch (zodError) {
+          // For job extraction, try per-item validation instead of rejecting everything.
+          // A single malformed job object from the LLM shouldn't discard all valid ones.
+          if (
+            structuredOutput.name.includes("extract_jobs") &&
+            normalizedParsed &&
+            typeof normalizedParsed === "object" &&
+            "jobs" in normalizedParsed &&
+            Array.isArray((normalizedParsed as any).jobs)
+          ) {
+            try {
+              const allJobs = (normalizedParsed as any).jobs as unknown[];
+              const jobSchema = (zodSchema as any).shape?.jobs?._def?.element;
+              if (jobSchema && allJobs.length > 0) {
+                const validJobs = allJobs.filter((job) => {
+                  try { jobSchema.parse(job); return true; } catch { return false; }
+                });
+                if (validJobs.length > 0) {
+                  console.log(`      ⚠️ ${allJobs.length - validJobs.length}/${allJobs.length} job objects failed validation, keeping ${validJobs.length} valid`);
+                  const partial = { ...normalizedParsed as any, jobs: validJobs };
+                  const validated = zodSchema.parse(partial);
+                  return { content: JSON.stringify(validated), usage };
+                }
+              }
+            } catch { /* per-item fallback failed, fall through to original error */ }
+          }
+
           const errorMsg = zodError instanceof Error
             ? zodError.message
             : String(zodError);
