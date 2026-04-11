@@ -21,7 +21,7 @@ export async function sendEmail(options: {
     );
   }
 
-  const fromEmail = getEnv("SJS_EMAIL_FROM", "noreply@example.com");
+  const fromEmail = getEnv("SJS_EMAIL_FROM", "noreply@example.com") as string;
 
   console.log(`[email] Sending "${options.subject}" to ${options.to}`);
 

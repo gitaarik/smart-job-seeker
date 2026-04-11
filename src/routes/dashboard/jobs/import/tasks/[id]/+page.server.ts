@@ -4,6 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { config } from "$lib/server/config";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
+import { getOrCreateVerificationAddress } from "$lib/server/email/verification-relay";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -94,6 +95,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   const subscription = user ? await getActiveSubscription(user.id) : null;
 
+  // Auto-generate verification email forwarding address on first visit
+  const verificationAddress = await getOrCreateVerificationAddress(layoutData.selectedProfile.id);
+
   return {
     searchTask,
     platformCredentials,
@@ -116,5 +120,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       timezone: geoDefaults.timezone,
     },
     uiPreferences: ((searchTask as any).ui_preferences ?? {}) as Record<string, unknown>,
+    verificationEmailAddress: verificationAddress.fullAddress,
   };
 };

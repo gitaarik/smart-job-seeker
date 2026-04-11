@@ -20,6 +20,7 @@
     faCog,
     faCopy,
     faDesktop,
+    faEnvelope,
     faExclamationTriangle,
     faExternalLinkAlt,
     faEye,
@@ -299,6 +300,22 @@
   let isMagicLink = $derived(
     isBlocked && searchTask.status_message?.includes("login link"),
   );
+  let isVerification = $derived(
+    isBlocked && (
+      searchTask.status_message?.includes("verification") ||
+      searchTask.status_message?.includes("login link")
+    ),
+  );
+  let verificationEmailAddress = $state(data.verificationEmailAddress);
+  let copiedVerifyEmail = $state(false);
+
+  function copyVerificationEmail() {
+    if (!verificationEmailAddress) return;
+    navigator.clipboard.writeText(verificationEmailAddress);
+    copiedVerifyEmail = true;
+    setTimeout(() => (copiedVerifyEmail = false), 2000);
+  }
+
   // Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
   let expectsCloudBrowser = $derived(
     (searchTask as any).browser_provider === "hosted" ||
@@ -717,9 +734,15 @@
   }
 
   async function startScrape() {
+    // Prevent starting when desktop app is required but not connected
+    if (isTunnelMode && !desktopConnected) {
+      errorMessage =
+        "The desktop app is not connected. Please open the Smart Job Seeker desktop app and connect it before running an import.";
+      return;
+    }
+
     isStarting = true;
     errorMessage = null;
-
 
     try {
       const response = await fetch(
@@ -1175,6 +1198,8 @@
             <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
               {#if loadingItems[run.id]}
                 Loading jobs...
+              {:else if run.finished_at}
+                No jobs imported
               {:else}
                 No jobs discovered yet
               {/if}
@@ -1574,6 +1599,22 @@
                   Complete the action in the browser view, then click Continue
                 {/if}
               </p>
+              {#if isVerification && verificationEmailAddress}
+                <div class="mt-2 flex items-center gap-2 p-2 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]">
+                  <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-primary)] shrink-0" />
+                  <span class="text-xs text-[var(--dash-text-secondary)]">
+                    Or forward the verification email to:
+                  </span>
+                  <code class="text-xs font-mono text-[var(--dash-primary)] select-all break-all">{verificationEmailAddress}</code>
+                  <button
+                    onclick={copyVerificationEmail}
+                    class="shrink-0 p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+                    title="Copy email address"
+                  >
+                    <FontAwesomeIcon icon={copiedVerifyEmail ? faCheck : faCopy} class="w-3 h-3" />
+                  </button>
+                </div>
+              {/if}
             </div>
           {:else if searchTask.status === "stopping"}
             <div
@@ -1853,6 +1894,7 @@
         browserFingerprintDefaults={data.browserFingerprintDefaults}
         uiPreferences={data.uiPreferences as Record<string, unknown>}
         {desktopConnected}
+        verificationEmailAddress={data.verificationEmailAddress}
       />
     {/key}
   </Card>
@@ -2093,15 +2135,25 @@
         >
           {#if isBlocked}
             <div class="flex items-center justify-between">
-              <p class="text-sm text-[var(--dash-text-secondary)]">
+              <div class="text-sm text-[var(--dash-text-secondary)]">
                 {#if isMagicLink}
-                  Paste the login link from your email below and click Navigate,
-                  then click Continue.
+                  <p>Paste the login link from your email below and click Navigate,
+                  then click Continue.</p>
                 {:else}
-                  Complete the required action (login, CAPTCHA, or verification)
-                  in the browser above, then click Continue.
+                  <p>Complete the required action (login, CAPTCHA, or verification)
+                  in the browser above, then click Continue.</p>
                 {/if}
-              </p>
+                {#if isVerification && verificationEmailAddress}
+                  <p class="mt-1 flex items-center gap-1.5 text-xs">
+                    <FontAwesomeIcon icon={faEnvelope} class="w-3 h-3 text-[var(--dash-primary)]" />
+                    <span>Auto-verify: forward the email to</span>
+                    <code class="font-mono text-[var(--dash-primary)] select-all">{verificationEmailAddress}</code>
+                    <button onclick={copyVerificationEmail} class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]" title="Copy">
+                      <FontAwesomeIcon icon={copiedVerifyEmail ? faCheck : faCopy} class="w-2.5 h-2.5" />
+                    </button>
+                  </p>
+                {/if}
+              </div>
               <div class="flex items-center gap-2 ml-4">
                 <button
                   onclick={() => sendFeedback("continue")}

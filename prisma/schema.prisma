@@ -1056,6 +1056,7 @@ model profiles {
   side_projects                                                     side_projects[]
   tech_skill_categories                                             tech_skill_categories[]
   work_experiences                                                  work_experiences[]
+  verification_email_address                                        verification_email_addresses?
 
   @@index([user_id])
 }
@@ -1485,12 +1486,51 @@ model search_task_runs {
   live_url              String?                 @db.VarChar(500)
   user_response         String?                 @db.VarChar(20)
   settings              Json?
+  verification_data     Json?                   @db.JsonB
   logs                  scraper_logs[]
   search_task_run_items    search_task_run_items[]
   scraper_agent_iterations scraper_agent_iterations[]
   search_tasks             search_tasks            @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  verification_emails      verification_emails[]
 
   @@index([search_task_id, started_at])
+}
+
+model verification_email_addresses {
+  id          Int       @id @default(autoincrement())
+  profile_id  Int       @unique
+  email_token String    @unique @db.VarChar(64)
+  full_address String   @db.VarChar(255)
+  is_active   Boolean   @default(true)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  last_used_at DateTime? @db.Timestamptz(6)
+
+  profiles              profiles               @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  verification_emails   verification_emails[]
+
+  @@index([email_token], map: "idx_verification_email_addresses_token")
+}
+
+model verification_emails {
+  id                       Int       @id @default(autoincrement())
+  verification_address_id  Int
+  run_id                   Int?
+  from_address             String    @db.VarChar(255)
+  subject                  String?   @db.VarChar(500)
+  body_text                String?
+  body_html                String?
+  extracted_code           String?   @db.VarChar(50)
+  extracted_link           String?   @db.VarChar(2000)
+  status                   String    @default("received") @db.VarChar(20)
+  received_at              DateTime  @default(now()) @db.Timestamptz(6)
+  applied_at               DateTime? @db.Timestamptz(6)
+
+  verification_email_addresses verification_email_addresses @relation(fields: [verification_address_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "verification_emails_address_fkey")
+  search_task_runs             search_task_runs?            @relation(fields: [run_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "verification_emails_run_fkey")
+
+  @@index([verification_address_id], map: "idx_verification_emails_address")
+  @@index([run_id], map: "idx_verification_emails_run")
+  @@index([status], map: "idx_verification_emails_status")
 }
 
 model search_tasks {

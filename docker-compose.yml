@@ -50,9 +50,11 @@ services:
       SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER:-postgres://postgres:postgres@database:5432/smartjobseeker}
       # DATABASE_URL is also set for compatibility with standard Prisma tools
       DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER:-postgres://postgres:postgres@database:5432/smartjobseeker}
-      # Pass through email config from parent .env (decrypted by dotenvx)
+      # SMTP2GO for outbound transactional emails
       SJS_SMTP2GO_API_KEY: ${SJS_SMTP2GO_API_KEY:-}
       SJS_EMAIL_FROM: ${SJS_EMAIL_FROM:-}
+      # EmailConnect.eu for inbound verification email relay
+      SJS_EMAILCONNECT_HMAC_KEY: ${SJS_EMAILCONNECT_HMAC_KEY:-}
   admin:
     extends:
       file: docker-compose.directus.yml

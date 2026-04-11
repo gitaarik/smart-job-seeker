@@ -5,7 +5,9 @@
     faCheck,
     faChevronDown,
     faChevronRight,
+    faCopy,
     faDesktop,
+    faEnvelope,
     faExternalLinkAlt,
     faEye,
     faEyeSlash,
@@ -57,6 +59,7 @@
     browserFingerprintDefaults?: { language: string; timezone: string };
     uiPreferences?: Record<string, unknown>;
     desktopConnected?: boolean | null;
+    verificationEmailAddress?: string | null;
   }
 
   let {
@@ -85,10 +88,20 @@
     browserFingerprintDefaults = { language: "", timezone: "" },
     uiPreferences = {},
     desktopConnected = null,
+    verificationEmailAddress = null,
   }: Props = $props();
 
   const isAdd = mode === "add";
   const isEdit = mode === "edit";
+
+  // ── Verification email relay ──
+  let copiedVerifyEmail = $state(false);
+  function copyVerificationEmail() {
+    if (!verificationEmailAddress) return;
+    navigator.clipboard.writeText(verificationEmailAddress);
+    copiedVerifyEmail = true;
+    setTimeout(() => (copiedVerifyEmail = false), 2000);
+  }
 
   // ── Add-mode credential state ──
   let selectedCredentialId = $state<string>("none");
@@ -1078,6 +1091,34 @@
               </div>
             {/if}
           {/if}
+
+          <!-- Email Verification Relay -->
+          {#if verificationEmailAddress}
+            <div class="pt-3 border-t border-[var(--dash-border)]">
+              <div class="flex items-center gap-2 mb-1.5">
+                <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                <span class="text-sm text-[var(--dash-text-secondary)]">Email verification relay</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <code class="flex-1 px-2 py-1.5 text-xs font-mono bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded select-all text-[var(--dash-text)] truncate">{verificationEmailAddress}</code>
+                <button
+                  type="button"
+                  onclick={copyVerificationEmail}
+                  class="px-2 py-1.5 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded hover:bg-[var(--dash-border)] transition-colors text-xs shrink-0"
+                  title="Copy to clipboard"
+                >
+                  {#if copiedVerifyEmail}
+                    <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5 text-[var(--dash-success)]" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCopy} class="w-3.5 h-3.5" />
+                  {/if}
+                </button>
+              </div>
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
+                Forward verification emails from job sites to this address for auto-login.
+              </p>
+            </div>
+          {/if}
         {/if}
       </div>
     {/if}
@@ -1327,6 +1368,7 @@
           )}
           {/if}
         </div>
+
       </div>
     {/if}
 
