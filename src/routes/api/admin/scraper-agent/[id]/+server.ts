@@ -85,6 +85,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       needsInput: session.needs_input,
       blockedMessage,
       systemPrompt: session.system_prompt,
+      claudeSessionId: session.claude_session_id,
       errorMessage: session.error_message,
       createdAt: session.created_at,
       updatedAt: session.updated_at,

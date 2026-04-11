@@ -53,6 +53,7 @@ export interface SessionDetail {
   pendingHint: string | null;
   needsInput: string | null;
   blockedMessage: string | null;
+  claudeSessionId: string | null;
   systemPrompt: string | null;
   errorMessage: string | null;
   createdAt: string;

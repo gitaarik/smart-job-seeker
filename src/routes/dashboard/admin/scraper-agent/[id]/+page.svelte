@@ -452,6 +452,16 @@
           {/if}
         </div>
 
+        {#if session.claudeSessionId}
+          <div class="sm:col-span-2">
+            <span class="font-medium text-[var(--dash-text-muted)]">Continue session:</span>
+            <code
+              class="ml-1 text-[10px] bg-[var(--dash-border)]/30 rounded px-1.5 py-0.5 select-all cursor-pointer text-[var(--dash-text-secondary)]"
+              title="Click to select, then copy"
+            >claude --resume {session.claudeSessionId}</code>
+          </div>
+        {/if}
+
         {#if session.systemPrompt}
           <details class="sm:col-span-2">
             <summary class="font-medium text-[var(--dash-text-muted)] cursor-pointer hover:text-[var(--dash-text-secondary)]">
