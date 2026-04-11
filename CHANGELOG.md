@@ -5,6 +5,29 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.39] - 2026-04-11
+
+11 commits since v0.4.38.
+
+### Added
+- Desktop app connection status check
+- Periodic auto-run scheduling for import tasks
+- Auto-create match configuration on first visit
+- Dashboard success banner after profile creation
+- Live job scrape settings adjustment during active scrape
+- No-jobs-imported message when no jobs have been imported
+
+### Changed
+- Getting started flow now requires skills and experience/education
+- Dashboard terminology clarified throughout interface
+- Mobile sidebar automatically closes when opening profile or account menu
+
+### Fixed
+- SPA login detection reliability
+- Profile deletion redirect
+- Edit popup closes on back navigation
+- Skill reorder pill visibility threshold with fewer than 2 skills
+
 ## [0.2.0] - 2026-03-22
 
 314 commits since v0.1.5.
