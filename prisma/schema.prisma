@@ -1491,7 +1491,7 @@ model search_task_runs {
   search_task_run_items    search_task_run_items[]
   scraper_agent_iterations scraper_agent_iterations[]
   search_tasks             search_tasks            @relation(fields: [search_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  verification_emails      verification_emails[]
+  inbound_emails           inbound_emails[]
 
   @@index([search_task_id, started_at])
 }
@@ -1506,14 +1506,16 @@ model verification_email_addresses {
   last_used_at DateTime? @db.Timestamptz(6)
 
   profiles              profiles               @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  verification_emails   verification_emails[]
+  inbound_emails        inbound_emails[]
 
   @@index([email_token], map: "idx_verification_email_addresses_token")
 }
 
-model verification_emails {
+model inbound_emails {
   id                       Int       @id @default(autoincrement())
-  verification_address_id  Int
+  recipient                String    @db.VarChar(255)
+  handler                  String?   @db.VarChar(50)
+  verification_address_id  Int?
   run_id                   Int?
   from_address             String    @db.VarChar(255)
   subject                  String?   @db.VarChar(500)
@@ -1525,12 +1527,14 @@ model verification_emails {
   received_at              DateTime  @default(now()) @db.Timestamptz(6)
   applied_at               DateTime? @db.Timestamptz(6)
 
-  verification_email_addresses verification_email_addresses @relation(fields: [verification_address_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "verification_emails_address_fkey")
-  search_task_runs             search_task_runs?            @relation(fields: [run_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "verification_emails_run_fkey")
+  verification_email_addresses verification_email_addresses? @relation(fields: [verification_address_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "inbound_emails_address_fkey")
+  search_task_runs             search_task_runs?             @relation(fields: [run_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "inbound_emails_run_fkey")
 
-  @@index([verification_address_id], map: "idx_verification_emails_address")
-  @@index([run_id], map: "idx_verification_emails_run")
-  @@index([status], map: "idx_verification_emails_status")
+  @@index([verification_address_id], map: "idx_inbound_emails_address")
+  @@index([run_id], map: "idx_inbound_emails_run")
+  @@index([status], map: "idx_inbound_emails_status")
+  @@index([handler], map: "idx_inbound_emails_handler")
+  @@index([received_at], map: "idx_inbound_emails_received")
 }
 
 model search_tasks {

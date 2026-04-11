@@ -142,8 +142,10 @@ export async function processInboundEmail(params: {
   const parsed = await parseVerificationEmail(subject, bodyText, bodyHtml);
 
   // 4. Store the email record
-  const emailRecord = await db.verification_emails.create({
+  const emailRecord = await db.inbound_emails.create({
     data: {
+      recipient: `verify-${recipientToken}@${VERIFY_DOMAIN}`,
+      handler: "verification-relay",
       verification_address_id: verifyAddr.id,
       run_id: blockedRun?.id || null,
       from_address: fromAddress,
@@ -178,7 +180,7 @@ export async function processInboundEmail(params: {
     });
 
     // Mark email as applied
-    await db.verification_emails.update({
+    await db.inbound_emails.update({
       where: { id: emailRecord.id },
       data: { status: "applied", applied_at: new Date() },
     });

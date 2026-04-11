@@ -211,6 +211,11 @@
           icon: faCommentDots,
         },
         {
+          label: "Inbox",
+          href: "/dashboard/admin/inbox",
+          icon: faEnvelope,
+        },
+        {
           label: "Costs",
           href: "/dashboard/admin/costs",
           icon: faChartLine,
