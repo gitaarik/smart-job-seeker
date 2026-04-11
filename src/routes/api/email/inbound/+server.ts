@@ -37,13 +37,22 @@ export const POST: RequestHandler = async (event) => {
   });
 
   try {
+    const contentType = event.request.headers.get("content-type") || "";
+
+    // --- EmailConnect webhook verification ---
+    if (contentType.includes("application/json")) {
+      const peekBody = JSON.parse(rawBodyForLog);
+      if (peekBody.type === "webhook_verification" && peekBody.verification_token) {
+        console.log("[email/inbound] Webhook verification request, echoing token");
+        return json({ verification_token: peekBody.verification_token });
+      }
+    }
+
     // Rate limiting
     if (!webhookRateLimiter.tryConsume(event.request)) {
       console.warn("[email/inbound] Rate limit exceeded");
       return createRateLimitResponse();
     }
-
-    const contentType = event.request.headers.get("content-type") || "";
     let recipient: string;
     let fromAddress: string;
     let subject: string | null;
