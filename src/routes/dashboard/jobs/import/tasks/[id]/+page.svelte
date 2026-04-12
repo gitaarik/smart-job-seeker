@@ -371,7 +371,7 @@
       const host = window.location.host;
       const encrypt = window.location.protocol === "https:" ? 1 : 0;
       const wsPath = `tunnel/vnc/${profileId}?token=${token}`;
-      vncUrl = `/vnc/vnc.html?autoconnect=true&resize=scale&password=secret&host=${host}&path=${wsPath}&encrypt=${encrypt}`;
+      vncUrl = `/vnc/vnc.html?autoconnect=true&resize=scale&password=secret&host=${host}&path=${encodeURIComponent(wsPath)}&encrypt=${encrypt}`;
       vncEnabled = true;
     } catch {
       vncError = "Failed to connect to VNC";

@@ -420,25 +420,10 @@
                 </h3>
                 {#if search.browser_provider === "local"}
                   <span
-                    class="
-                      text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 {desktopConnected
-                      ? 'bg-green-500/10 text-green-600'
-                      : desktopConnected === false
-                      ? 'bg-amber-500/10 text-amber-600'
-                      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
-                    "
-                    title={desktopConnected
-                      ? "Device connected"
-                      : "No device connected"}
+                    class={desktopConnected ? 'text-green-500' : desktopConnected === false ? 'text-red-400' : 'text-[var(--dash-text-muted)]'}
+                    title={desktopConnected ? "Device connected" : "No device connected"}
                   >
-                    <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-                    {
-                      desktopConnected
-                        ? "Connected"
-                        : desktopConnected === false
-                        ? "Disconnected"
-                        : "..."
-                    }
+                    <FontAwesomeIcon icon={faDesktop} class="w-3.5 h-3.5" />
                   </span>
                 {/if}
                 {#if               search.status === "running" ||
