@@ -5,6 +5,8 @@
  * Uses pattern matching first (fast, no cost), falls back to LLM if needed.
  */
 
+import * as cheerio from "cheerio";
+
 export interface ParsedVerification {
   code?: string;
   link?: string;
@@ -286,15 +288,28 @@ function extractCtaLink(text: string): string | null {
 }
 
 /**
- * Extract all href URLs from HTML.
+ * Extract all href URLs from HTML using Cheerio (proper HTML parser).
+ * Regex-based href extraction breaks on complex email HTML (e.g. LinkedIn
+ * emails with broken markup that concatenates URLs).
  */
 function extractLinksFromHtml(html: string): string[] {
   const urls: string[] = [];
-  const hrefPattern = /href\s*=\s*["']([^"']+)["']/gi;
-  let match;
-  while ((match = hrefPattern.exec(html)) !== null) {
-    if (match[1] && match[1].startsWith("http")) {
-      urls.push(match[1]);
+  try {
+    const $ = cheerio.load(html);
+    $("a[href]").each((_, el) => {
+      const href = $(el).attr("href");
+      if (href && href.startsWith("http")) {
+        urls.push(href);
+      }
+    });
+  } catch {
+    // Fallback to regex if Cheerio fails (shouldn't happen)
+    const hrefPattern = /href\s*=\s*["']([^"']+)["']/gi;
+    let match;
+    while ((match = hrefPattern.exec(html)) !== null) {
+      if (match[1] && match[1].startsWith("http")) {
+        urls.push(match[1]);
+      }
     }
   }
   return urls;
