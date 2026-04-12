@@ -6,6 +6,7 @@ import { config } from "$lib/server/config";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
 import { getOrCreateVerificationAddress } from "$lib/server/email/verification-relay";
 import { listApiKeys } from "$lib/server/auth/api-key";
+import { listSharedWithMe } from "$lib/server/device-shares";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -100,11 +101,24 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Auto-generate verification email forwarding address on first visit
   const verificationAddress = await getOrCreateVerificationAddress(layoutData.selectedProfile.id);
 
-  // Load API keys for device selection (tunnel mode)
+  // Load API keys for device selection (tunnel mode) — own + shared
   const allApiKeys = await listApiKeys(layoutData.selectedProfile.id);
   const apiKeyDevices = allApiKeys
     .filter(k => !k.revoked)
-    .map(k => ({ apiKeyId: k.id, apiKeyName: k.name }));
+    .map(k => ({ apiKeyId: k.id, apiKeyName: k.name, shared: false }));
+
+  // Add devices shared with this user
+  if (user) {
+    const sharedDevices = await listSharedWithMe(user.id);
+    for (const share of sharedDevices) {
+      const ownerName = share.api_key.owner?.name || share.api_key.owner?.email || "Unknown";
+      apiKeyDevices.push({
+        apiKeyId: share.api_key.id,
+        apiKeyName: `${share.api_key.name} (${ownerName})`,
+        shared: true,
+      });
+    }
+  }
 
   return {
     searchTask,

@@ -1074,9 +1074,38 @@ model api_keys {
   revoked      Boolean   @default(false)
   profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_keys_profile_foreign")
   search_tasks search_tasks[]
+  device_shares device_shares[]
 
   @@index([key_hash], map: "idx_api_keys_hash")
   @@index([profile], map: "idx_api_keys_profile")
+}
+
+model contacts {
+  id           Int       @id @default(autoincrement())
+  requester_id String
+  recipient_id String
+  status       String    @default("pending") @db.VarChar(20)
+  date_created DateTime? @default(now()) @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  requester    users     @relation("contacts_requester", fields: [requester_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  recipient    users     @relation("contacts_recipient", fields: [recipient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([requester_id, recipient_id], map: "contacts_pair_unique")
+  @@index([requester_id], map: "idx_contacts_requester")
+  @@index([recipient_id], map: "idx_contacts_recipient")
+}
+
+model device_shares {
+  id           Int       @id @default(autoincrement())
+  api_key_id   Int
+  shared_with  String
+  date_created DateTime? @default(now()) @db.Timestamptz(6)
+  api_key      api_keys  @relation(fields: [api_key_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user         users     @relation("device_shares_shared_with", fields: [shared_with], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([api_key_id, shared_with], map: "device_shares_key_user_unique")
+  @@index([api_key_id], map: "idx_device_shares_api_key")
+  @@index([shared_with], map: "idx_device_shares_shared_with")
 }
 
 model project_stories {
@@ -1414,6 +1443,9 @@ model users {
   usage_counters        usage_counters[]
   credit_balances       credit_balances[]
   credit_transactions   credit_transactions[]
+  contacts_sent         contacts[]       @relation("contacts_requester")
+  contacts_received     contacts[]       @relation("contacts_recipient")
+  device_shares_received device_shares[] @relation("device_shares_shared_with")
 }
 
 model verifications {

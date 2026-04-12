@@ -14,8 +14,10 @@
     faKey,
     faPlus,
     faServer,
+    faShareAlt,
     faTimes,
     faTrash,
+    faUserMinus,
   } from "@fortawesome/free-solid-svg-icons";
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
@@ -160,6 +162,91 @@
     const diffHours = Math.floor(diffMs / 3600000);
     if (diffHours < 24) return `${diffHours}h ago`;
     return formatDate(dateStr);
+  }
+
+  // Device sharing
+  interface ContactUser {
+    id: string;
+    name: string | null;
+    email: string;
+  }
+  interface DeviceShare {
+    id: number;
+    date_created: Date | null;
+    user: ContactUser & { image: string | null };
+  }
+
+  let sharingKeyId = $state<number | null>(null);
+  let sharingContacts = $state<ContactUser[]>([]);
+  let sharingExisting = $state<DeviceShare[]>([]);
+  let sharingLoading = $state(false);
+
+  async function openShareModal(apiKeyId: number) {
+    sharingKeyId = apiKeyId;
+    sharingLoading = true;
+
+    try {
+      const [contactsRes, sharesRes] = await Promise.all([
+        fetch("/api/contacts"),
+        fetch(`/api/device-shares?apiKeyId=${apiKeyId}`),
+      ]);
+      const contactsData = await contactsRes.json();
+      const sharesData = await sharesRes.json();
+
+      // Only show accepted contacts
+      sharingContacts = (contactsData.contacts || [])
+        .filter((c: { status: string }) => c.status === "accepted")
+        .map((c: { user: ContactUser }) => c.user);
+      sharingExisting = sharesData.shares || [];
+    } catch {
+      errorMessage = "Failed to load sharing data";
+      sharingKeyId = null;
+    } finally {
+      sharingLoading = false;
+    }
+  }
+
+  function isSharedWith(userId: string): boolean {
+    return sharingExisting.some((s) => s.user.id === userId);
+  }
+
+  async function shareWithContact(userId: string) {
+    if (!sharingKeyId) return;
+
+    try {
+      const res = await fetch("/api/device-shares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeyId: sharingKeyId, userId }),
+      });
+
+      if (res.ok) {
+        await openShareModal(sharingKeyId);
+      } else {
+        const data = await res.json();
+        errorMessage = data.error || "Failed to share device";
+      }
+    } catch {
+      errorMessage = "Failed to share device";
+    }
+  }
+
+  async function unshareFromContact(userId: string) {
+    if (!sharingKeyId) return;
+
+    try {
+      const res = await fetch("/api/device-shares", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeyId: sharingKeyId, userId }),
+      });
+
+      if (res.ok) {
+        await openShareModal(sharingKeyId);
+      }
+    } catch {
+      errorMessage = "Failed to unshare device";
+    }
   }
 </script>
 
@@ -529,6 +616,14 @@ volumes:
                 {#if !key.revoked}
                   <button
                     type="button"
+                    onclick={() => openShareModal(key.id)}
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                    title="Share device"
+                  >
+                    <FontAwesomeIcon icon={faShareAlt} class="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
                     onclick={() => revokeApiKey(key.id)}
                     class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                     title="Revoke key"
@@ -551,3 +646,91 @@ volumes:
     {/if}
   </Card>
 </div>
+
+<!-- Share Device Modal -->
+{#if sharingKeyId !== null}
+  {@const sharingKey = apiKeys.find((k) => k.id === sharingKeyId)}
+  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] w-full max-w-md shadow-xl">
+      <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
+        <h3 class="font-medium text-[var(--dash-text)]">
+          Share "{sharingKey?.name}"
+        </h3>
+        <button
+          type="button"
+          onclick={() => { sharingKeyId = null; }}
+          class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+        </button>
+      </div>
+
+      <div class="p-4">
+        {#if sharingLoading}
+          <div class="flex items-center justify-center py-8">
+            <Spinner size="w-6 h-6" />
+          </div>
+        {:else if sharingContacts.length === 0}
+          <div class="text-center py-6">
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              No contacts yet. <a href="/dashboard/contacts" class="text-[var(--dash-primary)] hover:underline">Add contacts</a> to share devices.
+            </p>
+          </div>
+        {:else}
+          <!-- Currently shared with -->
+          {#if sharingExisting.length > 0}
+            <div class="mb-4">
+              <p class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Shared with</p>
+              <div class="space-y-2">
+                {#each sharingExisting as share (share.id)}
+                  <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20">
+                    <div class="flex items-center gap-2">
+                      <div class="w-6 h-6 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-primary)]">
+                        {(share.user.name || share.user.email)[0].toUpperCase()}
+                      </div>
+                      <span class="text-sm text-[var(--dash-text)]">{share.user.name || share.user.email}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onclick={() => unshareFromContact(share.user.id)}
+                      class="p-1 text-[var(--dash-text-muted)] hover:text-red-400 transition-colors"
+                      title="Remove access"
+                    >
+                      <FontAwesomeIcon icon={faUserMinus} class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          <!-- Available contacts to share with -->
+          {@const unsharedContacts = sharingContacts.filter((c) => !isSharedWith(c.id))}
+          {#if unsharedContacts.length > 0}
+            <div>
+              <p class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Your contacts</p>
+              <div class="space-y-1">
+                {#each unsharedContacts as contact (contact.id)}
+                  <button
+                    type="button"
+                    onclick={() => shareWithContact(contact.id)}
+                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-left"
+                  >
+                    <div class="w-6 h-6 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-text-muted)]">
+                      {(contact.name || contact.email)[0].toUpperCase()}
+                    </div>
+                    <span class="text-sm text-[var(--dash-text)]">{contact.name || contact.email}</span>
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {:else if sharingExisting.length > 0}
+            <p class="text-sm text-[var(--dash-text-secondary)] text-center py-2">
+              Shared with all your contacts.
+            </p>
+          {/if}
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}

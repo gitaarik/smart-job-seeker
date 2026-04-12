@@ -3,6 +3,7 @@ import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
+import { hasDeviceAccess } from "$lib/server/device-shares";
 
 /**
  * PATCH /api/import-tasks/[id]
@@ -39,7 +40,15 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (body.skip_first !== undefined) data.skip_first = body.skip_first;
   if (body.browser_provider !== undefined) data.browser_provider = body.browser_provider;
   if (body.keep_minimized !== undefined) data.keep_minimized = body.keep_minimized;
-  if (body.tunnel_api_key !== undefined) data.tunnel_api_key = body.tunnel_api_key;
+  if (body.tunnel_api_key !== undefined) {
+    if (body.tunnel_api_key !== null) {
+      const canAccess = await hasDeviceAccess(body.tunnel_api_key, user.id);
+      if (!canAccess) {
+        throw error(403, "You don't have access to this device");
+      }
+    }
+    data.tunnel_api_key = body.tunnel_api_key;
+  }
   if (body.schedule_interval_hours !== undefined) {
     data.schedule_interval_hours = body.schedule_interval_hours;
     if (body.schedule_interval_hours === null) {
