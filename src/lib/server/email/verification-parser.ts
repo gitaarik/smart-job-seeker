@@ -184,12 +184,13 @@ function extractFromText(text: string, subject: string | null): ParsedVerificati
   // Try to extract a verification code
   const code = extractCode(combinedText);
 
-  // Try to extract a verification link (keyword-matched first)
+  // Try to extract a verification link (keyword-matched URLs only)
   let link = extractLink(combinedText);
 
-  // If no keyword-matched link but the email is clearly about verification,
-  // try to find a CTA link (the primary action link in the email)
-  if (!link && isVerificationContext(combinedText)) {
+  // If no code AND no keyword-matched link, try a CTA link fallback.
+  // Only do this when there's no code — if we have a code, a non-keyword
+  // link is likely just navigation (logo, profile, app store) not verification.
+  if (!code && !link && isVerificationContext(combinedText)) {
     link = extractCtaLink(combinedText);
   }
 
@@ -219,8 +220,10 @@ function extractFromHtml(html: string, subject: string | null): ParsedVerificati
   const combinedText = subject ? `${subject}\n${text}` : text;
   const code = extractCode(combinedText);
 
-  // If no keyword-matched link but verification context, find the CTA link from HTML hrefs
-  if (!verificationLink && isVerificationContext(combinedText)) {
+  // If no code AND no keyword-matched link, try any non-excluded link as CTA.
+  // Only do this when there's no code — if we have a code, a non-keyword
+  // link is likely just navigation (logo, profile, app store) not verification.
+  if (!code && !verificationLink && isVerificationContext(combinedText)) {
     verificationLink = links.find((url) => isValidUrl(url) && !isExcludedUrl(url));
   }
 
