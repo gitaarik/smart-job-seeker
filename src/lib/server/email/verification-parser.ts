@@ -294,23 +294,78 @@ function extractCtaLink(text: string): string | null {
   return null;
 }
 
+interface ScoredLink {
+  url: string;
+  score: number;
+}
+
 /**
- * Extract all href URLs from HTML using Cheerio (proper HTML parser).
- * Regex-based href extraction breaks on complex email HTML (e.g. LinkedIn
- * emails with broken markup that concatenates URLs).
+ * Extract and score all href URLs from HTML using Cheerio.
+ * Each link is scored based on multiple signals:
+ * - URL keywords (verify, confirm, auth, token, etc.)
+ * - Anchor text (e.g. "Verify", "Confirm", "Click here")
+ * - Button-like styling (inline styles, classes suggesting a CTA button)
+ * - Whether the link wraps an image (logo/icon links score lower)
+ * - Link position (links appearing after verification-related text score higher)
+ *
+ * Returns links sorted by score (highest first).
  */
 function extractLinksFromHtml(html: string): string[] {
-  const urls: string[] = [];
   try {
     const $ = cheerio.load(html);
+    const scored: ScoredLink[] = [];
+
     $("a[href]").each((_, el) => {
-      const href = $(el).attr("href");
-      if (href && href.startsWith("http")) {
-        urls.push(href);
-      }
+      const $el = $(el);
+      const href = $el.attr("href");
+      if (!href || !href.startsWith("http")) return;
+      if (!isValidUrl(href) || isExcludedUrl(href)) return;
+
+      let score = 0;
+
+      // URL keyword signals
+      if (isVerificationUrl(href)) score += 10;
+
+      // Anchor text signals
+      const text = $el.text().trim().toLowerCase();
+      const ctaPatterns = [
+        /verify/i, /confirm/i, /validate/i, /activate/i,
+        /sign\s*in/i, /log\s*in/i, /click\s*here/i,
+        /enter\s*code/i, /complete/i, /continue/i,
+        /yes,?\s*(?:this|it'?s)\s*(?:is|was)\s*me/i,
+      ];
+      if (ctaPatterns.some((p) => p.test(text))) score += 8;
+
+      // Button-like styling (common in email CTA buttons)
+      const style = ($el.attr("style") || "").toLowerCase();
+      const className = ($el.attr("class") || "").toLowerCase();
+      if (style.includes("background-color") || style.includes("background:")) score += 3;
+      if (style.includes("border-radius")) score += 2;
+      if (style.includes("padding")) score += 1;
+      if (/btn|button|cta/i.test(className)) score += 3;
+
+      // Image-only links are usually logos/icons, not verification CTAs
+      const hasImg = $el.find("img").length > 0;
+      const hasText = text.length > 0;
+      if (hasImg && !hasText) score -= 5;
+
+      // Penalize social/app store/navigation links
+      if (/itunes\.apple\.com|play\.google\.com|apps\.apple\.com/i.test(href)) score -= 10;
+      if (/\/comm\/feed|\/comm\/in\//i.test(href)) score -= 5;
+
+      // Context: check if nearby text mentions verification
+      const parentText = $el.parent().text().trim().toLowerCase();
+      if (/verify|confirm|code|pin|security|identity/i.test(parentText)) score += 3;
+
+      scored.push({ url: href, score });
     });
+
+    // Sort by score descending, return URLs
+    scored.sort((a, b) => b.score - a.score);
+    return scored.map((s) => s.url);
   } catch {
-    // Fallback to regex if Cheerio fails (shouldn't happen)
+    // Fallback to regex if Cheerio fails
+    const urls: string[] = [];
     const hrefPattern = /href\s*=\s*["']([^"']+)["']/gi;
     let match;
     while ((match = hrefPattern.exec(html)) !== null) {
@@ -318,8 +373,8 @@ function extractLinksFromHtml(html: string): string[] {
         urls.push(match[1]);
       }
     }
+    return urls;
   }
-  return urls;
 }
 
 /**
