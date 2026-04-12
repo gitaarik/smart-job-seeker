@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { page } from "$app/stores";
-  import { faBullseye, faChartBar, faDesktop, faSearch, faSliders } from "@fortawesome/free-solid-svg-icons";
+  import { faBullseye, faChartBar, faHouseSignal, faSearch, faSliders } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import TabNav from "../../components/TabNav.svelte";
 
@@ -11,7 +11,7 @@
     { label: "Import Tasks", href: "/dashboard/jobs/import/tasks", icon: faSearch },
     { label: "Match Config", href: "/dashboard/jobs/import/config", icon: faSliders },
     { label: "Match Progress", href: "/dashboard/jobs/import/progress", icon: faChartBar },
-    { label: "Desktop Import", href: "/dashboard/jobs/import/desktop", icon: faDesktop },
+    { label: "My Devices", href: "/dashboard/jobs/import/devices", icon: faHouseSignal },
   ];
 
   function isTabActive(href: string): boolean {

@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
 
 export const load = () => {
-  redirect(301, "/dashboard/jobs/import/desktop");
+  redirect(301, "/dashboard/jobs/import/devices");
 };

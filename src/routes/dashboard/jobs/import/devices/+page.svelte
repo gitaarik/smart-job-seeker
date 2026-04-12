@@ -7,13 +7,13 @@
     faCheck,
     faChevronDown,
     faChevronUp,
-    faCircle,
     faCopy,
     faDesktop,
     faEye,
     faEyeSlash,
     faKey,
     faPlus,
+    faServer,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -33,25 +33,42 @@
   let copiedKeyId = $state<number | null>(null);
   let visibleKeyId = $state<number | null>(null);
   let errorMessage = $state<string | null>(null);
+  let installTab = $state<"desktop" | "docker">("desktop");
 
   // Tunnel status polling
-  let tunnelConnected = $state(false);
-  let tunnelVersion = $state<string | null>(null);
-  let tunnelConnectedAt = $state<string | null>(null);
+  interface DeviceStatus {
+    apiKeyId: number;
+    apiKeyName: string;
+    connectedAt: string;
+    lastHeartbeat: string;
+    clientVersion: string;
+  }
+  let connectedDevices = $state<DeviceStatus[]>([]);
   let tunnelStatus = $state<string>("checking");
   let statusPollInterval: ReturnType<typeof setInterval> | null = null;
+
+  let tunnelConnected = $derived(connectedDevices.length > 0);
+
+  // Derive tunnel URL from current host
+  let tunnelUrl = $derived(
+    typeof window !== "undefined"
+      ? `wss://${window.location.host}/tunnel`
+      : "wss://app.smartjobseeker.com/tunnel",
+  );
+
+  function getDeviceStatus(apiKeyId: number): DeviceStatus | undefined {
+    return connectedDevices.find((d) => d.apiKeyId === apiKeyId);
+  }
 
   async function pollTunnelStatus() {
     try {
       const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
       const status = await res.json();
-      tunnelConnected = status.connected === true;
-      tunnelVersion = status.clientVersion || null;
-      tunnelConnectedAt = status.connectedAt || null;
+      connectedDevices = status.devices || [];
       tunnelStatus = status.connected ? "connected" : "disconnected";
     } catch {
       tunnelStatus = "unavailable";
-      tunnelConnected = false;
+      connectedDevices = [];
     }
   }
 
@@ -96,7 +113,7 @@
   }
 
   async function revokeApiKey(keyId: number) {
-    if (!confirm("Revoke this API key? The desktop app will be disconnected.")) return;
+    if (!confirm("Revoke this API key? The device will be disconnected.")) return;
 
     try {
       const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, { method: "DELETE" });
@@ -147,12 +164,12 @@
 </script>
 
 <svelte:head>
-  <title>Desktop Import - Import Jobs - Smart Job Seeker</title>
+  <title>My Devices - Import Jobs - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-4">
   <p class="text-sm text-[var(--dash-text-secondary)]">
-    Run the desktop app on your computer to scrape from your home IP address. This avoids datacenter IP detection that can trigger CAPTCHAs.
+    Connect a device to scrape from your own IP address. Use the desktop app on your computer or a self-hosted Docker container on a NAS or server.
   </p>
 
   <!-- Connection Status -->
@@ -164,18 +181,22 @@
           <p class="font-medium text-[var(--dash-text)]">
             {#if tunnelStatus === "checking"}
               Checking connection...
-            {:else if tunnelConnected}
-              Desktop App Connected
+            {:else if connectedDevices.length > 1}
+              {connectedDevices.length} Devices Connected
+            {:else if connectedDevices.length === 1}
+              {connectedDevices[0].apiKeyName} Connected
             {:else}
-              Desktop App Not Connected
+              No Device Connected
             {/if}
           </p>
-          {#if tunnelConnected && tunnelVersion}
+          {#if connectedDevices.length === 1}
             <p class="text-sm text-[var(--dash-text-muted)]">
-              v{tunnelVersion}
-              {#if tunnelConnectedAt}
-                &middot; connected {formatRelativeTime(tunnelConnectedAt)}
-              {/if}
+              v{connectedDevices[0].clientVersion}
+              &middot; connected {formatRelativeTime(connectedDevices[0].connectedAt)}
+            </p>
+          {:else if connectedDevices.length > 1}
+            <p class="text-sm text-[var(--dash-text-muted)]">
+              {connectedDevices.map((d) => d.apiKeyName).join(", ")}
             </p>
           {:else if tunnelStatus !== "checking"}
             <p class="text-sm text-[var(--dash-text-muted)]">
@@ -194,80 +215,174 @@
   <Card padding="lg">
     <h2 class="font-medium text-[var(--dash-text)] mb-4">Setup Instructions</h2>
     <ol class="space-y-4 text-sm text-[var(--dash-text-secondary)]">
+
+      <!-- Step 1: Install -->
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">1</span>
-        <div>
-          <p class="text-[var(--dash-text)]">Install the desktop app</p>
-          <p>Download the installer for your platform from <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">GitHub Releases</a>:</p>
-          <div class="mt-2 space-y-1.5 text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-[var(--dash-text-secondary)] w-16">macOS</span>
-              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.dmg</a>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[var(--dash-text-secondary)] w-16">Windows</span>
-              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.exe installer</a>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[var(--dash-text-secondary)] w-16">Linux</span>
-              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.deb</a>
-              <span class="text-[var(--dash-text-secondary)]">or</span>
-              <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.AppImage</a>
-            </div>
+        <div class="flex-1">
+          <p class="text-[var(--dash-text)] mb-2">Install</p>
+
+          <!-- Install type tabs -->
+          <div class="flex rounded-md overflow-hidden border border-[var(--dash-border)] w-fit mb-3">
+            <button
+              type="button"
+              onclick={() => { installTab = "desktop"; }}
+              class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {installTab === 'desktop' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+            >
+              <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+              Desktop App
+            </button>
+            <button
+              type="button"
+              onclick={() => { installTab = "docker"; }}
+              class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {installTab === 'docker' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+            >
+              <FontAwesomeIcon icon={faServer} class="w-3 h-3" />
+              Docker
+            </button>
           </div>
-          <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">A compatible browser will be downloaded automatically on first launch.</p>
 
-          <!-- Manual install toggle -->
-          <button
-            type="button"
-            onclick={() => { showManualInstall = !showManualInstall; }}
-            class="mt-2 flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-          >
-            <FontAwesomeIcon icon={showManualInstall ? faChevronUp : faChevronDown} class="w-2.5 h-2.5" />
-            <span>Manual install from source</span>
-          </button>
-
-          {#if showManualInstall}
-            <div class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2">
-              <p>Requires <a href="https://nodejs.org/" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Node.js 20+</a> and <a href="https://www.rust-lang.org/tools/install" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Rust</a>. Clone the repo and build:</p>
-              <div class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5">
-                <div>git clone https://github.com/gitaarik/sjs-desktop.git</div>
-                <div>cd sjs-desktop</div>
-                <div>npm install && npm run ui:install</div>
-                <div>npm run tauri:build</div>
+          {#if installTab === "desktop"}
+            <!-- Desktop App instructions -->
+            <p>Download the installer for your platform from <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">GitHub Releases</a>:</p>
+            <div class="mt-2 space-y-1.5 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="text-[var(--dash-text-secondary)] w-16">macOS</span>
+                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.dmg</a>
               </div>
-              <p>The installer will be in <code class="bg-[var(--dash-card)] px-1 rounded">src-tauri/target/release/bundle/</code>.</p>
+              <div class="flex items-center gap-2">
+                <span class="text-[var(--dash-text-secondary)] w-16">Windows</span>
+                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.exe installer</a>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[var(--dash-text-secondary)] w-16">Linux</span>
+                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.deb</a>
+                <span class="text-[var(--dash-text-secondary)]">or</span>
+                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.AppImage</a>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">A compatible browser will be downloaded automatically on first launch.</p>
+
+            <!-- Manual install toggle -->
+            <button
+              type="button"
+              onclick={() => { showManualInstall = !showManualInstall; }}
+              class="mt-2 flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+            >
+              <FontAwesomeIcon icon={showManualInstall ? faChevronUp : faChevronDown} class="w-2.5 h-2.5" />
+              <span>Manual install from source</span>
+            </button>
+
+            {#if showManualInstall}
+              <div class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2">
+                <p>Requires <a href="https://nodejs.org/" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Node.js 20+</a> and <a href="https://www.rust-lang.org/tools/install" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Rust</a>. Clone the repo and build:</p>
+                <div class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5">
+                  <div>git clone https://github.com/gitaarik/sjs-desktop.git</div>
+                  <div>cd sjs-desktop</div>
+                  <div>npm install && npm run ui:install</div>
+                  <div>npm run tauri:build</div>
+                </div>
+                <p>The installer will be in <code class="bg-[var(--dash-card)] px-1 rounded">src-tauri/target/release/bundle/</code>.</p>
+              </div>
+            {/if}
+
+            <!-- Source code link -->
+            <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+              <a href="https://github.com/gitaarik/sjs-desktop" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors">
+                <FontAwesomeIcon icon={faGithub} class="w-3 h-3" />
+                <span>View on GitHub</span>
+              </a>
+            </p>
+          {:else}
+            <!-- Docker instructions -->
+            <p>Run the tunnel client as a Docker container on a NAS (TrueNAS, Synology, Unraid) or any server with Docker.</p>
+
+            <div class="mt-3 space-y-3">
+              <div>
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">Docker Compose (recommended)</p>
+                <p class="text-xs text-[var(--dash-text-secondary)] mb-2">Create a <code class="bg-[var(--dash-bg)] px-1 rounded">docker-compose.yml</code> file:</p>
+                <div class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto">
+                  <pre class="whitespace-pre">services:
+  sjs-tunnel:
+    image: gitaarik036/sjs-tunnel-client:latest
+    restart: unless-stopped
+    shm_size: "512m"
+    volumes:
+      - chrome_data:/data
+    environment:
+      SJS_SERVER_URL: "{tunnelUrl}"
+      SJS_API_TOKEN: "your-api-key-here"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2"
+
+volumes:
+  chrome_data:</pre>
+                </div>
+                <p class="text-xs text-[var(--dash-text-secondary)] mt-2">Then run: <code class="bg-[var(--dash-bg)] px-1 rounded">docker compose up -d</code></p>
+              </div>
+
+              <div>
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">Docker Run</p>
+                <div class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto">
+                  <pre class="whitespace-pre">docker run -d \
+  --name sjs-tunnel \
+  --restart unless-stopped \
+  --shm-size 512m \
+  -v sjs_chrome_data:/data \
+  -e SJS_SERVER_URL="{tunnelUrl}" \
+  -e SJS_API_TOKEN="your-api-key-here" \
+  gitaarik036/sjs-tunnel-client:latest</pre>
+                </div>
+              </div>
+
+              <div>
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">TrueNAS Scale</p>
+                <p class="text-xs text-[var(--dash-text-secondary)]">
+                  Use <strong>Custom App</strong> with image <code class="bg-[var(--dash-bg)] px-1 rounded">gitaarik036/sjs-tunnel-client:latest</code>.
+                  Add environment variables <code class="bg-[var(--dash-bg)] px-1 rounded">SJS_SERVER_URL</code> and <code class="bg-[var(--dash-bg)] px-1 rounded">SJS_API_TOKEN</code>.
+                  Set shared memory to 512 MB.
+                </p>
+              </div>
+
+              <p class="text-xs text-[var(--dash-text-secondary)]">
+                You can view and control the browser directly from the dashboard during scraping — no extra ports needed.
+              </p>
             </div>
           {/if}
-
-          <!-- Source code link -->
-          <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
-            <a href="https://github.com/gitaarik/sjs-desktop" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors">
-              <FontAwesomeIcon icon={faGithub} class="w-3 h-3" />
-              <span>View on GitHub</span>
-            </a>
-          </p>
         </div>
       </li>
+
+      <!-- Step 2: Create API key -->
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">2</span>
         <div>
           <p class="text-[var(--dash-text)]">Create an API key below</p>
-          <p>This authenticates your desktop app with the server.</p>
+          <p>Each device needs its own API key. The key name identifies the device.</p>
         </div>
       </li>
+
+      <!-- Step 3: Connect -->
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">3</span>
         <div>
-          <p class="text-[var(--dash-text)]">Connect the desktop app</p>
-          <p>In the app, select the <strong>{typeof window !== 'undefined' && window.location.host.startsWith('preview.') ? 'Preview' : 'Dev'}</strong> server and enter your API key.</p>
+          <p class="text-[var(--dash-text)]">Connect the device</p>
+          {#if installTab === "desktop"}
+            <p>In the desktop app, select the <strong>{typeof window !== 'undefined' && (window.location.host.startsWith('app.') ? 'Production' : window.location.host.startsWith('preview.') ? 'Preview' : 'Dev')}</strong> server and enter your API key.</p>
+          {:else}
+            <p>Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs">your-api-key-here</code> in the config with your API key and start the container.</p>
+          {/if}
         </div>
       </li>
+
+      <!-- Step 4: Start scraping -->
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">4</span>
         <div>
           <p class="text-[var(--dash-text)]">Start scraping</p>
-          <p>Once connected (shown above), start a scrape from your Search Task page. The scraper will use your local Chrome and residential IP.</p>
+          <p>Once connected (shown above), start a scrape from your Import Task page. Select "My device" as the browser and choose which device to use.</p>
         </div>
       </li>
     </ol>
@@ -326,7 +441,7 @@
               type="text"
               id="key-name"
               bind:value={newKeyName}
-              placeholder="e.g., My Laptop"
+              placeholder="e.g., My Laptop, NAS"
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
               onkeydown={(e) => { if (e.key === "Enter") createApiKey(); }}
             />
@@ -357,15 +472,16 @@
     {#if apiKeys.length === 0}
       <div class="p-8 text-center text-[var(--dash-text-secondary)]">
         <FontAwesomeIcon icon={faKey} class="w-8 h-8 mb-2 opacity-30" />
-        <p>No API keys yet. Create one to connect the desktop app.</p>
+        <p>No API keys yet. Create one to connect a device.</p>
       </div>
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
         {#each apiKeys as key (key.id)}
+          {@const deviceStatus = getDeviceStatus(key.id)}
           <div class="p-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3 flex-1 min-w-0">
-                <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : 'bg-[var(--dash-success)]'}`}></div>
+                <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : deviceStatus ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-text-muted)]'}`}></div>
                 <div class="min-w-0">
                   <div class="flex items-center gap-2">
                     <p class="font-medium text-[var(--dash-text)] truncate">{key.name}</p>
@@ -373,12 +489,20 @@
                       <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
                         Revoked
                       </span>
+                    {:else if deviceStatus}
+                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]">
+                        Connected
+                      </span>
                     {/if}
                   </div>
                   <p class="text-xs text-[var(--dash-text-muted)]">
-                    Created {formatDate(key.date_created)}
-                    {#if key.last_used}
-                      &middot; Last used {formatDate(key.last_used)}
+                    {#if deviceStatus}
+                      v{deviceStatus.clientVersion} &middot; connected {formatRelativeTime(deviceStatus.connectedAt)}
+                    {:else}
+                      Created {formatDate(key.date_created)}
+                      {#if key.last_used}
+                        &middot; Last used {formatDate(key.last_used)}
+                      {/if}
                     {/if}
                   </p>
                 </div>

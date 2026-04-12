@@ -112,16 +112,27 @@
 
   // Desktop scraper connection status
   let desktopConnected = $state<boolean | null>(null);
+  let connectedDeviceIds = $state<number[]>([]);
 
   async function checkDesktopStatus() {
     try {
       const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
       const result = await res.json();
       desktopConnected = result.connected === true;
+      connectedDeviceIds = (result.devices ?? []).map((d: { apiKeyId: number }) => d.apiKeyId);
     } catch {
       desktopConnected = false;
+      connectedDeviceIds = [];
     }
   }
+
+  // Merge API key devices with live connection status
+  let devices = $derived(
+    data.apiKeyDevices.map(d => ({
+      ...d,
+      connected: connectedDeviceIds.includes(d.apiKeyId),
+    })),
+  );
 
   let isStarting = $state(false);
   let isStopping = $state(false);
@@ -338,70 +349,53 @@
           : "/vnc/vnc.html?autoconnect=true&resize=scale")),
   );
 
-  // Screencast state (for tunnel mode — polls JPEG frames from the desktop browser)
-  let screencastEnabled = $state(false);
-  let screencastSrc = $state<string | null>(null);
-  let screencastPollTimer: ReturnType<typeof setTimeout> | null = null;
+  // VNC state (for tunnel mode — interactive browser control via noVNC)
+  let vncEnabled = $state(false);
+  let vncUrl = $state<string | null>(null);
+  let vncError = $state<string | null>(null);
+  let vncConnecting = $state(false);
 
-  let screencastError = $state<string | null>(null);
+  async function startVnc() {
+    vncError = null;
+    vncConnecting = true;
 
-  function pollScreencastFrame() {
-    if (!screencastEnabled) return;
+    try {
+      const res = await fetch(`/api/tunnel/vnc/${data.profileId}`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Failed to start VNC" }));
+        vncError = err.message || err.error || "Failed to start VNC";
+        return;
+      }
 
-    const url = `/api/tunnel/screencast/${data.profileId}?t=${Date.now()}`;
-    fetch(url)
-      .then((res) => {
-        if (!screencastEnabled) return; // stopped while fetching
-        if (res.ok) {
-          return res.blob().then((blob) => {
-            if (!screencastEnabled) return;
-            // Revoke previous object URL to avoid memory leaks
-            if (screencastSrc && screencastSrc.startsWith("blob:")) {
-              URL.revokeObjectURL(screencastSrc);
-            }
-            screencastSrc = URL.createObjectURL(blob);
-          });
-        }
-        // 204 = no frame yet, just keep polling
-      })
-      .catch(() => {
-        // Network error, keep polling
-      })
-      .finally(() => {
-        if (screencastEnabled) {
-          screencastPollTimer = setTimeout(pollScreencastFrame, 1000);
-        }
-      });
+      const { token, profileId } = await res.json();
+      const host = window.location.host;
+      const encrypt = window.location.protocol === "https:" ? 1 : 0;
+      const wsPath = `tunnel/vnc/${profileId}?token=${token}`;
+      vncUrl = `/vnc/vnc.html?autoconnect=true&resize=scale&password=secret&host=${host}&path=${wsPath}&encrypt=${encrypt}`;
+      vncEnabled = true;
+    } catch {
+      vncError = "Failed to connect to VNC";
+    } finally {
+      vncConnecting = false;
+    }
   }
 
-  function stopScreencast() {
-    screencastEnabled = false;
-    if (screencastPollTimer) {
-      clearTimeout(screencastPollTimer);
-      screencastPollTimer = null;
-    }
-    if (screencastSrc && screencastSrc.startsWith("blob:")) {
-      URL.revokeObjectURL(screencastSrc);
-    }
-    screencastSrc = null;
+  function stopVnc() {
+    vncEnabled = false;
+    vncUrl = null;
   }
 
-  function toggleScreencast() {
-    screencastError = null;
-
-    if (screencastEnabled) {
-      stopScreencast();
+  function toggleVnc() {
+    vncError = null;
+    if (vncEnabled) {
+      stopVnc();
     } else {
-      screencastEnabled = true;
-      pollScreencastFrame();
+      startVnc();
     }
   }
 
-  // Clean up screencast on destroy
   onDestroy(() => {
-    if (screencastEnabled) {
-      stopScreencast();
-    }
+    if (vncEnabled) stopVnc();
   });
 
   function formatDate(date: Date | string | null): string {
@@ -734,10 +728,10 @@
   }
 
   async function startScrape() {
-    // Prevent starting when desktop app is required but not connected
+    // Prevent starting when device is required but not connected
     if (isTunnelMode && !desktopConnected) {
       errorMessage =
-        "The desktop app is not connected. Please open the Smart Job Seeker desktop app and connect it before running an import.";
+        "No device is connected. Connect the desktop app or a self-hosted tunnel before running an import.";
       return;
     }
 
@@ -1777,9 +1771,9 @@
             ></span>
             <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
             {#if desktopConnected}
-              Desktop app connected
+              Device connected
             {:else}
-              Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-amber-700">Setup guide</a>
+              No device connected — <a href="/dashboard/jobs/import/devices" class="underline hover:text-amber-700">Setup guide</a>
             {/if}
           </div>
         {/if}
@@ -1908,6 +1902,7 @@
         browserFingerprintDefaults={data.browserFingerprintDefaults}
         uiPreferences={data.uiPreferences as Record<string, unknown>}
         {desktopConnected}
+        {devices}
         verificationEmailAddress={data.verificationEmailAddress}
       />
     {/key}
@@ -1921,7 +1916,7 @@
       onkeydown={(e) => {
         if (e.key === "Escape") {
           showBrowser = false;
-          if (screencastEnabled) toggleScreencast();
+          if (vncEnabled) toggleVnc();
         }
       }}
     >
@@ -1930,7 +1925,7 @@
         class="absolute inset-0 bg-black/60 hidden sm:block"
         onclick={() => {
           showBrowser = false;
-          if (screencastEnabled) toggleScreencast();
+          if (vncEnabled) toggleVnc();
         }}
         role="presentation"
       >
@@ -1973,18 +1968,25 @@
             {/if}
             {#if isTunnelMode}
               <button
-                onclick={toggleScreencast}
+                onclick={toggleVnc}
+                disabled={vncConnecting}
                 class="
-                  px-2 py-1 text-xs rounded transition-colors {screencastEnabled
+                  px-2 py-1 text-xs rounded transition-colors {vncEnabled
                   ? 'bg-[var(--dash-primary)] text-white'
                   : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
                 "
-                title={screencastEnabled
-                  ? "Disable live view (reduces latency)"
-                  : "Enable live view (streams from desktop browser)"}
+                title={vncEnabled
+                  ? "Close interactive view"
+                  : "Open interactive browser view (VNC)"}
               >
                 <FontAwesomeIcon icon={faEye} class="w-3 h-3 mr-1" />
-                {screencastEnabled ? "Live" : "View"}
+                {#if vncConnecting}
+                  Connecting...
+                {:else if vncEnabled}
+                  Live
+                {:else}
+                  View
+                {/if}
               </button>
             {/if}
             {#if isCloudMode && liveUrl}
@@ -2013,7 +2015,7 @@
             <button
               onclick={() => {
                 showBrowser = false;
-                if (screencastEnabled) toggleScreencast();
+                if (vncEnabled) toggleVnc();
               }}
               class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
             >
@@ -2023,20 +2025,20 @@
         </div>
         <!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
         <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video {showBrowserLogs ? 'hidden' : ''}">
-          {#if screencastEnabled && screencastSrc}
-            <img
-              src={screencastSrc}
-              alt="Live browser view"
-              class="absolute inset-0 w-full h-full object-contain bg-black"
-            />
-          {:else if screencastEnabled}
+          {#if vncEnabled && vncUrl}
+            <iframe
+              src={vncUrl}
+              class="absolute inset-0 w-full h-full border-0"
+              title="Interactive browser view (VNC)"
+            ></iframe>
+          {:else if vncConnecting}
             <div
               class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
             >
               <div class="text-center">
                 <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
                 <p class="text-sm text-[var(--dash-text-muted)]">
-                  Starting live view...
+                  Connecting to browser...
                 </p>
               </div>
             </div>
@@ -2055,19 +2057,19 @@
                   icon={faDesktop}
                   class="w-6 h-6 text-[var(--dash-text-muted)] mb-2"
                 />
-                {#if screencastError}
+                {#if vncError}
                   <p class="text-sm text-[var(--dash-error)]">
-                    {screencastError}
+                    {vncError}
                   </p>
                   <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                    Check that the desktop app is connected
+                    Check that the device is connected
                   </p>
                 {:else}
                   <p class="text-sm text-[var(--dash-text-muted)]">
-                    Browser running on your desktop
+                    Browser running on your device
                   </p>
                   <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                    Click "View" to enable live streaming
+                    Click "View" for interactive browser control
                   </p>
                 {/if}
               </div>

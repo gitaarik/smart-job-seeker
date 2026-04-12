@@ -59,6 +59,7 @@
     browserFingerprintDefaults?: { language: string; timezone: string };
     uiPreferences?: Record<string, unknown>;
     desktopConnected?: boolean | null;
+    devices?: Array<{ apiKeyId: number; apiKeyName: string; connected: boolean }>;
     verificationEmailAddress?: string | null;
   }
 
@@ -88,6 +89,7 @@
     browserFingerprintDefaults = { language: "", timezone: "" },
     uiPreferences = {},
     desktopConnected = null,
+    devices = [],
     verificationEmailAddress = null,
   }: Props = $props();
 
@@ -260,6 +262,14 @@
     isEdit && browserProvider !== savedBrowserProvider,
   );
   let isSavingBrowserProvider = $state(false);
+
+  // Tunnel device selection (edit)
+  let tunnelApiKey = $state<number | null>(searchTask?.tunnel_api_key ?? null);
+  let savedTunnelApiKey = $state<number | null>(searchTask?.tunnel_api_key ?? null);
+  let tunnelApiKeyDirty = $derived(
+    isEdit && tunnelApiKey !== savedTunnelApiKey,
+  );
+  let isSavingTunnelApiKey = $state(false);
 
   // Keep minimized (edit)
   let keepMinimized = $state<boolean>(searchTask?.keep_minimized ?? true);
@@ -448,6 +458,19 @@
       console.error("Failed to save browser provider:", err);
     } finally {
       isSavingBrowserProvider = false;
+    }
+  }
+
+  async function saveTunnelApiKey() {
+    isSavingTunnelApiKey = true;
+    try {
+      await patchSearchTask({ tunnel_api_key: tunnelApiKey });
+      savedTunnelApiKey = tunnelApiKey;
+      searchTask.tunnel_api_key = tunnelApiKey;
+    } catch (err) {
+      console.error("Failed to save tunnel device:", err);
+    } finally {
+      isSavingTunnelApiKey = false;
     }
   }
 
@@ -1459,6 +1482,7 @@
           <BrowserProviderToggle
             bind:value={addBrowserProvider}
             {localBrowserAllowed}
+            {devices}
           />
           <input
             type="hidden"
@@ -1468,15 +1492,23 @@
         {:else}
           <BrowserProviderToggle
             bind:value={browserProvider}
+            bind:tunnelApiKey
             {localBrowserAllowed}
+            {devices}
           />
-          {#if browserProviderDirty}
-            {@render         saveCancel(
-          true,
-          isSavingBrowserProvider,
-          saveBrowserProvider,
-          () => (browserProvider = savedBrowserProvider),
-        )}
+          {#if browserProviderDirty || tunnelApiKeyDirty}
+            {@render saveCancel(
+              true,
+              isSavingBrowserProvider || isSavingTunnelApiKey,
+              async () => {
+                if (browserProviderDirty) await saveBrowserProvider();
+                if (tunnelApiKeyDirty) await saveTunnelApiKey();
+              },
+              () => {
+                browserProvider = savedBrowserProvider;
+                tunnelApiKey = savedTunnelApiKey;
+              },
+            )}
           {/if}
         {/if}
 
@@ -1501,9 +1533,9 @@
             ></span>
             <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
             {#if desktopConnected}
-              Desktop app connected
+              Device connected
             {:else}
-              Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-amber-700">Setup guide</a>
+              No device connected — <a href="/dashboard/jobs/import/devices" class="underline hover:text-amber-700">Setup guide</a>
             {/if}
           </div>
         {/if}

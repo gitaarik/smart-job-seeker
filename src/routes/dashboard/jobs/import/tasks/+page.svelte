@@ -256,9 +256,9 @@
           ></span>
           <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
           {#if desktopConnected}
-            Desktop app connected
+            Device connected
           {:else}
-            Desktop app not connected — <a href="/dashboard/jobs/import/desktop" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
+            No device connected — <a href="/dashboard/jobs/import/devices" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
           {/if}
         </div>
       {/if}
@@ -428,8 +428,8 @@
                       : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
                     "
                     title={desktopConnected
-                      ? "Desktop app connected"
-                      : "Desktop app not connected"}
+                      ? "Device connected"
+                      : "No device connected"}
                   >
                     <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
                     {

@@ -28,7 +28,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(searchTaskUpdateSchema, await request.json());
 
-  const data: { note?: string | null; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; keep_minimized?: boolean; schedule_interval_hours?: number | null; next_scheduled_run?: Date | null } = {};
+  const data: { note?: string | null; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; keep_minimized?: boolean; schedule_interval_hours?: number | null; next_scheduled_run?: Date | null; tunnel_api_key?: number | null } = {};
 
   if (body.note !== undefined) data.note = body.note || null;
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
@@ -39,6 +39,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (body.skip_first !== undefined) data.skip_first = body.skip_first;
   if (body.browser_provider !== undefined) data.browser_provider = body.browser_provider;
   if (body.keep_minimized !== undefined) data.keep_minimized = body.keep_minimized;
+  if (body.tunnel_api_key !== undefined) data.tunnel_api_key = body.tunnel_api_key;
   if (body.schedule_interval_hours !== undefined) {
     data.schedule_interval_hours = body.schedule_interval_hours;
     if (body.schedule_interval_hours === null) {

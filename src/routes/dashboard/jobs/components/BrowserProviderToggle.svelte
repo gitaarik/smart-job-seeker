@@ -3,11 +3,19 @@
   import {
     faCloud,
     faCog,
-    faDesktop,
+    faHouseSignal,
   } from "@fortawesome/free-solid-svg-icons";
+
+  interface Device {
+    apiKeyId: number;
+    apiKeyName: string;
+    connected: boolean;
+  }
 
   interface Props {
     value: string | null;
+    tunnelApiKey?: number | null;
+    devices?: Device[];
     localBrowserAllowed?: boolean;
     disabled?: boolean;
     onchange?: (value: string | null) => void;
@@ -15,6 +23,8 @@
 
   let {
     value = $bindable(),
+    tunnelApiKey = $bindable(null),
+    devices = [],
     localBrowserAllowed = false,
     disabled = false,
     onchange,
@@ -24,6 +34,11 @@
     if (disabled) return;
     value = v;
     onchange?.(v);
+  }
+
+  function selectDevice(e: Event) {
+    const select = e.target as HTMLSelectElement;
+    tunnelApiKey = select.value ? parseInt(select.value, 10) : null;
   }
 </script>
 
@@ -38,8 +53,8 @@
         onclick={() => select("local")}
         class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors disabled:opacity-60 {value === 'local' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
       >
-        <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-        Desktop
+        <FontAwesomeIcon icon={faHouseSignal} class="w-3 h-3" />
+        My device
       </button>
       <button
         type="button"
@@ -63,10 +78,29 @@
       {/if}
     </div>
   </div>
+
+  {#if value === "local" && devices.length > 0}
+    <div class="mt-2">
+      <select
+        {disabled}
+        value={tunnelApiKey ?? ""}
+        onchange={selectDevice}
+        class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+      >
+        <option value="">Any connected device</option>
+        {#each devices as device (device.apiKeyId)}
+          <option value={device.apiKeyId}>
+            {device.apiKeyName}{device.connected ? "" : " (offline)"}
+          </option>
+        {/each}
+      </select>
+    </div>
+  {/if}
+
   <p class="text-xs text-[var(--dash-text-muted)] mt-2">
     {#if value === "local"}
-      Uses your own computer's browser via the desktop app (residential IP).
-      Less likely to be detected, but requires the desktop app to be running.
+      Uses your own device's browser via the tunnel (residential IP).
+      Less likely to be detected, but requires a connected device.
     {:else if value === "hosted"}
       Uses a cloud-hosted anti-detect browser (datacenter IP). Fast and
       reliable, but may trigger bot detection on some platforms.
