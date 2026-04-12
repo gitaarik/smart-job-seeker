@@ -206,7 +206,7 @@ function extractFromText(text: string, subject: string | null): ParsedVerificati
 function extractFromHtml(html: string, subject: string | null): ParsedVerification | null {
   // Extract links from href attributes (preserves full URLs)
   const links = extractLinksFromHtml(html);
-  let verificationLink = links.find((url) => isVerificationUrl(url) && !isExcludedUrl(url));
+  let verificationLink = links.find((url) => isValidUrl(url) && isVerificationUrl(url) && !isExcludedUrl(url));
 
   // Strip HTML to get text content for code extraction
   const text = stripHtml(html);
@@ -215,7 +215,7 @@ function extractFromHtml(html: string, subject: string | null): ParsedVerificati
 
   // If no keyword-matched link but verification context, find the CTA link from HTML hrefs
   if (!verificationLink && isVerificationContext(combinedText)) {
-    verificationLink = links.find((url) => !isExcludedUrl(url));
+    verificationLink = links.find((url) => isValidUrl(url) && !isExcludedUrl(url));
   }
 
   if (!code && !verificationLink) return null;
@@ -252,7 +252,7 @@ function extractLink(text: string): string | null {
     const matches = text.matchAll(pattern);
     for (const match of matches) {
       const url = match[0].replace(/[.,;:!?)]+$/, ""); // Trim trailing punctuation
-      if (isVerificationUrl(url) && !isExcludedUrl(url)) {
+      if (isValidUrl(url) && isVerificationUrl(url) && !isExcludedUrl(url)) {
         return url;
       }
     }
@@ -270,7 +270,7 @@ function extractCtaLink(text: string): string | null {
   const angleBracketUrls = [...text.matchAll(/<(https?:\/\/[^>]+)>/gi)];
   for (const match of angleBracketUrls) {
     const url = match[1];
-    if (!isExcludedUrl(url)) {
+    if (isValidUrl(url) && !isExcludedUrl(url)) {
       return url;
     }
   }
@@ -278,7 +278,7 @@ function extractCtaLink(text: string): string | null {
   const bareUrls = [...text.matchAll(/https?:\/\/[^\s"'<>]+/gi)];
   for (const match of bareUrls) {
     const url = match[0].replace(/[.,;:!?)]+$/, "");
-    if (!isExcludedUrl(url)) {
+    if (isValidUrl(url) && !isExcludedUrl(url)) {
       return url;
     }
   }
@@ -319,6 +319,19 @@ function isVerificationUrl(url: string): boolean {
  */
 function isExcludedUrl(url: string): boolean {
   return LINK_EXCLUDE_PATTERNS.some((pattern) => pattern.test(url));
+}
+
+/**
+ * Check if a URL is well-formed (parseable, valid protocol).
+ * Catches malformed URLs like "https://foo][https://bar" before they reach the scraper.
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 /**
