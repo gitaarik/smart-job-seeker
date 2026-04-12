@@ -1481,8 +1481,7 @@
         {/if}
 
         <!-- Desktop connection status (edit only) -->
-        {#if         isEdit && desktopConnected !== null &&
-          (isTunnelMode || desktopConnected)}
+        {#if isEdit && isTunnelMode && desktopConnected !== null}
           <div
             class="
               flex items-center gap-2 text-xs {isTunnelMode &&

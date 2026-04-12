@@ -1100,9 +1100,11 @@
       startPolling();
     }
 
-    // Poll desktop connection status
-    checkDesktopStatus();
-    desktopPollInterval = setInterval(checkDesktopStatus, 15000);
+    // Poll desktop connection status (only relevant in tunnel mode)
+    if (isTunnelMode) {
+      checkDesktopStatus();
+      desktopPollInterval = setInterval(checkDesktopStatus, 15000);
+    }
   });
 
   onDestroy(() => {
@@ -1753,8 +1755,7 @@
           </div>
         {/if}
 
-        {#if           desktopConnected !== null &&
-            (isTunnelMode || desktopConnected)}
+        {#if isTunnelMode && desktopConnected !== null}
           <div
             class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}"
           >
