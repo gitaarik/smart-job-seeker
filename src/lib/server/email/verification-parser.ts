@@ -328,7 +328,11 @@ function isExcludedUrl(url: string): boolean {
 function isValidUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    // Reject URLs with embedded URL boundaries — e.g. "https://foo][https://bar"
+    // which are two concatenated URLs from broken HTML parsing
+    if (/\]\[|https?:\/\/.+https?:\/\//.test(url)) return false;
+    return true;
   } catch {
     return false;
   }
