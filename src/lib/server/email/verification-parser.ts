@@ -42,6 +42,10 @@ const LINK_EXCLUDE_PATTERNS = [
   /tracking/i,
   /pixel/i,
   /\.(?:png|jpg|jpeg|gif|svg|ico|css|js)(?:\?|$)/i,
+  /^https?:\/\/static\./i,       // Static asset subdomains (static.licdn.com, etc.)
+  /^https?:\/\/cdn\./i,          // CDN subdomains (cdn.example.com)
+  /^https?:\/\/assets\./i,       // Asset subdomains
+  /^https?:\/\/media\./i,        // Media subdomains
 ];
 
 /**
