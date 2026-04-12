@@ -1262,7 +1262,7 @@
                         {#if item.was_created === true}
                           <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success)] text-white shrink-0">new</span>
                         {:else if item.was_created === false && item.status === "completed"}
-                          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)] shrink-0">updated</span>
+                          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)] shrink-0">{run.settings?.skip_existing ? 'skipped' : 'updated'}</span>
                         {/if}
                         <!-- Status badge + chevron: inline on sm+, hidden here on mobile -->
                         <span
