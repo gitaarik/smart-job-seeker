@@ -37,6 +37,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   let platformCredentials: Array<{
     id: number;
     username: string | null;
+    security_answer: string | null;
   }> = [];
   if (searchTask.platform) {
     platformCredentials = await db.platform_profiles.findMany({
@@ -44,7 +45,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
         profile: layoutData.selectedProfile.id,
         platform: searchTask.platform,
       },
-      select: { id: true, username: true },
+      select: { id: true, username: true, security_answer: true },
       orderBy: { date_created: "asc" },
     });
   }

@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   const credentials = await db.platform_profiles.findMany({
     where: { profile: profile.id, platform: platformId },
-    select: { id: true, username: true },
+    select: { id: true, username: true, security_answer: true },
   });
 
   return json(credentials);
@@ -46,7 +46,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
   const platformId = parseIntParam(params.id, "platform");
 
-  const { profileId, username, password } = parseBody(
+  const { profileId, username, password, security_answer } = parseBody(
     platformCredentialsSchema,
     await request.json(),
   );
@@ -90,6 +90,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
       data: {
         username: username || null,
         password: password || null,
+        security_answer: security_answer || null,
         login_error: null, // Clear any previous error
         date_updated: new Date(),
       },
@@ -102,6 +103,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
         platform: platformId,
         username: username || null,
         password: password || null,
+        security_answer: security_answer || null,
         status: "active",
         date_created: new Date(),
       },

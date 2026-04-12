@@ -2,6 +2,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
+    faChevronDown,
+    faChevronRight,
     faEye,
     faEyeSlash,
     faKey,
@@ -11,7 +13,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
 
   interface Props {
-    credentials: { id: number; username: string | null }[];
+    credentials: { id: number; username: string | null; security_answer?: string | null }[];
     selectedId: string;
     platformId: number;
     profileId: number;
@@ -43,8 +45,15 @@
   let showAddForm = $state(false);
   let newUsername = $state("");
   let newPassword = $state("");
+  let newSecurityAnswer = $state("");
   let showPassword = $state(false);
+  let showAdvanced = $state(false);
   let isDeletingId = $state<number | null>(null);
+
+  // Security answer editing for existing credentials
+  let editingSecurityAnswerId = $state<number | null>(null);
+  let editSecurityAnswer = $state("");
+  let isSavingSecurityAnswer = $state(false);
 
   function select(id: string) {
     if (disabled) return;
@@ -66,6 +75,7 @@
             profileId,
             username: newUsername.trim(),
             password: newPassword,
+            security_answer: newSecurityAnswer || undefined,
           }),
         },
       );
@@ -98,6 +108,8 @@
       showAddForm = false;
       newUsername = "";
       newPassword = "";
+      newSecurityAnswer = "";
+      showAdvanced = false;
     }
   }
 
@@ -128,6 +140,45 @@
       console.error("Failed to delete credential:", err);
     } finally {
       isDeletingId = null;
+    }
+  }
+
+  function startEditSecurityAnswer(credId: number) {
+    const cred = credentials.find((c) => c.id === credId);
+    editingSecurityAnswerId = credId;
+    editSecurityAnswer = cred?.security_answer || "";
+  }
+
+  async function saveSecurityAnswer() {
+    if (editingSecurityAnswerId === null) return;
+    isSavingSecurityAnswer = true;
+    try {
+      const cred = credentials.find((c) => c.id === editingSecurityAnswerId);
+      const response = await fetch(
+        `/api/platforms/${platformId}/credentials`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            profileId,
+            username: cred?.username || "",
+            security_answer: editSecurityAnswer || undefined,
+          }),
+        },
+      );
+      if (response.ok) {
+        // Update local state
+        const idx = credentials.findIndex((c) => c.id === editingSecurityAnswerId);
+        if (idx >= 0) {
+          credentials[idx] = { ...credentials[idx], security_answer: editSecurityAnswer || null };
+        }
+        editingSecurityAnswerId = null;
+        editSecurityAnswer = "";
+      }
+    } catch (err) {
+      console.error("Failed to save security answer:", err);
+    } finally {
+      isSavingSecurityAnswer = false;
     }
   }
 </script>
@@ -240,6 +291,86 @@
     {/each}
   </div>
 
+  <!-- Advanced: security answer for selected credential -->
+  {#if selectedId !== "none" && credentials.length > 0 && !disabled}
+    {@const selectedCred = credentials.find((c) => String(c.id) === selectedId)}
+    {#if selectedCred}
+      <div class="mt-2">
+        <button
+          type="button"
+          onclick={() => {
+            if (editingSecurityAnswerId === selectedCred.id) {
+              editingSecurityAnswerId = null;
+            } else {
+              startEditSecurityAnswer(selectedCred.id);
+            }
+          }}
+          class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+        >
+          {#if editingSecurityAnswerId === selectedCred.id}
+            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
+          {:else}
+            <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
+          {/if}
+          Advanced
+          {#if selectedCred.security_answer}
+            <span class="text-[var(--dash-success)]">*</span>
+          {/if}
+        </button>
+
+        {#if editingSecurityAnswerId === selectedCred.id}
+          <div class="mt-2 space-y-2">
+            <div>
+              <label
+                for="edit-security-answer"
+                class="block text-xs text-[var(--dash-text-secondary)] mb-1"
+              >
+                Security Question Answer
+              </label>
+              <input
+                type="text"
+                id="edit-security-answer"
+                bind:value={editSecurityAnswer}
+                placeholder="e.g., your mother's maiden name"
+                class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+              />
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                Auto-filled when a site asks a security question after login.
+              </p>
+            </div>
+            {#if editSecurityAnswer !== (selectedCred.security_answer || "")}
+              <div class="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onclick={() => {
+                    editingSecurityAnswerId = null;
+                    editSecurityAnswer = "";
+                  }}
+                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onclick={saveSecurityAnswer}
+                  disabled={isSavingSecurityAnswer}
+                  class="px-2 py-1 text-xs bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingSecurityAnswer}
+                    <Spinner size="w-3 h-3" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
+  {/if}
+
   {#if credentials.length === 0 && !showAddForm}
     <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
       No credentials configured{platformName ? ` for ${platformName}` : ""}. Add
@@ -291,6 +422,39 @@
           </button>
         </div>
       </div>
+      <!-- Advanced: security answer -->
+      <button
+        type="button"
+        onclick={() => (showAdvanced = !showAdvanced)}
+        class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+      >
+        {#if showAdvanced}
+          <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
+        {:else}
+          <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
+        {/if}
+        Advanced
+      </button>
+      {#if showAdvanced}
+        <div>
+          <label
+            for="new-cred-security-answer"
+            class="block text-xs text-[var(--dash-text-secondary)] mb-1"
+          >
+            Security Question Answer <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="new-cred-security-answer"
+            bind:value={newSecurityAnswer}
+            placeholder="e.g., your mother's maiden name"
+            class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+          <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+            Auto-filled when a site asks a security question after login.
+          </p>
+        </div>
+      {/if}
       <div class="flex justify-end gap-2">
         <button
           type="button"
@@ -298,6 +462,8 @@
             showAddForm = false;
             newUsername = "";
             newPassword = "";
+            newSecurityAnswer = "";
+            showAdvanced = false;
           }}
           class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
         >

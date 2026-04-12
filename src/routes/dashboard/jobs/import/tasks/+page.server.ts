@@ -106,6 +106,7 @@ async function getOrCreateCredentials(
   credentialId: string | null,
   newUsername: string | null,
   newPassword: string | null,
+  newSecurityAnswer: string | null = null,
 ): Promise<number | null> {
   // If using existing credentials
   if (credentialId && credentialId !== "none" && credentialId !== "new") {
@@ -129,6 +130,7 @@ async function getOrCreateCredentials(
         platform: platformId,
         username: newUsername,
         password: newPassword || null,
+        security_answer: newSecurityAnswer || null,
         status: "active",
         date_created: new Date(),
       },
@@ -168,6 +170,7 @@ export const actions: Actions = {
     const credentialId = formData.get("credential_id") as string;
     const newCredUsername = formData.get("new_credential_username") as string;
     const newCredPassword = formData.get("new_credential_password") as string;
+    const newCredSecurityAnswer = formData.get("new_credential_security_answer") as string;
 
     if (!search_url || search_url.trim().length === 0) {
       return fail(400, { error: "Search URL is required" });
@@ -191,6 +194,7 @@ export const actions: Actions = {
         credentialId,
         newCredUsername,
         newCredPassword,
+        newCredSecurityAnswer,
       );
     }
 
@@ -283,6 +287,7 @@ export const actions: Actions = {
     const credentialId = formData.get("credential_id") as string;
     const newCredUsername = formData.get("new_credential_username") as string;
     const newCredPassword = formData.get("new_credential_password") as string;
+    const newCredSecurityAnswer = formData.get("new_credential_security_answer") as string;
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid search ID" });
@@ -314,6 +319,7 @@ export const actions: Actions = {
         credentialId,
         newCredUsername,
         newCredPassword,
+        newCredSecurityAnswer,
       );
     }
 

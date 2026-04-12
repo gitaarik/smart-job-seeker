@@ -108,7 +108,9 @@
   let showNewCredentials = $state(false);
   let newCredUsername = $state("");
   let newCredPassword = $state("");
+  let newCredSecurityAnswer = $state("");
   let showPassword = $state(false);
+  let showAdvancedAuth = $state(false);
 
   function handleCredentialSelection(value: string) {
     selectedCredentialId = value;
@@ -1058,6 +1060,40 @@
                       </button>
                     </div>
                   </div>
+                  <!-- Advanced: security answer -->
+                  <button
+                    type="button"
+                    onclick={() => (showAdvancedAuth = !showAdvancedAuth)}
+                    class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+                  >
+                    {#if showAdvancedAuth}
+                      <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
+                    {:else}
+                      <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
+                    {/if}
+                    Advanced
+                  </button>
+                  {#if showAdvancedAuth}
+                    <div>
+                      <label
+                        for="add-cred-security-answer"
+                        class="block text-xs text-[var(--dash-text-secondary)] mb-1"
+                      >
+                        Security Question Answer <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="add-cred-security-answer"
+                        name="new_credential_security_answer"
+                        bind:value={newCredSecurityAnswer}
+                        placeholder="e.g., your mother's maiden name"
+                        class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                      />
+                      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                        Auto-filled when a site asks a security question after login.
+                      </p>
+                    </div>
+                  {/if}
                 </div>
               {/if}
             </div>

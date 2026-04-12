@@ -126,6 +126,7 @@ export const platformCredentialsSchema = z.object({
   profileId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]),
   username: optionalTrimmedString(),
   password: optionalTrimmedString(1000),
+  security_answer: optionalTrimmedString(500),
 });
 
 // Browser info
