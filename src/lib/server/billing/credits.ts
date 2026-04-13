@@ -15,7 +15,7 @@
 
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getActiveSubscription } from "./subscription";
+import { getActiveSubscription, type ActiveSubscription } from "./subscription";
 import { PLAN_LIMITS } from "./plans";
 
 // ---------------------------------------------------------------------------
@@ -34,12 +34,10 @@ const FREE_PERIOD_DAYS = 30;
  * - Paid: uses Stripe's current_period_start → current_period_end
  * - Free: 30-day windows from signup date
  */
-async function getUserPeriod(userId: string): Promise<{
+async function getUserPeriod(userId: string, sub: ActiveSubscription): Promise<{
   periodKey: string;
   periodEnd: Date;
 }> {
-  const sub = await getActiveSubscription(userId);
-
   // Paid user with a Stripe billing cycle
   if (sub.plan !== "explorer" && sub.currentPeriodStart) {
     return {
@@ -108,13 +106,18 @@ export interface CreditBalance {
   periodEnd: Date;
 }
 
-/** Ensure a credit_balances row exists for the current period */
-async function ensureBalance(userId: string): Promise<{ periodKey: string; periodEnd: Date; plan: string }> {
-  const { periodKey, periodEnd } = await getUserPeriod(userId);
+/** Ensure a credit_balances row exists for the current period and return it */
+async function ensureBalance(userId: string): Promise<{
+  periodKey: string;
+  periodEnd: Date;
+  plan: string;
+  balance: { credits_used: number; credits_allowance: number; extra_credits: number };
+}> {
   const sub = await getActiveSubscription(userId);
+  const { periodKey, periodEnd } = await getUserPeriod(userId, sub);
   const allowance = PLAN_LIMITS[sub.plan].creditsPerMonth;
 
-  await db.credit_balances.upsert({
+  const balance = await db.credit_balances.upsert({
     where: { user_id_period: { user_id: userId, period: periodKey } },
     create: {
       user_id: userId,
@@ -129,20 +132,16 @@ async function ensureBalance(userId: string): Promise<{ periodKey: string; perio
     },
   });
 
-  return { periodKey, periodEnd, plan: sub.plan };
+  return { periodKey, periodEnd, plan: sub.plan, balance };
 }
 
 /** Get the user's current credit balance */
 export async function getBalance(userId: string): Promise<CreditBalance> {
-  const { periodKey, periodEnd, plan } = await ensureBalance(userId);
+  const { periodKey, periodEnd, plan, balance } = await ensureBalance(userId);
 
-  const balance = await db.credit_balances.findUnique({
-    where: { user_id_period: { user_id: userId, period: periodKey } },
-  });
-
-  const used = balance?.credits_used ?? 0;
-  const allowance = balance?.credits_allowance ?? 0;
-  const extra = balance?.extra_credits ?? 0;
+  const used = balance.credits_used;
+  const allowance = balance.credits_allowance;
+  const extra = balance.extra_credits;
 
   return {
     plan,

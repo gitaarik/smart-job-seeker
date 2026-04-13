@@ -2,7 +2,6 @@ import type { LayoutServerLoad } from "./$types";
 import { requireAuth } from "$lib/server/auth/guards";
 import { redirect } from "@sveltejs/kit";
 import { getProfilesByUserId } from "$lib/server/profile/user-profiles";
-import { dbDirect as db } from "$lib/server/db";
 import { getBalance } from "$lib/server/billing/credits";
 
 export const load: LayoutServerLoad = async (event) => {
@@ -10,7 +9,8 @@ export const load: LayoutServerLoad = async (event) => {
   const user = requireAuth(event);
   const adminUser = event.locals.adminUser ?? null;
 
-  // Get all profiles owned by this user
+  // Start both queries in parallel
+  const balancePromise = getBalance(user.id);
   const profiles = await getProfilesByUserId(user.id);
 
   // If user has no profiles, redirect to create page
@@ -66,7 +66,7 @@ export const load: LayoutServerLoad = async (event) => {
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
-  const creditBalance = await getBalance(user.id);
+  const creditBalance = await balancePromise;
 
   return {
     user,
