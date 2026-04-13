@@ -11,12 +11,15 @@
     faDesktop,
     faEye,
     faEyeSlash,
+    faEllipsisVertical,
     faKey,
+    faPencil,
     faPlus,
     faServer,
     faShareAlt,
     faTimes,
     faTrash,
+    faUndo,
     faUserMinus,
   } from "@fortawesome/free-solid-svg-icons";
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
@@ -36,6 +39,31 @@
   let visibleKeyId = $state<number | null>(null);
   let errorMessage = $state<string | null>(null);
   let installTab = $state<"desktop" | "docker">("desktop");
+
+  // Overflow menu and rename state
+  let menuOpenKeyId = $state<number | null>(null);
+  let editingKeyId = $state<number | null>(null);
+  let editKeyName = $state("");
+
+  async function renameApiKey(keyId: number) {
+    const name = editKeyName.trim();
+    if (!name) return;
+
+    try {
+      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rename", name }),
+      });
+      if (res.ok) {
+        editingKeyId = null;
+        await invalidateAll();
+        apiKeys = data.apiKeys;
+      }
+    } catch {
+      errorMessage = "Failed to rename API key";
+    }
+  }
 
   // Tunnel status polling
   interface DeviceStatus {
@@ -125,6 +153,36 @@
       }
     } catch {
       errorMessage = "Failed to revoke API key";
+    }
+  }
+
+  async function activateApiKey(keyId: number) {
+    try {
+      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "activate" }),
+      });
+      if (res.ok) {
+        await invalidateAll();
+        apiKeys = data.apiKeys;
+      }
+    } catch {
+      errorMessage = "Failed to activate API key";
+    }
+  }
+
+  async function deleteApiKey(keyId: number) {
+    if (!confirm("Permanently delete this API key? This cannot be undone.")) return;
+
+    try {
+      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}&permanent=true`, { method: "DELETE" });
+      if (res.ok) {
+        await invalidateAll();
+        apiKeys = data.apiKeys;
+      }
+    } catch {
+      errorMessage = "Failed to delete API key";
     }
   }
 
@@ -566,18 +624,44 @@ volumes:
         {#each apiKeys as key (key.id)}
           {@const deviceStatus = getDeviceStatus(key.id)}
           <div class="p-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3 flex-1 min-w-0">
-                <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : deviceStatus ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-text-muted)]'}`}></div>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-2">
+            <!-- Name row -->
+            <div class="flex items-center gap-3">
+              <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : deviceStatus ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-text-muted)]'}`}></div>
+              <div class="flex-1 min-w-0">
+                {#if editingKeyId === key.id}
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <input
+                      type="text"
+                      bind:value={editKeyName}
+                      class="flex-1 min-w-0 px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
+                      onkeydown={(e) => { if (e.key === "Enter") renameApiKey(key.id); if (e.key === "Escape") editingKeyId = null; }}
+                    />
+                    <div class="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onclick={() => renameApiKey(key.id)}
+                        class="px-2 py-1 bg-[var(--dash-primary)] text-white rounded text-sm hover:bg-[var(--dash-primary-hover)] transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => { editingKeyId = null; }}
+                        class="px-2 py-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                {:else}
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
                     <p class="font-medium text-[var(--dash-text)] truncate">{key.name}</p>
                     {#if key.revoked}
-                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] w-fit">
                         Revoked
                       </span>
                     {:else if deviceStatus}
-                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]">
+                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] w-fit">
                         Connected
                       </span>
                     {/if}
@@ -592,8 +676,10 @@ volumes:
                       {/if}
                     {/if}
                   </p>
-                </div>
+                {/if}
               </div>
+
+              <!-- Actions: inline on sm+, minimal on mobile -->
               <div class="flex items-center gap-1">
                 {#if key.key_plain && !key.revoked}
                   <button
@@ -613,26 +699,74 @@ volumes:
                     <FontAwesomeIcon icon={copiedKeyId === key.id ? faCheck : faCopy} class="w-4 h-4 {copiedKeyId === key.id ? 'text-[var(--dash-success)]' : ''}" />
                   </button>
                 {/if}
-                {#if !key.revoked}
+
+                <!-- Overflow menu -->
+                <div class="relative">
                   <button
                     type="button"
-                    onclick={() => openShareModal(key.id)}
-                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                    title="Share device"
+                    onclick={() => { menuOpenKeyId = menuOpenKeyId === key.id ? null : key.id; }}
+                    class="p-2 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+                    title="More actions"
                   >
-                    <FontAwesomeIcon icon={faShareAlt} class="w-4 h-4" />
+                    <FontAwesomeIcon icon={faEllipsisVertical} class="w-4 h-4" />
                   </button>
-                  <button
-                    type="button"
-                    onclick={() => revokeApiKey(key.id)}
-                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                    title="Revoke key"
-                  >
-                    <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                  </button>
-                {/if}
+                  {#if menuOpenKeyId === key.id}
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <div
+                      class="fixed inset-0 z-10"
+                      onclick={() => { menuOpenKeyId = null; }}
+                      onkeydown={(e) => e.key === "Escape" && (menuOpenKeyId = null)}
+                    ></div>
+                    <div class="absolute right-0 top-full mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[170px]">
+                      <button
+                        type="button"
+                        onclick={() => { editingKeyId = key.id; editKeyName = key.name; menuOpenKeyId = null; }}
+                        class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+                      >
+                        <FontAwesomeIcon icon={faPencil} class="w-3.5 h-3.5" />
+                        Rename
+                      </button>
+                      {#if key.revoked}
+                        <button
+                          type="button"
+                          onclick={() => { activateApiKey(key.id); menuOpenKeyId = null; }}
+                          class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-success)]"
+                        >
+                          <FontAwesomeIcon icon={faUndo} class="w-3.5 h-3.5" />
+                          Re-activate
+                        </button>
+                        <button
+                          type="button"
+                          onclick={() => { menuOpenKeyId = null; deleteApiKey(key.id); }}
+                          class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-error)]"
+                        >
+                          <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
+                          Delete permanently
+                        </button>
+                      {:else}
+                        <button
+                          type="button"
+                          onclick={() => { menuOpenKeyId = null; openShareModal(key.id); }}
+                          class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+                        >
+                          <FontAwesomeIcon icon={faShareAlt} class="w-3.5 h-3.5" />
+                          Share
+                        </button>
+                        <button
+                          type="button"
+                          onclick={() => { menuOpenKeyId = null; revokeApiKey(key.id); }}
+                          class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-error)]"
+                        >
+                          <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
+                          Revoke
+                        </button>
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
               </div>
             </div>
+
             {#if visibleKeyId === key.id && key.key_plain}
               <div class="mt-2 ml-5">
                 <code class="text-xs bg-[var(--dash-bg)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono select-all text-[var(--dash-text-secondary)]">

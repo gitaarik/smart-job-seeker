@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faChevronDown,
+    faAddressBook,
     faCog,
     faSignOutAlt,
   } from "@fortawesome/free-solid-svg-icons";
@@ -14,6 +16,12 @@
 
   let { user }: Props = $props();
   let isOpen = $state(false);
+
+  // Close menu on navigation
+  $effect(() => {
+    $page.url;
+    isOpen = false;
+  });
 
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -63,6 +71,14 @@
 
       <div class="py-2">
         <ThemeSwitcher variant="inline" />
+
+        <a
+          href="/dashboard/contacts"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faAddressBook} class="w-4 h-4" />
+          <span>Contacts</span>
+        </a>
 
         <a
           href="/dashboard/settings"

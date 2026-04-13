@@ -219,6 +219,61 @@ export async function revokeApiKey(
 }
 
 /**
+ * Re-activate a revoked API key
+ */
+export async function activateApiKey(
+  keyId: number,
+  profileId: number,
+): Promise<boolean> {
+  const result = await db.api_keys.updateMany({
+    where: {
+      id: keyId,
+      profile: profileId,
+      revoked: true,
+    },
+    data: { revoked: false },
+  });
+
+  return result.count > 0;
+}
+
+/**
+ * Rename an API key
+ */
+export async function renameApiKey(
+  keyId: number,
+  profileId: number,
+  name: string,
+): Promise<boolean> {
+  const result = await db.api_keys.updateMany({
+    where: {
+      id: keyId,
+      profile: profileId,
+    },
+    data: { name },
+  });
+
+  return result.count > 0;
+}
+
+/**
+ * Permanently delete an API key
+ */
+export async function deleteApiKey(
+  keyId: number,
+  profileId: number,
+): Promise<boolean> {
+  const result = await db.api_keys.deleteMany({
+    where: {
+      id: keyId,
+      profile: profileId,
+    },
+  });
+
+  return result.count > 0;
+}
+
+/**
  * List API keys for a profile (without exposing the actual keys)
  *
  * @param profileId - The profile ID

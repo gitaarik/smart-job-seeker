@@ -4,7 +4,6 @@
   import { feedbackState } from "./feedback-state.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faAddressBook,
     faBars,
     faBookmark,
     faBriefcase,
@@ -154,11 +153,6 @@
           icon: faLink,
         },
       ],
-    },
-    {
-      label: "Contacts",
-      href: "/dashboard/contacts",
-      icon: faAddressBook,
     },
     {
       label: "Data & Settings",

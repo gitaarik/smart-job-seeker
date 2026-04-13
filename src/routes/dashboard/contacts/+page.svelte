@@ -128,10 +128,10 @@
     <button
       type="button"
       onclick={() => { showAddForm = !showAddForm; errorMessage = null; successMessage = null; }}
-      class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors"
+      class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 text-sm font-medium rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors"
     >
-      <FontAwesomeIcon icon={showAddForm ? faTimes : faUserPlus} class="w-4 h-4" />
-      {showAddForm ? "Cancel" : "Add Contact"}
+      <FontAwesomeIcon icon={showAddForm ? faTimes : faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+      <span class="hidden sm:inline">{showAddForm ? "Cancel" : "Add Contact"}</span>
     </button>
   </div>
 
@@ -150,18 +150,16 @@
   <!-- Add Contact Form -->
   {#if showAddForm}
     <Card padding="md">
-      <form onsubmit={(e) => { e.preventDefault(); sendRequest(); }} class="flex gap-3">
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <FontAwesomeIcon icon={faEnvelope} class="w-4 h-4 text-[var(--dash-text-muted)]" />
-            <input
-              type="email"
-              bind:value={inviteEmail}
-              placeholder="Enter their email address"
-              class="flex-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg px-3 py-2 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:outline-none focus:border-[var(--dash-primary)]"
-              required
-            />
-          </div>
+      <form onsubmit={(e) => { e.preventDefault(); sendRequest(); }} class="flex flex-col sm:flex-row gap-3">
+        <div class="flex-1 flex items-center gap-2">
+          <FontAwesomeIcon icon={faEnvelope} class="w-4 h-4 text-[var(--dash-text-muted)] shrink-0" />
+          <input
+            type="email"
+            bind:value={inviteEmail}
+            placeholder="Enter their email address"
+            class="flex-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg px-3 py-2 text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:outline-none focus:border-[var(--dash-primary)]"
+            required
+          />
         </div>
         <button
           type="submit"
