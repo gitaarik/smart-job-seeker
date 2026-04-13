@@ -30,9 +30,11 @@
     faMapMarkerAlt,
     faMoneyBillWave,
     faPencil,
+    faCamera,
     faPlay,
     faPlus,
     faStop,
+    faSync,
     faTerminal,
     faTimes,
     faTrash,
@@ -353,6 +355,10 @@
           : "/vnc/vnc.html?autoconnect=true&resize=scale")),
   );
 
+  // Browser view mode for tunnel: "screenshot" (polling) or "vnc" (interactive)
+  type BrowserViewMode = "screenshot" | "vnc";
+  let browserViewMode = $state<BrowserViewMode>("screenshot");
+
   // VNC state (for tunnel mode — interactive browser control via noVNC)
   let vncEnabled = $state(false);
   let vncUrl = $state<string | null>(null);
@@ -389,17 +395,63 @@
     vncUrl = null;
   }
 
-  function toggleVnc() {
-    vncError = null;
-    if (vncEnabled) {
-      stopVnc();
-    } else {
-      startVnc();
+  function setViewMode(mode: BrowserViewMode) {
+    if (mode === browserViewMode) return;
+    // Stop the other mode
+    if (mode === "screenshot" && vncEnabled) stopVnc();
+    if (mode === "vnc") stopScreenshotPolling();
+    browserViewMode = mode;
+    if (mode === "vnc") startVnc();
+    if (mode === "screenshot" && showBrowser) startScreenshotPolling();
+  }
+
+  // Screenshot polling state
+  let screenshotSrc = $state<string | null>(null);
+  let screenshotPollingInterval: ReturnType<typeof setInterval> | null = null;
+  let screenshotLoading = $state(false);
+
+  async function fetchScreenshot() {
+    try {
+      const res = await fetch(`/api/tunnel/screencast/${data.profileId}`);
+      if (res.ok && res.status !== 204) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        if (screenshotSrc) URL.revokeObjectURL(screenshotSrc);
+        screenshotSrc = url;
+        screenshotLoading = false;
+      }
+    } catch {
+      // Silently ignore — will retry on next poll
     }
   }
 
+  function startScreenshotPolling() {
+    if (screenshotPollingInterval) return;
+    screenshotLoading = !screenshotSrc;
+    fetchScreenshot();
+    screenshotPollingInterval = setInterval(fetchScreenshot, 2000);
+  }
+
+  function stopScreenshotPolling() {
+    if (screenshotPollingInterval) {
+      clearInterval(screenshotPollingInterval);
+      screenshotPollingInterval = null;
+    }
+  }
+
+  // Start/stop screenshot polling when browser view opens/closes
+  $effect(() => {
+    if (showBrowser && isTunnelMode && browserViewMode === "screenshot") {
+      startScreenshotPolling();
+    } else {
+      stopScreenshotPolling();
+    }
+  });
+
   onDestroy(() => {
     if (vncEnabled) stopVnc();
+    stopScreenshotPolling();
+    if (screenshotSrc) URL.revokeObjectURL(screenshotSrc);
   });
 
   function formatDate(date: Date | string | null): string {
@@ -884,6 +936,48 @@
       console.error(err);
     } finally {
       isStopping = false;
+    }
+  }
+
+  let stoppingAt = $state<number | null>(null);
+  let showForceStop = $state(false);
+  let forceStopTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Show force stop button after 10 seconds in "stopping" state
+  $effect(() => {
+    if (searchTask.status === "stopping") {
+      if (!stoppingAt) stoppingAt = Date.now();
+      forceStopTimeout = setTimeout(() => { showForceStop = true; }, 10_000);
+    } else {
+      stoppingAt = null;
+      showForceStop = false;
+      if (forceStopTimeout) { clearTimeout(forceStopTimeout); forceStopTimeout = null; }
+    }
+    return () => { if (forceStopTimeout) clearTimeout(forceStopTimeout); };
+  });
+
+  async function forceStop() {
+    errorMessage = null;
+    try {
+      const response = await fetch(
+        `/api/import-tasks/${searchTask.id}/run?force=true`,
+        { method: "DELETE" },
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        errorMessage = result.message || "Failed to force stop";
+        return;
+      }
+      searchTask.status = "idle";
+      searchTask.status_message = "Force stopped by user";
+      stopPolling();
+      showBrowser = false;
+      liveUrl = null;
+      await loadRuns();
+      await invalidateAll();
+    } catch (err) {
+      errorMessage = "Failed to force stop";
+      console.error(err);
     }
   }
 
@@ -1640,6 +1734,14 @@
               <p class="text-sm text-[var(--dash-text-secondary)]">
                 Waiting for the scraper to finish current action
               </p>
+              {#if showForceStop}
+                <button
+                  onclick={forceStop}
+                  class="mt-1 text-sm text-[var(--dash-error)] hover:underline"
+                >
+                  Force stop
+                </button>
+              {/if}
             </div>
           {:else if searchTask.status === "success"}
             <div
@@ -1946,7 +2048,7 @@
               icon={isCloudMode ? faCloud : faDesktop}
               class="w-4 h-4 text-[var(--dash-text-secondary)]"
             />
-            <h2 class="font-medium text-[var(--dash-text)] text-sm sm:text-base">Browser View</h2>
+            <h2 class="font-medium text-[var(--dash-text)] text-sm sm:text-base hidden sm:block">Browser View</h2>
             {#if isCloudMode}
               <span
                 class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
@@ -1971,27 +2073,34 @@
               </span>
             {/if}
             {#if isTunnelMode}
-              <button
-                onclick={toggleVnc}
-                disabled={vncConnecting}
-                class="
-                  px-2 py-1 text-xs rounded transition-colors {vncEnabled
-                  ? 'bg-[var(--dash-primary)] text-white'
-                  : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
-                "
-                title={vncEnabled
-                  ? "Close interactive view"
-                  : "Open interactive browser view (VNC)"}
-              >
-                <FontAwesomeIcon icon={faEye} class="w-3 h-3 mr-1" />
-                {#if vncConnecting}
-                  Connecting...
-                {:else if vncEnabled}
-                  Live
-                {:else}
-                  View
-                {/if}
-              </button>
+              <div class="flex rounded overflow-hidden border border-[var(--dash-border)]">
+                <button
+                  onclick={() => setViewMode("screenshot")}
+                  class="px-2 py-1 text-xs flex items-center gap-1 transition-colors {browserViewMode === 'screenshot' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+                  title="Screenshot mode (auto-refreshing)"
+                >
+                  <FontAwesomeIcon icon={faCamera} class="w-3 h-3" />
+                  <span class="hidden sm:inline">Screenshot</span>
+                </button>
+                <button
+                  onclick={() => setViewMode("vnc")}
+                  disabled={vncConnecting}
+                  class="px-2 py-1 text-xs flex items-center gap-1 border-l border-[var(--dash-border)] transition-colors {browserViewMode === 'vnc' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+                  title="Interactive VNC mode"
+                >
+                  <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                  <span class="hidden sm:inline">{vncConnecting ? "Connecting..." : "Interactive"}</span>
+                </button>
+              </div>
+              {#if browserViewMode === "screenshot"}
+                <button
+                  onclick={fetchScreenshot}
+                  class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                  title="Refresh screenshot"
+                >
+                  <FontAwesomeIcon icon={faSync} class="w-3.5 h-3.5" />
+                </button>
+              {/if}
             {/if}
             {#if isCloudMode && liveUrl}
               <a
@@ -2019,7 +2128,8 @@
             <button
               onclick={() => {
                 showBrowser = false;
-                if (vncEnabled) toggleVnc();
+                if (vncEnabled) stopVnc();
+                stopScreenshotPolling();
               }}
               class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
             >
@@ -2029,7 +2139,30 @@
         </div>
         <!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
         <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video {showBrowserLogs ? 'hidden' : ''}">
-          {#if vncEnabled && vncUrl}
+          {#if browserViewMode === "screenshot"}
+            {#if screenshotSrc}
+              <img
+                src={screenshotSrc}
+                alt="Browser screenshot"
+                class="absolute inset-0 w-full h-full object-contain bg-black"
+              />
+            {:else if screenshotLoading}
+              <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+                <div class="text-center">
+                  <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
+                  <p class="text-sm text-[var(--dash-text-muted)]">Loading screenshot...</p>
+                </div>
+              </div>
+            {:else}
+              <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+                <div class="text-center">
+                  <FontAwesomeIcon icon={faCamera} class="w-6 h-6 text-[var(--dash-text-muted)] mb-2" />
+                  <p class="text-sm text-[var(--dash-text-muted)]">No screenshot available</p>
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">Make sure a device is connected</p>
+                </div>
+              </div>
+            {/if}
+          {:else if vncEnabled && vncUrl}
             <iframe
               src={vncUrl}
               class="absolute inset-0 w-full h-full border-0"
@@ -2073,7 +2206,7 @@
                     Browser running on your device
                   </p>
                   <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                    Click "View" for interactive browser control
+                    Switch to "Interactive" for VNC browser control
                   </p>
                 {/if}
               </div>

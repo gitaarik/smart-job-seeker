@@ -158,9 +158,10 @@ export const POST: RequestHandler = async ({ params, locals }) => {
  * Cancel a running or queued scrape.
  * GoLogin session cleanup is handled by the worker's failed event handler.
  */
-export const DELETE: RequestHandler = async ({ params, locals }) => {
+export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   const user = requireAuth(locals);
   const searchTaskId = parseIntParam(params.id, "job search");
+  const force = url.searchParams.get("force") === "true";
 
   // Get the job search and verify ownership
   const searchTask = await db.search_tasks.findFirst({
@@ -177,6 +178,52 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   // Verify the user owns this profile
   if (searchTask.profiles.user_id !== user.id) {
     throw error(403, "Not authorized to stop this job search");
+  }
+
+  // Force stop: directly cancel a stuck "stopping" run
+  if (force) {
+    const stoppingRun = await db.search_task_runs.findFirst({
+      where: {
+        search_task_id: searchTaskId,
+        status: { in: ["stopping", "running", "blocked"] },
+      },
+      orderBy: { started_at: "desc" },
+    });
+
+    if (stoppingRun) {
+      await db.search_task_runs.update({
+        where: { id: stoppingRun.id },
+        data: {
+          status: "cancelled",
+          error_message: "Force stopped by user",
+          finished_at: new Date(),
+          live_url: null,
+        },
+      });
+
+      await db.search_task_run_items.updateMany({
+        where: {
+          run_id: stoppingRun.id,
+          status: { in: ["pending", "in_progress"] },
+        },
+        data: { status: "cancelled" },
+      });
+    }
+
+    await db.search_tasks.update({
+      where: { id: searchTaskId },
+      data: {
+        status: "idle",
+        status_message: "Force stopped by user",
+        date_updated: new Date(),
+        live_url: null,
+      },
+    });
+
+    await removeActiveJob(searchTaskId);
+
+    console.log(`[API] Force stopped search ${searchTaskId}`);
+    return json({ status: "cancelled" });
   }
 
   // Try to remove from queue if waiting
