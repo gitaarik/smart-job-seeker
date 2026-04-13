@@ -113,16 +113,20 @@
   // Desktop scraper connection status
   let desktopConnected = $state<boolean | null>(null);
   let connectedDeviceIds = $state<number[]>([]);
+  let connectedDeviceNames = $state<string[]>([]);
 
   async function checkDesktopStatus() {
     try {
       const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
       const result = await res.json();
       desktopConnected = result.connected === true;
-      connectedDeviceIds = (result.devices ?? []).map((d: { apiKeyId: number }) => d.apiKeyId);
+      const devices = result.devices ?? [];
+      connectedDeviceIds = devices.map((d: { apiKeyId: number }) => d.apiKeyId);
+      connectedDeviceNames = devices.map((d: { apiKeyName: string }) => d.apiKeyName);
     } catch {
       desktopConnected = false;
       connectedDeviceIds = [];
+      connectedDeviceNames = [];
     }
   }
 
@@ -1771,7 +1775,7 @@
             ></span>
             <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
             {#if desktopConnected}
-              Device connected
+              {connectedDeviceNames.join(", ")}
             {:else}
               No device connected — <a href="/dashboard/jobs/import/devices" class="underline hover:text-amber-700">Setup guide</a>
             {/if}
@@ -1954,7 +1958,7 @@
               <span
                 class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
               >
-                Desktop
+                {connectedDeviceNames.join(", ") || "Desktop"}
               </span>
             {/if}
           </div>

@@ -74,6 +74,7 @@
 
   // Desktop scraper connection status
   let desktopConnected = $state<boolean | null>(null); // null = checking
+  let connectedDeviceNames = $state<string[]>([]);
 
   let anyTaskUsesDesktop = $derived(
     searchTasks.some((s) => s.browser_provider === "local"),
@@ -84,8 +85,10 @@
       const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
       const result = await res.json();
       desktopConnected = result.connected === true;
+      connectedDeviceNames = (result.devices ?? []).map((d: { apiKeyName: string }) => d.apiKeyName);
     } catch {
       desktopConnected = false;
+      connectedDeviceNames = [];
     }
   }
 
@@ -256,7 +259,7 @@
           ></span>
           <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
           {#if desktopConnected}
-            Device connected
+            {connectedDeviceNames.join(", ")}
           {:else}
             No device connected — <a href="/dashboard/jobs/import/devices" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
           {/if}
@@ -421,7 +424,7 @@
                 {#if search.browser_provider === "local"}
                   <span
                     class={desktopConnected ? 'text-green-500' : desktopConnected === false ? 'text-red-400' : 'text-[var(--dash-text-muted)]'}
-                    title={desktopConnected ? "Device connected" : "No device connected"}
+                    title={desktopConnected ? connectedDeviceNames.join(", ") : "No device connected"}
                   >
                     <FontAwesomeIcon icon={faDesktop} class="w-3.5 h-3.5" />
                   </span>
