@@ -106,6 +106,7 @@
   }
 
   // ── Add-mode credential state ──
+  let addLoginMode = $state<string>("auto");
   let selectedCredentialId = $state<string>("none");
   let showNewCredentials = $state(false);
   let newCredUsername = $state("");
@@ -326,6 +327,14 @@
     isEdit && editSelectedCredentialId !== editSavedCredentialId,
   );
   let isSavingCredential = $state(false);
+
+  // Login mode (edit)
+  let editLoginMode = $state<string>(searchTask?.login_mode ?? "auto");
+  let editSavedLoginMode = $state<string>(searchTask?.login_mode ?? "auto");
+  let loginModeDirty = $derived(
+    isEdit && editLoginMode !== editSavedLoginMode,
+  );
+  let isSavingLoginMode = $state(false);
 
   // Computed: tunnel mode / hosted mode for conditional sections
   let effectiveBrowserProvider = $derived(
@@ -560,6 +569,19 @@
     }
   }
 
+  async function saveLoginMode() {
+    isSavingLoginMode = true;
+    try {
+      await patchSearchTask({ login_mode: editLoginMode });
+      searchTask.login_mode = editLoginMode;
+      editSavedLoginMode = editLoginMode;
+    } catch (err) {
+      console.error("Failed to save login mode:", err);
+    } finally {
+      isSavingLoginMode = false;
+    }
+  }
+
   // Re-sync state when searchTask changes from outside (navigation)
   export function resetToData(newData: {
     searchTask: any;
@@ -605,6 +627,8 @@
       "none";
     editSavedCredentialId = credId;
     editSelectedCredentialId = credId;
+    editLoginMode = newData.searchTask.login_mode ?? "auto";
+    editSavedLoginMode = newData.searchTask.login_mode ?? "auto";
     sectionOpen = {
       search: (() => {
         const v = newData.uiPreferences["task_sections_search"];
@@ -654,6 +678,8 @@
       const credId = searchTask.platform_profile_id?.toString() ?? "none";
       editSavedCredentialId = credId;
       editSelectedCredentialId = credId;
+      editLoginMode = searchTask.login_mode ?? "auto";
+      editSavedLoginMode = searchTask.login_mode ?? "auto";
     }
   });
 </script>
@@ -1008,15 +1034,68 @@
             </div>
           {/if}
 
-          <!-- Credentials -->
-          {#if isAdd}
-            <div class="border-t border-[var(--dash-border)] pt-3">
+          <!-- Login Mode -->
+          <div class="border-t border-[var(--dash-border)] pt-3">
+            <h3
+              class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
+            >
+              Login Mode
+            </h3>
+
+            <div class="flex rounded-md border border-[var(--dash-border)] overflow-hidden">
+              <button
+                type="button"
+                onclick={() => { addLoginMode = "auto"; if (selectedCredentialId === "none") selectedCredentialId = existingCredentials.length > 0 ? String(existingCredentials[0].id) : "new"; showNewCredentials = selectedCredentialId === "new"; }}
+                class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                  addLoginMode === "auto"
+                    ? "bg-[var(--dash-primary)] text-white"
+                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                }`}
+              >
+                Auto-login
+              </button>
+              <button
+                type="button"
+                onclick={() => { addLoginMode = "manual"; selectedCredentialId = "none"; showNewCredentials = false; }}
+                class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                  addLoginMode === "manual"
+                    ? "bg-[var(--dash-primary)] text-white"
+                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                }`}
+              >
+                Manual login
+              </button>
+              <button
+                type="button"
+                onclick={() => { addLoginMode = "none"; selectedCredentialId = "none"; showNewCredentials = false; }}
+                class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                  addLoginMode === "none"
+                    ? "bg-[var(--dash-primary)] text-white"
+                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                }`}
+              >
+                No login
+              </button>
+            </div>
+            <input type="hidden" name="login_mode" value={addLoginMode} />
+            <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
+              {#if addLoginMode === "auto"}
+                The scraper will fill in credentials and log in automatically.
+              {:else if addLoginMode === "manual"}
+                The scraper will navigate to the login page and wait for you to log in.
+              {:else}
+                The scraper will go directly to the search page without logging in.
+              {/if}
+            </p>
+          </div>
+
+          <!-- Credentials (only for auto-login) -->
+          {#if isAdd && addLoginMode === "auto"}
+            <div>
               <h3
                 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
               >
                 Login Credentials
-                <span class="font-normal text-[var(--dash-text-muted)]"
-                >(optional)</span>
               </h3>
 
               <select
@@ -1028,7 +1107,6 @@
                   )}
                 class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
               >
-                <option value="none">No auto-login</option>
                 {#each existingCredentials as cred}
                   <option value={String(cred.id)}>{cred.username}</option>
                 {/each}
@@ -1124,6 +1202,7 @@
             <CredentialSelector
               bind:credentials={editPlatformCredentials}
               bind:selectedId={editSelectedCredentialId}
+              bind:loginMode={editLoginMode}
               platformId={searchTask?.platform}
               {profileId}
               platformName={searchTask?.job_platforms?.name}
@@ -1138,6 +1217,17 @@
                 }
               }}
             />
+
+            {#if loginModeDirty}
+              <div class="mt-3">
+                {@render saveCancel(
+                  true,
+                  isSavingLoginMode,
+                  saveLoginMode,
+                  () => (editLoginMode = editSavedLoginMode),
+                )}
+              </div>
+            {/if}
 
             {#if credentialDirty}
               <div class="mt-3">

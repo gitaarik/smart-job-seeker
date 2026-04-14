@@ -15,11 +15,13 @@
   interface Props {
     credentials: { id: number; username: string | null; security_answer?: string | null }[];
     selectedId: string;
+    loginMode: string;
     platformId: number;
     profileId: number;
     platformName?: string | null;
     disabled?: boolean;
     onselect?: (credentialId: string) => void;
+    onloginmodechange?: (mode: string) => void;
     oncredentialadded?: (
       cred: { id: number; username: string | null },
     ) => void;
@@ -29,11 +31,13 @@
   let {
     credentials = $bindable(),
     selectedId = $bindable(),
+    loginMode = $bindable(),
     platformId,
     profileId,
     platformName = null,
     disabled = false,
     onselect,
+    onloginmodechange,
     oncredentialadded,
     oncredentialdeleted,
   }: Props = $props();
@@ -60,6 +64,12 @@
     showAddForm = false;
     selectedId = id;
     onselect?.(id);
+  }
+
+  function setLoginMode(mode: string) {
+    if (disabled) return;
+    loginMode = mode;
+    onloginmodechange?.(mode);
   }
 
   async function addCredential() {
@@ -191,14 +201,14 @@
         class="w-4 h-4 text-[var(--dash-text-secondary)]"
       />
       <h2 class="font-medium text-[var(--dash-text)] text-sm">
-        Credentials
+        Login & Credentials
       </h2>
     </div>
     <div class="flex items-center gap-2">
       {#if isSaving}
         <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
       {/if}
-      {#if !disabled}
+      {#if !disabled && loginMode === "auto"}
         <button
           type="button"
           onclick={() => (showAddForm = !showAddForm)}
@@ -211,37 +221,61 @@
     </div>
   </div>
 
-  <!-- Credential list -->
-  <div class="space-y-1.5">
-    <!-- No credentials option -->
-    <button
-      type="button"
-      {disabled}
-      onclick={() => select("none")}
-      class="
-        w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedId === 'none'
-        ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
-        : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}
-        disabled:opacity-60
-      "
-    >
-      <span
-        class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedId === 'none' ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
+  <!-- Login Mode Toggle -->
+  <div class="mb-3">
+    <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Login Mode</h3>
+    <div class="flex rounded-md border border-[var(--dash-border)] overflow-hidden">
+      <button
+        type="button"
+        {disabled}
+        onclick={() => setLoginMode("auto")}
+        class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+          loginMode === "auto"
+            ? "bg-[var(--dash-primary)] text-white"
+            : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+        } disabled:opacity-60`}
       >
-        {#if selectedId === "none"}
-          <span
-            class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
-          ></span>
-        {/if}
-      </span>
-      <span class="flex-1 text-left">No credentials (public search)</span>
-      {#if savedId === "none"}
-        <span
-          class="text-xs text-[var(--dash-text-muted)] font-medium"
-        >Current</span>
+        Auto-login
+      </button>
+      <button
+        type="button"
+        {disabled}
+        onclick={() => setLoginMode("manual")}
+        class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+          loginMode === "manual"
+            ? "bg-[var(--dash-primary)] text-white"
+            : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+        } disabled:opacity-60`}
+      >
+        Manual login
+      </button>
+      <button
+        type="button"
+        {disabled}
+        onclick={() => setLoginMode("none")}
+        class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+          loginMode === "none"
+            ? "bg-[var(--dash-primary)] text-white"
+            : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+        } disabled:opacity-60`}
+      >
+        No login
+      </button>
+    </div>
+    <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
+      {#if loginMode === "auto"}
+        The scraper will fill in credentials and log in automatically.
+      {:else if loginMode === "manual"}
+        The scraper will navigate to the login page and wait for you to log in.
+      {:else}
+        The scraper will go directly to the search page without logging in.
       {/if}
-    </button>
+    </p>
+  </div>
 
+  <!-- Credential list (only for auto-login) -->
+  {#if loginMode === "auto"}
+  <div class="space-y-1.5">
     {#each credentials as cred}
       <div
         class="
@@ -292,7 +326,7 @@
   </div>
 
   <!-- Advanced: security answer for selected credential -->
-  {#if selectedId !== "none" && credentials.length > 0 && !disabled}
+  {#if credentials.length > 0 && !disabled}
     {@const selectedCred = credentials.find((c) => String(c.id) === selectedId)}
     {#if selectedCred}
       <div class="mt-2">
@@ -374,7 +408,7 @@
   {#if credentials.length === 0 && !showAddForm}
     <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
       No credentials configured{platformName ? ` for ${platformName}` : ""}. Add
-      credentials for automatic login. Otherwise manual login is required.
+      credentials for automatic login.
     </p>
   {/if}
 
@@ -484,5 +518,6 @@
         </button>
       </div>
     </div>
+  {/if}
   {/if}
 </div>

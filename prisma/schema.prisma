@@ -1600,6 +1600,7 @@ model search_tasks {
   ui_preferences         Json?                    @default("{}")
   extracted_jobs_json    String?
   tunnel_api_key         Int?
+  login_mode             String                   @default("auto") @db.VarChar(10)
   search_task_runs         search_task_runs[]
   api_keys               api_keys?            @relation(fields: [tunnel_api_key], references: [id], onDelete: SetNull, onUpdate: NoAction)
   scraper_agent_sessions   scraper_agent_sessions[]

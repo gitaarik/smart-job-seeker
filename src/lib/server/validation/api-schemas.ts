@@ -170,6 +170,7 @@ export const searchTaskUpdateSchema = z.object({
     z.number().int(),
     z.string().regex(/^\d+$/).transform(Number),
   ]).optional(),
+  login_mode: z.enum(["auto", "manual", "none"]).optional(),
   browser_provider: z.enum(["hosted", "local"]).optional().nullable(),
   tunnel_api_key: z.union([
     z.null(),

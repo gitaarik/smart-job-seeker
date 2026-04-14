@@ -198,6 +198,9 @@ export const actions: Actions = {
       );
     }
 
+    // Login mode
+    const loginMode = formData.get("login_mode") as string;
+
     // Scraping options
     const browserProvider = formData.get("browser_provider") as string;
     const maxJobsRaw = formData.get("max_jobs") as string;
@@ -236,6 +239,7 @@ export const actions: Actions = {
         search_term: search_term?.trim() || null,
         platform: resolvedPlatformId,
         platform_profile_id: resolvedCredentialId,
+        login_mode: ["auto", "manual", "none"].includes(loginMode) ? loginMode : "auto",
         is_active,
         profile: profileId,
         status: "idle",
