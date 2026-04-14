@@ -228,6 +228,8 @@
       completed: number;
       skipped: number;
       error: number;
+      new: number;
+      existing: number;
     };
   }
 
@@ -1231,9 +1233,9 @@
         Jobs
         {#if runItems[run.id]?.stats}
           <span class="ml-1 text-xs text-[var(--dash-text-muted)]">
-            ({runItems[run.id].stats.completed}/{
+            ({runItems[run.id].stats.new} new / {
               runItems[run.id].stats.total
-            })
+            } total)
           </span>
         {/if}
       </button>
@@ -1261,8 +1263,11 @@
               {@const stats = runItems[run.id].stats}
               <div class="flex gap-3 text-xs">
                 <span class="text-[var(--dash-text-muted)]">{stats.total} total</span>
-                {#if stats.completed > 0}
-                  <span class="text-[var(--dash-success)]">{stats.completed} imported</span>
+                {#if stats.new > 0}
+                  <span class="text-[var(--dash-success)]">{stats.new} new</span>
+                {/if}
+                {#if stats.existing > 0}
+                  <span class="text-[var(--dash-text-secondary)]">{stats.existing} existing</span>
                 {/if}
                 {#if stats.processing > 0}
                   <span class="text-[var(--dash-primary)]">{stats.processing} processing</span>
@@ -2502,7 +2507,7 @@
                   </span>
                   {#if run.jobs_found !== null}
                     <span class="text-sm text-[var(--dash-text-secondary)]">
-                      • {run.jobs_found} jobs
+                      • {run.jobs_found} new {run.jobs_found === 1 ? 'job' : 'jobs'}
                     </span>
                   {/if}
                   {#if                 run.error_message && run.status !== "success"}

@@ -76,6 +76,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     {} as Record<string, number>,
   );
 
+  const newCount = items.filter((i) => i.was_created === true).length;
+  const existingCount = items.filter((i) => i.was_created === false && i.status === "completed").length;
+
   return json({
     items,
     stats: {
@@ -85,6 +88,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       completed: statusCounts["completed"] || 0,
       skipped: statusCounts["skipped"] || 0,
       error: statusCounts["error"] || 0,
+      new: newCount,
+      existing: existingCount,
     },
   });
 };
