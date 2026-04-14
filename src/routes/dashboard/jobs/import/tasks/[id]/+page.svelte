@@ -26,6 +26,7 @@
     faEye,
     faEyeSlash,
     faForward,
+    faHandPointer,
     faHistory,
     faMapMarkerAlt,
     faMoneyBillWave,
@@ -441,10 +442,151 @@
     }
   }
 
+  // Interactive screenshot mode
+  let interactiveMode = $state(false);
+  let screenshotImgEl = $state<HTMLImageElement | null>(null);
+
+  // Translate mouse position on the displayed image to browser viewport coordinates
+  function imgToViewport(e: MouseEvent): { x: number; y: number } | null {
+    const img = screenshotImgEl;
+    if (!img || !img.naturalWidth || !img.naturalHeight) return null;
+    const rect = img.getBoundingClientRect();
+    // object-contain: image is centered with aspect ratio preserved
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+    const boxAspect = rect.width / rect.height;
+    let renderW: number, renderH: number, offsetX: number, offsetY: number;
+    if (imgAspect > boxAspect) {
+      // Image is wider than box — letterboxed top/bottom
+      renderW = rect.width;
+      renderH = rect.width / imgAspect;
+      offsetX = 0;
+      offsetY = (rect.height - renderH) / 2;
+    } else {
+      // Image is taller — pillarboxed left/right
+      renderH = rect.height;
+      renderW = rect.height * imgAspect;
+      offsetX = (rect.width - renderW) / 2;
+      offsetY = 0;
+    }
+    const relX = (e.clientX - rect.left - offsetX) / renderW;
+    const relY = (e.clientY - rect.top - offsetY) / renderH;
+    if (relX < 0 || relX > 1 || relY < 0 || relY > 1) return null;
+    return { x: Math.round(relX * img.naturalWidth), y: Math.round(relY * img.naturalHeight) };
+  }
+
+  function getModifiers(e: MouseEvent | KeyboardEvent): number {
+    let mod = 0;
+    if (e.altKey) mod |= 1;
+    if (e.ctrlKey) mod |= 2;
+    if (e.metaKey) mod |= 4;
+    if (e.shiftKey) mod |= 8;
+    return mod;
+  }
+
+  const MOUSE_BUTTON_MAP = ["left", "middle", "right"] as const;
+
+  function sendInput(body: Record<string, unknown>) {
+    fetch(`/api/tunnel/input/${data.profileId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  }
+
+  function handleInteractiveMouseDown(e: MouseEvent) {
+    if (!interactiveMode) return;
+    const pos = imgToViewport(e);
+    if (!pos) return;
+    e.preventDefault();
+    sendInput({
+      type: "rawMouseEvent",
+      ...pos,
+      eventType: "mousePressed",
+      button: MOUSE_BUTTON_MAP[e.button] || "left",
+      clickCount: e.detail,
+      modifiers: getModifiers(e),
+    });
+  }
+
+  function handleInteractiveMouseUp(e: MouseEvent) {
+    if (!interactiveMode) return;
+    const pos = imgToViewport(e);
+    if (!pos) return;
+    e.preventDefault();
+    sendInput({
+      type: "rawMouseEvent",
+      ...pos,
+      eventType: "mouseReleased",
+      button: MOUSE_BUTTON_MAP[e.button] || "left",
+      clickCount: e.detail,
+      modifiers: getModifiers(e),
+    });
+  }
+
+  let lastMoveTime = 0;
+  function handleInteractiveMouseMove(e: MouseEvent) {
+    if (!interactiveMode) return;
+    // Throttle to ~30fps
+    const now = Date.now();
+    if (now - lastMoveTime < 33) return;
+    lastMoveTime = now;
+    const pos = imgToViewport(e);
+    if (!pos) return;
+    sendInput({
+      type: "rawMouseEvent",
+      ...pos,
+      eventType: "mouseMoved",
+      modifiers: getModifiers(e),
+    });
+  }
+
+  function handleInteractiveWheel(e: WheelEvent) {
+    if (!interactiveMode) return;
+    const pos = imgToViewport(e);
+    if (!pos) return;
+    e.preventDefault();
+    sendInput({
+      type: "rawScrollEvent",
+      ...pos,
+      deltaX: e.deltaX,
+      deltaY: e.deltaY,
+    });
+  }
+
+  function handleInteractiveKeyDown(e: KeyboardEvent) {
+    if (!interactiveMode) return;
+    e.preventDefault();
+    sendInput({
+      type: "rawKeyEvent",
+      eventType: "keyDown",
+      key: e.key,
+      code: e.code,
+      text: e.key.length === 1 ? e.key : undefined,
+      modifiers: getModifiers(e),
+    });
+  }
+
+  function handleInteractiveKeyUp(e: KeyboardEvent) {
+    if (!interactiveMode) return;
+    e.preventDefault();
+    sendInput({
+      type: "rawKeyEvent",
+      eventType: "keyUp",
+      key: e.key,
+      code: e.code,
+      modifiers: getModifiers(e),
+    });
+  }
+
   // Start/stop screenshot polling when browser view opens/closes
+  // Faster polling (500ms) in interactive mode, normal (2s) otherwise
   $effect(() => {
     if (showBrowser && isTunnelMode && browserViewMode === "screenshot") {
-      startScreenshotPolling();
+      stopScreenshotPolling();
+      const interval = interactiveMode ? 500 : 2000;
+      screenshotLoading = !screenshotSrc;
+      fetchScreenshot();
+      screenshotPollingInterval = setInterval(fetchScreenshot, interval);
     } else {
       stopScreenshotPolling();
     }
@@ -2099,6 +2241,13 @@
               </div>
               {#if browserViewMode === "screenshot"}
                 <button
+                  onclick={() => { interactiveMode = !interactiveMode; }}
+                  class="p-1 transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+                  title="{interactiveMode ? 'Disable' : 'Enable'} interactive mode"
+                >
+                  <FontAwesomeIcon icon={faHandPointer} class="w-3.5 h-3.5" />
+                </button>
+                <button
                   onclick={fetchScreenshot}
                   class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   title="Refresh screenshot"
@@ -2146,11 +2295,27 @@
         <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video {showBrowserLogs ? 'hidden' : ''}">
           {#if browserViewMode === "screenshot"}
             {#if screenshotSrc}
-              <img
-                src={screenshotSrc}
-                alt="Browser screenshot"
-                class="absolute inset-0 w-full h-full object-contain bg-black"
-              />
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+              <div
+                class="absolute inset-0 bg-black {interactiveMode ? 'cursor-crosshair' : ''}"
+                role={interactiveMode ? "application" : undefined}
+                tabindex={interactiveMode ? 0 : undefined}
+                onmousedown={handleInteractiveMouseDown}
+                onmouseup={handleInteractiveMouseUp}
+                onmousemove={handleInteractiveMouseMove}
+                onwheel={handleInteractiveWheel}
+                onkeydown={handleInteractiveKeyDown}
+                onkeyup={handleInteractiveKeyUp}
+                oncontextmenu={(e) => { if (interactiveMode) e.preventDefault(); }}
+              >
+                <img
+                  bind:this={screenshotImgEl}
+                  src={screenshotSrc}
+                  alt="Browser screenshot"
+                  class="w-full h-full object-contain pointer-events-none select-none"
+                  draggable="false"
+                />
+              </div>
             {:else if screenshotLoading}
               <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
                 <div class="text-center">
