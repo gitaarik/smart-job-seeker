@@ -64,6 +64,8 @@
     selectedProfile={data.selectedProfile}
     unreadNotifications={data.unreadNotifications}
   />
+  <!-- Spacer for fixed header (matches sidebar top-[65px]) -->
+  <div class="h-[65px]"></div>
 
   <Sidebar creditBalance={data.creditBalance} />
 

@@ -49,7 +49,7 @@
 
   {#if isOpen}
     <div
-      class="fixed right-2 left-2 top-14 sm:absolute sm:left-auto sm:top-auto sm:right-0 sm:mt-2 sm:{width} bg-[var(--dash-card)] rounded-lg shadow-lg border border-[var(--dash-border)] overflow-hidden z-50"
+      class="fixed right-2 left-2 top-[65px] sm:absolute sm:left-auto sm:top-auto sm:right-0 sm:mt-2 sm:{width} bg-[var(--dash-card)] rounded-lg shadow-lg border border-[var(--dash-border)] overflow-hidden z-50"
     >
       {@render children()}
     </div>
