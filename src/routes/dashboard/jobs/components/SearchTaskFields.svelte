@@ -1034,7 +1034,9 @@
             </div>
           {/if}
 
-          <!-- Login Mode -->
+          <!-- Credentials -->
+          {#if isAdd}
+          <!-- Login Mode (add mode) -->
           <div class="border-t border-[var(--dash-border)] pt-3">
             <h3
               class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
@@ -1090,7 +1092,7 @@
           </div>
 
           <!-- Credentials (only for auto-login) -->
-          {#if isAdd && addLoginMode === "auto"}
+          {#if addLoginMode === "auto"}
             <div>
               <h3
                 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
@@ -1198,6 +1200,7 @@
                 </div>
               {/if}
             </div>
+          {/if}
           {:else}
             <CredentialSelector
               bind:credentials={editPlatformCredentials}
