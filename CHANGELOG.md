@@ -5,6 +5,41 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.45] - 2026-04-14
+
+63 commits since v0.4.44.
+
+### Added
+- Feedback ticket system with replies, merging, and notifications
+- Interactive screenshot mode and raw browser input control via Chrome DevTools Protocol
+- Login mode setting for import tasks (auto/manual/none)
+- Force stop and screenshot browser view functionality
+- Device sharing and multi-device support with VNC relay and tunnel resolution
+- Self-hosted tunnel client Docker image for NAS/home server deployments
+- Security question answer field and automatic answer-filling during login
+- New vs existing job status distinction in UI
+- Hard ceiling on total items processed per job (3x max_jobs)
+
+### Changed
+- Dashboard layout optimized to reduce database round-trips
+- Device system redesigned with "My Devices" and connected device names
+- Contacts moved to user menu with API key management (rename/activate/delete)
+- Email verification link extraction now scores by relevance and uses Cheerio parsing
+- Import task detail page mobile layout improved
+- Header positioning switched from sticky to fixed
+- Device status icon simplified and verification flow routing improved
+
+### Fixed
+- Login mode toggle appearing twice in edit mode
+- Stale page frame reference after keepCdpConnected intervention
+- Verification code fallback after failed link navigation
+- Cookie banner dismissal on CookieFirst shadow DOM sites
+- Email verification misclassified as magic link
+- False CAPTCHA detection on Cloudflare-fronted sites and challenge pages
+- Auth block classification (email/2FA checks before security question)
+- Cookie banner selector fallback bugs
+- Login submit click detection and retry when click has no effect
+
 ## [0.4.44] - 2026-04-11
 
 3 commits since v0.4.43.
