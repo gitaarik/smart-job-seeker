@@ -4,6 +4,7 @@
 
 import { db } from "$lib/server/db";
 import { areContacts } from "$lib/server/contacts";
+import { createNotification } from "$lib/server/notifications";
 
 /**
  * Share a device with a user (must be an accepted contact)
@@ -43,6 +44,19 @@ export async function shareDevice(
       shared_with: sharedWithUserId,
     },
   });
+
+  // Notify the recipient
+  const ownerUser = await db.users.findUnique({
+    where: { id: ownerId },
+    select: { name: true, email: true },
+  });
+  const ownerName = ownerUser?.name || ownerUser?.email || "Someone";
+  await createNotification({
+    userId: sharedWithUserId,
+    type: "device_share",
+    title: `${ownerName} shared a device with you`,
+    link: "/dashboard/contacts",
+  }).catch(() => {});
 
   return { success: true };
 }

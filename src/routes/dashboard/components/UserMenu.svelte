@@ -4,6 +4,7 @@
   import {
     faChevronDown,
     faAddressBook,
+    faCommentDots,
     faCog,
     faSignOutAlt,
   } from "@fortawesome/free-solid-svg-icons";
@@ -78,6 +79,14 @@
         >
           <FontAwesomeIcon icon={faAddressBook} class="w-4 h-4" />
           <span>Contacts</span>
+        </a>
+
+        <a
+          href="/dashboard/feedback"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faCommentDots} class="w-4 h-4" />
+          <span>Feedback</span>
         </a>
 
         <a

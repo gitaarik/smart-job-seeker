@@ -62,6 +62,7 @@
     user={data.user}
     profiles={data.profiles}
     selectedProfile={data.selectedProfile}
+    unreadNotifications={data.unreadNotifications}
   />
 
   <Sidebar creditBalance={data.creditBalance} />

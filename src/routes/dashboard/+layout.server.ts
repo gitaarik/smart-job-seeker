@@ -3,14 +3,16 @@ import { requireAuth } from "$lib/server/auth/guards";
 import { redirect } from "@sveltejs/kit";
 import { getProfilesByUserId } from "$lib/server/profile/user-profiles";
 import { getBalance } from "$lib/server/billing/credits";
+import { getUnreadCount } from "$lib/server/notifications";
 
 export const load: LayoutServerLoad = async (event) => {
   // Require authentication - redirects to /login?redirect=/dashboard
   const user = requireAuth(event);
   const adminUser = event.locals.adminUser ?? null;
 
-  // Start both queries in parallel
+  // Start queries in parallel
   const balancePromise = getBalance(user.id);
+  const unreadCountPromise = getUnreadCount(user.id);
   const profiles = await getProfilesByUserId(user.id);
 
   // If user has no profiles, redirect to create page
@@ -66,7 +68,10 @@ export const load: LayoutServerLoad = async (event) => {
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
-  const creditBalance = await balancePromise;
+  const [creditBalance, unreadNotifications] = await Promise.all([
+    balancePromise,
+    unreadCountPromise,
+  ]);
 
   return {
     user,
@@ -74,5 +79,6 @@ export const load: LayoutServerLoad = async (event) => {
     selectedProfile,
     adminUser,
     creditBalance,
+    unreadNotifications,
   };
 };

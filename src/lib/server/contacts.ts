@@ -3,6 +3,7 @@
  */
 
 import { db } from "$lib/server/db";
+import { createNotification } from "$lib/server/notifications";
 
 export type ContactStatus = "pending" | "accepted" | "declined";
 
@@ -141,6 +142,19 @@ export async function sendContactRequest(
     },
     select: { id: true, date_created: true },
   });
+
+  // Notify the recipient
+  const requester = await db.users.findUnique({
+    where: { id: requesterId },
+    select: { name: true, email: true },
+  });
+  const requesterName = requester?.name || requester?.email || "Someone";
+  await createNotification({
+    userId: recipient.id,
+    type: "contact_request",
+    title: `${requesterName} sent you a contact request`,
+    link: "/dashboard/contacts",
+  }).catch(() => {});
 
   return {
     success: true,

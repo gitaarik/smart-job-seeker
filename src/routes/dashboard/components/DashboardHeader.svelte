@@ -2,6 +2,7 @@
   import { navigating } from "$app/stores";
   import ProfileSwitcher from "./ProfileSwitcher.svelte";
   import UserMenu from "./UserMenu.svelte";
+  import NotificationBell from "./NotificationBell.svelte";
   import { sidebarState } from "./sidebar-state.svelte";
   import type { ProfileSummary } from "$lib/server/profile/user-profiles";
 
@@ -9,9 +10,10 @@
     user: { id: string; name: string | null; email: string };
     profiles: ProfileSummary[];
     selectedProfile: ProfileSummary | null;
+    unreadNotifications?: number;
   }
 
-  let { user, profiles, selectedProfile }: Props = $props();
+  let { user, profiles, selectedProfile, unreadNotifications = 0 }: Props = $props();
 
   function handleLogoClick(e: MouseEvent) {
     if (window.innerWidth < 1024) {
@@ -34,11 +36,12 @@
       >Smart Job Seeker</span>
     </a>
 
-    <!-- Right side: Profile switcher + User menu -->
-    <div class="flex-1 flex items-center justify-end gap-4 px-4">
+    <!-- Right side: Profile switcher + Notifications + User menu -->
+    <div class="flex-1 flex items-center justify-end gap-2 px-4">
       {#if profiles.length > 0 && selectedProfile}
         <ProfileSwitcher {profiles} {selectedProfile} />
       {/if}
+      <NotificationBell unreadCount={unreadNotifications} />
       <UserMenu {user} />
     </div>
   </div>

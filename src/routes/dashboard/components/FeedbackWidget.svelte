@@ -143,13 +143,22 @@
           </div>
           <p class="text-sm font-medium text-[var(--dash-text)]">Thanks for your feedback!</p>
           <p class="text-xs text-[var(--dash-text-muted)] mt-1">We'll look into it.</p>
-          <button
-            type="button"
-            onclick={close}
-            class="mt-4 px-4 py-1.5 text-sm text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/10 rounded-lg transition-colors"
-          >
-            Close
-          </button>
+          <div class="flex items-center justify-center gap-3 mt-4">
+            <a
+              href="/dashboard/feedback"
+              onclick={close}
+              class="px-4 py-1.5 text-sm text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/10 rounded-lg transition-colors"
+            >
+              View your feedback
+            </a>
+            <button
+              type="button"
+              onclick={close}
+              class="px-4 py-1.5 text-sm text-[var(--dash-text-muted)] hover:bg-[var(--dash-bg)] rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       {:else}
         <!-- Category selector -->
