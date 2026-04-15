@@ -1,48 +1,47 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { page } from "$app/stores";
-  import { sidebarState } from "./sidebar-state.svelte";
+  import { untrack } from "svelte";
+  import { sidebarState, overlayState } from "./sidebar-state.svelte";
 
   interface Props {
     trigger: Snippet<[{ isOpen: boolean }]>;
     children: Snippet;
     width?: string;
-    id: string;
+    id?: string;
     onopen?: () => void;
   }
 
-  let { trigger, children, width = "w-64", id, onopen }: Props = $props();
+  let { trigger, children, width = "w-64", onopen }: Props = $props();
   let isOpen = $state(false);
 
   // Close on navigation
   $effect(() => {
     $page.url;
-    isOpen = false;
+    untrack(() => close());
   });
 
-  function handleClickOutside(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest(`.header-dropdown-${id}`)) {
-      isOpen = false;
-    }
-  }
-
   function toggle() {
-    isOpen = !isOpen;
     if (isOpen) {
+      close();
+    } else {
+      // Close any other open overlay (other dropdown or sidebar)
+      overlayState.onclose?.();
       sidebarState.mobileOpen = false;
+      overlayState.onclose = close;
+      isOpen = true;
       onopen?.();
     }
   }
 
   export function close() {
+    if (!isOpen) return;
     isOpen = false;
+    overlayState.onclose = null;
   }
 </script>
 
-<svelte:window onclick={handleClickOutside} />
-
-<div class="header-dropdown-{id} relative">
+<div class="relative">
   <button type="button" onclick={toggle}>
     {@render trigger({ isOpen })}
   </button>

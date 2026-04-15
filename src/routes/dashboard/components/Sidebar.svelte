@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { sidebarState } from "./sidebar-state.svelte";
+  import { sidebarState, overlayState } from "./sidebar-state.svelte";
   import { feedbackState } from "./feedback-state.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
@@ -361,29 +361,30 @@
 
   function closeMobileMenu() {
     sidebarState.mobileOpen = false;
+    overlayState.onclose = null;
+  }
+
+  function toggleMobileMenu() {
+    // Close any open header dropdown first
+    overlayState.onclose?.();
+    sidebarState.mobileOpen = !sidebarState.mobileOpen;
+    if (sidebarState.mobileOpen) {
+      overlayState.onclose = closeMobileMenu;
+    } else {
+      overlayState.onclose = null;
+    }
   }
 </script>
 
 <!-- Mobile menu button -->
 <button
   type="button"
-  onclick={() => (sidebarState.mobileOpen = !sidebarState.mobileOpen)}
+  onclick={toggleMobileMenu}
   class="lg:hidden fixed bottom-4 right-4 z-50 w-14 h-14 bg-[var(--dash-primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--dash-primary-hover)] transition-colors"
   aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
 >
   <FontAwesomeIcon icon={mobileMenuOpen ? faTimes : faBars} class="w-6 h-6" />
 </button>
-
-<!-- Mobile overlay -->
-{#if mobileMenuOpen}
-  <button
-    type="button"
-    class="lg:hidden fixed inset-0 bg-black/50 z-40"
-    onclick={closeMobileMenu}
-    aria-label="Close menu"
-  >
-  </button>
-{/if}
 
 <!-- Sidebar -->
 <aside

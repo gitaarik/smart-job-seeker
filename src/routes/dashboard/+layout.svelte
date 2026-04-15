@@ -5,6 +5,7 @@
   import DashboardHeader from "./components/DashboardHeader.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import FeedbackWidget from "./components/FeedbackWidget.svelte";
+  import { overlayState } from "./components/sidebar-state.svelte";
   import "./dashboard.css";
 
   let { children, data }: { children: Snippet; data: LayoutData } =
@@ -66,6 +67,16 @@
   />
   <!-- Spacer for fixed header (matches sidebar top-[65px]) -->
   <div class="h-[65px]"></div>
+
+  <!-- Shared overlay for sidebar and header dropdowns -->
+  {#if overlayState.onclose}
+    <button
+      type="button"
+      class="fixed inset-0 top-[65px] bg-black/50 z-40"
+      onclick={() => { overlayState.onclose?.(); overlayState.onclose = null; }}
+      aria-label="Close menu"
+    ></button>
+  {/if}
 
   <Sidebar creditBalance={data.creditBalance} />
 
