@@ -121,7 +121,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         5, // parent ai_chats id
         "Add specific examples",
-        { includeOriginalContext: undefined },
+        { includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
       );
 
       // Verify question was updated
@@ -130,6 +130,7 @@ describe("createApplicationQuestionFollowup", () => {
         data: {
           ai_chat: 6,
           ai_chat_response: "Refined answer with more details",
+          answer: "Refined answer with more details",
         },
       });
     });
@@ -157,7 +158,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         5,
         "Make it shorter",
-        { includeOriginalContext: true },
+        { includeOriginalContext: true, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
       );
     });
 
@@ -182,6 +183,7 @@ describe("createApplicationQuestionFollowup", () => {
         data: {
           ai_chat: 6,
           ai_chat_response: "Refined answer with more details",
+          answer: "Refined answer with more details",
         },
       });
     });
@@ -328,7 +330,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         5,
         "",
-        { includeOriginalContext: undefined },
+        { includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
       );
     });
 

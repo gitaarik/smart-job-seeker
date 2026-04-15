@@ -16,7 +16,7 @@ function createMockEvent(
 
 describe("requireAuth", () => {
   it("returns user when authenticated", () => {
-    const user = { id: "user-1", name: "Test" };
+    const user = { id: "user-1", name: "Test", is_approved: true };
     const result = requireAuth(createMockEvent(user));
     expect(result).toBe(user);
   });

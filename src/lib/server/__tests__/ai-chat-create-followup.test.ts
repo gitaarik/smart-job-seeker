@@ -94,6 +94,7 @@ describe("createFollowupAiChat", () => {
           response: true,
           system_prompt: true,
           user_prompt: true,
+          followup_to: true,
         },
       });
     });
@@ -167,6 +168,7 @@ describe("createFollowupAiChat", () => {
           originalUserPrompt: expect.stringContaining("\\${company}"),
         }),
         1, // parent ai_chats id
+        { profileDataFields: [] },
       );
     });
 
@@ -196,6 +198,7 @@ describe("createFollowupAiChat", () => {
             "This is the previous AI response that needs refinement.",
         }),
         expect.any(Number),
+        { profileDataFields: [] },
       );
     });
   });

@@ -99,7 +99,13 @@ describe("generateAiChatResponse", () => {
     expect(result.message).toContain("Response generated for AI chat ID 1");
     expect(dbClient.ai_chats.update).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { response: "The capital of France is Paris." },
+      data: {
+        response: "The capital of France is Paris.",
+        input_tokens: null,
+        output_tokens: null,
+        total_tokens: null,
+        credits_charged: null,
+      },
     });
   });
 

@@ -120,9 +120,15 @@ describe("validateJobImport", () => {
   });
 
   it("accepts all valid salaryPeriod values", () => {
-    for (const period of ["yearly", "monthly", "weekly", "hourly"]) {
-      const result = validateJobImport({ ...validJob, salaryPeriod: period });
-      expect(result.salaryPeriod).toBe(period);
+    const periodMapping: Record<string, string> = {
+      yearly: "year",
+      monthly: "month",
+      weekly: "week",
+      hourly: "hour",
+    };
+    for (const [input, expected] of Object.entries(periodMapping)) {
+      const result = validateJobImport({ ...validJob, salaryPeriod: input });
+      expect(result.salaryPeriod).toBe(expected);
     }
   });
 

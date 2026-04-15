@@ -121,7 +121,7 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         1, // parent ai_chats id
         "Make it more concise",
-        { includeOriginalContext: undefined },
+        expect.objectContaining({ includeOriginalContext: undefined, profileDataFields: expect.any(Array) }),
       );
 
       // Verify letter was updated
@@ -157,7 +157,7 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         1,
         "Add more details",
-        { includeOriginalContext: true },
+        expect.objectContaining({ includeOriginalContext: true, profileDataFields: expect.any(Array) }),
       );
     });
 
@@ -330,7 +330,7 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         1,
         "",
-        { includeOriginalContext: undefined },
+        expect.objectContaining({ includeOriginalContext: undefined, profileDataFields: expect.any(Array) }),
       );
     });
 
