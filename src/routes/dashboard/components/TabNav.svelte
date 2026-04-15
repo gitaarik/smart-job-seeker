@@ -22,8 +22,10 @@
   // --- Overflow detection via hidden measurement row ---
   let containerEl = $state<HTMLDivElement | null>(null);
   let measureEl = $state<HTMLDivElement | null>(null);
+  let heightProbe = $state<HTMLSpanElement | null>(null);
   let overflows = $state(false);
   let tabWidths = $state<number[]>([]);
+  let rowH = $state(32);
 
   function measure() {
     if (!containerEl || !measureEl) return;
@@ -32,6 +34,10 @@
     if (overflows) {
       const spans = measureEl.children;
       tabWidths = Array.from(spans, (el) => (el as HTMLElement).offsetWidth);
+    }
+    // Measure actual tab height from the height probe
+    if (heightProbe) {
+      rowH = heightProbe.offsetHeight;
     }
   }
 
@@ -142,6 +148,13 @@
       </span>
     {/each}
   </div>
+  <!-- Height probe — matches multi-row tab styling to measure actual row height -->
+  <span
+    bind:this={heightProbe}
+    class="absolute invisible pointer-events-none flex items-center gap-1.5 px-3 text-sm font-medium rounded-t-lg border-x border-t border-transparent whitespace-nowrap"
+    style="padding-top: 6px; padding-bottom: 6px;"
+    aria-hidden="true"
+  >X</span>
 
   {#if !overflows}
     <!-- Single row: standard underline tabs -->
@@ -167,14 +180,13 @@
   {:else if rows}
     <!-- Multi-row: tabs stretch down to bottom border, lower rows overlap upper -->
     {@const rowCount = rows.length}
-    {@const rowH = 32}
     <div class="relative">
       {#each rows as row, rowIdx}
         {@const rowsBelow = rowCount - 1 - rowIdx}
         {@const isBottomRow = rowsBelow === 0}
         <div
           class="flex items-start px-4"
-          style="margin-bottom: {isBottomRow ? 0 : -rowsBelow * rowH}px;"
+          style="margin-bottom: {isBottomRow ? 0 : -rowsBelow * rowH}px; padding-left: {16 + rowsBelow * 3}px;"
         >
           {#each row as tab, tabIdx}
             {@const active = isActive(tab.href)}

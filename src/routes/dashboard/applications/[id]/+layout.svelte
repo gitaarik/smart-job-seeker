@@ -41,17 +41,16 @@
 </svelte:head>
 
 <!-- Back link + title -->
-<div class="mb-4 flex items-center gap-3">
+<div class="mb-4">
   <a
     href="/dashboard/applications/active"
-    class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+    class="inline-flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
   >
     <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
     <span class="text-sm">All Applications</span>
   </a>
   {#if app.jobs?.title}
-    <span class="text-[var(--dash-text-muted)]">·</span>
-    <h1 class="text-sm font-medium text-[var(--dash-text)] truncate">{app.jobs.title}</h1>
+    <h1 class="text-sm font-medium text-[var(--dash-text)] mt-1 truncate">{app.jobs.title}</h1>
   {/if}
 </div>
 

@@ -2,6 +2,11 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { getAllIcons } from "$lib/data/job-icons";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
+  import Checkbox from "../../components/Checkbox.svelte";
+  import RadioGroup from "../../components/RadioGroup.svelte";
+  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
+  import FilterTabs from "../../components/FilterTabs.svelte";
+  import TabNav from "../../components/TabNav.svelte";
   import {
     faArrowLeft,
     faArrowRight,
@@ -17,6 +22,7 @@
     faCalendarDays,
     faCamera,
     faChartBar,
+    faChartLine,
     faCheck,
     faCheckCircle,
     faChevronDown,
@@ -24,6 +30,7 @@
     faChevronRight,
     faChevronUp,
     faCircle,
+    faClipboardList,
     faCloud,
     faCloudUploadAlt,
     faCode,
@@ -64,6 +71,7 @@
     faPencil,
     faPlay,
     faPlus,
+    faQuestionCircle,
     faQuoteLeft,
     faRotate,
     faSearch,
@@ -278,6 +286,53 @@
     }
     checkboxValues = new Set(checkboxValues);
   }
+
+  // Checkbox demo
+  let checkboxA = $state(true);
+  let checkboxB = $state(false);
+  let checkboxC = $state(true);
+
+  // RadioGroup demo
+  let radioValue = $state("hybrid");
+  const radioOptions = [
+    { value: "remote", label: "Remote" },
+    { value: "hybrid", label: "Hybrid" },
+    { value: "onsite", label: "On-site" },
+  ];
+
+  // ToggleSwitch demo
+  let toggleBasic = $state(false);
+  let toggleWithLabel = $state(true);
+  let toggleDisabled = $state(false);
+
+  // FilterTabs demo
+  let filterValue = $state("all");
+  const filterOptions = [
+    { value: "all", label: "All", icon: faLayerGroup },
+    { value: "letters", label: "Letters", icon: faEnvelope },
+    { value: "questions", label: "Questions", icon: faQuestionCircle },
+  ];
+
+  let filterValueNoIcons = $state("active");
+  const filterOptionsNoIcons = [
+    { value: "active", label: "Active" },
+    { value: "archived", label: "Archived" },
+  ];
+
+  // TabNav demo
+  let activeTab = $state("#overview");
+  const tabNavTabs = [
+    { label: "Overview", href: "#overview", icon: faClipboardList },
+    { label: "Applications", href: "#applications", icon: faBriefcase },
+    { label: "Analytics", href: "#analytics", icon: faChartLine },
+    { label: "Documents", href: "#documents", icon: faFileAlt },
+    { label: "Salary", href: "#salary", icon: faMoneyBillWave },
+    { label: "Timeline", href: "#timeline", icon: faHistory },
+    { label: "Settings", href: "#settings", icon: faCog },
+    { label: "Profile", href: "#profile", icon: faUser },
+    { label: "Notifications", href: "#notifications", icon: faBell },
+    { label: "Bookmarks", href: "#bookmarks", icon: faBookmark },
+  ];
 
   const colorTokens = [
     { group: "Primary", tokens: [
@@ -703,6 +758,167 @@
         <p class="text-xs text-[var(--dash-text-muted)] mt-3">Selected: <code class="text-[var(--dash-primary)]">{[...checkboxValues].join(", ")}</code></p>
       </Card>
     </div>
+  </section>
+
+  <!-- Form Controls -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Form Controls</h2>
+    <div class="space-y-3">
+      <!-- Checkbox -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">Checkbox</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          Standard checkbox with label. Use for multi-select options and toggleable settings. Value is bindable.
+        </p>
+
+        <div class="space-y-5">
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Inline group</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-2">
+              <Checkbox bind:checked={checkboxA} label="Remote" />
+              <Checkbox bind:checked={checkboxB} label="Hybrid" />
+              <Checkbox bind:checked={checkboxC} label="On-site" />
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">Selected: {[checkboxA && "Remote", checkboxB && "Hybrid", checkboxC && "On-site"].filter(Boolean).join(", ") || "none"}</p>
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Usage</p>
+            <pre class="text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md p-3 overflow-x-auto"><code>{`<Checkbox bind:checked={value} label="Option" />`}</code></pre>
+          </div>
+        </div>
+      </Card>
+
+      <!-- RadioGroup -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">RadioGroup</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          Single-select radio buttons. Use for mutually exclusive choices. Value is bindable.
+        </p>
+
+        <div class="space-y-5">
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Default</p>
+            <RadioGroup options={radioOptions} bind:value={radioValue} />
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">Selected: {radioValue}</p>
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Usage</p>
+            <pre class="text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md p-3 overflow-x-auto"><code>{`<RadioGroup
+  options={[
+    { value: "remote", label: "Remote" },
+    { value: "hybrid", label: "Hybrid" },
+    { value: "onsite", label: "On-site" },
+  ]}
+  bind:value={selected}
+/>`}</code></pre>
+          </div>
+        </div>
+      </Card>
+
+      <!-- ToggleSwitch -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">ToggleSwitch</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          On/off toggle. Supports label, description, and disabled state. Value is bindable.
+        </p>
+
+        <div class="space-y-5">
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Basic</p>
+            <ToggleSwitch bind:checked={toggleBasic} />
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">Checked: {toggleBasic}</p>
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">With label and description</p>
+            <ToggleSwitch
+              bind:checked={toggleWithLabel}
+              label="Enable feature"
+              description="This enables an optional feature that does something useful"
+            />
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Disabled</p>
+            <ToggleSwitch bind:checked={toggleDisabled} label="Unavailable option" disabled />
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Usage</p>
+            <pre class="text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md p-3 overflow-x-auto"><code>{`<ToggleSwitch
+  bind:checked={enabled}
+  label="Enable feature"
+  description="Optional description text"
+/>`}</code></pre>
+          </div>
+        </div>
+      </Card>
+
+      <!-- FilterTabs -->
+      <Card padding="responsive">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">FilterTabs</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+          Single-select tabs for filtering or choosing between options. Icons are optional.
+        </p>
+
+        <div class="space-y-5">
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">With icons</p>
+            <FilterTabs filters={filterOptions} value={filterValue} onchange={(v) => (filterValue = v)} />
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">Selected: {filterValue}</p>
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Without icons</p>
+            <FilterTabs filters={filterOptionsNoIcons} value={filterValueNoIcons} onchange={(v) => (filterValueNoIcons = v)} />
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">Selected: {filterValueNoIcons}</p>
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Usage</p>
+            <pre class="text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md p-3 overflow-x-auto"><code>{`<FilterTabs
+  filters={[
+    { value: "all", label: "All", icon: faLayerGroup },
+    { value: "letters", label: "Letters", icon: faEnvelope },
+    { value: "questions", label: "Questions", icon: faQuestionCircle },
+  ]}
+  value={currentType}
+  onchange={(v) => (currentType = v)}
+/>`}</code></pre>
+          </div>
+        </div>
+      </Card>
+    </div>
+  </section>
+
+  <!-- TabNav -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">TabNav</h2>
+    <Card padding="responsive">
+      <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+        Navigation tabs with multi-row bookmark layout on small screens. Click a tab to change the active state.
+      </p>
+
+      <div class="space-y-5">
+        <div>
+          <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">10 tabs (forces multi-row on most screens)</p>
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div class="-mx-4 sm:-mx-6" onclick={(e) => {
+            const a = (e.target as HTMLElement).closest("a[href^='#']");
+            if (a) { e.preventDefault(); activeTab = a.getAttribute("href") || activeTab; }
+          }}>
+            <TabNav tabs={tabNavTabs} isActive={(href) => href === activeTab}>
+              <div class="px-4 sm:px-6 py-4 text-sm text-[var(--dash-text-muted)]">
+                Active tab: <strong class="text-[var(--dash-text)]">{activeTab}</strong>
+              </div>
+            </TabNav>
+          </div>
+        </div>
+      </div>
+    </Card>
   </section>
 
   <!-- Category Tag Pills -->
