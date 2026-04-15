@@ -13,17 +13,25 @@ export const load: LayoutServerLoad = async (event) => {
   const profiles = await getProfilesByUserId(user.id);
 
   // If user has no profiles, redirect to create page
-  // But not if we're already on the create page (to avoid infinite redirect)
+  // But allow certain pages that don't require a profile
+  const noProfileAllowed = [
+    "/dashboard/profile/create",
+    "/dashboard/billing",
+    "/dashboard/contacts",
+    "/dashboard/feedback",
+  ];
   if (profiles.length === 0) {
-    if (!event.url.pathname.startsWith("/dashboard/profile/create")) {
+    if (!noProfileAllowed.some((p) => event.url.pathname.startsWith(p))) {
       redirect(302, "/dashboard/profile/create");
     }
-    // Return minimal data for create page
+    // Return minimal data for pages that don't require a profile
     return {
       user,
       profiles: [],
       selectedProfile: null,
       adminUser,
+      creditBalance: 0,
+      unreadNotifications: 0,
     };
   }
 
