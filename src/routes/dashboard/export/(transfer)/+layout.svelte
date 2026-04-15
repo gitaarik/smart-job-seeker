@@ -17,10 +17,9 @@
   }
 </script>
 
-<div class="space-y-6">
-  <SectionHeader title="Import & Export" icon={faExchangeAlt} />
-
-  <TabNav {tabs} isActive={isTabActive}>
-    {@render children()}
-  </TabNav>
-</div>
+<TabNav {tabs} isActive={isTabActive} inset>
+  {#snippet header()}
+    <SectionHeader title="Import & Export" icon={faExchangeAlt} />
+  {/snippet}
+  {@render children()}
+</TabNav>

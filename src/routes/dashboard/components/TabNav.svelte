@@ -13,10 +13,14 @@
     tabs,
     isActive,
     children,
+    header,
+    inset = false,
   }: {
     tabs: Tab[];
     isActive: (href: string) => boolean;
     children: Snippet;
+    header?: Snippet;
+    inset?: boolean;
   } = $props();
 
   // --- Overflow detection via hidden measurement row ---
@@ -134,7 +138,23 @@
   }
 </script>
 
-<!-- Hidden measurement row — rendered offscreen to measure natural tab widths -->
+{#if inset}
+  <div class="tabnav-inset -mx-4 -mt-5 bg-[var(--dash-bg-inset)]" class:pt-5={!header}>
+    {#if header}
+      <div class="px-4 pt-5">
+        {@render header()}
+      </div>
+    {/if}
+    {@render tabBar()}
+  </div>
+  <div class="mt-6">
+    {@render children()}
+  </div>
+{:else}
+  {@render tabBar()}
+{/if}
+
+{#snippet tabBar()}
 <div bind:this={containerEl} class="relative">
   <div
     bind:this={measureEl}
@@ -174,9 +194,11 @@
         </a>
       {/each}
     </div>
-    <div class="mt-6">
-      {@render children()}
-    </div>
+    {#if !inset}
+      <div class="mt-6">
+        {@render children()}
+      </div>
+    {/if}
   {:else if rows}
     <!-- Multi-row: tabs stretch down to bottom border, lower rows overlap upper -->
     {@const rowCount = rows.length}
@@ -197,10 +219,10 @@
                 {tabIdx > 0 ? '-ml-px' : ''}
                 {active ? 'mb-[-2px]' : ''}
                 {active
-                ? 'bg-[var(--dash-bg)] border border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)]'
-                : 'bg-[var(--dash-bg)] border-x border-t border-[var(--dash-border)] border-b-transparent text-[var(--dash-text)] hover:bg-[var(--dash-card)]'}
+                ? 'bg-[var(--dash-bg)] border-2 border-[var(--dash-border)] border-b-transparent text-[var(--dash-primary)]'
+                : `${inset ? 'bg-[var(--dash-bg-inset)]' : 'bg-[var(--dash-bg)]'} border-x border-t border-[var(--dash-border)] border-b-transparent text-[var(--dash-text)] hover:bg-[var(--dash-card)]`}
               "
-              style="z-index: {active ? rowCount + 2 : rowIdx + 1}; padding-top: 6px; padding-bottom: {rowsBelow * rowH + (active ? 8 : 6)}px;"
+              style="z-index: {active ? rowCount + 2 : rowIdx + 1}; padding-top: 6px; padding-bottom: {rowsBelow * rowH + (active ? 5 : 6)}px;"
             >
               {#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="w-3.5 h-3.5" />{/if}
               {tab.label}
@@ -210,8 +232,32 @@
       {/each}
       <div class="border-b-2 border-[var(--dash-border)] relative" style="z-index: {rowCount};"></div>
     </div>
-    <div class="mt-6">
-      {@render children()}
-    </div>
+    {#if !inset}
+      <div class="mt-6">
+        {@render children()}
+      </div>
+    {/if}
   {/if}
 </div>
+{/snippet}
+
+<style>
+  .tabnav-inset {
+    position: relative;
+  }
+  .tabnav-inset::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* Extend full width beyond the max-w-5xl container */
+    left: calc(-50vw + 50%);
+    right: calc(-50vw + 50%);
+    background: inherit;
+    z-index: 0;
+  }
+  .tabnav-inset > :global(*) {
+    position: relative;
+    z-index: 1;
+  }
+</style>

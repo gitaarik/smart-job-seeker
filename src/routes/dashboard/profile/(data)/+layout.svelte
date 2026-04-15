@@ -31,10 +31,6 @@
   }
 </script>
 
-<div class="-mx-4">
-  <TabNav {tabs} isActive={isTabActive}>
-    <div class="px-4 pt-3">
-      {@render children()}
-    </div>
-  </TabNav>
-</div>
+<TabNav {tabs} isActive={isTabActive} inset>
+  {@render children()}
+</TabNav>

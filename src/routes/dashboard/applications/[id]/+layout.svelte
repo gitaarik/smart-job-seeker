@@ -40,24 +40,21 @@
   <title>{app.jobs?.title || 'Application'} - Applications - Smart Job Seeker</title>
 </svelte:head>
 
-<!-- Back link + title -->
-<div class="mb-4">
-  <a
-    href="/dashboard/applications/active"
-    class="inline-flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-  >
-    <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-    <span class="text-sm">All Applications</span>
-  </a>
-  {#if app.jobs?.title}
-    <h1 class="text-sm font-medium text-[var(--dash-text)] mt-1 truncate">{app.jobs.title}</h1>
-  {/if}
-</div>
-
-<div class="-mx-4">
-  <TabNav {tabs} isActive={isTabActive}>
-    <div class="px-4">
-      {@render children()}
+<TabNav {tabs} isActive={isTabActive} inset>
+  {#snippet header()}
+    <!-- Back link + title -->
+    <div class="mb-4">
+      <a
+        href="/dashboard/applications/active"
+        class="inline-flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+        <span class="text-sm">All Applications</span>
+      </a>
+      {#if app.jobs?.title}
+        <h1 class="text-sm font-medium text-[var(--dash-text)] mt-1 truncate">{app.jobs.title}</h1>
+      {/if}
     </div>
-  </TabNav>
-</div>
+  {/snippet}
+  {@render children()}
+</TabNav>

@@ -19,14 +19,9 @@
   }
 </script>
 
-<div class="-mx-4">
-  <div class="px-4">
+<TabNav {tabs} isActive={isTabActive} inset>
+  {#snippet header()}
     <SectionHeader title="Import Jobs" icon={faBullseye} />
-  </div>
-
-  <TabNav {tabs} isActive={isTabActive}>
-    <div class="px-4 pt-3">
-      {@render children()}
-    </div>
-  </TabNav>
-</div>
+  {/snippet}
+  {@render children()}
+</TabNav>
