@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       identifier: { startsWith: "invite:" },
       expiresAt: { gt: new Date() },
     },
-    select: { identifier: true },
+    select: { identifier: true, value: true, expiresAt: true, createdAt: true },
   });
 
   const invitedEmails = new Set(
@@ -56,7 +56,27 @@ export const load: PageServerLoad = async ({ parent }) => {
     plan: userPlanMap.get(u.id) ?? "free",
   }));
 
-  return { users: usersWithProfiles };
+  // Build list of pending invitations that haven't been accepted yet
+  const existingEmails = new Set(users.map((u) => u.email));
+  const pendingInvitations = pendingInvites
+    .filter((v) => !existingEmails.has(v.identifier.replace("invite:", "")))
+    .map((v) => {
+      const email = v.identifier.replace("invite:", "");
+      let name = "";
+      let is_approved = false;
+      let is_staff = false;
+      let is_admin = false;
+      try {
+        const data = JSON.parse(v.value);
+        name = data.name || "";
+        is_approved = data.is_approved || false;
+        is_staff = data.is_staff || false;
+        is_admin = data.is_admin || false;
+      } catch {}
+      return { email, name, is_approved, is_staff, is_admin, expiresAt: v.expiresAt, createdAt: v.createdAt };
+    });
+
+  return { users: usersWithProfiles, pendingInvitations };
 };
 
 export const actions: Actions = {

@@ -12,8 +12,18 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let users = $derived(data.users);
+  let pendingInvitations = $derived(data.pendingInvitations);
   let showAddForm = $state(false);
   let addingUser = $state(false);
+  let showFilter = $state<"all" | "active" | "invited">("all");
+
+  let filteredUsers = $derived(
+    showFilter === "all"
+      ? users
+      : showFilter === "invited"
+        ? users.filter((u) => u.hasInvite)
+        : users.filter((u) => !u.hasInvite),
+  );
 
   // Add form state
   let newName = $state("");
@@ -246,6 +256,36 @@
     </form>
   {/if}
 
+  <!-- Pending Invitations -->
+  {#if pendingInvitations.length > 0}
+    <div class="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-lg p-4">
+      <h3 class="text-sm font-medium text-orange-700 dark:text-orange-400 mb-3">
+        Pending Invitations ({pendingInvitations.length})
+      </h3>
+      <div class="space-y-2">
+        {#each pendingInvitations as invite}
+          <div class="flex items-center justify-between gap-3 text-sm">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-[var(--dash-text)] font-medium truncate">{invite.name || invite.email}</span>
+              {#if invite.name}
+                <span class="text-[var(--dash-text-muted)] truncate">{invite.email}</span>
+              {/if}
+              {#if invite.is_admin}
+                <span class="px-1.5 py-0.5 text-xs rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 flex-shrink-0">Admin</span>
+              {/if}
+              {#if invite.is_staff}
+                <span class="px-1.5 py-0.5 text-xs rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex-shrink-0">Staff</span>
+              {/if}
+            </div>
+            <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0">
+              Expires {formatDate(invite.expiresAt)}
+            </span>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
   <!-- Users List -->
   {#if users.length === 0 && !showAddForm}
     <EmptyState
@@ -257,7 +297,7 @@
     />
   {:else}
     <div class="space-y-3">
-      {#each users as user (user.id)}
+      {#each filteredUsers as user (user.id)}
         <a
           href="/dashboard/admin/users/{user.id}"
           class="block"
