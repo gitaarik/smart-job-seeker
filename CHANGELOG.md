@@ -5,6 +5,25 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.46] - 2026-04-15
+
+10 commits since v0.4.45.
+
+### Added
+- Adaptive favicon that switches between dark and light variants based on current theme
+- Inset mode for TabNav to enhance header background styling on tab pages
+- Pending invitations section on admin users page with collapsible layout
+- Support for accessing billing, contacts, and feedback pages without requiring a profile
+
+### Changed
+- Improved multi-row tabs with better back link positioning and merged styleguides
+- Header dropdowns now fit content width on desktop
+- Unified overlay behavior for sidebar and header dropdowns via shared state
+
+### Fixed
+- Fixed cookies.set() error that occurred after response generation
+- Fixed container restart to properly apply fresh environment variables
+
 ## [0.4.45] - 2026-04-14
 
 63 commits since v0.4.44.
