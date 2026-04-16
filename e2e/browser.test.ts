@@ -373,6 +373,183 @@ describe("settings page", () => {
 });
 
 // ============================================================================
+// Sidebar navigation via clicks
+// ============================================================================
+
+describe("sidebar navigation", () => {
+  const b = useBrowser();
+
+  it("navigates via sidebar section links", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/jobs");
+    await b.page.waitForLoadState("networkidle");
+
+    // Navigate back to Overview
+    await b.page.locator("aside a").filter({ hasText: "Overview" }).click();
+    await b.page.waitForURL("**/dashboard", { timeout: 5000 });
+    expect(b.page.url()).toMatch(/\/dashboard$/);
+
+    // Navigate to billing via plan link
+    await b.page.locator('aside a[href="/dashboard/billing"]').first().click();
+    await b.page.waitForURL("**/billing", { timeout: 5000 });
+    expect(b.page.url()).toContain("/dashboard/billing");
+  });
+
+  it("expands Job Search and navigates to sub-pages", async () => {
+    // Ensure Job Search section is expanded (click if "All Jobs" link not visible)
+    const allJobsLink = b.page.locator("aside a").filter({ hasText: "All Jobs" });
+    if (!(await allJobsLink.isVisible({ timeout: 500 }).catch(() => false))) {
+      await b.page.locator("aside button").filter({ hasText: "Job Search" }).click();
+      await b.page.waitForTimeout(300);
+    }
+
+    await allJobsLink.click();
+    await b.page.waitForURL("**/jobs", { timeout: 5000 });
+    expect(b.page.url()).toContain("/dashboard/jobs");
+  });
+
+  it("expands Applying and navigates to applications", async () => {
+    const appLink = b.page.locator("aside a").filter({ hasText: "Applications" });
+    if (!(await appLink.isVisible({ timeout: 500 }).catch(() => false))) {
+      await b.page.locator("aside button").filter({ hasText: "Applying" }).click();
+      await b.page.waitForTimeout(300);
+    }
+
+    await appLink.click();
+    await b.page.waitForURL("**/applications/**", { timeout: 5000 });
+    expect(b.page.url()).toContain("/dashboard/applications");
+  });
+
+  it("expands Profile and navigates to profile data", async () => {
+    const profileLink = b.page.locator("aside a").filter({ hasText: "Profile Data" });
+    if (!(await profileLink.isVisible({ timeout: 500 }).catch(() => false))) {
+      await b.page.locator("aside button").filter({ hasText: "Profile" }).click();
+      await b.page.waitForTimeout(300);
+    }
+
+    await profileLink.click();
+    await b.page.waitForURL("**/profile/edit", { timeout: 5000 });
+    expect(b.page.url()).toContain("/dashboard/profile/edit");
+  });
+
+  it("expands Data & Settings and navigates to import", async () => {
+    const importLink = b.page.locator("aside a").filter({ hasText: "Import & Export" });
+    if (!(await importLink.isVisible({ timeout: 500 }).catch(() => false))) {
+      await b.page.locator("aside button").filter({ hasText: "Data & Settings" }).click();
+      await b.page.waitForTimeout(300);
+    }
+
+    await importLink.click();
+    await b.page.waitForURL("**/export/import", { timeout: 5000 });
+    expect(b.page.url()).toContain("/dashboard/export/import");
+  });
+});
+
+// ============================================================================
+// Feedback form
+// ============================================================================
+
+describe("feedback form", () => {
+  const b = useBrowser();
+
+  it("opens feedback widget from sidebar", async () => {
+    await loginViaUI(b.page);
+    await b.page.waitForLoadState("networkidle");
+
+    await b.page.getByRole("button", { name: /send feedback/i }).click();
+    await b.page.waitForTimeout(500);
+
+    // Feedback widget should appear with textarea
+    const textarea = b.page.locator('textarea[placeholder*="mind"]');
+    expect(await textarea.isVisible()).toBe(true);
+  });
+
+  it("shows category buttons", async () => {
+    for (const category of ["Bug", "Feature", "Question"]) {
+      const btn = b.page.getByRole("button", { name: category });
+      expect(await btn.isVisible(), `${category} button`).toBe(true);
+    }
+  });
+
+  it("can select a category and type a message", async () => {
+    await b.page.getByRole("button", { name: "Bug" }).click();
+    await b.page.locator('textarea[placeholder*="mind"]').fill("E2E test feedback");
+
+    // Send button should be visible
+    const sendBtn = b.page.getByRole("button", { name: /^send$/i });
+    expect(await sendBtn.isVisible()).toBe(true);
+  });
+
+  it("submits feedback and shows success", async () => {
+    await b.page.getByRole("button", { name: /^send$/i }).click();
+    await b.page.waitForTimeout(2000);
+
+    // Should show success message
+    const successText = b.page.locator("text=Thanks for your feedback");
+    expect(await successText.isVisible({ timeout: 5000 })).toBe(true);
+  });
+});
+
+// ============================================================================
+// Theme switching
+// ============================================================================
+
+describe("theme switching", () => {
+  const b = useBrowser();
+
+  it("opens user menu and shows theme toggle", async () => {
+    await loginViaUI(b.page);
+    await b.page.waitForLoadState("networkidle");
+
+    // Click the avatar button (last button in header)
+    await b.page.locator("header button").last().click();
+    await b.page.waitForTimeout(300);
+
+    // Theme button should be visible in dropdown
+    const themeBtn = b.page.getByRole("button", { name: /^theme/i });
+    expect(await themeBtn.isVisible()).toBe(true);
+  });
+
+  it("cycles through all three themes", async () => {
+    const themes: string[] = [];
+
+    // Click theme 3 times to cycle through all states
+    for (let i = 0; i < 3; i++) {
+      // Open dropdown if closed
+      const themeBtn = b.page.getByRole("button", { name: /^theme/i });
+      if (!(await themeBtn.isVisible({ timeout: 500 }).catch(() => false))) {
+        await b.page.locator("header button").last().click();
+        await b.page.waitForTimeout(300);
+      }
+
+      await b.page.getByRole("button", { name: /^theme/i }).click();
+      await b.page.waitForTimeout(300);
+
+      const cookies = await b.context.cookies();
+      const theme = cookies.find((c) => c.name === "theme")?.value ?? "";
+      themes.push(theme);
+    }
+
+    // Should have cycled through 3 distinct values (light, dark, auto in some order)
+    expect(new Set(themes).size).toBe(3);
+    expect(themes).toContain("light");
+    expect(themes).toContain("dark");
+    expect(themes).toContain("auto");
+  });
+
+  it("persists theme after page reload", async () => {
+    // Get current theme class
+    const classBefore = await b.page.locator("html").getAttribute("class");
+
+    await b.page.reload();
+    await b.page.waitForLoadState("networkidle");
+
+    const classAfter = await b.page.locator("html").getAttribute("class");
+    expect(classAfter).toBe(classBefore);
+  });
+});
+
+// ============================================================================
 // Navigation between pages
 // ============================================================================
 
