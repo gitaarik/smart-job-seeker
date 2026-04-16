@@ -61,5 +61,7 @@ export const load: LayoutServerLoad = async ({ request, locals }) => {
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
     user: locals.user,
+    umamiUrl: process.env.SJS_UMAMI_URL || undefined,
+    umamiWebsiteId: process.env.SJS_UMAMI_WEBSITE_ID || undefined,
   };
 };

@@ -3,6 +3,7 @@
   config.autoAddCss = false;
 
   import "../app.css";
+  import { onMount } from "svelte";
   import { initializeTheme } from "$lib/stores/theme.svelte";
   import type { LayoutData } from "./$types";
 
@@ -16,6 +17,17 @@
       data.systemTheme,
     );
   }
+
+  // Inject Umami analytics script if configured
+  onMount(() => {
+    if (data.umamiUrl && data.umamiWebsiteId) {
+      const script = document.createElement("script");
+      script.defer = true;
+      script.src = `${data.umamiUrl}/script.js`;
+      script.dataset.websiteId = data.umamiWebsiteId;
+      document.head.appendChild(script);
+    }
+  });
 </script>
 
 {@render children()}
