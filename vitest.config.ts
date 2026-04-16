@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [sveltekit()],
   test: {
     environment: "node",
+    exclude: ["e2e/**", "node_modules/**"],
     setupFiles: ["./vitest.setup.ts"],
     pool: "forks", // Prevents node processes from staying alive after tests
     coverage: {

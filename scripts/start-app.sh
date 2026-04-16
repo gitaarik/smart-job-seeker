@@ -21,6 +21,8 @@ npx svelte-kit sync
 
 echo "=== Generating Prisma client ==="
 npx dotenvx run -- prisma generate
+# Fix ownership so host user can regenerate (container runs as root)
+chown -R "${HOST_UID:-1000}:${HOST_GID:-1000}" generated/ .svelte-kit/ 2>/dev/null || true
 
 # Database initialization
 if [ "$DB_RESET" = "true" ]; then
