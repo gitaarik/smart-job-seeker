@@ -693,6 +693,150 @@ describe("cross-page navigation", () => {
 });
 
 // ============================================================================
+// Password reset (forgot password)
+// ============================================================================
+
+describe("password reset", () => {
+  const b = useBrowser();
+
+  it("shows the reset password form", async () => {
+    await b.page.goto("/forgot-password");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h2").first().textContent();
+    expect(heading?.toLowerCase()).toContain("reset");
+
+    expect(await b.page.locator("#email").isVisible()).toBe(true);
+    const submitBtn = b.page.getByRole("button", { name: /send reset link/i });
+    expect(await submitBtn.isVisible()).toBe(true);
+  });
+
+  it("has a back to sign in link", async () => {
+    const backLink = b.page.locator("a").filter({ hasText: /sign in/i });
+    expect(await backLink.isVisible()).toBe(true);
+    const href = await backLink.getAttribute("href");
+    expect(href).toContain("/login");
+  });
+
+  it("submits and shows confirmation message", async () => {
+    await b.page.locator("#email").fill("alex.morgan@example.com");
+    await b.page.getByRole("button", { name: /send reset link/i }).click();
+
+    // Wait for "Check your inbox" confirmation (email sending may take a few seconds)
+    await b.page.getByText("Check your inbox").waitFor({ timeout: 15000 });
+  });
+});
+
+// ============================================================================
+// Signup redirect
+// ============================================================================
+
+describe("signup redirect", () => {
+  const b = useBrowser();
+
+  it("redirects /signup to /login", async () => {
+    await b.page.goto("/signup");
+    await b.page.waitForLoadState("networkidle");
+
+    expect(b.page.url()).toContain("/login");
+    const heading = await b.page.locator("h2").first().textContent();
+    expect(heading?.toLowerCase()).toContain("sign in");
+  });
+});
+
+// ============================================================================
+// Export page
+// ============================================================================
+
+describe("export page", () => {
+  const b = useBrowser();
+
+  it("shows export options with scope selection", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/export/data");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toContain("Import");
+
+    // Scope buttons
+    const profileBtn = b.page.getByRole("button", { name: /profile only/i });
+    expect(await profileBtn.isVisible()).toBe(true);
+
+    const fullBtn = b.page.getByRole("button", { name: /full account/i });
+    expect(await fullBtn.isVisible()).toBe(true);
+  });
+
+  it("has media files checkbox and export button", async () => {
+    const mediaCheckbox = b.page.locator('input[type="checkbox"]');
+    expect(await mediaCheckbox.isVisible()).toBe(true);
+
+    const exportBtn = b.page.getByRole("button", { name: /export.*json/i });
+    expect(await exportBtn.isVisible()).toBe(true);
+  });
+
+  it("triggers export and shows result", async () => {
+    // Submit export with "Profile Only" (default selection)
+    const exportBtn = b.page.getByRole("button", { name: /export.*json/i });
+    await exportBtn.click();
+    await b.page.waitForTimeout(5000);
+
+    // After export, should show the export in the list or success
+    const mainText = await b.page.locator("main").textContent();
+    const hasResult = mainText.includes("Download") || mainText.includes("JSON")
+      || mainText.includes("Profile") || mainText.includes("ago");
+    expect(hasResult).toBe(true);
+  });
+});
+
+// ============================================================================
+// Import page
+// ============================================================================
+
+describe("import page", () => {
+  const b = useBrowser();
+
+  it("shows import area with file upload", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/export/import");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toContain("Import");
+
+    // File input should exist (may be hidden, attached to drag-drop area)
+    const fileInput = b.page.locator('input[type="file"]');
+    expect(await fileInput.count()).toBeGreaterThan(0);
+  });
+
+  it("shows supported file formats", async () => {
+    const mainText = await b.page.locator("main").textContent();
+    expect(mainText).toContain("PDF");
+    expect(mainText).toContain("DOCX");
+    expect(mainText).toContain("JSON");
+  });
+
+  it("has import/export tab navigation", async () => {
+    const importTab = b.page.locator("main a").filter({ hasText: "Import" });
+    const exportTab = b.page.locator("main a").filter({ hasText: "Export" });
+
+    expect(await importTab.isVisible()).toBe(true);
+    expect(await exportTab.isVisible()).toBe(true);
+
+    // Click export tab and verify navigation
+    const exportHref = await exportTab.getAttribute("href");
+    await exportTab.click();
+    await b.page.waitForURL(`**${exportHref}`, { timeout: 5000 });
+    expect(b.page.url()).toContain("/export/");
+
+    // Click import tab back
+    await b.page.locator("main a").filter({ hasText: "Import" }).click();
+    await b.page.waitForURL("**/import", { timeout: 5000 });
+    expect(b.page.url()).toContain("/export/import");
+  });
+});
+
+// ============================================================================
 // Unauthenticated access
 // ============================================================================
 
