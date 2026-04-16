@@ -14,6 +14,14 @@ export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
   secret: getEnv("SJS_AUTH_SECRET"),
   baseURL: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
+  trustedOrigins: getEnv("SJS_TRUSTED_ORIGINS", "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
+  advanced: {
+    useSecureCookies: getEnv("SJS_APP_URL_HOST", "").startsWith("https://")
+      && !getEnv("SJS_TRUSTED_ORIGINS", ""),
+  },
 
   user: {
     modelName: "users",
