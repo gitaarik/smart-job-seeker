@@ -113,6 +113,126 @@ describe("profile creation page", () => {
 });
 
 // ============================================================================
+// Profile creation flow (create → verify → edit → sub-pages → delete)
+// ============================================================================
+
+describe("profile creation flow", () => {
+  const b = useBrowser();
+  const profileName = `E2E Test ${Date.now()}`;
+  let profileId: string | null = null;
+
+  it("creates a profile via manual entry", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/profile/create");
+    await b.page.waitForLoadState("networkidle");
+
+    // Switch to manual entry form (basic info section is already expanded)
+    await b.page.getByRole("button", { name: /skip to manual/i }).click();
+    await b.page.waitForTimeout(1000);
+
+    // Fill required field: Full Name (first text input)
+    await b.page.locator('input[type="text"]').first().fill(profileName);
+
+    // Fill optional: Professional Title (second text input)
+    await b.page.locator('input[type="text"]').nth(1).fill("Senior QA Engineer");
+
+    // Submit and wait for redirect to /dashboard?profile=<id>
+    await b.page.getByRole("button", { name: /create profile/i }).click();
+    await b.page.waitForURL(/\/dashboard\?profile=\d+/, { timeout: 15000 });
+
+    // Extract profile ID from redirect URL
+    const match = b.page.url().match(/profile=(\d+)/);
+    profileId = match?.[1] ?? null;
+    expect(profileId).toBeTruthy();
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Dashboard");
+  });
+
+  it("shows the new profile in the edit page", async () => {
+    // First ensure the new profile is selected via URL param
+    await b.page.goto(`/dashboard?profile=${profileId}`);
+    await b.page.waitForLoadState("networkidle");
+
+    await b.page.goto("/dashboard/profile/edit");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Basic Info");
+
+    // Verify saved name (first text input on edit page)
+    const nameValue = await b.page.locator('input[type="text"]').first().inputValue();
+    expect(nameValue).toBe(profileName);
+  });
+
+  it("shows work experience page with add button", async () => {
+    await b.page.goto("/dashboard/profile/work-experience");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Work Experience");
+
+    const addBtn = b.page.getByRole("button", { name: /add.*experience/i });
+    expect(await addBtn.isVisible()).toBe(true);
+  });
+
+  it("shows education page with add button", async () => {
+    await b.page.goto("/dashboard/profile/education");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Education");
+
+    const addBtn = b.page.getByRole("button", { name: /add.*education/i });
+    expect(await addBtn.isVisible()).toBe(true);
+  });
+
+  it("shows skills page with add categories", async () => {
+    await b.page.goto("/dashboard/profile/skills");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Skills");
+
+    const addBtn = b.page.getByRole("button", { name: /add category/i });
+    expect(await addBtn.isVisible()).toBe(true);
+  });
+
+  it("shows languages page", async () => {
+    await b.page.goto("/dashboard/profile/languages");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Languages");
+  });
+
+  it("deletes the test profile via settings danger zone", async () => {
+    // First ensure the test profile is selected
+    await b.page.goto(`/dashboard?profile=${profileId}`);
+    await b.page.waitForLoadState("networkidle");
+
+    await b.page.goto("/dashboard/export/settings");
+    await b.page.waitForLoadState("networkidle");
+
+    // Type the profile name in the confirmation input
+    const confirmInput = b.page.locator('input[placeholder="Enter profile name to confirm"]');
+    await confirmInput.fill(profileName);
+
+    // Click "Delete this profile" (enabled after name matches)
+    await b.page.getByRole("button", { name: /delete this profile/i }).click();
+    await b.page.waitForTimeout(500);
+
+    // Click "Yes, delete permanently" in the final confirmation
+    const finalDelete = b.page.getByRole("button", { name: /yes.*delete permanently/i });
+    await finalDelete.click();
+
+    // Should redirect to dashboard after deletion
+    await b.page.waitForURL("**/dashboard**", { timeout: 10000 });
+    expect(b.page.url()).toContain("/dashboard");
+  });
+});
+
+// ============================================================================
 // Jobs page
 // ============================================================================
 

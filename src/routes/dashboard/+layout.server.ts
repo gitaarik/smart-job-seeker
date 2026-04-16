@@ -70,6 +70,7 @@ export const load: LayoutServerLoad = async (event) => {
     maxAge: 60 * 60 * 24 * 365, // 1 year
     httpOnly: true,
     sameSite: "lax",
+    secure: event.url.protocol === "https:",
   });
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
