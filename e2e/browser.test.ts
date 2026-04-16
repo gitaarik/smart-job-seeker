@@ -550,6 +550,117 @@ describe("theme switching", () => {
 });
 
 // ============================================================================
+// Applications pages
+// ============================================================================
+
+describe("applications pages", () => {
+  const b = useBrowser();
+
+  it("shows all applications heading", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/applications/active");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("All Applications");
+  });
+
+  it("shows salary prep page", async () => {
+    await b.page.goto("/dashboard/applications/salary");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Salary Prep");
+  });
+});
+
+// ============================================================================
+// Job detail page
+// ============================================================================
+
+describe("job detail page", () => {
+  const b = useBrowser();
+
+  it("navigates to a job detail from the jobs list", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/jobs");
+    await b.page.waitForLoadState("networkidle");
+
+    // Click the first job card link
+    const jobLink = b.page.locator('main a[href*="/dashboard/jobs/"]').first();
+    expect(await jobLink.isVisible()).toBe(true);
+
+    const href = await jobLink.getAttribute("href");
+    await jobLink.click();
+    await b.page.waitForURL(`**${href}`, { timeout: 5000 });
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Job Details");
+  });
+
+  it("shows save button and job content", async () => {
+    const saveBtn = b.page.getByRole("button", { name: /^save$/i });
+    expect(await saveBtn.isVisible()).toBe(true);
+
+    // Job detail should have substantial content
+    const mainText = await b.page.locator("main").textContent();
+    expect(mainText!.length).toBeGreaterThan(500);
+  });
+});
+
+// ============================================================================
+// Profile edit and save
+// ============================================================================
+
+describe("profile edit and save", () => {
+  const b = useBrowser();
+  const testTitle = `E2E Title ${Date.now()}`;
+  let originalTitle = "";
+
+  it("loads the edit page with profile data", async () => {
+    await loginViaUI(b.page);
+    await b.page.goto("/dashboard/profile/edit");
+    await b.page.waitForLoadState("networkidle");
+
+    const heading = await b.page.locator("h1").first().textContent();
+    expect(heading?.trim()).toBe("Basic Info");
+
+    // Name should be filled
+    const nameValue = await b.page.locator('input[type="text"]').first().inputValue();
+    expect(nameValue).toBeTruthy();
+  });
+
+  it("can edit and save the professional title", async () => {
+    const titleInput = b.page.locator('input[type="text"]').nth(2);
+    originalTitle = await titleInput.inputValue();
+
+    await titleInput.fill(testTitle);
+    await b.page.getByRole("button", { name: /^save$/i }).first().click();
+    await b.page.waitForTimeout(2000);
+
+    // Reload and verify persistence
+    await b.page.reload();
+    await b.page.waitForLoadState("networkidle");
+
+    const savedValue = await b.page.locator('input[type="text"]').nth(2).inputValue();
+    expect(savedValue).toBe(testTitle);
+  });
+
+  it("restores the original title", async () => {
+    const titleInput = b.page.locator('input[type="text"]').nth(2);
+    await titleInput.fill(originalTitle);
+    await b.page.getByRole("button", { name: /^save$/i }).first().click();
+    await b.page.waitForTimeout(2000);
+
+    await b.page.reload();
+    await b.page.waitForLoadState("networkidle");
+
+    const restoredValue = await b.page.locator('input[type="text"]').nth(2).inputValue();
+    expect(restoredValue).toBe(originalTitle);
+  });
+});
+
+// ============================================================================
 // Navigation between pages
 // ============================================================================
 
