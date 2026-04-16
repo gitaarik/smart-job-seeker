@@ -5,6 +5,18 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.47] - 2026-04-16
+
+18 commits since v0.4.46.
+
+### Added
+- Browser-based E2E test suite covering signup, password reset, applications, job details, profile operations, navigation, feedback, and theme switching—23 tests across all pages
+- Trusted origins support for local development testing
+
+### Fixed
+- Cookie secure flag handling in production environments
+- 12 failing tests across 7 test suites
+
 ## [0.4.46] - 2026-04-15
 
 10 commits since v0.4.45.
