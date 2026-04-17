@@ -27,21 +27,26 @@ export interface MatchJobResult {
 // Queue Instance
 // ============================================================================
 
-export const matchQueue = new Queue<MatchJobData, MatchJobResult>(
-  "matcher",
-  {
+// Lazy singletons — avoids Redis connection at import/build time
+let _matchQueue: Queue<MatchJobData, MatchJobResult> | null = null;
+let _matchQueueEvents: QueueEvents | null = null;
+
+function getMatchQueue() {
+  return (_matchQueue ??= new Queue("matcher", {
     connection: redisConnection,
     defaultJobOptions: {
       removeOnComplete: 100,
       removeOnFail: 500,
       attempts: 1,
     },
-  },
-);
+  }));
+}
 
-const matchQueueEvents = new QueueEvents("matcher", {
-  connection: redisConnection,
-});
+function getMatchQueueEvents() {
+  return (_matchQueueEvents ??= new QueueEvents("matcher", {
+    connection: redisConnection,
+  }));
+}
 
 // ============================================================================
 // Helper Functions
@@ -60,7 +65,8 @@ export async function addMatchJob(
   // A fixed ID like "match-1-617" would silently return the old completed job
   // instead of creating a new one (since removeOnComplete keeps them around).
   const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
-  const job = await matchQueue.add("match", data, { jobId });
-  const result = await job.waitUntilFinished(matchQueueEvents, timeoutMs);
+  const queue = getMatchQueue();
+  const job = await queue.add("match", data, { jobId });
+  const result = await job.waitUntilFinished(getMatchQueueEvents(), timeoutMs);
   return result;
 }

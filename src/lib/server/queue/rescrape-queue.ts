@@ -36,17 +36,19 @@ export interface RescrapeJobResult {
 // Queue Instance
 // ============================================================================
 
-export const rescrapeQueue = new Queue<RescrapeJobData, RescrapeJobResult>(
-  "rescrape",
-  {
+// Lazy singleton — avoids Redis connection at import/build time
+let _rescrapeQueue: Queue<RescrapeJobData, RescrapeJobResult> | null = null;
+
+function getRescrapeQueue() {
+  return (_rescrapeQueue ??= new Queue("rescrape", {
     connection: redisConnection,
     defaultJobOptions: {
       removeOnComplete: 100,
       removeOnFail: 100,
       attempts: 1,
     },
-  },
-);
+  }));
+}
 
 // ============================================================================
 // Helper Functions
@@ -57,7 +59,7 @@ export const rescrapeQueue = new Queue<RescrapeJobData, RescrapeJobResult>(
  */
 export async function addRescrapeJob(data: RescrapeJobData) {
   const queueJobId = `rescrape-${data.jobId}-${Date.now()}`;
-  return rescrapeQueue.add("rescrape", data, {
+  return getRescrapeQueue().add("rescrape", data, {
     jobId: queueJobId,
   });
 }
@@ -66,7 +68,7 @@ export async function addRescrapeJob(data: RescrapeJobData) {
  * Get the active rescrape job for a specific job ID (if any)
  */
 export async function getActiveRescrapeJob(jobId: number) {
-  const activeJobs = await rescrapeQueue.getActive();
+  const activeJobs = await getRescrapeQueue().getActive();
   return activeJobs.find((j) => j.data.jobId === jobId);
 }
 
@@ -74,7 +76,7 @@ export async function getActiveRescrapeJob(jobId: number) {
  * Get waiting rescrape job for a specific job ID (if any)
  */
 export async function getWaitingRescrapeJob(jobId: number) {
-  const waitingJobs = await rescrapeQueue.getWaiting();
+  const waitingJobs = await getRescrapeQueue().getWaiting();
   return waitingJobs.find((j) => j.data.jobId === jobId);
 }
 

@@ -43,30 +43,32 @@ const defaultJobOptions = {
   attempts: 1, // No auto-retry for scraper jobs (they handle retries internally)
 };
 
-export const hostedScraperQueue = new Queue<ScrapeJobData, ScrapeJobResult>(
-  "scraper-hosted",
-  { connection: redisConnection, defaultJobOptions },
-);
+// Lazy singletons — avoids Redis connection at import/build time
+let _hostedQ: Queue<ScrapeJobData, ScrapeJobResult> | null = null;
+let _desktopQ: Queue<ScrapeJobData, ScrapeJobResult> | null = null;
+let _hostedQE: QueueEvents | null = null;
+let _desktopQE: QueueEvents | null = null;
 
-export const desktopScraperQueue = new Queue<ScrapeJobData, ScrapeJobResult>(
-  "scraper-desktop",
-  { connection: redisConnection, defaultJobOptions },
-);
+function getHostedQueue() {
+  return (_hostedQ ??= new Queue("scraper-hosted", { connection: redisConnection, defaultJobOptions }));
+}
+function getDesktopQueue() {
+  return (_desktopQ ??= new Queue("scraper-desktop", { connection: redisConnection, defaultJobOptions }));
+}
+function getHostedQueueEvents() {
+  return (_hostedQE ??= new QueueEvents("scraper-hosted", { connection: redisConnection }));
+}
+function getDesktopQueueEvents() {
+  return (_desktopQE ??= new QueueEvents("scraper-desktop", { connection: redisConnection }));
+}
 
-/** Both queues for cross-queue lookups */
-const allScraperQueues = [hostedScraperQueue, desktopScraperQueue];
-
-// ============================================================================
-// Queue Events (for monitoring)
-// ============================================================================
-
-export const hostedScraperQueueEvents = new QueueEvents("scraper-hosted", {
-  connection: redisConnection,
-});
-
-export const desktopScraperQueueEvents = new QueueEvents("scraper-desktop", {
-  connection: redisConnection,
-});
+// Re-export getters for the barrel export (cloud worker uses these)
+export {
+  getHostedQueue,
+  getDesktopQueue,
+  getHostedQueueEvents,
+  getDesktopQueueEvents,
+};
 
 // ============================================================================
 // Queue Routing
@@ -81,8 +83,8 @@ export const desktopScraperQueueEvents = new QueueEvents("scraper-desktop", {
 function resolveQueue(
   browserProvider?: string | null,
 ): Queue<ScrapeJobData, ScrapeJobResult> {
-  if (browserProvider === "hosted") return hostedScraperQueue;
-  return desktopScraperQueue;
+  if (browserProvider === "hosted") return getHostedQueue();
+  return getDesktopQueue();
 }
 
 // ============================================================================
@@ -109,7 +111,7 @@ export async function addScrapeJob(
  */
 export async function getActiveJobForSearch(searchTaskId: number) {
   const activeJobArrays = await Promise.all(
-    allScraperQueues.map((q) => q.getActive()),
+    [getHostedQueue(), getDesktopQueue()].map((q) => q.getActive()),
   );
   return activeJobArrays
     .flat()
@@ -121,7 +123,7 @@ export async function getActiveJobForSearch(searchTaskId: number) {
  */
 export async function getWaitingJobForSearch(searchTaskId: number) {
   const waitingJobArrays = await Promise.all(
-    allScraperQueues.map((q) => q.getWaiting()),
+    [getHostedQueue(), getDesktopQueue()].map((q) => q.getWaiting()),
   );
   return waitingJobArrays
     .flat()
@@ -165,6 +167,8 @@ export async function removeActiveJob(
  * Get aggregate queue stats across both queues
  */
 export async function getQueueStats() {
+  const hosted = getHostedQueue();
+  const desktop = getDesktopQueue();
   const [
     hostedWaiting,
     hostedActive,
@@ -175,14 +179,14 @@ export async function getQueueStats() {
     desktopCompleted,
     desktopFailed,
   ] = await Promise.all([
-    hostedScraperQueue.getWaitingCount(),
-    hostedScraperQueue.getActiveCount(),
-    hostedScraperQueue.getCompletedCount(),
-    hostedScraperQueue.getFailedCount(),
-    desktopScraperQueue.getWaitingCount(),
-    desktopScraperQueue.getActiveCount(),
-    desktopScraperQueue.getCompletedCount(),
-    desktopScraperQueue.getFailedCount(),
+    hosted.getWaitingCount(),
+    hosted.getActiveCount(),
+    hosted.getCompletedCount(),
+    hosted.getFailedCount(),
+    desktop.getWaitingCount(),
+    desktop.getActiveCount(),
+    desktop.getCompletedCount(),
+    desktop.getFailedCount(),
   ]);
 
   return {
