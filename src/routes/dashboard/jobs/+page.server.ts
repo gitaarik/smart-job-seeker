@@ -254,7 +254,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         .map((id) => matchById.get(id))
         .filter(Boolean) as typeof fullMatches;
 
-      const matchJobIds = orderedMatches.map((m) => m.job);
+      const matchJobIds = orderedMatches.map((m) => m.job_id);
 
       // Load user statuses from job_statuses table
       const jobStatuses = await db.job_statuses.findMany({
@@ -266,10 +266,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       jobs = orderedMatches.map((m) => m.jobs);
       matchesByJobId = Object.fromEntries(
         orderedMatches.map((m) => [
-          m.job,
+          m.job_id,
           {
             id: m.id,
-            job: m.job,
+            job: m.job_id,
             score: m.score,
             skill_match_percentage: m.skill_match_percentage,
             matched_skills: m.matched_skills,
@@ -322,11 +322,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       const jobMatches = await db.job_matches.findMany({
         where: {
           profile_id: profileId,
-          job: { in: jobIds },
+          job_id: { in: jobIds },
         },
         select: {
           id: true,
-          job: true,
+          job_id: true,
           score: true,
           skill_match_percentage: true,
           matched_skills: true,
@@ -342,7 +342,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       });
       const statusByJobId = Object.fromEntries(jobStatuses.map((s) => [s.job, s.status]));
 
-      matchesByJobId = Object.fromEntries(jobMatches.map((m) => [m.job, m]));
+      matchesByJobId = Object.fromEntries(jobMatches.map((m) => [m.job_id, m]));
       savedJobIds = jobIds.filter((id) => statusByJobId[id] === "saved");
       rejectedJobIds = jobIds.filter((id) => statusByJobId[id] === "rejected");
     }

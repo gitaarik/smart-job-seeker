@@ -60,7 +60,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         take: 20,
         select: {
           id: true,
-          job: true,
+          job_id: true,
           score: true,
           recommendation: true,
           date_created: true,

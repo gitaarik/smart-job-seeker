@@ -28,7 +28,7 @@
 
   interface RecentMatch {
     id: number;
-    job: number;
+    job_id: number;
     score: number;
     recommendation: string;
     status: string;
@@ -413,7 +413,7 @@
           {#each recentMatches as match (match.id)}
             {@const rec = getRecommendationLabel(match.recommendation)}
             <a
-              href="/dashboard/jobs/{match.job}"
+              href="/dashboard/jobs/{match.job_id}"
               class="flex items-center gap-3 p-3 rounded-lg bg-[var(--dash-bg)] hover:bg-[var(--dash-bg)]/80 transition-colors"
             >
               <!-- Score Badge -->
