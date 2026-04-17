@@ -288,9 +288,38 @@
                   <div class="text-[var(--dash-text-muted)] text-xs">{invite.email}</div>
                 {/if}
               </div>
-              <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0">
-                Expires {formatDate(invite.expiresAt)}
-              </span>
+              <form
+                method="POST"
+                action="?/update_invite_expiry"
+                use:enhance={() => {
+                  return async ({ update }) => { await update(); };
+                }}
+                class="flex items-center gap-1.5 flex-shrink-0"
+              >
+                <input type="hidden" name="email" value={invite.email} />
+                <span class="text-xs text-[var(--dash-text-muted)]">Expires</span>
+                <input
+                  type="date"
+                  name="expiresAt"
+                  value={new Date(invite.expiresAt).toISOString().split("T")[0]}
+                  onchange={(e) => e.currentTarget.form?.requestSubmit()}
+                  class="text-xs text-[var(--dash-text-muted)] bg-transparent border-b border-dashed border-[var(--dash-text-muted)]/40 hover:border-[var(--dash-primary)] focus:border-[var(--dash-primary)] focus:outline-none cursor-pointer px-0.5"
+                />
+              </form>
+              <form
+                method="POST"
+                action="?/revoke_invite"
+                use:enhance={({ cancel }) => {
+                  if (!confirm(`Revoke invitation for ${invite.email}?`)) { cancel(); return; }
+                  return async ({ update }) => { await update(); };
+                }}
+              >
+                <input type="hidden" name="email" value={invite.email} />
+                <button
+                  type="submit"
+                  class="text-xs text-[var(--dash-error)]/60 hover:text-[var(--dash-error)] transition-colors"
+                >Revoke</button>
+              </form>
             </div>
           {/each}
         </div>

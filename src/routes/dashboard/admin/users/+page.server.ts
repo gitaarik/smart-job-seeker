@@ -165,7 +165,7 @@ export const actions: Actions = {
         id: crypto.randomUUID(),
         identifier: `invite:${email.trim()}`,
         value: inviteData,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         createdAt: new Date(),
       },
     });
@@ -180,7 +180,7 @@ export const actions: Actions = {
           <p>You've been invited to join Smart Job Seeker.</p>
           <p>Click the link below to set up your account:</p>
           <p><a href="${baseUrl}/signup/invite?token=${token}">Accept Invitation & Set Password</a></p>
-          <p>This invitation expires in 7 days.</p>
+          <p>This invitation expires in 30 days.</p>
         `,
       });
     } catch (e: unknown) {
@@ -190,6 +190,59 @@ export const actions: Actions = {
       });
       const message = e instanceof Error ? e.message : "Failed to send email";
       return fail(500, { error: `Invite email failed: ${message}` });
+    }
+
+    return { success: true };
+  },
+
+  revoke_invite: async ({ request, locals }) => {
+    if (!locals.user?.is_admin) {
+      return fail(403, { error: "Admin access required" });
+    }
+
+    const formData = await request.formData();
+    const email = formData.get("email") as string;
+
+    if (!email?.trim()) {
+      return fail(400, { error: "Email is required" });
+    }
+
+    const deleted = await db.verifications.deleteMany({
+      where: { identifier: `invite:${email.trim()}` },
+    });
+
+    if (deleted.count === 0) {
+      return fail(404, { error: "Invitation not found" });
+    }
+
+    return { success: true };
+  },
+
+  update_invite_expiry: async ({ request, locals }) => {
+    if (!locals.user?.is_admin) {
+      return fail(403, { error: "Admin access required" });
+    }
+
+    const formData = await request.formData();
+    const email = formData.get("email") as string;
+    const expiresAt = formData.get("expiresAt") as string;
+
+    if (!email?.trim() || !expiresAt) {
+      return fail(400, { error: "Email and expiry date are required" });
+    }
+
+    const newExpiry = new Date(expiresAt);
+    if (isNaN(newExpiry.getTime())) {
+      return fail(400, { error: "Invalid date" });
+    }
+
+    const updated = await db.verifications.updateMany({
+      where: { identifier: `invite:${email.trim()}` },
+      data: { expiresAt: newExpiry },
+    });
+
+    if (updated.count === 0) {
+      return fail(404, { error: "Invitation not found" });
     }
 
     return { success: true };
