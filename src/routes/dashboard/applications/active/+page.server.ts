@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const search = url.searchParams.get("q") || "";
 
   const where: Record<string, unknown> = {
-    profile: layoutData.selectedProfile.id,
+    profile_id: layoutData.selectedProfile.id,
   };
 
   if (group === "active") {
@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   }
 
   if (platform) {
-    where.jobs = { job_platform: parseInt(platform) };
+    where.jobs = { job_platform_id: parseInt(platform) };
   }
 
   if (search) {
@@ -82,7 +82,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       jobs: {
         some: {
           applications: {
-            some: { profile: layoutData.selectedProfile.id },
+            some: { profile_id: layoutData.selectedProfile.id },
           },
         },
       },
@@ -117,7 +117,7 @@ export const actions: Actions = {
     const now = new Date();
     const application = await db.applications.create({
       data: {
-        profile: profileId,
+        profile_id: profileId,
         status: "preparing",
         status_action: "Send application",
         date_created: now,
@@ -159,7 +159,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.applications.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -206,7 +206,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.applications.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {

@@ -119,9 +119,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   if (platform) {
     const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
     if (platformIds.length === 1) {
-      platformFilter = Prisma.sql`j.job_platform = ${platformIds[0]}`;
+      platformFilter = Prisma.sql`j.job_platform_id = ${platformIds[0]}`;
     } else if (platformIds.length > 1) {
-      platformFilter = Prisma.sql`j.job_platform IN (${Prisma.join(platformIds)})`;
+      platformFilter = Prisma.sql`j.job_platform_id IN (${Prisma.join(platformIds)})`;
     }
   }
 
@@ -153,7 +153,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     // "Not yet matched" — jobs with no job_matches row for this profile
     // Uses same visibility scope as the matcher (respects match_community_jobs)
     const matchConfig = await db.match_config.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       select: { match_community_jobs: true },
     });
     const { from, where } = buildVisibilityScope(profileId, matchConfig?.match_community_jobs ?? false);
@@ -161,7 +161,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     const jobRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
       SELECT j.id, COUNT(*) OVER() as cnt
       ${from}
-      LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+      LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
       ${where}
       AND jm.id IS NULL
       AND ${searchFilter}
@@ -196,11 +196,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   } else if (hasScoreFilter || statusValues.length > 0) {
     // Query via job_matches + job_statuses tables when filtering by score or status
     let statusFilter = Prisma.sql`TRUE`;
-    let statusJoin = Prisma.sql`LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
+    let statusJoin = Prisma.sql`LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
 
     if (statusValues.length > 0) {
       // When filtering by specific statuses, use INNER JOIN to require a status row
-      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
+      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
       if (statusValues.length === 1) {
         statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
       } else {
@@ -215,9 +215,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     const matchRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
       SELECT jm.id, COUNT(*) OVER() as cnt
       FROM job_matches jm
-      JOIN jobs j ON j.id = jm.job
+      JOIN jobs j ON j.id = jm.job_id
       ${statusJoin}
-      WHERE jm.profile = ${profileId}
+      WHERE jm.profile_id = ${profileId}
       AND ${statusFilter}
       AND ${scoreFilter}
       AND ${searchFilter}
@@ -321,7 +321,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       // Get matches for the displayed jobs
       const jobMatches = await db.job_matches.findMany({
         where: {
-          profile: profileId,
+          profile_id: profileId,
           job: { in: jobIds },
         },
         select: {
@@ -431,9 +431,9 @@ async function countMatchingJobs(
   if (platform) {
     const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
     if (platformIds.length === 1) {
-      platformFilter = Prisma.sql`j.job_platform = ${platformIds[0]}`;
+      platformFilter = Prisma.sql`j.job_platform_id = ${platformIds[0]}`;
     } else if (platformIds.length > 1) {
-      platformFilter = Prisma.sql`j.job_platform IN (${Prisma.join(platformIds)})`;
+      platformFilter = Prisma.sql`j.job_platform_id IN (${Prisma.join(platformIds)})`;
     }
   }
 
@@ -464,7 +464,7 @@ async function countMatchingJobs(
   let statusJoin = Prisma.empty;
 
   if (statusValues.length > 0) {
-    statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
+    statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
     if (statusValues.length === 1) {
       statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
     } else {
@@ -475,9 +475,9 @@ async function countMatchingJobs(
   const result = await db.$queryRaw<{ cnt: bigint }[]>`
     SELECT COUNT(*) as cnt
     FROM job_matches jm
-    JOIN jobs j ON j.id = jm.job
+    JOIN jobs j ON j.id = jm.job_id
     ${statusJoin}
-    WHERE jm.profile = ${profileId}
+    WHERE jm.profile_id = ${profileId}
     AND jm.reasoning IS NOT NULL
     AND ${statusFilter}
     AND ${scoreFilter}
@@ -565,9 +565,9 @@ export const actions: Actions = {
     if (platform) {
       const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
       if (platformIds.length === 1) {
-        platformFilter = Prisma.sql`j.job_platform = ${platformIds[0]}`;
+        platformFilter = Prisma.sql`j.job_platform_id = ${platformIds[0]}`;
       } else if (platformIds.length > 1) {
-        platformFilter = Prisma.sql`j.job_platform IN (${Prisma.join(platformIds)})`;
+        platformFilter = Prisma.sql`j.job_platform_id IN (${Prisma.join(platformIds)})`;
       }
     }
 
@@ -598,7 +598,7 @@ export const actions: Actions = {
     let statusJoin = Prisma.empty;
 
     if (statusValues.length > 0) {
-      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job`;
+      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
       if (statusValues.length === 1) {
         statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
       } else {
@@ -609,8 +609,8 @@ export const actions: Actions = {
     await db.$queryRaw`
       DELETE FROM job_matches jm
       USING jobs j ${statusJoin}
-      WHERE j.id = jm.job
-      AND jm.profile = ${profileId}
+      WHERE j.id = jm.job_id
+      AND jm.profile_id = ${profileId}
       AND jm.reasoning IS NOT NULL
       AND ${statusFilter}
       AND ${scoreFilter}

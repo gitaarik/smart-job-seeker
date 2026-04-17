@@ -13,7 +13,7 @@ import {
   parseResumeWithLLM,
   validateJsonResume,
 } from "$lib/server/resume";
-import { getFileFromDirectus } from "$lib/server/directus/files";
+import { getFile } from "$lib/server/files";
 import { logImportEvent } from "$lib/server/import-log";
 import { dbDirect as db } from "$lib/server/db";
 
@@ -53,7 +53,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
   let buffer: Buffer;
   try {
-    buffer = await getFileFromDirectus(log.file_id!);
+    buffer = await getFile(log.file_id!);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch file";
     error(500, message);
@@ -82,7 +82,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   let buffer: Buffer;
   try {
-    buffer = await getFileFromDirectus(log.file_id!);
+    buffer = await getFile(log.file_id!);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch file from storage";
     error(500, message);

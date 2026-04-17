@@ -345,7 +345,7 @@
             <div class="flex flex-wrap gap-2">
               {#each tagUsage.achievements as item}
                 <a
-                  href="/dashboard/profile/work-experience/{item.work_experience}"
+                  href="/dashboard/profile/work-experience/{item.work_experience_id}"
                   class="dash-link-ext"
                 >{item.name || "Untitled"}</a>
               {/each}

@@ -80,7 +80,7 @@ export async function getMatchCounts(
       COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation = 'ineligible')::int AS ineligible,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.id IS NULL)::int AS unmatched
     ${from}
-    LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+    LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
     ${where}
   `;
 
@@ -122,7 +122,7 @@ export async function getEligibleUnmatchedCount(
   const result = await db.$queryRaw<{ cnt: number }[]>`
     SELECT COUNT(*)::int as cnt
     ${from}
-    LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+    LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
     ${where}
     AND jm.id IS NULL
     AND ${eligibilityFilter}
@@ -148,7 +148,7 @@ export async function getCommunityJobCountsByWindow(
     LEFT JOIN jobs j ON j.status != 'archived'
       AND j.id NOT IN (SELECT ji.job FROM job_importers ji WHERE ji.profile = ${profileId})
       AND (w.days = -1 OR j.date_created >= NOW() - MAKE_INTERVAL(days => w.days))
-    LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+    LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
     WHERE jm.id IS NULL
     GROUP BY w.days
     ORDER BY w.days

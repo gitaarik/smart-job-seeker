@@ -61,7 +61,7 @@ export async function generateApplicationQuestionAnswer(
     };
   }
 
-  const profileId = question.applications.profile;
+  const profileId = question.applications.profile_id;
   const jobDescription = question.applications.jobs?.job_description || "";
 
   // Generate AI chat (try block for async operation)
@@ -102,7 +102,7 @@ export async function generateApplicationQuestionAnswer(
     await db.application_questions.update({
       where: { id: questionId },
       data: {
-        ai_chat: aiChat.id,
+        ai_chat_id: aiChat.id,
         ai_chat_response: aiChat.response,
         answer: aiChat.response,
       },

@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const projects = await db.side_projects.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
     include: {
       side_project_achievements: {
@@ -53,7 +53,7 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.side_projects.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
 
@@ -66,7 +66,7 @@ export const actions: Actions = {
         stars: stars ? parseInt(stars) : null,
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
-        profile: profileId,
+        profile_id: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -97,7 +97,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.side_projects.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {

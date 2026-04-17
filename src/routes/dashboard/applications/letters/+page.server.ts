@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Get all applications for this profile
   const applications = await db.applications.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     include: {
       jobs: true,
       application_letters: {
@@ -94,7 +94,7 @@ export const actions: Actions = {
       },
     });
 
-    if (!letter || letter.applications.profile !== profileId) {
+    if (!letter || letter.applications.profile_id !== profileId) {
       return fail(404, { error: "Letter not found" });
     }
 
@@ -137,7 +137,7 @@ export const actions: Actions = {
       },
     });
 
-    if (!question || question.applications.profile !== profileId) {
+    if (!question || question.applications.profile_id !== profileId) {
       return fail(404, { error: "Question not found" });
     }
 
@@ -177,7 +177,7 @@ export const actions: Actions = {
       },
     });
 
-    if (!letter || letter.applications.profile !== profileId) {
+    if (!letter || letter.applications.profile_id !== profileId) {
       return fail(404, { error: "Letter not found" });
     }
 
@@ -213,7 +213,7 @@ export const actions: Actions = {
       },
     });
 
-    if (!question || question.applications.profile !== profileId) {
+    if (!question || question.applications.profile_id !== profileId) {
       return fail(404, { error: "Question not found" });
     }
 

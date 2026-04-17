@@ -76,7 +76,7 @@ describe("verifyApiKey", () => {
   it("returns null for revoked key", async () => {
     mockFindUnique.mockResolvedValue({
       id: 1,
-      profile: 42,
+      profile_id: 42,
       revoked: true,
       expires_at: null,
     });
@@ -86,7 +86,7 @@ describe("verifyApiKey", () => {
   it("returns null for expired key", async () => {
     mockFindUnique.mockResolvedValue({
       id: 1,
-      profile: 42,
+      profile_id: 42,
       revoked: false,
       expires_at: new Date("2020-01-01"),
     });
@@ -96,7 +96,7 @@ describe("verifyApiKey", () => {
   it("returns profile ID for valid key", async () => {
     mockFindUnique.mockResolvedValue({
       id: 1,
-      profile: 42,
+      profile_id: 42,
       revoked: false,
       expires_at: null,
     });
@@ -106,7 +106,7 @@ describe("verifyApiKey", () => {
   it("returns profile ID for valid key with future expiry", async () => {
     mockFindUnique.mockResolvedValue({
       id: 1,
-      profile: 42,
+      profile_id: 42,
       revoked: false,
       expires_at: new Date("2099-01-01"),
     });
@@ -116,7 +116,7 @@ describe("verifyApiKey", () => {
   it("updates last_used timestamp on valid key", async () => {
     mockFindUnique.mockResolvedValue({
       id: 7,
-      profile: 42,
+      profile_id: 42,
       revoked: false,
       expires_at: null,
     });
@@ -159,7 +159,7 @@ describe("verifyApiKeyDetailed", () => {
 
   it("returns error for revoked key", async () => {
     mockFindUnique.mockResolvedValue({
-      id: 1, profile: 42, revoked: true, expires_at: null,
+      id: 1, profile_id: 42, revoked: true, expires_at: null,
     });
     const result = await verifyApiKeyDetailed("sjs_revoked");
     expect(result).toEqual({ valid: false, error: "API key has been revoked" });
@@ -167,7 +167,7 @@ describe("verifyApiKeyDetailed", () => {
 
   it("returns error for expired key", async () => {
     mockFindUnique.mockResolvedValue({
-      id: 1, profile: 42, revoked: false, expires_at: new Date("2020-01-01"),
+      id: 1, profile_id: 42, revoked: false, expires_at: new Date("2020-01-01"),
     });
     const result = await verifyApiKeyDetailed("sjs_expired");
     expect(result).toEqual({ valid: false, error: "API key has expired" });
@@ -175,7 +175,7 @@ describe("verifyApiKeyDetailed", () => {
 
   it("returns valid with profileId for valid key", async () => {
     mockFindUnique.mockResolvedValue({
-      id: 1, profile: 42, revoked: false, expires_at: null,
+      id: 1, profile_id: 42, revoked: false, expires_at: null,
     });
     const result = await verifyApiKeyDetailed("sjs_valid");
     expect(result).toEqual({ valid: true, profileId: 42 });

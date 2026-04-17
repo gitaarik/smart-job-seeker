@@ -152,7 +152,7 @@ export async function createApplicationLetterFollowup(
     fetchEntity: (id) =>
       db.application_letters.findUnique({
         where: { id },
-        select: { id: true, ai_chat: true },
+        select: { id: true, ai_chat_id: true },
       }),
     updateEntity: async (id, aiChatId, aiChatResponse) => {
       // Parse structured response (letter + feedback)
@@ -163,7 +163,7 @@ export async function createApplicationLetterFollowup(
       await db.application_letters.update({
         where: { id },
         data: {
-          ai_chat: aiChatId,
+          ai_chat_id: aiChatId,
           ai_chat_response: aiChatResponse,
         },
       });

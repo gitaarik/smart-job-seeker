@@ -18,8 +18,8 @@ import { checkProfileAccess, type AccessControlOptions } from "../access-control
 const baseProfile = {
   id: 1,
   user_id: "owner-123",
-  public_cv_version: null as number | null,
-  public_resume_version: null as number | null,
+  public_cv_version_id: null as number | null,
+  public_resume_version_id: null as number | null,
 } as any;
 
 function opts(overrides: Partial<AccessControlOptions> = {}): AccessControlOptions {
@@ -36,7 +36,7 @@ describe("checkProfileAccess", () => {
   // Public access
   it("grants public access when public CV version is set", async () => {
     const result = await checkProfileAccess(opts({
-      profile: { ...baseProfile, public_cv_version: 10 },
+      profile: { ...baseProfile, public_cv_version_id: 10 },
     }));
     expect(result).toMatchObject({
       allowed: true,
@@ -47,7 +47,7 @@ describe("checkProfileAccess", () => {
 
   it("grants public access when public resume version is set", async () => {
     const result = await checkProfileAccess(opts({
-      profile: { ...baseProfile, public_resume_version: 20 },
+      profile: { ...baseProfile, public_resume_version_id: 20 },
       routeType: "resume",
     }));
     expect(result).toMatchObject({
@@ -64,7 +64,7 @@ describe("checkProfileAccess", () => {
       tokenId: 99,
     });
     const result = await checkProfileAccess(opts({
-      profile: { ...baseProfile, public_cv_version: 10 },
+      profile: { ...baseProfile, public_cv_version_id: 10 },
       token: "some-token",
     }));
     expect(result).toMatchObject({
@@ -151,7 +151,7 @@ describe("checkProfileAccess", () => {
   // Priority order
   it("prefers public over owner when no token", async () => {
     const result = await checkProfileAccess(opts({
-      profile: { ...baseProfile, public_cv_version: 10 },
+      profile: { ...baseProfile, public_cv_version_id: 10 },
       userId: "owner-123",
     }));
     expect(result.accessType).toBe("public");

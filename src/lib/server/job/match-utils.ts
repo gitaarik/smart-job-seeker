@@ -13,7 +13,7 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
   const skills = await db.tech_skills.findMany({
     where: {
       tech_skill_categories: {
-        profile: profileId,
+        profile_id: profileId,
       },
     },
     select: {
@@ -38,7 +38,7 @@ export async function getProfileSkillLevels(
   const skills = await db.tech_skills.findMany({
     where: {
       tech_skill_categories: {
-        profile: profileId,
+        profile_id: profileId,
       },
     },
     select: {

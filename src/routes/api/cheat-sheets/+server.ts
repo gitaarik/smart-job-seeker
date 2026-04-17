@@ -24,7 +24,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   const lastItem = await db.cheat_sheets.findFirst({
-    where: { profile: profile_id },
+    where: { profile_id: profile_id },
     orderBy: { sort: "desc" },
   });
 
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     data: {
       title: title.trim(),
       content: content?.trim() || null,
-      profile: profile_id,
+      profile_id: profile_id,
       sort: (lastItem?.sort ?? -1) + 1,
       date_created: new Date(),
     },
@@ -56,7 +56,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = await db.cheat_sheets.findFirst({
-    where: { id, profile: profile_id },
+    where: { id, profile_id: profile_id },
   });
 
   if (!existing) {
@@ -92,7 +92,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   await Promise.all(
     order.map((id, index) =>
       db.cheat_sheets.updateMany({
-        where: { id, profile: profile_id },
+        where: { id, profile_id: profile_id },
         data: { sort: index, date_updated: new Date() },
       })
     ),
@@ -115,7 +115,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = await db.cheat_sheets.findFirst({
-    where: { id, profile: profile_id },
+    where: { id, profile_id: profile_id },
   });
 
   if (!existing) {

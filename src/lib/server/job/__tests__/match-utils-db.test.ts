@@ -50,7 +50,7 @@ describe("getProfileSkills", () => {
     mockFindMany.mockResolvedValueOnce([]);
     await getProfileSkills(42);
     expect(mockFindMany).toHaveBeenCalledWith({
-      where: { tech_skill_categories: { profile: 42 } },
+      where: { tech_skill_categories: { profile_id: 42 } },
       select: { name: true },
     });
   });

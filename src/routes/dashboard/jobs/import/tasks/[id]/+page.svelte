@@ -2074,7 +2074,7 @@
             <button
               onclick={startScrape}
               disabled={isStarting || !searchTask.search_url ||
-                !searchTask.platform}
+                !searchTask.platform_id}
               class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {#if isStarting}
@@ -2129,7 +2129,7 @@
           No search URL configured. Please add a search URL to start scraping.
         </p>
       {/if}
-      {#if !searchTask.platform}
+      {#if !searchTask.platform_id}
         <p class="text-sm text-[var(--dash-warning)]">
           No platform selected. Please select a platform to start scraping.
         </p>

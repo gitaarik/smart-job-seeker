@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const exports = await db.profile_exports.findMany({
     where: {
-      profile: layoutData.selectedProfile.id,
+      profile_id: layoutData.selectedProfile.id,
       export_type: "structured_data",
     },
     include: {

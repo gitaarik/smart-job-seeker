@@ -262,7 +262,7 @@ export const actions: Actions = {
     const result = await db.$queryRaw<{ cnt: bigint }[]>`
       WITH deleted AS (
         DELETE FROM job_matches
-        WHERE profile IN (${Prisma.join(profileIds)})
+        WHERE profile_id IN (${Prisma.join(profileIds)})
         AND reasoning IS NOT NULL
         RETURNING id
       )

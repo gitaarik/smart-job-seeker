@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ locals }) => {
           id: true,
           note: true,
           search_url: true,
-          platform: true,
+          platform_id: true,
           browser_provider: true,
           job_platforms: { select: { name: true } },
         },
@@ -120,7 +120,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(404, "Search task not found");
   }
 
-  if (!searchTask.search_url || !searchTask.platform) {
+  if (!searchTask.search_url || !searchTask.platform_id) {
     throw error(400, "Search task must have a URL and platform configured");
   }
 

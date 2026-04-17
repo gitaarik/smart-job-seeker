@@ -19,12 +19,12 @@ export async function createApplicationQuestionFollowup(
     fetchEntity: (id) =>
       db.application_questions.findUnique({
         where: { id },
-        select: { id: true, ai_chat: true },
+        select: { id: true, ai_chat_id: true },
       }),
     updateEntity: (id, aiChatId, aiChatResponse) =>
       db.application_questions.update({
         where: { id },
-        data: { ai_chat: aiChatId, ai_chat_response: aiChatResponse, answer: aiChatResponse },
+        data: { ai_chat_id: aiChatId, ai_chat_response: aiChatResponse, answer: aiChatResponse },
       }).then(() => {}),
   });
 }

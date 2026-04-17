@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
         letter_type: letterType,
         status: "draft",
         content: null,
-        ai_chat: null,
+        ai_chat_id: null,
         ai_chat_response: null,
         date_created: new Date(),
         date_updated: null,
@@ -95,7 +95,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -108,7 +108,7 @@ export const actions: Actions = {
 
     const newLetter = await db.application_letters.create({
       data: {
-        application: appId,
+        application_id: appId,
         letter_type: letterType,
         content: content || null,
         status: "draft",
@@ -144,12 +144,12 @@ export const actions: Actions = {
     if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     const letter = await db.application_letters.findFirst({
-      where: { id: letterId, application: appId },
+      where: { id: letterId, application_id: appId },
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
@@ -211,12 +211,12 @@ export const actions: Actions = {
     if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     const letter = await db.application_letters.findFirst({
-      where: { id: letterId, application: appId },
+      where: { id: letterId, application_id: appId },
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 

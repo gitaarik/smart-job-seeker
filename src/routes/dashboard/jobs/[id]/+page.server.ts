@@ -41,8 +41,8 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   // Get match info if exists
   const match = await db.job_matches.findFirst({
     where: {
-      profile: profileId,
-      job: jobId,
+      profile_id: profileId,
+      job_id: jobId,
     },
   });
 
@@ -164,16 +164,16 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     };
     browserFingerprintDefaults: { language: string; timezone: string };
   } | null = null;
-  if (isStaff && job.job_platform) {
+  if (isStaff && job.job_platform_id) {
     // Fetch all credentials for this platform
     const platformCredentials = await db.platform_profiles.findMany({
-      where: { profile: profileId, platform: job.job_platform },
+      where: { profile_id: profileId, platform_id: job.job_platform_id },
       select: { id: true, username: true },
     });
 
     // Fetch job search settings for this platform + profile
     const searchTask = await db.search_tasks.findFirst({
-      where: { platform: job.job_platform, profile: profileId },
+      where: { platform_id: job.job_platform_id, profile_id: profileId },
       select: {
         browser_provider: true,
         keep_minimized: true,
@@ -196,7 +196,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
     rescrapeConfig = {
       platformCredentials,
-      platformId: job.job_platform,
+      platformId: job.job_platform_id,
       selectedCredentialId: searchTask?.platform_profile_id?.toString() ??
         "none",
       loginUrl: searchTask?.job_platforms?.login_page_url ?? null,
@@ -216,7 +216,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
   // Check if there's an existing application for this job
   const existingApplication = await db.applications.findFirst({
-    where: { job: jobId, profile: profileId },
+    where: { job_id: jobId, profile_id: profileId },
     select: { id: true, status: true },
   });
 
@@ -347,7 +347,7 @@ export const actions: Actions = {
 
     // Check if application already exists
     const existing = await db.applications.findFirst({
-      where: { job: jobId, profile: profileId },
+      where: { job_id: jobId, profile_id: profileId },
       select: { id: true },
     });
 
@@ -359,8 +359,8 @@ export const actions: Actions = {
     const now = new Date();
     const application = await db.applications.create({
       data: {
-        job: jobId,
-        profile: profileId,
+        job_id: jobId,
+        profile_id: profileId,
         status: "preparing",
         status_action: "Send application",
         date_created: now,

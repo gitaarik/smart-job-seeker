@@ -10,7 +10,6 @@ import { dbDirect as db } from "$lib/server/db";
 const PUBLIC_API_ROUTES = [
   "/api/auth", // Better Auth handles its own auth
   "/api/verify-turnstile", // Public CAPTCHA verification
-  "/api/webhook", // Uses webhook secret auth
   "/api/jobs/import", // Uses API key auth
 ];
 

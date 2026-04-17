@@ -61,25 +61,25 @@ export async function validateEntityOwnership(
     case "work_experience": {
       const entity = await dbDirect.work_experiences.findUnique({
         where: { id: entityId },
-        select: { profile: true },
+        select: { profile_id: true },
       });
-      profileId = entity?.profile ?? null;
+      profileId = entity?.profile_id ?? null;
       break;
     }
     case "education": {
       const entity = await dbDirect.education.findUnique({
         where: { id: entityId },
-        select: { profile: true },
+        select: { profile_id: true },
       });
-      profileId = entity?.profile ?? null;
+      profileId = entity?.profile_id ?? null;
       break;
     }
     case "side_project": {
       const entity = await dbDirect.side_projects.findUnique({
         where: { id: entityId },
-        select: { profile: true },
+        select: { profile_id: true },
       });
-      profileId = entity?.profile ?? null;
+      profileId = entity?.profile_id ?? null;
       break;
     }
   }
@@ -305,9 +305,9 @@ async function updateEntityMediaPath(
     case "work_experience":
       if (field === "logo_path") {
         // Clear both logo_path and legacy logo field when deleting
-        const data: { logo_path: string | null; logo?: null } = { logo_path: path };
+        const data: { logo_path: string | null; logo_id?: null } = { logo_path: path };
         if (path === null) {
-          data.logo = null;
+          data.logo_id = null;
         }
         await dbDirect.work_experiences.update({
           where: { id: entityId },

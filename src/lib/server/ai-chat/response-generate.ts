@@ -60,11 +60,11 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
     if (usage && creditsCost > 0) {
       const aiChat = await db.ai_chats.findUnique({
         where: { id: aiChatId },
-        select: { profile: true },
+        select: { profile_id: true },
       });
       if (aiChat) {
         const profile = await db.profiles.findUnique({
-          where: { id: aiChat.profile },
+          where: { id: aiChat.profile_id },
           select: { user_id: true },
         });
         if (profile?.user_id) {

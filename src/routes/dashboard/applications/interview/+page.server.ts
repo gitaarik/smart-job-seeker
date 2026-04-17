@@ -13,11 +13,11 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const [cheatsheets, stories] = await Promise.all([
     db.cheat_sheets.findMany({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "asc" },
     }),
     db.project_stories.findMany({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "asc" },
     }),
   ]);

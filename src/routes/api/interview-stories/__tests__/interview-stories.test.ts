@@ -80,7 +80,7 @@ describe("POST /api/interview-stories", () => {
           category: "leadership",
           situation: "We had a problem",
           sort: 4,
-          profile: 1,
+          profile_id: 1,
         }),
       }),
     );

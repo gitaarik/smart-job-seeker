@@ -5,7 +5,6 @@
  * specifically designed for job scraping and matching operations.
  */
 
-import { config } from "$lib/server/config";
 import { createAndGenerateAiChat } from "./utils.js";
 import { dbDirect } from "$lib/server/db";
 
@@ -50,7 +49,7 @@ export async function createJobScrapingAiChat<T>(
   // Look up profile from search_tasks
   const searchTask = await dbDirect.search_tasks.findUnique({
     where: { id: searchTaskId },
-    select: { profile: true },
+    select: { profile_id: true },
   });
 
   if (!searchTask) {
@@ -62,7 +61,7 @@ export async function createJobScrapingAiChat<T>(
     };
   }
 
-  if (!searchTask.profile) {
+  if (!searchTask.profile_id) {
     return {
       success: false,
       message: `Job search ${searchTaskId} has no profile assigned`,
@@ -74,7 +73,7 @@ export async function createJobScrapingAiChat<T>(
   try {
     // Call createAndGenerateAiChat with profile from search_tasks
     const result = await createAndGenerateAiChat(
-      searchTask.profile,
+      searchTask.profile_id,
       promptKey,
       customVariables,
     );
@@ -94,12 +93,10 @@ export async function createJobScrapingAiChat<T>(
       try {
         parsedResponse = JSON.parse(result.aiChat.response) as T;
       } catch (_parseError) {
-        const viewUrl =
-          `${config.directusUrl}/admin/content/ai_chats/${result.aiChat.id}`;
         return {
           success: false,
           message:
-            `Failed to parse AI response as JSON. View response: ${viewUrl}`,
+            `Failed to parse AI response as JSON (ai_chat ID: ${result.aiChat.id})`,
           response: null,
           aiChatId: result.aiChat.id,
         };
@@ -185,12 +182,10 @@ export async function createJobMatchingAiChat<T>(
       try {
         parsedResponse = JSON.parse(result.aiChat.response) as T;
       } catch (_parseError) {
-        const viewUrl =
-          `${config.directusUrl}/admin/content/ai_chats/${result.aiChat.id}`;
         return {
           success: false,
           message:
-            `Failed to parse AI response as JSON. View response: ${viewUrl}`,
+            `Failed to parse AI response as JSON (ai_chat ID: ${result.aiChat.id})`,
           response: null,
           aiChatId: result.aiChat.id,
         };

@@ -17,10 +17,6 @@ export interface AppConfig {
 
   // External Services
   publicSiteUrl: string;
-  adminPublicUrl: string;
-  directusUrl: string;
-  directusToken: string;
-  directusWebhookSecret: string;
 
   // Browser
   chromePath: string;
@@ -110,12 +106,7 @@ function loadConfig(): AppConfig {
     databaseUrl: getEnv("SJS_DATABASE_URL"),
 
     // External Services
-    // URLs: _HOST = accessible from outside Docker, _DOCKER = container-to-container
     publicSiteUrl: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
-    adminPublicUrl: getEnv("SJS_ADMIN_URL_HOST", "http://localhost:8055"),
-    directusUrl: getEnv("SJS_ADMIN_URL_DOCKER", "http://admin:8055"),
-    directusToken: getEnv("SJS_ADMIN_TOKEN", ""),
-    directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET", ""),
 
     // Browser
     chromePath: getEnv("SJS_CHROME_PATH", ""),
@@ -185,9 +176,6 @@ export function validateConfig(): void {
   // Check required fields
   const required: (keyof AppConfig)[] = [
     "databaseUrl",
-    "directusUrl",
-    "directusToken",
-    "directusWebhookSecret",
   ];
 
   const missing = required.filter((key) => !config[key]);

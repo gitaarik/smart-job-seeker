@@ -3,7 +3,7 @@ import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../profile/utils";
-import { getFileFromDirectus } from "$lib/server/directus/files";
+import { getFile } from "$lib/server/files";
 
 export const GET: RequestHandler = async ({ url, locals, cookies }) => {
   const user = requireAuth(locals);
@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
   const exp = await db.profile_exports.findFirst({
     where: {
       id: parseInt(exportId, 10),
-      profile: profileId,
+      profile_id: profileId,
     },
     include: {
       directus_files: true,
@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
     error(404, "Export not found");
   }
 
-  const fileBuffer = await getFileFromDirectus(exp.file);
+  const fileBuffer = await getFile(exp.file_id);
   const filename =
     exp.directus_files?.filename_download || `export-${exp.id}.${exp.file_type}`;
 

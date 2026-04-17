@@ -54,7 +54,7 @@ describe("validateToken", () => {
       visit_limit: null,
       visit_count: 0,
     });
-    mockFindUniqueVersion.mockResolvedValue({ profile: 999 });
+    mockFindUniqueVersion.mockResolvedValue({ profile_id: 999 });
     const result = await validateToken("some-token", 1);
     expect(result.valid).toBe(false);
     expect(result.error).toBe("Access token is not valid for this profile");
@@ -69,7 +69,7 @@ describe("validateToken", () => {
       visit_limit: null,
       visit_count: 0,
     });
-    mockFindUniqueVersion.mockResolvedValue({ profile: 1 });
+    mockFindUniqueVersion.mockResolvedValue({ profile_id: 1 });
     const result = await validateToken("some-token", 1);
     expect(result.valid).toBe(false);
     expect(result.error).toBe("Access token has expired");
@@ -84,7 +84,7 @@ describe("validateToken", () => {
       visit_limit: 5,
       visit_count: 5,
     });
-    mockFindUniqueVersion.mockResolvedValue({ profile: 1 });
+    mockFindUniqueVersion.mockResolvedValue({ profile_id: 1 });
     const result = await validateToken("some-token", 1);
     expect(result.valid).toBe(false);
     expect(result.error).toBe("Access token visit limit exceeded");
@@ -99,7 +99,7 @@ describe("validateToken", () => {
       visit_limit: null,
       visit_count: 0,
     });
-    mockFindUniqueVersion.mockResolvedValue({ profile: 1 });
+    mockFindUniqueVersion.mockResolvedValue({ profile_id: 1 });
     const result = await validateToken("some-token", 1);
     expect(result).toEqual({
       valid: true,
@@ -117,7 +117,7 @@ describe("validateToken", () => {
       visit_limit: 10,
       visit_count: 3,
     });
-    mockFindUniqueVersion.mockResolvedValue({ profile: 1 });
+    mockFindUniqueVersion.mockResolvedValue({ profile_id: 1 });
     const result = await validateToken("some-token", 1);
     expect(result.valid).toBe(true);
   });

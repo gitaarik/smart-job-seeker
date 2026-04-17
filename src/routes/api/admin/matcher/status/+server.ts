@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
     getAllMatcherStates(),
     db.match_config.findMany({
       select: {
-        profile: true,
+        profile_id: true,
         match_community_jobs: true,
       },
     }),
@@ -30,14 +30,14 @@ export const GET: RequestHandler = async ({ locals }) => {
   ]);
 
   // Get profile names for all profiles with match_config
-  const profileIds = configs.map((c) => c.profile);
+  const profileIds = configs.map((c) => c.profile_id);
   const profiles = await db.profiles.findMany({
     where: { id: { in: profileIds } },
     select: { id: true, name: true },
   });
 
   // Get per-profile match stats using shared match counting
-  const configMap = new Map(configs.map((c) => [c.profile, c]));
+  const configMap = new Map(configs.map((c) => [c.profile_id, c]));
   const profileStats = await Promise.all(
     profiles.map(async (p) => {
       const matchCommunityJobs = configMap.get(p.id)?.match_community_jobs ?? false;

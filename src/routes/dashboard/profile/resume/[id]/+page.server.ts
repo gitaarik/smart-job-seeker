@@ -18,12 +18,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const version = await db.profile_versions.findFirst({
-    where: { id, profile: layoutData.selectedProfile.id },
+    where: { id, profile_id: layoutData.selectedProfile.id },
     include: {
       profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
         {
           select: {
-            extended: true,
+            extended_id: true,
           },
         },
     },
@@ -41,14 +41,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const profile = await db.profiles.findUnique({
     where: { id: layoutData.selectedProfile.id },
     select: {
-      public_resume_version: true,
-      public_cv_version: true,
+      public_resume_version_id: true,
+      public_cv_version_id: true,
     },
   });
 
   // Get all other versions for "extends" options
   const allVersions = await db.profile_versions.findMany({
-    where: { profile: layoutData.selectedProfile.id, id: { not: id } },
+    where: { profile_id: layoutData.selectedProfile.id, id: { not: id } },
     orderBy: { name: "asc" },
     select: { id: true, name: true, slug: true },
   });
@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Find entities that reference this version's slug in their tags
   const slug = v.slug;
   type TaggedRow = { id: number; name: string | null };
-  type TaggedAchievementRow = { id: number; name: string | null; work_experience: number };
+  type TaggedAchievementRow = { id: number; name: string | null; work_experience_id: number };
   let taggedWorkExperiences: TaggedRow[] = [];
   let taggedEducation: TaggedRow[] = [];
   let taggedSideProjects: TaggedRow[] = [];
@@ -71,25 +71,25 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       await Promise.all([
         db.$queryRaw<TaggedRow[]>`
           SELECT id, COALESCE(position, name) as name FROM work_experiences
-          WHERE profile = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
+          WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
           ORDER BY name ASC`,
         db.$queryRaw<TaggedRow[]>`
           SELECT id, COALESCE(institution, area) as name FROM education
-          WHERE profile = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
+          WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
           ORDER BY name ASC`,
         db.$queryRaw<TaggedRow[]>`
           SELECT id, name FROM side_projects
-          WHERE profile = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
+          WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
           ORDER BY name ASC`,
         db.$queryRaw<TaggedRow[]>`
           SELECT ts.id, ts.name FROM tech_skills ts
-          JOIN tech_skill_categories tsc ON ts.category = tsc.id
-          WHERE tsc.profile = ${profileId} AND ts.tags::jsonb @> ${tagJson}::jsonb
+          JOIN tech_skill_categories tsc ON ts.category_id = tsc.id
+          WHERE tsc.profile_id = ${profileId} AND ts.tags::jsonb @> ${tagJson}::jsonb
           ORDER BY ts.name ASC`,
         db.$queryRaw<TaggedAchievementRow[]>`
-          SELECT wea.id, wea.description as name, wea.work_experience FROM work_experience_achievements wea
-          JOIN work_experiences we ON wea.work_experience = we.id
-          WHERE we.profile = ${profileId} AND wea.tags::jsonb @> ${tagJson}::jsonb
+          SELECT wea.id, wea.description as name, wea.work_experience_id FROM work_experience_achievements wea
+          JOIN work_experiences we ON wea.work_experience_id = we.id
+          WHERE we.profile_id = ${profileId} AND wea.tags::jsonb @> ${tagJson}::jsonb
           ORDER BY wea.description ASC`,
       ]);
   }
@@ -99,12 +99,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       ...v,
       extendsIds:
         exts
-          ?.map((e) => e.extended)
+          ?.map((e) => e.extended_id)
           .filter((id): id is number => id !== null) ?? [],
     },
     allVersions,
-    publicResumeVersionId: profile?.public_resume_version ?? null,
-    publicCvVersionId: profile?.public_cv_version ?? null,
+    publicResumeVersionId: profile?.public_resume_version_id ?? null,
+    publicCvVersionId: profile?.public_cv_version_id ?? null,
     tagUsage: {
       workExperiences: taggedWorkExperiences,
       education: taggedEducation,
@@ -147,7 +147,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.profile_versions.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -166,28 +166,28 @@ export const actions: Actions = {
     // Update public resume/cv version on profile
     const profile = await db.profiles.findUnique({
       where: { id: profileId },
-      select: { public_resume_version: true, public_cv_version: true },
+      select: { public_resume_version_id: true, public_cv_version_id: true },
     });
 
     const profileUpdate: {
-      public_resume_version?: number | null;
-      public_cv_version?: number | null;
+      public_resume_version_id?: number | null;
+      public_cv_version_id?: number | null;
     } = {};
 
     if (setPublicResume) {
-      if (profile?.public_resume_version !== id) {
-        profileUpdate.public_resume_version = id;
+      if (profile?.public_resume_version_id !== id) {
+        profileUpdate.public_resume_version_id = id;
       }
-    } else if (profile?.public_resume_version === id) {
-      profileUpdate.public_resume_version = null;
+    } else if (profile?.public_resume_version_id === id) {
+      profileUpdate.public_resume_version_id = null;
     }
 
     if (setPublicCv) {
-      if (profile?.public_cv_version !== id) {
-        profileUpdate.public_cv_version = id;
+      if (profile?.public_cv_version_id !== id) {
+        profileUpdate.public_cv_version_id = id;
       }
-    } else if (profile?.public_cv_version === id) {
-      profileUpdate.public_cv_version = null;
+    } else if (profile?.public_cv_version_id === id) {
+      profileUpdate.public_cv_version_id = null;
     }
 
     if (Object.keys(profileUpdate).length > 0) {
@@ -199,18 +199,18 @@ export const actions: Actions = {
 
     // Update extensions: remove old, add new ones
     await db.profile_version_extensions.deleteMany({
-      where: { extender: id },
+      where: { extender_id: id },
     });
 
     for (const parentId of extendsIds) {
       const parent = await db.profile_versions.findFirst({
-        where: { id: parentId, profile: profileId },
+        where: { id: parentId, profile_id: profileId },
       });
       if (parent) {
         await db.profile_version_extensions.create({
           data: {
-            extender: id,
-            extended: parentId,
+            extender_id: id,
+            extended_id: parentId,
           },
         });
       }
@@ -240,7 +240,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.profile_versions.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -250,19 +250,19 @@ export const actions: Actions = {
     // Clear public version references if this version was public
     const profile = await db.profiles.findUnique({
       where: { id: profileId },
-      select: { public_resume_version: true, public_cv_version: true },
+      select: { public_resume_version_id: true, public_cv_version_id: true },
     });
 
     const profileUpdate: {
-      public_resume_version?: number | null;
-      public_cv_version?: number | null;
+      public_resume_version_id?: number | null;
+      public_cv_version_id?: number | null;
     } = {};
 
-    if (profile?.public_resume_version === id) {
-      profileUpdate.public_resume_version = null;
+    if (profile?.public_resume_version_id === id) {
+      profileUpdate.public_resume_version_id = null;
     }
-    if (profile?.public_cv_version === id) {
-      profileUpdate.public_cv_version = null;
+    if (profile?.public_cv_version_id === id) {
+      profileUpdate.public_cv_version_id = null;
     }
 
     if (Object.keys(profileUpdate).length > 0) {
@@ -274,7 +274,7 @@ export const actions: Actions = {
 
     // Remove extension records where this version is extender or extended
     await db.profile_version_extensions.deleteMany({
-      where: { OR: [{ extender: id }, { extended: id }] },
+      where: { OR: [{ extender_id: id }, { extended_id: id }] },
     });
 
     await db.profile_versions.delete({

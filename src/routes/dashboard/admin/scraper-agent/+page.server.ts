@@ -6,7 +6,7 @@ export const load: PageServerLoad = async () => {
   const searchTasks = await db.search_tasks.findMany({
     where: {
       search_url: { not: null },
-      platform: { not: null },
+      platform_id: { not: null },
     },
     orderBy: { id: "asc" },
     select: {

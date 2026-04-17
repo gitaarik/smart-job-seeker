@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Get profile versions for this profile to use in the dropdown
   const versions = await db.profile_versions.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { name: "asc" },
   });
 
@@ -95,7 +95,7 @@ export const actions: Actions = {
     const version = await db.profile_versions.findFirst({
       where: {
         id: parseInt(profile_version),
-        profile: profileId,
+        profile_id: profileId,
       },
     });
 
@@ -162,7 +162,7 @@ export const actions: Actions = {
     const version = await db.profile_versions.findFirst({
       where: {
         id: existingToken.profile_version,
-        profile: profileId,
+        profile_id: profileId,
       },
     });
 
@@ -176,7 +176,7 @@ export const actions: Actions = {
       const newVersion = await db.profile_versions.findFirst({
         where: {
           id: parseInt(profile_version),
-          profile: profileId,
+          profile_id: profileId,
         },
       });
       if (!newVersion) {
@@ -233,7 +233,7 @@ export const actions: Actions = {
     const version = await db.profile_versions.findFirst({
       where: {
         id: existingToken.profile_version,
-        profile: profileId,
+        profile_id: profileId,
       },
     });
 

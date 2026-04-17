@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ locals, cookies }) => {
   }
 
   const versions = await db.profile_versions.findMany({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
     select: { slug: true },
     orderBy: { date_created: "desc" },
   });

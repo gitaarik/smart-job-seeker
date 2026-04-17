@@ -294,7 +294,7 @@
         await invalidateAll();
       }
 
-      if (letter.ai_chat) {
+      if (letter.ai_chat_id) {
         await sendFollowup(
           "Please review my letter and give me concise feedback: what works well, what could be improved, and any specific suggestions.",
           true,
@@ -550,7 +550,7 @@
             {/if}
           </button>
           <!-- Feedback input on last review-only entry (no revised version) -->
-          {#if isLast && hasExistingVersion && letter.ai_chat}
+          {#if isLast && hasExistingVersion && letter.ai_chat_id}
             <div class="mt-3 pt-3 border-t {borderColor} space-y-2">
               <textarea
                 bind:value={feedbackText}
@@ -740,7 +740,7 @@
       </div>
     {/if}
     <!-- Feedback input after last AI-generated version -->
-    {#if isLast && entry.content && !isEditing && letter.ai_chat && (entry.type === "ai_revision" || entry.type === "ai_review" || entry.type === "ai_generation")}
+    {#if isLast && entry.content && !isEditing && letter.ai_chat_id && (entry.type === "ai_revision" || entry.type === "ai_review" || entry.type === "ai_generation")}
       <div class="mt-3 space-y-2">
         <textarea
           bind:value={feedbackText}

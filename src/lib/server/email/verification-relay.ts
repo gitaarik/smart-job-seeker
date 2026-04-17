@@ -132,7 +132,7 @@ export async function processInboundEmail(params: {
     where: {
       status: "blocked",
       search_tasks: {
-        profile: profileId,
+        profile_id: profileId,
       },
     },
     orderBy: { started_at: "desc" },

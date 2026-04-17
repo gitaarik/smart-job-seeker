@@ -42,10 +42,10 @@ export const load: PageServerLoad = async ({
   // Verify the token belongs to this profile
   const profileVersion = await db.profile_versions.findUnique({
     where: { id: token.profile_version },
-    select: { profile: true },
+    select: { profile_id: true },
   });
 
-  if (!profileVersion || profileVersion.profile !== profile.id) {
+  if (!profileVersion || profileVersion.profile_id !== profile.id) {
     throw error(404, {
       message: "This link is not valid for this profile",
     });

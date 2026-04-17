@@ -99,7 +99,7 @@ export const POST: RequestHandler = async (event) => {
           date_posted: jobData.postedAt
             ? new Date(jobData.postedAt)
             : undefined,
-          job_platform: jobData.platformId,
+          job_platform_id: jobData.platformId,
           date_updated: new Date(),
         },
       });
@@ -123,8 +123,8 @@ export const POST: RequestHandler = async (event) => {
 
     // No changes — still record the importer
     await db.job_importers.upsert({
-      where: { job_profile: { job: existing.id, profile: profileId } },
-      create: { job: existing.id, profile: profileId },
+      where: { job_profile: { job_id: existing.id, profile_id: profileId } },
+      create: { job_id: existing.id, profile_id: profileId },
       update: {},
     });
 
@@ -160,7 +160,7 @@ export const POST: RequestHandler = async (event) => {
           : null,
         skills_required: jobData.skills,
         date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
-        job_platform: jobData.platformId,
+        job_platform_id: jobData.platformId,
         status: "hiring",
         date_created: new Date(),
         date_updated: new Date(),

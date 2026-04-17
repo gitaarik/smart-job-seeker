@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   }
 
   const credentials = await db.platform_profiles.findMany({
-    where: { profile: profile.id, platform: platformId },
+    where: { profile_id: profile.id, platform_id: platformId },
     select: { id: true, username: true, security_answer: true },
   });
 
@@ -78,8 +78,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   // Upsert credentials
   const existing = await db.platform_profiles.findFirst({
     where: {
-      profile: profile.id,
-      platform: platformId,
+      profile_id: profile.id,
+      platform_id: platformId,
     },
   });
 
@@ -99,8 +99,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
     // Create new
     await db.platform_profiles.create({
       data: {
-        profile: profile.id,
-        platform: platformId,
+        profile_id: profile.id,
+        platform_id: platformId,
         username: username || null,
         password: password || null,
         security_answer: security_answer || null,
@@ -148,8 +148,8 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
     const cred = await db.platform_profiles.findFirst({
       where: {
         id: parseInt(credentialId),
-        profile: profile.id,
-        platform: platformId,
+        profile_id: profile.id,
+        platform_id: platformId,
       },
     });
     if (!cred) {
@@ -164,22 +164,22 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
     await db.search_tasks.updateMany({
       where: {
         platform_profile_id: cred.id,
-        profile: profile.id,
+        profile_id: profile.id,
       },
       data: { platform_profile_id: null },
     });
   } else {
     // Delete all credentials for this platform
     const creds = await db.platform_profiles.findMany({
-      where: { profile: profile.id, platform: platformId },
+      where: { profile_id: profile.id, platform_id: platformId },
       select: { id: true },
     });
     const credIds = creds.map((c) => c.id);
 
     await db.platform_profiles.deleteMany({
       where: {
-        profile: profile.id,
-        platform: platformId,
+        profile_id: profile.id,
+        platform_id: platformId,
       },
     });
 
@@ -188,7 +188,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
       await db.search_tasks.updateMany({
         where: {
           platform_profile_id: { in: credIds },
-          profile: profile.id,
+          profile_id: profile.id,
         },
         data: { platform_profile_id: null },
       });

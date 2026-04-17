@@ -39,7 +39,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 

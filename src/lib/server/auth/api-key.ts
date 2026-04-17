@@ -72,7 +72,7 @@ export async function verifyApiKey(
       where: { key_hash: keyHash },
       select: {
         id: true,
-        profile: true,
+        profile_id: true,
         revoked: true,
         expires_at: true,
       },
@@ -100,7 +100,7 @@ export async function verifyApiKey(
       // Ignore errors updating last_used
     });
 
-    return apiKey.profile;
+    return apiKey.profile_id;
   } catch {
     return null;
   }
@@ -131,7 +131,7 @@ export async function verifyApiKeyDetailed(
       where: { key_hash: keyHash },
       select: {
         id: true,
-        profile: true,
+        profile_id: true,
         revoked: true,
         expires_at: true,
       },
@@ -157,7 +157,7 @@ export async function verifyApiKeyDetailed(
       // Ignore errors updating last_used
     });
 
-    return { valid: true, profileId: apiKey.profile };
+    return { valid: true, profileId: apiKey.profile_id };
   } catch (error) {
     return {
       valid: false,
@@ -183,7 +183,7 @@ export async function createApiKey(
 
   const created = await db.api_keys.create({
     data: {
-      profile: profileId,
+      profile_id: profileId,
       name,
       key_hash: hash,
       key_plain: key,
@@ -209,7 +209,7 @@ export async function revokeApiKey(
   const result = await db.api_keys.updateMany({
     where: {
       id: keyId,
-      profile: profileId,
+      profile_id: profileId,
       revoked: false,
     },
     data: { revoked: true },
@@ -228,7 +228,7 @@ export async function activateApiKey(
   const result = await db.api_keys.updateMany({
     where: {
       id: keyId,
-      profile: profileId,
+      profile_id: profileId,
       revoked: true,
     },
     data: { revoked: false },
@@ -248,7 +248,7 @@ export async function renameApiKey(
   const result = await db.api_keys.updateMany({
     where: {
       id: keyId,
-      profile: profileId,
+      profile_id: profileId,
     },
     data: { name },
   });
@@ -266,7 +266,7 @@ export async function deleteApiKey(
   const result = await db.api_keys.deleteMany({
     where: {
       id: keyId,
-      profile: profileId,
+      profile_id: profileId,
     },
   });
 
@@ -281,7 +281,7 @@ export async function deleteApiKey(
  */
 export async function listApiKeys(profileId: number) {
   return db.api_keys.findMany({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
     select: {
       id: true,
       name: true,

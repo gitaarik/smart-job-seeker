@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     select: {
       id: true,
       date_created: true,
-      profile: true,
+      profile_id: true,
       system_prompt: true,
       user_prompt: true,
       full_prompt: true,

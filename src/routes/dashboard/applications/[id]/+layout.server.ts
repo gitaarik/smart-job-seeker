@@ -17,7 +17,7 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
   const application = await db.applications.findFirst({
     where: {
       id: appId,
-      profile: layoutData.selectedProfile.id,
+      profile_id: layoutData.selectedProfile.id,
     },
     include: {
       jobs: {

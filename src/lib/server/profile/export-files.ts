@@ -4,7 +4,7 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
-import { getFileFromDirectus } from "../directus/files";
+import { getFile } from "$lib/server/files";
 
 /**
  * Query parameters for finding profile exports
@@ -23,13 +23,13 @@ interface ExportQuery {
  */
 export async function getLatestExport(query: ExportQuery) {
   const whereClause: {
-    profile: number;
+    profile_id: number;
     export_type: string;
     file_type: string;
     status: string;
     export_format?: string;
   } = {
-    profile: query.profileId,
+    profile_id: query.profileId,
     export_type: query.exportType,
     file_type: query.fileType,
     status: "published",
@@ -52,7 +52,7 @@ export async function getLatestExport(query: ExportQuery) {
  * @returns Buffer containing the file data
  */
 export async function getExportFileBuffer(fileUuid: string): Promise<Buffer> {
-  return getFileFromDirectus(fileUuid);
+  return getFile(fileUuid);
 }
 
 /**
@@ -67,7 +67,7 @@ export async function getLatestExportWithFile(query: ExportQuery) {
     return null;
   }
 
-  const fileBuffer = await getExportFileBuffer(exportRecord.file);
+  const fileBuffer = await getExportFileBuffer(exportRecord.file_id);
 
   return {
     export: exportRecord,

@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { uploadFileToDirectus } from "$lib/server/directus/files";
+import { uploadFile } from "$lib/server/files";
 import { Buffer } from "buffer";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const uploaded = await uploadFileToDirectus({
+    const uploaded = await uploadFile({
       filename: file.name,
       buffer,
       title: `Feedback #${feedback.id} - ${file.name}`,

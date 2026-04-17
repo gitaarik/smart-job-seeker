@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Fetch match config first — needed for visibility scope in getMatchCounts
   const matchConfig = await db.match_config.findFirst({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
     select: {
       id: true,
       job_types: true,
@@ -74,7 +74,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
     // Search tasks for this profile
     db.search_tasks.findMany({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       select: {
         id: true,
         note: true,
@@ -101,8 +101,8 @@ export const load: PageServerLoad = async ({ parent }) => {
           COUNT(*) FILTER (WHERE js.status = 'saved') as saved,
           COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0) as new_unreviewed
         FROM job_matches jm
-        LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job
-        WHERE jm.profile = ${profileId}
+        LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
+        WHERE jm.profile_id = ${profileId}
       `,
     ]),
 
@@ -110,8 +110,8 @@ export const load: PageServerLoad = async ({ parent }) => {
     db.$queryRaw<{ id: number }[]>`
       SELECT jm.id
       FROM job_matches jm
-      LEFT JOIN job_statuses js ON js.profile = jm.profile AND js.job = jm.job
-      WHERE jm.profile = ${profileId}
+      LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
+      WHERE jm.profile_id = ${profileId}
       AND jm.score > 0
       AND COALESCE(js.status, 'new') != 'rejected'
       ORDER BY jm.score DESC
@@ -153,7 +153,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     // Active applications
     db.applications.findMany({
       where: {
-        profile: profileId,
+        profile_id: profileId,
         status: { in: activeApplicationStatuses },
       },
       include: {

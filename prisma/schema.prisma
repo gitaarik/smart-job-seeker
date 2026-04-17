@@ -32,8 +32,8 @@ model application_activity_log {
   date         DateTime?     @db.Date
   title        String?       @db.VarChar(255)
   note         String?
-  application  Int?
-  applications applications? @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_activity_log_application_foreign")
+  application_id  Int?
+  applications applications? @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_activity_log_application_foreign")
 }
 
 model application_status_log {
@@ -53,14 +53,14 @@ model application_letters {
   id                                           Int               @id @default(autoincrement())
   date_created                                 DateTime?         @db.Timestamptz(6)
   date_updated                                 DateTime?         @db.Timestamptz(6)
-  application                                  Int
+  application_id  Int
   letter_type                                  String            @default("cover_letter") @db.VarChar(255)
   content                                      String?
-  ai_chat                                      Int?
+  ai_chat_id  Int?
   status                                       String            @default("draft") @db.VarChar(255)
   ai_chat_response                             String?
-  ai_chat_application_letters_ai_chatToai_chat ai_chats?         @relation("application_letters_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_letters_ai_chat_foreign")
-  applications                                 applications      @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_letters_application_foreign")
+  ai_chat_application_letters_ai_chatToai_chat ai_chats?         @relation("application_letters_ai_chatToai_chat", fields: [ai_chat_id], references: [id], onUpdate: NoAction, map: "application_letters_ai_chat_foreign")
+  applications                                 applications      @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_letters_application_foreign")
   letter_versions                              letter_versions[]
 }
 
@@ -82,13 +82,13 @@ model application_questions {
   sort                                           Int?
   date_created                                   DateTime?    @db.Timestamptz(6)
   date_updated                                   DateTime?    @db.Timestamptz(6)
-  application                                    Int
+  application_id  Int
   question                                       String
   answer                                         String?
-  ai_chat                                        Int?
+  ai_chat_id  Int?
   ai_chat_response                               String?
-  ai_chat_application_questions_ai_chatToai_chat ai_chats?    @relation("application_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_questions_ai_chat_foreign")
-  applications                                   applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_application_foreign")
+  ai_chat_application_questions_ai_chatToai_chat ai_chats?    @relation("application_questions_ai_chatToai_chat", fields: [ai_chat_id], references: [id], onUpdate: NoAction, map: "application_questions_ai_chat_foreign")
+  applications                                   applications @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_application_foreign")
 }
 
 model applications {
@@ -99,11 +99,11 @@ model applications {
   status_action_date       DateTime?                  @db.Date
   date_created             DateTime?                  @db.Timestamptz(6)
   date_updated             DateTime?                  @db.Timestamptz(6)
-  job                      Int?
-  profile                  Int
+  job_id  Int?
+  profile_id  Int
   cv_sent_through          String?                    @db.VarChar(255)
   cv_version_sent          String?                    @db.VarChar(255)
-  cv_file_sent             String?                    @db.Uuid
+  cv_file_sent_id  String? @db.Uuid
   application_sent_date    DateTime?                  @db.Date
   discontinued_reason      String?                    @db.VarChar(255)
   discontinued_note        String?
@@ -116,9 +116,9 @@ model applications {
   application_status_log   application_status_log[]
   application_letters      application_letters[]
   application_questions    application_questions[]
-  directus_files           directus_files?            @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
-  jobs                     jobs?                      @relation(fields: [job], references: [id], onUpdate: NoAction, map: "applications_job_foreign")
-  profiles                 profiles                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
+  directus_files           directus_files?            @relation(fields: [cv_file_sent_id], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
+  jobs                     jobs?                      @relation(fields: [job_id], references: [id], onUpdate: NoAction, map: "applications_job_foreign")
+  profiles                 profiles                   @relation(fields: [profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
   applications_files       applications_files[]
 }
 
@@ -137,8 +137,8 @@ model cheat_sheets {
   date_updated DateTime? @db.Timestamptz(6)
   title        String?   @db.VarChar(255)
   content      String?
-  profile      Int
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
+  profile_id  Int
+  profiles     profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
 }
 
 model collected_data {
@@ -146,8 +146,8 @@ model collected_data {
   date_updated DateTime? @db.Timestamptz(6)
   schema       String?
   data         String?
-  profile      Int?
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "collected_data_profile_foreign")
+  profile_id  Int?
+  profiles     profiles? @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "collected_data_profile_foreign")
 }
 
 model config {
@@ -676,14 +676,14 @@ model education {
   graduation_year Int?
   start_date      DateTime?       @db.Date
   end_date        DateTime?       @db.Date
-  profile         Int
+  profile_id  Int
   summary         String?
-  logo            String?         @db.Uuid
+  logo_id  String? @db.Uuid
   tags            Json?           @db.Json
   logo_path       String?         @db.VarChar(255)
   banner_path     String?         @db.VarChar(255)
-  directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
-  profiles        profiles        @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "education_profile_foreign")
+  directus_files  directus_files? @relation(fields: [logo_id], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
+  profiles        profiles        @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "education_profile_foreign")
 }
 
 model highlights {
@@ -692,12 +692,12 @@ model highlights {
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
-  profile      Int
+  profile_id  Int
   text         String?   @db.VarChar(255)
   fa_icon      String?   @db.VarChar(255)
   type         String?   @default("highlight") @db.VarChar(50)
   icon_name    String?   @db.VarChar(50)
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "highlights_profile_foreign")
+  profiles     profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "highlights_profile_foreign")
 }
 
 model job_matches {
@@ -711,17 +711,17 @@ model job_matches {
   job_date_updated_when_matched DateTime? @db.Timestamptz(6)
   date_created                  DateTime? @db.Timestamptz(6)
   date_updated                  DateTime? @db.Timestamptz(6)
-  job                           Int
-  profile                       Int
+  job_id  Int
+  profile_id  Int
   llm_prompt                    String?
   ai_chat_scoring               Int?
   matched_skills                Json?     @db.Json
   match_summary                 String?
   ai_chat                       ai_chats? @relation(fields: [ai_chat_scoring], references: [id], onUpdate: NoAction, map: "job_matches_ai_chat_scoring_foreign")
-  jobs                          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
-  profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
+  jobs                          jobs      @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
+  profiles                      profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
 
-  @@index([profile, job])
+  @@index([profile_id, job_id])
 }
 
 model job_match_history {
@@ -777,10 +777,10 @@ model job_resources {
   date_updated   DateTime?       @db.Timestamptz(6)
   name           String?         @db.VarChar(255)
   url            String?         @db.VarChar(255)
-  file           String?         @db.Uuid
-  job            Int
-  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "job_resources_file_foreign")
-  jobs           jobs            @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_resources_job_foreign")
+  file_id  String? @db.Uuid
+  job_id  Int
+  directus_files directus_files? @relation(fields: [file_id], references: [id], onUpdate: NoAction, map: "job_resources_file_foreign")
+  jobs           jobs            @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_resources_job_foreign")
 }
 
 model scraper_logs {
@@ -818,7 +818,7 @@ model jobs {
   experience_levels     Json?                   @db.Json
   work_location         Json?                   @db.Json
   source_html_stripped  String?
-  job_platform          Int?
+  job_platform_id  Int?
   ai_chat_extraction    Int?
   company               String?                 @db.VarChar(255)
   skills_required       Json?                   @db.Json
@@ -836,7 +836,7 @@ model jobs {
   job_statuses          job_statuses[]
   job_resources         job_resources[]
   ai_chat               ai_chats?               @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
-  job_platforms         job_platforms?          @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
+  job_platforms         job_platforms?          @relation(fields: [job_platform_id], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
   search_task_run_items search_task_run_items[]
 
   @@index([title, job_poster, date_posted], map: "idx_jobs_uniqueness")
@@ -867,9 +867,9 @@ model languages {
   name          String?   @db.VarChar(255)
   language_code String?   @db.VarChar(255)
   proficiency   String?   @db.VarChar(255)
-  profile       Int
+  profile_id  Int
   sort          Int?
-  profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "languages_profile_foreign")
+  profiles      profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "languages_profile_foreign")
 }
 
 model os_contributions {
@@ -880,12 +880,12 @@ model os_contributions {
   title             String?   @db.VarChar(255)
   description       String?
   project_name      String?   @db.VarChar(255)
-  profile           Int?
+  profile_id  Int?
   merged_date       DateTime? @db.Date
   issue_url         String?   @db.VarChar(255)
   pull_request_url  String?   @db.VarChar(255)
   contribution_type String?   @db.VarChar(255)
-  profiles          profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "os_contributions_profile_foreign")
+  profiles          profiles? @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "os_contributions_profile_foreign")
 }
 
 model platform_profiles {
@@ -894,8 +894,8 @@ model platform_profiles {
   sort                Int?
   date_created        DateTime?      @db.Timestamptz(6)
   date_updated        DateTime?      @db.Timestamptz(6)
-  profile             Int
-  platform            Int?
+  profile_id  Int
+  platform_id  Int?
   username            String?        @db.VarChar(255)
   password            String?        @db.VarChar(255)
   security_answer     String?        @db.VarChar(500)
@@ -903,8 +903,8 @@ model platform_profiles {
   last_login_at       DateTime?      @db.Timestamptz(6)
   login_error         String?
   provider_profile_id String?        @db.VarChar(255)
-  job_platforms       job_platforms? @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "platform_profiles_platform_foreign")
-  profiles            profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "platform_profiles_profile_foreign")
+  job_platforms       job_platforms? @relation(fields: [platform_id], references: [id], onUpdate: NoAction, map: "platform_profiles_platform_foreign")
+  profiles            profiles       @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "platform_profiles_profile_foreign")
   search_tasks        search_tasks[]
 }
 
@@ -914,15 +914,15 @@ model profile_exports {
   sort           Int?
   date_created   DateTime?      @db.Timestamptz(6)
   date_updated   DateTime?      @db.Timestamptz(6)
-  profile        Int
-  file           String         @db.Uuid
+  profile_id  Int
+  file_id  String @db.Uuid
   file_type      String         @db.VarChar(255)
   export_type    String         @db.VarChar(255)
   export_format  String?        @db.VarChar(255)
   description    String?
   source_url     String?        @db.VarChar(512)
-  directus_files directus_files @relation(fields: [file], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_file_foreign")
-  profiles       profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_profile_foreign")
+  directus_files directus_files @relation(fields: [file_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_file_foreign")
+  profiles       profiles       @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_profile_foreign")
 }
 
 model profile_tokens {
@@ -947,10 +947,10 @@ model profile_tokens {
 
 model profile_version_extensions {
   id                                                                     Int               @id @default(autoincrement())
-  extender                                                               Int?
-  extended                                                               Int?
-  profile_versions_profile_version_extensions_extendedToprofile_versions profile_versions? @relation("profile_version_extensions_extendedToprofile_versions", fields: [extended], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extended_foreign")
-  profile_versions_profile_version_extensions_extenderToprofile_versions profile_versions? @relation("profile_version_extensions_extenderToprofile_versions", fields: [extender], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extender_foreign")
+  extender_id  Int?
+  extended_id  Int?
+  profile_versions_profile_version_extensions_extendedToprofile_versions profile_versions? @relation("profile_version_extensions_extendedToprofile_versions", fields: [extended_id], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extended_foreign")
+  profile_versions_profile_version_extensions_extenderToprofile_versions profile_versions? @relation("profile_version_extensions_extenderToprofile_versions", fields: [extender_id], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extender_foreign")
 }
 
 model profile_versions {
@@ -961,12 +961,12 @@ model profile_versions {
   date_updated                                                                     DateTime?                    @db.Timestamptz(6)
   slug                                                                             String?                      @db.VarChar(255)
   name                                                                             String?
-  profile                                                                          Int
+  profile_id  Int
   toggles                                                                          Json?                        @db.Json
   preview_links                                                                    String?
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extendedToprofile_versions")
   profile_version_extensions_profile_version_extensions_extenderToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extenderToprofile_versions")
-  profiles_profile_versions_profileToprofiles                                      profiles                     @relation("profile_versions_profileToprofiles", fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  profiles_profile_versions_profileToprofiles                                      profiles                     @relation("profile_versions_profileToprofiles", fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
   profiles_profiles_public_cv_versionToprofile_versions                            profiles[]                   @relation("profiles_public_cv_versionToprofile_versions")
   profiles_profiles_public_resume_versionToprofile_versions                        profiles[]                   @relation("profiles_public_resume_versionToprofile_versions")
 }
@@ -986,7 +986,7 @@ model profiles {
   github_profile                                                    String?                 @db.VarChar(255)
   stackoverflow_profile                                             String?                 @db.VarChar(255)
   headline                                                          String?                 @db.VarChar(255)
-  profile_picture                                                   String?                 @db.Uuid
+  profile_picture_id  String? @db.Uuid
   summary                                                           String?
   nationality                                                       String?                 @db.VarChar(255)
   location_url                                                      String?                 @db.VarChar(255)
@@ -1013,8 +1013,8 @@ model profiles {
   whatsapp_number                                                   String?                 @db.VarChar(50)
   telegram_username                                                 String?                 @db.VarChar(100)
   user_id                                                           String?
-  public_cv_version                                                 Int?
-  public_resume_version                                             Int?
+  public_cv_version_id  Int?
+  public_resume_version_id  Int?
   source_cv                                                         String?                 @db.Uuid
   location                                                          String?                 @db.VarChar(255)
   profile_photo_path                                                String?                 @db.VarChar(255)
@@ -1047,9 +1047,9 @@ model profiles {
   platform_profiles                                                 platform_profiles[]
   profile_exports                                                   profile_exports[]
   profile_versions_profile_versions_profileToprofiles               profile_versions[]      @relation("profile_versions_profileToprofiles")
-  directus_files                                                    directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
-  profile_versions_profiles_public_cv_versionToprofile_versions     profile_versions?       @relation("profiles_public_cv_versionToprofile_versions", fields: [public_cv_version], references: [id], onUpdate: NoAction, map: "profiles_public_cv_version_foreign")
-  profile_versions_profiles_public_resume_versionToprofile_versions profile_versions?       @relation("profiles_public_resume_versionToprofile_versions", fields: [public_resume_version], references: [id], onUpdate: NoAction, map: "profiles_public_resume_version_foreign")
+  directus_files                                                    directus_files?         @relation(fields: [profile_picture_id], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
+  profile_versions_profiles_public_cv_versionToprofile_versions     profile_versions?       @relation("profiles_public_cv_versionToprofile_versions", fields: [public_cv_version_id], references: [id], onUpdate: NoAction, map: "profiles_public_cv_version_foreign")
+  profile_versions_profiles_public_resume_versionToprofile_versions profile_versions?       @relation("profiles_public_resume_versionToprofile_versions", fields: [public_resume_version_id], references: [id], onUpdate: NoAction, map: "profiles_public_resume_version_foreign")
   project_stories                                                   project_stories[]
   references                                                        references[]
   salary_expectations                                               salary_expectations[]
@@ -1064,7 +1064,7 @@ model profiles {
 
 model api_keys {
   id           Int       @id @default(autoincrement())
-  profile      Int
+  profile_id  Int
   name         String    @db.VarChar(255)
   key_hash     String    @unique @db.VarChar(64)
   key_plain    String?   @db.VarChar(100)
@@ -1072,12 +1072,12 @@ model api_keys {
   expires_at   DateTime? @db.Timestamptz(6)
   last_used    DateTime? @db.Timestamptz(6)
   revoked      Boolean   @default(false)
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_keys_profile_foreign")
+  profiles     profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_keys_profile_foreign")
   search_tasks search_tasks[]
   device_shares device_shares[]
 
   @@index([key_hash], map: "idx_api_keys_hash")
-  @@index([profile], map: "idx_api_keys_profile")
+  @@index([profile_id], map: "idx_api_keys_profile")
 }
 
 model contacts {
@@ -1120,8 +1120,8 @@ model project_stories {
   result       String?
   reflection   String?
   category     String?   @db.VarChar(255)
-  profile      Int
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_stories_profile_foreign")
+  profile_id  Int
+  profiles     profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_stories_profile_foreign")
 }
 
 model references {
@@ -1133,8 +1133,8 @@ model references {
   author          String    @db.VarChar(255)
   author_position String?   @db.VarChar(255)
   text            String?
-  profile         Int
-  profiles        profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "references_profile_foreign")
+  profile_id  Int
+  profiles        profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "references_profile_foreign")
 }
 
 model salary_expectations {
@@ -1152,19 +1152,19 @@ model salary_expectations {
   month_salary     Int?
   year_salary      Int?
   daily_rate       Int?
-  profile          Int
+  profile_id  Int
   currency         String?   @default("EUR") @db.VarChar(255)
-  profiles         profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "salary_expectations_profile_foreign")
+  profiles         profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "salary_expectations_profile_foreign")
 }
 
 model side_project_achievements {
   id            Int           @id @default(autoincrement())
   description   String?       @db.VarChar(255)
-  side_project  Int
+  side_project_id  Int
   date_created  DateTime?     @db.Timestamptz(6)
   date_updated  DateTime?     @db.Timestamptz(6)
   sort          Int?
-  side_projects side_projects @relation(fields: [side_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
+  side_projects side_projects @relation(fields: [side_project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
 }
 
 model side_project_technologies {
@@ -1173,8 +1173,8 @@ model side_project_technologies {
   date_created  DateTime?     @db.Timestamptz(6)
   date_updated  DateTime?     @db.Timestamptz(6)
   name          String?       @db.VarChar(255)
-  side_project  Int
-  side_projects side_projects @relation(fields: [side_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
+  side_project_id  Int
+  side_projects side_projects @relation(fields: [side_project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
 }
 
 model side_projects {
@@ -1186,7 +1186,7 @@ model side_projects {
   name                      String?                     @db.VarChar(255)
   start_date                DateTime?                   @db.Date
   end_date                  DateTime?                   @db.Date
-  profile                   Int
+  profile_id  Int
   url                       String?                     @db.VarChar(255)
   stars                     Int?
   summary                   String?
@@ -1196,7 +1196,7 @@ model side_projects {
   banner_path               String?                     @db.VarChar(255)
   side_project_achievements side_project_achievements[]
   side_project_technologies side_project_technologies[]
-  profiles                  profiles                    @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_projects_profile_foreign")
+  profiles                  profiles                    @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_projects_profile_foreign")
 }
 
 model tech_skill_categories {
@@ -1206,9 +1206,9 @@ model tech_skill_categories {
   date_created DateTime?     @db.Timestamptz(6)
   date_updated DateTime?     @db.Timestamptz(6)
   name         String?       @db.VarChar(255)
-  profile      Int
+  profile_id  Int
   fa_icon      String?       @db.VarChar(255)
-  profiles     profiles      @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skill_categories_profile_foreign")
+  profiles     profiles      @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skill_categories_profile_foreign")
   tech_skills  tech_skills[]
 }
 
@@ -1230,13 +1230,13 @@ model tech_skills {
   date_created          DateTime?             @db.Timestamptz(6)
   date_updated          DateTime?             @db.Timestamptz(6)
   name                  String?               @db.VarChar(255)
-  category              Int
+  category_id  Int
   level                 String?               @db.VarChar(255)
-  tech_type             Int?
+  tech_type_id  Int?
   years_experience      Int?
   tags                  Json?                 @db.Json
-  tech_skill_categories tech_skill_categories @relation(fields: [category], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skills_category_foreign")
-  tech_skill_types      tech_skill_types?     @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
+  tech_skill_categories tech_skill_categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skills_category_foreign")
+  tech_skill_types      tech_skill_types?     @relation(fields: [tech_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
 
 model work_experience_achievements {
@@ -1247,10 +1247,10 @@ model work_experience_achievements {
   date_updated     DateTime?        @db.Timestamptz(6)
   title            String?          @db.VarChar(255)
   description      String?          @db.VarChar(255)
-  work_experience  Int
+  work_experience_id  Int
   fa_icon          String?          @db.VarChar(255)
   tags             Json?            @db.Json
-  work_experiences work_experiences @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
+  work_experiences work_experiences @relation(fields: [work_experience_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
 }
 
 model work_experience_project_technologies {
@@ -1258,9 +1258,9 @@ model work_experience_project_technologies {
   sort                     Int?
   date_created             DateTime?                 @db.Timestamptz(6)
   date_updated             DateTime?                 @db.Timestamptz(6)
-  work_experience_project  Int?
+  work_experience_project_id  Int?
   name                     String?                   @db.VarChar(255)
-  work_experience_projects work_experience_projects? @relation(fields: [work_experience_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_project_technologies_work___27d59b1f_foreign")
+  work_experience_projects work_experience_projects? @relation(fields: [work_experience_project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_project_technologies_work___27d59b1f_foreign")
 }
 
 model work_experience_projects {
@@ -1269,7 +1269,7 @@ model work_experience_projects {
   sort                                 Int?
   date_created                         DateTime?                              @db.Timestamptz(6)
   date_updated                         DateTime?                              @db.Timestamptz(6)
-  work_experience                      Int?
+  work_experience_id  Int?
   name                                 String?                                @db.VarChar(255)
   url                                  String?                                @db.VarChar(255)
   start_date                           DateTime?                              @db.Date
@@ -1277,7 +1277,7 @@ model work_experience_projects {
   description                          String?
   outcome                              String?
   work_experience_project_technologies work_experience_project_technologies[]
-  work_experiences                     work_experiences?                      @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_projects_work_experience_foreign")
+  work_experiences                     work_experiences?                      @relation(fields: [work_experience_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_projects_work_experience_foreign")
 }
 
 model work_experience_technologies {
@@ -1287,8 +1287,8 @@ model work_experience_technologies {
   date_created     DateTime?        @db.Timestamptz(6)
   date_updated     DateTime?        @db.Timestamptz(6)
   name             String?          @db.VarChar(255)
-  work_experience  Int
-  work_experiences work_experiences @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
+  work_experience_id  Int
+  work_experiences work_experiences @relation(fields: [work_experience_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
 }
 
 model work_experiences {
@@ -1298,10 +1298,10 @@ model work_experiences {
   position                     String
   summary                      String
   id                           Int                            @id @default(autoincrement())
-  logo                         String?                        @db.Uuid
+  logo_id  String? @db.Uuid
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
-  profile                      Int
+  profile_id  Int
   date_created                 DateTime?                      @db.Timestamptz(6)
   date_updated                 DateTime?                      @db.Timestamptz(6)
   start_date                   DateTime?                      @db.Date
@@ -1313,15 +1313,15 @@ model work_experiences {
   work_experience_achievements work_experience_achievements[]
   work_experience_projects     work_experience_projects[]
   work_experience_technologies work_experience_technologies[]
-  directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
-  profiles                     profiles                       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experiences_profile_foreign")
+  directus_files               directus_files?                @relation(fields: [logo_id], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
+  profiles                     profiles                       @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 }
 
 model ai_chats {
   id                                                           Int                     @id @default(autoincrement())
   date_created                                                 DateTime?               @db.Timestamptz(6)
   date_updated                                                 DateTime?               @db.Timestamptz(6)
-  profile                                                      Int
+  profile_id  Int
   system_prompt                                                String
   user_prompt                                                  String
   full_prompt                                                  String?
@@ -1340,7 +1340,7 @@ model ai_chats {
   ai_chat_templates                                            ai_chat_templates?      @relation(fields: [ai_chat_template], references: [id], onUpdate: NoAction, map: "ai_chats_ai_chat_template_foreign")
   ai_chats                                                     ai_chats?               @relation("ai_chatsToai_chats", fields: [followup_to], references: [id], onUpdate: NoAction, map: "ai_chats_followup_to_foreign")
   other_ai_chats                                               ai_chats[]              @relation("ai_chatsToai_chats")
-  profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chats_profile_foreign")
+  profiles                                                     profiles                @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chats_profile_foreign")
   application_letters_application_letters_ai_chatToai_chat     application_letters[]   @relation("application_letters_ai_chatToai_chat")
   application_questions_application_questions_ai_chatToai_chat application_questions[] @relation("application_questions_ai_chatToai_chat")
   job_matches                                                  job_matches[]
@@ -1476,12 +1476,12 @@ model match_config {
   experience_levels    Json?     @db.Json
   work_location        Json?     @db.Json
   locations            Json?     @db.Json
-  profile              Int
+  profile_id  Int
   name                 String?   @db.VarChar(255)
   remote_only          Boolean   @default(false)
   match_community_jobs    Boolean   @default(false)
   community_max_age_days  Int?
-  profiles                profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "match_config_profile_foreign")
+  profiles                profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "match_config_profile_foreign")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -1577,10 +1577,10 @@ model search_tasks {
   date_created           DateTime?                @db.Timestamptz(6)
   date_updated           DateTime?                @db.Timestamptz(6)
   note                   String?                  @db.VarChar(500)
-  profile                Int
+  profile_id  Int
   last_run               DateTime?                @db.Timestamptz(6)
   search_url             String?
-  platform               Int?
+  platform_id  Int?
   navigation_type        String?                  @db.VarChar(255)
   stripped_html          String?
   last_run_jobs_found    Int?
@@ -1604,9 +1604,9 @@ model search_tasks {
   search_task_runs         search_task_runs[]
   api_keys               api_keys?            @relation(fields: [tunnel_api_key], references: [id], onDelete: SetNull, onUpdate: NoAction)
   scraper_agent_sessions   scraper_agent_sessions[]
-  job_platforms            job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "search_tasks_platform_foreign")
+  job_platforms            job_platforms?           @relation(fields: [platform_id], references: [id], onUpdate: NoAction, map: "search_tasks_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "search_tasks_profile_foreign")
+  profiles               profiles                 @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "search_tasks_profile_foreign")
   search_tasks_job_sites search_tasks_job_sites[]
 
   @@index([platform_profile_id], map: "idx_search_tasks_platform_profile")

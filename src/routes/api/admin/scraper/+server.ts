@@ -367,7 +367,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       throw error(404, "Search task not found");
     }
 
-    if (!searchTask.search_url || !searchTask.platform) {
+    if (!searchTask.search_url || !searchTask.platform_id) {
       throw error(400, "Search task missing URL or platform");
     }
 
@@ -405,7 +405,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       searchTaskId,
       runId: run.id,
       searchUrl: searchTask.search_url,
-      platformId: String(searchTask.platform),
+      platformId: String(searchTask.platform_id),
       triggeredBy: "user",
       browserProvider: effectiveProvider,
       ...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {}),

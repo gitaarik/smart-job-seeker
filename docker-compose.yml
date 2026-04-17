@@ -55,18 +55,5 @@ services:
       SJS_EMAIL_FROM: ${SJS_EMAIL_FROM:-}
       # EmailConnect.eu for inbound verification email relay
       SJS_EMAILCONNECT_HMAC_KEY: ${SJS_EMAILCONNECT_HMAC_KEY:-}
-  admin:
-    extends:
-      file: docker-compose.directus.yml
-      service: admin
-    depends_on:
-      app:
-        condition: service_healthy
-      database:
-        condition: service_healthy
-  admin-cache:
-    extends:
-      file: docker-compose.directus.yml
-      service: admin-cache
 volumes:
   postgres_data:

@@ -34,8 +34,8 @@ export async function checkProfileAccess(
 
   // 1. Check for public version access
   const publicVersionId = routeType === "cv"
-    ? profile.public_cv_version
-    : profile.public_resume_version;
+    ? profile.public_cv_version_id
+    : profile.public_resume_version_id;
 
   if (publicVersionId !== null && !token) {
     return {
@@ -114,7 +114,7 @@ export async function getVersionIdBySlug(
   versionSlug: string,
 ): Promise<number | null> {
   const version = await db.profile_versions.findFirst({
-    where: { profile: profileId, slug: versionSlug },
+    where: { profile_id: profileId, slug: versionSlug },
     select: { id: true },
   });
 

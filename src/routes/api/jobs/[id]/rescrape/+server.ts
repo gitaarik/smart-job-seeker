@@ -52,7 +52,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     select: {
       id: true,
       source_url: true,
-      job_platform: true,
+      job_platform_id: true,
       title: true,
       rescrape_status: true,
     },
@@ -69,7 +69,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     );
   }
 
-  if (!job.job_platform) {
+  if (!job.job_platform_id) {
     return json(
       { error: "Job has no platform - cannot rescrape" },
       { status: 400 },
@@ -99,7 +99,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   try {
     const run = await db.rescrape_runs.create({
       data: {
-        job: jobId,
+        job_id: jobId,
         status: "queued",
         triggered_by: "user",
         started_at: new Date(),
@@ -114,7 +114,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   const queueJob = await addRescrapeJob({
     jobId: job.id,
     sourceUrl: job.source_url,
-    platformId: job.job_platform,
+    platformId: job.job_platform_id,
     triggeredBy: "user",
     ...overrides,
     rescrapeRunId,
@@ -172,7 +172,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   }[] = [];
   try {
     const runs = await db.rescrape_runs.findMany({
-      where: { job: jobId },
+      where: { job_id: jobId },
       select: {
         id: true,
         status: true,
@@ -217,7 +217,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     // Find the queued run and mark as cancelled
     try {
       const queuedRun = await db.rescrape_runs.findFirst({
-        where: { job: jobId, status: "queued" },
+        where: { job_id: jobId, status: "queued" },
         orderBy: { started_at: "desc" },
       });
       if (queuedRun) {
@@ -270,7 +270,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   // Update the rescrape run record
   try {
     const activeRun = await db.rescrape_runs.findFirst({
-      where: { job: jobId, status: { in: ["queued", "scraping"] } },
+      where: { job_id: jobId, status: { in: ["queued", "scraping"] } },
       orderBy: { started_at: "desc" },
     });
     if (activeRun) {

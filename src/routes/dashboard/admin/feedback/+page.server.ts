@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { deleteFileFromDirectus } from "$lib/server/directus/files";
+import { deleteFile } from "$lib/server/files";
 import { createNotifications } from "$lib/server/notifications";
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -229,7 +229,7 @@ export const actions: Actions = {
 
     // Delete files from Directus
     for (const file of entry.user_feedback_files) {
-      await deleteFileFromDirectus(file.directus_files_id).catch(() => {});
+      await deleteFile(file.directus_files_id).catch(() => {});
     }
 
     await db.user_feedback.delete({ where: { id } });

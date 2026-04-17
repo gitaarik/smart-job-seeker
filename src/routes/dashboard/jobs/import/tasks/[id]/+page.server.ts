@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const searchTask = await db.search_tasks.findFirst({
     where: {
       id: searchTaskId,
-      profile: layoutData.selectedProfile.id,
+      profile_id: layoutData.selectedProfile.id,
     },
     include: {
       job_platforms: true,
@@ -41,11 +41,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     username: string | null;
     security_answer: string | null;
   }> = [];
-  if (searchTask.platform) {
+  if (searchTask.platform_id) {
     platformCredentials = await db.platform_profiles.findMany({
       where: {
-        profile: layoutData.selectedProfile.id,
-        platform: searchTask.platform,
+        profile_id: layoutData.selectedProfile.id,
+        platform_id: searchTask.platform_id,
       },
       select: { id: true, username: true, security_answer: true },
       orderBy: { date_created: "asc" },
@@ -60,10 +60,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Staff can always edit. Normal users can edit only if no other user's
   // accounts reference this platform (cheap existence check with LIMIT 1).
   let canEditPlatformUrls = isStaff;
-  if (!canEditPlatformUrls && searchTask.platform && user) {
+  if (!canEditPlatformUrls && searchTask.platform_id && user) {
     const otherUserUsage = await db.search_tasks.findFirst({
       where: {
-        platform: searchTask.platform,
+        platform_id: searchTask.platform_id,
         profiles: { user_id: { not: user.id } },
       },
       select: { id: true },
@@ -89,7 +89,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Check if any other search task for this profile is currently running/queued/blocked
   const otherRunning = await db.search_tasks.findFirst({
     where: {
-      profile: layoutData.selectedProfile.id,
+      profile_id: layoutData.selectedProfile.id,
       id: { not: searchTaskId },
       status: { in: ["running", "queued", "blocked"] },
     },

@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const education = await db.education.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
   });
 
@@ -47,7 +47,7 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.education.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
 
@@ -62,7 +62,7 @@ export const actions: Actions = {
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
         summary: summary?.trim() || null,
-        profile: profileId,
+        profile_id: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -93,7 +93,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.education.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {

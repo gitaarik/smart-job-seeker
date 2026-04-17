@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const education = await db.education.findFirst({
-    where: { id, profile: layoutData.selectedProfile.id },
+    where: { id, profile_id: layoutData.selectedProfile.id },
   });
 
   if (!education) {

@@ -16,17 +16,17 @@ export const load: PageServerLoad = async ({ parent }) => {
     db.profiles.findUnique({
       where: { id: layoutData.selectedProfile.id },
       select: {
-        public_resume_version: true,
-        public_cv_version: true,
+        public_resume_version_id: true,
+        public_cv_version_id: true,
       },
     }),
     db.profile_versions.findMany({
-      where: { profile: layoutData.selectedProfile.id },
+      where: { profile_id: layoutData.selectedProfile.id },
       include: {
         profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
           {
             select: {
-              extended: true,
+              extended_id: true,
             },
           },
       },
@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
     db.profile_exports.findMany({
       where: {
-        profile: layoutData.selectedProfile.id,
+        profile_id: layoutData.selectedProfile.id,
         status: "published",
         export_type: { in: ["resume", "cv"] },
       },
@@ -42,8 +42,8 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
   ]);
 
-  const publicResumeVersionId = profile?.public_resume_version ?? null;
-  const publicCvVersionId = profile?.public_cv_version ?? null;
+  const publicResumeVersionId = profile?.public_resume_version_id ?? null;
+  const publicCvVersionId = profile?.public_cv_version_id ?? null;
 
   const mapped = versions.map(({ profile_version_extensions_profile_version_extensions_extenderToprofile_versions: exts, ...v }) => {
     const hasResumePdf = profileExports.some(
@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     );
     return {
       ...v,
-      extendsIds: exts?.map((e) => e.extended).filter((id): id is number => id !== null) ?? [],
+      extendsIds: exts?.map((e) => e.extended_id).filter((id): id is number => id !== null) ?? [],
       hasResumePdf,
       hasCvPdf,
     };
@@ -103,20 +103,20 @@ export const actions: Actions = {
       data: {
         slug: slug.trim(),
         name: name?.trim() || null,
-        profile: profileId,
+        profile_id: profileId,
         date_created: new Date(),
       },
     });
 
     for (const parentId of extendsIds) {
       const parent = await db.profile_versions.findFirst({
-        where: { id: parentId, profile: profileId },
+        where: { id: parentId, profile_id: profileId },
       });
       if (parent) {
         await db.profile_version_extensions.create({
           data: {
-            extender: created.id,
-            extended: parentId,
+            extender_id: created.id,
+            extended_id: parentId,
           },
         });
       }
@@ -141,7 +141,7 @@ export const actions: Actions = {
     if (!slug) return fail(400, { error: "No version specified" });
 
     const version = await db.profile_versions.findFirst({
-      where: { profile: profileId, slug },
+      where: { profile_id: profileId, slug },
     });
     if (!version) return fail(404, { error: "Version not found" });
 

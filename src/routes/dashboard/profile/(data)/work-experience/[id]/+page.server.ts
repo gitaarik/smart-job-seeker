@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const experience = await db.work_experiences.findFirst({
-    where: { id, profile: layoutData.selectedProfile.id },
+    where: { id, profile_id: layoutData.selectedProfile.id },
     include: {
       work_experience_achievements: {
         orderBy: { sort: "asc" },
@@ -29,8 +29,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Get logo URL (prefer local path, fall back to Directus UUID)
   const logoUrl = experience?.logo_path
     ? `/uploads/${experience.logo_path}`
-    : experience?.logo
-      ? `/assets/${experience.logo}`
+    : experience?.logo_id
+      ? `/assets/${experience.logo_id}`
       : null;
 
   // Get banner URL

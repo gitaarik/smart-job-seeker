@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           id: true,
           note: true,
           search_url: true,
-          platform: true,
+          platform_id: true,
           browser_provider: true,
           job_platforms: { select: { name: true } },
         },

@@ -5,8 +5,6 @@
 
 import { db } from "$lib/server/db";
 import { createAndGenerateAiChat } from "./utils";
-import { getFieldChoiceLabel } from "../directus/field-labels";
-
 /**
  * Map letter types to their corresponding AI chat prompt request types
  */
@@ -104,7 +102,7 @@ export async function generateApplicationLetter(
     };
   }
 
-  const profileId = letter.applications.profile;
+  const profileId = letter.applications.profile_id;
   const job = letter.applications.jobs;
   const letterType = letter.letter_type;
 
@@ -134,14 +132,6 @@ export async function generateApplicationLetter(
   }
   if (job.company_description) {
     jobDetailLines.push(`**About the company:** ${job.company_description}`);
-  }
-  if (job.import_source) {
-    try {
-      const sourceLabel = await getFieldChoiceLabel("jobs", "import_source", job.import_source);
-      jobDetailLines.push(`**Source:** ${sourceLabel} (this is the job platform where the listing was found — NOT the employer)`);
-    } catch {
-      // Non-critical, skip
-    }
   }
   jobDetailLines.push("", "**Job Description:**", job.job_description || "Not specified");
 
@@ -210,7 +200,7 @@ export async function generateApplicationLetter(
     }
 
     const updateData: Record<string, unknown> = {
-      ai_chat: aiChat.id,
+      ai_chat_id: aiChat.id,
       ai_chat_response: aiChat.response,
     };
 

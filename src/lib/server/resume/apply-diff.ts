@@ -158,7 +158,7 @@ export async function applyDiffToProfile(
     for (const w of payload.work.added ?? []) {
       const created = await dbDirect.work_experiences.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           name: w.name || "",
           position: w.position || "",
           location: w.location || "",
@@ -175,7 +175,7 @@ export async function applyDiffToProfile(
       for (const ach of w.achievements ?? []) {
         await dbDirect.work_experience_achievements.create({
           data: {
-            work_experience: created.id,
+            work_experience_id: created.id,
             description: ach,
             status: "draft",
             sort: sort++,
@@ -187,7 +187,7 @@ export async function applyDiffToProfile(
       for (const tech of w.technologies ?? []) {
         await dbDirect.work_experience_technologies.create({
           data: {
-            work_experience: created.id,
+            work_experience_id: created.id,
             name: tech,
             status: "draft",
             sort: sort++,
@@ -200,7 +200,7 @@ export async function applyDiffToProfile(
     for (const mod of payload.work.modified ?? []) {
       const [company, position] = mod.matchKey.split("|||");
       const existing = await dbDirect.work_experiences.findFirst({
-        where: { profile: profileId, name: company, position },
+        where: { profile_id: profileId, name: company, position },
         select: { id: true },
       });
       if (!existing) continue;
@@ -224,14 +224,14 @@ export async function applyDiffToProfile(
       // Add new achievements
       if (mod.addAchievements?.length) {
         const maxSort = await dbDirect.work_experience_achievements.aggregate({
-          where: { work_experience: existing.id },
+          where: { work_experience_id: existing.id },
           _max: { sort: true },
         });
         let sort = (maxSort._max.sort ?? 0) + 1;
         for (const ach of mod.addAchievements) {
           await dbDirect.work_experience_achievements.create({
             data: {
-              work_experience: existing.id,
+              work_experience_id: existing.id,
               description: ach,
               status: "draft",
               sort: sort++,
@@ -244,7 +244,7 @@ export async function applyDiffToProfile(
       if (mod.removeAchievements?.length) {
         for (const ach of mod.removeAchievements) {
           await dbDirect.work_experience_achievements.deleteMany({
-            where: { work_experience: existing.id, description: ach },
+            where: { work_experience_id: existing.id, description: ach },
           });
         }
       }
@@ -252,14 +252,14 @@ export async function applyDiffToProfile(
       // Add new technologies
       if (mod.addTechnologies?.length) {
         const maxSort = await dbDirect.work_experience_technologies.aggregate({
-          where: { work_experience: existing.id },
+          where: { work_experience_id: existing.id },
           _max: { sort: true },
         });
         let sort = (maxSort._max.sort ?? 0) + 1;
         for (const tech of mod.addTechnologies) {
           await dbDirect.work_experience_technologies.create({
             data: {
-              work_experience: existing.id,
+              work_experience_id: existing.id,
               name: tech,
               status: "draft",
               sort: sort++,
@@ -272,7 +272,7 @@ export async function applyDiffToProfile(
       if (mod.removeTechnologies?.length) {
         for (const tech of mod.removeTechnologies) {
           await dbDirect.work_experience_technologies.deleteMany({
-            where: { work_experience: existing.id, name: tech },
+            where: { work_experience_id: existing.id, name: tech },
           });
         }
       }
@@ -282,21 +282,21 @@ export async function applyDiffToProfile(
     for (const key of payload.work.removed ?? []) {
       const [company, position] = key.split("|||");
       const existing = await dbDirect.work_experiences.findFirst({
-        where: { profile: profileId, name: company, position },
+        where: { profile_id: profileId, name: company, position },
         select: { id: true },
       });
       if (!existing) continue;
 
-      await dbDirect.work_experience_achievements.deleteMany({ where: { work_experience: existing.id } });
-      await dbDirect.work_experience_technologies.deleteMany({ where: { work_experience: existing.id } });
+      await dbDirect.work_experience_achievements.deleteMany({ where: { work_experience_id: existing.id } });
+      await dbDirect.work_experience_technologies.deleteMany({ where: { work_experience_id: existing.id } });
       const projects = await dbDirect.work_experience_projects.findMany({
-        where: { work_experience: existing.id },
+        where: { work_experience_id: existing.id },
         select: { id: true },
       });
       for (const proj of projects) {
-        await dbDirect.work_experience_project_technologies.deleteMany({ where: { work_experience_project: proj.id } });
+        await dbDirect.work_experience_project_technologies.deleteMany({ where: { work_experience_project_id: proj.id } });
       }
-      await dbDirect.work_experience_projects.deleteMany({ where: { work_experience: existing.id } });
+      await dbDirect.work_experience_projects.deleteMany({ where: { work_experience_id: existing.id } });
       await dbDirect.work_experiences.delete({ where: { id: existing.id } });
     }
   }
@@ -306,7 +306,7 @@ export async function applyDiffToProfile(
     for (const e of payload.education.added ?? []) {
       await dbDirect.education.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           status: "draft",
           institution: e.institution || null,
           area: e.area || null,
@@ -324,7 +324,7 @@ export async function applyDiffToProfile(
     for (const mod of payload.education.modified ?? []) {
       const [institution, area] = mod.matchKey.split("|||");
       const existing = await dbDirect.education.findFirst({
-        where: { profile: profileId, institution, area: area || null },
+        where: { profile_id: profileId, institution, area: area || null },
         select: { id: true },
       });
       if (!existing) continue;
@@ -348,7 +348,7 @@ export async function applyDiffToProfile(
     for (const key of payload.education.removed ?? []) {
       const [institution, area] = key.split("|||");
       await dbDirect.education.deleteMany({
-        where: { profile: profileId, institution, area: area || null },
+        where: { profile_id: profileId, institution, area: area || null },
       });
     }
   }
@@ -358,7 +358,7 @@ export async function applyDiffToProfile(
     for (const cat of payload.skills.added ?? []) {
       const created = await dbDirect.tech_skill_categories.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           name: cat.name || null,
           status: "draft",
         },
@@ -367,7 +367,7 @@ export async function applyDiffToProfile(
       for (const skill of cat.skills ?? []) {
         await dbDirect.tech_skills.create({
           data: {
-            category: created.id,
+            category_id: created.id,
             name: skill.name || null,
             level: skill.level || null,
             years_experience: skill.yearsExperience ?? null,
@@ -380,7 +380,7 @@ export async function applyDiffToProfile(
 
     for (const mod of payload.skills.modified ?? []) {
       const existing = await dbDirect.tech_skill_categories.findFirst({
-        where: { profile: profileId, name: mod.matchKey },
+        where: { profile_id: profileId, name: mod.matchKey },
         select: { id: true },
       });
       if (!existing) continue;
@@ -388,14 +388,14 @@ export async function applyDiffToProfile(
       // Add new skills
       if (mod.addSkills?.length) {
         const maxSort = await dbDirect.tech_skills.aggregate({
-          where: { category: existing.id },
+          where: { category_id: existing.id },
           _max: { sort: true },
         });
         let sort = (maxSort._max.sort ?? 0) + 1;
         for (const skill of mod.addSkills) {
           await dbDirect.tech_skills.create({
             data: {
-              category: existing.id,
+              category_id: existing.id,
               name: skill.name || null,
               level: skill.level || null,
               years_experience: skill.yearsExperience ?? null,
@@ -410,7 +410,7 @@ export async function applyDiffToProfile(
       if (mod.removeSkills?.length) {
         for (const name of mod.removeSkills) {
           await dbDirect.tech_skills.deleteMany({
-            where: { category: existing.id, name },
+            where: { category_id: existing.id, name },
           });
         }
       }
@@ -419,7 +419,7 @@ export async function applyDiffToProfile(
       if (mod.modifySkills?.length) {
         for (const skillMod of mod.modifySkills) {
           const skill = await dbDirect.tech_skills.findFirst({
-            where: { category: existing.id, name: skillMod.name },
+            where: { category_id: existing.id, name: skillMod.name },
             select: { id: true },
           });
           if (!skill) continue;
@@ -438,11 +438,11 @@ export async function applyDiffToProfile(
 
     for (const name of payload.skills.removed ?? []) {
       const existing = await dbDirect.tech_skill_categories.findFirst({
-        where: { profile: profileId, name },
+        where: { profile_id: profileId, name },
         select: { id: true },
       });
       if (!existing) continue;
-      await dbDirect.tech_skills.deleteMany({ where: { category: existing.id } });
+      await dbDirect.tech_skills.deleteMany({ where: { category_id: existing.id } });
       await dbDirect.tech_skill_categories.delete({ where: { id: existing.id } });
     }
   }
@@ -452,7 +452,7 @@ export async function applyDiffToProfile(
     for (const l of payload.languages.added ?? []) {
       await dbDirect.languages.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           status: "draft",
           name: l.name || null,
           language_code: l.languageCode || null,
@@ -463,7 +463,7 @@ export async function applyDiffToProfile(
 
     for (const mod of payload.languages.modified ?? []) {
       const existing = await dbDirect.languages.findFirst({
-        where: { profile: profileId, name: mod.matchKey },
+        where: { profile_id: profileId, name: mod.matchKey },
         select: { id: true },
       });
       if (!existing) continue;
@@ -479,7 +479,7 @@ export async function applyDiffToProfile(
 
     for (const name of payload.languages.removed ?? []) {
       await dbDirect.languages.deleteMany({
-        where: { profile: profileId, name },
+        where: { profile_id: profileId, name },
       });
     }
   }
@@ -489,7 +489,7 @@ export async function applyDiffToProfile(
     for (const p of payload.projects.added ?? []) {
       const created = await dbDirect.side_projects.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           status: "draft",
           name: p.name || null,
           url: p.url || null,
@@ -504,21 +504,21 @@ export async function applyDiffToProfile(
       let sort = 1;
       for (const ach of p.achievements ?? []) {
         await dbDirect.side_project_achievements.create({
-          data: { side_project: created.id, description: ach, sort: sort++ },
+          data: { side_project_id: created.id, description: ach, sort: sort++ },
         });
       }
 
       sort = 1;
       for (const tech of p.technologies ?? []) {
         await dbDirect.side_project_technologies.create({
-          data: { side_project: created.id, name: tech, sort: sort++ },
+          data: { side_project_id: created.id, name: tech, sort: sort++ },
         });
       }
     }
 
     for (const mod of payload.projects.modified ?? []) {
       const existing = await dbDirect.side_projects.findFirst({
-        where: { profile: profileId, name: mod.matchKey },
+        where: { profile_id: profileId, name: mod.matchKey },
         select: { id: true },
       });
       if (!existing) continue;
@@ -539,13 +539,13 @@ export async function applyDiffToProfile(
       // Add achievements
       if (mod.addAchievements?.length) {
         const maxSort = await dbDirect.side_project_achievements.aggregate({
-          where: { side_project: existing.id },
+          where: { side_project_id: existing.id },
           _max: { sort: true },
         });
         let sort = (maxSort._max.sort ?? 0) + 1;
         for (const ach of mod.addAchievements) {
           await dbDirect.side_project_achievements.create({
-            data: { side_project: existing.id, description: ach, sort: sort++ },
+            data: { side_project_id: existing.id, description: ach, sort: sort++ },
           });
         }
       }
@@ -553,20 +553,20 @@ export async function applyDiffToProfile(
       if (mod.removeAchievements?.length) {
         for (const ach of mod.removeAchievements) {
           await dbDirect.side_project_achievements.deleteMany({
-            where: { side_project: existing.id, description: ach },
+            where: { side_project_id: existing.id, description: ach },
           });
         }
       }
 
       if (mod.addTechnologies?.length) {
         const maxSort = await dbDirect.side_project_technologies.aggregate({
-          where: { side_project: existing.id },
+          where: { side_project_id: existing.id },
           _max: { sort: true },
         });
         let sort = (maxSort._max.sort ?? 0) + 1;
         for (const tech of mod.addTechnologies) {
           await dbDirect.side_project_technologies.create({
-            data: { side_project: existing.id, name: tech, sort: sort++ },
+            data: { side_project_id: existing.id, name: tech, sort: sort++ },
           });
         }
       }
@@ -574,7 +574,7 @@ export async function applyDiffToProfile(
       if (mod.removeTechnologies?.length) {
         for (const tech of mod.removeTechnologies) {
           await dbDirect.side_project_technologies.deleteMany({
-            where: { side_project: existing.id, name: tech },
+            where: { side_project_id: existing.id, name: tech },
           });
         }
       }
@@ -582,12 +582,12 @@ export async function applyDiffToProfile(
 
     for (const name of payload.projects.removed ?? []) {
       const existing = await dbDirect.side_projects.findFirst({
-        where: { profile: profileId, name },
+        where: { profile_id: profileId, name },
         select: { id: true },
       });
       if (!existing) continue;
-      await dbDirect.side_project_achievements.deleteMany({ where: { side_project: existing.id } });
-      await dbDirect.side_project_technologies.deleteMany({ where: { side_project: existing.id } });
+      await dbDirect.side_project_achievements.deleteMany({ where: { side_project_id: existing.id } });
+      await dbDirect.side_project_technologies.deleteMany({ where: { side_project_id: existing.id } });
       await dbDirect.side_projects.delete({ where: { id: existing.id } });
     }
   }
@@ -611,7 +611,7 @@ export async function applyDiffToProfile(
 
     for (const mod of payload.certificates.modified ?? []) {
       const existing = await dbDirect.certificates.findFirst({
-        where: { profile: profileId, name: mod.matchKey },
+        where: { profile_id: profileId, name: mod.matchKey },
         select: { id: true },
       });
       if (!existing) continue;
@@ -630,7 +630,7 @@ export async function applyDiffToProfile(
 
     for (const name of payload.certificates.removed ?? []) {
       await dbDirect.certificates.deleteMany({
-        where: { profile: profileId, name },
+        where: { profile_id: profileId, name },
       });
     }
   }
@@ -640,7 +640,7 @@ export async function applyDiffToProfile(
     for (const r of payload.references.added ?? []) {
       await dbDirect.references.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           status: "draft",
           author: r.author || "",
           author_position: r.authorPosition || null,
@@ -651,7 +651,7 @@ export async function applyDiffToProfile(
 
     for (const mod of payload.references.modified ?? []) {
       const existing = await dbDirect.references.findFirst({
-        where: { profile: profileId, author: mod.matchKey },
+        where: { profile_id: profileId, author: mod.matchKey },
         select: { id: true },
       });
       if (!existing) continue;
@@ -668,7 +668,7 @@ export async function applyDiffToProfile(
 
     for (const author of payload.references.removed ?? []) {
       await dbDirect.references.deleteMany({
-        where: { profile: profileId, author },
+        where: { profile_id: profileId, author },
       });
     }
   }

@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const [searchTasks, profile] = await Promise.all([
     db.search_tasks.findMany({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       include: {
         job_platforms: true,
         platform_profiles: true,
@@ -113,8 +113,8 @@ async function getOrCreateCredentials(
     const existing = await db.platform_profiles.findFirst({
       where: {
         id: parseInt(credentialId),
-        profile: profileId,
-        platform: platformId,
+        profile_id: profileId,
+        platform_id: platformId,
       },
     });
     if (existing) {
@@ -126,8 +126,8 @@ async function getOrCreateCredentials(
   if (credentialId === "new" && newUsername) {
     const newCred = await db.platform_profiles.create({
       data: {
-        profile: profileId,
-        platform: platformId,
+        profile_id: profileId,
+        platform_id: platformId,
         username: newUsername,
         password: newPassword || null,
         security_answer: newSecurityAnswer || null,
@@ -237,11 +237,11 @@ export const actions: Actions = {
         note: note?.trim() || null,
         search_url: search_url.trim(),
         search_term: search_term?.trim() || null,
-        platform: resolvedPlatformId,
+        platform_id: resolvedPlatformId,
         platform_profile_id: resolvedCredentialId,
         login_mode: ["auto", "manual", "none"].includes(loginMode) ? loginMode : "auto",
         is_active,
-        profile: profileId,
+        profile_id: profileId,
         status: "idle",
         browser_provider: browserProvider || config.defaultBrowserProvider,
         max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
@@ -298,7 +298,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.search_tasks.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -333,7 +333,7 @@ export const actions: Actions = {
         note: note?.trim() || null,
         search_url: search_url?.trim() || null,
         search_term: search_term?.trim() || null,
-        platform: resolvedPlatformId,
+        platform_id: resolvedPlatformId,
         platform_profile_id: resolvedCredentialId,
         is_active,
         date_updated: new Date(),
@@ -362,7 +362,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.search_tasks.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {

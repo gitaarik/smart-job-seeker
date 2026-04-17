@@ -1,10 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import {
-  deleteFileFromDirectus,
-  uploadFileToDirectus,
-} from "$lib/server/directus/files";
+import { deleteFile, uploadFile } from "$lib/server/files";
 import {
   createProfileFromResume,
   extractTextFromFile,
@@ -85,7 +82,7 @@ export const actions: Actions = {
       const buffer = Buffer.from(arrayBuffer);
 
       // Upload to Directus
-      const uploadResult = await uploadFileToDirectus({
+      const uploadResult = await uploadFile({
         filename: file.name,
         buffer,
         title: `CV Upload - ${user.email || user.id}`,
@@ -110,7 +107,7 @@ export const actions: Actions = {
       // Clean up uploaded file if parsing failed
       if (fileId) {
         try {
-          await deleteFileFromDirectus(fileId);
+          await deleteFile(fileId);
         } catch {
           // Ignore cleanup errors
         }

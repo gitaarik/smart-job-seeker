@@ -200,7 +200,7 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
 
   // Get work experience media
   const workExps = await dbDirect.work_experiences.findMany({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
     select: { logo_path: true },
   });
 
@@ -216,7 +216,7 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
 
   // Get education media
   const education = await dbDirect.education.findMany({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
     select: { logo_path: true },
   });
 
@@ -232,7 +232,7 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
 
   // Get side project media
   const sideProjects = await dbDirect.side_projects.findMany({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
     select: { image_path: true },
   });
 

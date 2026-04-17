@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const experiences = await db.work_experiences.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
     include: {
       work_experience_achievements: {
@@ -58,7 +58,7 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.work_experiences.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
 
@@ -72,7 +72,7 @@ export const actions: Actions = {
         summary: summary?.trim() || "",
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
-        profile: profileId,
+        profile_id: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -103,7 +103,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.work_experiences.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {

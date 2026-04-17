@@ -414,7 +414,7 @@ export async function exportProfile(profileId: number): Promise<{
 
     // SINGLE DATABASE OPERATION - Update both fields atomically
     const existingCollectedData = await db.collected_data.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
     });
 
     if (existingCollectedData) {
@@ -429,7 +429,7 @@ export async function exportProfile(profileId: number): Promise<{
     } else {
       await db.collected_data.create({
         data: {
-          profile: profileId,
+          profile_id: profileId,
           schema: JSON.stringify(schema, null, 2),
           data: JSON.stringify(data, null, 2),
           date_updated: new Date(),

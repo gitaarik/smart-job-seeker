@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       select: {
         id: true,
         date_created: true,
-        profile: true,
+        profile_id: true,
         followup_to: true,
         error: true,
         provider: true,

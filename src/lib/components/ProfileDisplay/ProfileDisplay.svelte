@@ -119,7 +119,7 @@
             .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
         ) {
           const extObj = getVersion(
-            junctionObj.extended,
+            junctionObj.extended_id,
           );
           versionObjs.push(extObj);
           addVersionObjs(extObj);

@@ -82,7 +82,7 @@ describe("PUT /api/job-preferences", () => {
     expect(mockConfigCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          profile: 1,
+          profile_id: 1,
           job_types: ["full-time", "contract"],
           work_location: ["remote", "hybrid"],
           locations: ["Amsterdam", "Berlin"],

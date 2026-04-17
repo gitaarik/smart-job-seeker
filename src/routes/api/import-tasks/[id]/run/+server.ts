@@ -81,7 +81,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(400, "Job search has no search URL configured");
   }
 
-  if (!searchTask.platform) {
+  if (!searchTask.platform_id) {
     throw error(400, "Job search has no platform configured");
   }
 
@@ -125,7 +125,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     searchTaskId,
     runId: run.id,
     searchUrl: searchTask.search_url,
-    platformId: String(searchTask.platform),
+    platformId: String(searchTask.platform_id),
     triggeredBy: "user",
     browserProvider: effectiveProvider,
     ...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {}),

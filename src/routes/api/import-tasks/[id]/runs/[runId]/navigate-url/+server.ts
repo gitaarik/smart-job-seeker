@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   const searchTask = await db.search_tasks.findFirst({
     where: { id: searchTaskId },
     select: {
-      profile: true,
+      profile_id: true,
       profiles: { select: { user_id: true, browser_profile_id: true } },
     },
   });

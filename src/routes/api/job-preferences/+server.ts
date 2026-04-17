@@ -20,7 +20,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   // Check if config already exists
   const existing = await db.match_config.findFirst({
-    where: { profile: profile_id },
+    where: { profile_id: profile_id },
   });
 
   const data = {
@@ -47,7 +47,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     result = await db.match_config.create({
       data: {
         ...data,
-        profile: profile_id,
+        profile_id: profile_id,
         date_created: new Date(),
       },
     });
@@ -74,7 +74,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = await db.match_config.findFirst({
-    where: { profile: profile_id },
+    where: { profile_id: profile_id },
   });
 
   if (!existing) {

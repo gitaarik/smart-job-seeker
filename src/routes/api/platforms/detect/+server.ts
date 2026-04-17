@@ -83,8 +83,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     // Get existing credentials for this platform and profile
     const platformProfiles = await db.platform_profiles.findMany({
       where: {
-        platform: existingPlatform.id,
-        profile: profile.id,
+        platform_id: existingPlatform.id,
+        profile_id: profile.id,
         username: { not: null },
       },
       select: {

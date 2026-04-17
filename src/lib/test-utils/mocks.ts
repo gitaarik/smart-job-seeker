@@ -43,14 +43,6 @@ export function createMockDb() {
       update: vi.fn(),
       delete: vi.fn(),
     },
-    directus_collections: {
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-    },
-    directus_fields: {
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-    },
   };
 }
 
@@ -63,12 +55,8 @@ export function createMockEnv(
   return {
     SJS_DATABASE_URL: "postgresql://test:test@localhost:5432/test",
     SJS_POSTGRES_URL: "postgresql://test:test@localhost:5432/test",
-    SJS_ADMIN_URL_DOCKER: "http://admin:8055",
-    SJS_ADMIN_URL_HOST: "http://localhost:8055",
     SJS_APP_URL_HOST: "http://localhost:5173",
-    SJS_ADMIN_TOKEN: "test-token",
     SJS_LLM_API_KEY_GROQ: "test-groq-key",
-    SJS_WEBHOOK_SECRET: "test-webhook-secret",
     SJS_TURNSTILE_SECRET: "test-turnstile-secret",
     ...overrides,
   };
@@ -84,17 +72,6 @@ export function createMockGroqClient() {
         create: vi.fn(),
       },
     },
-  };
-}
-
-/**
- * Creates a mock Directus client
- */
-export function createMockDirectusClient() {
-  return {
-    request: vi.fn(),
-    refresh: vi.fn(),
-    logout: vi.fn(),
   };
 }
 

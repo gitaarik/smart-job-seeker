@@ -52,7 +52,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     await db.application_letters.update({
       where: { id: letterId },
       data: {
-        ai_chat: lastVersion?.ai_chat ?? null,
+        ai_chat_id: lastVersion?.ai_chat ?? null,
       },
     });
   }

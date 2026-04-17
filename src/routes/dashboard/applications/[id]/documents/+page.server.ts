@@ -2,10 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../../profile/utils";
-import {
-  deleteFileFromDirectus,
-  uploadFileToDirectus,
-} from "$lib/server/directus/files";
+import { deleteFile, uploadFile } from "$lib/server/files";
 import { Buffer } from "buffer";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -17,7 +14,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const profileVersions = await db.profile_versions.findMany({
     where: {
-      profile: layoutData.selectedProfile.id,
+      profile_id: layoutData.selectedProfile.id,
       status: "published",
     },
     select: { slug: true, name: true },
@@ -41,7 +38,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -59,7 +56,7 @@ export const actions: Actions = {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const uploaded = await uploadFileToDirectus({
+    const uploaded = await uploadFile({
       filename: file.name,
       buffer,
       title: file.name,
@@ -86,7 +83,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -107,7 +104,7 @@ export const actions: Actions = {
     // Delete the file from Directus
     if (fileRecord.directus_files_id) {
       try {
-        await deleteFileFromDirectus(fileRecord.directus_files_id);
+        await deleteFile(fileRecord.directus_files_id);
       } catch {
         // File may already be deleted from Directus, continue
       }
@@ -127,7 +124,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 

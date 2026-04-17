@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Get the highest sort value
   const lastItem = await db.project_stories.findFirst({
-    where: { profile: profile_id },
+    where: { profile_id: profile_id },
     orderBy: { sort: "desc" },
   });
 
@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       action: action?.trim() || null,
       result: result?.trim() || null,
       reflection: reflection?.trim() || null,
-      profile: profile_id,
+      profile_id: profile_id,
       sort: (lastItem?.sort ?? -1) + 1,
       date_created: new Date(),
     },
@@ -65,7 +65,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   // Verify the story belongs to this profile
   const existing = await db.project_stories.findFirst({
-    where: { id, profile: profile_id },
+    where: { id, profile_id: profile_id },
   });
 
   if (!existing) {
@@ -106,7 +106,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   await Promise.all(
     order.map((id, index) =>
       db.project_stories.updateMany({
-        where: { id, profile: profile_id },
+        where: { id, profile_id: profile_id },
         data: { sort: index, date_updated: new Date() },
       })
     ),
@@ -131,7 +131,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 
   // Verify the story belongs to this profile
   const existing = await db.project_stories.findFirst({
-    where: { id, profile: profile_id },
+    where: { id, profile_id: profile_id },
   });
 
   if (!existing) {

@@ -28,13 +28,13 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Get or auto-create config for this profile
   let config = await db.match_config.findFirst({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
   });
 
   if (!config) {
     config = await db.match_config.create({
       data: {
-        profile: profileId,
+        profile_id: profileId,
         date_created: new Date(),
         date_updated: new Date(),
       },

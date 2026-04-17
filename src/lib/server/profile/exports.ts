@@ -1,8 +1,5 @@
 import { dbDirect as db } from "$lib/server/db";
-import {
-  deleteFileFromDirectus,
-  uploadFileToDirectus,
-} from "../directus/files";
+import { deleteFile, uploadFile } from "$lib/server/files";
 import type { Buffer } from "buffer";
 
 interface CreateExportOptions {
@@ -23,7 +20,7 @@ export async function createProfileExport(
 
   try {
     // Upload file to Directus
-    uploadedFile = await uploadFileToDirectus({
+    uploadedFile = await uploadFile({
       filename: options.filename,
       buffer: options.fileBuffer,
       title: options.filename,
@@ -33,8 +30,8 @@ export async function createProfileExport(
     // Create database record
     const exportRecord = await db.profile_exports.create({
       data: {
-        profile: options.profileId,
-        file: uploadedFile.id,
+        profile_id: options.profileId,
+        file_id: uploadedFile.id,
         file_type: options.fileType,
         export_type: options.exportType,
         export_format: options.exportFormat,
@@ -49,7 +46,7 @@ export async function createProfileExport(
   } catch (error) {
     // Cleanup: delete uploaded file if database insert fails
     if (uploadedFile?.id) {
-      await deleteFileFromDirectus(uploadedFile.id).catch(() => {});
+      await deleteFile(uploadedFile.id).catch(() => {});
     }
     throw error;
   }

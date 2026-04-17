@@ -6,15 +6,6 @@ Open-source SvelteKit application for job seeking assistance.
 
 This project uses Docker Compose with these containers:
 
-### `admin`
-- **Directus CMS** for database management
-- Source of truth for the database schema
-- Use Directus MCP server or admin UI to make schema changes
-- Prisma ORM connects the SvelteKit app to the same database
-- After schema changes: `npm run docker:update-schema`
-- Field choice labels (for dropdowns/checkboxes) can be retrieved programmatically
-  using `getFieldChoiceLabel()` from `$lib/server/directus/field-labels`
-
 ### `app`
 - **SvelteKit** application using Svelte 5 with **TypeScript**
 - **Prisma** ORM, schema in `prisma/schema.prisma`
@@ -50,12 +41,10 @@ Look at the scripts in `package.json` for help executing things in containers.
 
 ## Database Changes
 
-**Important**: Use Directus admin UI to create/modify database fields, then sync Prisma:
+Edit `prisma/schema.prisma` directly, then push changes:
 ```bash
-npm run docker:update-schema
+npx prisma db push
 ```
-
-Do NOT add database columns directly via SQL - use Directus so fields get proper interface configuration.
 
 ## Code Quality
 

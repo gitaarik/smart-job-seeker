@@ -41,7 +41,7 @@ export async function createFollowupAiChat(
   message: string;
   aiChat?: {
     id: number;
-    profile: number;
+    profile_id: number;
     system_prompt: string;
     user_prompt: string;
     full_prompt: string | null;
@@ -59,7 +59,7 @@ export async function createFollowupAiChat(
     parent = await db.ai_chats.findUnique({
       where: { id: parentAiChatId },
       select: {
-        profile: true,
+        profile_id: true,
         context: true,
         response: true,
         system_prompt: true,
@@ -174,7 +174,7 @@ export async function createFollowupAiChat(
   let result;
   try {
     result = await createAndGenerateAiChat(
-      parent.profile,
+      parent.profile_id,
       promptType,
       customVariables,
       parentAiChatId,
@@ -202,7 +202,7 @@ export async function createFollowupAiChat(
   let linkedLetters;
   try {
     linkedLetters = await db.application_letters.findMany({
-      where: { ai_chat: parentAiChatId },
+      where: { ai_chat_id: parentAiChatId },
       select: { id: true },
     });
   } catch (error) {
@@ -219,8 +219,8 @@ export async function createFollowupAiChat(
   if (linkedLetters.length > 0) {
     try {
       await db.application_letters.updateMany({
-        where: { ai_chat: parentAiChatId },
-        data: { ai_chat: newAiChatId },
+        where: { ai_chat_id: parentAiChatId },
+        data: { ai_chat_id: newAiChatId },
       });
     } catch (error) {
       const errorMessage = error instanceof Error
@@ -237,7 +237,7 @@ export async function createFollowupAiChat(
   let linkedQuestions;
   try {
     linkedQuestions = await db.application_questions.findMany({
-      where: { ai_chat: parentAiChatId },
+      where: { ai_chat_id: parentAiChatId },
       select: { id: true },
     });
   } catch (error) {
@@ -254,8 +254,8 @@ export async function createFollowupAiChat(
   if (linkedQuestions.length > 0) {
     try {
       await db.application_questions.updateMany({
-        where: { ai_chat: parentAiChatId },
-        data: { ai_chat: newAiChatId },
+        where: { ai_chat_id: parentAiChatId },
+        data: { ai_chat_id: newAiChatId },
       });
     } catch (error) {
       const errorMessage = error instanceof Error

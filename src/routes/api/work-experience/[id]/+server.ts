@@ -59,7 +59,7 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
 
 async function updateTechnologies(id: number, technologies: string[]) {
   await db.work_experience_technologies.deleteMany({
-    where: { work_experience: id },
+    where: { work_experience_id: id },
   });
 
   const now = new Date();
@@ -68,7 +68,7 @@ async function updateTechnologies(id: number, technologies: string[]) {
     .filter((t): t is { name: string; sort: number } => !!t.name)
     .map((t) => ({
       name: t.name,
-      work_experience: id,
+      work_experience_id: id,
       sort: t.sort,
       status: "published",
       date_created: now,
@@ -83,7 +83,7 @@ async function updateTechnologies(id: number, technologies: string[]) {
 
 async function updateAchievements(id: number, achievements: { description: string; tags?: string[] | null }[]) {
   await db.work_experience_achievements.deleteMany({
-    where: { work_experience: id },
+    where: { work_experience_id: id },
   });
 
   const now = new Date();
@@ -101,7 +101,7 @@ async function updateAchievements(id: number, achievements: { description: strin
         title: null,
         description: a.description,
         ...(a.tags && a.tags.length > 0 ? { tags: a.tags } : {}),
-        work_experience: id,
+        work_experience_id: id,
         sort: a.sort,
         status: "published",
         date_created: now,

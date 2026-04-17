@@ -16,7 +16,7 @@ import {
   validateJsonResume,
 } from "$lib/server/resume";
 import type { ResumeData } from "$lib/server/resume/types";
-import { uploadFileToDirectus } from "$lib/server/directus/files";
+import { uploadFile } from "$lib/server/files";
 import { logImportEvent } from "$lib/server/import-log";
 import { requireCredits } from "$lib/server/billing/credits";
 
@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     let jsonFileId: string | undefined;
     try {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const uploadResult = await uploadFileToDirectus({
+      const uploadResult = await uploadFile({
         filename: file.name,
         buffer,
         title: `CV Upload (JSON) - ${user.email || user.id}`,
@@ -93,7 +93,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Directus
-    const uploadResult = await uploadFileToDirectus({
+    const uploadResult = await uploadFile({
       filename: file.name,
       buffer,
       title: `CV Upload - ${user.email || user.id}`,

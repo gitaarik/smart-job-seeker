@@ -319,7 +319,7 @@
   // Credentials (edit)
   let editPlatformCredentials = $state(initialPlatformCredentials);
   let canEditPlatformUrls = $state(initialCanEditPlatformUrls);
-  const editInitialCredId = searchTask?.platform_profile_id?.toString() ??
+  const editInitialCredId = searchTask?.platform_id_profile_id?.toString() ??
     "none";
   let editSavedCredentialId = $state<string>(editInitialCredId);
   let editSelectedCredentialId = $state<string>(editInitialCredId);
@@ -385,7 +385,7 @@
   }
 
   async function saveLoginUrl() {
-    if (!searchTask?.platform) return;
+    if (!searchTask?.platform_id) return;
     isSavingLoginUrl = true;
     try {
       const url = loginUrlInput.trim() || null;
@@ -744,7 +744,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
   <!-- Left column: Search & Credentials -->
   <div class="space-y-4">
-    {#if isAdd || searchTask?.platform}
+    {#if isAdd || searchTask?.platform_id}
       {#if isEdit}
         {@render sectionToggle("search", "Search")}
       {/if}
@@ -1206,7 +1206,7 @@
               bind:credentials={editPlatformCredentials}
               bind:selectedId={editSelectedCredentialId}
               bind:loginMode={editLoginMode}
-              platformId={searchTask?.platform}
+              platformId={searchTask?.platform_id}
               {profileId}
               platformName={searchTask?.job_platforms?.name}
               oncredentialadded={() => {
@@ -1214,7 +1214,7 @@
                 saveCredential();
               }}
               oncredentialdeleted={(credId) => {
-                if (searchTask?.platform_profile_id === credId) {
+                if (searchTask?.platform_id_profile_id === credId) {
                   searchTask.platform_profile_id = null;
                   editSavedCredentialId = "none";
                 }

@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const project = await db.side_projects.findFirst({
-    where: { id, profile: layoutData.selectedProfile.id },
+    where: { id, profile_id: layoutData.selectedProfile.id },
     include: {
       side_project_achievements: {
         orderBy: { sort: "asc" },

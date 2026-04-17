@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
   // Load matcher config
   const matchConfig = await db.match_config.findFirst({
-    where: { profile: profileId },
+    where: { profile_id: profileId },
   });
 
   const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
@@ -53,7 +53,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       isMatcherAlive(),
       db.job_matches.findMany({
         where: {
-          profile: profileId,
+          profile_id: profileId,
           ...(!includeIneligible && { recommendation: { not: "ineligible" } }),
         },
         orderBy: { date_created: "desc" },

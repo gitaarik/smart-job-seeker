@@ -183,7 +183,7 @@
       {#each items as item (getItemId(item))}
         {@const itemId = getItemId(item)}
         {@const isLetter = item.itemType === "letter"}
-        {@const hasAiChat = !!item.ai_chat}
+        {@const hasAiChat = !!item.ai_chat_id}
         {@const hasContent = isLetter ? !!item.content : !!item.answer}
         <Card class="overflow-hidden">
           <!-- Header -->

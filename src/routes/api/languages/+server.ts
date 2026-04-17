@@ -23,7 +23,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   await Promise.all(
     order.map((id, index) =>
       db.languages.updateMany({
-        where: { id, profile: profile_id },
+        where: { id, profile_id: profile_id },
         data: { sort: index, date_updated: new Date() },
       })
     ),

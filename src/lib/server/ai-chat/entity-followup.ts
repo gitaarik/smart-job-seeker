@@ -11,7 +11,7 @@ export type FollowupResult = {
   message: string;
   aiChat?: {
     id: number;
-    profile: number;
+    profile_id: number;
     system_prompt: string;
     user_prompt: string;
     full_prompt: string | null;
@@ -33,7 +33,7 @@ export async function createEntityFollowup(opts: {
   promptType?: string;
   customVariables?: Record<string, unknown>;
   profileDataFields?: string[];
-  fetchEntity: (id: number) => Promise<{ id: number; ai_chat: number | null } | null>;
+  fetchEntity: (id: number) => Promise<{ id: number; ai_chat_id: number | null } | null>;
   updateEntity: (id: number, aiChatId: number, aiChatResponse: string | null) => Promise<void>;
 }): Promise<FollowupResult> {
   const { entityId, entityLabel, followupRequest, includeOriginalContext, promptType, customVariables, fetchEntity, updateEntity } = opts;
@@ -57,7 +57,7 @@ export async function createEntityFollowup(opts: {
     };
   }
 
-  if (!entity.ai_chat) {
+  if (!entity.ai_chat_id) {
     return {
       success: false,
       message: `${capLabel} ${entityId} does not have an ai_chats yet. ${noAiChatHint}`,
@@ -67,7 +67,7 @@ export async function createEntityFollowup(opts: {
   let result;
   try {
     result = await createFollowupAiChat(
-      entity.ai_chat,
+      entity.ai_chat_id,
       followupRequest,
       { includeOriginalContext, promptType, customVariables, profileDataFields: opts.profileDataFields },
     );

@@ -50,8 +50,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const result = await db.$queryRaw<{ id: number }[]>`
     DELETE FROM job_matches jm
     USING jobs j
-    WHERE jm.job = j.id
-      AND jm.profile = ${profileId}
+    WHERE jm.job_id = j.id
+      AND jm.profile_id = ${profileId}
       AND ${scoreCondition}
       ${dateCondition}
     RETURNING jm.id

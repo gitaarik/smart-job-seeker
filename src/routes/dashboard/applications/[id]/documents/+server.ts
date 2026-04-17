@@ -1,7 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getFileFromDirectus } from "$lib/server/directus/files";
+import { getFile } from "$lib/server/files";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   if (isNaN(appId)) error(400, "Invalid application ID");
 
   const application = await db.applications.findFirst({
-    where: { id: appId, profile: profileId },
+    where: { id: appId, profile_id: profileId },
   });
   if (!application) error(404, "Application not found");
 
@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   const isAttached = await db.applications_files.findFirst({
     where: { applications_id: appId, directus_files_id: fileId },
   });
-  const isCvFile = application.cv_file_sent === fileId;
+  const isCvFile = application.cv_file_sent_id === fileId;
   if (!isAttached && !isCvFile) error(403, "File not associated with this application");
 
   const fileMeta = await db.directus_files.findUnique({
@@ -34,7 +34,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
     select: { filename_download: true, type: true },
   });
 
-  const buffer = await getFileFromDirectus(fileId);
+  const buffer = await getFile(fileId);
 
   return new Response(buffer, {
     headers: {

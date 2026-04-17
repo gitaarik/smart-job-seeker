@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { Prisma } from "../../../../../../generated/prisma/client.js";
-import { getFieldChoices } from "$lib/server/directus";
+import { SKILL_LEVELS } from "$lib/data/field-labels";
 import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const categories = await db.tech_skill_categories.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
     include: {
       tech_skills: {
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     },
   });
 
-  const levelOptions = await getFieldChoices("tech_skills", "level");
+  const levelOptions = SKILL_LEVELS;
 
   return { categories, profileId: layoutData.selectedProfile.id, levelOptions };
 };
@@ -48,14 +48,14 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.tech_skill_categories.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
 
     await db.tech_skill_categories.create({
       data: {
         name: name.trim(),
-        profile: profileId,
+        profile_id: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -90,7 +90,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.tech_skill_categories.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -128,7 +128,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.tech_skill_categories.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -171,7 +171,7 @@ export const actions: Actions = {
 
     // Verify category ownership
     const category = await db.tech_skill_categories.findFirst({
-      where: { id: categoryId, profile: profileId },
+      where: { id: categoryId, profile_id: profileId },
     });
 
     if (!category) {
@@ -180,7 +180,7 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.tech_skills.findFirst({
-      where: { category: categoryId },
+      where: { category_id: categoryId },
       orderBy: { sort: "desc" },
     });
 
@@ -194,7 +194,7 @@ export const actions: Actions = {
         level: level || null,
         years_experience: years_experience ? parseInt(years_experience) : null,
         ...(tags ? { tags } : {}),
-        category: categoryId,
+        category_id: categoryId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -238,7 +238,7 @@ export const actions: Actions = {
 
     if (
       !existing ||
-      existing.tech_skill_categories.profile !== profileId
+      existing.tech_skill_categories.profile_id !== profileId
     ) {
       return fail(404, { error: "Skill not found" });
     }
@@ -289,7 +289,7 @@ export const actions: Actions = {
 
     // Verify category ownership
     const category = await db.tech_skill_categories.findFirst({
-      where: { id: categoryId, profile: profileId },
+      where: { id: categoryId, profile_id: profileId },
     });
 
     if (!category) {
@@ -300,7 +300,7 @@ export const actions: Actions = {
     await Promise.all(
       order.map((skillId, index) =>
         db.tech_skills.updateMany({
-          where: { id: skillId, category: categoryId },
+          where: { id: skillId, category_id: categoryId },
           data: { sort: index, date_updated: new Date() },
         })
       ),
@@ -334,7 +334,7 @@ export const actions: Actions = {
     await Promise.all(
       order.map((categoryId, index) =>
         db.tech_skill_categories.updateMany({
-          where: { id: categoryId, profile: profileId },
+          where: { id: categoryId, profile_id: profileId },
           data: { sort: index, date_updated: new Date() },
         })
       ),
@@ -369,7 +369,7 @@ export const actions: Actions = {
 
     if (
       !existing ||
-      existing.tech_skill_categories.profile !== profileId
+      existing.tech_skill_categories.profile_id !== profileId
     ) {
       return fail(404, { error: "Skill not found" });
     }

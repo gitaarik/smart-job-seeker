@@ -25,7 +25,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   const newLetter = await db.application_letters.create({
     data: {
-      application: applicationId,
+      application_id: applicationId,
       letter_type: letterType,
       status: "draft",
       date_created: new Date(),

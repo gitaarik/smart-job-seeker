@@ -24,9 +24,9 @@ export function getEntityMediaUrl(
  */
 export function getWorkExperienceLogoUrl(workExp: {
   logo_path?: string | null;
-  logo?: string | null;
+  logo_id?: string | null;
 }): string | null {
-  return getEntityMediaUrl(workExp.logo_path, workExp.logo);
+  return getEntityMediaUrl(workExp.logo_path, workExp.logo_id);
 }
 
 /**
@@ -43,9 +43,9 @@ export function getWorkExperienceBannerUrl(workExp: {
  */
 export function getEducationLogoUrl(edu: {
   logo_path?: string | null;
-  logo?: string | null;
+  logo_id?: string | null;
 }): string | null {
-  return getEntityMediaUrl(edu.logo_path, edu.logo);
+  return getEntityMediaUrl(edu.logo_path, edu.logo_id);
 }
 
 /**

@@ -24,8 +24,8 @@ export async function getPlatformCredentials(
 ): Promise<PlatformCredentials | null> {
   const platformProfile = await dbDirect.platform_profiles.findFirst({
     where: {
-      profile: profileId,
-      platform: platformId,
+      profile_id: profileId,
+      platform_id: platformId,
     },
   });
 
@@ -54,8 +54,8 @@ export async function updateLoginError(
 ): Promise<void> {
   const existingProfile = await dbDirect.platform_profiles.findFirst({
     where: {
-      profile: profileId,
-      platform: platformId,
+      profile_id: profileId,
+      platform_id: platformId,
     },
   });
 

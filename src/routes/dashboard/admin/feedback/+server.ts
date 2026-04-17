@@ -1,7 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { getFileFromDirectus } from "$lib/server/directus/files";
+import { getFile } from "$lib/server/files";
 
 export const GET: RequestHandler = async ({ url, locals }) => {
   const user = locals.user;
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     select: { filename_download: true, type: true },
   });
 
-  const buffer = await getFileFromDirectus(fileId);
+  const buffer = await getFile(fileId);
 
   return new Response(new Uint8Array(buffer), {
     headers: {

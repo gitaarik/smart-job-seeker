@@ -62,11 +62,11 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Create new credential and assign it
-  if (body.new_credential && searchTask.platform) {
+  if (body.new_credential && searchTask.platform_id) {
     const newCred = await db.platform_profiles.create({
       data: {
-        profile: searchTask.profile,
-        platform: searchTask.platform,
+        profile_id: searchTask.profile_id,
+        platform_id: searchTask.platform_id,
         username: body.new_credential.username,
         password: body.new_credential.password || null,
         status: "active",
@@ -84,8 +84,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       const cred = await db.platform_profiles.findFirst({
         where: {
           id: body.platform_profile_id,
-          profile: searchTask.profile,
-          platform: searchTask.platform ?? undefined,
+          profile_id: searchTask.profile_id,
+          platform_id: searchTask.platform_id ?? undefined,
         },
       });
       if (!cred) {

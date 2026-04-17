@@ -44,7 +44,7 @@ const PROFILE_INCLUDE = {
       date_updated: true,
       slug: true,
       name: true,
-      profile: true,
+      profile_id: true,
       toggles: true,
       profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
         true,

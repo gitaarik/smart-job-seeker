@@ -295,7 +295,7 @@
       {#each items as item (getItemId(item))}
         {@const itemId = getItemId(item)}
         {@const isLetter = item.itemType === "letter"}
-        {@const hasAiChat = !!(item as QuestionItem).ai_chat}
+        {@const hasAiChat = !!(item as QuestionItem).ai_chat_id}
         {@const hasContent = isLetter ? !!(item as LetterItem).content : !!(item as QuestionItem).answer}
 
         {#if isLetter}
@@ -305,7 +305,7 @@
           {@const firstContentVersion = versions.find((v: { content: string | null }) => v.content)}
           {@const isAiStarted = firstContentVersion
             ? firstContentVersion.source === "ai_generation"
-            : !!letterItem.ai_chat}
+            : !!letterItem.ai_chat_id}
           {@const latestContent = (() => {
             for (let i = versions.length - 1; i >= 0; i--) {
               if (versions[i].content) return versions[i].content;

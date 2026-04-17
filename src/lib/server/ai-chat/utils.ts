@@ -98,7 +98,7 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
   // Fetch the ai_chatss record
   const aiChat = await db.ai_chats.findUnique({
     where: { id: aiChatId },
-    select: { system_prompt: true, user_prompt: true, profile: true },
+    select: { system_prompt: true, user_prompt: true, profile_id: true },
   });
 
   if (!aiChat) {
@@ -107,7 +107,7 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
 
   // Fetch the collected_data for this profile
   const collectedData = await db.collected_data.findFirst({
-    where: { profile: aiChat.profile },
+    where: { profile_id: aiChat.profile_id },
     select: { schema: true, data: true },
   });
 
@@ -159,7 +159,7 @@ export async function createAndGenerateAiChat(
   message: string;
   aiChat?: {
     id: number;
-    profile: number;
+    profile_id: number;
     system_prompt: string;
     user_prompt: string;
     full_prompt: string | null;
@@ -201,7 +201,7 @@ export async function createAndGenerateAiChat(
 
     // Step 2: Fetch collected_data for the profile
     const collectedData = await db.collected_data.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       select: { schema: true, data: true },
     });
 
@@ -283,7 +283,7 @@ export async function createAndGenerateAiChat(
     // Step 7: Create the ai_chats record with template prompts (not interpolated)
     const aiChat = await db.ai_chats.create({
       data: {
-        profile: profileId,
+        profile_id: profileId,
         system_prompt: promptTemplate.system_prompt,
         user_prompt: promptTemplate.user_prompt,
         context: JSON.parse(JSON.stringify(context)),
@@ -376,7 +376,7 @@ export async function createAndGenerateAiChat(
       where: { id: aiChat.id },
       select: {
         id: true,
-        profile: true,
+        profile_id: true,
         system_prompt: true,
         user_prompt: true,
         full_prompt: true,
@@ -411,7 +411,7 @@ export async function createAndGenerateAiChat(
         data: { error: errorMessage },
       });
       console.error(
-        `      📋 Error details: ${config.directusUrl}/admin/content/ai_chats/${aiChatId}`,
+        `      📋 Error details: ai_chat ID ${aiChatId}`,
       );
     }
 

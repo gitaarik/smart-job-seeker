@@ -31,7 +31,7 @@ export async function buildFullExport(
     await Promise.all([
       // Project stories
       dbDirect.project_stories.findMany({
-        where: { profile: profileId },
+        where: { profile_id: profileId },
         select: {
           sort: true,
           title: true,
@@ -47,7 +47,7 @@ export async function buildFullExport(
 
       // Cheat sheets
       dbDirect.cheat_sheets.findMany({
-        where: { profile: profileId },
+        where: { profile_id: profileId },
         select: {
           sort: true,
           title: true,
@@ -69,7 +69,7 @@ export async function buildFullExport(
 
       // Applications with related data
       dbDirect.applications.findMany({
-        where: { profile: profileId },
+        where: { profile_id: profileId },
         include: {
           jobs: {
             select: {

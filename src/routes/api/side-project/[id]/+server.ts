@@ -59,7 +59,7 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
 
 async function updateTechnologies(id: number, technologies: string[]) {
   await db.side_project_technologies.deleteMany({
-    where: { side_project: id },
+    where: { side_project_id: id },
   });
 
   const now = new Date();
@@ -68,7 +68,7 @@ async function updateTechnologies(id: number, technologies: string[]) {
     .filter((t): t is { name: string; sort: number } => !!t.name)
     .map((t) => ({
       name: t.name,
-      side_project: id,
+      side_project_id: id,
       sort: t.sort,
       date_created: now,
     }));
@@ -82,7 +82,7 @@ async function updateTechnologies(id: number, technologies: string[]) {
 
 async function updateAchievements(id: number, achievements: string[]) {
   await db.side_project_achievements.deleteMany({
-    where: { side_project: id },
+    where: { side_project_id: id },
   });
 
   const achievementData = achievements
@@ -90,7 +90,7 @@ async function updateAchievements(id: number, achievements: string[]) {
     .filter((a): a is { description: string; sort: number } => !!a.description)
     .map((a) => ({
       description: a.description,
-      side_project: id,
+      side_project_id: id,
       sort: a.sort,
     }));
 

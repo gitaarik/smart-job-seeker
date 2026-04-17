@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const languages = await db.languages.findMany({
-    where: { profile: layoutData.selectedProfile.id },
+    where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
   });
 
@@ -41,7 +41,7 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.languages.findFirst({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
 
@@ -50,7 +50,7 @@ export const actions: Actions = {
         name: name.trim(),
         language_code: language_code?.trim() || null,
         proficiency: proficiency || null,
-        profile: profileId,
+        profile_id: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -87,7 +87,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.languages.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {
@@ -127,7 +127,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.languages.findFirst({
-      where: { id, profile: profileId },
+      where: { id, profile_id: profileId },
     });
 
     if (!existing) {

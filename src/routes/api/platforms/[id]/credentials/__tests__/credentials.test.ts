@@ -97,7 +97,7 @@ describe("PUT /api/platforms/[id]/credentials", () => {
     expect(mockPlatformProfilesCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          profile: 1, platform: 5, username: "user@test.com", password: "pass123",
+          profile_id: 1, platform_id: 5, username: "user@test.com", password: "pass123",
         }),
       }),
     );
@@ -181,7 +181,7 @@ describe("DELETE /api/platforms/[id]/credentials", () => {
     const data = await response.json();
     expect(data.success).toBe(true);
     expect(mockPlatformProfilesDeleteMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { profile: 1, platform: 5 } }),
+      expect.objectContaining({ where: { profile_id: 1, platform_id: 5 } }),
     );
     expect(mockJobSearchesUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({

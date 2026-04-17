@@ -52,9 +52,9 @@ export const load: PageServerLoad = async ({
     if (versionSlug) {
       versionId = await getVersionIdBySlug(profile.id, versionSlug) ??
         undefined;
-    } else if (profile.public_cv_version) {
+    } else if (profile.public_cv_version_id) {
       // Fall back to public version when no specific version requested
-      versionId = profile.public_cv_version;
+      versionId = profile.public_cv_version_id;
     }
   }
 

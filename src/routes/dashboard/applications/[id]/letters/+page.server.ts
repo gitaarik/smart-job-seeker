@@ -19,7 +19,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -32,13 +32,13 @@ export const actions: Actions = {
 
     // Get the next sort order
     const lastQuestion = await db.application_questions.findFirst({
-      where: { application: appId },
+      where: { application_id: appId },
       orderBy: { sort: "desc" },
     });
 
     await db.application_questions.create({
       data: {
-        application: appId,
+        application_id: appId,
         question: question.trim(),
         sort: (lastQuestion?.sort ?? 0) + 1,
         date_created: new Date(),
@@ -59,7 +59,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -71,7 +71,7 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid letter ID" });
 
     const letter = await db.application_letters.findFirst({
-      where: { id, application: appId },
+      where: { id, application_id: appId },
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
@@ -98,7 +98,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -109,7 +109,7 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid question ID" });
 
     const question = await db.application_questions.findFirst({
-      where: { id, application: appId },
+      where: { id, application_id: appId },
     });
     if (!question) return fail(404, { error: "Question not found" });
 
@@ -135,7 +135,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -144,7 +144,7 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid letter ID" });
 
     const letter = await db.application_letters.findFirst({
-      where: { id, application: appId },
+      where: { id, application_id: appId },
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
@@ -164,7 +164,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.applications.findFirst({
-      where: { id: appId, profile: profileId },
+      where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -173,7 +173,7 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid question ID" });
 
     const question = await db.application_questions.findFirst({
-      where: { id, application: appId },
+      where: { id, application_id: appId },
     });
     if (!question) return fail(404, { error: "Question not found" });
 
