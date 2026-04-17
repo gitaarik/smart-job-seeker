@@ -98,7 +98,6 @@ async function updateAchievements(id: number, achievements: { description: strin
   if (filtered.length > 0) {
     await db.work_experience_achievements.createMany({
       data: filtered.map((a) => ({
-        title: null,
         description: a.description,
         ...(a.tags && a.tags.length > 0 ? { tags: a.tags } : {}),
         work_experience_id: id,

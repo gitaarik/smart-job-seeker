@@ -237,8 +237,7 @@ async function createWorkExperience(
     for (const achievement of work.achievements) {
       await dbDirect.work_experience_achievements.create({
         data: {
-          title: achievement,
-          description: null,
+          description: achievement,
           status: "draft",
           sort,
           work_experiences: {

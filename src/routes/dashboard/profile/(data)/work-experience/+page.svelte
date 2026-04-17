@@ -314,14 +314,7 @@
                   {#each exp.work_experience_achievements as achievement}
                     <li class="flex items-start gap-2">
                       <span class="text-[var(--dash-primary)] mt-1">•</span>
-                      <span>
-                        {#if achievement.title}
-                          <span class="font-medium">{achievement.title}</span>
-                          {#if achievement.description} – {achievement.description}{/if}
-                        {:else}
-                          {achievement.description}
-                        {/if}
-                      </span>
+                      <span>{achievement.description}</span>
                     </li>
                   {/each}
                 </ul>

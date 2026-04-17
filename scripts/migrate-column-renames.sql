@@ -84,3 +84,26 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- Merge work_experience_achievements.title into description and drop the column.
+-- For rows where description is null/empty but title has content, copy title → description.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'work_experience_achievements'
+      AND column_name = 'title'
+  ) THEN
+    -- Copy title into description where description is empty
+    UPDATE work_experience_achievements
+    SET description = title
+    WHERE (description IS NULL OR description = '')
+      AND title IS NOT NULL AND title != '';
+
+    ALTER TABLE work_experience_achievements DROP COLUMN title;
+    RAISE NOTICE 'Merged title into description and dropped title column from work_experience_achievements';
+  ELSE
+    RAISE NOTICE 'work_experience_achievements.title already removed';
+  END IF;
+END $$;

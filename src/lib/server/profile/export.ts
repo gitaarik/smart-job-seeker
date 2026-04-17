@@ -59,7 +59,7 @@ const PROFILE_SCHEMA_MAPPING = {
         ],
         relations: {
           work_experience_achievements: {
-            fields: ["title", "description"],
+            fields: ["description"],
           },
           work_experience_technologies: {
             fields: ["name"],
@@ -258,7 +258,6 @@ async function fetchProfileData(profileId: number) {
           website: true,
           work_experience_achievements: {
             select: {
-              title: true,
               description: true,
             },
             orderBy: { sort: "asc" },

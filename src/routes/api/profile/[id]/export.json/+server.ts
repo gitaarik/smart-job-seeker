@@ -122,7 +122,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
             select: {
               status: true,
               sort: true,
-              title: true,
               description: true,
               fa_icon: true,
               tags: true,

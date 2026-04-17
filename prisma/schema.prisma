@@ -1245,7 +1245,6 @@ model work_experience_achievements {
   sort             Int?
   date_created     DateTime?        @db.Timestamptz(6)
   date_updated     DateTime?        @db.Timestamptz(6)
-  title            String?          @db.VarChar(255)
   description      String?          @db.VarChar(255)
   work_experience_id  Int
   fa_icon          String?          @db.VarChar(255)

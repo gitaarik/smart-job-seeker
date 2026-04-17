@@ -80,7 +80,6 @@ export async function buildProfileExport(
             select: {
               status: true,
               sort: true,
-              title: true,
               description: true,
               fa_icon: true,
               tags: true,
@@ -340,7 +339,6 @@ export async function buildProfileExport(
       achievements: work.work_experience_achievements.map((a) => ({
         status: a.status || undefined,
         sort: a.sort,
-        title: a.title || undefined,
         description: a.description || undefined,
         fa_icon: a.fa_icon || undefined,
         tags: a.tags,

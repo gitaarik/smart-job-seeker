@@ -83,7 +83,6 @@ export interface ExportedProfile {
       achievements: Array<{
         status?: string;
         sort?: number | null;
-        title?: string;
         description?: string;
         fa_icon?: string;
         tags?: any;
@@ -263,7 +262,6 @@ export async function buildProfileJsonExport(
             select: {
               status: true,
               sort: true,
-              title: true,
               description: true,
               fa_icon: true,
               tags: true,

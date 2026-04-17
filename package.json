@@ -58,7 +58,7 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:e2e": "dotenvx run -f ../.env -- vitest run --config e2e/vitest.config.ts"
+    "test:e2e": "vitest run --config e2e/vitest.config.ts"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
