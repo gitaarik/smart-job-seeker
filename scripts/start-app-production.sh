@@ -37,6 +37,12 @@ if [ "$DB_RESTORE" = "true" ]; then
 
 elif db_query -c "SELECT 1 FROM search_task_runs LIMIT 1" > /dev/null 2>&1; then
   echo "=== App tables already exist ==="
+
+  # Run idempotent column renames (safe to run every startup)
+  if [ -f /app/scripts/migrate-column-renames.sql ]; then
+    echo "=== Running column renames (idempotent) ==="
+    db_query -f /app/scripts/migrate-column-renames.sql
+  fi
 else
   echo "=== App tables not found, initializing database ==="
 
