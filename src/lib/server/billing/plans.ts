@@ -85,8 +85,8 @@ export function getPlans(): PlanDefinition[] {
       limits: PLAN_LIMITS.explorer,
       stripePriceId: null,
       usageExample: [
-        "Import & match ~80 jobs",
-        "5+ AI-assisted applications",
+        "Import & match ~80 jobs/mo",
+        "5+ AI-assisted applications/mo",
       ],
     },
     {
@@ -97,8 +97,8 @@ export function getPlans(): PlanDefinition[] {
       limits: PLAN_LIMITS.seeker,
       stripePriceId: prices.seeker || null,
       usageExample: [
-        "Import & match ~400 jobs",
-        "20+ AI-assisted applications",
+        "Import & match ~400 jobs/mo",
+        "20+ AI-assisted applications/mo",
       ],
     },
     {
@@ -109,8 +109,8 @@ export function getPlans(): PlanDefinition[] {
       limits: PLAN_LIMITS.hunter,
       stripePriceId: prices.hunter || null,
       usageExample: [
-        "Import & match ~1,200 jobs",
-        "50+ AI-assisted applications",
+        "Import & match ~1,200 jobs/mo",
+        "50+ AI-assisted applications/mo",
       ],
     },
     {
@@ -121,8 +121,8 @@ export function getPlans(): PlanDefinition[] {
       limits: PLAN_LIMITS.contractor,
       stripePriceId: prices.contractor || null,
       usageExample: [
-        "Import & match ~4,000 jobs",
-        "200+ AI-assisted applications",
+        "Import & match ~4,000 jobs/mo",
+        "200+ AI-assisted applications/mo",
       ],
     },
   ];

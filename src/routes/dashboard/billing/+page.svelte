@@ -227,21 +227,12 @@
             {/if}
           </div>
 
-          <div class="space-y-2.5 mb-4 text-xs">
-            <div class="text-[var(--dash-text)]">
-              <span class="font-semibold">{plan.limits.profiles === -1 ? "Unlimited" : plan.limits.profiles}</span> profile{plan.limits.profiles === 1 ? "" : "s"}
-            </div>
-            <div>
-              <div class="text-[var(--dash-text)]">
-                <span class="font-semibold">{plan.limits.creditsPerMonth.toLocaleString()}</span> usage/mo
-              </div>
-              <ul class="mt-1 ml-3 space-y-0.5 text-[var(--dash-text-secondary)] list-disc">
-                {#each plan.usageExample as example}
-                  <li>{example}</li>
-                {/each}
-              </ul>
-            </div>
-          </div>
+          <ul class="space-y-1.5 mb-4 text-xs text-[var(--dash-text)] ml-3 list-disc">
+            <li>{plan.limits.profiles === -1 ? "Unlimited" : plan.limits.profiles} profile{plan.limits.profiles === 1 ? "" : "s"}</li>
+            {#each plan.usageExample as example}
+              <li>{example}</li>
+            {/each}
+          </ul>
 
           {#if isCurrent}
             <div class="w-full px-3 py-1.5 text-sm text-center text-[var(--dash-primary)] font-medium bg-[var(--dash-primary)]/10 rounded-lg">
