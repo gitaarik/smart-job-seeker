@@ -11,9 +11,8 @@ export default defineConfig({
   ],
   server: {
     allowedHosts: [
-      "app", // This allows Directus CMS to do HTTP requests from it's
-      // Docker container to this one. In Docker compose, this is the
-      // `app` service and runs on the host `app`.
+      "app", // In Docker Compose, this is the `app` service and runs
+      // on the host `app`.
       ...(process.env.SJS_HOSTNAME ? [process.env.SJS_HOSTNAME] : []),
     ],
     hmr: process.env.SJS_HOSTNAME

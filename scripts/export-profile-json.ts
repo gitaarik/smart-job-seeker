@@ -111,7 +111,7 @@ async function main() {
       );
       console.error("\nUsage: npm run docker:export-profile-json [profileId]");
       console.error(
-        "\nSet a default profile in Directus or provide a profile ID",
+        "\nSet a default profile or provide a profile ID",
       );
       process.exit(1);
     }

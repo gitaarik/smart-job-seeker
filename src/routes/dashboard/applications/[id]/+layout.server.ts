@@ -47,7 +47,7 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
       },
       applications_files: {
         include: {
-          directus_files: {
+          files: {
             select: {
               id: true,
               filename_download: true,
@@ -58,7 +58,7 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
           },
         },
       },
-      directus_files: {
+      files: {
         select: {
           id: true,
           filename_download: true,

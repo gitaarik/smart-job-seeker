@@ -101,12 +101,12 @@ export const actions: Actions = {
       where: { id },
     });
 
-    // Delete the file from Directus
+    // Delete the file
     if (fileRecord.directus_files_id) {
       try {
         await deleteFile(fileRecord.directus_files_id);
       } catch {
-        // File may already be deleted from Directus, continue
+        // File may already be deleted, continue
       }
     }
 

@@ -2,7 +2,7 @@
  * Local file storage
  *
  * Stores files on the local filesystem under uploads/files/{uuid}.{ext}
- * and tracks metadata in the directus_files table (to be renamed later).
+ * and tracks metadata in the files table.
  */
 
 import { writeFile, readFile, mkdir, unlink } from "node:fs/promises";
@@ -62,7 +62,7 @@ export async function uploadFile(
   await mkdir(UPLOADS_DIR, { recursive: true });
   await writeFile(filePath, options.buffer);
 
-  await db.directus_files.create({
+  await db.files.create({
     data: {
       id,
       storage: "local",
@@ -84,7 +84,7 @@ export async function uploadFile(
 }
 
 export async function deleteFile(fileId: string): Promise<void> {
-  const file = await db.directus_files.findUnique({
+  const file = await db.files.findUnique({
     where: { id: fileId },
     select: { filename_disk: true },
   });
@@ -101,11 +101,11 @@ export async function deleteFile(fileId: string): Promise<void> {
     }
   }
 
-  await db.directus_files.delete({ where: { id: fileId } }).catch(() => {});
+  await db.files.delete({ where: { id: fileId } }).catch(() => {});
 }
 
 export async function getFile(fileId: string): Promise<Buffer> {
-  const file = await db.directus_files.findUnique({
+  const file = await db.files.findUnique({
     where: { id: fileId },
     select: { filename_disk: true },
   });
@@ -114,7 +114,7 @@ export async function getFile(fileId: string): Promise<Buffer> {
     throw new Error(`File not found: ${fileId}`);
   }
 
-  // Try new location first, fall back to legacy Directus uploads
+  // Try new location first, fall back to legacy uploads
   try {
     return await readFile(join(UPLOADS_DIR, file.filename_disk));
   } catch {

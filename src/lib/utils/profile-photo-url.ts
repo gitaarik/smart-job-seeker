@@ -3,7 +3,7 @@
  *
  * Priority:
  * 1. Local upload (profile_photo_path): "profiles/abc123.jpg" → "/uploads/profiles/abc123.jpg"
- * 2. Legacy Directus (profile_picture_id UUID): "ee492412-..." → "/assets/ee492412-..."
+ * 2. Legacy file UUID (profile_picture_id): "ee492412-..." → "/assets/ee492412-..."
  *
  * @param profile - Object with profile_photo_path and/or profile_picture_id
  */
@@ -20,7 +20,7 @@ export function getProfilePhotoUrl(
     return `/uploads/${profile.profile_photo_path}`;
   }
 
-  // Fall back to legacy Directus UUID
+  // Fall back to legacy file UUID
   if (profile.profile_picture_id) {
     return `/assets/${profile.profile_picture_id}`;
   }

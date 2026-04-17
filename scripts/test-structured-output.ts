@@ -58,7 +58,7 @@ console.log(
   "\nNext steps:",
 );
 console.log(
-  "1. Add JSON schemas to prompts in Directus (see docs/structured-output-schemas.md)",
+  "1. Add JSON schemas to prompt templates (see docs/structured-output-schemas.md)",
 );
 console.log("2. Test with actual job scraping: npm run docker:scrape:jobs");
 console.log("3. Monitor LLM responses for schema compliance");

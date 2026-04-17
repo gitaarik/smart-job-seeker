@@ -399,7 +399,7 @@
           <div class="flex items-center justify-between text-sm">
             <span class="text-[var(--dash-text-secondary)]">CV Sent</span>
             <span class="text-[var(--dash-text)] font-medium truncate ml-2">
-              {app.directus_files?.filename_download || "None"}
+              {app.files?.filename_download || "None"}
             </span>
           </div>
         </div>

@@ -55,5 +55,16 @@ services:
       SJS_EMAIL_FROM: ${SJS_EMAIL_FROM:-}
       # EmailConnect.eu for inbound verification email relay
       SJS_EMAILCONNECT_HMAC_KEY: ${SJS_EMAILCONNECT_HMAC_KEY:-}
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${SJS_ADMINER_PORT:-8080}:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+      ADMINER_DESIGN: pepa-linha-dark
+    depends_on:
+      database:
+        condition: service_healthy
 volumes:
   postgres_data:

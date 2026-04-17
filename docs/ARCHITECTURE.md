@@ -3,8 +3,8 @@
 ## Overview
 
 Smart Job Seeker is a SvelteKit application that helps users manage their job
-search process. It integrates with Directus CMS for data management and uses
-LangChain with multiple LLM providers for generating personalized content.
+search process. It uses Prisma ORM for data management and LangChain with
+multiple LLM providers for generating personalized content.
 
 ## Technology Stack
 
@@ -21,7 +21,6 @@ LangChain with multiple LLM providers for generating personalized content.
 - **SvelteKit Server** - SSR and API routes
 - **Prisma ORM** - Database access layer
 - **PostgreSQL** - Primary database
-- **Directus CMS** - Headless CMS for content management
 - **Better Auth** - Authentication (email/password)
 - **Redis** - Background job queues
 
@@ -47,7 +46,6 @@ smart-job-seeker/
 │   │   │   ├── ai-chat/           # AI prompt/response generation
 │   │   │   ├── auth/              # Better Auth + API key auth
 │   │   │   ├── browser/           # Browser automation
-│   │   │   ├── directus/          # Directus CMS client
 │   │   │   ├── email/             # Email service
 │   │   │   ├── export/            # Profile data export/import
 │   │   │   ├── html/              # HTML parsing/extraction
@@ -62,7 +60,6 @@ smart-job-seeker/
 │   │   │   ├── uploads/           # File upload handling
 │   │   │   ├── utils/             # Retry logic, helpers
 │   │   │   ├── validation/        # Request validation schemas
-│   │   │   ├── webhook-handlers/  # Webhook handlers (profile export, version links)
 │   │   │   └── config.ts          # Centralized configuration
 │   │   ├── stores/                # Client-side stores
 │   │   │   ├── is-human.svelte.ts # Bot detection
@@ -78,7 +75,6 @@ smart-job-seeker/
 │   │   │   ├── media/             # Media uploads
 │   │   │   ├── platforms/         # Platform config
 │   │   │   ├── profile/           # Profile endpoints
-│   │   │   ├── webhook/           # Directus webhook processing
 │   │   │   ├── work-experience/   # Work experience CRUD
 │   │   │   └── ...                # Other API routes
 │   │   ├── dashboard/             # Dashboard UI
@@ -111,34 +107,22 @@ All components use modern Svelte 5 runes:
 - `$derived()` for computed values
 - `$effect()` for side effects
 
-### 2. Webhook Handler Registry
-
-Webhooks from Directus are handled through a modular registry. Currently 2
-handlers are registered:
-
-- `profile.export` - Profile data and schema export
-- `profile.version-links` - Profile version link management
-
-AI generation handlers have been migrated to direct API endpoints under
-`/api/ai/`.
-
-### 3. AI Generation via API Endpoints
+### 2. AI Generation via API Endpoints
 
 AI features (letter generation, question answering, follow-ups) are served
-through direct API routes at `/api/ai/` rather than webhook handlers. This
-provides:
+through direct API routes at `/api/ai/`. This provides:
 
 - Direct request/response flow
 - Better error handling
 - Dashboard integration
 
-### 4. LLM Provider Abstraction
+### 3. LLM Provider Abstraction
 
 LLM calls go through LangChain (`src/lib/server/llm/langchain.ts`), which
 supports provider switching via the `SJS_LLM_PROVIDER` env var. Responses are
 cached using SHA-256 hashes of prompts with configurable TTL.
 
-### 5. Production Reliability
+### 4. Production Reliability
 
 #### Retry Logic
 
@@ -163,7 +147,7 @@ Token bucket algorithm per client IP for API endpoints.
 
 Structured logging with context via `src/lib/server/monitoring/`.
 
-### 6. Type Safety
+### 5. Type Safety
 
 #### Prisma Types
 
@@ -199,25 +183,7 @@ Database update (Prisma)
 Response to client
 ```
 
-### 2. Webhook Processing
-
-```
-Directus Flow
-    |
-POST /api/webhook
-    |
-HMAC-SHA256 Signature Verification
-    |
-Handler Registry (2 handlers)
-    |
-Business Logic
-    |
-Database Update (Prisma)
-    |
-Response
-```
-
-### 3. Page Rendering
+### 2. Page Rendering
 
 ```
 User Request
@@ -238,7 +204,6 @@ All configuration is centralized in `src/lib/server/config.ts`. Key settings:
 - **LLM**: Provider selection, API keys, model overrides, cache TTL, retry config
 - **Database**: PostgreSQL connection via `SJS_DATABASE_URL`
 - **Auth**: Better Auth with Prisma adapter
-- **External Services**: Directus URL and token, webhook secret
 - **Browser**: Chrome path for PDF generation and scraping
 - **Scraping**: Cooldown and rate limits
 - **Redis**: Host and port for job queues
@@ -248,7 +213,7 @@ All configuration is centralized in `src/lib/server/config.ts`. Key settings:
 - **508 tests** across 37 test files
 - **Vitest** for unit and integration testing
 - Tests colocated in `__tests__/` directories alongside source code
-- External services mocked (LLM providers, Directus, database)
+- External services mocked (LLM providers, database)
 
 See [TESTING.md](TESTING.md) for the full testing guide.
 
@@ -256,7 +221,6 @@ See [TESTING.md](TESTING.md) for the full testing guide.
 
 - **Better Auth** - Email/password authentication with session management
 - **API Key Auth** - For programmatic access (`sjs_` prefix keys)
-- **HMAC-SHA256** - Webhook signature verification
 - **Rate Limiting** - Per-IP token bucket
 - **Zod Validation** - All inputs validated at runtime
 - **Prisma** - SQL injection prevention
@@ -266,7 +230,7 @@ See [TESTING.md](TESTING.md) for the full testing guide.
 ### Docker Compose (Development)
 
 - `database` - PostgreSQL
-- `admin` - Directus CMS
+- `adminer` - Database management UI
 - `app` - SvelteKit development server
 
 ### Production
@@ -274,7 +238,6 @@ See [TESTING.md](TESTING.md) for the full testing guide.
 - SvelteKit app deployed with Node adapter
 - PostgreSQL database
 - Redis for background job queues
-- Directus CMS for content management
 
 ## Contributing
 

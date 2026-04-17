@@ -8,14 +8,14 @@ const UPLOADS_DIR = join(process.cwd(), "uploads", "files");
 const LEGACY_DIR = join(process.cwd(), "directus", "uploads");
 
 export const GET: RequestHandler = async ({ params }) => {
-  const file = await db.directus_files.findUnique({
+  const file = await db.files.findUnique({
     where: { id: params.id },
     select: { filename_disk: true, type: true, filename_download: true },
   });
 
   if (!file?.filename_disk) throw error(404);
 
-  // Try new location first, fall back to legacy Directus uploads
+  // Try new location first, fall back to legacy uploads
   let buffer: Buffer;
   try {
     buffer = await readFile(join(UPLOADS_DIR, file.filename_disk));

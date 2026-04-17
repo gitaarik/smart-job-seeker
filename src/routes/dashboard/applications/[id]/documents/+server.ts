@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   const isCvFile = application.cv_file_sent_id === fileId;
   if (!isAttached && !isCvFile) error(403, "File not associated with this application");
 
-  const fileMeta = await db.directus_files.findUnique({
+  const fileMeta = await db.files.findUnique({
     where: { id: fileId },
     select: { filename_download: true, type: true },
   });

@@ -1,6 +1,6 @@
 /**
  * Profile Export File Service
- * Handles querying profile_exports table and retrieving files from Directus
+ * Handles querying profile_exports table and retrieving files
  */
 
 import { dbDirect as db } from "$lib/server/db";
@@ -47,8 +47,8 @@ export async function getLatestExport(query: ExportQuery) {
 }
 
 /**
- * Retrieve file content from Directus by UUID
- * @param fileUuid - The UUID of the file in Directus
+ * Retrieve file content by UUID
+ * @param fileUuid - The UUID of the file
  * @returns Buffer containing the file data
  */
 export async function getExportFileBuffer(fileUuid: string): Promise<Buffer> {

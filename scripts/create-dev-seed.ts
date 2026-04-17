@@ -3,7 +3,7 @@
  * Creates a dev seed SQL file with essential tables and dev users.
  *
  * 1. Seeds dev users via Better Auth (creates accounts, links to profiles)
- * 2. Dumps Directus config tables (with schema)
+ * 2. Dumps database tables
  * 3. Dumps application tables (with schema, excluding transient data)
  *
  * Run inside the app container: npx vite-node scripts/create-dev-seed.ts
@@ -125,42 +125,9 @@ async function seedDevUsers() {
 // Database Dump
 // ============================================================================
 
-const DIRECTUS_TABLES = [
-  "directus_migrations",
-  "directus_folders",
-  "directus_files",
-  "directus_collections",
-  "directus_fields",
-  "directus_relations",
-  "directus_roles",
-  "directus_policies",
-  "directus_users",
-  "directus_access",
-  "directus_permissions",
-  "directus_settings",
-  "directus_translations",
-  "directus_flows",
-  "directus_operations",
-];
-
 const EXCLUDE_TABLES = [
-  // Already dumped Directus tables
-  ...DIRECTUS_TABLES,
-  // Other Directus tables not needed
-  "directus_activity",
-  "directus_revisions",
-  "directus_sessions",
-  "directus_notifications",
-  "directus_presets",
-  "directus_dashboards",
-  "directus_panels",
-  "directus_shares",
-  "directus_versions",
-  "directus_comments",
-  "directus_extensions",
-  "directus_deployments",
-  "directus_deployment_projects",
-  "directus_deployment_runs",
+  // Directus system tables (legacy, will be dropped)
+  "directus_%",
   // App tables not needed
   "session",
   "verification",
@@ -197,18 +164,8 @@ SET session_replication_role = 'replica';
 
 `;
 
-  // Directus tables (with schema)
-  console.log("\n[2/3] Exporting Directus config...");
-  const directusTableArgs = DIRECTUS_TABLES.flatMap((t) => ["-t", t]);
-  sql += pgDump(["--no-owner", "--no-acl", "--disable-triggers", ...directusTableArgs]);
-
-  for (const table of DIRECTUS_TABLES) {
-    const count = psqlQuery(`SELECT COUNT(*) FROM "${table}"`);
-    console.log(`  ${table} (${count} rows)`);
-  }
-
   // Application tables (with schema, excluding unwanted)
-  console.log("\n[3/3] Exporting application tables...");
+  console.log("\n[2/2] Exporting application tables...");
   const excludeArgs = EXCLUDE_TABLES.flatMap((t) => [`--exclude-table=${t}`]);
   sql += pgDump(["--no-owner", "--no-acl", "--disable-triggers", ...excludeArgs]);
 

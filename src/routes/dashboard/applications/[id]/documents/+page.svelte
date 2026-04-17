@@ -216,7 +216,7 @@
     {:else}
       <div class="space-y-2 mt-4">
         {#each files as fileRecord (fileRecord.id)}
-          {@const file = fileRecord.directus_files}
+          {@const file = fileRecord.files}
           {#if file}
             <Card padding="sm">
               <div class="flex items-center justify-between">

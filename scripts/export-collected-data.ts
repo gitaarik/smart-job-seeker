@@ -4,7 +4,7 @@ import { dbDirect } from "$lib/server/db";
 import { getDefaultProfileId } from "$lib/server/profile/default";
 import removeMd from "remove-markdown";
 
-// Mapping of ExportedProfile structure to Directus collections and fields
+// Mapping of ExportedProfile structure to database collections and fields
 const PROFILE_SCHEMA_MAPPING = {
   profiles: {
     fields: [
@@ -155,44 +155,23 @@ interface SchemaNode {
  * Build a schema node recursively for a collection
  * Exported for reusability and testing
  */
-export async function buildSchemaNode(
+export function buildSchemaNode(
   collection: string,
   fieldNames: string[],
   relations?: Record<string, { fields: string[]; relations?: any }>,
-): Promise<SchemaNode> {
-  // Fetch collection note
-  const collectionMeta = await dbDirect.directus_collections.findUnique({
-    where: { collection },
-    select: { note: true },
-  });
-
+): SchemaNode {
   const node: SchemaNode = {
-    note: collectionMeta?.note || undefined,
     fields: {},
   };
 
-  // Fetch field notes
-  const fieldMetas = await dbDirect.directus_fields.findMany({
-    where: {
-      collection,
-      field: { in: fieldNames },
-    },
-    select: { field: true, note: true },
-  });
-
-  const fieldNotesMap = Object.fromEntries(
-    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || "")]),
-  );
-
   for (const fieldName of fieldNames) {
-    node.fields![fieldName] = fieldNotesMap[fieldName] || "";
+    node.fields![fieldName] = "";
   }
 
-  // Build relations recursively
   if (relations && Object.keys(relations).length > 0) {
     node.relations = {};
     for (const [relationName, relationConfig] of Object.entries(relations)) {
-      node.relations[relationName] = await buildSchemaNode(
+      node.relations[relationName] = buildSchemaNode(
         relationName,
         relationConfig.fields,
         relationConfig.relations,
@@ -455,7 +434,7 @@ async function main() {
         "\nUsage: npm run host:export-collected-data [profileId]",
       );
       console.error(
-        "\nSet a default profile in Directus or provide a profile ID",
+        "\nSet a default profile or provide a profile ID",
       );
       process.exit(1);
     }

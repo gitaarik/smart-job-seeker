@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       export_type: "structured_data",
     },
     include: {
-      directus_files: true,
+      files: true,
     },
     orderBy: { date_created: "desc" },
   });

@@ -191,14 +191,14 @@
             {#if entry.user_feedback_files?.length > 0}
               <div class="flex flex-wrap gap-2">
                 {#each entry.user_feedback_files as fileRecord}
-                  {#if fileRecord.directus_files}
+                  {#if fileRecord.files}
                     <a
-                      href="/dashboard/admin/feedback?fileId={fileRecord.directus_files.id}&feedbackId={entry.id}"
+                      href="/dashboard/admin/feedback?fileId={fileRecord.files.id}&feedbackId={entry.id}"
                       class="flex items-center gap-1.5 px-2 py-1 text-xs bg-[var(--dash-bg)] rounded border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors"
                     >
                       <FontAwesomeIcon icon={faDownload} class="w-3 h-3" />
-                      <span class="truncate max-w-32">{fileRecord.directus_files.filename_download}</span>
-                      <span class="text-[var(--dash-text-muted)]">{formatFileSize(fileRecord.directus_files.filesize)}</span>
+                      <span class="truncate max-w-32">{fileRecord.files.filename_download}</span>
+                      <span class="text-[var(--dash-text-muted)]">{formatFileSize(fileRecord.files.filesize)}</span>
                     </a>
                   {/if}
                 {/each}

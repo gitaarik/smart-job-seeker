@@ -19,7 +19,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   });
   if (!link) error(403, "File not associated with this feedback");
 
-  const fileMeta = await db.directus_files.findUnique({
+  const fileMeta = await db.files.findUnique({
     where: { id: fileId },
     select: { filename_download: true, type: true },
   });

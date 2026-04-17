@@ -43,7 +43,7 @@ async function main() {
         "  npm run docker:export-to-json-resume 12 ./custom-resume.json",
       );
       console.error(
-        "\nSet a default profile in Directus or provide a profile ID",
+        "\nSet a default profile or provide a profile ID",
       );
       process.exit(1);
     }
@@ -51,7 +51,7 @@ async function main() {
     exportToFile = true;
     console.log(`Using default profile: ${profileId}`);
   } else {
-    // Profile ID provided as argument - only save to Directus
+    // Profile ID provided as argument - only save to database
     profileId = parseInt(args[0], 10);
     if (isNaN(profileId)) {
       console.error(`❌ Error: Invalid profile ID "${args[0]}"`);

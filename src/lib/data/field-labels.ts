@@ -1,7 +1,7 @@
 /**
  * Static field choice labels
  *
- * Replaces the old Directus-based field label fetching with simple static maps.
+ * Static maps for field choice labels used in dropdowns and display.
  */
 
 export const SKILL_LEVELS: Array<{ value: string; label: string }> = [

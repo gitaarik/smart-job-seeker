@@ -85,6 +85,23 @@ BEGIN
   END LOOP;
 END $$;
 
+-- Rename directus_files table to files
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'directus_files'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'files'
+  ) THEN
+    ALTER TABLE directus_files RENAME TO files;
+    RAISE NOTICE 'Renamed directus_files → files';
+  ELSE
+    RAISE NOTICE 'directus_files already renamed or files table exists';
+  END IF;
+END $$;
+
 -- Merge work_experience_achievements.title into description and drop the column.
 -- For rows where description is null/empty but title has content, copy title → description.
 DO $$

@@ -12,8 +12,6 @@
 #    - Tables with FK refs to jobs (keeps only rows for included jobs):
 #      job_matches, job_match_history, job_importers, job_resources,
 #      job_statuses, job_search_run_items
-#    - directus_activity: Audit log (excluded)
-#    - directus_revisions: Version history (excluded)
 #
 
 set -e
@@ -62,8 +60,6 @@ pg_dump \
   --exclude-table-data=job_importers \
   --exclude-table-data=job_resources \
   --exclude-table-data=job_statuses \
-  --exclude-table-data=directus_activity \
-  --exclude-table-data=directus_revisions \
   > "$SMART_FILE"
 
 # Disable FK triggers during restore (we include partial ai_chats/jobs data,
@@ -154,9 +150,9 @@ done
   echo ""
   echo "-- Clean up orphaned FK references (partial backup may have dangling refs)"
   echo "UPDATE public.jobs SET ai_chat_extraction = NULL WHERE ai_chat_extraction IS NOT NULL AND ai_chat_extraction NOT IN (SELECT id FROM public.ai_chats);"
-  echo "UPDATE public.application_letters SET ai_chat = NULL WHERE ai_chat IS NOT NULL AND ai_chat NOT IN (SELECT id FROM public.ai_chats);"
-  echo "UPDATE public.application_questions SET ai_chat = NULL WHERE ai_chat IS NOT NULL AND ai_chat NOT IN (SELECT id FROM public.ai_chats);"
-  echo "UPDATE public.applications SET job = NULL WHERE job IS NOT NULL AND job NOT IN (SELECT id FROM public.jobs);"
+  echo "UPDATE public.application_letters SET ai_chat_id = NULL WHERE ai_chat_id IS NOT NULL AND ai_chat_id NOT IN (SELECT id FROM public.ai_chats);"
+  echo "UPDATE public.application_questions SET ai_chat_id = NULL WHERE ai_chat_id IS NOT NULL AND ai_chat_id NOT IN (SELECT id FROM public.ai_chats);"
+  echo "UPDATE public.applications SET job_id = NULL WHERE job_id IS NOT NULL AND job_id NOT IN (SELECT id FROM public.jobs);"
   echo ""
   echo "-- Reset sequences after partial data import"
   echo "SELECT setval('public.ai_chats_id_seq', COALESCE((SELECT MAX(id) FROM public.ai_chats), 1));"

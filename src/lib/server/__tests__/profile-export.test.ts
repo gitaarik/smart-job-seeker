@@ -11,12 +11,6 @@ vi.mock("$lib/server/db", () => ({
     profiles: {
       findUnique: vi.fn(),
     },
-    directus_collections: {
-      findUnique: vi.fn(),
-    },
-    directus_fields: {
-      findMany: vi.fn(),
-    },
     collected_data: {
       findFirst: vi.fn(),
       create: vi.fn(),

@@ -43,8 +43,6 @@ journey with AI-powered insights.
 ### Technical Highlights
 
 - **Multi-Provider LLM Integration** - Groq, Anthropic, OpenAI, and more
-- **Directus CMS** - Headless CMS for content management
-- **Webhook System** - Secure integration with Directus Flows
 - **JSON Resume** - Standard resume format with PDF export
 
 ## Quick Start
@@ -72,9 +70,9 @@ npm run dev
 
 This starts:
 
-- **Directus CMS** at http://localhost:8055
 - **SvelteKit app** at http://localhost:5173
 - **PostgreSQL database** on port 5432
+- **Adminer** (DB management) at http://localhost:8080
 
 ## Architecture
 
@@ -82,7 +80,7 @@ This starts:
 
 - **Frontend**: SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
 - **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
-- **Database**: PostgreSQL with Directus CMS
+- **Database**: PostgreSQL, Prisma ORM, Adminer
 - **AI**: Multi-provider LLM (Groq, Anthropic, OpenAI, Gemini, DeepSeek)
 - **Browser Automation**: Patchright (Playwright fork) with CDP
 - **DevOps**: Docker Compose, Vitest
@@ -133,7 +131,7 @@ npm run dev:restore              # Reset DB from full/smart backup
 npm run docker:cli               # Access app container
 
 # Database
-npm run docker:update-schema     # Sync Prisma from Directus
+npx prisma db push               # Push schema changes to DB
 npm run docker:db:backup         # Backup database
 
 # Code Quality
@@ -179,7 +177,6 @@ npm run build
 ```
 
 - `SJS_JWT_SECRET`, `SJS_DATABASE_URL`, `SJS_LLM_API_KEY_GROQ`
-- `SJS_WEBHOOK_SECRET`, Directus configuration
 
 ## Roadmap
 
@@ -189,8 +186,6 @@ npm run build
 - Job application tracking with AI assistance
 - Interview preparation tools
 - **Job scraping infrastructure** (newly added)
-- Directus CMS integration
-
 ### Next Steps 🚀
 
 - Profile-to-job matching engine
@@ -220,4 +215,4 @@ experience.
 - **GitHub:** https://github.com/gitaarik
 - **LinkedIn:** https://www.linkedin.com/in/rik-wanders-software
 
-Built with TypeScript, SvelteKit, PostgreSQL, and Directus CMS.
+Built with TypeScript, SvelteKit, and PostgreSQL.

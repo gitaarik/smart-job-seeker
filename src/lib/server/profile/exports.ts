@@ -19,7 +19,7 @@ export async function createProfileExport(
   let uploadedFile;
 
   try {
-    // Upload file to Directus
+    // Upload file
     uploadedFile = await uploadFile({
       filename: options.filename,
       buffer: options.fileBuffer,

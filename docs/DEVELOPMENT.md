@@ -34,12 +34,8 @@ contributing to Smart Job Seeker.
 
    - `SJS_DATABASE_URL` - PostgreSQL connection string
    - `SJS_APP_URL_HOST` - Public site URL (default: http://localhost:5173)
-   - `SJS_ADMIN_URL_HOST` - Directus admin URL (default: http://localhost:8055)
-   - `SJS_ADMIN_TOKEN` - Directus API token
-   - `SJS_WEBHOOK_SECRET` - Webhook authentication secret
    - `SJS_LLM_PROVIDER` - LLM provider (groq, gemini, openai, deepseek, cerebras)
    - `SJS_LLM_API_KEY_GROQ` - Groq API key (default provider)
-   - Directus admin credentials
 
 ## Development Workflow
 
@@ -55,9 +51,9 @@ npm run dev
 
 This starts:
 
-- **Directus CMS** on `http://localhost:8055`
 - **SvelteKit app** on `http://localhost:5173`
 - **PostgreSQL database** on port 5432
+- **Adminer** (DB management) on `http://localhost:8080`
 
 ### Useful Commands
 
@@ -67,7 +63,7 @@ npm run docker:cli               # Access app container shell
 npm run docker:db:cli            # Access PostgreSQL CLI
 
 # Database operations
-npm run docker:update-schema     # Sync Prisma schema from DB
+npx prisma db push               # Push schema changes to DB
 npm run docker:db:migrate        # Run database migrations
 npm run docker:db:backup         # Backup database
 npm run docker:db:restore        # Restore database
@@ -130,7 +126,6 @@ smart-job-seeker/
 │   │   ├── signup/
 │   │   └── api/                   # API endpoints
 │   │       ├── ai/                # AI generation (letters, questions, chats)
-│   │       ├── webhook/           # Directus webhook handler
 │   │       ├── profile/           # Profile endpoints
 │   │       ├── jobs/              # Job operations
 │   │       └── ...                # Other API routes
@@ -143,7 +138,6 @@ smart-job-seeker/
 │   │   │   ├── profile/           # Profile management
 │   │   │   ├── queue/             # Redis job queues
 │   │   │   ├── schemas/           # Zod AI prompt schemas
-│   │   │   ├── webhook-handlers/  # Webhook handlers
 │   │   │   └── config.ts          # Centralized configuration
 │   │   ├── components/            # Reusable Svelte components
 │   │   ├── data/                  # Static data and config
@@ -165,11 +159,11 @@ smart-job-seeker/
 
 ### Prisma Workflow
 
-The project uses Directus as the source of truth for the database schema.
-Changes should be made in Directus, then synchronized to Prisma.
+The project uses Prisma as the source of truth for the database schema.
+Edit `prisma/schema.prisma` directly, then push changes:
 
-1. **Make changes in Directus** (http://localhost:8055)
-2. **Sync Prisma schema**: `npm run docker:update-schema`
+1. **Edit schema**: `prisma/schema.prisma`
+2. **Push changes**: `npx prisma db push`
 3. **Generate Prisma client**: `npx prisma generate`
 
 ### Manual Prisma Operations
@@ -214,11 +208,11 @@ For the complete testing guide, see [TESTING.md](TESTING.md).
 
 ### Service Details
 
-**Admin (Directus CMS)**
+**Adminer (DB Management)**
 
 ```bash
-docker compose up admin
-# Access at http://localhost:8055
+docker compose up adminer
+# Access at http://localhost:8080
 ```
 
 **App (SvelteKit)**
@@ -251,7 +245,6 @@ npm run docker:cli
 
 # View logs
 docker compose logs -f app
-docker compose logs -f admin
 ```
 
 ## API Development
@@ -263,13 +256,6 @@ AI features are served through direct API routes at `/api/ai/`:
 - Letter generation, question answering, follow-up refinement
 - Authentication via Better Auth sessions
 - Direct request/response flow
-
-### Webhook Endpoint
-
-Webhook endpoint at `POST /api/webhook` for Directus integration:
-
-- HMAC-SHA256 signature verification
-- 2 registered handlers: profile export, profile version links
 
 ## Code Quality Standards
 
@@ -295,7 +281,6 @@ npx deno fmt          # Format all code
 
 - **Better Auth** - Email/password authentication with session management
 - **API Key Auth** - For programmatic access (`sjs_` prefix keys)
-- **HMAC-SHA256** - Webhook signature verification
 - **Environment Variable Protection** - Sensitive credentials stored securely
 
 ## Contributing

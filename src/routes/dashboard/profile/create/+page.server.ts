@@ -81,7 +81,7 @@ export const actions: Actions = {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Upload to Directus
+      // Upload file
       const uploadResult = await uploadFile({
         filename: file.name,
         buffer,

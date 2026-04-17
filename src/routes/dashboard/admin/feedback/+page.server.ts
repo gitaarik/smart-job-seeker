@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ url }) => {
     include: {
       user_feedback_files: {
         include: {
-          directus_files: {
+          files: {
             select: {
               id: true,
               filename_download: true,
@@ -227,7 +227,7 @@ export const actions: Actions = {
     });
     if (!entry) return fail(404, { error: "Not found" });
 
-    // Delete files from Directus
+    // Delete files
     for (const file of entry.user_feedback_files) {
       await deleteFile(file.directus_files_id).catch(() => {});
     }

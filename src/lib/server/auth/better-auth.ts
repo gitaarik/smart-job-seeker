@@ -102,7 +102,7 @@ export const auth = betterAuth({
                 <h2>New user signup</h2>
                 <p><strong>Name:</strong> ${user.name || "(not provided)"}</p>
                 <p><strong>Email:</strong> ${user.email}</p>
-                <p>Log in to Directus to approve this user.</p>
+                <p>Log in to the admin panel to approve this user.</p>
               `,
             }).catch((err) =>
               console.error("[auth] Failed to send admin notification:", err)

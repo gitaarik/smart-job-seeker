@@ -1,6 +1,6 @@
 /**
  * Get URL for entity media
- * Handles both local storage paths and legacy Directus UUIDs
+ * Handles both local storage paths and legacy file UUIDs
  */
 export function getEntityMediaUrl(
   localPath: string | null | undefined,
@@ -11,7 +11,7 @@ export function getEntityMediaUrl(
     return `/uploads/${localPath}`;
   }
 
-  // Fall back to legacy Directus
+  // Fall back to legacy UUID
   if (legacyUuid) {
     return `/assets/${legacyUuid}`;
   }

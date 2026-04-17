@@ -288,9 +288,9 @@
                 </p>
                 <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
                   <span>{formatDate(exp.date_created)}</span>
-                  {#if exp.directus_files?.filesize}
+                  {#if exp.files?.filesize}
                     <span>•</span>
-                    <span>{formatFileSize(exp.directus_files.filesize)}</span>
+                    <span>{formatFileSize(exp.files.filesize)}</span>
                   {/if}
                 </div>
               </div>

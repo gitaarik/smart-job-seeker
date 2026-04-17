@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
       profile_id: profileId,
     },
     include: {
-      directus_files: true,
+      files: true,
     },
   });
 
@@ -34,7 +34,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
 
   const fileBuffer = await getFile(exp.file_id);
   const filename =
-    exp.directus_files?.filename_download || `export-${exp.id}.${exp.file_type}`;
+    exp.files?.filename_download || `export-${exp.id}.${exp.file_type}`;
 
   // Determine content type based on file type
   let contentType: string;

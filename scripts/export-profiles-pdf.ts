@@ -61,7 +61,7 @@ async function exportProfilesToPDF(profileId?: number) {
   console.log(`\n📋 Profile: ${profile.name || `ID ${profile.id}`}`);
   console.log(
     `📍 Export Mode: ${
-      isExplicitProfileId ? "Directus only" : "Filesystem + Directus"
+      isExplicitProfileId ? "DB only" : "Filesystem + DB"
     }`,
   );
   console.log(`📦 Profile Versions: ${profile.profile_versions.length}`);
@@ -212,7 +212,7 @@ async function exportProfilesToPDF(profileId?: number) {
 
       // Save to profile_exports collection
       try {
-        console.log(`   🔄 Saving to Directus...`);
+        console.log(`   🔄 Saving to database...`);
 
         // Build source URL from the route used for rendering
         const sourceUrl = buildExportUrl({
@@ -231,13 +231,13 @@ async function exportProfilesToPDF(profileId?: number) {
           }`,
           sourceUrl: sourceUrl,
         });
-        console.log(`   ✅ Saved to Directus (profile_exports)`);
+        console.log(`   ✅ Saved to database (profile_exports)`);
         console.log(
           `   📝 Metadata: ${version.displayType} | PDF | ${version.description}`,
         );
       } catch (error) {
         console.error(
-          `   ❌ Failed to save to Directus: ${
+          `   ❌ Failed to save to database: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
@@ -259,7 +259,7 @@ async function exportProfilesToPDF(profileId?: number) {
     console.log(`   File Type: PDF`);
     console.log(
       `   Storage: ${
-        isExplicitProfileId ? "Directus only" : "Filesystem + Directus"
+        isExplicitProfileId ? "DB only" : "Filesystem + DB"
       }`,
     );
   } catch (error) {

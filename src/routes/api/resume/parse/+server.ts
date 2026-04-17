@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Handle JSON Resume files
   if (file.type === "application/json" || file.name.endsWith(".json")) {
-    // Upload JSON file to Directus for logging
+    // Upload JSON file for logging
     let jsonFileId: string | undefined;
     try {
       const buffer = Buffer.from(await file.arrayBuffer());
@@ -92,7 +92,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Directus
+    // Upload file
     const uploadResult = await uploadFile({
       filename: file.name,
       buffer,

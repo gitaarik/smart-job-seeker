@@ -5,8 +5,6 @@ import { createInterface } from "node:readline";
 import { dbDirect as db } from "$lib/server/db";
 
 const MIN_PASSWORD_LENGTH = 8;
-const DIRECTUS_URL = process.env.SJS_ADMIN_URL_DOCKER ?? "http://admin:8055";
-const DIRECTUS_TOKEN = process.env.SJS_ADMIN_TOKEN;
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -128,53 +126,6 @@ async function updateAppUser(
   return true;
 }
 
-async function updateDirectusUser(
-  email: string | undefined,
-  password: string,
-): Promise<boolean> {
-  if (!DIRECTUS_TOKEN) {
-    console.error("  ⚠ SJS_ADMIN_TOKEN not set, skipping Directus");
-    return false;
-  }
-
-  if (!email) return false;
-
-  const res = await fetch(
-    `${DIRECTUS_URL}/users?filter[email][_eq]=${encodeURIComponent(email)}&fields=id,email,first_name`,
-    { headers: { Authorization: `Bearer ${DIRECTUS_TOKEN}` } },
-  );
-
-  if (!res.ok) {
-    console.error(`  ⚠ Directus API error: ${res.status} ${res.statusText}`);
-    return false;
-  }
-
-  const { data } = await res.json();
-  if (!data?.length) return false;
-
-  const user = data[0];
-  console.log(`Directus user: ${user.first_name} (${user.email})`);
-
-  const updateRes = await fetch(`${DIRECTUS_URL}/users/${user.id}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${DIRECTUS_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ password }),
-  });
-
-  if (!updateRes.ok) {
-    console.error(
-      `  ✗ Failed to update Directus password: ${updateRes.status}`,
-    );
-    return false;
-  }
-
-  console.log("  ✓ Directus password updated");
-  return true;
-}
-
 async function main() {
   const { email, id, password: passwordArg } = parseArgs();
 
@@ -188,9 +139,8 @@ async function main() {
   }
 
   const appUpdated = await updateAppUser(email, id, password);
-  const directusUpdated = await updateDirectusUser(email, password);
 
-  if (!appUpdated && !directusUpdated) {
+  if (!appUpdated) {
     console.error(`User not found: ${email ?? id}`);
     process.exit(1);
   }

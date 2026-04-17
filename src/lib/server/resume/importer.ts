@@ -26,7 +26,7 @@ function parseDate(value: string | undefined | null): Date | null {
  * Create a new profile from resume data
  * @param data - Parsed resume data
  * @param userId - User ID to link the profile to
- * @param sourceFileId - Optional Directus file UUID of the source CV
+ * @param sourceFileId - Optional file UUID of the source CV
  */
 export async function createProfileFromResume(
   data: ResumeData,

@@ -13,7 +13,7 @@ interface SchemaNode {
 }
 
 /**
- * Mapping of ExportedProfile structure to Directus collections and fields
+ * Mapping of ExportedProfile structure to database collections and fields
  */
 const PROFILE_SCHEMA_MAPPING = {
   profiles: {
@@ -154,47 +154,26 @@ const PROFILE_SCHEMA_MAPPING = {
 /**
  * Build a schema node with field notes
  */
-async function buildSchemaNode(
+function buildSchemaNode(
   collection: string,
   fieldNames: string[],
   relations?: Record<
     string,
     { fields: string[]; relations?: Record<string, unknown> }
   >,
-): Promise<SchemaNode> {
-  // Fetch collection note
-  const collectionMeta = await db.directus_collections.findUnique({
-    where: { collection },
-    select: { note: true },
-  });
-
+): SchemaNode {
   const node: SchemaNode = {
-    note: collectionMeta?.note || undefined,
     fields: {},
   };
 
-  // Fetch field notes
-  const fieldMetas = await db.directus_fields.findMany({
-    where: {
-      collection,
-      field: { in: fieldNames },
-    },
-    select: { field: true, note: true },
-  });
-
-  const fieldNotesMap = Object.fromEntries(
-    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || "")]),
-  );
-
   for (const fieldName of fieldNames) {
-    node.fields![fieldName] = fieldNotesMap[fieldName] || "";
+    node.fields![fieldName] = "";
   }
 
-  // Build relations recursively
   if (relations && Object.keys(relations).length > 0) {
     node.relations = {};
     for (const [relationName, relationConfig] of Object.entries(relations)) {
-      node.relations[relationName] = await buildSchemaNode(
+      node.relations[relationName] = buildSchemaNode(
         relationName,
         relationConfig.fields,
         relationConfig.relations as Record<string, { fields: string[] }>,

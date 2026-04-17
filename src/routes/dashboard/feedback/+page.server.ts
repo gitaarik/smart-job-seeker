@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       },
       user_feedback_files: {
         include: {
-          directus_files: {
+          files: {
             select: {
               id: true,
               filename_download: true,

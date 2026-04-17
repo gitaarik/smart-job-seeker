@@ -32,7 +32,7 @@ if [ "$DB_RESET" = "true" ]; then
   echo "=== Reset mode: dropping all tables ==="
   db_query -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
-  # Load dev seed BEFORE Directus starts (seed includes all schemas)
+  # Load dev seed (seed includes all schemas)
   if [ -f /db-dumps/dev-seed.sql ]; then
     echo "=== Loading dev seed (includes all schemas and data) ==="
     db_query -f /db-dumps/dev-seed.sql
