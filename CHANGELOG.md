@@ -5,6 +5,13 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.49] - 2026-04-17
+
+1 commit since v0.4.48.
+
+### Added
+- npm scripts for dotenvx environment variable management (`env:set`, `env:set:plain`, `env:get`)
+
 ## [0.4.48] - 2026-04-16
 
 5 commits since v0.4.47.
