@@ -23,7 +23,7 @@
   }
 </script>
 
-<header class="fixed top-0 left-0 right-0 z-50 bg-[var(--dash-chrome)] border-b border-[var(--dash-chrome)]/80 transition-colors">
+<header class="fixed left-0 right-0 z-50 bg-[var(--dash-chrome)] border-b border-[var(--dash-chrome)]/80 transition-colors" style="top: var(--imp-offset, 0px)">
   <div class="flex items-center py-2">
     <!-- Logo area — matches sidebar width on desktop -->
     <a href="/dashboard" onclick={handleLogoClick} class="flex items-center gap-3 px-4 lg:w-60 shrink-0">

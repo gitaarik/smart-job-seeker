@@ -48,7 +48,8 @@
 
   {#if isOpen}
     <div
-      class="fixed right-2 left-2 top-[65px] sm:absolute sm:left-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-max sm:min-{width} sm:max-w-sm bg-[var(--dash-card)] rounded-lg shadow-lg border border-[var(--dash-border)] overflow-hidden z-50"
+      class="fixed right-2 left-2 sm:absolute sm:left-auto sm:!top-auto sm:right-0 sm:mt-2 sm:w-max sm:min-{width} sm:max-w-sm bg-[var(--dash-card)] rounded-lg shadow-lg border border-[var(--dash-border)] overflow-hidden z-50"
+      style:top="calc(65px + var(--imp-offset, 0px))"
     >
       {@render children()}
     </div>

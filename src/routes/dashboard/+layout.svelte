@@ -38,10 +38,10 @@
   <title>Dashboard - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[var(--dash-bg)] transition-colors">
+<div class="min-h-screen bg-[var(--dash-bg)] transition-colors" style:--imp-offset="{data.adminUser ? '36px' : '0px'}">
   {#if data.adminUser}
     <div
-      class="bg-purple-600 text-white px-4 py-2 text-sm flex items-center justify-between z-50 relative"
+      class="fixed top-0 left-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-sm flex items-center justify-between z-[60]"
     >
       <span>
         Impersonating <strong>{data.user?.name || data.user?.email}</strong>
@@ -52,7 +52,7 @@
       >
         <button
           type="submit"
-          class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
+          class="px-3 py-0.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
         >
           Stop
         </button>
@@ -65,14 +65,15 @@
     selectedProfile={data.selectedProfile}
     unreadNotifications={data.unreadNotifications}
   />
-  <!-- Spacer for fixed header (matches sidebar top-[65px]) -->
-  <div class="h-[65px]"></div>
+  <!-- Spacer for fixed header + optional impersonation banner -->
+  <div style="height: calc(65px + var(--imp-offset))"></div>
 
   <!-- Shared overlay for sidebar and header dropdowns -->
   {#if overlayState.onclose}
     <button
       type="button"
-      class="fixed inset-0 top-[65px] bg-black/50 z-40"
+      class="fixed inset-0 bg-black/50 z-40"
+      style="top: calc(65px + var(--imp-offset))"
       onclick={() => { overlayState.onclose?.(); overlayState.onclose = null; }}
       aria-label="Close menu"
     ></button>

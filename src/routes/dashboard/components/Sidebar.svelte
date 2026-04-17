@@ -390,11 +390,11 @@
 <aside
   class="
     fixed left-0 w-56 bg-[var(--dash-card)] border-r border-[var(--dash-border)] z-40 transform transition-transform duration-200 ease-in-out
-    top-[65px] h-[calc(100vh-65px)]
     lg:translate-x-0 {mobileMenuOpen
     ? 'translate-x-0'
     : '-translate-x-full'}
   "
+  style="top: calc(65px + var(--imp-offset, 0px)); height: calc(100vh - 65px - var(--imp-offset, 0px))"
 >
   <nav class="p-3 pb-16 overflow-y-auto h-full">
     <ul class="space-y-1">
