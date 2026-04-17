@@ -16,6 +16,9 @@ db_query() {
 echo "=== Installing dependencies ==="
 npm ci --ignore-scripts --include=dev --legacy-peer-deps
 
+echo "=== Installing Patchright Chromium (for PDF generation) ==="
+npx patchright install chromium
+
 echo "=== Syncing SvelteKit ==="
 npx svelte-kit sync
 

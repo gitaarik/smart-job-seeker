@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Patchright Chromium + system dependencies for PDF generation
-RUN npx patchright install --with-deps chromium
+# Patchright system dependencies for PDF generation (browser itself is
+# installed at startup via start-app.sh to match the app's pinned version)
+RUN npx patchright install-deps chromium
 
 WORKDIR /app
