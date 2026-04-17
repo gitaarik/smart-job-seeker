@@ -48,7 +48,7 @@ import { createFollowupAiChat } from "../ai-chat/create-followup";
 describe("createFollowupAiChat", () => {
   const mockParentAiChat = {
     id: 1,
-    profile: 123,
+    profile_id: 123,
     context: {
       jobTitle: "Senior Developer",
       company: "Acme Corp",
@@ -61,7 +61,7 @@ describe("createFollowupAiChat", () => {
 
   const mockCreatedAiChat = {
     id: 2,
-    profile: 123,
+    profile_id: 123,
     system_prompt: "Refine the previous response",
     user_prompt: "Make it shorter",
     full_prompt: "System: Refine...\nUser: Make it shorter",
@@ -89,7 +89,7 @@ describe("createFollowupAiChat", () => {
       expect(mockFindUnique).toHaveBeenCalledWith({
         where: { id: 999 },
         select: {
-          profile: true,
+          profile_id: true,
           context: true,
           response: true,
           system_prompt: true,
@@ -308,8 +308,8 @@ describe("createFollowupAiChat", () => {
 
       expect(result.success).toBe(true);
       expect(mockUpdateManyLetters).toHaveBeenCalledWith({
-        where: { ai_chat: 1 },
-        data: { ai_chat: 2 },
+        where: { ai_chat_id: 1 },
+        data: { ai_chat_id: 2 },
       });
       expect(result.message).toContain("Updated 2 letter(s)");
     });
@@ -338,8 +338,8 @@ describe("createFollowupAiChat", () => {
 
       expect(result.success).toBe(true);
       expect(mockUpdateManyQuestions).toHaveBeenCalledWith({
-        where: { ai_chat: 1 },
-        data: { ai_chat: 2 },
+        where: { ai_chat_id: 1 },
+        data: { ai_chat_id: 2 },
       });
       expect(result.message).toContain("Updated 0 letter(s) and 1 question(s)");
     });
@@ -455,7 +455,7 @@ describe("createFollowupAiChat", () => {
       expect(result.success).toBe(true);
       expect(result.aiChat).toBeDefined();
       expect(result.aiChat?.id).toBe(2);
-      expect(result.aiChat?.profile).toBe(123);
+      expect(result.aiChat?.profile_id).toBe(123);
     });
 
     it("should not return aiChat on failure", async () => {

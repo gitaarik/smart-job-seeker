@@ -27,7 +27,7 @@ import { createApplicationQuestionFollowup } from "../ai-chat/application-questi
 describe("createApplicationQuestionFollowup", () => {
   const mockQuestion = {
     id: 200,
-    ai_chat: 5,
+    ai_chat_id: 5,
   };
 
   const mockCreatedAiChat = {
@@ -63,7 +63,7 @@ describe("createApplicationQuestionFollowup", () => {
         where: { id: 999 },
         select: {
           id: true,
-          ai_chat: true,
+          ai_chat_id: true,
         },
       });
     });
@@ -72,7 +72,7 @@ describe("createApplicationQuestionFollowup", () => {
       const mockFindUnique = db.application_questions.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         id: 200,
-        ai_chat: null,
+        ai_chat_id: null,
       });
 
       const result = await createApplicationQuestionFollowup(
@@ -128,7 +128,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: 200 },
         data: {
-          ai_chat: 6,
+          ai_chat_id: 6,
           ai_chat_response: "Refined answer with more details",
           answer: "Refined answer with more details",
         },
@@ -181,7 +181,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: 200 },
         data: {
-          ai_chat: 6,
+          ai_chat_id: 6,
           ai_chat_response: "Refined answer with more details",
           answer: "Refined answer with more details",
         },
@@ -338,7 +338,7 @@ describe("createApplicationQuestionFollowup", () => {
       const mockFindUnique = db.application_questions.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         id: 200,
-        ai_chat: 0,
+        ai_chat_id: 0,
       });
 
       const result = await createApplicationQuestionFollowup(200, "Refine");

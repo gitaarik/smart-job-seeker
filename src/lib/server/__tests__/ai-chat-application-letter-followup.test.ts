@@ -27,7 +27,7 @@ import { createApplicationLetterFollowup } from "../ai-chat/application-letter-f
 describe("createApplicationLetterFollowup", () => {
   const mockLetter = {
     id: 100,
-    ai_chat: 1,
+    ai_chat_id: 1,
   };
 
   const mockCreatedAiChat = {
@@ -63,7 +63,7 @@ describe("createApplicationLetterFollowup", () => {
         where: { id: 999 },
         select: {
           id: true,
-          ai_chat: true,
+          ai_chat_id: true,
         },
       });
     });
@@ -72,7 +72,7 @@ describe("createApplicationLetterFollowup", () => {
       const mockFindUnique = db.application_letters.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         id: 100,
-        ai_chat: null,
+        ai_chat_id: null,
       });
 
       const result = await createApplicationLetterFollowup(
@@ -128,7 +128,7 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: 100 },
         data: {
-          ai_chat: 2,
+          ai_chat_id: 2,
           ai_chat_response: "Refined response",
         },
       });
@@ -180,7 +180,7 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: 100 },
         data: {
-          ai_chat: 2,
+          ai_chat_id: 2,
           ai_chat_response: "Refined response",
         },
       });
@@ -338,7 +338,7 @@ describe("createApplicationLetterFollowup", () => {
       const mockFindUnique = db.application_letters.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         id: 100,
-        ai_chat: 0,
+        ai_chat_id: 0,
       });
 
       const result = await createApplicationLetterFollowup(100, "Refine");

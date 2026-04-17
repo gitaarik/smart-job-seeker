@@ -112,7 +112,7 @@ describe("getInterpolatedPrompts", () => {
     expect(result).toBeNull();
     expect(dbClient.ai_chats.findUnique).toHaveBeenCalledWith({
       where: { id: 999 },
-      select: { system_prompt: true, user_prompt: true, profile: true },
+      select: { system_prompt: true, user_prompt: true, profile_id: true },
     });
   });
 
@@ -122,7 +122,7 @@ describe("getInterpolatedPrompts", () => {
     const mockAiChat = {
       system_prompt: "System: ${schema} - ${data}",
       user_prompt: "User: ${schema} - ${data}",
-      profile: 1,
+      profile_id: 1,
     };
 
     const mockCollectedData = {
@@ -148,7 +148,7 @@ describe("getInterpolatedPrompts", () => {
     const mockAiChat = {
       system_prompt: "Schema: ${schema}\nData: ${data}",
       user_prompt: "Show me ${schema} and ${data}",
-      profile: 1,
+      profile_id: 1,
     };
 
     dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
@@ -167,7 +167,7 @@ describe("getInterpolatedPrompts", () => {
     const mockAiChat = {
       system_prompt: "${schema} ${data}",
       user_prompt: "${schema} ${data}",
-      profile: 1,
+      profile_id: 1,
     };
 
     const mockCollectedData = {
@@ -194,7 +194,7 @@ describe("getInterpolatedPrompts", () => {
     dbClient.ai_chats.findUnique.mockResolvedValueOnce({
       system_prompt: "${schema}",
       user_prompt: "${data}",
-      profile: profileId,
+      profile_id: profileId,
     });
 
     dbClient.collected_data.findFirst.mockResolvedValueOnce({
@@ -205,7 +205,7 @@ describe("getInterpolatedPrompts", () => {
     await getInterpolatedPrompts(1);
 
     expect(dbClient.collected_data.findFirst).toHaveBeenCalledWith({
-      where: { profile: profileId },
+      where: { profile_id: profileId },
       select: { schema: true, data: true },
     });
   });
@@ -217,7 +217,7 @@ describe("getInterpolatedPrompts", () => {
       system_prompt:
         "Use ${schema} to understand the structure of ${data}. The ${schema} is important for ${data}.",
       user_prompt: "I have ${data} which matches ${schema}",
-      profile: 1,
+      profile_id: 1,
     };
 
     const mockCollectedData = {
