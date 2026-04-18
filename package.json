@@ -111,6 +111,7 @@
     "@noble/ciphers": "^2.1.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "@sentry/sveltekit": "^10.49.0",
     "@smithy/eventstream-codec": "^2.2.0",
     "@smithy/protocol-http": "^3.3.0",
     "@smithy/signature-v4": "^2.3.0",

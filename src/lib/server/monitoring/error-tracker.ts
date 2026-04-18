@@ -1,10 +1,11 @@
 /**
  * Error tracking and structured logging
  * Provides a wrapper for capturing errors with context
- * Future: Can be integrated with Sentry or other monitoring services
+ * Integrates with Sentry/GlitchTip when SENTRY_DSN is configured
  */
 
 import { config } from "$lib/server/config";
+import { Sentry } from "./sentry";
 
 export interface ErrorContext {
   userId?: string;
@@ -33,7 +34,6 @@ class ErrorTracker {
       ...context,
     };
 
-    // Console logging for now - can be extended to send to Sentry, etc.
     console.error(
       `[ErrorTracker] ${message}`,
       {
@@ -44,10 +44,11 @@ class ErrorTracker {
       },
     );
 
-    // Future: Send to external monitoring service
-    // if (process.env.SENTRY_DSN) {
-    //   Sentry.captureException(error, { contexts: { custom: context } });
-    // }
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureException(error, {
+        contexts: { custom: context as Record<string, unknown> },
+      });
+    }
   }
 
   /**

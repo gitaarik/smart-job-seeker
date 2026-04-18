@@ -1,10 +1,13 @@
-import type { Handle } from "@sveltejs/kit";
+import type { Handle, HandleServerError } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { auth } from "$lib/server/auth/better-auth";
 import type { User } from "$lib/server/auth/better-auth";
 import { config } from "$lib/server/config";
 import { dbDirect as db } from "$lib/server/db";
+import { initSentry, Sentry } from "$lib/server/monitoring/sentry";
+
+initSentry("sveltekit");
 
 // API routes that don't require session auth (they handle their own auth or are public)
 const PUBLIC_API_ROUTES = [
@@ -159,4 +162,13 @@ export const handle: Handle = async ({ event, resolve }) => {
       return html.replace('class="theme-light"', `class="theme-${theme}"`);
     },
   });
+};
+
+export const handleError: HandleServerError = ({ error, event }) => {
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(error, {
+      extra: { url: event.url.pathname },
+    });
+  }
+  console.error(error);
 };
