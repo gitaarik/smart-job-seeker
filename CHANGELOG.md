@@ -5,6 +5,16 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.65] - 2026-04-18
+
+2 commits since v0.4.64.
+
+### Changed
+- Deploy tag argument is now optional and defaults to the latest tag
+
+### Fixed
+- Deploy now uses --no-cache to prevent stale Prisma client
+
 ## [0.4.64] - 2026-04-18
 
 2 commits since v0.4.63.
