@@ -4,10 +4,8 @@
   import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCheck,
     faChevronDown,
     faChevronUp,
-    faCopy,
     faDesktop,
     faEye,
     faEyeSlash,
@@ -25,25 +23,38 @@
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
   import Card from "../../../components/Card.svelte";
+  import CopyButton from "../../../components/CopyButton.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
 
   let { data }: { data: PageData } = $props();
 
   let apiKeys = $state(data.apiKeys);
+  let sortedApiKeys = $derived([...apiKeys].sort((a, b) => Number(!!a.revoked) - Number(!!b.revoked)));
   let showAddForm = $state(false);
   let showManualInstall = $state(false);
   let newKeyName = $state("");
   let isCreating = $state(false);
   let newlyCreatedKey = $state<string | null>(null);
-  let copiedKeyId = $state<number | null>(null);
   let visibleKeyId = $state<number | null>(null);
   let errorMessage = $state<string | null>(null);
   let installTab = $state<"desktop" | "docker">("desktop");
 
   // Overflow menu and rename state
   let menuOpenKeyId = $state<number | null>(null);
+  let menuDropUp = $state(false);
   let editingKeyId = $state<number | null>(null);
   let editKeyName = $state("");
+
+  function toggleMenu(keyId: number, event: MouseEvent) {
+    if (menuOpenKeyId === keyId) {
+      menuOpenKeyId = null;
+      return;
+    }
+    const button = (event.currentTarget as HTMLElement);
+    const rect = button.getBoundingClientRect();
+    menuDropUp = rect.bottom + 200 > window.innerHeight;
+    menuOpenKeyId = keyId;
+  }
 
   async function renameApiKey(keyId: number) {
     const name = editKeyName.trim();
@@ -173,7 +184,7 @@
   }
 
   async function deleteApiKey(keyId: number) {
-    if (!confirm("Permanently delete this API key? This cannot be undone.")) return;
+    if (!confirm("Delete this API key? This cannot be undone.")) return;
 
     try {
       const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}&permanent=true`, { method: "DELETE" });
@@ -183,18 +194,6 @@
       }
     } catch {
       errorMessage = "Failed to delete API key";
-    }
-  }
-
-  async function copyToClipboard(text: string, keyId?: number) {
-    try {
-      await navigator.clipboard.writeText(text);
-      if (keyId !== undefined) {
-        copiedKeyId = keyId;
-        setTimeout(() => { copiedKeyId = null; }, 2000);
-      }
-    } catch {
-      // Fallback: select text
     }
   }
 
@@ -621,7 +620,7 @@ volumes:
       </div>
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
-        {#each apiKeys as key (key.id)}
+        {#each sortedApiKeys as key (key.id)}
           {@const deviceStatus = getDeviceStatus(key.id)}
           <div class="p-4">
             <!-- Name row -->
@@ -690,21 +689,16 @@ volumes:
                   >
                     <FontAwesomeIcon icon={visibleKeyId === key.id ? faEyeSlash : faEye} class="w-4 h-4" />
                   </button>
-                  <button
-                    type="button"
-                    onclick={() => copyToClipboard(key.key_plain, key.id)}
-                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                    title="Copy key"
-                  >
-                    <FontAwesomeIcon icon={copiedKeyId === key.id ? faCheck : faCopy} class="w-4 h-4 {copiedKeyId === key.id ? 'text-[var(--dash-success)]' : ''}" />
-                  </button>
+                  <span class="p-2">
+                    <CopyButton text={key.key_plain} />
+                  </span>
                 {/if}
 
                 <!-- Overflow menu -->
                 <div class="relative">
                   <button
                     type="button"
-                    onclick={() => { menuOpenKeyId = menuOpenKeyId === key.id ? null : key.id; }}
+                    onclick={(e) => toggleMenu(key.id, e)}
                     class="p-2 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
                     title="More actions"
                   >
@@ -717,7 +711,7 @@ volumes:
                       onclick={() => { menuOpenKeyId = null; }}
                       onkeydown={(e) => e.key === "Escape" && (menuOpenKeyId = null)}
                     ></div>
-                    <div class="absolute right-0 top-full mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[170px]">
+                    <div class={`absolute right-0 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[170px] ${menuDropUp ? 'bottom-full mb-1' : 'top-full mt-1'}`}>
                       <button
                         type="button"
                         onclick={() => { editingKeyId = key.id; editKeyName = key.name; menuOpenKeyId = null; }}
@@ -741,7 +735,7 @@ volumes:
                           class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-error)]"
                         >
                           <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
-                          Delete permanently
+                          Delete
                         </button>
                       {:else}
                         <button

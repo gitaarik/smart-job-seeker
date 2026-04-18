@@ -112,6 +112,7 @@
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import Card from "../../components/Card.svelte";
+  import CopyButton from "../../components/CopyButton.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
 
   // Group icons by category for display
@@ -670,6 +671,62 @@
         <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]">Success badge</span>
         <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-error-light)] text-[var(--dash-error)]">Error badge</span>
         <span class="text-xs px-2 py-1 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">Warning badge</span>
+      </div>
+    </Card>
+  </section>
+
+  <!-- Copy Button -->
+  <section>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-3">Copy Button</h2>
+    <Card padding="responsive">
+      <p class="text-xs text-[var(--dash-text-secondary)] mb-4">
+        Copies text to clipboard with visual feedback (icon swaps to checkmark for 2 seconds). Supports icon-only and labeled variants, in two sizes.
+      </p>
+
+      <div class="space-y-5">
+        <div>
+          <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-3">Variants</p>
+          <div class="flex flex-wrap items-center gap-6">
+            <div class="flex flex-col items-center gap-2">
+              <CopyButton text="hello world" />
+              <span class="text-xs text-[var(--dash-text-muted)]">Icon only (md)</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <CopyButton text="hello world" size="sm" />
+              <span class="text-xs text-[var(--dash-text-muted)]">Icon only (sm)</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <CopyButton text="hello world" label="Copy" />
+              <span class="text-xs text-[var(--dash-text-muted)]">With label (md)</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <CopyButton text="hello world" label="Copy" size="sm" />
+              <span class="text-xs text-[var(--dash-text-muted)]">With label (sm)</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">Inline example</p>
+          <div class="flex items-center gap-2">
+            <code class="text-xs bg-[var(--dash-bg)] px-2 py-1 rounded font-mono text-[var(--dash-text-secondary)]">sk_live_abc123xyz</code>
+            <CopyButton text="sk_live_abc123xyz" />
+          </div>
+        </div>
+
+        <div class="border-t border-[var(--dash-border)] pt-4">
+          <h3 class="text-sm font-medium text-[var(--dash-text)] mb-2">Usage</h3>
+          <pre class="text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md p-3 overflow-x-auto"><code>{`import CopyButton from "../../components/CopyButton.svelte";
+
+<!-- Icon only -->
+<CopyButton text="value to copy" />
+
+<!-- With label -->
+<CopyButton text="value to copy" label="Copy" />
+
+<!-- Small size -->
+<CopyButton text="value to copy" size="sm" />`}</code></pre>
+        </div>
       </div>
     </Card>
   </section>
