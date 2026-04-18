@@ -3,11 +3,13 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faCheckCircle,
     faCog,
     faFileAlt,
     faFilePdf,
     faGlobe,
     faPencil,
+    faSync,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
@@ -285,45 +287,59 @@
             {#if data.selectedProfile?.slug}
               {@const ps = data.selectedProfile.slug}
               {@const vs = version.slug ?? ""}
-              <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
-                <a
-                  href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id) })}
-                  target="_blank"
-                  class="dash-link-ext"
-                >Resume</a>
-                <a
-                  href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true })}
-                  target="_blank"
-                  class="dash-link-ext"
-                >Resume PDF</a>
-                <a
-                  href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id) })}
-                  target="_blank"
-                  class="dash-link-ext"
-                >CV</a>
-                <a
-                  href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true })}
-                  target="_blank"
-                  class="dash-link-ext"
-                >CV PDF</a>
+              <div class="space-y-3">
+                <div class="flex gap-3">
+                  <div class="border border-[var(--dash-border)] rounded-lg px-4 py-3 text-center">
+                    <p class="text-sm font-semibold text-[var(--dash-text)] mb-2">Resume</p>
+                    <div class="flex items-center justify-center gap-1.5">
+                      <a
+                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id) })}
+                        target="_blank"
+                        class="dash-link-ext"
+                      >HTML</a>
+                      <a
+                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true })}
+                        target="_blank"
+                        class="dash-link-ext"
+                      >PDF</a>
+                    </div>
+                  </div>
+                  <div class="border border-[var(--dash-border)] rounded-lg px-4 py-3 text-center">
+                    <p class="text-sm font-semibold text-[var(--dash-text)] mb-2">CV</p>
+                    <div class="flex items-center justify-center gap-1.5">
+                      <a
+                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id) })}
+                        target="_blank"
+                        class="dash-link-ext"
+                      >HTML</a>
+                      <a
+                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true })}
+                        target="_blank"
+                        class="dash-link-ext"
+                      >PDF</a>
+                    </div>
+                  </div>
+                </div>
                 {#if generatingSlug === version.slug}
-                  <span class="dash-link-ext !text-amber-600 !bg-amber-500/10 flex items-center gap-1 pointer-events-none">
+                  <span class="dash-link-ext !text-amber-600 !bg-amber-500/10 pointer-events-none">
                     <FontAwesomeIcon icon={faCog} class="w-3 h-3 animate-spin" />
                     Generating...
                   </span>
                 {:else if generatedSlug === version.slug}
-                  <span class="text-xs text-green-600">
-                    PDFs generating — <button type="button" onclick={() => location.reload()} class="underline hover:no-underline">reload</button> in a moment
+                  <span class="dash-link-ext !text-green-600 !bg-green-500/10 pointer-events-none">
+                    <FontAwesomeIcon icon={faCheckCircle} class="w-3 h-3" />
+                    PDFs generated
                   </span>
-                {:else if !version.hasResumePdf || !version.hasCvPdf}
+                {:else}
+                  {@const hasPdfs = version.hasResumePdf && version.hasCvPdf}
                   <form method="POST" action="?/generateExports" use:enhance={() => handleGenerateSubmit(version.slug ?? "")} class="inline">
                     <input type="hidden" name="slug" value={version.slug} />
                     <button
                       type="submit"
-                      class="dash-link-ext !text-amber-600 !bg-amber-500/10 hover:!bg-amber-500/20 flex items-center gap-1"
+                      class="dash-link-ext border border-[var(--dash-border)] {hasPdfs ? '!text-[var(--dash-text-secondary)] !bg-[var(--dash-bg)] hover:!bg-[var(--dash-primary)]/10 hover:!text-[var(--dash-primary)]' : '!text-amber-600 !bg-amber-500/10 hover:!bg-amber-500/20'}"
                     >
-                      <FontAwesomeIcon icon={faFilePdf} class="w-3 h-3" />
-                      Generate PDFs
+                      <FontAwesomeIcon icon={hasPdfs ? faSync : faFilePdf} class="w-3 h-3" />
+                      {hasPdfs ? "Regenerate PDFs" : "Generate PDFs"}
                     </button>
                   </form>
                 {/if}
