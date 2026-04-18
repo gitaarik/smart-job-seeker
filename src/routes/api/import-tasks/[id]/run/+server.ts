@@ -9,7 +9,7 @@ import {
   removeWaitingJob,
   removeActiveJob,
 } from "$lib/server/queue";
-import { requireCredits } from "$lib/server/billing/credits";
+import { requireCredits } from "$lib/server/billing/require-credits";
 
 /**
  * POST /api/import-tasks/[id]/run

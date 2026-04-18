@@ -1,5 +1,6 @@
 /**
- * Get current subscription and usage info.
+ * Subscription info — OSS version (always free plan).
+ * The cloud version overlays this with real subscription data.
  */
 
 import { json, error } from "@sveltejs/kit";

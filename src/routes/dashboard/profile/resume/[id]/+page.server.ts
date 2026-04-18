@@ -3,7 +3,8 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
-import { requireCredits, chargeCredits } from "$lib/server/billing/credits";
+import { chargeCredits } from "$lib/server/billing/credits";
+import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();

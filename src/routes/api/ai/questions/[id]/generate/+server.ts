@@ -3,7 +3,7 @@ import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
-import { requireCredits } from "$lib/server/billing/credits";
+import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const POST: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);

@@ -202,208 +202,232 @@
   </header>
 
   <!-- Contact Details -->
-  <section class="mt-1 mb-[-15px]">
-    <ul class="list-disc ml-3 print:ml-4">
-      <li class="print:indent-[-3px]">
-        <ContactItem
-          label="Email"
-          href={profile.email_address}
-          content={profile.email_address}
-          type="email"
-        />
-      </li>
+  {#if profile.email_address || profile.phone_number || profile.location || profile.personal_website || profile.linkedin_profile || profile.github_profile}
+    <section class="mt-1 mb-[-15px]">
+      <ul class="list-disc ml-3 print:ml-4">
+        {#if profile.email_address}
+          <li class="print:indent-[-3px]">
+            <ContactItem
+              label="Email"
+              href={profile.email_address}
+              content={profile.email_address}
+              type="email"
+            />
+          </li>
+        {/if}
 
-      <li class="print:indent-[-3px]">
-        <ContactItem
-          label="Phone"
-          href={profile.phone_number}
-          content={profile.phone_number}
-          type="phone"
-        />
-      </li>
+        {#if profile.phone_number}
+          <li class="print:indent-[-3px]">
+            <ContactItem
+              label="Phone"
+              href={profile.phone_number}
+              content={profile.phone_number}
+              type="phone"
+            />
+          </li>
+        {/if}
 
-      <li class="print:indent-[-3px]">
-        <ContactItem
-          label="Location"
-          href={profile.location_url}
-          content={profile.location}
-        >
-          {#if profile.location_timezone}
-            ({profile.location_timezone})
-          {/if}
-        </ContactItem>
-      </li>
+        {#if profile.location}
+          <li class="print:indent-[-3px]">
+            <ContactItem
+              label="Location"
+              href={profile.location_url}
+              content={profile.location}
+            >
+              {#if profile.location_timezone}
+                ({profile.location_timezone})
+              {/if}
+            </ContactItem>
+          </li>
+        {/if}
 
-      <li class="print:indent-[-3px]">
-        <ContactItem
-          label="Website"
-          href={profile.personal_website}
-          content={profile.personal_website}
-        />
-      </li>
+        {#if profile.personal_website}
+          <li class="print:indent-[-3px]">
+            <ContactItem
+              label="Website"
+              href={profile.personal_website}
+              content={profile.personal_website}
+            />
+          </li>
+        {/if}
 
-      <li class="print:indent-[-3px]">
-        <ContactItem
-          label="LinkedIn"
-          href={profile.linkedin_profile}
-          content={profile.linkedin_profile}
-        />
-      </li>
+        {#if profile.linkedin_profile}
+          <li class="print:indent-[-3px]">
+            <ContactItem
+              label="LinkedIn"
+              href={profile.linkedin_profile}
+              content={profile.linkedin_profile}
+            />
+          </li>
+        {/if}
 
-      <li class="print:indent-[-3px]">
-        <ContactItem
-          label="GitHub"
-          href={profile.github_profile}
-          content={profile.github_profile}
-        />
-      </li>
-    </ul>
-    <br>
-  </section>
+        {#if profile.github_profile}
+          <li class="print:indent-[-3px]">
+            <ContactItem
+              label="GitHub"
+              href={profile.github_profile}
+              content={profile.github_profile}
+            />
+          </li>
+        {/if}
+      </ul>
+      <br>
+    </section>
+  {/if}
 
   <!-- Summary -->
-  <section class="my-4">
-    <h2 class="text-sm font-bold">SUMMARY</h2>
+  {#if profile.summary}
+    <section class="my-4">
+      <h2 class="text-sm font-bold">SUMMARY</h2>
 
-    <hr class="mt-1 mb-2" />
+      <hr class="mt-1 mb-2" />
 
-    <p class="mt-1 text-xs mb-[-30px]">{profile.summary}<br><br><br></p>
-  </section>
+      <p class="mt-1 text-xs mb-[-30px]">{profile.summary}<br><br><br></p>
+    </section>
+  {/if}
 
   <!-- Work Experience -->
-  <section class="my-4 mb-[-20px]">
-    <h2 class="text-sm font-bold h-5">WORK EXPERIENCE<br><br></h2>
+  {#if work_experiences.length > 0}
+    <section class="my-4 mb-[-20px]">
+      <h2 class="text-sm font-bold h-5">WORK EXPERIENCE<br><br></h2>
 
-    <hr class="mt-1 mb-2" />
+      <hr class="mt-1 mb-2" />
 
-    {#each work_experiences as job, index (index)}
-      <div class="mb-[-10px]">
-        <div class="text-xs font-bold mb-1">
-          {job.name} |
-          {job.location} |
-          {job.position} |
-          {formatDateRangeCompact(job.start_date, job.end_date)}
-        </div>
+      {#each work_experiences as job, index (index)}
+        <div class="mb-[-10px]">
+          <div class="text-xs font-bold mb-1">
+            {job.name} |
+            {job.location} |
+            {job.position} |
+            {formatDateRangeCompact(job.start_date, job.end_date)}
+          </div>
 
-        {#if job.note}
-          <p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
-        {/if}
-
-        {#if         job.work_experience_achievements &&
-          job.work_experience_achievements.length > 0}
-          {@const         filteredHighlights = filterOnTags(
-          job.work_experience_achievements,
-        )}
-          {#if filteredHighlights.length > 0}
-            <ul class="list-disc ml-3 print:ml-4">
-              {#each filteredHighlights as highlight, index (index)}
-                <li class="print:indent-[-6px] whitespace-nowrap">
-                  <span class="inline-block w-0 opacity-0">-&nbsp;</span>{
-                    highlight.description
-                  }
-                </li>
-              {/each}
-            </ul>
+          {#if job.note}
+            <p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
           {/if}
-        {/if}
-        <br>
-      </div>
-    {/each}
-  </section>
+
+          {#if         job.work_experience_achievements &&
+            job.work_experience_achievements.length > 0}
+            {@const         filteredHighlights = filterOnTags(
+            job.work_experience_achievements,
+          )}
+            {#if filteredHighlights.length > 0}
+              <ul class="list-disc ml-3 print:ml-4">
+                {#each filteredHighlights as highlight, index (index)}
+                  <li class="print:indent-[-6px] whitespace-nowrap">
+                    <span class="inline-block w-0 opacity-0">-&nbsp;</span>{
+                      highlight.description
+                    }
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          {/if}
+          <br>
+        </div>
+      {/each}
+    </section>
+  {/if}
 
   <!-- Skills -->
-  <section class="my-4 break-inside-avoid mb-[-20px]">
-    <h2 class="text-sm font-bold">SKILLS</h2>
+  {#if profile.tech_skill_categories && profile.tech_skill_categories.length > 0}
+    <section class="my-4 break-inside-avoid mb-[-20px]">
+      <h2 class="text-sm font-bold">SKILLS</h2>
 
-    <hr class="mt-1 mb-2" />
+      <hr class="mt-1 mb-2" />
 
-    <ul class="list-disc ml-3 print:ml-4">
-      {#each profile.tech_skill_categories as skillGroup, index (index)}
-        <li class="print:indent-[-2px]">
-          <span class="inline-flex items-center h-2 whitespace-nowrap">
-            <span class="w-0 opacity-0">-&nbsp;</span>
-            <span class="font-bold mr-1 print:mr-[6px]">{
-                skillGroup.name
-              }:</span>
-            <span class="text-xs">
-              {
-                skillGroup.tech_skills.map(
-                  (s: { name: string }) => s.name,
-                ).join(" | ")
-              }
+      <ul class="list-disc ml-3 print:ml-4">
+        {#each profile.tech_skill_categories as skillGroup, index (index)}
+          <li class="print:indent-[-2px]">
+            <span class="inline-flex items-center h-2 whitespace-nowrap">
+              <span class="w-0 opacity-0">-&nbsp;</span>
+              <span class="font-bold mr-1 print:mr-[6px]">{
+                  skillGroup.name
+                }:</span>
+              <span class="text-xs">
+                {
+                  skillGroup.tech_skills.map(
+                    (s: { name: string }) => s.name,
+                  ).join(" | ")
+                }
+              </span>
+              <br>
             </span>
-            <br>
-          </span>
-        </li>
-      {/each}
-    </ul>
-    <br>
-  </section>
+          </li>
+        {/each}
+      </ul>
+      <br>
+    </section>
+  {/if}
 
   <!-- Side Projects -->
-  <section class="my-4 break-inside-avoid">
-    <h2 class="text-sm font-bold h-5">SIDE PROJECTS<br><br></h2>
+  {#if filterOnTags(profile.side_projects).length > 0}
+    <section class="my-4 break-inside-avoid">
+      <h2 class="text-sm font-bold h-5">SIDE PROJECTS<br><br></h2>
 
-    <hr class="mt-1 mb-2" />
+      <hr class="mt-1 mb-2" />
 
-    {#each filterOnTags(profile.side_projects) as project, index (index)}
-      <div class="mb-3">
-        <div class="text-xs font-bold mb-0">
-          {project.name} | {
-            formatDateRangeCompact(
-              project.start_date,
-              project.end_date,
-            )
-          }
+      {#each filterOnTags(profile.side_projects) as project, index (index)}
+        <div class="mb-3">
+          <div class="text-xs font-bold mb-0">
+            {project.name} | {
+              formatDateRangeCompact(
+                project.start_date,
+                project.end_date,
+              )
+            }
+          </div>
+
+          <div>
+            <a
+              href={project.url}
+              target="_blank"
+              class="underline whitespace-nowrap hover:text-slate-600"
+            >
+              {project.url}
+            </a>
+          </div>
+
+          <div class="text-xs mb-[-31px]">{project.summary}<br><br><br></div>
         </div>
-
-        <div>
-          <a
-            href={project.url}
-            target="_blank"
-            class="underline whitespace-nowrap hover:text-slate-600"
-          >
-            {project.url}
-          </a>
-        </div>
-
-        <div class="text-xs mb-[-31px]">{project.summary}<br><br><br></div>
-      </div>
-    {/each}
-  </section>
+      {/each}
+    </section>
+  {/if}
 
   <!-- Education -->
-  <section class="my-3 break-inside-avoid mb-[-45px]">
-    <h2 class="text-sm font-bold h-5">EDUCATION<br><br></h2>
+  {#if filterOnTags(profile.education).length > 0}
+    <section class="my-3 break-inside-avoid mb-[-45px]">
+      <h2 class="text-sm font-bold h-5">EDUCATION<br><br></h2>
 
-    <hr class="mt-1 mb-2" />
+      <hr class="mt-1 mb-2" />
 
-    {#each filterOnTags(profile.education) as education, index (index)}
-      <div class="mb-2">
-        <div class="font-bold">
-          {education.area}, {education.study_type}{#if type === "cv"},
+      {#each filterOnTags(profile.education) as education, index (index)}
+        <div class="mb-2">
+          <div class="font-bold">
+            {education.area}, {education.study_type}{#if type === "cv"},
 
-            {#if education.graduation_year}
-              Graduation Year {education.graduation_year}
-            {:else}
-              {
-                formatDateRangeCompact(
-                  education.start_date,
-                  education.end_date,
-                )
-              }
-            {/if}
-          {/if} |
-          {education.institution}, {education.location}
+              {#if education.graduation_year}
+                Graduation Year {education.graduation_year}
+              {:else}
+                {
+                  formatDateRangeCompact(
+                    education.start_date,
+                    education.end_date,
+                  )
+                }
+              {/if}
+            {/if} |
+            {education.institution}, {education.location}
+          </div>
+
+          <div>
+            {education.summary}
+          </div>
         </div>
-
-        <div>
-          {education.summary}
-        </div>
-      </div>
-    {/each}
-    <br><br>
-  </section>
+      {/each}
+      <br><br>
+    </section>
+  {/if}
 
   {#if profile.certificates && profile.certificates.length > 0}
     <!-- Certificates -->
@@ -421,20 +445,22 @@
   {/if}
 
   <!-- Languages -->
-  <section class="my-3 break-inside-avoid">
-    <h2 class="text-sm font-bold h-5">LANGUAGES<br><br></h2>
+  {#if profile.languages && profile.languages.length > 0}
+    <section class="my-3 break-inside-avoid">
+      <h2 class="text-sm font-bold h-5">LANGUAGES<br><br></h2>
 
-    <hr class="mt-1 mb-2" />
+      <hr class="mt-1 mb-2" />
 
-    {#each profile.languages as language, index (index)}
-      <div>
-        {language.name}: {
-          language.proficiency.substr(0, 1).toUpperCase() +
-            language.proficiency.substr(1)
-        }
-      </div>
-    {/each}
-  </section>
+      {#each profile.languages as language, index (index)}
+        <div>
+          {language.name}: {
+            language.proficiency.substr(0, 1).toUpperCase() +
+              language.proficiency.substr(1)
+          }
+        </div>
+      {/each}
+    </section>
+  {/if}
 
   {#if toggles.includes("nationality")}
     <!-- Nationality -->
@@ -451,7 +477,7 @@
     </section>
   {/if}
 
-  {#if type === "cv"}
+  {#if type === "cv" && profile.references && profile.references.length > 0}
     <section class="mb-6">
       <h2 class="text-sm font-bold">
         REFERENCES

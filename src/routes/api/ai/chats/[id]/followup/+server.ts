@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { parseBody, followupRequestSchema } from "$lib/server/validation/api-schemas";
 import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
-import { requireCredits } from "$lib/server/billing/credits";
+import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
