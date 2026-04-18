@@ -148,7 +148,7 @@ export const actions: Actions = {
 
     await requireCredits(user.id, 1);
     await chargeCredits(user.id, 1, "pdf_export", "PDF export");
-    generateVersionPdfs(profileId, slug).catch(console.error);
+    await generateVersionPdfs(profileId, slug);
 
     return { success: true, generatedSlug: slug };
   },
