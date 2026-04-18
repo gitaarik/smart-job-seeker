@@ -120,11 +120,11 @@ model applications {
 }
 
 model applications_files {
-  id                Int             @id @default(autoincrement())
-  applications_id   Int?
-  directus_files_id String?         @db.Uuid
-  applications      applications?   @relation(fields: [applications_id], references: [id], onUpdate: NoAction, map: "applications_files_applications_id_foreign")
-  files             files?          @relation(fields: [directus_files_id], references: [id], onUpdate: NoAction, map: "applications_files_directus_files_id_foreign")
+  id              Int             @id @default(autoincrement())
+  applications_id Int?
+  file_id         String?         @db.Uuid
+  applications    applications?   @relation(fields: [applications_id], references: [id], onUpdate: NoAction, map: "applications_files_applications_id_foreign")
+  files           files?          @relation(fields: [file_id], references: [id], onUpdate: NoAction, map: "applications_files_file_id_foreign")
 }
 
 model cheat_sheets {
@@ -1209,11 +1209,11 @@ model user_feedback {
 }
 
 model user_feedback_files {
-  id                Int             @id @default(autoincrement())
-  user_feedback_id  Int
-  directus_files_id String          @db.Uuid
-  user_feedback     user_feedback   @relation(fields: [user_feedback_id], references: [id], onDelete: Cascade)
-  files             files           @relation(fields: [directus_files_id], references: [id], onDelete: Cascade)
+  id               Int             @id @default(autoincrement())
+  user_feedback_id Int
+  file_id          String          @db.Uuid
+  user_feedback    user_feedback   @relation(fields: [user_feedback_id], references: [id], onDelete: Cascade)
+  files            files           @relation(fields: [file_id], references: [id], onDelete: Cascade)
 
   @@index([user_feedback_id], map: "user_feedback_files_feedback_idx")
 }

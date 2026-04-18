@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
   // Verify file belongs to this feedback entry
   const link = await db.user_feedback_files.findFirst({
-    where: { user_feedback_id: feedbackId, directus_files_id: fileId },
+    where: { user_feedback_id: feedbackId, file_id: fileId },
   });
   if (!link) error(403, "File not associated with this feedback");
 

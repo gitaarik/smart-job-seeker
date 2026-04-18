@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
 
   // Verify file belongs to this application (either as attached file or CV sent)
   const isAttached = await db.applications_files.findFirst({
-    where: { applications_id: appId, directus_files_id: fileId },
+    where: { applications_id: appId, file_id: fileId },
   });
   const isCvFile = application.cv_file_sent_id === fileId;
   if (!isAttached && !isCvFile) error(403, "File not associated with this application");

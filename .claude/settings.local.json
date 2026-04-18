@@ -33,7 +33,6 @@
       "Bash(npm run check:*)",
       "Bash(npm run dev:*)",
       "Bash(npm run docker:*)",
-      "Bash(npm run docker:clear-directus-cache:*)",
       "Bash(npm run docker:db:backup:*)",
       "Bash(npm run docker:db:cli:*)",
       "Bash(npm run docker:db:restore:*)",
@@ -63,8 +62,6 @@
       "Bash(y)",
       "Skill(commit-commands:commit)",
       "WebFetch(domain:console.groq.com)",
-      "WebFetch(domain:directus.io)",
-      "WebFetch(domain:docs.directus.io)",
       "WebFetch(domain:dotenvx.com)",
       "WebFetch(domain:jsonresume.org)",
       "WebFetch(domain:localhost)",
@@ -73,14 +70,6 @@
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:www.prisma.io)",
       "WebSearch",
-      "mcp__directus__collections",
-      "mcp__directus__fields",
-      "mcp__directus__flows",
-      "mcp__directus__items",
-      "mcp__directus__operations",
-      "mcp__directus__relations",
-      "mcp__directus__schema",
-      "mcp__directus__system-prompt",
       "mcp__plugin_context7_context7__query-docs",
       "mcp__plugin_context7_context7__resolve-library-id",
       "mcp__plugin_serena_serena__activate_project",
@@ -123,7 +112,5 @@
     "deny": [],
     "ask": []
   },
-  "enabledMcpjsonServers": [
-    "directus"
-  ]
+  "enabledMcpjsonServers": []
 }

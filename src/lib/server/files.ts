@@ -11,7 +11,6 @@ import { randomUUID } from "node:crypto";
 import { dbDirect as db } from "$lib/server/db";
 
 const UPLOADS_DIR = join(process.cwd(), "uploads", "files");
-const LEGACY_DIR = join(process.cwd(), "directus", "uploads");
 
 interface UploadFileOptions {
   filename: string;
@@ -90,14 +89,10 @@ export async function deleteFile(fileId: string): Promise<void> {
   });
 
   if (file?.filename_disk) {
-    // Try both new and legacy locations
-    for (const dir of [UPLOADS_DIR, LEGACY_DIR]) {
-      try {
-        await unlink(join(dir, file.filename_disk));
-        break;
-      } catch (err) {
-        if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
-      }
+    try {
+      await unlink(join(UPLOADS_DIR, file.filename_disk));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
   }
 
@@ -114,10 +109,5 @@ export async function getFile(fileId: string): Promise<Buffer> {
     throw new Error(`File not found: ${fileId}`);
   }
 
-  // Try new location first, fall back to legacy uploads
-  try {
-    return await readFile(join(UPLOADS_DIR, file.filename_disk));
-  } catch {
-    return readFile(join(LEGACY_DIR, file.filename_disk));
-  }
+  return readFile(join(UPLOADS_DIR, file.filename_disk));
 }

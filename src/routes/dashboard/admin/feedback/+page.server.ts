@@ -229,7 +229,7 @@ export const actions: Actions = {
 
     // Delete files
     for (const file of entry.user_feedback_files) {
-      await deleteFile(file.directus_files_id).catch(() => {});
+      await deleteFile(file.file_id).catch(() => {});
     }
 
     await db.user_feedback.delete({ where: { id } });

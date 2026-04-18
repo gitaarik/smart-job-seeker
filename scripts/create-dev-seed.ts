@@ -126,7 +126,7 @@ async function seedDevUsers() {
 // ============================================================================
 
 const EXCLUDE_TABLES = [
-  // Directus system tables (legacy, will be dropped)
+  // Legacy system tables
   "directus_%",
   // App tables not needed
   "session",

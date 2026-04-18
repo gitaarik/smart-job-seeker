@@ -65,7 +65,7 @@ export const actions: Actions = {
     await db.applications_files.create({
       data: {
         applications_id: appId,
-        directus_files_id: uploaded.id,
+        file_id: uploaded.id,
       },
     });
 
@@ -102,9 +102,9 @@ export const actions: Actions = {
     });
 
     // Delete the file
-    if (fileRecord.directus_files_id) {
+    if (fileRecord.file_id) {
       try {
-        await deleteFile(fileRecord.directus_files_id);
+        await deleteFile(fileRecord.file_id);
       } catch {
         // File may already be deleted, continue
       }

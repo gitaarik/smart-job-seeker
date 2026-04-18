@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     await db.user_feedback_files.create({
       data: {
         user_feedback_id: feedback.id,
-        directus_files_id: uploaded.id,
+        file_id: uploaded.id,
       },
     });
   }
