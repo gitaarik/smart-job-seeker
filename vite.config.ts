@@ -9,6 +9,12 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
   ],
+  ssr: {
+    // cheerio is CJS and breaks when bundled into ESM with Sentry's
+    // require-in-the-middle instrumentation. Keep it external so Node
+    // loads it natively as CJS.
+    external: ["cheerio"],
+  },
   server: {
     allowedHosts: [
       "app", // In Docker Compose, this is the `app` service and runs
