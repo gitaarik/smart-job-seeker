@@ -211,6 +211,11 @@
           icon: faCommentDots,
         },
         {
+          label: "Files",
+          href: "/dashboard/admin/files",
+          icon: faFileAlt,
+        },
+        {
           label: "Inbox",
           href: "/dashboard/admin/inbox",
           icon: faEnvelope,
