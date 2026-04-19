@@ -5,35 +5,57 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the database module
+// Mock Drizzle insert chain (with returning)
+const mockInsertReturning = vi.fn();
+const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
+const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
+
+// Mock Drizzle update chain
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
+
+// Mock Drizzle query finders
+const mockJobImportersFindFirst = vi.fn();
+
 vi.mock("$lib/server/db", () => ({
   db: {
-    profiles: {
-      findFirst: vi.fn(),
+    query: {
+      jobs: {
+        findFirst: vi.fn(),
+      },
+      job_importers: {
+        findFirst: (...a: any[]) => mockJobImportersFindFirst(...a),
+      },
     },
-    jobs: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-    },
-    job_importers: {
-      create: vi.fn(),
-      upsert: vi.fn(),
-    },
-    api_keys: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
+    insert: (...a: any[]) => mockInsertFn(...a),
+    update: (...a: any[]) => mockUpdateFn(...a),
   },
 }));
 
-// Mock the API key verification module
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  jobs: { id: "jobs.id", source_url: "jobs.source_url" },
+  job_importers: { job: "job_importers.job", profile: "job_importers.profile" },
+}));
+
+// Mock the import utilities
+const mockFindExistingJob = vi.fn();
+const mockGetProfileIdFromApiKey = vi.fn();
+
+vi.mock("$lib/server/job/import-utils", () => ({
+  findExistingJob: (...a: any[]) => mockFindExistingJob(...a),
+  getProfileIdFromApiKey: (...a: any[]) => mockGetProfileIdFromApiKey(...a),
+}));
+
+// Mock the API key verification module (used by getProfileIdFromApiKey)
 vi.mock("$lib/server/auth/api-key", () => ({
   verifyApiKey: vi.fn(),
 }));
 
-import { db } from "$lib/server/db";
-import { verifyApiKey } from "$lib/server/auth/api-key";
 import { POST as importSingle } from "../+server";
 import { POST as importBatch } from "../batch/+server";
 
@@ -83,11 +105,20 @@ describe("POST /api/jobs/import - Single Job Import", () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    mockJobImportersFindFirst.mockResolvedValue(null);
+    mockInsertFn.mockReturnValue({ values: mockInsertValues });
+    mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
+    mockInsertReturning.mockResolvedValue([{ id: 42 }]);
+    mockUpdateFn.mockReturnValue({ set: mockUpdateSet });
+    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   describe("authentication", () => {
     it("should reject request without authentication", async () => {
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "API key required" });
+
       const request = createMockRequest(validJob);
       const event = createMockEvent(request);
 
@@ -100,8 +131,7 @@ describe("POST /api/jobs/import - Single Job Import", () => {
     });
 
     it("should reject invalid API key", async () => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValueOnce(null);
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "Invalid API key" });
 
       const request = createMockRequest(validJob, "sjs_invalid_key");
       const event = createMockEvent(request);
@@ -115,12 +145,9 @@ describe("POST /api/jobs/import - Single Job Import", () => {
     });
 
     it("should accept valid API key", async () => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValueOnce(1); // Returns profile ID
-
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce(null); // No existing job
-      mockDbJobs.create.mockResolvedValueOnce({ id: 42 });
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: 1 });
+      mockFindExistingJob.mockResolvedValueOnce(null); // No existing job
+      mockInsertReturning.mockResolvedValueOnce([{ id: 42 }]);
 
       const request = createMockRequest(validJob, "sjs_valid_key_here");
       const event = createMockEvent(request);
@@ -133,13 +160,11 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       expect(data.action).toBe("created");
       expect(data.jobId).toBe(42);
     });
-
   });
 
   describe("validation", () => {
     beforeEach(() => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValue(1);
+      mockGetProfileIdFromApiKey.mockResolvedValue({ profileId: 1 });
     });
 
     it("should reject missing required fields", async () => {
@@ -177,9 +202,8 @@ describe("POST /api/jobs/import - Single Job Import", () => {
     });
 
     it("should accept valid optional fields", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce(null);
-      mockDbJobs.create.mockResolvedValueOnce({ id: 42 });
+      mockFindExistingJob.mockResolvedValueOnce(null);
+      mockInsertReturning.mockResolvedValueOnce([{ id: 42 }]);
 
       const fullJob = {
         ...validJob,
@@ -206,13 +230,11 @@ describe("POST /api/jobs/import - Single Job Import", () => {
 
   describe("deduplication", () => {
     beforeEach(() => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValue(1);
+      mockGetProfileIdFromApiKey.mockResolvedValue({ profileId: 1 });
     });
 
     it("should skip duplicate job with same data", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce({
+      mockFindExistingJob.mockResolvedValueOnce({
         id: 99,
         job_description: "A great job opportunity",
       });
@@ -230,12 +252,10 @@ describe("POST /api/jobs/import - Single Job Import", () => {
     });
 
     it("should update duplicate job when data changed", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce({
+      mockFindExistingJob.mockResolvedValueOnce({
         id: 99,
         job_description: "Old description",
       });
-      mockDbJobs.update.mockResolvedValueOnce({ id: 99 });
 
       const request = createMockRequest(validJob, "sjs_valid_key");
       const event = createMockEvent(request);
@@ -250,9 +270,8 @@ describe("POST /api/jobs/import - Single Job Import", () => {
     });
 
     it("should normalize URLs by removing only tracking params", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce(null);
-      mockDbJobs.create.mockResolvedValueOnce({ id: 42 });
+      mockFindExistingJob.mockResolvedValueOnce(null);
+      mockInsertReturning.mockResolvedValueOnce([{ id: 42 }]);
 
       const linkedInJob = {
         ...validJob,
@@ -265,13 +284,12 @@ describe("POST /api/jobs/import - Single Job Import", () => {
 
       await importSingle(event);
 
-      // Check that only tracking params were removed, job identifiers preserved
-      expect(mockDbJobs.create).toHaveBeenCalledWith(
+      // Check that insert was called with the normalized URL
+      expect(mockInsertFn).toHaveBeenCalled();
+      expect(mockInsertValues).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            source_url:
-              "https://www.linkedin.com/jobs/view/123456?currentJobId=789",
-          }),
+          source_url:
+            "https://www.linkedin.com/jobs/view/123456?currentJobId=789",
         }),
       );
     });
@@ -279,14 +297,12 @@ describe("POST /api/jobs/import - Single Job Import", () => {
 
   describe("job creation", () => {
     beforeEach(() => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValue(1);
+      mockGetProfileIdFromApiKey.mockResolvedValue({ profileId: 1 });
     });
 
     it("should create new job successfully", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce(null);
-      mockDbJobs.create.mockResolvedValueOnce({ id: 42 });
+      mockFindExistingJob.mockResolvedValueOnce(null);
+      mockInsertReturning.mockResolvedValueOnce([{ id: 42 }]);
 
       const request = createMockRequest(validJob, "sjs_valid_key");
       const event = createMockEvent(request);
@@ -302,9 +318,8 @@ describe("POST /api/jobs/import - Single Job Import", () => {
     });
 
     it("should handle database errors gracefully", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce(null);
-      mockDbJobs.create.mockRejectedValueOnce(new Error("Database error"));
+      mockFindExistingJob.mockResolvedValueOnce(null);
+      mockInsertReturning.mockRejectedValueOnce(new Error("Database error"));
 
       const request = createMockRequest(validJob, "sjs_valid_key");
       const event = createMockEvent(request);
@@ -334,11 +349,20 @@ describe("POST /api/jobs/import/batch - Batch Job Import", () => {
   ];
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    mockJobImportersFindFirst.mockResolvedValue(null);
+    mockInsertFn.mockReturnValue({ values: mockInsertValues });
+    mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
+    mockInsertReturning.mockResolvedValue([{ id: 42 }]);
+    mockUpdateFn.mockReturnValue({ set: mockUpdateSet });
+    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   describe("authentication", () => {
     it("should reject request without authentication", async () => {
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "API key required" });
+
       const request = createMockRequest({ jobs: validJobs });
       const event = createMockEvent(request);
 
@@ -352,8 +376,7 @@ describe("POST /api/jobs/import/batch - Batch Job Import", () => {
 
   describe("validation", () => {
     beforeEach(() => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValue(1);
+      mockGetProfileIdFromApiKey.mockResolvedValue({ profileId: 1 });
     });
 
     it("should reject empty jobs array", async () => {
@@ -390,16 +413,16 @@ describe("POST /api/jobs/import/batch - Batch Job Import", () => {
 
   describe("batch processing", () => {
     beforeEach(() => {
-      const mockVerifyApiKey = verifyApiKey as ReturnType<typeof vi.fn>;
-      mockVerifyApiKey.mockResolvedValue(1);
+      mockGetProfileIdFromApiKey.mockResolvedValue({ profileId: 1 });
     });
 
     it("should create multiple jobs successfully", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValue(null);
-      mockDbJobs.create
-        .mockResolvedValueOnce({ id: 1 })
-        .mockResolvedValueOnce({ id: 2 });
+      mockFindExistingJob.mockResolvedValue(null);
+      mockInsertReturning
+        .mockResolvedValueOnce([{ id: 1 }])
+        .mockResolvedValueOnce([{ id: 2 }]);
+      // Each job also inserts a job_importer record
+      mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
 
       const request = createMockRequest({ jobs: validJobs }, "sjs_valid_key");
       const event = createMockEvent(request);
@@ -415,11 +438,12 @@ describe("POST /api/jobs/import/batch - Batch Job Import", () => {
     });
 
     it("should handle partial failures", async () => {
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValue(null);
-      mockDbJobs.create
-        .mockResolvedValueOnce({ id: 1 })
+      mockFindExistingJob.mockResolvedValue(null);
+      mockInsertReturning
+        .mockResolvedValueOnce([{ id: 1 }])
+        .mockResolvedValueOnce(undefined) // insert job_importer for first job
         .mockRejectedValueOnce(new Error("DB error"));
+      mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
 
       const request = createMockRequest({ jobs: validJobs }, "sjs_valid_key");
       const event = createMockEvent(request);
@@ -434,12 +458,12 @@ describe("POST /api/jobs/import/batch - Batch Job Import", () => {
     });
 
     it("should handle mixed create/skip/update results", async () => {
-      const mockDbJobs = db.jobs as any;
       // First job: no existing, create
-      mockDbJobs.findFirst.mockResolvedValueOnce(null);
-      mockDbJobs.create.mockResolvedValueOnce({ id: 1 });
+      mockFindExistingJob.mockResolvedValueOnce(null);
+      mockInsertReturning.mockResolvedValueOnce([{ id: 1 }]);
+      mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
       // Second job: existing with same data, skip
-      mockDbJobs.findFirst.mockResolvedValueOnce({
+      mockFindExistingJob.mockResolvedValueOnce({
         id: 99,
         job_description: null,
       });

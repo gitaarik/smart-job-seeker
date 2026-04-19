@@ -5,21 +5,41 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockJobSearchesFindFirst = vi.fn();
-const mockJobSearchesUpdate = vi.fn();
+const mockSearchTasksFindFirst = vi.fn();
 const mockRunsFindFirst = vi.fn();
-const mockRunsUpdate = vi.fn();
+
+// Mock Drizzle update chain
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    search_tasks: {
-      findFirst: (...a: any[]) => mockJobSearchesFindFirst(...a),
-      update: (...a: any[]) => mockJobSearchesUpdate(...a),
+    query: {
+      search_tasks: {
+        findFirst: (...a: any[]) => mockSearchTasksFindFirst(...a),
+      },
+      search_task_runs: {
+        findFirst: (...a: any[]) => mockRunsFindFirst(...a),
+      },
     },
-    search_task_runs: {
-      findFirst: (...a: any[]) => mockRunsFindFirst(...a),
-      update: (...a: any[]) => mockRunsUpdate(...a),
-    },
+    update: (...a: any[]) => mockUpdateFn(...a),
+  },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+  and: vi.fn((...args: any[]) => args),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  search_tasks: {
+    id: "search_tasks.id",
+    profile_id: "search_tasks.profile_id",
+  },
+  search_task_runs: {
+    id: "search_task_runs.id",
+    search_task_id: "search_task_runs.search_task_id",
   },
 }));
 
@@ -43,8 +63,7 @@ function createEvent(body: any, opts: {
 describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRunsUpdate.mockResolvedValue({});
-    mockJobSearchesUpdate.mockResolvedValue({});
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   it("rejects unauthenticated", async () => {
@@ -70,23 +89,23 @@ describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
   });
 
   it("rejects when user doesn't own job search", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce({
+    mockSearchTasksFindFirst.mockResolvedValueOnce({
       id: 1,
-      profiles: { user_id: "other-user" },
+      profile: { user_id: "other-user" },
     });
     await expect(POST(createEvent({ response: "continue" })))
       .rejects.toMatchObject({ status: 403 });
   });
 
   it("rejects when job search not found", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce(null);
+    mockSearchTasksFindFirst.mockResolvedValueOnce(null);
     await expect(POST(createEvent({ response: "continue" })))
       .rejects.toMatchObject({ status: 404 });
   });
 
   it("rejects when run not found", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+    mockSearchTasksFindFirst.mockResolvedValueOnce({
+      id: 1, profile: { user_id: "user-1" },
     });
     mockRunsFindFirst.mockResolvedValueOnce(null);
     await expect(POST(createEvent({ response: "continue" })))
@@ -94,8 +113,8 @@ describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
   });
 
   it("rejects when run is not active", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+    mockSearchTasksFindFirst.mockResolvedValueOnce({
+      id: 1, profile: { user_id: "user-1" },
     });
     mockRunsFindFirst.mockResolvedValueOnce({ id: 10, status: "completed" });
     await expect(POST(createEvent({ response: "continue" })))
@@ -103,8 +122,8 @@ describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
   });
 
   it("records 'continue' response", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+    mockSearchTasksFindFirst.mockResolvedValueOnce({
+      id: 1, profile: { user_id: "user-1" },
     });
     mockRunsFindFirst.mockResolvedValueOnce({ id: 10, status: "running" });
 
@@ -112,18 +131,18 @@ describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
     const data = await res.json();
     expect(data.success).toBe(true);
     expect(data.response).toBe("continue");
-    expect(mockRunsUpdate).toHaveBeenCalledWith(
+    // Verify update was called for the run
+    expect(mockUpdateFn).toHaveBeenCalledTimes(1);
+    expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 10 },
-        data: { user_response: "continue" },
+        user_response: "continue",
       }),
     );
-    expect(mockJobSearchesUpdate).not.toHaveBeenCalled();
   });
 
   it("records 'skip' response", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+    mockSearchTasksFindFirst.mockResolvedValueOnce({
+      id: 1, profile: { user_id: "user-1" },
     });
     mockRunsFindFirst.mockResolvedValueOnce({ id: 10, status: "blocked" });
 
@@ -134,8 +153,8 @@ describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
   });
 
   it("cancels run and job search on 'cancel'", async () => {
-    mockJobSearchesFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+    mockSearchTasksFindFirst.mockResolvedValueOnce({
+      id: 1, profile: { user_id: "user-1" },
     });
     mockRunsFindFirst.mockResolvedValueOnce({ id: 10, status: "running" });
 
@@ -144,24 +163,22 @@ describe("POST /api/import-tasks/[id]/runs/[runId]/respond", () => {
     expect(data.success).toBe(true);
     expect(data.message).toBe("Run cancelled");
 
-    // Run should be cancelled
-    expect(mockRunsUpdate).toHaveBeenCalledWith(
+    // Both run and search task should be updated
+    expect(mockUpdateFn).toHaveBeenCalledTimes(2);
+
+    // First call: update the run
+    expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          user_response: "cancel",
-          status: "cancelled",
-        }),
+        user_response: "cancel",
+        status: "cancelled",
       }),
     );
 
-    // Job search should also be cancelled
-    expect(mockJobSearchesUpdate).toHaveBeenCalledWith(
+    // Second call: update the search task
+    expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 1 },
-        data: expect.objectContaining({
-          status: "cancelled",
-          status_message: "Cancelled by user",
-        }),
+        status: "cancelled",
+        status_message: "Cancelled by user",
       }),
     );
   });

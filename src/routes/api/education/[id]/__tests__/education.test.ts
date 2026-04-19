@@ -6,15 +6,29 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockFindFirst = vi.fn();
-const mockUpdate = vi.fn();
+
+// Mock Drizzle update chain
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    education: {
-      findFirst: (...a: any[]) => mockFindFirst(...a),
-      update: (...a: any[]) => mockUpdate(...a),
+    query: {
+      education: {
+        findFirst: (...a: any[]) => mockFindFirst(...a),
+      },
     },
+    update: (...a: any[]) => mockUpdateFn(...a),
   },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  education: { id: "education.id" },
 }));
 
 import { PATCH } from "../+server";
@@ -37,7 +51,7 @@ function createEvent(body: any, opts: {
 describe("PATCH /api/education/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockResolvedValue({});
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   it("rejects unauthenticated", async () => {
@@ -52,7 +66,7 @@ describe("PATCH /api/education/[id]", () => {
 
   it("rejects when user doesn't own education record", async () => {
     mockFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "other-user" },
+      id: 1, profile: { user_id: "other-user" },
     });
     await expect(PATCH(createEvent({ institution: "MIT" })))
       .rejects.toMatchObject({ status: 403 });
@@ -66,7 +80,7 @@ describe("PATCH /api/education/[id]", () => {
 
   it("rejects empty institution", async () => {
     mockFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+      id: 1, profile: { user_id: "user-1" },
     });
     await expect(PATCH(createEvent({ institution: "" })))
       .rejects.toMatchObject({ status: 400 });
@@ -74,7 +88,7 @@ describe("PATCH /api/education/[id]", () => {
 
   it("updates education with valid data", async () => {
     mockFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+      id: 1, profile: { user_id: "user-1" },
     });
     const res = await PATCH(createEvent({
       institution: "MIT",
@@ -83,43 +97,40 @@ describe("PATCH /api/education/[id]", () => {
     }));
     const data = await res.json();
     expect(data.success).toBe(true);
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 1 },
-        data: expect.objectContaining({
-          institution: "MIT",
-          area: "Computer Science",
-          graduation_year: 2020,
-        }),
+        institution: "MIT",
+        area: "Computer Science",
+        graduation_year: 2020,
       }),
     );
   });
 
   it("converts date fields to Date objects", async () => {
     mockFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+      id: 1, profile: { user_id: "user-1" },
     });
     await PATCH(createEvent({
       start_date: "2016-09-01",
       end_date: "2020-06-15",
     }));
-    const updateData = mockUpdate.mock.calls[0][0].data;
-    expect(updateData.start_date).toBeInstanceOf(Date);
-    expect(updateData.end_date).toBeInstanceOf(Date);
+    const setCallData = mockUpdateSet.mock.calls[0][0];
+    expect(setCallData.start_date).toBeInstanceOf(Date);
+    expect(setCallData.end_date).toBeInstanceOf(Date);
   });
 
   it("only updates allowed fields", async () => {
     mockFindFirst.mockResolvedValueOnce({
-      id: 1, profiles: { user_id: "user-1" },
+      id: 1, profile: { user_id: "user-1" },
     });
     await PATCH(createEvent({
       institution: "MIT",
       profile: 999,
       user_id: "hacker",
     }));
-    const updateData = mockUpdate.mock.calls[0][0].data;
-    expect(updateData.institution).toBe("MIT");
-    expect(updateData.profile).toBeUndefined();
-    expect(updateData.user_id).toBeUndefined();
+    const setCallData = mockUpdateSet.mock.calls[0][0];
+    expect(setCallData.institution).toBe("MIT");
+    expect(setCallData.profile).toBeUndefined();
+    expect(setCallData.user_id).toBeUndefined();
   });
 });

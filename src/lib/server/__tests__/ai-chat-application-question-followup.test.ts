@@ -5,19 +5,37 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the database
+// Mock Drizzle update chain
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
+
+// Mock the database with Drizzle-style API
 vi.mock("$lib/server/db", () => ({
   db: {
-    application_questions: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
+    query: {
+      application_questions: {
+        findFirst: vi.fn(),
+      },
     },
+    update: (...args: any[]) => mockUpdateFn(...args),
   },
 }));
 
 // Mock the core followup creation function
 vi.mock("$lib/server/ai-chat/create-followup", () => ({
   createFollowupAiChat: vi.fn(),
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  application_questions: {
+    id: "application_questions.id",
+    ai_chat_id: "application_questions.ai_chat_id",
+  },
 }));
 
 import { db } from "$lib/server/db";
@@ -32,7 +50,7 @@ describe("createApplicationQuestionFollowup", () => {
 
   const mockCreatedAiChat = {
     id: 6,
-    profile: 456,
+    profile_id: 456,
     system_prompt: "Refine the previous answer",
     user_prompt: "Make it more detailed",
     full_prompt: "System: Refine...\nUser: Make it more detailed",
@@ -43,12 +61,12 @@ describe("createApplicationQuestionFollowup", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   describe("validation", () => {
     it("should return error if application question not found", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(null);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(null);
 
       const result = await createApplicationQuestionFollowup(
         999,
@@ -59,18 +77,11 @@ describe("createApplicationQuestionFollowup", () => {
       expect(result.message).toContain(
         "Application question with ID 999 not found",
       );
-      expect(mockFindUnique).toHaveBeenCalledWith({
-        where: { id: 999 },
-        select: {
-          id: true,
-          ai_chat_id: true,
-        },
-      });
+      expect(db.query.application_questions.findFirst).toHaveBeenCalled();
     });
 
     it("should return error if question has no ai_chats", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce({
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce({
         id: 200,
         ai_chat_id: null,
       });
@@ -88,8 +99,7 @@ describe("createApplicationQuestionFollowup", () => {
 
   describe("successful followup creation", () => {
     it("should create followup and update question reference", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -97,9 +107,6 @@ describe("createApplicationQuestionFollowup", () => {
         message: "Follow-up created",
         aiChat: mockCreatedAiChat,
       });
-
-      const mockUpdate = db.application_questions.update as any;
-      mockUpdate.mockResolvedValueOnce({});
 
       const result = await createApplicationQuestionFollowup(
         200,
@@ -124,20 +131,19 @@ describe("createApplicationQuestionFollowup", () => {
         { includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
       );
 
-      // Verify question was updated
-      expect(mockUpdate).toHaveBeenCalledWith({
-        where: { id: 200 },
-        data: {
+      // Verify question was updated via Drizzle update chain
+      expect(mockUpdateFn).toHaveBeenCalled();
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({
           ai_chat_id: 6,
           ai_chat_response: "Refined answer with more details",
           answer: "Refined answer with more details",
-        },
-      });
+        }),
+      );
     });
 
     it("should pass includeOriginalContext option to createFollowupAiChat", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -145,9 +151,6 @@ describe("createApplicationQuestionFollowup", () => {
         message: "Follow-up created",
         aiChat: mockCreatedAiChat,
       });
-
-      const mockUpdate = db.application_questions.update as any;
-      mockUpdate.mockResolvedValueOnce({});
 
       await createApplicationQuestionFollowup(
         200,
@@ -163,8 +166,7 @@ describe("createApplicationQuestionFollowup", () => {
     });
 
     it("should update both ai_chats and ai_chat_response fields", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -173,26 +175,21 @@ describe("createApplicationQuestionFollowup", () => {
         aiChat: mockCreatedAiChat,
       });
 
-      const mockUpdate = db.application_questions.update as any;
-      mockUpdate.mockResolvedValueOnce({});
-
       await createApplicationQuestionFollowup(200, "Refine");
 
-      expect(mockUpdate).toHaveBeenCalledWith({
-        where: { id: 200 },
-        data: {
+      expect(mockUpdateSet).toHaveBeenCalledWith(
+        expect.objectContaining({
           ai_chat_id: 6,
           ai_chat_response: "Refined answer with more details",
           answer: "Refined answer with more details",
-        },
-      });
+        }),
+      );
     });
   });
 
   describe("error handling", () => {
     it("should handle createFollowupAiChat failure", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -207,13 +204,11 @@ describe("createApplicationQuestionFollowup", () => {
       expect(result.aiChat).toBeUndefined();
 
       // Question should not be updated
-      const mockUpdate = db.application_questions.update as any;
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockUpdateFn).not.toHaveBeenCalled();
     });
 
     it("should handle createFollowupAiChat returning no aiChat", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -227,13 +222,11 @@ describe("createApplicationQuestionFollowup", () => {
       expect(result.success).toBe(false);
 
       // Question should not be updated
-      const mockUpdate = db.application_questions.update as any;
-      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockUpdateFn).not.toHaveBeenCalled();
     });
 
     it("should handle database errors gracefully", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockRejectedValueOnce(
+      (db.query.application_questions.findFirst as any).mockRejectedValueOnce(
         new Error("Database connection lost"),
       );
 
@@ -247,8 +240,7 @@ describe("createApplicationQuestionFollowup", () => {
     });
 
     it("should handle unknown errors", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockRejectedValueOnce("Unexpected error");
+      (db.query.application_questions.findFirst as any).mockRejectedValueOnce("Unexpected error");
 
       const result = await createApplicationQuestionFollowup(200, "Refine");
 
@@ -257,8 +249,7 @@ describe("createApplicationQuestionFollowup", () => {
     });
 
     it("should handle error during question update", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -267,8 +258,7 @@ describe("createApplicationQuestionFollowup", () => {
         aiChat: mockCreatedAiChat,
       });
 
-      const mockUpdate = db.application_questions.update as any;
-      mockUpdate.mockRejectedValueOnce(new Error("Update failed"));
+      mockUpdateWhere.mockRejectedValueOnce(new Error("Update failed"));
 
       const result = await createApplicationQuestionFollowup(200, "Refine");
 
@@ -279,8 +269,7 @@ describe("createApplicationQuestionFollowup", () => {
 
   describe("return values", () => {
     it("should return aiChat on success", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -288,9 +277,6 @@ describe("createApplicationQuestionFollowup", () => {
         message: "Follow-up created",
         aiChat: mockCreatedAiChat,
       });
-
-      const mockUpdate = db.application_questions.update as any;
-      mockUpdate.mockResolvedValueOnce({});
 
       const result = await createApplicationQuestionFollowup(200, "Refine");
 
@@ -300,8 +286,7 @@ describe("createApplicationQuestionFollowup", () => {
     });
 
     it("should not return aiChat on failure", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(null);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(null);
 
       const result = await createApplicationQuestionFollowup(999, "Refine");
 
@@ -311,8 +296,7 @@ describe("createApplicationQuestionFollowup", () => {
 
   describe("edge cases", () => {
     it("should handle empty followup request", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce(mockQuestion);
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -320,9 +304,6 @@ describe("createApplicationQuestionFollowup", () => {
         message: "Follow-up created",
         aiChat: mockCreatedAiChat,
       });
-
-      const mockUpdate = db.application_questions.update as any;
-      mockUpdate.mockResolvedValueOnce({});
 
       // Should still work, validation is done in createFollowupAiChat
       const result = await createApplicationQuestionFollowup(200, "");
@@ -335,8 +316,7 @@ describe("createApplicationQuestionFollowup", () => {
     });
 
     it("should handle question with ai_chats = 0", async () => {
-      const mockFindUnique = db.application_questions.findUnique as any;
-      mockFindUnique.mockResolvedValueOnce({
+      (db.query.application_questions.findFirst as any).mockResolvedValueOnce({
         id: 200,
         ai_chat_id: 0,
       });

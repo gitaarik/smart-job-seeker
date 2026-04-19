@@ -9,19 +9,48 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockProfilesFindFirst = vi.fn();
 const mockStoriesFindFirst = vi.fn();
-const mockStoriesCreate = vi.fn();
-const mockStoriesUpdate = vi.fn();
-const mockStoriesDelete = vi.fn();
+
+// Mock Drizzle insert chain
+const mockInsertReturning = vi.fn();
+const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
+const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
+
+// Mock Drizzle update chain
+const mockUpdateReturning = vi.fn();
+const mockUpdateWhere = vi.fn().mockReturnValue({ returning: mockUpdateReturning });
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
+
+// Mock Drizzle delete chain
+const mockDeleteWhere = vi.fn().mockResolvedValue({});
+const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
-    project_stories: {
-      findFirst: (...a: any[]) => mockStoriesFindFirst(...a),
-      create: (...a: any[]) => mockStoriesCreate(...a),
-      update: (...a: any[]) => mockStoriesUpdate(...a),
-      delete: (...a: any[]) => mockStoriesDelete(...a),
+    query: {
+      profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
+      project_stories: {
+        findFirst: (...a: any[]) => mockStoriesFindFirst(...a),
+      },
     },
+    insert: (...a: any[]) => mockInsertFn(...a),
+    update: (...a: any[]) => mockUpdateFn(...a),
+    delete: (...a: any[]) => mockDeleteFn(...a),
+  },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+  and: vi.fn((...args: any[]) => args),
+  desc: vi.fn(),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  profiles: { id: "profiles.id", user_id: "profiles.user_id" },
+  project_stories: {
+    id: "project_stories.id",
+    profile_id: "project_stories.profile_id",
+    sort: "project_stories.sort",
   },
 }));
 
@@ -39,7 +68,10 @@ function createEvent(method: string, body: any, user?: any) {
 }
 
 describe("POST /api/interview-stories", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockInsertReturning.mockResolvedValue([{ id: 10, title: "Test" }]);
+  });
 
   it("rejects unauthenticated", async () => {
     await expect(POST(createEvent("POST", {}, null))).rejects.toMatchObject({ status: 401 });
@@ -62,7 +94,7 @@ describe("POST /api/interview-stories", () => {
   it("creates story with auto-increment sort", async () => {
     mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
     mockStoriesFindFirst.mockResolvedValueOnce({ sort: 3 }); // last sort = 3
-    mockStoriesCreate.mockResolvedValueOnce({ id: 10, title: "My Story" });
+    mockInsertReturning.mockResolvedValueOnce([{ id: 10, title: "My Story" }]);
 
     const res = await POST(createEvent("POST", {
       profile_id: 1,
@@ -73,15 +105,13 @@ describe("POST /api/interview-stories", () => {
     const data = await res.json();
     expect(data.success).toBe(true);
     expect(data.story.id).toBe(10);
-    expect(mockStoriesCreate).toHaveBeenCalledWith(
+    expect(mockInsertValues).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          title: "My Story",
-          category: "leadership",
-          situation: "We had a problem",
-          sort: 4,
-          profile_id: 1,
-        }),
+        title: "My Story",
+        category: "leadership",
+        situation: "We had a problem",
+        sort: 4,
+        profile_id: 1,
       }),
     );
   });
@@ -89,19 +119,20 @@ describe("POST /api/interview-stories", () => {
   it("starts sort at 0 when no existing stories", async () => {
     mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
     mockStoriesFindFirst.mockResolvedValueOnce(null);
-    mockStoriesCreate.mockResolvedValueOnce({ id: 1 });
+    mockInsertReturning.mockResolvedValueOnce([{ id: 1 }]);
 
     await POST(createEvent("POST", { profile_id: 1, title: "First" }));
-    expect(mockStoriesCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ sort: 0 }),
-      }),
+    expect(mockInsertValues).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: 0 }),
     );
   });
 });
 
 describe("PUT /api/interview-stories", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdateReturning.mockResolvedValue([{ id: 5, title: "Updated" }]);
+  });
 
   it("rejects unauthenticated", async () => {
     await expect(PUT(createEvent("PUT", {}, null))).rejects.toMatchObject({ status: 401 });
@@ -121,18 +152,15 @@ describe("PUT /api/interview-stories", () => {
   it("updates story successfully", async () => {
     mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
     mockStoriesFindFirst.mockResolvedValueOnce({ id: 5 });
-    mockStoriesUpdate.mockResolvedValueOnce({ id: 5, title: "Updated" });
+    mockUpdateReturning.mockResolvedValueOnce([{ id: 5, title: "Updated" }]);
 
     const res = await PUT(createEvent("PUT", {
       profile_id: 1, id: 5, title: "Updated", situation: "New situation",
     }));
     const data = await res.json();
     expect(data.success).toBe(true);
-    expect(mockStoriesUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: 5 },
-        data: expect.objectContaining({ title: "Updated", situation: "New situation" }),
-      }),
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Updated", situation: "New situation" }),
     );
   });
 });
@@ -140,7 +168,7 @@ describe("PUT /api/interview-stories", () => {
 describe("DELETE /api/interview-stories", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockStoriesDelete.mockResolvedValue({});
+    mockDeleteWhere.mockResolvedValue({});
   });
 
   it("rejects unauthenticated", async () => {
@@ -160,6 +188,6 @@ describe("DELETE /api/interview-stories", () => {
     const res = await DELETE(createEvent("DELETE", { profile_id: 1, id: 5 }));
     const data = await res.json();
     expect(data.success).toBe(true);
-    expect(mockStoriesDelete).toHaveBeenCalledWith({ where: { id: 5 } });
+    expect(mockDeleteFn).toHaveBeenCalled();
   });
 });

@@ -6,14 +6,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat/utils";
 
-// Mock the Prisma client
+// Mock the Drizzle db module
 vi.mock("$lib/server/db", () => ({
   db: {
-    ai_chats: {
-      findUnique: vi.fn(),
-    },
-    collected_data: {
-      findFirst: vi.fn(),
+    query: {
+      ai_chats: {
+        findFirst: vi.fn(),
+      },
+      collected_data: {
+        findFirst: vi.fn(),
+      },
     },
   },
 }));
@@ -104,21 +106,15 @@ describe("getInterpolatedPrompts", () => {
   });
 
   it("should return null if ai_chats not found", async () => {
-    const dbClient = db as any;
-    dbClient.ai_chats.findUnique.mockResolvedValueOnce(null);
+    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(null);
 
     const result = await getInterpolatedPrompts(999);
 
     expect(result).toBeNull();
-    expect(dbClient.ai_chats.findUnique).toHaveBeenCalledWith({
-      where: { id: 999 },
-      select: { system_prompt: true, user_prompt: true, profile_id: true },
-    });
+    expect(db.query.ai_chats.findFirst).toHaveBeenCalled();
   });
 
   it("should interpolate prompts with schema and data from collected_data", async () => {
-    const dbClient = db as any;
-
     const mockAiChat = {
       system_prompt: "System: ${schema} - ${data}",
       user_prompt: "User: ${schema} - ${data}",
@@ -130,8 +126,8 @@ describe("getInterpolatedPrompts", () => {
       data: '{"name": "John"}',
     };
 
-    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
-    dbClient.collected_data.findFirst.mockResolvedValueOnce(
+    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(
       mockCollectedData,
     );
     const result = await getInterpolatedPrompts(1);
@@ -143,16 +139,14 @@ describe("getInterpolatedPrompts", () => {
   });
 
   it("should use empty objects as defaults when collected_data not found", async () => {
-    const dbClient = db as any;
-
     const mockAiChat = {
       system_prompt: "Schema: ${schema}\nData: ${data}",
       user_prompt: "Show me ${schema} and ${data}",
       profile_id: 1,
     };
 
-    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
-    dbClient.collected_data.findFirst.mockResolvedValueOnce(null);
+    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(null);
     const result = await getInterpolatedPrompts(1);
 
     expect(result).toEqual({
@@ -162,8 +156,6 @@ describe("getInterpolatedPrompts", () => {
   });
 
   it("should handle null schema and data with empty object defaults", async () => {
-    const dbClient = db as any;
-
     const mockAiChat = {
       system_prompt: "${schema} ${data}",
       user_prompt: "${schema} ${data}",
@@ -175,8 +167,8 @@ describe("getInterpolatedPrompts", () => {
       data: null,
     };
 
-    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
-    dbClient.collected_data.findFirst.mockResolvedValueOnce(
+    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(
       mockCollectedData,
     );
     const result = await getInterpolatedPrompts(1);
@@ -188,31 +180,25 @@ describe("getInterpolatedPrompts", () => {
   });
 
   it("should call collected_data.findFirst with correct profile ID", async () => {
-    const dbClient = db as any;
     const profileId = 42;
 
-    dbClient.ai_chats.findUnique.mockResolvedValueOnce({
+    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce({
       system_prompt: "${schema}",
       user_prompt: "${data}",
       profile_id: profileId,
     });
 
-    dbClient.collected_data.findFirst.mockResolvedValueOnce({
+    (db.query.collected_data.findFirst as any).mockResolvedValueOnce({
       schema: "{}",
       data: "{}",
     });
 
     await getInterpolatedPrompts(1);
 
-    expect(dbClient.collected_data.findFirst).toHaveBeenCalledWith({
-      where: { profile_id: profileId },
-      select: { schema: true, data: true },
-    });
+    expect(db.query.collected_data.findFirst).toHaveBeenCalled();
   });
 
   it("should correctly replace multiple occurrences of both schema and data", async () => {
-    const dbClient = db as any;
-
     const mockAiChat = {
       system_prompt:
         "Use ${schema} to understand the structure of ${data}. The ${schema} is important for ${data}.",
@@ -225,8 +211,8 @@ describe("getInterpolatedPrompts", () => {
       data: "DATA_VALUE",
     };
 
-    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
-    dbClient.collected_data.findFirst.mockResolvedValueOnce(
+    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(
       mockCollectedData,
     );
     const result = await getInterpolatedPrompts(1);

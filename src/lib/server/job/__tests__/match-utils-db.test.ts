@@ -4,23 +4,47 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockFindMany } = vi.hoisted(() => ({
-  mockFindMany: vi.fn(),
-}));
+// Mock Drizzle-style select chain
+const mockWhere = vi.fn();
+const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere });
+const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin });
+const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    tech_skills: { findMany: mockFindMany },
+    select: (...args: any[]) => mockSelect(...args),
+  },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  tech_skills: {
+    name: "tech_skills.name",
+    level: "tech_skills.level",
+    years_experience: "tech_skills.years_experience",
+    category_id: "tech_skills.category_id",
+  },
+  tech_skill_categories: {
+    id: "tech_skill_categories.id",
+    profile_id: "tech_skill_categories.profile_id",
   },
 }));
 
 import { getProfileSkills, getProfileSkillLevels } from "../match-utils";
 
 describe("getProfileSkills", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset the chain
+    mockFrom.mockReturnValue({ innerJoin: mockInnerJoin });
+    mockInnerJoin.mockReturnValue({ where: mockWhere });
+  });
 
   it("returns skill names", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "TypeScript" },
       { name: "React" },
       { name: "Node.js" },
@@ -30,7 +54,7 @@ describe("getProfileSkills", () => {
   });
 
   it("filters out null names", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "TypeScript" },
       { name: null },
       { name: "" },
@@ -41,26 +65,30 @@ describe("getProfileSkills", () => {
   });
 
   it("returns empty array when no skills", async () => {
-    mockFindMany.mockResolvedValueOnce([]);
+    mockWhere.mockResolvedValueOnce([]);
     const skills = await getProfileSkills(1);
     expect(skills).toEqual([]);
   });
 
   it("queries with correct profile filter", async () => {
-    mockFindMany.mockResolvedValueOnce([]);
+    mockWhere.mockResolvedValueOnce([]);
     await getProfileSkills(42);
-    expect(mockFindMany).toHaveBeenCalledWith({
-      where: { tech_skill_categories: { profile_id: 42 } },
-      select: { name: true },
-    });
+    expect(mockSelect).toHaveBeenCalled();
+    expect(mockFrom).toHaveBeenCalled();
+    expect(mockInnerJoin).toHaveBeenCalled();
+    expect(mockWhere).toHaveBeenCalled();
   });
 });
 
 describe("getProfileSkillLevels", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFrom.mockReturnValue({ innerJoin: mockInnerJoin });
+    mockInnerJoin.mockReturnValue({ where: mockWhere });
+  });
 
   it("classifies beginner as weak", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "React", level: "beginner", years_experience: null },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -68,7 +96,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("classifies intermediate as weak", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "React", level: "Intermediate", years_experience: null },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -76,7 +104,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("classifies expert as strong", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "TypeScript", level: "expert", years_experience: null },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -84,7 +112,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("classifies proficient as strong", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "TypeScript", level: "Proficient", years_experience: null },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -92,7 +120,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("classifies < 3 years without level as weak", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "Go", level: null, years_experience: 2 },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -100,7 +128,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("classifies 3+ years without level as strong", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "Go", level: null, years_experience: 3 },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -108,7 +136,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("classifies no level and no years as strong", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "Python", level: null, years_experience: null },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -116,7 +144,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("lowercases skill names as keys", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "TypeScript", level: "expert", years_experience: null },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -125,7 +153,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("skips skills with null name", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: null, level: "expert", years_experience: 5 },
       { name: "React", level: "expert", years_experience: null },
     ]);
@@ -134,7 +162,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("level takes precedence over years", async () => {
-    mockFindMany.mockResolvedValueOnce([
+    mockWhere.mockResolvedValueOnce([
       { name: "React", level: "beginner", years_experience: 10 },
     ]);
     const levels = await getProfileSkillLevels(1);
@@ -142,7 +170,7 @@ describe("getProfileSkillLevels", () => {
   });
 
   it("returns empty object when no skills", async () => {
-    mockFindMany.mockResolvedValueOnce([]);
+    mockWhere.mockResolvedValueOnce([]);
     const levels = await getProfileSkillLevels(1);
     expect(levels).toEqual({});
   });

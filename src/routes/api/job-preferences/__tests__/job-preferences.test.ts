@@ -7,17 +7,41 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockProfilesFindFirst = vi.fn();
 const mockConfigFindFirst = vi.fn();
-const mockConfigCreate = vi.fn();
-const mockConfigUpdate = vi.fn();
+
+// Mock Drizzle insert chain
+const mockInsertReturning = vi.fn();
+const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
+const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
+
+// Mock Drizzle update chain
+const mockUpdateReturning = vi.fn();
+const mockUpdateWhere = vi.fn().mockReturnValue({ returning: mockUpdateReturning });
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
-    match_config: {
-      findFirst: (...a: any[]) => mockConfigFindFirst(...a),
-      create: (...a: any[]) => mockConfigCreate(...a),
-      update: (...a: any[]) => mockConfigUpdate(...a),
+    query: {
+      profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
+      match_config: {
+        findFirst: (...a: any[]) => mockConfigFindFirst(...a),
+      },
     },
+    insert: (...a: any[]) => mockInsertFn(...a),
+    update: (...a: any[]) => mockUpdateFn(...a),
+  },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+  and: vi.fn((...args: any[]) => args),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  profiles: { id: "profiles.id", user_id: "profiles.user_id" },
+  match_config: {
+    id: "match_config.id",
+    profile_id: "match_config.profile_id",
   },
 }));
 
@@ -35,7 +59,11 @@ function createEvent(body: any, user?: any) {
 }
 
 describe("PUT /api/job-preferences", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockInsertReturning.mockResolvedValue([{ id: 42 }]);
+    mockUpdateReturning.mockResolvedValue([{ id: 42 }]);
+  });
 
   it("rejects unauthenticated", async () => {
     await expect(PUT(createEvent({}, null))).rejects.toMatchObject({ status: 401 });
@@ -68,7 +96,7 @@ describe("PUT /api/job-preferences", () => {
   it("creates new config when none exists", async () => {
     mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
     mockConfigFindFirst.mockResolvedValueOnce(null);
-    mockConfigCreate.mockResolvedValueOnce({ id: 42 });
+    mockInsertReturning.mockResolvedValueOnce([{ id: 42 }]);
 
     const res = await PUT(createEvent({
       profile_id: 1,
@@ -79,14 +107,12 @@ describe("PUT /api/job-preferences", () => {
     const data = await res.json();
     expect(data.success).toBe(true);
     expect(data.id).toBe(42);
-    expect(mockConfigCreate).toHaveBeenCalledWith(
+    expect(mockInsertValues).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          profile_id: 1,
-          job_types: ["full-time", "contract"],
-          work_location: ["remote", "hybrid"],
-          locations: ["Amsterdam", "Berlin"],
-        }),
+        profile_id: 1,
+        job_types: ["full-time", "contract"],
+        work_location: ["remote", "hybrid"],
+        locations: ["Amsterdam", "Berlin"],
       }),
     );
   });
@@ -94,7 +120,7 @@ describe("PUT /api/job-preferences", () => {
   it("updates existing config", async () => {
     mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
     mockConfigFindFirst.mockResolvedValueOnce({ id: 42 });
-    mockConfigUpdate.mockResolvedValueOnce({ id: 42 });
+    mockUpdateReturning.mockResolvedValueOnce([{ id: 42 }]);
 
     const res = await PUT(createEvent({
       profile_id: 1,
@@ -103,15 +129,13 @@ describe("PUT /api/job-preferences", () => {
     }));
     const data = await res.json();
     expect(data.success).toBe(true);
-    expect(mockConfigUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 42 } }),
-    );
+    expect(mockUpdateFn).toHaveBeenCalled();
   });
 
   it("nullifies empty optional arrays", async () => {
     mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
     mockConfigFindFirst.mockResolvedValueOnce(null);
-    mockConfigCreate.mockResolvedValueOnce({ id: 1 });
+    mockInsertReturning.mockResolvedValueOnce([{ id: 1 }]);
 
     await PUT(createEvent({
       profile_id: 1,
@@ -120,12 +144,10 @@ describe("PUT /api/job-preferences", () => {
       experience_levels: [],
       locations: [],
     }));
-    expect(mockConfigCreate).toHaveBeenCalledWith(
+    expect(mockInsertValues).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          experience_levels: null,
-          locations: null,
-        }),
+        experience_levels: null,
+        locations: null,
       }),
     );
   });

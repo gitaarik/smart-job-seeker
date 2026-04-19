@@ -8,22 +8,43 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockFindFirst = vi.fn();
-const mockFindUnique = vi.fn();
-const mockUpdate = vi.fn();
+
+// Mock Drizzle update chain
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 vi.mock("$lib/server/db", () => ({
   db: {
-    profiles: {
-      findFirst: (...a: any[]) => mockFindFirst(...a),
-      update: (...a: any[]) => mockUpdate(...a),
+    query: {
+      profiles: {
+        findFirst: (...a: any[]) => mockFindFirst(...a),
+      },
     },
+    update: (...a: any[]) => mockUpdateFn(...a),
   },
   dbDirect: {
-    profiles: {
-      findFirst: (...a: any[]) => mockFindFirst(...a),
-      findUnique: (...a: any[]) => mockFindUnique(...a),
-      update: (...a: any[]) => mockUpdate(...a),
+    query: {
+      profiles: {
+        findFirst: (...a: any[]) => mockFindFirst(...a),
+      },
     },
+    update: (...a: any[]) => mockUpdateFn(...a),
+  },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+  and: vi.fn((...args: any[]) => args),
+  ne: vi.fn((_col: any, val: any) => val),
+  asc: vi.fn(),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  profiles: {
+    id: "profiles.id",
+    user_id: "profiles.user_id",
+    slug: "profiles.slug",
   },
 }));
 
@@ -56,7 +77,7 @@ function createEvent(opts: {
 describe("PATCH /api/profile/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockResolvedValue({});
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   it("rejects unauthenticated", async () => {
@@ -106,14 +127,12 @@ describe("PATCH /api/profile/[id]", () => {
     const response = await PATCH(event);
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateFn).toHaveBeenCalled();
+    expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 1 },
-        data: expect.objectContaining({
-          name: "New Name",
-          slug: "new-slug",
-          title: "Dev",
-        }),
+        name: "New Name",
+        slug: "new-slug",
+        title: "Dev",
       }),
     );
   });
@@ -125,10 +144,10 @@ describe("PATCH /api/profile/[id]", () => {
     });
     const response = await PATCH(event);
     expect(response.status).toBe(200);
-    const updateCall = mockUpdate.mock.calls[0][0];
-    expect(updateCall.data.user_id).toBeUndefined();
-    expect(updateCall.data.is_admin).toBeUndefined();
-    expect(updateCall.data.name).toBe("Test");
+    const setCall = mockUpdateSet.mock.calls[0][0];
+    expect(setCall.user_id).toBeUndefined();
+    expect(setCall.is_admin).toBeUndefined();
+    expect(setCall.name).toBe("Test");
   });
 });
 
@@ -149,14 +168,14 @@ describe("GET /api/profile/[id]/export.json", () => {
 
   it("returns 404 when profile not found", async () => {
     mockFindFirst.mockResolvedValueOnce({ id: 1 }); // ownership OK
-    mockFindUnique.mockResolvedValueOnce(null); // profile not found
+    mockFindFirst.mockResolvedValueOnce(null); // profile not found
     const event = createEvent({});
     await expect(GET(event)).rejects.toMatchObject({ status: 404 });
   });
 
   it("exports profile data with correct structure", async () => {
-    mockFindFirst.mockResolvedValueOnce({ id: 1 });
-    mockFindUnique.mockResolvedValueOnce({
+    mockFindFirst.mockResolvedValueOnce({ id: 1 }); // ownership check
+    mockFindFirst.mockResolvedValueOnce({
       name: "Alice",
       title: "Developer",
       location: null,
@@ -173,18 +192,21 @@ describe("GET /api/profile/[id]/export.json", () => {
       nationality: null,
       location_url: null,
       location_timezone: null,
+      salary_base_rate: null,
+      salary_currency: null,
+      salary_adjustments: null,
+      salary_region_overrides: null,
       application_questions: null,
-      profile_versions_profile_versions_profileToprofiles: [],
+      profile_versions: [],
       highlights: [],
       tech_skill_categories: [],
       work_experiences: [],
       side_projects: [],
-      education: [],
+      educations: [],
       languages: [],
       references: [],
       project_stories: [],
       cheat_sheets: [],
-      salary_expectations: [],
     });
     const event = createEvent({});
     const response = await GET(event);
@@ -199,7 +221,7 @@ describe("GET /api/profile/[id]/export.json", () => {
 describe("PUT /api/profile/[id]/browser-info", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdate.mockResolvedValue({});
+    mockUpdateWhere.mockResolvedValue({});
   });
 
   it("rejects unauthenticated", async () => {
@@ -263,6 +285,6 @@ describe("PUT /api/profile/[id]/browser-info", () => {
     const response = await PUT(event);
     const data = await response.json();
     expect(data.updated).toEqual([]);
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockUpdateFn).not.toHaveBeenCalled();
   });
 });

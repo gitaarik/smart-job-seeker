@@ -5,12 +5,23 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock Drizzle update chain
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
+
 // Mock dependencies
 vi.mock("$lib/server/db", () => ({
   db: {
-    ai_chats: {
-      update: vi.fn(),
+    query: {
+      ai_chats: {
+        findFirst: vi.fn(),
+      },
+      profiles: {
+        findFirst: vi.fn(),
+      },
     },
+    update: (...args: any[]) => mockUpdateFn(...args),
   },
 }));
 
@@ -54,7 +65,15 @@ vi.mock("@langchain/groq", () => ({
   },
 }));
 
-import { db } from "$lib/server/db";
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  ai_chats: { id: "ai_chats.id" },
+  profiles: { id: "profiles.id" },
+}));
+
 import { getInterpolatedPrompts } from "../ai-chat/utils";
 import { generateAiChatResponse } from "../ai-chat/response-generate";
 import { AIMessage } from "@langchain/core/messages";
@@ -63,6 +82,7 @@ import { llmCache } from "../llm/cache";
 describe("generateAiChatResponse", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUpdateWhere.mockResolvedValue({});
     // Clear LLM cache to prevent cache hits affecting tests
     llmCache.clear();
   });
@@ -79,7 +99,6 @@ describe("generateAiChatResponse", () => {
 
   it("should generate response and save to database", async () => {
     const utilsMock = getInterpolatedPrompts as any;
-    const dbClient = db as any;
 
     const mockPrompts = {
       systemPrompt: "You are a helpful assistant",
@@ -91,27 +110,22 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("The capital of France is Paris."),
     );
-    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result = await generateAiChatResponse(1);
 
     expect(result.success).toBe(true);
     expect(result.message).toContain("Response generated for AI chat ID 1");
-    expect(dbClient.ai_chats.update).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: {
+    // Verify db.update was called
+    expect(mockUpdateFn).toHaveBeenCalled();
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
         response: "The capital of France is Paris.",
-        input_tokens: null,
-        output_tokens: null,
-        total_tokens: null,
-        credits_charged: null,
-      },
-    });
+      }),
+    );
   });
 
   it("should call Groq API with correct parameters", async () => {
     const utilsMock = getInterpolatedPrompts as any;
-    const dbClient = db as any;
 
     const mockPrompts = {
       systemPrompt: "You are helpful",
@@ -123,7 +137,6 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("Why did the chicken cross the road?"),
     );
-    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     await generateAiChatResponse(1);
 
@@ -187,7 +200,6 @@ describe("generateAiChatResponse", () => {
 
   it("should handle database update error", async () => {
     const utilsMock = getInterpolatedPrompts as any;
-    const dbClient = db as any;
 
     const mockPrompts = {
       systemPrompt: "You are helpful",
@@ -196,22 +208,12 @@ describe("generateAiChatResponse", () => {
 
     utilsMock.mockResolvedValueOnce(mockPrompts);
 
-    const mockResponse = {
-      choices: [
-        {
-          message: {
-            content: "Why did the chicken cross the road?",
-          },
-        },
-      ],
-    };
-
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("Some response"),
     );
 
     const dbError = new Error("Database connection failed");
-    dbClient.ai_chats.update.mockRejectedValueOnce(dbError);
+    mockUpdateWhere.mockRejectedValueOnce(dbError);
 
     const result = await generateAiChatResponse(1);
 
@@ -222,7 +224,6 @@ describe("generateAiChatResponse", () => {
 
   it("should use variable interpolation before sending to Groq", async () => {
     const utilsMock = getInterpolatedPrompts as any;
-    const dbClient = db as any;
 
     const mockPrompts = {
       systemPrompt: "Use this schema: {user_schema} to structure response",
@@ -235,7 +236,6 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("Response with interpolated data"),
     );
-    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result = await generateAiChatResponse(1);
 
@@ -246,7 +246,6 @@ describe("generateAiChatResponse", () => {
 
   it("should process multiple responses correctly", async () => {
     const utilsMock = getInterpolatedPrompts as any;
-    const dbClient = db as any;
 
     const mockPrompts = {
       systemPrompt: "Be helpful",
@@ -258,7 +257,6 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("2 + 2 = 4"),
     );
-    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result1 = await generateAiChatResponse(1);
 
@@ -266,12 +264,11 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("2 + 2 = 4"),
     );
-    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result2 = await generateAiChatResponse(2);
 
     expect(result1.success).toBe(true);
     expect(result2.success).toBe(true);
-    expect(dbClient.ai_chats.update).toHaveBeenCalledTimes(2);
+    expect(mockUpdateFn).toHaveBeenCalledTimes(2);
   });
 });

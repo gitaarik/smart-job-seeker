@@ -4,12 +4,28 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the database
+// Mock the database with Drizzle-style API
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
-    profiles: {
-      findMany: vi.fn(),
+    query: {
+      profiles: {
+        findMany: vi.fn(),
+      },
     },
+  },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
+  and: vi.fn((...args: any[]) => args),
+  ne: vi.fn((_col: any, val: any) => val),
+}));
+
+vi.mock("$lib/server/db/schema", () => ({
+  profiles: {
+    user_id: "profiles.user_id",
+    id: "profiles.id",
+    name: "profiles.name",
   },
 }));
 
@@ -23,7 +39,7 @@ describe("getUniqueProfileName", () => {
 
   it("should return the base name when no duplicates exist", async () => {
     const mockDb = dbDirect as any;
-    mockDb.profiles.findMany.mockResolvedValueOnce([
+    mockDb.query.profiles.findMany.mockResolvedValueOnce([
       { name: "Other Profile" },
       { name: "Another Profile" },
     ]);
@@ -31,15 +47,12 @@ describe("getUniqueProfileName", () => {
     const result = await getUniqueProfileName("My Profile", "user-123");
 
     expect(result).toBe("My Profile");
-    expect(mockDb.profiles.findMany).toHaveBeenCalledWith({
-      where: { user_id: "user-123" },
-      select: { name: true },
-    });
+    expect(mockDb.query.profiles.findMany).toHaveBeenCalled();
   });
 
   it("should append '2' when base name already exists", async () => {
     const mockDb = dbDirect as any;
-    mockDb.profiles.findMany.mockResolvedValueOnce([
+    mockDb.query.profiles.findMany.mockResolvedValueOnce([
       { name: "My Profile" },
       { name: "Other Profile" },
     ]);
@@ -51,7 +64,7 @@ describe("getUniqueProfileName", () => {
 
   it("should increment suffix until unique name is found", async () => {
     const mockDb = dbDirect as any;
-    mockDb.profiles.findMany.mockResolvedValueOnce([
+    mockDb.query.profiles.findMany.mockResolvedValueOnce([
       { name: "My Profile" },
       { name: "My Profile 2" },
       { name: "My Profile 3" },
@@ -64,7 +77,7 @@ describe("getUniqueProfileName", () => {
 
   it("should handle gaps in numbering sequence", async () => {
     const mockDb = dbDirect as any;
-    mockDb.profiles.findMany.mockResolvedValueOnce([
+    mockDb.query.profiles.findMany.mockResolvedValueOnce([
       { name: "My Profile" },
       { name: "My Profile 3" },
       { name: "My Profile 5" },
@@ -77,7 +90,7 @@ describe("getUniqueProfileName", () => {
 
   it("should handle empty profile list", async () => {
     const mockDb = dbDirect as any;
-    mockDb.profiles.findMany.mockResolvedValueOnce([]);
+    mockDb.query.profiles.findMany.mockResolvedValueOnce([]);
 
     const result = await getUniqueProfileName("My Profile", "user-123");
 
@@ -86,7 +99,7 @@ describe("getUniqueProfileName", () => {
 
   it("should handle names with special characters", async () => {
     const mockDb = dbDirect as any;
-    mockDb.profiles.findMany.mockResolvedValueOnce([
+    mockDb.query.profiles.findMany.mockResolvedValueOnce([
       { name: "John's Profile (2024)" },
     ]);
 

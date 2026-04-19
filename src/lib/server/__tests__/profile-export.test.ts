@@ -8,14 +8,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock the database
 vi.mock("$lib/server/db", () => ({
   db: {
-    profiles: {
-      findUnique: vi.fn(),
+    query: {
+      profiles: {
+        findFirst: vi.fn(),
+      },
+      collected_data: {
+        findFirst: vi.fn(),
+      },
     },
-    collected_data: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-    },
+    insert: vi.fn(),
+    update: vi.fn(),
   },
 }));
 
@@ -33,10 +35,8 @@ describe("exportProfile", () => {
   });
 
   it("should export both schema and data atomically", async () => {
-    const mockDb = db as any;
-
     // Setup for profile check - profile not found
-    mockDb.profiles.findUnique.mockResolvedValueOnce(null);
+    (db.query.profiles.findFirst as any).mockResolvedValueOnce(null);
 
     const result = await exportProfile(1);
 
