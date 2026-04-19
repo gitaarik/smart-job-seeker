@@ -9,7 +9,7 @@ import { ai_chats } from "$lib/server/db/schema";
 import { getInterpolatedPrompts, makeFullPrompt } from "./utils";
 
 /**
- * Generate full prompt for a single AI chat using the same prisma instance
+ * Generate full prompt for a single AI chat
  */
 export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
   success: boolean;

@@ -1,6 +1,8 @@
 import type { PageServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, ne, inArray, asc } from "drizzle-orm";
+import { search_tasks, profiles, platform_profiles } from "$lib/server/db/schema";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { config } from "$lib/server/config";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
@@ -21,13 +23,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const searchTask = await db.query.search_tasks.findFirst({
-    where: {
-      id: searchTaskId,
-      profile_id: layoutData.selectedProfile.id,
-    },
+    where: and(eq(search_tasks.id, searchTaskId), eq(search_tasks.profile_id, layoutData.selectedProfile.id)),
     with: {
-      job_platforms: true,
-      platform_profiles: true,
+      job_platform: true,
+      platform_profile: true,
     },
   });
 
@@ -43,12 +42,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }> = [];
   if (searchTask.platform_id) {
     platformCredentials = await db.query.platform_profiles.findMany({
-      where: {
-        profile_id: layoutData.selectedProfile.id,
-        platform_id: searchTask.platform_id,
-      },
-      select: { id: true, username: true, security_answer: true },
-      orderBy: asc(search_task_runs.date_created),
+      where: and(eq(platform_profiles.profile_id, layoutData.selectedProfile.id), eq(platform_profiles.platform_id, searchTask.platform_id)),
+      columns: { id: true, username: true, security_answer: true },
+      orderBy: asc(platform_profiles.date_created),
     });
   }
 
@@ -61,20 +57,19 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // accounts reference this platform (cheap existence check with LIMIT 1).
   let canEditPlatformUrls = isStaff;
   if (!canEditPlatformUrls && searchTask.platform_id && user) {
-    const otherUserUsage = await db.query.search_tasks.findFirst({
-      where: {
-        platform_id: searchTask.platform_id,
-        profiles: { user_id: { not: user.id } },
-      },
-      select: { id: true },
-    });
+    const [otherUserUsage] = await db
+      .select({ id: search_tasks.id })
+      .from(search_tasks)
+      .innerJoin(profiles, eq(profiles.id, search_tasks.profile_id))
+      .where(and(eq(search_tasks.platform_id, searchTask.platform_id), ne(profiles.user_id, user.id)))
+      .limit(1);
     canEditPlatformUrls = !otherUserUsage;
   }
 
   // Load profile data (country code + browser fingerprint fields)
   const profileData = await db.query.profiles.findFirst({
-    where: { id: layoutData.selectedProfile.id },
-    select: {
+    where: eq(profiles.id, layoutData.selectedProfile.id),
+    columns: {
       country_code: true,
       browser_country_code: true,
       browser_language: true,
@@ -88,12 +83,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   // Check if any other search task for this profile is currently running/queued/blocked
   const otherRunning = await db.query.search_tasks.findFirst({
-    where: {
-      profile_id: layoutData.selectedProfile.id,
-      id: { not: searchTaskId },
-      status: { in: ["running", "queued", "blocked"] },
-    },
-    select: { id: true },
+    where: and(
+      eq(search_tasks.profile_id, layoutData.selectedProfile.id),
+      ne(search_tasks.id, searchTaskId),
+      inArray(search_tasks.status, ["running", "queued", "blocked"]),
+    ),
+    columns: { id: true },
   });
 
   const subscription = user ? await getActiveSubscription(user.id) : null;

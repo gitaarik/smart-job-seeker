@@ -79,7 +79,7 @@
       id: number;
       slug: string;
       toggles: string[];
-      profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
+      profile_version_extensions_extender_id:
         number[];
     }>;
   }
@@ -112,11 +112,11 @@
       if (
         versionObj &&
         versionObj
-          .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
+          .profile_version_extensions_extender_id
       ) {
         for (
           const junctionObj of versionObj
-            .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
+            .profile_version_extensions_extender_id
         ) {
           const extObj = getVersion(
             junctionObj.extended_id,
@@ -395,13 +395,13 @@
   {/if}
 
   <!-- Education -->
-  {#if filterOnTags(profile.education).length > 0}
+  {#if filterOnTags(profile.educations).length > 0}
     <section class="my-3 break-inside-avoid mb-[-45px]">
       <h2 class="text-sm font-bold h-5">EDUCATION<br><br></h2>
 
       <hr class="mt-1 mb-2" />
 
-      {#each filterOnTags(profile.education) as education, index (index)}
+      {#each filterOnTags(profile.educations) as education, index (index)}
         <div class="mb-2">
           <div class="font-bold">
             {education.area}, {education.study_type}{#if type === "cv"},

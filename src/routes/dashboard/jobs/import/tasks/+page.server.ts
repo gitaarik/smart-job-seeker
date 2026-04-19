@@ -287,7 +287,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.search_tasks.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(search_tasks.id, id), eq(search_tasks.profile_id, profileId)),
     });
 
     if (!existing) {
@@ -348,7 +348,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.search_tasks.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(search_tasks.id, id), eq(search_tasks.profile_id, profileId)),
     });
 
     if (!existing) {

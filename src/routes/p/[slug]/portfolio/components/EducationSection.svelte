@@ -20,7 +20,7 @@
 
 <InfoSection title="Education" icon={faGraduationCap}>
   <div>
-    {#each profile.education as edu, index (index)}
+    {#each profile.educations as edu, index (index)}
       <div class="break-inside-avoid {index === 0 ? 'mt-12 print:mt-0' : ''}">
         <header class="mb-6 print:mb-4">
           <div class="flex items-start justify-between">
@@ -120,7 +120,7 @@
           </div>
         {/if}
       </div>
-      {#if index < profile.education.length - 1}
+      {#if index < profile.educations.length - 1}
         <hr class="border-cloud my-12" />
       {/if}
     {/each}

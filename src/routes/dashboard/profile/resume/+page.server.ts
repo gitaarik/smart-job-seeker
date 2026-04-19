@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { profile_versions, profile_version_extensions } from "$lib/server/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { profiles, profile_versions, profile_version_extensions, profile_exports } from "$lib/server/db/schema";
+import { eq, and, asc, inArray } from "drizzle-orm";
 import { getSelectedProfileId } from "../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
@@ -17,18 +17,18 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const [profile, versions, profileExports] = await Promise.all([
     db.query.profiles.findFirst({
-      where: { id: layoutData.selectedProfile.id },
-      select: {
+      where: eq(profiles.id, layoutData.selectedProfile.id),
+      columns: {
         public_resume_version_id: true,
         public_cv_version_id: true,
       },
     }),
     db.query.profile_versions.findMany({
-      where: { profile_id: layoutData.selectedProfile.id },
+      where: eq(profile_versions.profile_id, layoutData.selectedProfile.id),
       with: {
-        profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
+        profile_version_extensions_extender_id:
           {
-            select: {
+            columns: {
               extended_id: true,
             },
           },
@@ -36,19 +36,19 @@ export const load: PageServerLoad = async ({ parent }) => {
       orderBy: asc(profile_versions.name),
     }),
     db.query.profile_exports.findMany({
-      where: {
-        profile_id: layoutData.selectedProfile.id,
-        status: "published",
-        export_type: { in: ["resume", "cv"] },
-      },
-      select: { description: true, export_type: true },
+      where: and(
+        eq(profile_exports.profile_id, layoutData.selectedProfile.id),
+        eq(profile_exports.status, "published"),
+        inArray(profile_exports.export_type, ["resume", "cv"]),
+      ),
+      columns: { description: true, export_type: true },
     }),
   ]);
 
   const publicResumeVersionId = profile?.public_resume_version_id ?? null;
   const publicCvVersionId = profile?.public_cv_version_id ?? null;
 
-  const mapped = versions.map(({ profile_version_extensions_profile_version_extensions_extenderToprofile_versions: exts, ...v }) => {
+  const mapped = versions.map(({ profile_version_extensions_extender_id: exts, ...v }) => {
     const hasResumePdf = profileExports.some(
       (e) => e.export_type === "resume" && e.description?.includes(`(${v.slug})`)
     );
@@ -111,7 +111,7 @@ export const actions: Actions = {
 
     for (const parentId of extendsIds) {
       const parent = await db.query.profile_versions.findFirst({
-        where: { id: parentId, profile_id: profileId },
+        where: and(eq(profile_versions.id, parentId), eq(profile_versions.profile_id, profileId)),
       });
       if (parent) {
         await db.insert(profile_version_extensions).values({
@@ -140,7 +140,7 @@ export const actions: Actions = {
     if (!slug) return fail(400, { error: "No version specified" });
 
     const version = await db.query.profile_versions.findFirst({
-      where: { profile_id: profileId, slug },
+      where: and(eq(profile_versions.profile_id, profileId), eq(profile_versions.slug, slug)),
     });
     if (!version) return fail(404, { error: "Version not found" });
 

@@ -3,6 +3,8 @@ import { getProfileByIdentifier } from "$lib/server/profile/default";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import { hashToken } from "$lib/server/auth/token-generator";
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profile_tokens, profile_versions } from "$lib/server/db/schema";
 import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from "$lib/profile-tokens";
 import type { PageServerLoad } from "./$types";
 
@@ -24,7 +26,7 @@ export const load: PageServerLoad = async ({
   // Find the token
   const tokenHash = hashToken(tokenString);
   const token = await db.query.profile_tokens.findFirst({
-    where: { token_hash: tokenHash },
+    where: eq(profile_tokens.token_hash, tokenHash),
   });
 
   if (!token) {
@@ -41,8 +43,8 @@ export const load: PageServerLoad = async ({
 
   // Verify the token belongs to this profile
   const profileVersion = await db.query.profile_versions.findFirst({
-    where: { id: token.profile_version },
-    select: { profile_id: true },
+    where: eq(profile_versions.id, token.profile_version),
+    columns: { profile_id: true },
   });
 
   if (!profileVersion || profileVersion.profile_id !== profile.id) {
@@ -82,7 +84,7 @@ export const load: PageServerLoad = async ({
   return {
     profile: {
       ...profile,
-      profile_versions: profile.profile_versions_profile_versions_profileToprofiles,
+      profile_versions: profile.profile_versions,
     },
     versionId: token.profile_version,
     format,

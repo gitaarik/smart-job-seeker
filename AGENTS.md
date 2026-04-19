@@ -8,7 +8,7 @@ This project uses Docker Compose with these containers:
 
 ### `app`
 - **SvelteKit** application using Svelte 5 with **TypeScript**
-- **Prisma** ORM, schema in `prisma/schema.prisma`
+- **Drizzle** ORM, schema in `src/lib/server/db/schema.ts`
 - **Tailwind CSS** for styling
 
 ### `database`
@@ -19,7 +19,7 @@ This project uses Docker Compose with these containers:
 **Normal development** (`npm run dev`):
 - Checks if the database is already initialized (looks for `profiles` table)
 - If empty, restores from `db-dumps/full.sql` or `db-dumps/smart.sql` backup
-- If no backup found, runs Prisma migrations
+- If no backup found, runs Drizzle migrations
 
 **Reset database** (`npm run dev:reset`):
 - Drops all tables and loads dev seed
@@ -41,9 +41,9 @@ Look at the scripts in `package.json` for help executing things in containers.
 
 ## Database Changes
 
-Edit `prisma/schema.prisma` directly, then push changes:
+Edit `src/lib/server/db/schema.ts` directly, then push changes:
 ```bash
-npx prisma db push
+npx drizzle-kit push
 ```
 
 ## Code Quality

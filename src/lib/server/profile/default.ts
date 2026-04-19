@@ -27,7 +27,7 @@ const PROFILE_INCLUDE = {
     },
     orderBy: (t: any, { asc }: any) => asc(t.sort),
   },
-  education: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+  educations: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
   side_projects: {
     with: {
       side_project_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
@@ -37,7 +37,7 @@ const PROFILE_INCLUDE = {
   },
   references: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
   certificates: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
-  profile_versions_profile_versions_profileToprofiles: {
+  profile_versions: {
     columns: {
       id: true,
       status: true,
@@ -50,7 +50,7 @@ const PROFILE_INCLUDE = {
       toggles: true,
     },
     with: {
-      profile_version_extensions_profile_version_extensions_extenderToprofile_versions: true,
+      profile_version_extensions_extender_id: true,
     },
     orderBy: (t: any, { asc }: any) => asc(t.sort),
     where: (t: any, { eq }: any) => eq(t.status, "published"),

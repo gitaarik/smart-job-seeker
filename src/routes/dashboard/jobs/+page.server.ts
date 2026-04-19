@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { type SQL, eq, and, inArray, asc, desc } from "drizzle-orm";
+import { type SQL, sql, eq, and, inArray, asc, desc } from "drizzle-orm";
 import { dbDirect as db, queryRaw, sqlJoin } from "$lib/server/db";
 import { match_config, jobs as jobsTable, job_matches, job_statuses, job_platforms } from "$lib/server/db/schema";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";

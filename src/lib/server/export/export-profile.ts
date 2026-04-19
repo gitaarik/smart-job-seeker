@@ -21,7 +21,7 @@ export async function buildProfileExport(
   const profile = await dbDirect.query.profiles.findFirst({
     where: eq(profiles.id, profileId),
     with: {
-      profile_versions_profile_versions_profileToprofiles: {
+      profile_versions: {
         columns: {
           status: true,
           sort: true,
@@ -30,7 +30,7 @@ export async function buildProfileExport(
           toggles: true,
         },
         with: {
-          profile_version_extensions_profile_version_extensions_extenderToprofile_versions: {
+          profile_version_extensions_extender_id: {
             with: {
               profile_version_extended_id: {
                 columns: { slug: true },
@@ -147,7 +147,7 @@ export async function buildProfileExport(
         },
         orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
-      education: {
+      educations: {
         columns: {
           id: true,
           status: true,
@@ -233,7 +233,7 @@ export async function buildProfileExport(
     }
 
     // Education media
-    for (const edu of profile.education) {
+    for (const edu of profile.educations) {
       if (edu.logo_path) {
         mediaFiles.push({
           path: edu.logo_path,
@@ -301,7 +301,7 @@ export async function buildProfileExport(
     profile_photo_path: profile.profile_photo_path || undefined,
 
     profile_versions:
-      profile.profile_versions_profile_versions_profileToprofiles.map((pv) => ({
+      profile.profile_versions.map((pv) => ({
         status: pv.status || undefined,
         sort: pv.sort,
         slug: pv.slug || undefined,
@@ -309,7 +309,7 @@ export async function buildProfileExport(
         toggles: pv.toggles,
         extends_from:
           pv
-            .profile_version_extensions_profile_version_extensions_extenderToprofile_versions?.[0]
+            .profile_version_extensions_extender_id?.[0]
             ?.profile_version_extended_id
             ?.slug || null,
       })),
@@ -398,7 +398,7 @@ export async function buildProfileExport(
       })),
     })),
 
-    education: profile.education.map((edu) => ({
+    education: profile.educations.map((edu) => ({
       status: edu.status || undefined,
       sort: edu.sort,
       institution: edu.institution || undefined,

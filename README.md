@@ -79,8 +79,8 @@ This starts:
 ### Tech Stack
 
 - **Frontend**: SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
-- **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
-- **Database**: PostgreSQL, Prisma ORM, Adminer
+- **Backend**: Node.js, SvelteKit Server Routes, Drizzle ORM
+- **Database**: PostgreSQL, Drizzle ORM, Adminer
 - **AI**: Multi-provider LLM (Groq, Anthropic, OpenAI, Gemini, DeepSeek)
 - **Browser Automation**: Patchright (Playwright fork) with CDP
 - **DevOps**: Docker Compose, Vitest
@@ -117,7 +117,7 @@ Key collections:
 - **profiles** - User portfolios
 - **ai_chat_templates** - AI prompt templates
 
-Complete schema: `prisma/schema.prisma`
+Complete schema: `src/lib/server/db/schema.ts`
 
 ## Development
 
@@ -131,7 +131,7 @@ npm run dev:restore              # Reset DB from full/smart backup
 npm run docker:cli               # Access app container
 
 # Database
-npx prisma db push               # Push schema changes to DB
+npx drizzle-kit push             # Push schema changes to DB
 npm run docker:db:backup         # Backup database
 
 # Code Quality

@@ -21,7 +21,7 @@ import type {
   FullExportData,
 } from "./types";
 
-// Helper to convert JSON value for Prisma
+// Helper to convert JSON value for database insert
 function toJsonValue(value: unknown): unknown | undefined {
   if (value === null || value === undefined) return undefined;
   return value as unknown;

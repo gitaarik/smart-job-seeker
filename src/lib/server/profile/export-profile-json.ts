@@ -196,10 +196,10 @@ export async function buildProfileJsonExport(
   const baseProfile = await dbDirect.query.profiles.findFirst({
     where: eq(profiles.id, profileId),
     with: {
-      profile_versions_profile_versions_profileToprofiles: {
+      profile_versions: {
         columns: { status: true, sort: true, slug: true, name: true, toggles: true },
         with: {
-          profile_version_extensions_profile_version_extensions_extenderToprofile_versions: {
+          profile_version_extensions_extender_id: {
             with: {
               profile_version_extended_id: { columns: { slug: true } },
             },
@@ -254,7 +254,7 @@ export async function buildProfileJsonExport(
         },
         orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
-      education: {
+      educations: {
         columns: { status: true, sort: true, institution: true, location: true, url: true, area: true, study_type: true, graduation_year: true, start_date: true, end_date: true, summary: true, tags: true },
         orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
@@ -324,7 +324,7 @@ export async function buildProfileJsonExport(
       vat_id: baseProfile.vat_id || undefined,
       kvk_number: baseProfile.kvk_number || undefined,
       profile_versions:
-        baseProfile.profile_versions_profile_versions_profileToprofiles.map(
+        baseProfile.profile_versions.map(
           (pv) => ({
             status: pv.status || undefined,
             sort: pv.sort,
@@ -332,7 +332,7 @@ export async function buildProfileJsonExport(
             name: pv.name || undefined,
             toggles: pv.toggles,
             extends_from: pv
-              .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
+              .profile_version_extensions_extender_id
               ?.[0]
               ?.profile_version_extended_id
               ?.slug,
@@ -382,7 +382,7 @@ export async function buildProfileJsonExport(
         achievements: proj.side_project_achievements,
         technologies: proj.side_project_technologies,
       })),
-      education: baseProfile.education,
+      education: baseProfile.educations,
       languages: baseProfile.languages,
       references: baseProfile.references,
       certificates: baseProfile.certificates,

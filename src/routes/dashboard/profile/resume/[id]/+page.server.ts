@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { profile_versions, profile_version_extensions, profiles } from "$lib/server/db/schema";
-import { eq, and, or, asc } from "drizzle-orm";
+import { eq, and, ne, or, asc } from "drizzle-orm";
 import { getSelectedProfileId } from "../../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
@@ -21,11 +21,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const version = await db.query.profile_versions.findFirst({
-    where: { id, profile_id: layoutData.selectedProfile.id },
+    where: and(eq(profile_versions.id, id), eq(profile_versions.profile_id, layoutData.selectedProfile.id)),
     with: {
-      profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
+      profile_version_extensions_extender_id:
         {
-          select: {
+          columns: {
             extended_id: true,
           },
         },
@@ -37,13 +37,13 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const {
-    profile_version_extensions_profile_version_extensions_extenderToprofile_versions: exts,
+    profile_version_extensions_extender_id: exts,
     ...v
   } = version;
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: layoutData.selectedProfile.id },
-    select: {
+    where: eq(profiles.id, layoutData.selectedProfile.id),
+    columns: {
       public_resume_version_id: true,
       public_cv_version_id: true,
     },
@@ -51,9 +51,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   // Get all other versions for "extends" options
   const allVersions = await db.query.profile_versions.findMany({
-    where: { profile_id: layoutData.selectedProfile.id, id: { not: id } },
+    where: and(eq(profile_versions.profile_id, layoutData.selectedProfile.id), ne(profile_versions.id, id)),
     orderBy: asc(profile_versions.name),
-    select: { id: true, name: true, slug: true },
+    columns: { id: true, name: true, slug: true },
   });
 
   // Find entities that reference this version's slug in their tags
@@ -150,7 +150,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.profile_versions.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(profile_versions.id, id), eq(profile_versions.profile_id, profileId)),
     });
 
     if (!existing) {
@@ -165,8 +165,8 @@ export const actions: Actions = {
 
     // Update public resume/cv version on profile
     const profile = await db.query.profiles.findFirst({
-      where: { id: profileId },
-      select: { public_resume_version_id: true, public_cv_version_id: true },
+      where: eq(profiles.id, profileId),
+      columns: { public_resume_version_id: true, public_cv_version_id: true },
     });
 
     const profileUpdate: {
@@ -199,7 +199,7 @@ export const actions: Actions = {
 
     for (const parentId of extendsIds) {
       const parent = await db.query.profile_versions.findFirst({
-        where: { id: parentId, profile_id: profileId },
+        where: and(eq(profile_versions.id, parentId), eq(profile_versions.profile_id, profileId)),
       });
       if (parent) {
         await db.insert(profile_version_extensions).values({
@@ -233,7 +233,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.profile_versions.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(profile_versions.id, id), eq(profile_versions.profile_id, profileId)),
     });
 
     if (!existing) {
@@ -242,8 +242,8 @@ export const actions: Actions = {
 
     // Clear public version references if this version was public
     const profile = await db.query.profiles.findFirst({
-      where: { id: profileId },
-      select: { public_resume_version_id: true, public_cv_version_id: true },
+      where: eq(profiles.id, profileId),
+      columns: { public_resume_version_id: true, public_cv_version_id: true },
     });
 
     const profileUpdate: {

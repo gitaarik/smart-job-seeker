@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
 import { profiles } from "$lib/server/db/schema";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import {
@@ -201,7 +202,7 @@ export const actions: Actions = {
     let finalSlug = slug;
     while (true) {
       const existing = await db.query.profiles.findFirst({
-        where: { slug: finalSlug },
+        where: eq(profiles.slug, finalSlug),
       });
       if (!existing) break;
       slugSuffix++;

@@ -74,7 +74,7 @@ The test suite covers (~508 tests across 37 files):
 
 ### Database Mocking
 
-Tests mock the Prisma database client using Vitest's `vi.mock()`:
+Tests mock the database client using Vitest's `vi.mock()`:
 
 ```typescript
 vi.mock("$lib/db", () => ({

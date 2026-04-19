@@ -31,7 +31,7 @@
     salary_max: number | null;
     salary_currency: string | null;
     salary_period: string | null;
-    skills_required: unknown; // JsonValue from Prisma
+    skills_required: unknown;
     work_location?: unknown; // JsonValue - string[]
     job_types?: unknown; // JsonValue - string[]
     experience_levels?: unknown; // JsonValue - string[]

@@ -3,7 +3,7 @@
 ## Overview
 
 Smart Job Seeker is a SvelteKit application that helps users manage their job
-search process. It uses Prisma ORM for data management and LangChain with
+search process. It uses Drizzle ORM for data management and LangChain with
 multiple LLM providers for generating personalized content.
 
 ## Technology Stack
@@ -19,7 +19,7 @@ multiple LLM providers for generating personalized content.
 ### Backend
 
 - **SvelteKit Server** - SSR and API routes
-- **Prisma ORM** - Database access layer
+- **Drizzle ORM** - Database access layer
 - **PostgreSQL** - Primary database
 - **Better Auth** - Authentication (email/password)
 - **Redis** - Background job queues
@@ -88,9 +88,7 @@ smart-job-seeker/
 │   │   ├── signup/
 │   │   └── ...
 │   └── app.css                    # Global styles
-├── prisma/
-│   └── schema.prisma              # Database schema
-├── generated/                     # Prisma generated code
+├── drizzle/                       # Drizzle migrations
 ├── scripts/                       # Utility scripts
 ├── docs/                          # Documentation
 └── tests/                         # Test utilities
@@ -149,9 +147,9 @@ Structured logging with context via `src/lib/server/monitoring/`.
 
 ### 5. Type Safety
 
-#### Prisma Types
+#### Drizzle Types
 
-Database access is fully typed through Prisma.
+Database access is fully typed through Drizzle ORM.
 
 #### Zod Validation
 
@@ -178,7 +176,7 @@ LLM call (LangChain -> provider)
     |
 Cache response
     |
-Database update (Prisma)
+Database update (Drizzle)
     |
 Response to client
 ```
@@ -190,7 +188,7 @@ User Request
     |
 SvelteKit Route (+page.server.ts)
     |
-Auth Guard + Load Function (Prisma query)
+Auth Guard + Load Function (Drizzle query)
     |
 Page Component (+page.svelte)
     |
@@ -203,7 +201,7 @@ All configuration is centralized in `src/lib/server/config.ts`. Key settings:
 
 - **LLM**: Provider selection, API keys, model overrides, cache TTL, retry config
 - **Database**: PostgreSQL connection via `SJS_DATABASE_URL`
-- **Auth**: Better Auth with Prisma adapter
+- **Auth**: Better Auth with Drizzle adapter
 - **Browser**: Chrome path for PDF generation and scraping
 - **Scraping**: Cooldown and rate limits
 - **Redis**: Host and port for job queues
@@ -223,7 +221,7 @@ See [TESTING.md](TESTING.md) for the full testing guide.
 - **API Key Auth** - For programmatic access (`sjs_` prefix keys)
 - **Rate Limiting** - Per-IP token bucket
 - **Zod Validation** - All inputs validated at runtime
-- **Prisma** - SQL injection prevention
+- **Drizzle ORM** - SQL injection prevention
 
 ## Deployment
 

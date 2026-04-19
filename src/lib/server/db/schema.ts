@@ -79,17 +79,6 @@ export const tech_skill_categories_id_seq = pgSequence("tech_skill_categories_id
 export const work_experience_achievements_id_seq = pgSequence("work_experience_achievements_id_seq", {  startWith: "1", increment: "1", minValue: "1", maxValue: "2147483647", cache: "1", cycle: false })
 export const work_experience_technologies_id_seq = pgSequence("work_experience_technologies_id_seq", {  startWith: "1", increment: "1", minValue: "1", maxValue: "2147483647", cache: "1", cycle: false })
 
-export const _prisma_migrations = pgTable("_prisma_migrations", {
-	id: varchar({ length: 36 }).primaryKey().notNull(),
-	checksum: varchar({ length: 64 }).notNull(),
-	finished_at: timestamp({ withTimezone: true, mode: 'date' }),
-	migration_name: varchar({ length: 255 }).notNull(),
-	logs: text(),
-	rolled_back_at: timestamp({ withTimezone: true, mode: 'date' }),
-	started_at: timestamp({ withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	applied_steps_count: integer().default(0).notNull(),
-});
-
 export const ai_chat_templates = pgTable("ai_chat_templates", {
 	id: serial().primaryKey().notNull(),
 	date_created: timestamp({ withTimezone: true, mode: 'date' }),

@@ -63,7 +63,7 @@ npm run docker:cli               # Access app container shell
 npm run docker:db:cli            # Access PostgreSQL CLI
 
 # Database operations
-npx prisma db push               # Push schema changes to DB
+npx drizzle-kit push             # Push schema changes to DB
 npm run docker:db:migrate        # Run database migrations
 npm run docker:db:backup         # Backup database
 npm run docker:db:restore        # Restore database
@@ -145,9 +145,7 @@ smart-job-seeker/
 │   ├── app.html                   # Root HTML template
 │   ├── app.css                    # Global styles
 │   └── hooks.server.ts            # Server hooks
-├── prisma/
-│   ├── schema.prisma              # Database schema
-│   └── migrations/                # Database migrations
+├── drizzle/                       # Drizzle migrations and schema
 ├── scripts/                       # Utility scripts
 ├── docs/                          # Documentation
 ├── docker-compose.yml             # Docker services configuration
@@ -157,22 +155,14 @@ smart-job-seeker/
 
 ## Database Management
 
-### Prisma Workflow
+### Drizzle Workflow
 
-The project uses Prisma as the source of truth for the database schema.
-Edit `prisma/schema.prisma` directly, then push changes:
+The project uses Drizzle ORM with the schema defined in `src/lib/server/db/schema.ts`.
 
-1. **Edit schema**: `prisma/schema.prisma`
-2. **Push changes**: `npx prisma db push`
-3. **Generate Prisma client**: `npx prisma generate`
-
-### Manual Prisma Operations
-
-```bash
-npx prisma studio          # View database in UI
-npx prisma migrate dev     # Create and apply migrations
-npx prisma generate       # Generate Prisma Client
-```
+1. **Edit schema**: `src/lib/server/db/schema.ts`
+2. **Push changes** (dev): `npx drizzle-kit push`
+3. **Generate migration** (production): `npx drizzle-kit generate`
+4. **Apply migrations**: `npx drizzle-kit migrate`
 
 ### Database Scripts
 

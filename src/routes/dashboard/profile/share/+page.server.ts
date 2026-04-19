@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { profile_tokens } from "$lib/server/db/schema";
-import { eq, asc, desc } from "drizzle-orm";
+import { profile_tokens, profile_versions } from "$lib/server/db/schema";
+import { eq, and, inArray, asc, desc } from "drizzle-orm";
 import { getSelectedProfileId } from "../utils";
 import {
   DEFAULT_FORMAT,
@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Get profile versions for this profile to use in the dropdown
   const versions = await db.query.profile_versions.findMany({
-    where: { profile_id: layoutData.selectedProfile.id },
+    where: eq(profile_versions.profile_id, layoutData.selectedProfile.id),
     orderBy: asc(profile_versions.name),
   });
 
@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const tokens = versionIds.length > 0
     ? await db.query.profile_tokens.findMany({
-      where: { profile_version: { in: versionIds } },
+      where: inArray(profile_tokens.profile_version, versionIds),
       orderBy: desc(profile_tokens.date_created),
     })
     : [];
@@ -95,10 +95,7 @@ export const actions: Actions = {
 
     // Verify the version belongs to this profile
     const version = await db.query.profile_versions.findFirst({
-      where: {
-        id: parseInt(profile_version),
-        profile_id: profileId,
-      },
+      where: and(eq(profile_versions.id, parseInt(profile_version)), eq(profile_versions.profile_id, profileId)),
     });
 
     if (!version) {
@@ -152,7 +149,7 @@ export const actions: Actions = {
 
     // Verify ownership through version
     const existingToken = await db.query.profile_tokens.findFirst({
-      where: { id },
+      where: eq(profile_tokens.id, id),
     });
 
     if (!existingToken) {
@@ -160,10 +157,7 @@ export const actions: Actions = {
     }
 
     const version = await db.query.profile_versions.findFirst({
-      where: {
-        id: existingToken.profile_version,
-        profile_id: profileId,
-      },
+      where: and(eq(profile_versions.id, existingToken.profile_version), eq(profile_versions.profile_id, profileId)),
     });
 
     if (!version) {
@@ -174,10 +168,7 @@ export const actions: Actions = {
     let newVersionId = existingToken.profile_version;
     if (profile_version) {
       const newVersion = await db.query.profile_versions.findFirst({
-        where: {
-          id: parseInt(profile_version),
-          profile_id: profileId,
-        },
+        where: and(eq(profile_versions.id, parseInt(profile_version)), eq(profile_versions.profile_id, profileId)),
       });
       if (!newVersion) {
         return fail(400, { error: "Invalid profile version" });
@@ -220,7 +211,7 @@ export const actions: Actions = {
 
     // Verify ownership through version
     const existingToken = await db.query.profile_tokens.findFirst({
-      where: { id },
+      where: eq(profile_tokens.id, id),
     });
 
     if (!existingToken) {
@@ -228,10 +219,7 @@ export const actions: Actions = {
     }
 
     const version = await db.query.profile_versions.findFirst({
-      where: {
-        id: existingToken.profile_version,
-        profile_id: profileId,
-      },
+      where: and(eq(profile_versions.id, existingToken.profile_version), eq(profile_versions.profile_id, profileId)),
     });
 
     if (!version) {

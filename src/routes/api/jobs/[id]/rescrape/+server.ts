@@ -9,7 +9,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
-import { eq, and, inArray, desc } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { jobs } from "$lib/server/db/schema";
 import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 import {
@@ -96,15 +96,12 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   // Create rescrape run record (table may not exist yet)
   let rescrapeRunId: number | undefined;
   try {
-    const run = await db.rescrape_runs.create({
-      data: {
-        job_id: jobId,
-        status: "queued",
-        triggered_by: "user",
-        started_at: new Date(),
-      },
-    });
-    rescrapeRunId = run.id;
+    const result = await db.execute(sql`
+      INSERT INTO rescrape_runs (job_id, status, triggered_by, started_at)
+      VALUES (${jobId}, 'queued', 'user', ${new Date()})
+      RETURNING id
+    `);
+    rescrapeRunId = (result.rows[0] as { id: number }).id;
   } catch {
     // Table may not exist yet — continue without run tracking
   }
@@ -122,10 +119,10 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   // Update run with BullMQ job ID
   if (rescrapeRunId) {
     try {
-      await db.rescrape_runs.update({
-        where: { id: rescrapeRunId },
-        data: { bullmq_job_id: queueJob.id },
-      });
+      await db.execute(sql`
+        UPDATE rescrape_runs SET bullmq_job_id = ${queueJob.id}
+        WHERE id = ${rescrapeRunId}
+      `);
     } catch {
       // Ignore
     }
@@ -170,24 +167,18 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     message: string | null;
   }[] = [];
   try {
-    const runs = await db.query.rescrape_runs.findMany({
-      where: { job_id: jobId },
-      select: {
-        id: true,
-        status: true,
-        started_at: true,
-        finished_at: true,
-        message: true,
-      },
-      orderBy: { started_at: "desc" },
-      limit: 10,
-    });
-    history = runs.map((r) => ({
+    const result = await db.execute(sql`
+      SELECT id, status, started_at, finished_at, message
+      FROM rescrape_runs
+      WHERE job_id = ${jobId}
+      ORDER BY started_at DESC
+      LIMIT 10
+    `);
+    history = (result.rows as { id: number; status: string; started_at: Date | null; finished_at: Date | null; message: string | null }[]).map((r) => ({
       id: r.id,
       status: r.status ?? "unknown",
-      started_at: (r.started_at as Date)?.toISOString() ??
-        new Date().toISOString(),
-      finished_at: r.finished_at ? (r.finished_at as Date).toISOString() : null,
+      started_at: r.started_at ? new Date(r.started_at).toISOString() : new Date().toISOString(),
+      finished_at: r.finished_at ? new Date(r.finished_at).toISOString() : null,
       message: r.message,
     }));
   } catch {
@@ -215,19 +206,19 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   if (removed) {
     // Find the queued run and mark as cancelled
     try {
-      const queuedRun = await db.query.rescrape_runs.findFirst({
-        where: { job_id: jobId, status: "queued" },
-        orderBy: { started_at: "desc" },
-      });
+      const queuedResult = await db.execute(sql`
+        SELECT id FROM rescrape_runs
+        WHERE job_id = ${jobId} AND status = 'queued'
+        ORDER BY started_at DESC
+        LIMIT 1
+      `);
+      const queuedRun = queuedResult.rows[0] as { id: number } | undefined;
       if (queuedRun) {
-        await db.rescrape_runs.update({
-          where: { id: queuedRun.id },
-          data: {
-            status: "cancelled",
-            message: "Cancelled before start",
-            finished_at: new Date(),
-          },
-        });
+        await db.execute(sql`
+          UPDATE rescrape_runs
+          SET status = 'cancelled', message = 'Cancelled before start', finished_at = ${new Date()}
+          WHERE id = ${queuedRun.id}
+        `);
       }
     } catch {
       // rescrape_runs table may not exist
@@ -262,19 +253,19 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
   // Update the rescrape run record
   try {
-    const activeRun = await db.query.rescrape_runs.findFirst({
-      where: { job_id: jobId, status: { in: ["queued", "scraping"] } },
-      orderBy: { started_at: "desc" },
-    });
+    const activeResult = await db.execute(sql`
+      SELECT id FROM rescrape_runs
+      WHERE job_id = ${jobId} AND status IN ('queued', 'scraping')
+      ORDER BY started_at DESC
+      LIMIT 1
+    `);
+    const activeRun = activeResult.rows[0] as { id: number } | undefined;
     if (activeRun) {
-      await db.rescrape_runs.update({
-        where: { id: activeRun.id },
-        data: {
-          status: "cancelled",
-          message: "Cancelled by user",
-          finished_at: new Date(),
-        },
-      });
+      await db.execute(sql`
+        UPDATE rescrape_runs
+        SET status = 'cancelled', message = 'Cancelled by user', finished_at = ${new Date()}
+        WHERE id = ${activeRun.id}
+      `);
     }
   } catch {
     // rescrape_runs table may not exist

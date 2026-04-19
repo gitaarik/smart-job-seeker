@@ -62,7 +62,7 @@ export const load: PageServerLoad = async ({
     profile: {
       ...profile,
       profile_versions: profile
-        .profile_versions_profile_versions_profileToprofiles,
+        .profile_versions,
     },
     versionId,
     accessType: accessResult.accessType,

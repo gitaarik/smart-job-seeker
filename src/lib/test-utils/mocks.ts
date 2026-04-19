@@ -6,7 +6,7 @@
 import { vi } from "vitest";
 
 /**
- * Creates a mock Prisma database client with common methods
+ * Creates a mock database client with common methods
  * Can be extended with additional methods as needed
  */
 export function createMockDb() {
