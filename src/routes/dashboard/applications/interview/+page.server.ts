@@ -12,11 +12,11 @@ export const load: PageServerLoad = async ({ parent }) => {
   const profileId = layoutData.selectedProfile.id;
 
   const [cheatsheets, stories] = await Promise.all([
-    db.cheat_sheets.findMany({
+    db.query.cheat_sheets.findMany({
       where: { profile_id: profileId },
       orderBy: { sort: "asc" },
     }),
-    db.project_stories.findMany({
+    db.query.project_stories.findMany({
       where: { profile_id: profileId },
       orderBy: { sort: "asc" },
     }),

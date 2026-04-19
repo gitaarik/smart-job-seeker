@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
-import { dbDirect as db } from "$lib/server/db";
+import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { getMatchCounts } from "$lib/server/job/match-counts";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import {
@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const profileId = layoutData.selectedProfile.id;
 
   // Fetch match config first — needed for visibility scope in getMatchCounts
-  const matchConfig = await db.match_config.findFirst({
+  const matchConfig = await db.query.match_config.findFirst({
     where: { profile_id: profileId },
     select: {
       id: true,
@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     activeApplications,
   ] = await Promise.all([
     // Lightweight profile fields for completeness check
-    db.profiles.findUnique({
+    db.query.profiles.findFirst({
       where: { id: profileId },
       select: {
         title: true,
@@ -73,7 +73,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
 
     // Search tasks for this profile
-    db.search_tasks.findMany({
+    db.query.search_tasks.findMany({
       where: { profile_id: profileId },
       select: {
         id: true,
@@ -92,9 +92,9 @@ export const load: PageServerLoad = async ({ parent }) => {
     // while strong/saved/newUnreviewed still need job_statuses join
     Promise.all([
       getMatchCounts(profileId, matchCommunityJobs),
-      db.$queryRaw<
+      queryRaw<
         [{ strong80: bigint; strong70: bigint; saved: bigint; new_unreviewed: bigint }]
-      >`
+      >(sql`
         SELECT
           COUNT(*) FILTER (WHERE jm.score >= 80 AND COALESCE(js.status, 'new') != 'rejected') as strong80,
           COUNT(*) FILTER (WHERE jm.score >= 70 AND COALESCE(js.status, 'new') != 'rejected') as strong70,
@@ -103,11 +103,11 @@ export const load: PageServerLoad = async ({ parent }) => {
         FROM job_matches jm
         LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
         WHERE jm.profile_id = ${profileId}
-      `,
+      `),
     ]),
 
     // Top 5 matches by score (excluding rejected via job_statuses)
-    db.$queryRaw<{ id: number }[]>`
+    queryRaw<{ id: number }[]>(sql`
       SELECT jm.id
       FROM job_matches jm
       LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
@@ -116,12 +116,12 @@ export const load: PageServerLoad = async ({ parent }) => {
       AND COALESCE(js.status, 'new') != 'rejected'
       ORDER BY jm.score DESC
       LIMIT 5
-    `.then(async (ids) => {
+    `).then(async (ids) => {
       if (ids.length === 0) return [];
-      return db.job_matches.findMany({
+      return db.query.job_matches.findMany({
         where: { id: { in: ids.map((r) => r.id) } },
         orderBy: { score: "desc" },
-        include: {
+        with: {
           jobs: {
             select: {
               id: true,
@@ -151,14 +151,14 @@ export const load: PageServerLoad = async ({ parent }) => {
     getProfileSkillLevels(profileId),
 
     // Active applications
-    db.applications.findMany({
+    db.query.applications.findMany({
       where: {
         profile_id: profileId,
         status: { in: activeApplicationStatuses },
       },
-      include: {
+      with: {
         jobs: {
-          include: {
+          with: {
             job_platforms: true,
           },
         },

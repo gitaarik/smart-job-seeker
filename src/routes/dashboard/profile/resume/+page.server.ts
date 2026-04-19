@@ -14,16 +14,16 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const [profile, versions, profileExports] = await Promise.all([
-    db.profiles.findUnique({
+    db.query.profiles.findFirst({
       where: { id: layoutData.selectedProfile.id },
       select: {
         public_resume_version_id: true,
         public_cv_version_id: true,
       },
     }),
-    db.profile_versions.findMany({
+    db.query.profile_versions.findMany({
       where: { profile_id: layoutData.selectedProfile.id },
-      include: {
+      with: {
         profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
           {
             select: {
@@ -33,7 +33,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       },
       orderBy: { name: "asc" },
     }),
-    db.profile_exports.findMany({
+    db.query.profile_exports.findMany({
       where: {
         profile_id: layoutData.selectedProfile.id,
         status: "published",
@@ -110,7 +110,7 @@ export const actions: Actions = {
     });
 
     for (const parentId of extendsIds) {
-      const parent = await db.profile_versions.findFirst({
+      const parent = await db.query.profile_versions.findFirst({
         where: { id: parentId, profile_id: profileId },
       });
       if (parent) {
@@ -141,7 +141,7 @@ export const actions: Actions = {
     const slug = (formData.get("slug") as string) || "";
     if (!slug) return fail(400, { error: "No version specified" });
 
-    const version = await db.profile_versions.findFirst({
+    const version = await db.query.profile_versions.findFirst({
       where: { profile_id: profileId, slug },
     });
     if (!version) return fail(404, { error: "Version not found" });

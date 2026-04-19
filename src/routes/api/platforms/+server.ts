@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 
   // Verify user owns this profile
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: {
       id: parseInt(profileId),
       user_id: user.id,
@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 
   // Get platforms where the user has credentials configured
-  const platformProfiles = await db.platform_profiles.findMany({
+  const platformProfiles = await db.query.platform_profiles.findMany({
     where: {
       profile_id: profile.id,
       username: { not: null },

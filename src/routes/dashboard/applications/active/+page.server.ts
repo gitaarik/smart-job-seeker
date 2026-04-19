@@ -60,24 +60,24 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     }
   }
 
-  const applications = await db.applications.findMany({
+  const applications = await db.query.applications.findMany({
     where,
-    include: {
+    with: {
       jobs: {
-        include: {
+        with: {
           job_platforms: true,
         },
       },
       application_letters: {
         where: { status: "published" },
-        take: 1,
+        limit: 1,
       },
     },
     orderBy: { date_created: "desc" },
   });
 
   // Get platforms that have applications for this profile (for the filter)
-  const platforms = await db.job_platforms.findMany({
+  const platforms = await db.query.job_platforms.findMany({
     where: {
       jobs: {
         some: {
@@ -158,7 +158,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid application ID" });
     }
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -205,7 +205,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid application ID" });
     }
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id, profile_id: profileId },
     });
 

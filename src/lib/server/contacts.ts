@@ -25,7 +25,7 @@ export interface ContactWithUser {
  */
 export async function listContacts(userId: string): Promise<ContactWithUser[]> {
   const [sent, received] = await Promise.all([
-    db.contacts.findMany({
+    db.query.contacts.findMany({
       where: { requester_id: userId, status: { in: ["pending", "accepted"] } },
       select: {
         id: true,
@@ -35,7 +35,7 @@ export async function listContacts(userId: string): Promise<ContactWithUser[]> {
       },
       orderBy: { date_created: "desc" },
     }),
-    db.contacts.findMany({
+    db.query.contacts.findMany({
       where: { recipient_id: userId, status: { in: ["pending", "accepted"] } },
       select: {
         id: true,
@@ -81,7 +81,7 @@ export async function sendContactRequest(
   recipientEmail: string,
 ): Promise<{ success: boolean; error?: string; contact?: ContactWithUser }> {
   // Find recipient by email
-  const recipient = await db.users.findFirst({
+  const recipient = await db.query.users.findFirst({
     where: { email: recipientEmail },
     select: { id: true, name: true, email: true, image: true },
   });
@@ -95,7 +95,7 @@ export async function sendContactRequest(
   }
 
   // Check if contact already exists (in either direction)
-  const existing = await db.contacts.findFirst({
+  const existing = await db.query.contacts.findFirst({
     where: {
       OR: [
         { requester_id: requesterId, recipient_id: recipient.id },
@@ -144,7 +144,7 @@ export async function sendContactRequest(
   });
 
   // Notify the recipient
-  const requester = await db.users.findUnique({
+  const requester = await db.query.users.findFirst({
     where: { id: requesterId },
     select: { name: true, email: true },
   });
@@ -221,7 +221,7 @@ export async function removeContact(contactId: number, userId: string): Promise<
  * Check if two users are accepted contacts
  */
 export async function areContacts(userA: string, userB: string): Promise<boolean> {
-  const contact = await db.contacts.findFirst({
+  const contact = await db.query.contacts.findFirst({
     where: {
       status: "accepted",
       OR: [

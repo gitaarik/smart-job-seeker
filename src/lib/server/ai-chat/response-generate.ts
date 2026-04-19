@@ -58,12 +58,12 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 
     // Charge credits
     if (usage && creditsCost > 0) {
-      const aiChat = await db.ai_chats.findUnique({
+      const aiChat = await db.query.ai_chats.findFirst({
         where: { id: aiChatId },
         select: { profile_id: true },
       });
       if (aiChat) {
-        const profile = await db.profiles.findUnique({
+        const profile = await db.query.profiles.findFirst({
           where: { id: aiChat.profile_id },
           select: { user_id: true },
         });

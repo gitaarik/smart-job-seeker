@@ -96,7 +96,7 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
   } | null
 > {
   // Fetch the ai_chatss record
-  const aiChat = await db.ai_chats.findUnique({
+  const aiChat = await db.query.ai_chats.findFirst({
     where: { id: aiChatId },
     select: { system_prompt: true, user_prompt: true, profile_id: true },
   });
@@ -106,7 +106,7 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
   }
 
   // Fetch the collected_data for this profile
-  const collectedData = await db.collected_data.findFirst({
+  const collectedData = await db.query.collected_data.findFirst({
     where: { profile_id: aiChat.profile_id },
     select: { schema: true, data: true },
   });
@@ -173,7 +173,7 @@ export async function createAndGenerateAiChat(
 
   try {
     // Check credits before doing any work
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId },
       select: { user_id: true },
     });
@@ -200,7 +200,7 @@ export async function createAndGenerateAiChat(
     }
 
     // Step 2: Fetch collected_data for the profile
-    const collectedData = await db.collected_data.findFirst({
+    const collectedData = await db.query.collected_data.findFirst({
       where: { profile_id: profileId },
       select: { schema: true, data: true },
     });
@@ -347,7 +347,7 @@ export async function createAndGenerateAiChat(
 
     // Charge credits if we have a user and usage
     if (usage && creditsCost > 0) {
-      const profile = await db.profiles.findUnique({
+      const profile = await db.query.profiles.findFirst({
         where: { id: profileId },
         select: { user_id: true },
       });
@@ -372,7 +372,7 @@ export async function createAndGenerateAiChat(
     }
 
     // Step 9: Fetch and return the complete ai_chats record
-    const completeAiChat = await db.ai_chats.findUnique({
+    const completeAiChat = await db.query.ai_chats.findFirst({
       where: { id: aiChat.id },
       select: {
         id: true,

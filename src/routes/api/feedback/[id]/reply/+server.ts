@@ -13,9 +13,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   const message = body.message?.trim();
   if (!message) error(400, "Message is required");
 
-  const feedback = await db.user_feedback.findUnique({
+  const feedback = await db.query.user_feedback.findFirst({
     where: { id: feedbackId },
-    include: { subscribers: { select: { user_id: true } } },
+    with: { subscribers: { select: { user_id: true } } },
   });
   if (!feedback) error(404, "Feedback not found");
 

@@ -17,7 +17,7 @@ export async function createApplicationQuestionFollowup(
     followupRequest,
     includeOriginalContext,
     fetchEntity: (id) =>
-      db.application_questions.findUnique({
+      db.query.application_questions.findFirst({
         where: { id },
         select: { id: true, ai_chat_id: true },
       }),

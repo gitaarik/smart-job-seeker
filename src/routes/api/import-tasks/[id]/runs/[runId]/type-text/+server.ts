@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Verify ownership and get job search details
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
     select: {
       profile_id: true,
@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   if (searchTask.profiles.user_id !== user.id) throw error(403, "Not authorized");
 
   // Verify run is active
-  const run = await db.search_task_runs.findFirst({
+  const run = await db.query.search_task_runs.findFirst({
     where: { id: runId, search_task_id: searchTaskId },
     select: { status: true },
   });

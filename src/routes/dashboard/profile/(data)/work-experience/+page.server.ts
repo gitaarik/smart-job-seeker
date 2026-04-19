@@ -10,10 +10,10 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const experiences = await db.work_experiences.findMany({
+  const experiences = await db.query.work_experiences.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
-    include: {
+    with: {
       work_experience_achievements: {
         orderBy: { sort: "asc" },
       },
@@ -57,7 +57,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.work_experiences.findFirst({
+    const lastItem = await db.query.work_experiences.findFirst({
       where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
@@ -102,7 +102,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.work_experiences.findFirst({
+    const existing = await db.query.work_experiences.findFirst({
       where: { id, profile_id: profileId },
     });
 

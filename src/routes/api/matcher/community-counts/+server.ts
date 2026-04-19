@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   }
 
   // Verify profile belongs to user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: { id: true },
   });

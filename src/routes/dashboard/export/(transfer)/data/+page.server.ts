@@ -19,12 +19,12 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const exports = await db.profile_exports.findMany({
+  const exports = await db.query.profile_exports.findMany({
     where: {
       profile_id: layoutData.selectedProfile.id,
       export_type: "structured_data",
     },
-    include: {
+    with: {
       files: true,
     },
     orderBy: { date_created: "desc" },

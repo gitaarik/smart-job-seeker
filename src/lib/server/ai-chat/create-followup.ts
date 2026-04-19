@@ -16,7 +16,7 @@ function escapePlaceholders(text: string): string {
 /**
  * Create a follow-up ai_chats instance to refine a previous AI-generated response
  *
- * The follow-up will include:
+ * The follow-up will with:
  * - The previous response (so AI knows what to refine)
  * - The follow-up request (what the user wants to change)
  * - Optionally, the original context (schema, data, jobDescription, etc.)
@@ -56,7 +56,7 @@ export async function createFollowupAiChat(
   // Step 1: Fetch parent ai_chats record (try block for database query)
   let parent;
   try {
-    parent = await db.ai_chats.findUnique({
+    parent = await db.query.ai_chats.findFirst({
       where: { id: parentAiChatId },
       select: {
         profile_id: true,
@@ -101,7 +101,7 @@ export async function createFollowupAiChat(
     let currentId = parent.followup_to;
     // Walk up the chain (with a safety limit to prevent infinite loops)
     for (let i = 0; i < 50 && currentId; i++) {
-      const ancestor = await db.ai_chats.findUnique({
+      const ancestor = await db.query.ai_chats.findFirst({
         where: { id: currentId },
         select: {
           context: true,
@@ -201,7 +201,7 @@ export async function createFollowupAiChat(
   // Check application_letters (try block for database query)
   let linkedLetters;
   try {
-    linkedLetters = await db.application_letters.findMany({
+    linkedLetters = await db.query.application_letters.findMany({
       where: { ai_chat_id: parentAiChatId },
       select: { id: true },
     });
@@ -236,7 +236,7 @@ export async function createFollowupAiChat(
   // Check application_questions (try block for database query)
   let linkedQuestions;
   try {
-    linkedQuestions = await db.application_questions.findMany({
+    linkedQuestions = await db.query.application_questions.findMany({
       where: { ai_chat_id: parentAiChatId },
       select: { id: true },
     });

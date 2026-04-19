@@ -33,11 +33,11 @@ export async function generateApplicationQuestionAnswer(
   // Fetch the question (try block for database query)
   let question;
   try {
-    question = await db.application_questions.findUnique({
+    question = await db.query.application_questions.findFirst({
       where: { id: questionId },
-      include: {
+      with: {
         applications: {
-          include: {
+          with: {
             jobs: true,
           },
         },

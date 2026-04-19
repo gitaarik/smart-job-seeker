@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({
 
   // Find the token
   const tokenHash = hashToken(tokenString);
-  const token = await db.profile_tokens.findUnique({
+  const token = await db.query.profile_tokens.findFirst({
     where: { token_hash: tokenHash },
   });
 
@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({
   }
 
   // Verify the token belongs to this profile
-  const profileVersion = await db.profile_versions.findUnique({
+  const profileVersion = await db.query.profile_versions.findFirst({
     where: { id: token.profile_version },
     select: { profile_id: true },
   });

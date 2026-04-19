@@ -6,8 +6,8 @@
  * Uses the same visibility scope (match_community_jobs) as the matcher itself.
  */
 
-import { Prisma } from "../../../../generated/prisma/client";
-import { dbDirect as db } from "$lib/server/db";
+import { sql, type SQL } from "drizzle-orm";
+import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { buildEligibilityFilter } from "$lib/server/job/eligibility";
 import { getProfileSkills } from "$lib/server/job/match-utils";
 
@@ -32,21 +32,21 @@ export function buildVisibilityScope(
   communityMaxAgeDays?: number | null,
 ) {
   const ownershipFilter = matchCommunityJobs
-    ? Prisma.empty
-    : Prisma.sql`AND ji.id IS NOT NULL`;
+    ? sql``
+    : sql`AND ji.id IS NOT NULL`;
 
-  // When community matching is on with an age limit, include:
+  // When community matching is on with an age limit, with:
   // - all own-imported jobs (ji.id IS NOT NULL), regardless of age
   // - community jobs only if created within the age window
   const ageFilter = matchCommunityJobs && communityMaxAgeDays
-    ? Prisma.sql`AND (ji.id IS NOT NULL OR j.date_created >= NOW() - MAKE_INTERVAL(days => ${communityMaxAgeDays}))`
-    : Prisma.empty;
+    ? sql`AND (ji.id IS NOT NULL OR j.date_created >= NOW() - MAKE_INTERVAL(days => ${communityMaxAgeDays}))`
+    : sql``;
 
   return {
-    from: Prisma.sql`
+    from: sql`
       FROM jobs j
       LEFT JOIN job_importers ji ON j.id = ji.job AND ji.profile = ${profileId}`,
-    where: Prisma.sql`
+    where: sql`
       WHERE j.status != 'archived'
       ${ownershipFilter}
       ${ageFilter}`,
@@ -64,14 +64,14 @@ export async function getMatchCounts(
 ): Promise<MatchCounts> {
   const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, communityMaxAgeDays);
 
-  const result = await db.$queryRaw<{
+  const result = await queryRaw<{
     total: number;
     matched: number;
     no_match: number;
     not_recommended: number;
     ineligible: number;
     unmatched: number;
-  }[]>`
+  }[]>(sql`
     SELECT
       COUNT(DISTINCT j.id)::int AS total,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.score > 0)::int AS matched,
@@ -82,7 +82,7 @@ export async function getMatchCounts(
     ${from}
     LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
     ${where}
-  `;
+  `);
 
   const row = result[0];
   return {
@@ -119,14 +119,14 @@ export async function getEligibleUnmatchedCount(
     profileSkills,
   );
 
-  const result = await db.$queryRaw<{ cnt: number }[]>`
+  const result = await queryRaw<{ cnt: number }[]>(sql`
     SELECT COUNT(*)::int as cnt
     ${from}
     LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
     ${where}
     AND jm.id IS NULL
     AND ${eligibilityFilter}
-  `;
+  `);
 
   return result[0]?.cnt ?? 0;
 }
@@ -140,7 +140,7 @@ export async function getCommunityJobCountsByWindow(
   profileId: number,
   windows: (number | null)[],
 ): Promise<Map<number | null, number>> {
-  const result = await db.$queryRaw<{ days: number | null; cnt: number }[]>`
+  const result = await queryRaw<{ days: number | null; cnt: number }[]>(sql`
     SELECT
       w.days,
       COUNT(DISTINCT j.id)::int AS cnt
@@ -152,7 +152,7 @@ export async function getCommunityJobCountsByWindow(
     WHERE jm.id IS NULL
     GROUP BY w.days
     ORDER BY w.days
-  `;
+  `);
 
   const map = new Map<number | null, number>();
   for (const row of result) {

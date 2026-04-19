@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const highlights = await db.highlights.findMany({
+  const highlights = await db.query.highlights.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
   });
@@ -39,7 +39,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.highlights.findFirst({
+    const lastItem = await db.query.highlights.findFirst({
       where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
@@ -84,7 +84,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.highlights.findFirst({
+    const existing = await db.query.highlights.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -123,7 +123,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.highlights.findFirst({
+    const existing = await db.query.highlights.findFirst({
       where: { id, profile_id: profileId },
     });
 

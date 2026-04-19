@@ -9,7 +9,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const educationId = parseIntParam(params.id, "education");
 
   // Verify ownership through profile
-  const education = await db.education.findFirst({
+  const education = await db.query.education.findFirst({
     where: { id: educationId },
     select: {
       id: true,

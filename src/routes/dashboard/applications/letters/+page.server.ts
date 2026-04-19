@@ -13,9 +13,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const type = url.searchParams.get("type") || "all";
 
   // Get all applications for this profile
-  const applications = await db.applications.findMany({
+  const applications = await db.query.applications.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
-    include: {
+    with: {
       jobs: true,
       application_letters: {
         orderBy: { date_created: "desc" },
@@ -87,9 +87,9 @@ export const actions: Actions = {
     }
 
     // Verify ownership through application
-    const letter = await db.application_letters.findFirst({
+    const letter = await db.query.application_letters.findFirst({
       where: { id },
-      include: {
+      with: {
         applications: true,
       },
     });
@@ -130,9 +130,9 @@ export const actions: Actions = {
     }
 
     // Verify ownership through application
-    const question = await db.application_questions.findFirst({
+    const question = await db.query.application_questions.findFirst({
       where: { id },
-      include: {
+      with: {
         applications: true,
       },
     });
@@ -170,9 +170,9 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid letter ID" });
     }
 
-    const letter = await db.application_letters.findFirst({
+    const letter = await db.query.application_letters.findFirst({
       where: { id },
-      include: {
+      with: {
         applications: true,
       },
     });
@@ -206,9 +206,9 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid question ID" });
     }
 
-    const question = await db.application_questions.findFirst({
+    const question = await db.query.application_questions.findFirst({
       where: { id },
-      include: {
+      with: {
         applications: true,
       },
     });

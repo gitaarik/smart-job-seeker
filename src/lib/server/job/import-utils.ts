@@ -29,7 +29,7 @@ export async function getProfileIdFromApiKey(
 export async function findExistingJob(
   normalizedUrl: string,
 ): Promise<{ id: number; job_description: string | null } | null> {
-  return db.jobs.findFirst({
+  return db.query.jobs.findFirst({
     where: { source_url: normalizedUrl },
     select: { id: true, job_description: true },
   });

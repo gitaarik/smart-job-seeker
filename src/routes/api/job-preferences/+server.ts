@@ -10,7 +10,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     parseBody(jobPreferencesSchema, await request.json());
 
   // Verify the profile belongs to this user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -19,7 +19,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   // Check if config already exists
-  const existing = await db.match_config.findFirst({
+  const existing = await db.query.match_config.findFirst({
     where: { profile_id: profile_id },
   });
 
@@ -65,7 +65,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   );
 
   // Verify the profile belongs to this user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -73,7 +73,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     return json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const existing = await db.match_config.findFirst({
+  const existing = await db.query.match_config.findFirst({
     where: { profile_id: profile_id },
   });
 

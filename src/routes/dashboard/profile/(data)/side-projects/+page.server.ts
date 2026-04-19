@@ -10,10 +10,10 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const projects = await db.side_projects.findMany({
+  const projects = await db.query.side_projects.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
-    include: {
+    with: {
       side_project_achievements: {
         orderBy: { sort: "asc" },
       },
@@ -52,7 +52,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.side_projects.findFirst({
+    const lastItem = await db.query.side_projects.findFirst({
       where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
@@ -96,7 +96,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.side_projects.findFirst({
+    const existing = await db.query.side_projects.findFirst({
       where: { id, profile_id: profileId },
     });
 

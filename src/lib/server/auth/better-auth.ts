@@ -1,17 +1,19 @@
 /**
  * Better Auth Configuration
  *
- * Sets up email/password authentication with Prisma adapter.
+ * Sets up email/password authentication with Drizzle adapter.
  */
 
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { verifications } from "$lib/server/db/schema";
 import { getEnv } from "$lib/tools/get-env";
 import { sendEmail } from "$lib/server/email";
 
 export const auth = betterAuth({
-  database: prismaAdapter(db, { provider: "postgresql" }),
+  database: drizzleAdapter(db, { provider: "pg" }),
   secret: getEnv("SJS_AUTH_SECRET"),
   baseURL: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
   trustedOrigins: getEnv("SJS_TRUSTED_ORIGINS", "")
@@ -72,8 +74,8 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           // Skip welcome/admin emails for invited users (they already got an invite email)
-          const invite = await db.verifications.findFirst({
-            where: { identifier: `invite:${user.email}` },
+          const invite = await db.query.verifications.findFirst({
+            where: eq(verifications.identifier, `invite:${user.email}`),
           });
           if (invite) return;
 

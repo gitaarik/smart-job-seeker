@@ -38,7 +38,7 @@ export const actions: Actions = {
     const confirmName = formData.get("confirmName") as string;
 
     // Get the profile to verify ownership and name
-    const profile = await db.profiles.findFirst({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId, user_id: user.id },
     });
 
@@ -61,7 +61,7 @@ export const actions: Actions = {
     }
 
     // Find the next profile to switch to before deleting
-    const nextProfile = await db.profiles.findFirst({
+    const nextProfile = await db.query.profiles.findFirst({
       where: { user_id: user.id, id: { not: profileId } },
       select: { id: true },
       orderBy: { id: "asc" },

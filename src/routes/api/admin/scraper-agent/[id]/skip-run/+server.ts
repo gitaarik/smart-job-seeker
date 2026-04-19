@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   const sessionId = parseIntParam(params.id, "session");
 
-  const session = await db.scraper_agent_sessions.findUnique({
+  const session = await db.query.scraper_agent_sessions.findFirst({
     where: { id: sessionId },
   });
 
@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Find the latest iteration's run
-  const latestIteration = await db.scraper_agent_iterations.findFirst({
+  const latestIteration = await db.query.scraper_agent_iterations.findFirst({
     where: { session_id: sessionId },
     orderBy: { iteration: "desc" },
   });
@@ -31,7 +31,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Check the run is actually blocked/running
-  const run = await db.search_task_runs.findUnique({
+  const run = await db.query.search_task_runs.findFirst({
     where: { id: latestIteration.run_id },
     select: { status: true },
   });

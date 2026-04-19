@@ -13,7 +13,7 @@ export default defineConfig({
     // cheerio is CJS and breaks when bundled into ESM with Sentry's
     // require-in-the-middle instrumentation. Keep it external so Node
     // loads it natively as CJS.
-    external: ["cheerio"],
+    external: ["cheerio", "drizzle-orm"],
   },
   server: {
     allowedHosts: [

@@ -14,9 +14,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   // Verify ownership: application -> profile -> user
-  const application = await db.applications.findFirst({
+  const application = await db.query.applications.findFirst({
     where: { id: applicationId },
-    include: { profiles: { select: { user_id: true } } },
+    with: { profiles: { select: { user_id: true } } },
   });
 
   if (!application || application.profiles.user_id !== user.id) {

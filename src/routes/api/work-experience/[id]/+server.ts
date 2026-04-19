@@ -14,7 +14,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const workExperienceId = parseIntParam(params.id, "work experience");
 
   // Verify ownership through profile
-  const workExperience = await db.work_experiences.findFirst({
+  const workExperience = await db.query.work_experiences.findFirst({
     where: { id: workExperienceId },
     select: {
       id: true,

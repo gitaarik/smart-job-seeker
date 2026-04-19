@@ -1,6 +1,6 @@
 FROM node:22-slim
 
-# Prisma needs openssl, healthcheck needs curl, psql for database restore
+# healthcheck needs curl, psql for database restore
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     ca-certificates \

@@ -53,8 +53,8 @@ else
     echo "Restoring from smart backup..."
     db_query -f /db-dumps/smart.sql
   else
-    echo "=== No backup found, creating tables with prisma db push ==="
-    npx dotenvx run -- prisma db push --accept-data-loss
+    echo "=== No backup found, creating tables with drizzle-kit push ==="
+    npx dotenvx run -- drizzle-kit push
   fi
 fi
 

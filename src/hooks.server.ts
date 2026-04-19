@@ -100,7 +100,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const impersonateId = event.cookies.get("sjs_impersonate");
   if (impersonateId && event.locals.user) {
     if ((event.locals.user as { is_admin?: boolean }).is_admin) {
-      const targetUser = await db.users.findUnique({
+      const targetUser = await db.query.users.findFirst({
         where: { id: impersonateId },
       });
       if (targetUser) {

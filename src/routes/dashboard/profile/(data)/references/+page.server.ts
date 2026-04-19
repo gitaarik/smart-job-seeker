@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const references = await db.references.findMany({
+  const references = await db.query.references.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
   });
@@ -40,7 +40,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.references.findFirst({
+    const lastItem = await db.query.references.findFirst({
       where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
@@ -86,7 +86,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.references.findFirst({
+    const existing = await db.query.references.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -126,7 +126,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.references.findFirst({
+    const existing = await db.query.references.findFirst({
       where: { id, profile_id: profileId },
     });
 

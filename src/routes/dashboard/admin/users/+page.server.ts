@@ -9,7 +9,7 @@ import crypto from "crypto";
 export const load: PageServerLoad = async ({ parent }) => {
   await parent();
 
-  const users = await db.users.findMany({
+  const users = await db.query.users.findMany({
     orderBy: { createdAt: "desc" },
   });
 
@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   );
 
   // Fetch pending invites to show invite status per user
-  const pendingInvites = await db.verifications.findMany({
+  const pendingInvites = await db.query.verifications.findMany({
     where: {
       identifier: { startsWith: "invite:" },
       expiresAt: { gt: new Date() },
@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   );
 
   // Fetch active subscriptions to show plan per user
-  const activeSubs = await db.subscriptions.findMany({
+  const activeSubs = await db.query.subscriptions.findMany({
     where: { status: { in: ["active", "trialing", "past_due"] } },
     orderBy: { date_created: "desc" },
     select: { user_id: true, plan: true },
@@ -139,7 +139,7 @@ export const actions: Actions = {
       return fail(400, { error: "Email is required" });
     }
 
-    const existing = await db.users.findFirst({
+    const existing = await db.query.users.findFirst({
       where: { email: email.trim() },
     });
     if (existing) {

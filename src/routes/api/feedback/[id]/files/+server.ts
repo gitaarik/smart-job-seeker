@@ -14,9 +14,9 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
   if (!fileId) error(400, "File ID required");
 
   // Load feedback and check ownership/subscription
-  const feedback = await db.user_feedback.findUnique({
+  const feedback = await db.query.user_feedback.findFirst({
     where: { id: feedbackId },
-    include: { subscribers: { select: { user_id: true } } },
+    with: { subscribers: { select: { user_id: true } } },
   });
   if (!feedback) error(404, "Feedback not found");
 
@@ -29,12 +29,12 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
   }
 
   // Verify file belongs to this feedback entry
-  const link = await db.user_feedback_files.findFirst({
+  const link = await db.query.user_feedback_files.findFirst({
     where: { user_feedback_id: feedbackId, file_id: fileId },
   });
   if (!link) error(403, "File not associated with this feedback");
 
-  const fileMeta = await db.files.findUnique({
+  const fileMeta = await db.query.files.findFirst({
     where: { id: fileId },
     select: { filename_download: true, type: true },
   });

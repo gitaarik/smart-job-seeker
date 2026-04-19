@@ -15,11 +15,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   const [chats, total, requestTypes] = await Promise.all([
     // Only fetch lightweight columns for the list view — full content loaded on-demand
-    db.ai_chats.findMany({
+    db.query.ai_chats.findMany({
       where,
       orderBy: { id: "desc" },
-      skip: (page - 1) * perPage,
-      take: perPage,
+      offset: (page - 1) * perPage,
+      limit: perPage,
       select: {
         id: true,
         date_created: true,

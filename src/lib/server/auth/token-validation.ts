@@ -20,7 +20,7 @@ export async function validateToken(
 ): Promise<TokenValidationResult> {
   const tokenHash = hashToken(tokenString);
 
-  const token = await db.profile_tokens.findUnique({
+  const token = await db.query.profile_tokens.findFirst({
     where: { token_hash: tokenHash },
   });
 
@@ -39,7 +39,7 @@ export async function validateToken(
   }
 
   // Look up the profile_version to verify profile ownership
-  const profileVersion = await db.profile_versions.findUnique({
+  const profileVersion = await db.query.profile_versions.findFirst({
     where: { id: token.profile_version },
     select: { profile_id: true },
   });

@@ -14,7 +14,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const projectId = parseIntParam(params.id, "project");
 
   // Verify ownership through profile
-  const project = await db.side_projects.findFirst({
+  const project = await db.query.side_projects.findFirst({
     where: { id: projectId },
     select: {
       id: true,

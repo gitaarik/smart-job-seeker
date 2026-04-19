@@ -18,7 +18,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
@@ -92,7 +92,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
@@ -121,7 +121,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
@@ -162,7 +162,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });

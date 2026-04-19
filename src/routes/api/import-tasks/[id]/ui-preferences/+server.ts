@@ -13,9 +13,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
   const searchTaskId = parseIntParam(params.id, "job search");
 
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: { profiles: { select: { user_id: true } } },
+    with: { profiles: { select: { user_id: true } } },
   });
 
   if (!searchTask || searchTask.profiles.user_id !== user.id) {

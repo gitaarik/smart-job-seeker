@@ -51,9 +51,9 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   if (isAdmin) {
     try {
-      const logs = await db.import_logs.findMany({
+      const logs = await db.query.import_logs.findMany({
         orderBy: { date_created: "desc" },
-        take: 50,
+        limit: 50,
       });
       importLogs = logs.map((l) => ({
         ...l,

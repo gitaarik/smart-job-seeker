@@ -27,9 +27,9 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const searchTaskId = parseIntParam(params.id, "job search");
 
   // Get the job search and verify ownership
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: {
+    with: {
       profiles: true,
       job_platforms: true,
     },
@@ -164,9 +164,9 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   const force = url.searchParams.get("force") === "true";
 
   // Get the job search and verify ownership
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: {
+    with: {
       profiles: true,
     },
   });
@@ -182,7 +182,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 
   // Force stop: directly cancel a stuck "stopping" run
   if (force) {
-    const stoppingRun = await db.search_task_runs.findFirst({
+    const stoppingRun = await db.query.search_task_runs.findFirst({
       where: {
         search_task_id: searchTaskId,
         status: { in: ["stopping", "running", "blocked"] },
@@ -230,7 +230,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   const removed = await removeWaitingJob(searchTaskId);
   if (removed) {
     // Find the queued run and update it
-    const queuedRun = await db.search_task_runs.findFirst({
+    const queuedRun = await db.query.search_task_runs.findFirst({
       where: {
         search_task_id: searchTaskId,
         status: "queued",
@@ -263,7 +263,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   }
 
   // Find the running/blocked run in the database
-  const runningRun = await db.search_task_runs.findFirst({
+  const runningRun = await db.query.search_task_runs.findFirst({
     where: {
       search_task_id: searchTaskId,
       status: { in: ["running", "blocked"] },
@@ -311,9 +311,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
   const searchTaskId = parseIntParam(params.id, "job search");
 
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: {
+    with: {
       profiles: true,
     },
   });
@@ -327,7 +327,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   }
 
   // Get the most recent run
-  const latestRun = await db.search_task_runs.findFirst({
+  const latestRun = await db.query.search_task_runs.findFirst({
     where: { search_task_id: searchTaskId },
     orderBy: { started_at: "desc" },
   });

@@ -12,12 +12,12 @@ export const load: PageServerLoad = async ({ url }) => {
   if (statusFilter) where.status = statusFilter;
   if (categoryFilter) where.category = categoryFilter;
 
-  const feedback = await db.user_feedback.findMany({
+  const feedback = await db.query.user_feedback.findMany({
     where,
     orderBy: { date_created: "desc" },
-    include: {
+    with: {
       user_feedback_files: {
-        include: {
+        with: {
           files: {
             select: {
               id: true,
@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ url }) => {
       userIds.add(m.user_id);
     }
   }
-  const users = await db.users.findMany({
+  const users = await db.query.users.findMany({
     where: { id: { in: [...userIds] } },
     select: { id: true, name: true, email: true },
   });
@@ -123,9 +123,9 @@ export const actions: Actions = {
     });
 
     // Auto-set status to reviewed if it was new
-    const feedback = await db.user_feedback.findUnique({
+    const feedback = await db.query.user_feedback.findFirst({
       where: { id },
-      include: { subscribers: { select: { user_id: true } } },
+      with: { subscribers: { select: { user_id: true } } },
     });
     const newStatus = feedback?.status === "new" ? "reviewed" : undefined;
 
@@ -167,11 +167,11 @@ export const actions: Actions = {
     if (sourceId === targetId) return fail(400, { error: "Cannot merge a ticket into itself" });
 
     const [source, target] = await Promise.all([
-      db.user_feedback.findUnique({
+      db.query.user_feedback.findFirst({
         where: { id: sourceId },
-        include: { subscribers: true },
+        with: { subscribers: true },
       }),
-      db.user_feedback.findUnique({ where: { id: targetId } }),
+      db.query.user_feedback.findFirst({ where: { id: targetId } }),
     ]);
     if (!source) return fail(404, { error: "Source ticket not found" });
     if (!target) return fail(404, { error: "Target ticket not found" });
@@ -221,9 +221,9 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
     if (isNaN(id)) return fail(400, { error: "Invalid request" });
 
-    const entry = await db.user_feedback.findUnique({
+    const entry = await db.query.user_feedback.findFirst({
       where: { id },
-      include: { user_feedback_files: true },
+      with: { user_feedback_files: true },
     });
     if (!entry) return fail(404, { error: "Not found" });
 

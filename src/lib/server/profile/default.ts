@@ -13,13 +13,13 @@ const PROFILE_INCLUDE = {
   languages: { orderBy: { sort: "asc" as const } },
   highlights: { orderBy: { sort: "asc" as const } },
   tech_skill_categories: {
-    include: {
+    with: {
       tech_skills: { orderBy: { sort: "asc" as const } },
     },
     orderBy: { sort: "asc" as const },
   },
   work_experiences: {
-    include: {
+    with: {
       work_experience_achievements: { orderBy: { sort: "asc" as const } },
       work_experience_technologies: { orderBy: { sort: "asc" as const } },
     },
@@ -27,7 +27,7 @@ const PROFILE_INCLUDE = {
   },
   education: { orderBy: { sort: "asc" as const } },
   side_projects: {
-    include: {
+    with: {
       side_project_achievements: { orderBy: { sort: "asc" as const } },
       side_project_technologies: { orderBy: { sort: "asc" as const } },
     },
@@ -59,7 +59,7 @@ const PROFILE_INCLUDE = {
  */
 export async function getDefaultProfile() {
   // Get config to find default profile ID
-  const config = await db.config.findFirst({
+  const config = await db.query.config.findFirst({
     select: { default_profile: true },
   });
 
@@ -68,9 +68,9 @@ export async function getDefaultProfile() {
   }
 
   // Fetch the profile with all relations
-  return db.profiles.findUnique({
+  return db.query.profiles.findFirst({
     where: { id: config.default_profile },
-    include: PROFILE_INCLUDE,
+    with: PROFILE_INCLUDE,
   });
 }
 
@@ -81,9 +81,9 @@ export async function getDefaultProfile() {
  */
 export async function getProfileOrDefault(profileId?: number) {
   if (profileId !== undefined) {
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId },
-      include: PROFILE_INCLUDE,
+      with: PROFILE_INCLUDE,
     });
     if (profile) return profile;
   }
@@ -97,7 +97,7 @@ export async function getProfileOrDefault(profileId?: number) {
  */
 export async function setDefaultProfile(profileId: number) {
   // Get or create config record
-  const config = await db.config.findFirst();
+  const config = await db.query.config.findFirst();
 
   if (config) {
     // Update existing config
@@ -117,7 +117,7 @@ export async function setDefaultProfile(profileId: number) {
  * Get default profile ID only (lightweight query for scripts)
  */
 export async function getDefaultProfileId(): Promise<number | null> {
-  const config = await db.config.findFirst({
+  const config = await db.query.config.findFirst({
     select: { default_profile: true },
   });
 
@@ -141,16 +141,16 @@ export async function getProfileByIdentifier(
     : parseInt(String(identifier), 10);
 
   if (!isNaN(id)) {
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id },
-      include: PROFILE_INCLUDE,
+      with: PROFILE_INCLUDE,
     });
     if (profile) return profile;
   }
 
-  return db.profiles.findFirst({
+  return db.query.profiles.findFirst({
     where: { slug: String(identifier) },
-    include: PROFILE_INCLUDE,
+    with: PROFILE_INCLUDE,
   });
 }
 

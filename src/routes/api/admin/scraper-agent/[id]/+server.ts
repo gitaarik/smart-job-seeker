@@ -19,9 +19,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
   const sessionId = parseIntParam(params.id, "session");
 
-  const session = await db.scraper_agent_sessions.findUnique({
+  const session = await db.query.scraper_agent_sessions.findFirst({
     where: { id: sessionId },
-    include: {
+    with: {
       search_tasks: {
         select: {
           id: true,
@@ -64,7 +64,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const latestIter = session.iterations[session.iterations.length - 1];
   let blockedMessage: string | null = null;
   if (latestIter?.stage === "blocked" && latestIter.run_id) {
-    const run = await db.search_task_runs.findUnique({
+    const run = await db.query.search_task_runs.findFirst({
       where: { id: latestIter.run_id },
       select: { error_message: true },
     });
@@ -120,7 +120,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
   const sessionId = parseIntParam(params.id, "session");
 
-  const session = await db.scraper_agent_sessions.findUnique({
+  const session = await db.query.scraper_agent_sessions.findFirst({
     where: { id: sessionId },
   });
 

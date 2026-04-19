@@ -10,7 +10,7 @@ import { dbDirect as db } from "$lib/server/db";
  * @returns Array of skill names
  */
 export async function getProfileSkills(profileId: number): Promise<string[]> {
-  const skills = await db.tech_skills.findMany({
+  const skills = await db.query.tech_skills.findMany({
     where: {
       tech_skill_categories: {
         profile_id: profileId,
@@ -35,7 +35,7 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
 export async function getProfileSkillLevels(
   profileId: number,
 ): Promise<Record<string, "strong" | "weak">> {
-  const skills = await db.tech_skills.findMany({
+  const skills = await db.query.tech_skills.findMany({
     where: {
       tech_skill_categories: {
         profile_id: profileId,

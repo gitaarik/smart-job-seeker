@@ -12,7 +12,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   const { profile_id, order } =
     parseBody(languageReorderSchema, await request.json());
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 

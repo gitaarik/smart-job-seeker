@@ -14,9 +14,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
   const searchTaskId = parseIntParam(params.id, "job search");
 
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: { profiles: true },
+    with: { profiles: true },
   });
 
   if (!searchTask) {
@@ -81,7 +81,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       data.platform_profile_id = null;
     } else {
       // Verify the credential belongs to this user and platform
-      const cred = await db.platform_profiles.findFirst({
+      const cred = await db.query.platform_profiles.findFirst({
         where: {
           id: body.platform_profile_id,
           profile_id: searchTask.profile_id,
@@ -112,9 +112,9 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
   const searchTaskId = parseIntParam(params.id, "job search");
 
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: { profiles: { select: { user_id: true } } },
+    with: { profiles: { select: { user_id: true } } },
   });
 
   if (!searchTask) {

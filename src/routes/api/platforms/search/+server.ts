@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 
   // Search for platforms matching the domain
-  const platforms = await db.job_platforms.findMany({
+  const platforms = await db.query.job_platforms.findMany({
     where: {
       OR: [
         { url: { contains: domain, mode: "insensitive" } },
@@ -48,7 +48,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       login_page_url: true,
       status: true,
     },
-    take: 10,
+    limit: 10,
   });
 
   return json(platforms);

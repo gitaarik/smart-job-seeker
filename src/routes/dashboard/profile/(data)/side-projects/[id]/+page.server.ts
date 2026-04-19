@@ -14,9 +14,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/dashboard/profile/side-projects");
   }
 
-  const project = await db.side_projects.findFirst({
+  const project = await db.query.side_projects.findFirst({
     where: { id, profile_id: layoutData.selectedProfile.id },
-    include: {
+    with: {
       side_project_achievements: {
         orderBy: { sort: "asc" },
       },

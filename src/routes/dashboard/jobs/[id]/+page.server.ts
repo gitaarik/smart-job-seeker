@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { dbDirect as db } from "$lib/server/db";
+import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
@@ -21,9 +21,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   }
 
   // Get job with platform info
-  const job = await db.jobs.findUnique({
+  const job = await db.query.jobs.findFirst({
     where: { id: jobId },
-    include: {
+    with: {
       job_platforms: {
         select: {
           id: true,
@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   }
 
   // Get match info if exists
-  const match = await db.job_matches.findFirst({
+  const match = await db.query.job_matches.findFirst({
     where: {
       profile_id: profileId,
       job_id: jobId,
@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   });
 
   // Get user status from job_statuses table
-  const jobStatus = await db.job_statuses.findFirst({
+  const jobStatus = await db.query.job_statuses.findFirst({
     where: { profile: profileId, job: jobId },
     select: { status: true },
   });
@@ -70,7 +70,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   // Load scrape history for staff (only if scraped more than once)
   let scrapeHistory: { processed_at: Date }[] = [];
   if (isStaff && job.scrape_count && job.scrape_count > 1) {
-    scrapeHistory = await db.search_task_run_items.findMany({
+    scrapeHistory = await db.query.search_task_run_items.findMany({
       where: {
         job_id: jobId,
         processed_at: { not: null },
@@ -84,7 +84,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   let importers: { profileName: string; scrapedAt: Date | null }[] = [];
   if (isStaff) {
     // Get profiles that scraped this job (via search task run items → search task → profile)
-    const scrapeImporters = await db.search_task_run_items.findMany({
+    const scrapeImporters = await db.query.search_task_run_items.findMany({
       where: { job_id: jobId },
       select: {
         processed_at: true,
@@ -102,7 +102,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     });
 
     // Also get profiles from job_importers (in case of manual imports without a scrape run)
-    const jobImporters = await db.job_importers.findMany({
+    const jobImporters = await db.query.job_importers.findMany({
       where: { job: jobId },
       select: {
         date_created: true,
@@ -135,7 +135,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     date_created: Date | null;
   }[] = [];
   if (isStaff) {
-    matchHistory = await db.job_match_history.findMany({
+    matchHistory = await db.query.job_match_history.findMany({
       where: { job: jobId, profile: profileId },
       select: {
         score: true,
@@ -166,13 +166,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   } | null = null;
   if (isStaff && job.job_platform_id) {
     // Fetch all credentials for this platform
-    const platformCredentials = await db.platform_profiles.findMany({
+    const platformCredentials = await db.query.platform_profiles.findMany({
       where: { profile_id: profileId, platform_id: job.job_platform_id },
       select: { id: true, username: true },
     });
 
     // Fetch job search settings for this platform + profile
-    const searchTask = await db.search_tasks.findFirst({
+    const searchTask = await db.query.search_tasks.findFirst({
       where: { platform_id: job.job_platform_id, profile_id: profileId },
       select: {
         browser_provider: true,
@@ -182,7 +182,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
       },
     });
 
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId },
       select: {
         country_code: true,
@@ -215,7 +215,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   }
 
   // Check if there's an existing application for this job
-  const existingApplication = await db.applications.findFirst({
+  const existingApplication = await db.query.applications.findFirst({
     where: { job_id: jobId, profile_id: profileId },
     select: { id: true, status: true },
   });
@@ -253,18 +253,18 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    const job = await db.jobs.findUnique({ where: { id: jobId } });
+    const job = await db.query.jobs.findFirst({ where: { id: jobId } });
     if (!job) {
       return fail(404, { error: "Job not found" });
     }
 
     const now = new Date();
-    await db.$queryRaw`
+    await queryRaw(sql`
       INSERT INTO job_statuses (profile, job, status, date_created, date_updated)
       VALUES (${profileId}, ${jobId}, 'saved', ${now}, ${now})
       ON CONFLICT (profile, job)
       DO UPDATE SET status = 'saved', date_updated = ${now}
-    `;
+    `);
 
     return { success: true, action: "saved" };
   },
@@ -318,12 +318,12 @@ export const actions: Actions = {
       });
     } else {
       const now = new Date();
-      await db.$queryRaw`
+      await queryRaw(sql`
         INSERT INTO job_statuses (profile, job, status, date_created, date_updated)
         VALUES (${profileId}, ${jobId}, ${status}, ${now}, ${now})
         ON CONFLICT (profile, job)
         DO UPDATE SET status = ${status}, date_updated = ${now}
-      `;
+      `);
     }
 
     return { success: true, status };
@@ -346,7 +346,7 @@ export const actions: Actions = {
     }
 
     // Check if application already exists
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { job_id: jobId, profile_id: profileId },
       select: { id: true },
     });

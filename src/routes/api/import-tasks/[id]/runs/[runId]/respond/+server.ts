@@ -18,7 +18,7 @@ type UserResponse = (typeof VALID_RESPONSES)[number];
  * Body: { response: "continue" | "skip" | "cancel" }
  *
  * - continue: Proceed with the current action (e.g., after solving CAPTCHA)
- * - skip: Skip the current page/action and move to next
+ * - offset: Skip the current page/action and move to next
  * - cancel: Cancel the entire scraping run
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
@@ -40,9 +40,9 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Get the job search and verify ownership
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: {
+    with: {
       profiles: true,
     },
   });
@@ -56,7 +56,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Get the run and verify it belongs to this job search
-  const run = await db.search_task_runs.findFirst({
+  const run = await db.query.search_task_runs.findFirst({
     where: {
       id: runId,
       search_task_id: searchTaskId,

@@ -14,9 +14,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/dashboard/profile/work-experience");
   }
 
-  const experience = await db.work_experiences.findFirst({
+  const experience = await db.query.work_experiences.findFirst({
     where: { id, profile_id: layoutData.selectedProfile.id },
-    include: {
+    with: {
       work_experience_achievements: {
         orderBy: { sort: "asc" },
       },

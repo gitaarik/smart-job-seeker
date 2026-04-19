@@ -4,84 +4,59 @@
  */
 
 import type { JsonResumeSchema } from "./json-resume-mapper";
-import type { Prisma } from "../../generated/prisma";
 
 /**
  * Type for profile data with all nested relations
  */
-type ProfileWithRelations = Prisma.profilesGetPayload<{
-  select: {
-    name: true;
-    title: true;
-    email_address: true;
-    phone_number: true;
-    personal_website: true;
-    summary: true;
-    location: true;
-    linkedin_profile: true;
-    github_profile: true;
-    stackoverflow_profile: true;
-    work_experiences: {
-      select: {
-        name: true;
-        position: true;
-        location: true;
-        website: true;
-        start_date: true;
-        end_date: true;
-        summary: true;
-        description: true;
-        work_experience_achievements: {
-          select: { description: true };
-        };
-        work_experience_technologies: {
-          select: { name: true };
-        };
-      };
-    };
-    education: {
-      select: {
-        institution: true;
-        url: true;
-        area: true;
-        study_type: true;
-        start_date: true;
-        end_date: true;
-        graduation_year: true;
-      };
-    };
-    tech_skill_categories: {
-      select: {
-        name: true;
-        tech_skills: {
-          select: { name: true; level: true };
-        };
-      };
-    };
-    languages: {
-      select: { name: true; proficiency: true };
-    };
-    side_projects: {
-      select: {
-        name: true;
-        url: true;
-        summary: true;
-        start_date: true;
-        end_date: true;
-        stars: true;
-        side_project_achievements: {
-          select: { description: true };
-        };
-        side_project_technologies: {
-          select: { name: true };
-        };
-      };
-    };
-    references: {
-      select: { author: true; text: true };
-    };
-  };
-}>;
+interface ProfileWithRelations {
+  name: string | null;
+  title: string | null;
+  email_address: string | null;
+  phone_number: string | null;
+  personal_website: string | null;
+  summary: string | null;
+  location: string | null;
+  linkedin_profile: string | null;
+  github_profile: string | null;
+  stackoverflow_profile: string | null;
+  work_experiences: Array<{
+    name: string | null;
+    position: string | null;
+    location: string | null;
+    website: string | null;
+    start_date: Date | null;
+    end_date: Date | null;
+    summary: string | null;
+    description: string | null;
+    work_experience_achievements: Array<{ description: string | null }>;
+    work_experience_technologies: Array<{ name: string | null }>;
+  }>;
+  education: Array<{
+    institution: string | null;
+    url: string | null;
+    area: string | null;
+    study_type: string | null;
+    start_date: Date | null;
+    end_date: Date | null;
+    graduation_year: string | null;
+  }>;
+  tech_skill_categories: Array<{
+    name: string | null;
+    tech_skills: Array<{ name: string; level: string | null }>;
+  }>;
+  languages: Array<{ name: string | null; proficiency: string | null }>;
+  side_projects: Array<{
+    name: string | null;
+    url: string | null;
+    summary: string | null;
+    start_date: Date | null;
+    end_date: Date | null;
+    stars: number | null;
+    side_project_achievements: Array<{ description: string | null }>;
+    side_project_technologies: Array<{ name: string | null }>;
+  }>;
+  references: Array<{ author: string | null; text: string | null }>;
+}
 
 /**
  * Export profile data to JSON Resume format

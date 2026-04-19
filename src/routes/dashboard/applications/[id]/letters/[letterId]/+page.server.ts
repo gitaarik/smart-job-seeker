@@ -58,7 +58,7 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
   }
 
   // Build conversation from letter_versions table
-  const versions = await db.letter_versions.findMany({
+  const versions = await db.query.letter_versions.findMany({
     where: { letter: letterId },
     orderBy: { id: "asc" },
     select: {
@@ -94,7 +94,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
@@ -143,12 +143,12 @@ export const actions: Actions = {
     const letterId = parseInt(params.letterId);
     if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
-    const letter = await db.application_letters.findFirst({
+    const letter = await db.query.application_letters.findFirst({
       where: { id: letterId, application_id: appId },
     });
     if (!letter) return fail(404, { error: "Letter not found" });
@@ -210,12 +210,12 @@ export const actions: Actions = {
     const letterId = parseInt(params.letterId);
     if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
-    const letter = await db.application_letters.findFirst({
+    const letter = await db.query.application_letters.findFirst({
       where: { id: letterId, application_id: appId },
     });
     if (!letter) return fail(404, { error: "Letter not found" });

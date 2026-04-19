@@ -21,7 +21,7 @@ export async function getOrCreateVerificationAddress(profileId: number): Promise
   isActive: boolean;
 }> {
   // Check for existing address
-  const existing = await db.verification_email_addresses.findUnique({
+  const existing = await db.query.verification_email_addresses.findFirst({
     where: { profile_id: profileId },
   });
 
@@ -106,9 +106,9 @@ export async function processInboundEmail(params: {
   const { recipientToken, fromAddress, subject, bodyText, bodyHtml } = params;
 
   // 1. Find the verification address
-  const verifyAddr = await db.verification_email_addresses.findUnique({
+  const verifyAddr = await db.query.verification_email_addresses.findFirst({
     where: { email_token: recipientToken },
-    include: { profiles: true },
+    with: { profiles: true },
   });
 
   if (!verifyAddr) {
@@ -128,7 +128,7 @@ export async function processInboundEmail(params: {
   });
 
   // 2. Find an active blocked run for this profile
-  const blockedRun = await db.search_task_runs.findFirst({
+  const blockedRun = await db.query.search_task_runs.findFirst({
     where: {
       status: "blocked",
       search_tasks: {

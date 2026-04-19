@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   // Check if platform already exists with this URL
-  const existing = await db.job_platforms.findFirst({
+  const existing = await db.query.job_platforms.findFirst({
     where: {
       OR: [
         { url: { contains: domain, mode: "insensitive" } },
@@ -59,7 +59,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     .toLowerCase();
 
   // Ensure key is unique
-  const keyExists = await db.job_platforms.findFirst({
+  const keyExists = await db.query.job_platforms.findFirst({
     where: { key },
   });
 

@@ -59,11 +59,11 @@ export async function generateApplicationLetter(
   // Fetch the application_letter (try block for database query)
   let letter;
   try {
-    letter = await db.application_letters.findUnique({
+    letter = await db.query.application_letters.findFirst({
       where: { id: letterId },
-      include: {
+      with: {
         applications: {
-          include: {
+          with: {
             jobs: true,
           },
         },

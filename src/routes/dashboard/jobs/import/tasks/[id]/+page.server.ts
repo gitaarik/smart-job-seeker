@@ -20,12 +20,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     throw error(400, "Invalid job search ID");
   }
 
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: {
       id: searchTaskId,
       profile_id: layoutData.selectedProfile.id,
     },
-    include: {
+    with: {
       job_platforms: true,
       platform_profiles: true,
     },
@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     security_answer: string | null;
   }> = [];
   if (searchTask.platform_id) {
-    platformCredentials = await db.platform_profiles.findMany({
+    platformCredentials = await db.query.platform_profiles.findMany({
       where: {
         profile_id: layoutData.selectedProfile.id,
         platform_id: searchTask.platform_id,
@@ -61,7 +61,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // accounts reference this platform (cheap existence check with LIMIT 1).
   let canEditPlatformUrls = isStaff;
   if (!canEditPlatformUrls && searchTask.platform_id && user) {
-    const otherUserUsage = await db.search_tasks.findFirst({
+    const otherUserUsage = await db.query.search_tasks.findFirst({
       where: {
         platform_id: searchTask.platform_id,
         profiles: { user_id: { not: user.id } },
@@ -72,7 +72,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   // Load profile data (country code + browser fingerprint fields)
-  const profileData = await db.profiles.findUnique({
+  const profileData = await db.query.profiles.findFirst({
     where: { id: layoutData.selectedProfile.id },
     select: {
       country_code: true,
@@ -87,7 +87,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const geoDefaults = getGeoConfig(effectiveCountryCode);
 
   // Check if any other search task for this profile is currently running/queued/blocked
-  const otherRunning = await db.search_tasks.findFirst({
+  const otherRunning = await db.query.search_tasks.findFirst({
     where: {
       profile_id: layoutData.selectedProfile.id,
       id: { not: searchTaskId },

@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     parseBody(interviewStoryCreateSchema, await request.json());
 
   // Verify the profile belongs to this user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -25,7 +25,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   // Get the highest sort value
-  const lastItem = await db.project_stories.findFirst({
+  const lastItem = await db.query.project_stories.findFirst({
     where: { profile_id: profile_id },
     orderBy: { sort: "desc" },
   });
@@ -55,7 +55,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     parseBody(interviewStoryUpdateSchema, await request.json());
 
   // Verify the profile belongs to this user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -64,7 +64,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   // Verify the story belongs to this profile
-  const existing = await db.project_stories.findFirst({
+  const existing = await db.query.project_stories.findFirst({
     where: { id, profile_id: profile_id },
   });
 
@@ -95,7 +95,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   const { profile_id, order } =
     parseBody(interviewStoryReorderSchema, await request.json());
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -121,7 +121,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   const { profile_id, id } = parseBody(interviewStoryDeleteSchema, await request.json());
 
   // Verify the profile belongs to this user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -130,7 +130,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   }
 
   // Verify the story belongs to this profile
-  const existing = await db.project_stories.findFirst({
+  const existing = await db.query.project_stories.findFirst({
     where: { id, profile_id: profile_id },
   });
 

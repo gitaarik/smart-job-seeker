@@ -36,7 +36,7 @@ function requireAdmin(locals: App.Locals) {
 }
 
 async function getLogWithFile(logId: number) {
-  const log = await db.import_logs.findUnique({ where: { id: logId } });
+  const log = await db.query.import_logs.findFirst({ where: { id: logId } });
   if (!log) error(404, "Import log entry not found");
   if (!log.file_id) error(400, "No file stored for this log entry");
   return log;

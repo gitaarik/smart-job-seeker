@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   // Get profile versions for this profile to use in the dropdown
-  const versions = await db.profile_versions.findMany({
+  const versions = await db.query.profile_versions.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { name: "asc" },
   });
@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const versionIds = versions.map((v) => v.id);
 
   const tokens = versionIds.length > 0
-    ? await db.profile_tokens.findMany({
+    ? await db.query.profile_tokens.findMany({
       where: { profile_version: { in: versionIds } },
       orderBy: { date_created: "desc" },
     })
@@ -92,7 +92,7 @@ export const actions: Actions = {
     }
 
     // Verify the version belongs to this profile
-    const version = await db.profile_versions.findFirst({
+    const version = await db.query.profile_versions.findFirst({
       where: {
         id: parseInt(profile_version),
         profile_id: profileId,
@@ -151,7 +151,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership through version
-    const existingToken = await db.profile_tokens.findUnique({
+    const existingToken = await db.query.profile_tokens.findFirst({
       where: { id },
     });
 
@@ -159,7 +159,7 @@ export const actions: Actions = {
       return fail(404, { error: "Token not found" });
     }
 
-    const version = await db.profile_versions.findFirst({
+    const version = await db.query.profile_versions.findFirst({
       where: {
         id: existingToken.profile_version,
         profile_id: profileId,
@@ -173,7 +173,7 @@ export const actions: Actions = {
     // If changing version, verify the new version belongs to this profile
     let newVersionId = existingToken.profile_version;
     if (profile_version) {
-      const newVersion = await db.profile_versions.findFirst({
+      const newVersion = await db.query.profile_versions.findFirst({
         where: {
           id: parseInt(profile_version),
           profile_id: profileId,
@@ -222,7 +222,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership through version
-    const existingToken = await db.profile_tokens.findUnique({
+    const existingToken = await db.query.profile_tokens.findFirst({
       where: { id },
     });
 
@@ -230,7 +230,7 @@ export const actions: Actions = {
       return fail(404, { error: "Token not found" });
     }
 
-    const version = await db.profile_versions.findFirst({
+    const version = await db.query.profile_versions.findFirst({
       where: {
         id: existingToken.profile_version,
         profile_id: profileId,

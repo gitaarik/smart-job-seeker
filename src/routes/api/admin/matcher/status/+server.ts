@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   const [states, configs, matcherAlive] = await Promise.all([
     getAllMatcherStates(),
-    db.match_config.findMany({
+    db.query.match_config.findMany({
       select: {
         profile_id: true,
         match_community_jobs: true,
@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   // Get profile names for all profiles with match_config
   const profileIds = configs.map((c) => c.profile_id);
-  const profiles = await db.profiles.findMany({
+  const profiles = await db.query.profiles.findMany({
     where: { id: { in: profileIds } },
     select: { id: true, name: true },
   });

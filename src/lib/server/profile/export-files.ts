@@ -40,7 +40,7 @@ export async function getLatestExport(query: ExportQuery) {
     whereClause.export_format = query.exportFormat;
   }
 
-  return db.profile_exports.findFirst({
+  return db.query.profile_exports.findFirst({
     where: whereClause,
     orderBy: { date_updated: "desc" },
   });

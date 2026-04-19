@@ -13,11 +13,11 @@ export const load: PageServerLoad = async ({ url }) => {
   if (handlerFilter) where.handler = handlerFilter;
 
   const [emails, total] = await Promise.all([
-    db.inbound_emails.findMany({
+    db.query.inbound_emails.findMany({
       where,
       orderBy: { received_at: "desc" },
-      skip: (page - 1) * perPage,
-      take: perPage,
+      offset: (page - 1) * perPage,
+      limit: perPage,
       select: {
         id: true,
         recipient: true,

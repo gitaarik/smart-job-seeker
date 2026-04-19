@@ -31,7 +31,7 @@ export function parseIntParam(value: string, label: string): number {
  * Verify that a profile belongs to the given user, or throw 403.
  */
 export async function requireProfileAccess(profileId: number, userId: string): Promise<void> {
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: userId },
     select: { id: true },
   });

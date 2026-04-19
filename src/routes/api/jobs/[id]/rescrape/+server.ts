@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     // No body or invalid JSON — that's fine, all fields are optional
   }
 
-  const job = await db.jobs.findUnique({
+  const job = await db.query.jobs.findFirst({
     where: { id: jobId },
     select: {
       id: true,
@@ -147,7 +147,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
   const jobId = parseIntParam(params.id, "job");
 
-  const job = await db.jobs.findUnique({
+  const job = await db.query.jobs.findFirst({
     where: { id: jobId },
     select: {
       id: true,
@@ -171,7 +171,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     message: string | null;
   }[] = [];
   try {
-    const runs = await db.rescrape_runs.findMany({
+    const runs = await db.query.rescrape_runs.findMany({
       where: { job_id: jobId },
       select: {
         id: true,
@@ -181,7 +181,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         message: true,
       },
       orderBy: { started_at: "desc" },
-      take: 10,
+      limit: 10,
     });
     history = runs.map((r) => ({
       id: r.id,
@@ -216,7 +216,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   if (removed) {
     // Find the queued run and mark as cancelled
     try {
-      const queuedRun = await db.rescrape_runs.findFirst({
+      const queuedRun = await db.query.rescrape_runs.findFirst({
         where: { job_id: jobId, status: "queued" },
         orderBy: { started_at: "desc" },
       });
@@ -248,7 +248,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   }
 
   // Check if actively scraping
-  const job = await db.jobs.findUnique({
+  const job = await db.query.jobs.findFirst({
     where: { id: jobId },
     select: { rescrape_status: true },
   });
@@ -269,7 +269,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
   // Update the rescrape run record
   try {
-    const activeRun = await db.rescrape_runs.findFirst({
+    const activeRun = await db.query.rescrape_runs.findFirst({
       where: { job_id: jobId, status: { in: ["queued", "scraping"] } },
       orderBy: { started_at: "desc" },
     });

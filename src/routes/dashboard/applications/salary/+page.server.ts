@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../profile/utils";
-import type { Prisma } from "../../../../../generated/prisma/client";
+import { type SQL } from "drizzle-orm";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const profile = await db.profiles.findUnique({
+  const profile = await db.query.profiles.findFirst({
     where: { id: layoutData.selectedProfile.id },
     select: {
       id: true,
@@ -64,7 +64,7 @@ export const actions: Actions = {
       data: {
         salary_base_rate: parseInt(baseRate),
         salary_currency: currency || "EUR",
-        salary_region_overrides: regionOverrides as unknown as Prisma.InputJsonValue,
+        salary_region_overrides: regionOverrides as unknown as unknown,
         date_updated: new Date(),
       },
     });
@@ -94,7 +94,7 @@ export const actions: Actions = {
     await db.profiles.update({
       where: { id: profileId },
       data: {
-        salary_adjustments: adjustments as unknown as Prisma.InputJsonValue,
+        salary_adjustments: adjustments as unknown as unknown,
         date_updated: new Date(),
       },
     });

@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const runId = parseIntParam(params.runId, "run");
 
   // Verify the run belongs to this job search and the user owns it
-  const run = await db.search_task_runs.findFirst({
+  const run = await db.query.search_task_runs.findFirst({
     where: {
       id: runId,
       search_task_id: searchTaskId,
@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   }
 
   // Get all items for this run with job details for completed items
-  const items = await db.search_task_run_items.findMany({
+  const items = await db.query.search_task_run_items.findMany({
     where: { run_id: runId },
     orderBy: { position: "asc" },
     select: {

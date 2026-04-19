@@ -9,7 +9,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const profileId = parseIntParam(params.id, "profile");
 
   // Verify ownership
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: { id: true, slug: true },
   });
@@ -36,7 +36,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     }
 
     // Check if slug is already taken by another profile
-    const existingProfile = await db.profiles.findFirst({
+    const existingProfile = await db.query.profiles.findFirst({
       where: {
         slug: slug,
         id: { not: profileId },

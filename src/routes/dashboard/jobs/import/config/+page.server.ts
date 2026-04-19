@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const { profileId } = await parent();
 
   // Get or auto-create config for this profile
-  let config = await db.match_config.findFirst({
+  let config = await db.query.match_config.findFirst({
     where: { profile_id: profileId },
   });
 

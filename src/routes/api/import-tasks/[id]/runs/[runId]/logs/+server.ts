@@ -15,14 +15,14 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   const runId = parseIntParam(params.runId, "run");
 
   // Get the run and verify ownership through job search
-  const run = await db.search_task_runs.findFirst({
+  const run = await db.query.search_task_runs.findFirst({
     where: {
       id: runId,
       search_task_id: searchTaskId,
     },
-    include: {
+    with: {
       search_tasks: {
-        include: {
+        with: {
           profiles: true,
         },
       },
@@ -65,10 +65,10 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   }
 
   // Get logs
-  const logs = await db.scraper_logs.findMany({
+  const logs = await db.query.scraper_logs.findMany({
     where,
     orderBy: { timestamp: "asc" },
-    take: limit,
+    limit: limit,
     select: {
       id: true,
       level: true,

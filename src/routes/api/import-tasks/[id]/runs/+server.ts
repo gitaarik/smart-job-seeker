@@ -13,9 +13,9 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   const searchTaskId = parseIntParam(params.id, "job search");
 
   // Get the job search and verify ownership
-  const searchTask = await db.search_tasks.findFirst({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
-    include: {
+    with: {
       profiles: true,
     },
   });
@@ -34,11 +34,11 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   // Get runs
   const [runs, total] = await Promise.all([
-    db.search_task_runs.findMany({
+    db.query.search_task_runs.findMany({
       where: { search_task_id: searchTaskId },
       orderBy: { started_at: "desc" },
-      take: limit,
-      skip: offset,
+      limit: limit,
+      offset: offset,
       select: {
         id: true,
         status: true,

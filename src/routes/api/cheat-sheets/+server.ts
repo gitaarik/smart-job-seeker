@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const { profile_id, title, content } =
     parseBody(cheatSheetCreateSchema, await request.json());
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     return json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const lastItem = await db.cheat_sheets.findFirst({
+  const lastItem = await db.query.cheat_sheets.findFirst({
     where: { profile_id: profile_id },
     orderBy: { sort: "desc" },
   });
@@ -47,7 +47,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   const { profile_id, id, title, content } =
     parseBody(cheatSheetUpdateSchema, await request.json());
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -55,7 +55,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     return json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const existing = await db.cheat_sheets.findFirst({
+  const existing = await db.query.cheat_sheets.findFirst({
     where: { id, profile_id: profile_id },
   });
 
@@ -81,7 +81,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   const { profile_id, order } =
     parseBody(cheatSheetReorderSchema, await request.json());
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -106,7 +106,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 
   const { profile_id, id } = parseBody(cheatSheetDeleteSchema, await request.json());
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profile_id, user_id: user.id },
   });
 
@@ -114,7 +114,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
     return json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const existing = await db.cheat_sheets.findFirst({
+  const existing = await db.query.cheat_sheets.findFirst({
     where: { id, profile_id: profile_id },
   });
 

@@ -11,11 +11,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   const letterId = parseIntParam(params.id, "letter");
 
   // Verify ownership: letter -> application -> profile -> user
-  const letter = await db.application_letters.findFirst({
+  const letter = await db.query.application_letters.findFirst({
     where: { id: letterId },
-    include: {
+    with: {
       applications: {
-        include: { profiles: { select: { user_id: true } } },
+        with: { profiles: { select: { user_id: true } } },
       },
     },
   });
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   // If replacing a version, delete it and all subsequent versions first
   if (replaceVersionId) {
     // Verify the version belongs to this letter
-    const version = await db.letter_versions.findFirst({
+    const version = await db.query.letter_versions.findFirst({
       where: { id: replaceVersionId, letter: letterId },
     });
     if (!version) {
@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     });
 
     // Restore ai_chat pointer to the previous version's ai_chat (or the last remaining version's)
-    const lastVersion = await db.letter_versions.findFirst({
+    const lastVersion = await db.query.letter_versions.findFirst({
       where: { letter: letterId },
       orderBy: { id: "desc" },
       select: { ai_chat: true, content: true },

@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { Prisma } from "../../../../generated/prisma/client";
-import { dbDirect as db } from "$lib/server/db";
+import { sql, type SQL } from "drizzle-orm";
+import { dbDirect as db, queryRaw, sqlJoin } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { buildVisibilityScope } from "$lib/server/job/match-counts";
 import { getSelectedProfileId } from "../profile/utils";
@@ -18,23 +18,23 @@ import {
  * "0" (no match — score = 0), "1" (all matches — score > 0),
  * "1-49" (range), "50"/"60"/etc (min threshold).
  */
-function buildScoreFilter(minScore: string): { filter: Prisma.Sql; isActive: boolean; isUnmatched: boolean } {
-  if (!minScore) return { filter: Prisma.sql`TRUE`, isActive: false, isUnmatched: false };
+function buildScoreFilter(minScore: string): { filter: SQL; isActive: boolean; isUnmatched: boolean } {
+  if (!minScore) return { filter: sql`TRUE`, isActive: false, isUnmatched: false };
   if (minScore === "unmatched") {
-    return { filter: Prisma.sql`TRUE`, isActive: true, isUnmatched: true };
+    return { filter: sql`TRUE`, isActive: true, isUnmatched: true };
   }
   if (minScore === "0") {
-    return { filter: Prisma.sql`jm.score = 0`, isActive: true, isUnmatched: false };
+    return { filter: sql`jm.score = 0`, isActive: true, isUnmatched: false };
   }
   if (minScore.includes("-")) {
     const [min, max] = minScore.split("-").map(Number);
-    return { filter: Prisma.sql`jm.score BETWEEN ${min} AND ${max}`, isActive: true, isUnmatched: false };
+    return { filter: sql`jm.score BETWEEN ${min} AND ${max}`, isActive: true, isUnmatched: false };
   }
   const val = parseInt(minScore);
   if (val > 0) {
-    return { filter: Prisma.sql`jm.score >= ${val}`, isActive: true, isUnmatched: false };
+    return { filter: sql`jm.score >= ${val}`, isActive: true, isUnmatched: false };
   }
-  return { filter: Prisma.sql`TRUE`, isActive: false, isUnmatched: false };
+  return { filter: sql`TRUE`, isActive: false, isUnmatched: false };
 }
 
 /**
@@ -42,33 +42,33 @@ function buildScoreFilter(minScore: string): { filter: Prisma.Sql; isActive: boo
  * Uses PostgreSQL's ?| operator (cast to jsonb) for multi-value OR matching.
  * Assumes jobs table is aliased as `j`.
  */
-function buildJsonFilters(workLocation: string, jobType: string): Prisma.Sql {
-  const fragments: Prisma.Sql[] = [];
+function buildJsonFilters(workLocation: string, jobType: string): SQL {
+  const fragments: SQL[] = [];
 
   if (workLocation) {
     const values = workLocation.split(",").map((v) => v.trim()).filter(Boolean);
     if (values.length === 1) {
-      fragments.push(Prisma.sql`j.work_location::jsonb ? ${values[0]}`);
+      fragments.push(sql`j.work_location::jsonb ? ${values[0]}`);
     } else if (values.length > 1) {
       // ?| checks if ANY of the values exist in the array
-      fragments.push(Prisma.sql`j.work_location::jsonb ?| array[${Prisma.join(values)}]`);
+      fragments.push(sql`j.work_location::jsonb ?| array[${sqlJoin(values)}]`);
     }
   }
 
   if (jobType) {
     const values = jobType.split(",").map((v) => v.trim()).filter(Boolean);
     if (values.length === 1) {
-      fragments.push(Prisma.sql`j.job_types::jsonb ? ${values[0]}`);
+      fragments.push(sql`j.job_types::jsonb ? ${values[0]}`);
     } else if (values.length > 1) {
-      fragments.push(Prisma.sql`j.job_types::jsonb ?| array[${Prisma.join(values)}]`);
+      fragments.push(sql`j.job_types::jsonb ?| array[${sqlJoin(values)}]`);
     }
   }
 
   if (fragments.length === 0) {
-    return Prisma.sql`TRUE`;
+    return sql`TRUE`;
   }
 
-  return fragments.reduce((acc, f) => Prisma.sql`${acc} AND ${f}`);
+  return fragments.reduce((acc, f) => sql`${acc} AND ${f}`);
 }
 
 export const load: PageServerLoad = async ({ parent, url }) => {
@@ -104,10 +104,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   // Build filter SQL fragments shared by both branches (all reference jobs as `j`)
   const jsonFilter = buildJsonFilters(workLocation, jobType);
 
-  let searchFilter = Prisma.sql`TRUE`;
+  let searchFilter = sql`TRUE`;
   if (search) {
     const searchPattern = `%${search}%`;
-    searchFilter = Prisma.sql`(
+    searchFilter = sql`(
       j.title ILIKE ${searchPattern}
       OR j.company ILIKE ${searchPattern}
       OR j.office_location ILIKE ${searchPattern}
@@ -115,33 +115,33 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     )`;
   }
 
-  let platformFilter = Prisma.sql`TRUE`;
+  let platformFilter = sql`TRUE`;
   if (platform) {
     const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
     if (platformIds.length === 1) {
-      platformFilter = Prisma.sql`j.job_platform_id = ${platformIds[0]}`;
+      platformFilter = sql`j.job_platform_id = ${platformIds[0]}`;
     } else if (platformIds.length > 1) {
-      platformFilter = Prisma.sql`j.job_platform_id IN (${Prisma.join(platformIds)})`;
+      platformFilter = sql`j.job_platform_id IN (${sqlJoin(platformIds)})`;
     }
   }
 
-  let dateFilter = Prisma.sql`TRUE`;
+  let dateFilter = sql`TRUE`;
   if (datePosted) {
     const days = parseInt(datePosted);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
+    dateFilter = sql`j.date_posted >= ${cutoffDate}`;
   }
 
-  let importedByFilter = Prisma.sql`TRUE`;
+  let importedByFilter = sql`TRUE`;
   if (importedBy) {
     const values = importedBy.split(",").map((v) => v.trim()).filter(Boolean);
     const hasMe = values.includes("me");
     const hasOthers = values.includes("others");
     if (hasMe && !hasOthers) {
-      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
     } else if (hasOthers && !hasMe) {
-      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
     }
   }
 
@@ -152,13 +152,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   if (isUnmatched) {
     // "Not yet matched" — jobs with no job_matches row for this profile
     // Uses same visibility scope as the matcher (respects match_community_jobs)
-    const matchConfig = await db.match_config.findFirst({
+    const matchConfig = await db.query.match_config.findFirst({
       where: { profile_id: profileId },
       select: { match_community_jobs: true },
     });
     const { from, where } = buildVisibilityScope(profileId, matchConfig?.match_community_jobs ?? false);
 
-    const jobRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
+    const jobRows = await queryRaw<{ id: number; cnt: bigint }[]>(sql`
       SELECT j.id, COUNT(*) OVER() as cnt
       ${from}
       LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
@@ -172,15 +172,15 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       ORDER BY j.date_posted DESC NULLS LAST, j.date_created DESC
       LIMIT ${limit}
       OFFSET ${offset}
-    `;
+    `);
 
     totalCount = jobRows.length > 0 ? Number(jobRows[0].cnt) : 0;
     const jobIds = jobRows.map((r) => r.id);
 
     if (jobIds.length > 0) {
-      const fullJobs = await db.jobs.findMany({
+      const fullJobs = await db.query.jobs.findMany({
         where: { id: { in: jobIds } },
-        include: {
+        with: {
           job_platforms: {
             select: { id: true, name: true, url: true },
           },
@@ -195,24 +195,24 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     }
   } else if (hasScoreFilter || statusValues.length > 0) {
     // Query via job_matches + job_statuses tables when filtering by score or status
-    let statusFilter = Prisma.sql`TRUE`;
-    let statusJoin = Prisma.sql`LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+    let statusFilter = sql`TRUE`;
+    let statusJoin = sql`LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
 
     if (statusValues.length > 0) {
       // When filtering by specific statuses, use INNER JOIN to require a status row
-      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+      statusJoin = sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
       if (statusValues.length === 1) {
-        statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
+        statusFilter = sql`js.status = ${statusValues[0]}`;
       } else {
-        statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
+        statusFilter = sql`js.status IN (${sqlJoin(statusValues)})`;
       }
     } else if (minScore !== "0") {
       // When filtering by score only (not "no match"), exclude rejected
-      statusFilter = Prisma.sql`COALESCE(js.status, 'new') != 'rejected'`;
+      statusFilter = sql`COALESCE(js.status, 'new') != 'rejected'`;
     }
 
     // Get filtered+paginated match IDs and count in one query
-    const matchRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
+    const matchRows = await queryRaw<{ id: number; cnt: bigint }[]>(sql`
       SELECT jm.id, COUNT(*) OVER() as cnt
       FROM job_matches jm
       JOIN jobs j ON j.id = jm.job_id
@@ -228,18 +228,18 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       ORDER BY j.date_posted DESC NULLS LAST, j.date_created DESC
       LIMIT ${limit}
       OFFSET ${offset}
-    `;
+    `);
 
     totalCount = matchRows.length > 0 ? Number(matchRows[0].cnt) : 0;
     const matchIds = matchRows.map((r) => r.id);
 
     if (matchIds.length > 0) {
       // Load full match data with relations using Prisma
-      const fullMatches = await db.job_matches.findMany({
+      const fullMatches = await db.query.job_matches.findMany({
         where: { id: { in: matchIds } },
-        include: {
+        with: {
           jobs: {
-            include: {
+            with: {
               job_platforms: {
                 select: { id: true, name: true, url: true },
               },
@@ -257,7 +257,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       const matchJobIds = orderedMatches.map((m) => m.job_id);
 
       // Load user statuses from job_statuses table
-      const jobStatuses = await db.job_statuses.findMany({
+      const jobStatuses = await db.query.job_statuses.findMany({
         where: { profile: profileId, job: { in: matchJobIds } },
         select: { job: true, status: true },
       });
@@ -285,7 +285,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     // "all" - Query from jobs table directly
 
     // Get filtered+paginated job IDs and count
-    const jobRows = await db.$queryRaw<{ id: number; cnt: bigint }[]>`
+    const jobRows = await queryRaw<{ id: number; cnt: bigint }[]>(sql`
       SELECT j.id, COUNT(*) OVER() as cnt
       FROM jobs j
       WHERE ${searchFilter}
@@ -296,16 +296,16 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       ORDER BY j.date_posted DESC NULLS LAST, j.date_created DESC
       LIMIT ${limit}
       OFFSET ${offset}
-    `;
+    `);
 
     totalCount = jobRows.length > 0 ? Number(jobRows[0].cnt) : 0;
     const jobIds = jobRows.map((r) => r.id);
 
     if (jobIds.length > 0) {
       // Load full job data with relations using Prisma
-      const fullJobs = await db.jobs.findMany({
+      const fullJobs = await db.query.jobs.findMany({
         where: { id: { in: jobIds } },
-        include: {
+        with: {
           job_platforms: {
             select: { id: true, name: true, url: true },
           },
@@ -319,7 +319,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         .filter(Boolean) as typeof fullJobs;
 
       // Get matches for the displayed jobs
-      const jobMatches = await db.job_matches.findMany({
+      const jobMatches = await db.query.job_matches.findMany({
         where: {
           profile_id: profileId,
           job_id: { in: jobIds },
@@ -336,7 +336,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       });
 
       // Load user statuses from job_statuses table
-      const jobStatuses = await db.job_statuses.findMany({
+      const jobStatuses = await db.query.job_statuses.findMany({
         where: { profile: profileId, job: { in: jobIds } },
         select: { job: true, status: true },
       });
@@ -349,7 +349,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   }
 
   // Get all platforms for filter dropdown
-  const platforms = await db.job_platforms.findMany({
+  const platforms = await db.query.job_platforms.findMany({
     where: { status: "published" },
     select: {
       id: true,
@@ -416,10 +416,10 @@ async function countMatchingJobs(
 
   const jsonFilter = buildJsonFilters(workLocation, jobType);
 
-  let searchFilter = Prisma.sql`TRUE`;
+  let searchFilter = sql`TRUE`;
   if (search) {
     const searchPattern = `%${search}%`;
-    searchFilter = Prisma.sql`(
+    searchFilter = sql`(
       j.title ILIKE ${searchPattern}
       OR j.company ILIKE ${searchPattern}
       OR j.office_location ILIKE ${searchPattern}
@@ -427,52 +427,52 @@ async function countMatchingJobs(
     )`;
   }
 
-  let platformFilter = Prisma.sql`TRUE`;
+  let platformFilter = sql`TRUE`;
   if (platform) {
     const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
     if (platformIds.length === 1) {
-      platformFilter = Prisma.sql`j.job_platform_id = ${platformIds[0]}`;
+      platformFilter = sql`j.job_platform_id = ${platformIds[0]}`;
     } else if (platformIds.length > 1) {
-      platformFilter = Prisma.sql`j.job_platform_id IN (${Prisma.join(platformIds)})`;
+      platformFilter = sql`j.job_platform_id IN (${sqlJoin(platformIds)})`;
     }
   }
 
-  let dateFilter = Prisma.sql`TRUE`;
+  let dateFilter = sql`TRUE`;
   if (datePosted) {
     const days = parseInt(datePosted);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
+    dateFilter = sql`j.date_posted >= ${cutoffDate}`;
   }
 
-  let importedByFilter = Prisma.sql`TRUE`;
+  let importedByFilter = sql`TRUE`;
   if (importedBy) {
     const values = importedBy.split(",").map((v) => v.trim()).filter(Boolean);
     const hasMe = values.includes("me");
     const hasOthers = values.includes("others");
     if (hasMe && !hasOthers) {
-      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
     } else if (hasOthers && !hasMe) {
-      importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
     }
   }
 
   const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
   const { filter: scoreFilter } = buildScoreFilter(minScore);
 
-  let statusFilter = Prisma.sql`TRUE`;
-  let statusJoin = Prisma.empty;
+  let statusFilter = sql`TRUE`;
+  let statusJoin = sql``;
 
   if (statusValues.length > 0) {
-    statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+    statusJoin = sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
     if (statusValues.length === 1) {
-      statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
+      statusFilter = sql`js.status = ${statusValues[0]}`;
     } else {
-      statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
+      statusFilter = sql`js.status IN (${sqlJoin(statusValues)})`;
     }
   }
 
-  const result = await db.$queryRaw<{ cnt: bigint }[]>`
+  const result = await queryRaw<{ cnt: bigint }[]>(sql`
     SELECT COUNT(*) as cnt
     FROM job_matches jm
     JOIN jobs j ON j.id = jm.job_id
@@ -486,7 +486,7 @@ async function countMatchingJobs(
     AND ${dateFilter}
     AND ${jsonFilter}
     AND ${importedByFilter}
-  `;
+  `);
 
   return Number(result[0]?.cnt ?? 0);
 }
@@ -550,10 +550,10 @@ export const actions: Actions = {
 
     const jsonFilter = buildJsonFilters(workLocation, jobType);
 
-    let searchFilter = Prisma.sql`TRUE`;
+    let searchFilter = sql`TRUE`;
     if (search) {
       const searchPattern = `%${search}%`;
-      searchFilter = Prisma.sql`(
+      searchFilter = sql`(
         j.title ILIKE ${searchPattern}
         OR j.company ILIKE ${searchPattern}
         OR j.office_location ILIKE ${searchPattern}
@@ -561,52 +561,52 @@ export const actions: Actions = {
       )`;
     }
 
-    let platformFilter = Prisma.sql`TRUE`;
+    let platformFilter = sql`TRUE`;
     if (platform) {
       const platformIds = platform.split(",").map((id) => parseInt(id.trim())).filter((id) => !isNaN(id));
       if (platformIds.length === 1) {
-        platformFilter = Prisma.sql`j.job_platform_id = ${platformIds[0]}`;
+        platformFilter = sql`j.job_platform_id = ${platformIds[0]}`;
       } else if (platformIds.length > 1) {
-        platformFilter = Prisma.sql`j.job_platform_id IN (${Prisma.join(platformIds)})`;
+        platformFilter = sql`j.job_platform_id IN (${sqlJoin(platformIds)})`;
       }
     }
 
-    let dateFilter = Prisma.sql`TRUE`;
+    let dateFilter = sql`TRUE`;
     if (datePosted) {
       const days = parseInt(datePosted);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
-      dateFilter = Prisma.sql`j.date_posted >= ${cutoffDate}`;
+      dateFilter = sql`j.date_posted >= ${cutoffDate}`;
     }
 
-    let importedByFilter = Prisma.sql`TRUE`;
+    let importedByFilter = sql`TRUE`;
     if (importedBy) {
       const values = importedBy.split(",").map((v) => v.trim()).filter(Boolean);
       const hasMe = values.includes("me");
       const hasOthers = values.includes("others");
       if (hasMe && !hasOthers) {
-        importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+        importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
       } else if (hasOthers && !hasMe) {
-        importedByFilter = Prisma.sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+        importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
       }
     }
 
     const statusValues = status ? status.split(",").map((v) => v.trim()).filter(Boolean) : [];
     const { filter: scoreFilter } = buildScoreFilter(minScore);
 
-    let statusFilter = Prisma.sql`TRUE`;
-    let statusJoin = Prisma.empty;
+    let statusFilter = sql`TRUE`;
+    let statusJoin = sql``;
 
     if (statusValues.length > 0) {
-      statusJoin = Prisma.sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+      statusJoin = sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
       if (statusValues.length === 1) {
-        statusFilter = Prisma.sql`js.status = ${statusValues[0]}`;
+        statusFilter = sql`js.status = ${statusValues[0]}`;
       } else {
-        statusFilter = Prisma.sql`js.status IN (${Prisma.join(statusValues)})`;
+        statusFilter = sql`js.status IN (${sqlJoin(statusValues)})`;
       }
     }
 
-    await db.$queryRaw`
+    await queryRaw(sql`
       DELETE FROM job_matches jm
       USING jobs j ${statusJoin}
       WHERE j.id = jm.job_id
@@ -619,7 +619,7 @@ export const actions: Actions = {
       AND ${dateFilter}
       AND ${jsonFilter}
       AND ${importedByFilter}
-    `;
+    `);
 
     return { success: true, action: "clearMatchData", clearedCount: count };
   },

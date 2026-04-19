@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const profileVersions = await db.profile_versions.findMany({
+  const profileVersions = await db.query.profile_versions.findMany({
     where: {
       profile_id: layoutData.selectedProfile.id,
       status: "published",
@@ -37,7 +37,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
@@ -82,7 +82,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });
@@ -91,7 +91,7 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
     if (isNaN(id)) return fail(400, { error: "Invalid file record ID" });
 
-    const fileRecord = await db.applications_files.findFirst({
+    const fileRecord = await db.query.applications_files.findFirst({
       where: { id, applications_id: appId },
     });
     if (!fileRecord) return fail(404, { error: "File record not found" });
@@ -123,7 +123,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });

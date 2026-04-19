@@ -189,7 +189,7 @@ function buildSchemaNode(
  * Internal helper function used by exportProfile
  */
 async function fetchProfileData(profileId: number) {
-  return await db.profiles.findUnique({
+  return await db.query.profiles.findFirst({
     where: { id: profileId },
     select: {
       name: true,
@@ -367,7 +367,7 @@ export async function exportProfile(profileId: number): Promise<{
 }> {
   try {
     // Verify profile exists
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId },
       select: { id: true },
     });
@@ -391,7 +391,7 @@ export async function exportProfile(profileId: number): Promise<{
     ]);
 
     // SINGLE DATABASE OPERATION - Update both fields atomically
-    const existingCollectedData = await db.collected_data.findFirst({
+    const existingCollectedData = await db.query.collected_data.findFirst({
       where: { profile_id: profileId },
     });
 

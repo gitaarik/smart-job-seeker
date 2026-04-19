@@ -7,7 +7,7 @@ import type { RequestHandler } from "./$types";
 const UPLOADS_DIR = join(process.cwd(), "uploads", "files");
 
 export const GET: RequestHandler = async ({ params }) => {
-  const file = await db.files.findUnique({
+  const file = await db.query.files.findFirst({
     where: { id: params.id },
     select: { filename_disk: true, type: true, filename_download: true },
   });

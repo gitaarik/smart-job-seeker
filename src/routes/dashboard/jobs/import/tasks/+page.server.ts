@@ -14,9 +14,9 @@ export const load: PageServerLoad = async ({ parent }) => {
   const profileId = layoutData.selectedProfile.id;
 
   const [searchTasks, profile] = await Promise.all([
-    db.search_tasks.findMany({
+    db.query.search_tasks.findMany({
       where: { profile_id: profileId },
-      include: {
+      with: {
         job_platforms: true,
         platform_profiles: true,
       },
@@ -67,7 +67,7 @@ async function getOrCreatePlatform(
   const parsed = new URL(platformUrl);
   const domain = parsed.hostname.replace(/^www\./, "");
 
-  const existing = await db.job_platforms.findFirst({
+  const existing = await db.query.job_platforms.findFirst({
     where: {
       OR: [
         { url: { contains: domain, mode: "insensitive" } },
@@ -110,7 +110,7 @@ async function getOrCreateCredentials(
 ): Promise<number | null> {
   // If using existing credentials
   if (credentialId && credentialId !== "none" && credentialId !== "new") {
-    const existing = await db.platform_profiles.findFirst({
+    const existing = await db.query.platform_profiles.findFirst({
       where: {
         id: parseInt(credentialId),
         profile_id: profileId,
@@ -297,7 +297,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid search ID" });
     }
 
-    const existing = await db.search_tasks.findFirst({
+    const existing = await db.query.search_tasks.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -361,7 +361,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid search ID" });
     }
 
-    const existing = await db.search_tasks.findFirst({
+    const existing = await db.query.search_tasks.findFirst({
       where: { id, profile_id: profileId },
     });
 

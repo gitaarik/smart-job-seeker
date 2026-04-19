@@ -12,7 +12,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     return json({ error: "Invalid ID" }, { status: 400 });
   }
 
-  const chat = await db.ai_chats.findUnique({
+  const chat = await db.query.ai_chats.findFirst({
     where: { id },
     select: {
       id: true,

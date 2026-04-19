@@ -22,14 +22,14 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   }
 
   // Verify user owns this profile
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: parseInt(profileId), user_id: user.id },
   });
   if (!profile) {
     throw error(403, "Not authorized");
   }
 
-  const credentials = await db.platform_profiles.findMany({
+  const credentials = await db.query.platform_profiles.findMany({
     where: { profile_id: profile.id, platform_id: platformId },
     select: { id: true, username: true, security_answer: true },
   });
@@ -52,7 +52,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   );
 
   // Verify user owns this profile
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: {
       id: profileId,
       user_id: user.id,
@@ -64,7 +64,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Check platform exists
-  const platform = await db.job_platforms.findFirst({
+  const platform = await db.query.job_platforms.findFirst({
     where: {
       id: platformId,
       status: "published",
@@ -76,7 +76,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Upsert credentials
-  const existing = await db.platform_profiles.findFirst({
+  const existing = await db.query.platform_profiles.findFirst({
     where: {
       profile_id: profile.id,
       platform_id: platformId,
@@ -130,7 +130,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   }
 
   // Verify user owns this profile
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: {
       id: parseInt(profileId),
       user_id: user.id,
@@ -145,7 +145,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 
   if (credentialId) {
     // Delete specific credential
-    const cred = await db.platform_profiles.findFirst({
+    const cred = await db.query.platform_profiles.findFirst({
       where: {
         id: parseInt(credentialId),
         profile_id: profile.id,
@@ -170,7 +170,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
     });
   } else {
     // Delete all credentials for this platform
-    const creds = await db.platform_profiles.findMany({
+    const creds = await db.query.platform_profiles.findMany({
       where: { profile_id: profile.id, platform_id: platformId },
       select: { id: true },
     });

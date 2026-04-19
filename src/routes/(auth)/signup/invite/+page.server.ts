@@ -41,7 +41,7 @@ export const load: PageServerLoad = async (event) => {
     return { valid: false as const, error: "No invitation token provided." };
   }
 
-  const invites = await db.verifications.findMany({
+  const invites = await db.query.verifications.findMany({
     where: {
       identifier: { startsWith: "invite:" },
       expiresAt: { gt: new Date() },
@@ -88,7 +88,7 @@ export const actions: Actions = {
     }
 
     // Find and validate invite
-    const invites = await db.verifications.findMany({
+    const invites = await db.query.verifications.findMany({
       where: {
         identifier: { startsWith: "invite:" },
         expiresAt: { gt: new Date() },
@@ -106,7 +106,7 @@ export const actions: Actions = {
     const data = JSON.parse(invite.value);
     const email = invite.identifier.replace("invite:", "");
 
-    const existingUser = await db.users.findFirst({ where: { email } });
+    const existingUser = await db.query.users.findFirst({ where: { email } });
 
     if (existingUser) {
       // Existing user (invite sent after user was already created)

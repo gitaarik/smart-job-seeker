@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { dbDirect as db } from "$lib/server/db";
+import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { getSelectedProfileId } from "../../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
@@ -18,9 +18,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/dashboard/profile/resume");
   }
 
-  const version = await db.profile_versions.findFirst({
+  const version = await db.query.profile_versions.findFirst({
     where: { id, profile_id: layoutData.selectedProfile.id },
-    include: {
+    with: {
       profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
         {
           select: {
@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     ...v
   } = version;
 
-  const profile = await db.profiles.findUnique({
+  const profile = await db.query.profiles.findFirst({
     where: { id: layoutData.selectedProfile.id },
     select: {
       public_resume_version_id: true,
@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   });
 
   // Get all other versions for "extends" options
-  const allVersions = await db.profile_versions.findMany({
+  const allVersions = await db.query.profile_versions.findMany({
     where: { profile_id: layoutData.selectedProfile.id, id: { not: id } },
     orderBy: { name: "asc" },
     select: { id: true, name: true, slug: true },
@@ -70,28 +70,28 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
     [taggedWorkExperiences, taggedEducation, taggedSideProjects, taggedSkills, taggedAchievements] =
       await Promise.all([
-        db.$queryRaw<TaggedRow[]>`
+        queryRaw<TaggedRow[]>(sql`
           SELECT id, COALESCE(position, name) as name FROM work_experiences
           WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
-          ORDER BY name ASC`,
-        db.$queryRaw<TaggedRow[]>`
+          ORDER BY name ASC`),
+        queryRaw<TaggedRow[]>(sql`
           SELECT id, COALESCE(institution, area) as name FROM education
           WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
-          ORDER BY name ASC`,
-        db.$queryRaw<TaggedRow[]>`
+          ORDER BY name ASC`),
+        queryRaw<TaggedRow[]>(sql`
           SELECT id, name FROM side_projects
           WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
-          ORDER BY name ASC`,
-        db.$queryRaw<TaggedRow[]>`
+          ORDER BY name ASC`),
+        queryRaw<TaggedRow[]>(sql`
           SELECT ts.id, ts.name FROM tech_skills ts
           JOIN tech_skill_categories tsc ON ts.category_id = tsc.id
           WHERE tsc.profile_id = ${profileId} AND ts.tags::jsonb @> ${tagJson}::jsonb
-          ORDER BY ts.name ASC`,
-        db.$queryRaw<TaggedAchievementRow[]>`
+          ORDER BY ts.name ASC`),
+        queryRaw<TaggedAchievementRow[]>(sql`
           SELECT wea.id, wea.description as name, wea.work_experience_id FROM work_experience_achievements wea
           JOIN work_experiences we ON wea.work_experience_id = we.id
           WHERE we.profile_id = ${profileId} AND wea.tags::jsonb @> ${tagJson}::jsonb
-          ORDER BY wea.description ASC`,
+          ORDER BY wea.description ASC`),
       ]);
   }
 
@@ -147,7 +147,7 @@ export const actions: Actions = {
       return fail(400, { error: "Slug is required" });
     }
 
-    const existing = await db.profile_versions.findFirst({
+    const existing = await db.query.profile_versions.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -165,7 +165,7 @@ export const actions: Actions = {
     });
 
     // Update public resume/cv version on profile
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId },
       select: { public_resume_version_id: true, public_cv_version_id: true },
     });
@@ -204,7 +204,7 @@ export const actions: Actions = {
     });
 
     for (const parentId of extendsIds) {
-      const parent = await db.profile_versions.findFirst({
+      const parent = await db.query.profile_versions.findFirst({
         where: { id: parentId, profile_id: profileId },
       });
       if (parent) {
@@ -240,7 +240,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid version ID" });
     }
 
-    const existing = await db.profile_versions.findFirst({
+    const existing = await db.query.profile_versions.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -249,7 +249,7 @@ export const actions: Actions = {
     }
 
     // Clear public version references if this version was public
-    const profile = await db.profiles.findUnique({
+    const profile = await db.query.profiles.findFirst({
       where: { id: profileId },
       select: { public_resume_version_id: true, public_cv_version_id: true },
     });

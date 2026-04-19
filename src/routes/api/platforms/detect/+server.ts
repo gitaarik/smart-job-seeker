@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 
   // Verify user owns this profile
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: {
       id: parseInt(profileId),
       user_id: user.id,
@@ -48,7 +48,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 
   // Try to find existing platform by URL/domain
-  const existingPlatform = await db.job_platforms.findFirst({
+  const existingPlatform = await db.query.job_platforms.findFirst({
     where: {
       OR: [
         { url: { contains: domain, mode: "insensitive" } },
@@ -81,7 +81,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     };
 
     // Get existing credentials for this platform and profile
-    const platformProfiles = await db.platform_profiles.findMany({
+    const platformProfiles = await db.query.platform_profiles.findMany({
       where: {
         platform_id: existingPlatform.id,
         profile_id: profile.id,

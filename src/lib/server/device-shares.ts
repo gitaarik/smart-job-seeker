@@ -15,7 +15,7 @@ export async function shareDevice(
   sharedWithUserId: string,
 ): Promise<{ success: boolean; error?: string }> {
   // Verify the API key belongs to the owner
-  const apiKey = await db.api_keys.findFirst({
+  const apiKey = await db.query.api_keys.findFirst({
     where: { id: apiKeyId, revoked: false },
     select: { id: true, profiles: { select: { user_id: true } } },
   });
@@ -30,7 +30,7 @@ export async function shareDevice(
   }
 
   // Check if already shared
-  const existing = await db.device_shares.findFirst({
+  const existing = await db.query.device_shares.findFirst({
     where: { api_key_id: apiKeyId, shared_with: sharedWithUserId },
   });
 
@@ -46,7 +46,7 @@ export async function shareDevice(
   });
 
   // Notify the recipient
-  const ownerUser = await db.users.findUnique({
+  const ownerUser = await db.query.users.findFirst({
     where: { id: ownerId },
     select: { name: true, email: true },
   });
@@ -70,7 +70,7 @@ export async function unshareDevice(
   sharedWithUserId: string,
 ): Promise<boolean> {
   // Verify ownership
-  const apiKey = await db.api_keys.findFirst({
+  const apiKey = await db.query.api_keys.findFirst({
     where: { id: apiKeyId },
     select: { id: true, profiles: { select: { user_id: true } } },
   });
@@ -90,7 +90,7 @@ export async function unshareDevice(
  * List shares for a specific device (who it's shared with)
  */
 export async function listDeviceShares(apiKeyId: number) {
-  return db.device_shares.findMany({
+  return db.query.device_shares.findMany({
     where: { api_key_id: apiKeyId },
     select: {
       id: true,
@@ -105,7 +105,7 @@ export async function listDeviceShares(apiKeyId: number) {
  * List devices shared with a user (devices they can use from contacts)
  */
 export async function listSharedWithMe(userId: string) {
-  const shares = await db.device_shares.findMany({
+  const shares = await db.query.device_shares.findMany({
     where: { shared_with: userId },
     select: {
       id: true,
@@ -127,7 +127,7 @@ export async function listSharedWithMe(userId: string) {
   // Resolve owner names from user_ids
   const ownerIds = [...new Set(shares.map((s) => s.api_key.profiles.user_id).filter(Boolean))] as string[];
   const owners = ownerIds.length > 0
-    ? await db.users.findMany({
+    ? await db.query.users.findMany({
         where: { id: { in: ownerIds } },
         select: { id: true, name: true, email: true },
       })
@@ -154,7 +154,7 @@ export async function listSharedWithMe(userId: string) {
  */
 export async function hasDeviceAccess(apiKeyId: number, userId: string): Promise<boolean> {
   // Check ownership
-  const owned = await db.api_keys.findFirst({
+  const owned = await db.query.api_keys.findFirst({
     where: { id: apiKeyId, revoked: false },
     select: { id: true, profiles: { select: { user_id: true } } },
   });
@@ -164,7 +164,7 @@ export async function hasDeviceAccess(apiKeyId: number, userId: string): Promise
   }
 
   // Check shared access
-  const shared = await db.device_shares.findFirst({
+  const shared = await db.query.device_shares.findFirst({
     where: { api_key_id: apiKeyId, shared_with: userId },
     select: { id: true },
   });

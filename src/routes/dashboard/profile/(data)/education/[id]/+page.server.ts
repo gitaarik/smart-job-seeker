@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/dashboard/profile/education");
   }
 
-  const education = await db.education.findFirst({
+  const education = await db.query.education.findFirst({
     where: { id, profile_id: layoutData.selectedProfile.id },
   });
 

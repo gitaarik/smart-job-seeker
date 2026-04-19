@@ -11,11 +11,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   const letterId = parseIntParam(params.id, "letter");
 
   // Verify ownership: letter -> application -> profile -> user
-  const letter = await db.application_letters.findFirst({
+  const letter = await db.query.application_letters.findFirst({
     where: { id: letterId },
-    include: {
+    with: {
       applications: {
-        include: { profiles: { select: { user_id: true } } },
+        with: { profiles: { select: { user_id: true } } },
       },
     },
   });

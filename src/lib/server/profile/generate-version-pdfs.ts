@@ -28,7 +28,7 @@ export async function generateVersionPdfs(
   profileId: number,
   versionSlug: string,
 ): Promise<void> {
-  const profile = await db.profiles.findUnique({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId },
     select: { slug: true, name: true, user_id: true },
   });

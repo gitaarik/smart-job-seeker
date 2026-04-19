@@ -18,12 +18,12 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
     error(400, "Missing export ID");
   }
 
-  const exp = await db.profile_exports.findFirst({
+  const exp = await db.query.profile_exports.findFirst({
     where: {
       id: parseInt(exportId, 10),
       profile_id: profileId,
     },
-    include: {
+    with: {
       files: true,
     },
   });

@@ -20,7 +20,7 @@ export async function ensureUniqueSlug(
   let counter = 2;
 
   while (true) {
-    const existing = await db.profiles.findFirst({
+    const existing = await db.query.profiles.findFirst({
       where: {
         slug,
         ...(excludeProfileId ? { id: { not: excludeProfileId } } : {}),

@@ -83,7 +83,7 @@ export async function uploadFile(
 }
 
 export async function deleteFile(fileId: string): Promise<void> {
-  const file = await db.files.findUnique({
+  const file = await db.query.files.findFirst({
     where: { id: fileId },
     select: { filename_disk: true },
   });
@@ -100,7 +100,7 @@ export async function deleteFile(fileId: string): Promise<void> {
 }
 
 export async function getFile(fileId: string): Promise<Buffer> {
-  const file = await db.files.findUnique({
+  const file = await db.query.files.findFirst({
     where: { id: fileId },
     select: { filename_disk: true },
   });

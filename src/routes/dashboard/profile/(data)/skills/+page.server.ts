@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { Prisma } from "../../../../../../generated/prisma/client.js";
+import { sql, type SQL } from "drizzle-orm";
 import { SKILL_LEVELS } from "$lib/data/field-labels";
 import { getSelectedProfileId } from "../../utils";
 
@@ -12,10 +12,10 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const categories = await db.tech_skill_categories.findMany({
+  const categories = await db.query.tech_skill_categories.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
-    include: {
+    with: {
       tech_skills: {
         orderBy: { sort: "asc" },
       },
@@ -47,7 +47,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.tech_skill_categories.findFirst({
+    const lastItem = await db.query.tech_skill_categories.findFirst({
       where: { profile_id: profileId },
       orderBy: { sort: "desc" },
     });
@@ -89,7 +89,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.tech_skill_categories.findFirst({
+    const existing = await db.query.tech_skill_categories.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -127,7 +127,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.tech_skill_categories.findFirst({
+    const existing = await db.query.tech_skill_categories.findFirst({
       where: { id, profile_id: profileId },
     });
 
@@ -170,7 +170,7 @@ export const actions: Actions = {
     }
 
     // Verify category ownership
-    const category = await db.tech_skill_categories.findFirst({
+    const category = await db.query.tech_skill_categories.findFirst({
       where: { id: categoryId, profile_id: profileId },
     });
 
@@ -179,7 +179,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.tech_skills.findFirst({
+    const lastItem = await db.query.tech_skills.findFirst({
       where: { category_id: categoryId },
       orderBy: { sort: "desc" },
     });
@@ -231,9 +231,9 @@ export const actions: Actions = {
     }
 
     // Verify ownership through category
-    const existing = await db.tech_skills.findFirst({
+    const existing = await db.query.tech_skills.findFirst({
       where: { id },
-      include: { tech_skill_categories: true },
+      with: { tech_skill_categories: true },
     });
 
     if (
@@ -253,7 +253,7 @@ export const actions: Actions = {
         name: name.trim(),
         level: level || null,
         years_experience: years_experience ? parseInt(years_experience) : null,
-        tags: tags ?? Prisma.DbNull,
+        tags: tags ?? null,
         date_updated: new Date(),
       },
     });
@@ -288,7 +288,7 @@ export const actions: Actions = {
     }
 
     // Verify category ownership
-    const category = await db.tech_skill_categories.findFirst({
+    const category = await db.query.tech_skill_categories.findFirst({
       where: { id: categoryId, profile_id: profileId },
     });
 
@@ -362,9 +362,9 @@ export const actions: Actions = {
     }
 
     // Verify ownership through category
-    const existing = await db.tech_skills.findFirst({
+    const existing = await db.query.tech_skills.findFirst({
       where: { id },
-      include: { tech_skill_categories: true },
+      with: { tech_skill_categories: true },
     });
 
     if (

@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { Prisma } from "../../../../../../generated/prisma/client";
-import { dbDirect as db } from "$lib/server/db";
+import { sql, type SQL } from "drizzle-orm";
+import { dbDirect as db, sqlJoin, queryRaw } from "$lib/server/db";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
 import { getEnv } from "$lib/tools/get-env";
@@ -13,7 +13,7 @@ import crypto from "crypto";
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
 
-  const user = await db.users.findUnique({
+  const user = await db.query.users.findFirst({
     where: { id: params.id },
   });
 
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     where: { user_id: user.id },
   });
 
-  const pendingInvite = await db.verifications.findFirst({
+  const pendingInvite = await db.query.verifications.findFirst({
     where: {
       identifier: `invite:${user.email}`,
       expiresAt: { gt: new Date() },
@@ -74,7 +74,7 @@ export const actions: Actions = {
       return fail(400, { error: "Cannot remove your own admin status" });
     }
 
-    const existing = await db.users.findUnique({ where: { id: params.id } });
+    const existing = await db.query.users.findFirst({ where: { id: params.id } });
     if (!existing) {
       return fail(404, { error: "User not found" });
     }
@@ -166,7 +166,7 @@ export const actions: Actions = {
       return fail(403, { error: "Admin access required" });
     }
 
-    const user = await db.users.findUnique({ where: { id: params.id } });
+    const user = await db.query.users.findFirst({ where: { id: params.id } });
     if (!user) {
       return fail(404, { error: "User not found" });
     }
@@ -223,7 +223,7 @@ export const actions: Actions = {
       return fail(403, { error: "Admin access required" });
     }
 
-    const targetUser = await db.users.findUnique({ where: { id: params.id } });
+    const targetUser = await db.query.users.findFirst({ where: { id: params.id } });
     if (!targetUser) {
       return fail(404, { error: "User not found" });
     }
@@ -243,12 +243,12 @@ export const actions: Actions = {
       return fail(403, { error: "Admin access required" });
     }
 
-    const user = await db.users.findUnique({ where: { id: params.id } });
+    const user = await db.query.users.findFirst({ where: { id: params.id } });
     if (!user) {
       return fail(404, { error: "User not found" });
     }
 
-    const profiles = await db.profiles.findMany({
+    const profiles = await db.query.profiles.findMany({
       where: { user_id: params.id },
       select: { id: true },
     });
@@ -259,15 +259,15 @@ export const actions: Actions = {
 
     const profileIds = profiles.map((p) => p.id);
 
-    const result = await db.$queryRaw<{ cnt: bigint }[]>`
+    const result = await queryRaw<{ cnt: bigint }[]>(sql`
       WITH deleted AS (
         DELETE FROM job_matches
-        WHERE profile_id IN (${Prisma.join(profileIds)})
+        WHERE profile_id IN (${sqlJoin(profileIds)})
         AND reasoning IS NOT NULL
         RETURNING id
       )
       SELECT COUNT(*) as cnt FROM deleted
-    `;
+    `);
 
     return { success: true, clearedCount: Number(result[0]?.cnt ?? 0) };
   },
@@ -281,7 +281,7 @@ export const actions: Actions = {
       return fail(400, { error: "Cannot delete your own account" });
     }
 
-    const existing = await db.users.findUnique({ where: { id: params.id } });
+    const existing = await db.query.users.findFirst({ where: { id: params.id } });
     if (!existing) {
       return fail(404, { error: "User not found" });
     }

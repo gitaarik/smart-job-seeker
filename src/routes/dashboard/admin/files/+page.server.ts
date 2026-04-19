@@ -45,12 +45,12 @@ export const load: PageServerLoad = async ({ url }) => {
   }
 
   const [files, total] = await Promise.all([
-    db.files.findMany({
+    db.query.files.findMany({
       where,
       orderBy: { created_on: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      include: {
+      offset: (page - 1) * pageSize,
+      limit: pageSize,
+      with: {
         profiles: { select: { id: true, name: true } },
         applications_files: {
           select: {
@@ -71,7 +71,7 @@ export const load: PageServerLoad = async ({ url }) => {
   // Get import log entries for files that have them
   const fileIds = files.map((f) => f.id);
   const importLogs = fileIds.length
-    ? await db.import_logs.findMany({
+    ? await db.query.import_logs.findMany({
         where: { file_id: { in: fileIds } },
         select: {
           file_id: true,

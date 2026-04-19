@@ -199,7 +199,7 @@ export const actions: Actions = {
     let slugSuffix = 0;
     let finalSlug = slug;
     while (true) {
-      const existing = await db.profiles.findFirst({
+      const existing = await db.query.profiles.findFirst({
         where: { slug: finalSlug },
       });
       if (!existing) break;

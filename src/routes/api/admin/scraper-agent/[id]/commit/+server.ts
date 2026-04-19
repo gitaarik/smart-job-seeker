@@ -19,9 +19,9 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   const sessionId = parseIntParam(params.id, "session");
 
-  const session = await db.scraper_agent_sessions.findUnique({
+  const session = await db.query.scraper_agent_sessions.findFirst({
     where: { id: sessionId },
-    include: {
+    with: {
       search_tasks: { select: { note: true, job_platforms: { select: { name: true } } } },
     },
   });

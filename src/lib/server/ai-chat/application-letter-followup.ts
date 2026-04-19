@@ -43,7 +43,7 @@ function parseLetterResponse(response: string | null): { letter: string | null; 
 
 /** Build a condensed conversation history from previous letter versions */
 async function buildConversationHistory(letterId: number): Promise<string> {
-  const versions = await db.letter_versions.findMany({
+  const versions = await db.query.letter_versions.findMany({
     where: {
       letter: letterId,
       OR: [
@@ -85,7 +85,7 @@ export async function createApplicationLetterFollowup(
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
   if (mode === "review" || updateContent) {
-    const letterRecord = await db.application_letters.findUnique({
+    const letterRecord = await db.query.application_letters.findFirst({
       where: { id: letterId },
       select: {
         letter_type: true,
@@ -109,7 +109,7 @@ export async function createApplicationLetterFollowup(
       const jobDetailsText = job ? formatJobDetails(job) : "";
 
       // Get the latest letter content: check letter_versions first, fall back to application_letters.content
-      const latestVersion = await db.letter_versions.findFirst({
+      const latestVersion = await db.query.letter_versions.findFirst({
         where: { letter: letterId, content: { not: null } },
         orderBy: { id: "desc" },
         select: { content: true },
@@ -150,7 +150,7 @@ export async function createApplicationLetterFollowup(
     customVariables: extraVariables,
     profileDataFields: LETTER_PROFILE_FIELDS,
     fetchEntity: (id) =>
-      db.application_letters.findUnique({
+      db.query.application_letters.findFirst({
         where: { id },
         select: { id: true, ai_chat_id: true },
       }),

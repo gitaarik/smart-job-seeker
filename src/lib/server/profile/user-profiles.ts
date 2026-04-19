@@ -25,7 +25,7 @@ export interface ProfileSummary {
 export async function getProfilesByUserId(
   userId: string,
 ): Promise<ProfileSummary[]> {
-  return db.profiles.findMany({
+  return db.query.profiles.findMany({
     where: { user_id: userId },
     select: {
       id: true,
@@ -50,7 +50,7 @@ export async function userOwnsProfile(
   userId: string,
   profileId: number,
 ): Promise<boolean> {
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: {
       id: profileId,
       user_id: userId,

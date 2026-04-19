@@ -17,9 +17,9 @@ export const GET: RequestHandler = async ({ locals }) => {
     throw error(403, "Admin access required");
   }
 
-  const sessions = await db.scraper_agent_sessions.findMany({
+  const sessions = await db.query.scraper_agent_sessions.findMany({
     orderBy: { created_at: "desc" },
-    include: {
+    with: {
       search_tasks: {
         select: {
           id: true,
@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       },
       iterations: {
         orderBy: { iteration: "desc" },
-        take: 1,
+        limit: 1,
         select: {
           iteration: true,
           stage: true,
@@ -52,7 +52,7 @@ export const GET: RequestHandler = async ({ locals }) => {
     .map((s) => s.iterations[0].run_id!);
 
   const blockedRuns = blockedRunIds.length > 0
-    ? await db.search_task_runs.findMany({
+    ? await db.query.search_task_runs.findMany({
         where: { id: { in: blockedRunIds } },
         select: { id: true, error_message: true },
       })
@@ -112,7 +112,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   // Validate search task exists and is properly configured
-  const searchTask = await db.search_tasks.findUnique({
+  const searchTask = await db.query.search_tasks.findFirst({
     where: { id: searchTaskId },
   });
 
@@ -125,7 +125,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   // Check no other active session for this search task
-  const existing = await db.scraper_agent_sessions.findFirst({
+  const existing = await db.query.scraper_agent_sessions.findFirst({
     where: {
       search_task_id: searchTaskId,
       status: { in: ["active", "paused"] },

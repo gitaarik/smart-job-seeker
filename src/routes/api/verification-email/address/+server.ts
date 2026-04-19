@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 
   // Verify ownership
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: { id: true },
   });
@@ -63,7 +63,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   // Verify ownership
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: { id: true },
   });
@@ -104,7 +104,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   // Verify ownership
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: body.profileId, user_id: user.id },
     select: { id: true },
   });

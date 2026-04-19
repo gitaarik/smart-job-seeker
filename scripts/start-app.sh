@@ -22,10 +22,8 @@ npx patchright install chromium
 echo "=== Syncing SvelteKit ==="
 npx svelte-kit sync
 
-echo "=== Generating Prisma client ==="
-npx dotenvx run -- prisma generate
 # Fix ownership so host user can regenerate (container runs as root)
-chown -R "${HOST_UID:-1000}:${HOST_GID:-1000}" generated/ .svelte-kit/ 2>/dev/null || true
+chown -R "${HOST_UID:-1000}:${HOST_GID:-1000}" .svelte-kit/ 2>/dev/null || true
 
 # Database initialization
 if [ "$DB_RESET" = "true" ]; then
@@ -37,18 +35,18 @@ if [ "$DB_RESET" = "true" ]; then
     echo "=== Loading dev seed (includes all schemas and data) ==="
     db_query -f /db-dumps/dev-seed.sql
 
-    # No need for prisma db push - seed has all tables
+    # No need for schema push - seed has all tables
     # Just sync any potential schema differences
-    echo "=== Syncing Prisma schema ==="
-    cd /app && npx dotenvx run -- prisma db push --accept-data-loss 2>/dev/null || true
+    echo "=== Syncing schema ==="
+    cd /app && npx dotenvx run -- drizzle-kit push 2>/dev/null || true
 
     echo ""
     echo "============================================"
     echo "  Reset complete! Refresh your browser.    "
     echo "============================================"
   else
-    echo "=== No seed file found, creating tables with prisma db push ==="
-    cd /app && npx dotenvx run -- prisma db push --accept-data-loss
+    echo "=== No seed file found, creating tables with drizzle-kit push ==="
+    cd /app && npx dotenvx run -- drizzle-kit push
 
     echo "=== Seeding test user ==="
     cd /app && npx vite-node scripts/seed-test-user.ts
@@ -97,8 +95,8 @@ else
     echo "Restoring from smart backup..."
     db_query -f /db-dumps/smart.sql
   else
-    echo "=== No backup found, creating tables with prisma db push ==="
-    cd /app && npx dotenvx run -- prisma db push --accept-data-loss
+    echo "=== No backup found, creating tables with drizzle-kit push ==="
+    cd /app && npx dotenvx run -- drizzle-kit push
   fi
 fi
 

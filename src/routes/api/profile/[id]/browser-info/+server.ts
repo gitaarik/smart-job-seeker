@@ -15,7 +15,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
   const profileId = parseIntParam(params.id, "profile");
 
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: {
       id: true,

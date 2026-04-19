@@ -1,3 +1,4 @@
+import { sqlJoin, sql } from "$lib/server/db";
 /**
  * Shared eligibility filter for job matching SQL queries.
  *
@@ -11,7 +12,7 @@
  * that produces human-readable failure reasons).
  */
 
-import { Prisma } from "../../../../generated/prisma/client.js";
+import { sql, type SQL } from "drizzle-orm";
 import {
   JOB_TYPES,
   WORK_LOCATIONS,
@@ -28,7 +29,7 @@ const workLocationFamilies = buildFamilyMap(WORK_LOCATIONS);
 const jobTypeFamilies = buildFamilyMap(JOB_TYPES);
 
 /**
- * Build a Prisma.Sql WHERE clause fragment for job eligibility filtering.
+ * Build a SQL WHERE clause fragment for job eligibility filtering.
  *
  * Assumes the jobs table is aliased as `j` in the outer query.
  *
@@ -40,7 +41,7 @@ const jobTypeFamilies = buildFamilyMap(JOB_TYPES);
 export function buildEligibilityFilter(
   config: EligibilityConfig,
   profileSkills: string[],
-): Prisma.Sql {
+): SQL {
   if (!config.work_location || config.work_location.length === 0) {
     throw new Error("Work location config is required for job matching");
   }
@@ -76,7 +77,7 @@ export function buildEligibilityFilter(
   });
   const jobTypes = Array.from(expandedJobTypes);
 
-  return Prisma.sql`
+  return sql`
     -- Minimum data: job must have a description OR at least one skill
     (
       (j.job_description IS NOT NULL AND TRIM(j.job_description) != '')
@@ -91,7 +92,7 @@ export function buildEligibilityFilter(
       OR j.work_location::text = 'null'
       OR EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(j.work_location::jsonb) AS elem
-        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') LIKE ANY(array[${Prisma.join(workLocations.map(wl => "%" + wl + "%"))}]::text[])
+        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') LIKE ANY(array[${sqlJoin(workLocations.map(wl => "%" + wl + "%"))}]::text[])
       )
     )
     -- Job types overlap — normalized (case + separator insensitive)
@@ -100,7 +101,7 @@ export function buildEligibilityFilter(
       OR j.job_types::text = 'null'
       OR EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(j.job_types::jsonb) AS elem
-        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${Prisma.join(jobTypes)}]::text[])
+        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${sqlJoin(jobTypes)}]::text[])
       )
     )
     -- Skills overlap (AT LEAST ONE match in required OR preferred)
@@ -113,10 +114,10 @@ export function buildEligibilityFilter(
       OR jsonb_array_length(j.skills_required::jsonb) = 0
       OR jsonb_array_length(j.skills_preferred::jsonb) = 0
       OR j.skills_required::jsonb ?| array[${
-    Prisma.join(profileSkills)
+    sqlJoin(profileSkills)
   }]::text[]
       OR j.skills_preferred::jsonb ?| array[${
-    Prisma.join(profileSkills)
+    sqlJoin(profileSkills)
   }]::text[]
     )
   `;

@@ -7,8 +7,8 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { dbDirect as db } from "$lib/server/db";
-import { Prisma } from "../../../../../generated/prisma/client";
+import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
+import { sql, type SQL } from "drizzle-orm";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = locals.user;
@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     : undefined;
 
   // Verify profile belongs to user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: { id: true },
   });
@@ -39,15 +39,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   // Build score condition based on type
   const scoreCondition =
     type === "matched"
-      ? Prisma.sql`jm.score > 0`
-      : Prisma.sql`jm.score = 0`;
+      ? sql`jm.score > 0`
+      : sql`jm.score = 0`;
 
   // Build optional date filter
   const dateCondition = datePostedDays
-    ? Prisma.sql`AND j.date_posted >= NOW() - INTERVAL '1 day' * ${datePostedDays}`
-    : Prisma.sql``;
+    ? sql`AND j.date_posted >= NOW() - INTERVAL '1 day' * ${datePostedDays}`
+    : sql``;
 
-  const result = await db.$queryRaw<{ id: number }[]>`
+  const result = await queryRaw<{ id: number }[]>(sql`
     DELETE FROM job_matches jm
     USING jobs j
     WHERE jm.job_id = j.id
@@ -55,7 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       AND ${scoreCondition}
       ${dateCondition}
     RETURNING jm.id
-  `;
+  `);
 
   return json({ deleted: result.length });
 };

@@ -9,7 +9,7 @@ export async function getSelectedProfileId(
   const profileId = parseInt(cookieValue, 10);
   if (isNaN(profileId)) return null;
   // Verify ownership
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: userId },
   });
   return profile ? profileId : null;

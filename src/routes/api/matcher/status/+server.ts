@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const includeIneligible = url.searchParams.get("includeIneligible") === "true";
 
   // Verify profile belongs to user
-  const profile = await db.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId, user_id: user.id },
     select: { id: true },
   });
@@ -37,7 +37,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   }
 
   // Load matcher config
-  const matchConfig = await db.match_config.findFirst({
+  const matchConfig = await db.query.match_config.findFirst({
     where: { profile_id: profileId },
   });
 
@@ -51,13 +51,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       getEligibleUnmatchedCount(profileId, matchCommunityJobs, matchConfig ? { ...matchConfig, community_max_age_days: communityMaxAgeDays } : null),
       getMatcherState(profileId),
       isMatcherAlive(),
-      db.job_matches.findMany({
+      db.query.job_matches.findMany({
         where: {
           profile_id: profileId,
           ...(!includeIneligible && { recommendation: { not: "ineligible" } }),
         },
         orderBy: { date_created: "desc" },
-        take: 20,
+        limit: 20,
         select: {
           id: true,
           job_id: true,

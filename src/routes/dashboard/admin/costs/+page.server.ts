@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   }
 
   // Fetch AI cost transactions for the period
-  const aiTransactions = await db.credit_transactions.findMany({
+  const aiTransactions = await db.query.credit_transactions.findMany({
     where: {
       operation: { in: ["ai_generation", "resume_parse_ai"] },
       created_at: { gte: periodStart, lt: periodEnd },
@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   });
 
   // Fetch active subscriptions to map users to plans
-  const activeSubs = await db.subscriptions.findMany({
+  const activeSubs = await db.query.subscriptions.findMany({
     where: { status: { in: ["active", "trialing", "past_due"] } },
     orderBy: { date_created: "desc" },
     select: { user_id: true, plan: true },
@@ -175,7 +175,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   // Fetch user emails for top users
   const topUserIds = topUsers.map((u) => u.userId);
   const topUserRecords = topUserIds.length > 0
-    ? await db.users.findMany({
+    ? await db.query.users.findMany({
         where: { id: { in: topUserIds } },
         select: { id: true, email: true, name: true },
       })
@@ -195,7 +195,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const totalMissingCost = planStats.reduce((sum, p) => sum + p.missingCost, 0);
 
   // Available months (for period selector)
-  const firstTx = await db.credit_transactions.findFirst({
+  const firstTx = await db.query.credit_transactions.findFirst({
     where: { operation: { in: ["ai_generation", "resume_parse_ai"] } },
     orderBy: { created_at: "asc" },
     select: { created_at: true },

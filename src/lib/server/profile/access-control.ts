@@ -1,4 +1,4 @@
-import type { profiles } from "generated/prisma";
+import type { Profiles } from "$lib/server/db/schema";
 import { db } from "$lib/server/db";
 import { validateToken } from "../auth/token-validation";
 
@@ -98,7 +98,7 @@ export async function checkProfileAccess(
 export async function getVersionSlugById(
   versionId: number,
 ): Promise<string | null> {
-  const version = await db.profile_versions.findUnique({
+  const version = await db.query.profile_versions.findFirst({
     where: { id: versionId },
     select: { slug: true },
   });
@@ -113,7 +113,7 @@ export async function getVersionIdBySlug(
   profileId: number,
   versionSlug: string,
 ): Promise<number | null> {
-  const version = await db.profile_versions.findFirst({
+  const version = await db.query.profile_versions.findFirst({
     where: { profile_id: profileId, slug: versionSlug },
     select: { id: true },
   });

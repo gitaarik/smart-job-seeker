@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ params }) => {
   const sessionId = parseInt(params.id);
   if (isNaN(sessionId)) throw error(400, "Invalid session ID");
 
-  const session = await db.scraper_agent_sessions.findUnique({
+  const session = await db.query.scraper_agent_sessions.findFirst({
     where: { id: sessionId },
     select: { id: true },
   });

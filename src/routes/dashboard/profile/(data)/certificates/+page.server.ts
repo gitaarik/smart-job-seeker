@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const certificates = await db.certificates.findMany({
+  const certificates = await db.query.certificates.findMany({
     where: { profile: layoutData.selectedProfile.id },
     orderBy: { sort: "asc" },
   });
@@ -41,7 +41,7 @@ export const actions: Actions = {
     }
 
     // Get the highest sort value
-    const lastItem = await db.certificates.findFirst({
+    const lastItem = await db.query.certificates.findFirst({
       where: { profile: profileId },
       orderBy: { sort: "desc" },
     });
@@ -89,7 +89,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.certificates.findFirst({
+    const existing = await db.query.certificates.findFirst({
       where: { id, profile: profileId },
     });
 
@@ -130,7 +130,7 @@ export const actions: Actions = {
     }
 
     // Verify ownership
-    const existing = await db.certificates.findFirst({
+    const existing = await db.query.certificates.findFirst({
       where: { id, profile: profileId },
     });
 

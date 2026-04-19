@@ -5,14 +5,14 @@ export const load: PageServerLoad = async ({ parent }) => {
   const { user } = await parent();
 
   // Get IDs of tickets the user is subscribed to (from merged tickets)
-  const subscriptions = await db.user_feedback_subscribers.findMany({
+  const subscriptions = await db.query.user_feedback_subscribers.findMany({
     where: { user_id: user.id },
     select: { feedback_id: true },
   });
   const subscribedIds = subscriptions.map((s) => s.feedback_id);
 
   // Load tickets: owned by user OR subscribed to, excluding merged-away tickets
-  const feedback = await db.user_feedback.findMany({
+  const feedback = await db.query.user_feedback.findMany({
     where: {
       merged_into_id: null,
       OR: [
@@ -21,12 +21,12 @@ export const load: PageServerLoad = async ({ parent }) => {
       ],
     },
     orderBy: { date_updated: { sort: "desc", nulls: "last" } },
-    include: {
+    with: {
       feedback_replies: {
         orderBy: { created_at: "asc" },
       },
       user_feedback_files: {
-        include: {
+        with: {
           files: {
             select: {
               id: true,
@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     }
   }
   const users = replyUserIds.size > 0
-    ? await db.users.findMany({
+    ? await db.query.users.findMany({
         where: { id: { in: [...replyUserIds] } },
         select: { id: true, name: true, email: true },
       })

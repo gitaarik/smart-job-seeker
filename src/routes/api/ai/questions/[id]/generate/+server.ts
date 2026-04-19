@@ -10,11 +10,11 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const questionId = parseIntParam(params.id, "question");
 
   // Verify ownership: question -> application -> profile -> user
-  const question = await db.application_questions.findFirst({
+  const question = await db.query.application_questions.findFirst({
     where: { id: questionId },
-    include: {
+    with: {
       applications: {
-        include: { profiles: { select: { user_id: true } } },
+        with: { profiles: { select: { user_id: true } } },
       },
     },
   });

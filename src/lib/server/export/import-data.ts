@@ -2,7 +2,7 @@
  * Import export data (v2.0 format)
  */
 
-import { Prisma } from "../../../../generated/prisma/client";
+import { sql, type SQL } from "drizzle-orm";
 import { dbDirect } from "$lib/server/db";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import type {
@@ -12,9 +12,9 @@ import type {
 } from "./types";
 
 // Helper to convert JSON value for Prisma
-function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
+function toJsonValue(value: unknown): unknown | undefined {
   if (value === null || value === undefined) return undefined;
-  return value as Prisma.InputJsonValue;
+  return value as unknown;
 }
 
 interface ImportOptions {
@@ -35,7 +35,7 @@ async function getUniqueProfileName(
   userId: string,
   excludeProfileId?: number,
 ): Promise<string> {
-  const existingNames = await dbDirect.profiles.findMany({
+  const existingNames = await dbDirect.query.profiles.findMany({
     where: {
       user_id: userId,
       ...(excludeProfileId ? { id: { not: excludeProfileId } } : {}),
@@ -72,7 +72,7 @@ export async function importExportData(
 
   if (overwriteProfileId) {
     // Overwrite existing profile - delete all child records first
-    const existingProfile = await dbDirect.profiles.findFirst({
+    const existingProfile = await dbDirect.query.profiles.findFirst({
       where: { id: overwriteProfileId, user_id: userId },
     });
 
@@ -141,7 +141,7 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
   await dbDirect.salary_expectations.deleteMany({ where: { profile_id: profileId } });
 
   // Delete tech skills (need to delete skills before categories)
-  const techCategories = await dbDirect.tech_skill_categories.findMany({
+  const techCategories = await dbDirect.query.tech_skill_categories.findMany({
     where: { profile_id: profileId },
     select: { id: true },
   });
@@ -151,14 +151,14 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
   await dbDirect.tech_skill_categories.deleteMany({ where: { profile_id: profileId } });
 
   // Delete work experiences and children
-  const workExps = await dbDirect.work_experiences.findMany({
+  const workExps = await dbDirect.query.work_experiences.findMany({
     where: { profile_id: profileId },
     select: { id: true },
   });
   for (const we of workExps) {
     await dbDirect.work_experience_achievements.deleteMany({ where: { work_experience_id: we.id } });
     await dbDirect.work_experience_technologies.deleteMany({ where: { work_experience_id: we.id } });
-    const projects = await dbDirect.work_experience_projects.findMany({
+    const projects = await dbDirect.query.work_experience_projects.findMany({
       where: { work_experience_id: we.id },
       select: { id: true },
     });
@@ -172,7 +172,7 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
   await dbDirect.work_experiences.deleteMany({ where: { profile_id: profileId } });
 
   // Delete side projects and children
-  const sideProjs = await dbDirect.side_projects.findMany({
+  const sideProjs = await dbDirect.query.side_projects.findMany({
     where: { profile_id: profileId },
     select: { id: true },
   });
@@ -183,7 +183,7 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
   await dbDirect.side_projects.deleteMany({ where: { profile_id: profileId } });
 
   // Delete profile versions and extensions
-  const versions = await dbDirect.profile_versions.findMany({
+  const versions = await dbDirect.query.profile_versions.findMany({
     where: { profile_id: profileId },
     select: { id: true },
   });
@@ -194,7 +194,7 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
   await dbDirect.profile_versions.deleteMany({ where: { profile_id: profileId } });
 
   // Delete applications and children
-  const applications = await dbDirect.applications.findMany({
+  const applications = await dbDirect.query.applications.findMany({
     where: { profile_id: profileId },
     select: { id: true },
   });
@@ -259,7 +259,7 @@ async function generateUniqueSlug(name: string): Promise<string> {
   let finalSlug = baseSlug;
 
   while (true) {
-    const existing = await dbDirect.profiles.findFirst({
+    const existing = await dbDirect.query.profiles.findFirst({
       where: { slug: finalSlug },
     });
     if (!existing) break;
@@ -362,7 +362,7 @@ async function importProfileEntities(
   }
 
   // Tech skill categories + tech skills
-  const techTypes = await dbDirect.tech_skill_types.findMany({
+  const techTypes = await dbDirect.query.tech_skill_types.findMany({
     select: { id: true, slug: true },
   });
   const techTypeBySlug = new Map(techTypes.map((t) => [t.slug, t.id]));
@@ -613,8 +613,8 @@ async function importFullAccountEntities(
       data: {
         salary_base_rate: ss.base_rate ?? null,
         salary_currency: ss.currency ?? "EUR",
-        salary_adjustments: ss.adjustments ? (ss.adjustments as Prisma.InputJsonValue) : undefined,
-        salary_region_overrides: ss.region_overrides ? (ss.region_overrides as Prisma.InputJsonValue) : undefined,
+        salary_adjustments: ss.adjustments ? (ss.adjustments as unknown) : undefined,
+        salary_region_overrides: ss.region_overrides ? (ss.region_overrides as unknown) : undefined,
       },
     });
   }

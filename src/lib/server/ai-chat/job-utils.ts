@@ -47,7 +47,7 @@ export async function createJobScrapingAiChat<T>(
   customVariables: Record<string, unknown>,
 ): Promise<JobScrapingAiChatResult<T>> {
   // Look up profile from search_tasks
-  const searchTask = await dbDirect.search_tasks.findUnique({
+  const searchTask = await dbDirect.query.search_tasks.findFirst({
     where: { id: searchTaskId },
     select: { profile_id: true },
   });

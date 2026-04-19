@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
   const profileId = layoutData.profileId;
 
-  const profile = await db.profiles.findUnique({
+  const profile = await db.query.profiles.findFirst({
     where: { id: profileId },
     select: {
       salary_base_rate: true,
@@ -38,7 +38,7 @@ export const actions: Actions = {
     const appId = parseInt(params.id);
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
-    const existing = await db.applications.findFirst({
+    const existing = await db.query.applications.findFirst({
       where: { id: appId, profile_id: profileId },
     });
     if (!existing) return fail(404, { error: "Application not found" });

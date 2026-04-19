@@ -3,7 +3,7 @@ import { dbDirect as db } from "$lib/server/db";
 
 export const load: PageServerLoad = async () => {
   // Pre-load search tasks with platform and user info
-  const searchTasks = await db.search_tasks.findMany({
+  const searchTasks = await db.query.search_tasks.findMany({
     where: {
       search_url: { not: null },
       platform_id: { not: null },
@@ -37,7 +37,7 @@ export const load: PageServerLoad = async () => {
   ];
   const users =
     userIds.length > 0
-      ? await db.users.findMany({
+      ? await db.query.users.findMany({
           where: { id: { in: userIds } },
           select: { id: true, name: true, email: true },
         })

@@ -68,7 +68,7 @@ export async function verifyApiKey(
   const keyHash = hashApiKey(key);
 
   try {
-    const apiKey = await db.api_keys.findUnique({
+    const apiKey = await db.query.api_keys.findFirst({
       where: { key_hash: keyHash },
       select: {
         id: true,
@@ -127,7 +127,7 @@ export async function verifyApiKeyDetailed(
   const keyHash = hashApiKey(key);
 
   try {
-    const apiKey = await db.api_keys.findUnique({
+    const apiKey = await db.query.api_keys.findFirst({
       where: { key_hash: keyHash },
       select: {
         id: true,
@@ -280,7 +280,7 @@ export async function deleteApiKey(
  * @returns List of API keys with metadata
  */
 export async function listApiKeys(profileId: number) {
-  return db.api_keys.findMany({
+  return db.query.api_keys.findMany({
     where: { profile_id: profileId },
     select: {
       id: true,

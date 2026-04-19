@@ -7,7 +7,7 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { dbDirect as db } from "$lib/server/db";
+import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { searchTaskDisplayName } from "$lib/format";
 import {
@@ -38,14 +38,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const healthChecks = await getHealthChecks();
 
   const [runs, totalCount, queueStats] = await Promise.all([
-    db.search_task_runs.findMany({
+    db.query.search_task_runs.findMany({
       where: statusWhere,
       orderBy: { started_at: "desc" },
-      take: limit,
-      skip: offset,
-      include: {
+      limit: limit,
+      offset: offset,
+      with: {
         search_tasks: {
-          include: {
+          with: {
             profiles: {
               select: {
                 id: true,
@@ -72,7 +72,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     runs.map((r) => r.search_tasks.profiles.user_id).filter(Boolean) as string[],
   )];
   const users = userIds.length > 0
-    ? await db.users.findMany({
+    ? await db.query.users.findMany({
         where: { id: { in: userIds } },
         select: { id: true, name: true, email: true },
       })
@@ -135,13 +135,13 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
     statusMismatches,
   ] = await Promise.all([
     // Completed runs that still have pending/processing items
-    db.$queryRaw<{ count: bigint }[]>`
+    queryRaw<{ count: bigint }[]>(sql`
       SELECT COUNT(DISTINCT ri.run_id) as count
       FROM search_task_run_items ri
       JOIN search_task_runs r ON r.id = ri.run_id
       WHERE ri.status IN ('pending', 'processing')
         AND r.status IN ('success', 'error', 'cancelled', 'partial')
-    `,
+    `),
     // Runs stuck in running/queued/stopping for more than 30 minutes
     db.search_task_runs.count({
       where: {
@@ -150,7 +150,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
       },
     }),
     // Search tasks where status says running/queued but latest run is finished
-    db.$queryRaw<{ count: bigint }[]>`
+    queryRaw<{ count: bigint }[]>(sql`
       SELECT COUNT(*) as count
       FROM search_tasks st
       WHERE st.status IN ('running', 'queued', 'blocked', 'stopping')
@@ -159,7 +159,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
           WHERE r.search_task_id = st.id
             AND r.status IN ('running', 'queued', 'stopping')
         )
-    `,
+    `),
   ]);
 
   const orphanedCount = Number(orphanedItems[0]?.count ?? 0);
@@ -237,7 +237,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   if (action === "fix-stuck-runs") {
-    const stuckRuns = await db.search_task_runs.findMany({
+    const stuckRuns = await db.query.search_task_runs.findMany({
       where: {
         status: { in: ["running", "queued", "stopping"] },
         started_at: { lt: new Date(Date.now() - 30 * 60 * 1000) },
@@ -270,7 +270,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   if (action === "fix-status-mismatches") {
-    const stuckTasks = await db.$queryRaw<{ id: number }[]>`
+    const stuckTasks = await queryRaw<{ id: number }[]>(sql`
       SELECT st.id
       FROM search_tasks st
       WHERE st.status IN ('running', 'queued', 'blocked', 'stopping')
@@ -279,7 +279,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
           WHERE r.search_task_id = st.id
             AND r.status IN ('running', 'queued', 'stopping')
         )
-    `;
+    `);
     if (stuckTasks.length > 0) {
       await db.search_tasks.updateMany({
         where: { id: { in: stuckTasks.map((t) => t.id) } },
@@ -304,7 +304,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     // Remove from queue if waiting
     const removed = await removeWaitingJob(searchTaskId);
     if (removed) {
-      const queuedRun = await db.search_task_runs.findFirst({
+      const queuedRun = await db.query.search_task_runs.findFirst({
         where: { search_task_id: searchTaskId, status: "queued" },
         orderBy: { started_at: "desc" },
       });
@@ -326,7 +326,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     }
 
     // Stop running job — set to "stopping" and let worker finalize
-    const runningRun = await db.search_task_runs.findFirst({
+    const runningRun = await db.query.search_task_runs.findFirst({
       where: {
         search_task_id: searchTaskId,
         status: { in: ["running", "blocked"] },
@@ -358,9 +358,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   if (action === "restart") {
-    const searchTask = await db.search_tasks.findFirst({
+    const searchTask = await db.query.search_tasks.findFirst({
       where: { id: searchTaskId },
-      include: { job_platforms: true },
+      with: { job_platforms: true },
     });
 
     if (!searchTask) {

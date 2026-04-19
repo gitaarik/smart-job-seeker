@@ -11,9 +11,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   const chatId = parseIntParam(params.id, "chat");
 
   // Verify ownership: ai_chat -> profile -> user
-  const chat = await db.ai_chats.findFirst({
+  const chat = await db.query.ai_chats.findFirst({
     where: { id: chatId },
-    include: {
+    with: {
       profiles: { select: { user_id: true } },
     },
   });

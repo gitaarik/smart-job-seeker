@@ -14,12 +14,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   if (isNaN(feedbackId)) error(400, "Feedback ID required");
 
   // Verify file belongs to this feedback entry
-  const link = await db.user_feedback_files.findFirst({
+  const link = await db.query.user_feedback_files.findFirst({
     where: { user_feedback_id: feedbackId, file_id: fileId },
   });
   if (!link) error(403, "File not associated with this feedback");
 
-  const fileMeta = await db.files.findUnique({
+  const fileMeta = await db.query.files.findFirst({
     where: { id: fileId },
     select: { filename_download: true, type: true },
   });

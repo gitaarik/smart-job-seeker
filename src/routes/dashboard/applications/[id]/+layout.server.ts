@@ -14,14 +14,14 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
     error(400, "Invalid application ID");
   }
 
-  const application = await db.applications.findFirst({
+  const application = await db.query.applications.findFirst({
     where: {
       id: appId,
       profile_id: layoutData.selectedProfile.id,
     },
-    include: {
+    with: {
       jobs: {
-        include: {
+        with: {
           job_platforms: {
             select: { id: true, name: true, url: true },
           },
@@ -29,7 +29,7 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
       },
       application_letters: {
         orderBy: { date_created: "desc" },
-        include: {
+        with: {
           letter_versions: {
             orderBy: { id: "asc" },
             select: { id: true, source: true, content: true },
@@ -46,7 +46,7 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
         orderBy: { date_created: "desc" },
       },
       applications_files: {
-        include: {
+        with: {
           files: {
             select: {
               id: true,
