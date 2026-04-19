@@ -74,13 +74,19 @@ export function isValidJobPostingDate(
   return true;
 }
 
+/** Coerce a Date or date string (e.g. "2024-01-15") into a Date object. */
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
+}
+
 export function formatDateRangeVerbose(
-  startDate: Date | null,
-  endDate?: Date | null,
+  startDate: Date | string | null,
+  endDate?: Date | string | null,
 ): string {
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
+  const formatDate = (date: Date | string) => {
+    const d = toDate(date);
+    const year = d.getFullYear();
+    const month = d.getMonth();
     const monthNames = [
       "Jan",
       "Feb",
@@ -105,12 +111,13 @@ export function formatDateRangeVerbose(
 }
 
 export function formatDateRangeCompact(
-  startDate: Date | null,
-  endDate?: Date | null,
+  startDate: Date | string | null,
+  endDate?: Date | string | null,
 ): string {
-  const formatDate = (date: Date) => {
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
+  const formatDate = (date: Date | string) => {
+    const d = toDate(date);
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
     return `${month}/${year}`;
   };
 
@@ -121,12 +128,12 @@ export function formatDateRangeCompact(
 }
 
 export function formatDateRangeYear(
-  startDate: Date | null,
-  endDate?: Date | null,
+  startDate: Date | string | null,
+  endDate?: Date | string | null,
 ): string {
   if (!startDate) return "";
-  const startYear = startDate.getFullYear();
-  const endYear = endDate ? endDate.getFullYear() : "Present";
+  const startYear = toDate(startDate).getFullYear();
+  const endYear = endDate ? toDate(endDate).getFullYear() : "Present";
 
   return `${startYear} - ${endYear}`;
 }
