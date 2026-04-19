@@ -6,27 +6,12 @@ import * as schema from "./schema";
 import * as relations from "./relations";
 import type { SQL } from "drizzle-orm";
 
-// Exclude legacy/unused tables (directus_*, _prisma_migrations, sequences)
-const excludeFromSchema = new Set(
-  Object.keys(schema).filter((k) =>
-    k.startsWith("directus_") || k === "_prisma_migrations" ||
-    !(schema[k as keyof typeof schema] && typeof schema[k as keyof typeof schema] === "object" &&
-      "getSQL" in (schema[k as keyof typeof schema] as object))
-  ),
-);
-
-const filteredSchema: Record<string, unknown> = {};
-for (const [key, value] of Object.entries(schema)) {
-  if (!excludeFromSchema.has(key)) filteredSchema[key] = value;
-}
-for (const [key, value] of Object.entries(relations)) {
-  filteredSchema[key] = value;
-}
+const allSchema = { ...schema, ...relations };
 
 const pool = new pg.Pool({
   connectionString: getEnv("SJS_DATABASE_URL"),
 });
-export const db = drizzle(pool, { schema: filteredSchema });
+export const db = drizzle(pool, { schema: allSchema });
 
 // Direct PostgreSQL connection for CLI scripts
 // When running in Docker: use 'database' as hostname (Docker service name)
@@ -44,7 +29,7 @@ const postgresUrl = isRunningInDocker()
 const directPool = new pg.Pool({
   connectionString: postgresUrl,
 });
-export const dbDirect = drizzle(directPool, { schema: filteredSchema });
+export const dbDirect = drizzle(directPool, { schema: allSchema });
 
 /**
  * Execute a raw SQL query and return typed rows.
