@@ -1,10 +1,66 @@
 import { relations } from "drizzle-orm/relations";
-import { ai_prompts, applications, application_activity_log, applications_files, files, profiles, collected_data, config, education, highlights, match_config, ai_chats, job_matches, jobs, job_resources, search_tasks, search_task_runs, os_contributions, job_platforms, platform_profiles, languages, search_task_run_items, project_stories, profile_exports, references, scraper_logs, salary_expectations, profile_versions, side_projects, side_project_technologies, work_experiences, work_experience_achievements, users, sessions, work_experience_projects, work_experience_technologies, tech_skill_categories, work_experience_project_technologies, tech_skills, tech_skill_types, accounts, cheat_sheets, profile_version_extensions, side_project_achievements, api_keys, ai_chat_templates, search_tasks_job_sites, scraper_agent_sessions, scraper_agent_iterations, job_statuses, application_letters, application_questions, application_status_log, letter_versions, job_match_history, job_importers, user_feedback, user_feedback_files, billing_customers, subscriptions, credit_purchases, usage_counters, verification_email_addresses, credit_balances, credit_transactions, certificates, inbound_emails, contacts, device_shares, feedback_replies, user_feedback_subscribers } from "./schema";
-
+import { directus_users, ai_prompts, applications, application_activity_log, applications_files, files, profiles, collected_data, directus_comments, directus_dashboards, directus_deployments, directus_deployment_projects, directus_deployment_runs, config, directus_policies, directus_access, directus_roles, directus_collections, directus_folders, directus_notifications, directus_flows, directus_presets, directus_panels, directus_activity, directus_revisions, directus_versions, directus_permissions, directus_settings, education, highlights, directus_shares, match_config, ai_chats, job_matches, jobs, job_resources, search_tasks, search_task_runs, os_contributions, job_platforms, platform_profiles, languages, search_task_run_items, project_stories, profile_exports, references, scraper_logs, salary_expectations, profile_versions, side_projects, side_project_technologies, work_experiences, work_experience_achievements, users, sessions, work_experience_projects, work_experience_technologies, tech_skill_categories, work_experience_project_technologies, tech_skills, tech_skill_types, accounts, cheat_sheets, directus_operations, directus_sessions, profile_version_extensions, side_project_achievements, api_keys, ai_chat_templates, search_tasks_job_sites, scraper_agent_sessions, scraper_agent_iterations, job_statuses, application_letters, application_questions, application_status_log, letter_versions, job_match_history, job_importers, user_feedback, user_feedback_files, billing_customers, subscriptions, credit_purchases, usage_counters, verification_email_addresses, credit_balances, credit_transactions, certificates, inbound_emails, contacts, device_shares, feedback_replies, user_feedback_subscribers } from "./schema";
 
 export const ai_promptsRelations = relations(ai_prompts, ({one}) => ({
+	directus_user_user_created: one(directus_users, {
+		fields: [ai_prompts.user_created],
+		references: [directus_users.id],
+		relationName: "ai_prompts_user_created_directus_users_id"
+	}),
+	directus_user_user_updated: one(directus_users, {
+		fields: [ai_prompts.user_updated],
+		references: [directus_users.id],
+		relationName: "ai_prompts_user_updated_directus_users_id"
+	}),
 }));
 
+export const directus_usersRelations = relations(directus_users, ({one, many}) => ({
+	ai_prompts_user_created: many(ai_prompts, {
+		relationName: "ai_prompts_user_created_directus_users_id"
+	}),
+	ai_prompts_user_updated: many(ai_prompts, {
+		relationName: "ai_prompts_user_updated_directus_users_id"
+	}),
+	directus_comments_user_created: many(directus_comments, {
+		relationName: "directus_comments_user_created_directus_users_id"
+	}),
+	directus_comments_user_updated: many(directus_comments, {
+		relationName: "directus_comments_user_updated_directus_users_id"
+	}),
+	directus_dashboards: many(directus_dashboards),
+	directus_deployments: many(directus_deployments),
+	directus_deployment_runs: many(directus_deployment_runs),
+	directus_accesses: many(directus_access),
+	directus_notifications_recipient: many(directus_notifications, {
+		relationName: "directus_notifications_recipient_directus_users_id"
+	}),
+	directus_notifications_sender: many(directus_notifications, {
+		relationName: "directus_notifications_sender_directus_users_id"
+	}),
+	directus_flows: many(directus_flows),
+	directus_presets: many(directus_presets),
+	directus_panels: many(directus_panels),
+	directus_versions_user_created: many(directus_versions, {
+		relationName: "directus_versions_user_created_directus_users_id"
+	}),
+	directus_versions_user_updated: many(directus_versions, {
+		relationName: "directus_versions_user_updated_directus_users_id"
+	}),
+	directus_shares: many(directus_shares),
+	directus_role: one(directus_roles, {
+		fields: [directus_users.role],
+		references: [directus_roles.id]
+	}),
+	directus_deployment_projects: many(directus_deployment_projects),
+	directus_operations: many(directus_operations),
+	directus_sessions: many(directus_sessions),
+	files_modified_by: many(files, {
+		relationName: "files_modified_by_directus_users_id"
+	}),
+	files_uploaded_by: many(files, {
+		relationName: "files_uploaded_by_directus_users_id"
+	}),
+}));
 
 export const application_activity_logRelations = relations(application_activity_log, ({one}) => ({
 	application: one(applications, {
@@ -12,7 +68,6 @@ export const application_activity_logRelations = relations(application_activity_
 		references: [applications.id]
 	}),
 }));
-
 
 export const applicationsRelations = relations(applications, ({one, many}) => ({
 	application_activity_logs: many(application_activity_log),
@@ -34,7 +89,6 @@ export const applicationsRelations = relations(applications, ({one, many}) => ({
 	application_status_logs: many(application_status_log),
 }));
 
-
 export const applications_filesRelations = relations(applications_files, ({one}) => ({
 	application: one(applications, {
 		fields: [applications_files.applications_id],
@@ -46,18 +100,42 @@ export const applications_filesRelations = relations(applications_files, ({one})
 	}),
 }));
 
-
 export const filesRelations = relations(files, ({one, many}) => ({
 	applications_files: many(applications_files),
+	directus_settings_project_logo: many(directus_settings, {
+		relationName: "directus_settings_project_logo_files_id"
+	}),
+	directus_settings_public_background: many(directus_settings, {
+		relationName: "directus_settings_public_background_files_id"
+	}),
+	directus_settings_public_favicon: many(directus_settings, {
+		relationName: "directus_settings_public_favicon_files_id"
+	}),
+	directus_settings_public_foreground: many(directus_settings, {
+		relationName: "directus_settings_public_foreground_files_id"
+	}),
 	educations: many(education),
 	job_resources: many(job_resources),
 	profile_exports: many(profile_exports),
 	work_experiences: many(work_experiences),
 	applications: many(applications),
 	profiles: many(profiles),
-	user_feedback_files: many(user_feedback_files)
+	user_feedback_files: many(user_feedback_files),
+	directus_folder: one(directus_folders, {
+		fields: [files.folder],
+		references: [directus_folders.id]
+	}),
+	directus_user_modified_by: one(directus_users, {
+		fields: [files.modified_by],
+		references: [directus_users.id],
+		relationName: "files_modified_by_directus_users_id"
+	}),
+	directus_user_uploaded_by: one(directus_users, {
+		fields: [files.uploaded_by],
+		references: [directus_users.id],
+		relationName: "files_uploaded_by_directus_users_id"
+	}),
 }));
-
 
 export const collected_dataRelations = relations(collected_data, ({one}) => ({
 	profile: one(profiles, {
@@ -65,7 +143,6 @@ export const collected_dataRelations = relations(collected_data, ({one}) => ({
 		references: [profiles.id]
 	}),
 }));
-
 
 export const profilesRelations = relations(profiles, ({one, many}) => ({
 	collected_data: many(collected_data),
@@ -113,6 +190,57 @@ export const profilesRelations = relations(profiles, ({one, many}) => ({
 	certificates: many(certificates),
 }));
 
+export const directus_commentsRelations = relations(directus_comments, ({one}) => ({
+	directus_user_user_created: one(directus_users, {
+		fields: [directus_comments.user_created],
+		references: [directus_users.id],
+		relationName: "directus_comments_user_created_directus_users_id"
+	}),
+	directus_user_user_updated: one(directus_users, {
+		fields: [directus_comments.user_updated],
+		references: [directus_users.id],
+		relationName: "directus_comments_user_updated_directus_users_id"
+	}),
+}));
+
+export const directus_dashboardsRelations = relations(directus_dashboards, ({one, many}) => ({
+	directus_user: one(directus_users, {
+		fields: [directus_dashboards.user_created],
+		references: [directus_users.id]
+	}),
+	directus_panels: many(directus_panels),
+}));
+
+export const directus_deploymentsRelations = relations(directus_deployments, ({one, many}) => ({
+	directus_user: one(directus_users, {
+		fields: [directus_deployments.user_created],
+		references: [directus_users.id]
+	}),
+	directus_deployment_projects: many(directus_deployment_projects),
+}));
+
+export const directus_deployment_runsRelations = relations(directus_deployment_runs, ({one}) => ({
+	directus_deployment_project: one(directus_deployment_projects, {
+		fields: [directus_deployment_runs.project],
+		references: [directus_deployment_projects.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_deployment_runs.user_created],
+		references: [directus_users.id]
+	}),
+}));
+
+export const directus_deployment_projectsRelations = relations(directus_deployment_projects, ({one, many}) => ({
+	directus_deployment_runs: many(directus_deployment_runs),
+	directus_deployment: one(directus_deployments, {
+		fields: [directus_deployment_projects.deployment],
+		references: [directus_deployments.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_deployment_projects.user_created],
+		references: [directus_users.id]
+	}),
+}));
 
 export const configRelations = relations(config, ({one}) => ({
 	profile: one(profiles, {
@@ -121,6 +249,189 @@ export const configRelations = relations(config, ({one}) => ({
 	}),
 }));
 
+export const directus_accessRelations = relations(directus_access, ({one}) => ({
+	directus_policy: one(directus_policies, {
+		fields: [directus_access.policy],
+		references: [directus_policies.id]
+	}),
+	directus_role: one(directus_roles, {
+		fields: [directus_access.role],
+		references: [directus_roles.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_access.user],
+		references: [directus_users.id]
+	}),
+}));
+
+export const directus_policiesRelations = relations(directus_policies, ({many}) => ({
+	directus_accesses: many(directus_access),
+	directus_permissions: many(directus_permissions),
+}));
+
+export const directus_rolesRelations = relations(directus_roles, ({one, many}) => ({
+	directus_accesses: many(directus_access),
+	directus_presets: many(directus_presets),
+	directus_settings: many(directus_settings),
+	directus_role: one(directus_roles, {
+		fields: [directus_roles.parent],
+		references: [directus_roles.id],
+		relationName: "directus_roles_parent_directus_roles_id"
+	}),
+	directus_roles: many(directus_roles, {
+		relationName: "directus_roles_parent_directus_roles_id"
+	}),
+	directus_shares: many(directus_shares),
+	directus_users: many(directus_users),
+}));
+
+export const directus_collectionsRelations = relations(directus_collections, ({one, many}) => ({
+	directus_collection: one(directus_collections, {
+		fields: [directus_collections.group],
+		references: [directus_collections.collection],
+		relationName: "directus_collections_group_directus_collections_collection"
+	}),
+	directus_collections: many(directus_collections, {
+		relationName: "directus_collections_group_directus_collections_collection"
+	}),
+	directus_versions: many(directus_versions),
+	directus_shares: many(directus_shares),
+}));
+
+export const directus_foldersRelations = relations(directus_folders, ({one, many}) => ({
+	directus_folder: one(directus_folders, {
+		fields: [directus_folders.parent],
+		references: [directus_folders.id],
+		relationName: "directus_folders_parent_directus_folders_id"
+	}),
+	directus_folders: many(directus_folders, {
+		relationName: "directus_folders_parent_directus_folders_id"
+	}),
+	directus_settings: many(directus_settings),
+	files: many(files),
+}));
+
+export const directus_notificationsRelations = relations(directus_notifications, ({one}) => ({
+	directus_user_recipient: one(directus_users, {
+		fields: [directus_notifications.recipient],
+		references: [directus_users.id],
+		relationName: "directus_notifications_recipient_directus_users_id"
+	}),
+	directus_user_sender: one(directus_users, {
+		fields: [directus_notifications.sender],
+		references: [directus_users.id],
+		relationName: "directus_notifications_sender_directus_users_id"
+	}),
+}));
+
+export const directus_flowsRelations = relations(directus_flows, ({one, many}) => ({
+	directus_user: one(directus_users, {
+		fields: [directus_flows.user_created],
+		references: [directus_users.id]
+	}),
+	directus_operations: many(directus_operations),
+}));
+
+export const directus_presetsRelations = relations(directus_presets, ({one}) => ({
+	directus_role: one(directus_roles, {
+		fields: [directus_presets.role],
+		references: [directus_roles.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_presets.user],
+		references: [directus_users.id]
+	}),
+}));
+
+export const directus_panelsRelations = relations(directus_panels, ({one}) => ({
+	directus_dashboard: one(directus_dashboards, {
+		fields: [directus_panels.dashboard],
+		references: [directus_dashboards.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_panels.user_created],
+		references: [directus_users.id]
+	}),
+}));
+
+export const directus_revisionsRelations = relations(directus_revisions, ({one, many}) => ({
+	directus_activity: one(directus_activity, {
+		fields: [directus_revisions.activity],
+		references: [directus_activity.id]
+	}),
+	directus_revision: one(directus_revisions, {
+		fields: [directus_revisions.parent],
+		references: [directus_revisions.id],
+		relationName: "directus_revisions_parent_directus_revisions_id"
+	}),
+	directus_revisions: many(directus_revisions, {
+		relationName: "directus_revisions_parent_directus_revisions_id"
+	}),
+	directus_version: one(directus_versions, {
+		fields: [directus_revisions.version],
+		references: [directus_versions.id]
+	}),
+}));
+
+export const directus_activityRelations = relations(directus_activity, ({many}) => ({
+	directus_revisions: many(directus_revisions),
+}));
+
+export const directus_versionsRelations = relations(directus_versions, ({one, many}) => ({
+	directus_revisions: many(directus_revisions),
+	directus_collection: one(directus_collections, {
+		fields: [directus_versions.collection],
+		references: [directus_collections.collection]
+	}),
+	directus_user_user_created: one(directus_users, {
+		fields: [directus_versions.user_created],
+		references: [directus_users.id],
+		relationName: "directus_versions_user_created_directus_users_id"
+	}),
+	directus_user_user_updated: one(directus_users, {
+		fields: [directus_versions.user_updated],
+		references: [directus_users.id],
+		relationName: "directus_versions_user_updated_directus_users_id"
+	}),
+}));
+
+export const directus_permissionsRelations = relations(directus_permissions, ({one}) => ({
+	directus_policy: one(directus_policies, {
+		fields: [directus_permissions.policy],
+		references: [directus_policies.id]
+	}),
+}));
+
+export const directus_settingsRelations = relations(directus_settings, ({one}) => ({
+	file_project_logo: one(files, {
+		fields: [directus_settings.project_logo],
+		references: [files.id],
+		relationName: "directus_settings_project_logo_files_id"
+	}),
+	file_public_background: one(files, {
+		fields: [directus_settings.public_background],
+		references: [files.id],
+		relationName: "directus_settings_public_background_files_id"
+	}),
+	file_public_favicon: one(files, {
+		fields: [directus_settings.public_favicon],
+		references: [files.id],
+		relationName: "directus_settings_public_favicon_files_id"
+	}),
+	file_public_foreground: one(files, {
+		fields: [directus_settings.public_foreground],
+		references: [files.id],
+		relationName: "directus_settings_public_foreground_files_id"
+	}),
+	directus_role: one(directus_roles, {
+		fields: [directus_settings.public_registration_role],
+		references: [directus_roles.id]
+	}),
+	directus_folder: one(directus_folders, {
+		fields: [directus_settings.storage_default_folder],
+		references: [directus_folders.id]
+	}),
+}));
 
 export const educationRelations = relations(education, ({one}) => ({
 	file: one(files, {
@@ -133,7 +444,6 @@ export const educationRelations = relations(education, ({one}) => ({
 	}),
 }));
 
-
 export const highlightsRelations = relations(highlights, ({one}) => ({
 	profile: one(profiles, {
 		fields: [highlights.profile_id],
@@ -141,6 +451,21 @@ export const highlightsRelations = relations(highlights, ({one}) => ({
 	}),
 }));
 
+export const directus_sharesRelations = relations(directus_shares, ({one, many}) => ({
+	directus_collection: one(directus_collections, {
+		fields: [directus_shares.collection],
+		references: [directus_collections.collection]
+	}),
+	directus_role: one(directus_roles, {
+		fields: [directus_shares.role],
+		references: [directus_roles.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_shares.user_created],
+		references: [directus_users.id]
+	}),
+	directus_sessions: many(directus_sessions),
+}));
 
 export const match_configRelations = relations(match_config, ({one}) => ({
 	profile: one(profiles, {
@@ -148,7 +473,6 @@ export const match_configRelations = relations(match_config, ({one}) => ({
 		references: [profiles.id]
 	}),
 }));
-
 
 export const job_matchesRelations = relations(job_matches, ({one}) => ({
 	ai_chat: one(ai_chats, {
@@ -164,7 +488,6 @@ export const job_matchesRelations = relations(job_matches, ({one}) => ({
 		references: [profiles.id]
 	}),
 }));
-
 
 export const ai_chatsRelations = relations(ai_chats, ({one, many}) => ({
 	job_matches: many(job_matches),
@@ -190,7 +513,6 @@ export const ai_chatsRelations = relations(ai_chats, ({one, many}) => ({
 	letter_versions: many(letter_versions),
 }));
 
-
 export const jobsRelations = relations(jobs, ({one, many}) => ({
 	job_matches: many(job_matches),
 	job_resources: many(job_resources),
@@ -209,7 +531,6 @@ export const jobsRelations = relations(jobs, ({one, many}) => ({
 	job_importers: many(job_importers),
 }));
 
-
 export const job_resourcesRelations = relations(job_resources, ({one}) => ({
 	file: one(files, {
 		fields: [job_resources.file_id],
@@ -221,7 +542,6 @@ export const job_resourcesRelations = relations(job_resources, ({one}) => ({
 	}),
 }));
 
-
 export const search_task_runsRelations = relations(search_task_runs, ({one, many}) => ({
 	search_task: one(search_tasks, {
 		fields: [search_task_runs.search_task_id],
@@ -232,7 +552,6 @@ export const search_task_runsRelations = relations(search_task_runs, ({one, many
 	scraper_agent_iterations: many(scraper_agent_iterations),
 	inbound_emails: many(inbound_emails),
 }));
-
 
 export const search_tasksRelations = relations(search_tasks, ({one, many}) => ({
 	search_task_runs: many(search_task_runs),
@@ -256,14 +575,12 @@ export const search_tasksRelations = relations(search_tasks, ({one, many}) => ({
 	scraper_agent_sessions: many(scraper_agent_sessions),
 }));
 
-
 export const os_contributionsRelations = relations(os_contributions, ({one}) => ({
 	profile: one(profiles, {
 		fields: [os_contributions.profile_id],
 		references: [profiles.id]
 	}),
 }));
-
 
 export const platform_profilesRelations = relations(platform_profiles, ({one, many}) => ({
 	job_platform: one(job_platforms, {
@@ -277,13 +594,11 @@ export const platform_profilesRelations = relations(platform_profiles, ({one, ma
 	search_tasks: many(search_tasks),
 }));
 
-
 export const job_platformsRelations = relations(job_platforms, ({many}) => ({
 	platform_profiles: many(platform_profiles),
 	jobs: many(jobs),
 	search_tasks: many(search_tasks),
 }));
-
 
 export const languagesRelations = relations(languages, ({one}) => ({
 	profile: one(profiles, {
@@ -291,7 +606,6 @@ export const languagesRelations = relations(languages, ({one}) => ({
 		references: [profiles.id]
 	}),
 }));
-
 
 export const search_task_run_itemsRelations = relations(search_task_run_items, ({one}) => ({
 	job: one(jobs, {
@@ -304,14 +618,12 @@ export const search_task_run_itemsRelations = relations(search_task_run_items, (
 	}),
 }));
 
-
 export const project_storiesRelations = relations(project_stories, ({one}) => ({
 	profile: one(profiles, {
 		fields: [project_stories.profile_id],
 		references: [profiles.id]
 	}),
 }));
-
 
 export const profile_exportsRelations = relations(profile_exports, ({one}) => ({
 	file: one(files, {
@@ -324,14 +636,12 @@ export const profile_exportsRelations = relations(profile_exports, ({one}) => ({
 	}),
 }));
 
-
 export const referencesRelations = relations(references, ({one}) => ({
 	profile: one(profiles, {
 		fields: [references.profile_id],
 		references: [profiles.id]
 	}),
 }));
-
 
 export const scraper_logsRelations = relations(scraper_logs, ({one}) => ({
 	search_task_run: one(search_task_runs, {
@@ -340,14 +650,12 @@ export const scraper_logsRelations = relations(scraper_logs, ({one}) => ({
 	}),
 }));
 
-
 export const salary_expectationsRelations = relations(salary_expectations, ({one}) => ({
 	profile: one(profiles, {
 		fields: [salary_expectations.profile_id],
 		references: [profiles.id]
 	}),
 }));
-
 
 export const profile_versionsRelations = relations(profile_versions, ({one, many}) => ({
 	profile: one(profiles, {
@@ -369,14 +677,12 @@ export const profile_versionsRelations = relations(profile_versions, ({one, many
 	}),
 }));
 
-
 export const side_project_technologiesRelations = relations(side_project_technologies, ({one}) => ({
 	side_project: one(side_projects, {
 		fields: [side_project_technologies.side_project_id],
 		references: [side_projects.id]
 	}),
 }));
-
 
 export const side_projectsRelations = relations(side_projects, ({one, many}) => ({
 	side_project_technologies: many(side_project_technologies),
@@ -387,14 +693,12 @@ export const side_projectsRelations = relations(side_projects, ({one, many}) => 
 	side_project_achievements: many(side_project_achievements),
 }));
 
-
 export const work_experience_achievementsRelations = relations(work_experience_achievements, ({one}) => ({
 	work_experience: one(work_experiences, {
 		fields: [work_experience_achievements.work_experience_id],
 		references: [work_experiences.id]
 	}),
 }));
-
 
 export const work_experiencesRelations = relations(work_experiences, ({one, many}) => ({
 	work_experience_achievements: many(work_experience_achievements),
@@ -410,14 +714,12 @@ export const work_experiencesRelations = relations(work_experiences, ({one, many
 	}),
 }));
 
-
 export const sessionsRelations = relations(sessions, ({one}) => ({
 	user: one(users, {
 		fields: [sessions.userId],
 		references: [users.id]
 	}),
 }));
-
 
 export const usersRelations = relations(users, ({many}) => ({
 	sessions: many(sessions),
@@ -437,7 +739,6 @@ export const usersRelations = relations(users, ({many}) => ({
 	device_shares: many(device_shares),
 }));
 
-
 export const work_experience_projectsRelations = relations(work_experience_projects, ({one, many}) => ({
 	work_experience: one(work_experiences, {
 		fields: [work_experience_projects.work_experience_id],
@@ -446,14 +747,12 @@ export const work_experience_projectsRelations = relations(work_experience_proje
 	work_experience_project_technologies: many(work_experience_project_technologies),
 }));
 
-
 export const work_experience_technologiesRelations = relations(work_experience_technologies, ({one}) => ({
 	work_experience: one(work_experiences, {
 		fields: [work_experience_technologies.work_experience_id],
 		references: [work_experiences.id]
 	}),
 }));
-
 
 export const tech_skill_categoriesRelations = relations(tech_skill_categories, ({one, many}) => ({
 	profile: one(profiles, {
@@ -463,14 +762,12 @@ export const tech_skill_categoriesRelations = relations(tech_skill_categories, (
 	tech_skills: many(tech_skills),
 }));
 
-
 export const work_experience_project_technologiesRelations = relations(work_experience_project_technologies, ({one}) => ({
 	work_experience_project: one(work_experience_projects, {
 		fields: [work_experience_project_technologies.work_experience_project_id],
 		references: [work_experience_projects.id]
 	}),
 }));
-
 
 export const tech_skillsRelations = relations(tech_skills, ({one}) => ({
 	tech_skill_category: one(tech_skill_categories, {
@@ -483,11 +780,9 @@ export const tech_skillsRelations = relations(tech_skills, ({one}) => ({
 	}),
 }));
 
-
 export const tech_skill_typesRelations = relations(tech_skill_types, ({many}) => ({
 	tech_skills: many(tech_skills),
 }));
-
 
 export const accountsRelations = relations(accounts, ({one}) => ({
 	user: one(users, {
@@ -496,7 +791,6 @@ export const accountsRelations = relations(accounts, ({one}) => ({
 	}),
 }));
 
-
 export const cheat_sheetsRelations = relations(cheat_sheets, ({one}) => ({
 	profile: one(profiles, {
 		fields: [cheat_sheets.profile_id],
@@ -504,6 +798,43 @@ export const cheat_sheetsRelations = relations(cheat_sheets, ({one}) => ({
 	}),
 }));
 
+export const directus_operationsRelations = relations(directus_operations, ({one, many}) => ({
+	directus_flow: one(directus_flows, {
+		fields: [directus_operations.flow],
+		references: [directus_flows.id]
+	}),
+	directus_operation_reject: one(directus_operations, {
+		fields: [directus_operations.reject],
+		references: [directus_operations.id],
+		relationName: "directus_operations_reject_directus_operations_id"
+	}),
+	directus_operations_reject: many(directus_operations, {
+		relationName: "directus_operations_reject_directus_operations_id"
+	}),
+	directus_operation_resolve: one(directus_operations, {
+		fields: [directus_operations.resolve],
+		references: [directus_operations.id],
+		relationName: "directus_operations_resolve_directus_operations_id"
+	}),
+	directus_operations_resolve: many(directus_operations, {
+		relationName: "directus_operations_resolve_directus_operations_id"
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_operations.user_created],
+		references: [directus_users.id]
+	}),
+}));
+
+export const directus_sessionsRelations = relations(directus_sessions, ({one}) => ({
+	directus_share: one(directus_shares, {
+		fields: [directus_sessions.share],
+		references: [directus_shares.id]
+	}),
+	directus_user: one(directus_users, {
+		fields: [directus_sessions.user],
+		references: [directus_users.id]
+	}),
+}));
 
 export const profile_version_extensionsRelations = relations(profile_version_extensions, ({one}) => ({
 	profile_version_extended_id: one(profile_versions, {
@@ -518,14 +849,12 @@ export const profile_version_extensionsRelations = relations(profile_version_ext
 	}),
 }));
 
-
 export const side_project_achievementsRelations = relations(side_project_achievements, ({one}) => ({
 	side_project: one(side_projects, {
 		fields: [side_project_achievements.side_project_id],
 		references: [side_projects.id]
 	}),
 }));
-
 
 export const api_keysRelations = relations(api_keys, ({one, many}) => ({
 	profile: one(profiles, {
@@ -536,11 +865,9 @@ export const api_keysRelations = relations(api_keys, ({one, many}) => ({
 	device_shares: many(device_shares),
 }));
 
-
 export const ai_chat_templatesRelations = relations(ai_chat_templates, ({many}) => ({
 	ai_chats: many(ai_chats),
 }));
-
 
 export const search_tasks_job_sitesRelations = relations(search_tasks_job_sites, ({one}) => ({
 	search_task: one(search_tasks, {
@@ -548,7 +875,6 @@ export const search_tasks_job_sitesRelations = relations(search_tasks_job_sites,
 		references: [search_tasks.id]
 	}),
 }));
-
 
 export const scraper_agent_iterationsRelations = relations(scraper_agent_iterations, ({one}) => ({
 	scraper_agent_session: one(scraper_agent_sessions, {
@@ -561,7 +887,6 @@ export const scraper_agent_iterationsRelations = relations(scraper_agent_iterati
 	}),
 }));
 
-
 export const scraper_agent_sessionsRelations = relations(scraper_agent_sessions, ({one, many}) => ({
 	scraper_agent_iterations: many(scraper_agent_iterations),
 	search_task: one(search_tasks, {
@@ -569,7 +894,6 @@ export const scraper_agent_sessionsRelations = relations(scraper_agent_sessions,
 		references: [search_tasks.id]
 	}),
 }));
-
 
 export const job_statusesRelations = relations(job_statuses, ({one}) => ({
 	job: one(jobs, {
@@ -581,7 +905,6 @@ export const job_statusesRelations = relations(job_statuses, ({one}) => ({
 		references: [profiles.id]
 	}),
 }));
-
 
 export const application_lettersRelations = relations(application_letters, ({one, many}) => ({
 	ai_chat: one(ai_chats, {
@@ -595,7 +918,6 @@ export const application_lettersRelations = relations(application_letters, ({one
 	letter_versions: many(letter_versions),
 }));
 
-
 export const application_questionsRelations = relations(application_questions, ({one}) => ({
 	ai_chat: one(ai_chats, {
 		fields: [application_questions.ai_chat_id],
@@ -607,14 +929,12 @@ export const application_questionsRelations = relations(application_questions, (
 	}),
 }));
 
-
 export const application_status_logRelations = relations(application_status_log, ({one}) => ({
 	application: one(applications, {
 		fields: [application_status_log.application],
 		references: [applications.id]
 	}),
 }));
-
 
 export const letter_versionsRelations = relations(letter_versions, ({one}) => ({
 	ai_chat: one(ai_chats, {
@@ -627,7 +947,6 @@ export const letter_versionsRelations = relations(letter_versions, ({one}) => ({
 	}),
 }));
 
-
 export const job_match_historyRelations = relations(job_match_history, ({one}) => ({
 	job: one(jobs, {
 		fields: [job_match_history.job],
@@ -638,7 +957,6 @@ export const job_match_historyRelations = relations(job_match_history, ({one}) =
 		references: [profiles.id]
 	}),
 }));
-
 
 export const job_importersRelations = relations(job_importers, ({one}) => ({
 	job: one(jobs, {
@@ -651,7 +969,6 @@ export const job_importersRelations = relations(job_importers, ({one}) => ({
 	}),
 }));
 
-
 export const user_feedback_filesRelations = relations(user_feedback_files, ({one}) => ({
 	user_feedback: one(user_feedback, {
 		fields: [user_feedback_files.user_feedback_id],
@@ -662,7 +979,6 @@ export const user_feedback_filesRelations = relations(user_feedback_files, ({one
 		references: [files.id]
 	}),
 }));
-
 
 export const user_feedbackRelations = relations(user_feedback, ({one, many}) => ({
 	user_feedback_files: many(user_feedback_files),
@@ -678,14 +994,12 @@ export const user_feedbackRelations = relations(user_feedback, ({one, many}) => 
 	user_feedback_subscribers: many(user_feedback_subscribers),
 }));
 
-
 export const billing_customersRelations = relations(billing_customers, ({one}) => ({
 	user: one(users, {
 		fields: [billing_customers.user_id],
 		references: [users.id]
 	}),
 }));
-
 
 export const subscriptionsRelations = relations(subscriptions, ({one}) => ({
 	user: one(users, {
@@ -694,7 +1008,6 @@ export const subscriptionsRelations = relations(subscriptions, ({one}) => ({
 	}),
 }));
 
-
 export const credit_purchasesRelations = relations(credit_purchases, ({one}) => ({
 	user: one(users, {
 		fields: [credit_purchases.user_id],
@@ -702,14 +1015,12 @@ export const credit_purchasesRelations = relations(credit_purchases, ({one}) => 
 	}),
 }));
 
-
 export const usage_countersRelations = relations(usage_counters, ({one}) => ({
 	user: one(users, {
 		fields: [usage_counters.user_id],
 		references: [users.id]
 	}),
 }));
-
 
 export const verification_email_addressesRelations = relations(verification_email_addresses, ({one, many}) => ({
 	profile: one(profiles, {
@@ -719,14 +1030,12 @@ export const verification_email_addressesRelations = relations(verification_emai
 	inbound_emails: many(inbound_emails),
 }));
 
-
 export const credit_balancesRelations = relations(credit_balances, ({one}) => ({
 	user: one(users, {
 		fields: [credit_balances.user_id],
 		references: [users.id]
 	}),
 }));
-
 
 export const credit_transactionsRelations = relations(credit_transactions, ({one}) => ({
 	user: one(users, {
@@ -735,14 +1044,12 @@ export const credit_transactionsRelations = relations(credit_transactions, ({one
 	}),
 }));
 
-
 export const certificatesRelations = relations(certificates, ({one}) => ({
 	profile: one(profiles, {
 		fields: [certificates.profile],
 		references: [profiles.id]
 	}),
 }));
-
 
 export const inbound_emailsRelations = relations(inbound_emails, ({one}) => ({
 	verification_email_address: one(verification_email_addresses, {
@@ -754,7 +1061,6 @@ export const inbound_emailsRelations = relations(inbound_emails, ({one}) => ({
 		references: [search_task_runs.id]
 	}),
 }));
-
 
 export const contactsRelations = relations(contacts, ({one}) => ({
 	user_recipient_id: one(users, {
@@ -769,7 +1075,6 @@ export const contactsRelations = relations(contacts, ({one}) => ({
 	}),
 }));
 
-
 export const device_sharesRelations = relations(device_shares, ({one}) => ({
 	user: one(users, {
 		fields: [device_shares.shared_with],
@@ -781,14 +1086,12 @@ export const device_sharesRelations = relations(device_shares, ({one}) => ({
 	}),
 }));
 
-
 export const feedback_repliesRelations = relations(feedback_replies, ({one}) => ({
 	user_feedback: one(user_feedback, {
 		fields: [feedback_replies.feedback_id],
 		references: [user_feedback.id]
 	}),
 }));
-
 
 export const user_feedback_subscribersRelations = relations(user_feedback_subscribers, ({one}) => ({
 	user_feedback: one(user_feedback, {

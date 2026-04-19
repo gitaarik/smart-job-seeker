@@ -16,6 +16,34 @@ import { getTableColumns } from "drizzle-orm";
 type WhereClause = Record<string, unknown>;
 
 /**
+ * Prisma uses table names for one() relations (e.g., 'jobs', 'profiles').
+ * Drizzle introspection uses singular names (e.g., 'job', 'profile').
+ * This map normalizes Prisma-style keys to Drizzle relation property names.
+ */
+const RELATION_KEY_MAP: Record<string, string> = {
+  ai_chat_templates: "ai_chat_template",
+  ai_chats: "ai_chat",
+  api_keys: "api_key",
+  application_letters: "application_letter",
+  applications: "application",
+  files: "file",
+  job_platforms: "job_platform",
+  jobs: "job",
+  platform_profiles: "platform_profile",
+  profiles: "profile",
+  scraper_agent_sessions: "scraper_agent_session",
+  search_task_runs: "search_task_run",
+  search_tasks: "search_task",
+  side_projects: "side_project",
+  tech_skill_categories: "tech_skill_category",
+  tech_skill_types: "tech_skill_type",
+  users: "user",
+  verification_email_addresses: "verification_email_address",
+  work_experience_projects: "work_experience_project",
+  work_experiences: "work_experience",
+};
+
+/**
  * Convert a Prisma-style where clause to Drizzle SQL conditions.
  */
 function buildWhere(table: PgTable, where: WhereClause): SQL | undefined {
@@ -263,27 +291,25 @@ function convertQueryOptions(table: PgTable, options: any, tables?: Record<strin
     converted.orderBy = convertOrderBy(table, converted.orderBy);
   }
 
+  // Convert select: → columns: (Drizzle uses 'columns' for field projection in relational queries)
+  if (converted.select && !converted.columns) {
+    converted.columns = converted.select;
+    delete converted.select;
+  }
+
   // Recursively convert `with` options (nested relations)
   if (converted.with && tables) {
     const convertedWith: Record<string, unknown> = {};
-    const tableRelations = getTableColumns(table);
 
     for (const [relName, relOptions] of Object.entries(converted.with)) {
-      if (relOptions === true) {
-        convertedWith[relName] = true;
-        continue;
-      }
-      if (typeof relOptions === "object" && relOptions !== null) {
-        // Try to find the related table
-        const relTable = tables[relName];
-        if (relTable) {
-          convertedWith[relName] = convertQueryOptions(relTable, relOptions, tables);
-        } else {
-          convertedWith[relName] = relOptions;
-        }
-      } else {
-        convertedWith[relName] = relOptions;
-      }
+      // Normalize Prisma relation names to Drizzle names (e.g., 'jobs' → 'job')
+      const drizzleKey = RELATION_KEY_MAP[relName] || relName;
+      const relTable = tables[relName] || tables[drizzleKey];
+      const opts = relOptions === true ? true
+        : typeof relOptions === "object" && relOptions !== null
+          ? convertQueryOptions(relTable || table, relOptions, tables)
+          : relOptions;
+      convertedWith[drizzleKey] = opts;
     }
     converted.with = convertedWith;
   }
