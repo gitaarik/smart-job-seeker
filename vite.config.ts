@@ -10,10 +10,15 @@ export default defineConfig({
     sveltekit(),
   ],
   ssr: {
-    // cheerio is CJS and breaks when bundled into ESM with Sentry's
-    // require-in-the-middle instrumentation. Keep it external so Node
-    // loads it natively as CJS.
-    external: ["cheerio", "drizzle-orm", "bullmq", "import-in-the-middle"],
+    // Keep CJS packages external so Node loads them natively instead of
+    // bundling require() calls into the ESM server build.
+    external: [
+      "cheerio",
+      "drizzle-orm",
+      "bullmq",
+      "import-in-the-middle",
+      "require-in-the-middle",
+    ],
   },
   server: {
     allowedHosts: [
