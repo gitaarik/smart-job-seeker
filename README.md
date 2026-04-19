@@ -2,7 +2,7 @@
 
 An intelligent job search and application management platform that helps you
 create a detailed profile, discover matching opportunities, and optimize your
-job application process with AI assistance.
+entire job application process with AI assistance.
 
 **Vision:** Create your profile once, automatically match it against scraped job
 listings from various platforms, and intelligently manage your entire job search
