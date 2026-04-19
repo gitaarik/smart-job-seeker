@@ -7,8 +7,10 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
-import { sql, type SQL } from "drizzle-orm";
+import { dbDirect as db, queryRaw } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = locals.user;
@@ -29,8 +31,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Verify profile belongs to user
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: { id: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true },
   });
   if (!profile) {
     throw error(403, "Profile not found or not owned by user");

@@ -1,6 +1,8 @@
 import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, asc } from "drizzle-orm";
+import { side_projects, side_project_achievements, side_project_technologies } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -15,13 +17,13 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const project = await db.query.side_projects.findFirst({
-    where: { id, profile_id: layoutData.selectedProfile.id },
+    where: and(eq(side_projects.id, id), eq(side_projects.profile_id, layoutData.selectedProfile.id)),
     with: {
       side_project_achievements: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(side_project_achievements.sort),
       },
       side_project_technologies: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(side_project_technologies.sort),
       },
     },
   });

@@ -6,6 +6,8 @@ import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import { dbDirect } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles, work_experiences, education, side_projects } from "$lib/server/db/schema";
 import type { MediaFile } from "./types";
 
 const UPLOADS_DIR = join(process.cwd(), "uploads");
@@ -142,37 +144,29 @@ async function updateEntityMediaPath(
   switch (entityType) {
     case "profile":
       if (field === "profile_photo_path") {
-        await dbDirect.profiles.update({
-          where: { id: profileId },
-          data: { profile_photo_path: newPath },
-        });
+        await dbDirect.update(profiles).set({ profile_photo_path: newPath })
+          .where(eq(profiles.id, profileId));
       }
       break;
 
     case "work_experience":
       if (field === "logo_path") {
-        await dbDirect.work_experiences.update({
-          where: { id: entityId },
-          data: { logo_path: newPath },
-        });
+        await dbDirect.update(work_experiences).set({ logo_path: newPath })
+          .where(eq(work_experiences.id, entityId));
       }
       break;
 
     case "education":
       if (field === "logo_path") {
-        await dbDirect.education.update({
-          where: { id: entityId },
-          data: { logo_path: newPath },
-        });
+        await dbDirect.update(education).set({ logo_path: newPath })
+          .where(eq(education.id, entityId));
       }
       break;
 
     case "side_project":
       if (field === "image_path") {
-        await dbDirect.side_projects.update({
-          where: { id: entityId },
-          data: { image_path: newPath },
-        });
+        await dbDirect.update(side_projects).set({ image_path: newPath })
+          .where(eq(side_projects.id, entityId));
       }
       break;
   }
@@ -185,9 +179,9 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
   const { unlink } = await import("node:fs/promises");
 
   // Get profile photo
-  const profile = await dbDirect.profiles.findUnique({
-    where: { id: profileId },
-    select: { profile_photo_path: true },
+  const profile = await dbDirect.query.profiles.findFirst({
+    where: eq(profiles.id, profileId),
+    columns: { profile_photo_path: true },
   });
 
   if (profile?.profile_photo_path) {
@@ -199,9 +193,9 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
   }
 
   // Get work experience media
-  const workExps = await dbDirect.work_experiences.findMany({
-    where: { profile_id: profileId },
-    select: { logo_path: true },
+  const workExps = await dbDirect.query.work_experiences.findMany({
+    where: eq(work_experiences.profile_id, profileId),
+    columns: { logo_path: true },
   });
 
   for (const we of workExps) {
@@ -215,12 +209,12 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
   }
 
   // Get education media
-  const education = await dbDirect.education.findMany({
-    where: { profile_id: profileId },
-    select: { logo_path: true },
+  const eduRecords = await dbDirect.query.education.findMany({
+    where: eq(education.profile_id, profileId),
+    columns: { logo_path: true },
   });
 
-  for (const edu of education) {
+  for (const edu of eduRecords) {
     if (edu.logo_path) {
       try {
         await unlink(join(UPLOADS_DIR, edu.logo_path));
@@ -231,12 +225,12 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
   }
 
   // Get side project media
-  const sideProjects = await dbDirect.side_projects.findMany({
-    where: { profile_id: profileId },
-    select: { image_path: true },
+  const sideProjectRecords = await dbDirect.query.side_projects.findMany({
+    where: eq(side_projects.profile_id, profileId),
+    columns: { image_path: true },
   });
 
-  for (const sp of sideProjects) {
+  for (const sp of sideProjectRecords) {
     if (sp.image_path) {
       try {
         await unlink(join(UPLOADS_DIR, sp.image_path));

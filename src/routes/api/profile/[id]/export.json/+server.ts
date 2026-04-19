@@ -1,6 +1,8 @@
 import type { RequestHandler } from "./$types";
 import { error, json } from "@sveltejs/kit";
-import { dbDirect } from "$lib/server/db";
+import { dbDirect as db } from "$lib/server/db";
+import { eq, and, asc } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 
 interface ExportedProfile {
@@ -46,66 +48,71 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const profileId = parseIntParam(params.id, "profile");
 
   // Verify ownership
-  const profile = await dbDirect.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: { id: true },
+  const profileCheck = await db.query.profiles.findFirst({
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true },
   });
 
-  if (!profile) {
+  if (!profileCheck) {
     throw error(403, "Access denied");
   }
 
-  // Fetch profile with all relations - same structure as export-profile-json.ts
-  const baseProfile = await dbDirect.profiles.findUnique({
-    where: { id: profileId },
-    include: {
-      profile_versions_profile_versions_profileToprofiles: {
-        select: {
+  // Fetch profile with all relations using Drizzle relational queries
+  const baseProfile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, profileId),
+    with: {
+      profile_versions: {
+        columns: {
           status: true,
           sort: true,
           slug: true,
           name: true,
           toggles: true,
-          profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
-            {
-              select: {
-                profile_versions_profile_version_extensions_extendedToprofile_versions:
-                  {
-                    select: {
-                      slug: true,
-                    },
-                  },
+        },
+        with: {
+          profile_version_extensions_extender_id: {
+            columns: {},
+            with: {
+              profile_version_extended_id: {
+                columns: {
+                  slug: true,
+                },
               },
             },
+          },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       highlights: {
-        select: { status: true, sort: true, text: true, fa_icon: true },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, text: true, fa_icon: true },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       tech_skill_categories: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           name: true,
           fa_icon: true,
+        },
+        with: {
           tech_skills: {
-            select: {
+            columns: {
               status: true,
               sort: true,
               name: true,
               years_experience: true,
               level: true,
-              tech_skill_types: { select: { slug: true } },
             },
-            orderBy: { sort: "asc" },
+            with: {
+              tech_skill_type: { columns: { slug: true } },
+            },
+            orderBy: (t, { asc }) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       work_experiences: {
-        select: {
+        columns: {
           id: true,
           name: true,
           location: true,
@@ -118,22 +125,24 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           end_date: true,
           website: true,
           tags: true,
+        },
+        with: {
           work_experience_achievements: {
-            select: {
+            columns: {
               status: true,
               sort: true,
               description: true,
               fa_icon: true,
               tags: true,
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t, { asc }) => asc(t.sort),
           },
           work_experience_technologies: {
-            select: { status: true, sort: true, name: true },
-            orderBy: { sort: "asc" },
+            columns: { status: true, sort: true, name: true },
+            orderBy: (t, { asc }) => asc(t.sort),
           },
           work_experience_projects: {
-            select: {
+            columns: {
               status: true,
               sort: true,
               name: true,
@@ -142,18 +151,20 @@ export const GET: RequestHandler = async ({ params, locals }) => {
               end_date: true,
               description: true,
               outcome: true,
+            },
+            with: {
               work_experience_project_technologies: {
-                select: { sort: true, name: true },
-                orderBy: { sort: "asc" },
+                columns: { sort: true, name: true },
+                orderBy: (t, { asc }) => asc(t.sort),
               },
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t, { asc }) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       side_projects: {
-        select: {
+        columns: {
           id: true,
           status: true,
           sort: true,
@@ -165,22 +176,24 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           summary: true,
           url_label: true,
           tags: true,
+        },
+        with: {
           side_project_achievements: {
-            select: {
+            columns: {
               description: true,
               sort: true,
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t, { asc }) => asc(t.sort),
           },
           side_project_technologies: {
-            select: { sort: true, name: true },
-            orderBy: { sort: "asc" },
+            columns: { sort: true, name: true },
+            orderBy: (t, { asc }) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
-      education: {
-        select: {
+      educations: {
+        columns: {
           status: true,
           sort: true,
           institution: true,
@@ -194,30 +207,30 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           summary: true,
           tags: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       languages: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           name: true,
           language_code: true,
           proficiency: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       references: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           author: true,
           author_position: true,
           text: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       project_stories: {
-        select: {
+        columns: {
           sort: true,
           title: true,
           situation: true,
@@ -227,11 +240,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           reflection: true,
           category: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
       cheat_sheets: {
-        select: { sort: true, title: true, content: true },
-        orderBy: { sort: "asc" },
+        columns: { sort: true, title: true, content: true },
+        orderBy: (t, { asc }) => asc(t.sort),
       },
     },
   });
@@ -259,19 +272,17 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       nationality: baseProfile.nationality || undefined,
       location_url: baseProfile.location_url || undefined,
       location_timezone: baseProfile.location_timezone || undefined,
-      profile_versions: baseProfile
-        .profile_versions_profile_versions_profileToprofiles.map((pv) => ({
-          status: pv.status || undefined,
-          sort: pv.sort,
-          slug: pv.slug || undefined,
-          name: pv.name || undefined,
-          toggles: pv.toggles,
-          extends_from: pv
-            .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
-            ?.[0]
-            ?.profile_versions_profile_version_extensions_extendedToprofile_versions
-            ?.slug,
-        })),
+      profile_versions: baseProfile.profile_versions.map((pv) => ({
+        status: pv.status || undefined,
+        sort: pv.sort,
+        slug: pv.slug || undefined,
+        name: pv.name || undefined,
+        toggles: pv.toggles,
+        extends_from: pv.profile_version_extensions_extender_id
+          ?.[0]
+          ?.profile_version_extended_id
+          ?.slug,
+      })),
       highlights: baseProfile.highlights,
       tech_skill_categories: baseProfile.tech_skill_categories.map((cat) => ({
         status: cat.status || undefined,
@@ -284,7 +295,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           name: skill.name || undefined,
           years_experience: skill.years_experience || undefined,
           level: skill.level || undefined,
-          tech_type: skill.tech_skill_types?.slug || null,
+          tech_type: skill.tech_skill_type?.slug || null,
         })),
       })),
       work_experiences: baseProfile.work_experiences.map((work) => ({
@@ -317,11 +328,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         achievements: proj.side_project_achievements,
         technologies: proj.side_project_technologies,
       })),
-      education: baseProfile.education,
+      education: baseProfile.educations,
       languages: baseProfile.languages,
       references: baseProfile.references,
       project_stories: baseProfile.project_stories,
-      application_questions: baseProfile.application_questions,
       cheat_sheets: baseProfile.cheat_sheets,
       salary_settings: baseProfile.salary_base_rate ? {
         base_rate: baseProfile.salary_base_rate,

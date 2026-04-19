@@ -1,6 +1,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { scraper_agent_sessions } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskDisplayName } from "$lib/format";
 import { execFileSync } from "child_process";
@@ -20,9 +22,12 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const sessionId = parseIntParam(params.id, "session");
 
   const session = await db.query.scraper_agent_sessions.findFirst({
-    where: { id: sessionId },
+    where: eq(scraper_agent_sessions.id, sessionId),
     with: {
-      search_tasks: { select: { note: true, job_platforms: { select: { name: true } } } },
+      search_task: {
+        columns: { note: true },
+        with: { job_platform: { columns: { name: true } } },
+      },
     },
   });
 
@@ -42,7 +47,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     git("add", "src/server/scrapers/");
 
     // Build commit message
-    const taskName = searchTaskDisplayName(session.search_tasks.job_platforms?.name, session.search_tasks.note);
+    const taskName = searchTaskDisplayName(session.search_task.job_platform?.name, session.search_task.note);
     const message = [
       `Scraper agent: improve scraper for "${taskName}"`,
       "",

@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, ne, count, asc } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -11,9 +13,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   // Count user's profiles to prevent deleting the last one
-  const profileCount = await db.profiles.count({
-    where: { user_id: layoutData.user.id },
-  });
+  const [{ profileCount }] = await db.select({ profileCount: count() }).from(profiles).where(eq(profiles.user_id, layoutData.user.id));
 
   return {
     profileName: layoutData.selectedProfile.name,
@@ -39,7 +39,7 @@ export const actions: Actions = {
 
     // Get the profile to verify ownership and name
     const profile = await db.query.profiles.findFirst({
-      where: { id: profileId, user_id: user.id },
+      where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
     });
 
     if (!profile) {
@@ -52,9 +52,8 @@ export const actions: Actions = {
     }
 
     // Check if this is the user's last profile
-    const profileCount = await db.profiles.count({
-      where: { user_id: user.id },
-    });
+    const [{ cnt }] = await db.select({ cnt: count() }).from(profiles).where(eq(profiles.user_id, user.id));
+    const profileCount = cnt;
 
     if (profileCount <= 1) {
       return fail(400, { error: "Cannot delete your last profile" });
@@ -62,15 +61,13 @@ export const actions: Actions = {
 
     // Find the next profile to switch to before deleting
     const nextProfile = await db.query.profiles.findFirst({
-      where: { user_id: user.id, id: { not: profileId } },
-      select: { id: true },
-      orderBy: { id: "asc" },
+      where: and(eq(profiles.user_id, user.id), ne(profiles.id, profileId)),
+      columns: { id: true },
+      orderBy: asc(profiles.id),
     });
 
     // Delete the profile (cascades to related records)
-    await db.profiles.delete({
-      where: { id: profileId },
-    });
+    await db.delete(profiles).where(eq(profiles.id, profileId));
 
     // Clear the selected profile cookie so the layout auto-selects another
     cookies.delete("selected_profile_id", { path: "/dashboard" });

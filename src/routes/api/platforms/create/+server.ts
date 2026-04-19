@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, or, ilike } from "drizzle-orm";
+import { job_platforms } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { platformCreateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
@@ -29,12 +31,10 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   // Check if platform already exists with this URL
   const existing = await db.query.job_platforms.findFirst({
-    where: {
-      OR: [
-        { url: { contains: domain, mode: "insensitive" } },
-        { key: domain.replace(/\.[^.]+$/, "").replace(/[^a-z0-9]/gi, "-").toLowerCase() },
-      ],
-    },
+    where: or(
+      ilike(job_platforms.url, `%${domain}%`),
+      eq(job_platforms.key, domain.replace(/\.[^.]+$/, "").replace(/[^a-z0-9]/gi, "-").toLowerCase()),
+    ),
   });
 
   if (existing) {
@@ -60,7 +60,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   // Ensure key is unique
   const keyExists = await db.query.job_platforms.findFirst({
-    where: { key },
+    where: eq(job_platforms.key, key),
   });
 
   if (keyExists) {
@@ -69,16 +69,14 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   // Create new platform
-  const platform = await db.job_platforms.create({
-    data: {
-      name: name || domain,
-      url: normalizedUrl,
-      key,
-      login_page_url: loginPageUrl || null,
-      status: "published", // User-created platforms are immediately available
-      date_created: new Date(),
-    },
-  });
+  const [platform] = await db.insert(job_platforms).values({
+    name: name || domain,
+    url: normalizedUrl,
+    key,
+    login_page_url: loginPageUrl || null,
+    status: "published", // User-created platforms are immediately available
+    date_created: new Date(),
+  }).returning();
 
   return json({
     created: true,

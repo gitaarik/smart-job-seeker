@@ -1,7 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { sql, type SQL } from "drizzle-orm";
+import { sql, type SQL, eq, and, inArray, asc, desc } from "drizzle-orm";
 import { dbDirect as db, queryRaw, sqlJoin } from "$lib/server/db";
+import { match_config, jobs as jobsTable, job_matches, job_statuses, job_platforms } from "$lib/server/db/schema";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { buildVisibilityScope } from "$lib/server/job/match-counts";
 import { getSelectedProfileId } from "../profile/utils";
@@ -153,8 +154,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     // "Not yet matched" — jobs with no job_matches row for this profile
     // Uses same visibility scope as the matcher (respects match_community_jobs)
     const matchConfig = await db.query.match_config.findFirst({
-      where: { profile_id: profileId },
-      select: { match_community_jobs: true },
+      where: eq(match_config.profile_id, profileId),
+      columns: { match_community_jobs: true },
     });
     const { from, where } = buildVisibilityScope(profileId, matchConfig?.match_community_jobs ?? false);
 
@@ -179,10 +180,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
     if (jobIds.length > 0) {
       const fullJobs = await db.query.jobs.findMany({
-        where: { id: { in: jobIds } },
+        where: inArray(jobsTable.id, jobIds),
         with: {
-          job_platforms: {
-            select: { id: true, name: true, url: true },
+          job_platform: {
+            columns: { id: true, name: true, url: true },
           },
         },
       });
@@ -234,14 +235,14 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     const matchIds = matchRows.map((r) => r.id);
 
     if (matchIds.length > 0) {
-      // Load full match data with relations using Prisma
+      // Load full match data with relations
       const fullMatches = await db.query.job_matches.findMany({
-        where: { id: { in: matchIds } },
+        where: inArray(job_matches.id, matchIds),
         with: {
-          jobs: {
+          job: {
             with: {
-              job_platforms: {
-                select: { id: true, name: true, url: true },
+              job_platform: {
+                columns: { id: true, name: true, url: true },
               },
             },
           },
@@ -257,13 +258,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       const matchJobIds = orderedMatches.map((m) => m.job_id);
 
       // Load user statuses from job_statuses table
-      const jobStatuses = await db.query.job_statuses.findMany({
-        where: { profile: profileId, job: { in: matchJobIds } },
-        select: { job: true, status: true },
+      const jobStatusRows = await db.query.job_statuses.findMany({
+        where: and(eq(job_statuses.profile, profileId), inArray(job_statuses.job, matchJobIds)),
+        columns: { job: true, status: true },
       });
-      const statusByJobId = Object.fromEntries(jobStatuses.map((s) => [s.job, s.status]));
+      const statusByJobId = Object.fromEntries(jobStatusRows.map((s) => [s.job, s.status]));
 
-      jobs = orderedMatches.map((m) => m.jobs);
+      jobs = orderedMatches.map((m) => m.job);
       matchesByJobId = Object.fromEntries(
         orderedMatches.map((m) => [
           m.job_id,
@@ -302,12 +303,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     const jobIds = jobRows.map((r) => r.id);
 
     if (jobIds.length > 0) {
-      // Load full job data with relations using Prisma
+      // Load full job data with relations
       const fullJobs = await db.query.jobs.findMany({
-        where: { id: { in: jobIds } },
+        where: inArray(jobsTable.id, jobIds),
         with: {
-          job_platforms: {
-            select: { id: true, name: true, url: true },
+          job_platform: {
+            columns: { id: true, name: true, url: true },
           },
         },
       });
@@ -319,12 +320,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         .filter(Boolean) as typeof fullJobs;
 
       // Get matches for the displayed jobs
-      const jobMatches = await db.query.job_matches.findMany({
-        where: {
-          profile_id: profileId,
-          job_id: { in: jobIds },
-        },
-        select: {
+      const jobMatchRows = await db.query.job_matches.findMany({
+        where: and(eq(job_matches.profile_id, profileId), inArray(job_matches.job_id, jobIds)),
+        columns: {
           id: true,
           job_id: true,
           score: true,
@@ -336,13 +334,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       });
 
       // Load user statuses from job_statuses table
-      const jobStatuses = await db.query.job_statuses.findMany({
-        where: { profile: profileId, job: { in: jobIds } },
-        select: { job: true, status: true },
+      const jobStatusRows = await db.query.job_statuses.findMany({
+        where: and(eq(job_statuses.profile, profileId), inArray(job_statuses.job, jobIds)),
+        columns: { job: true, status: true },
       });
-      const statusByJobId = Object.fromEntries(jobStatuses.map((s) => [s.job, s.status]));
+      const statusByJobId = Object.fromEntries(jobStatusRows.map((s) => [s.job, s.status]));
 
-      matchesByJobId = Object.fromEntries(jobMatches.map((m) => [m.job_id, m]));
+      matchesByJobId = Object.fromEntries(jobMatchRows.map((m) => [m.job_id, m]));
       savedJobIds = jobIds.filter((id) => statusByJobId[id] === "saved");
       rejectedJobIds = jobIds.filter((id) => statusByJobId[id] === "rejected");
     }
@@ -350,12 +348,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Get all platforms for filter dropdown
   const platforms = await db.query.job_platforms.findMany({
-    where: { status: "published" },
-    select: {
+    where: eq(job_platforms.status, "published"),
+    columns: {
       id: true,
       name: true,
     },
-    orderBy: { name: "asc" },
+    orderBy: asc(job_platforms.name),
   });
 
   const totalPages = Math.ceil(totalCount / limit);

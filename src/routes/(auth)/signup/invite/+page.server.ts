@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, gt, like } from "drizzle-orm";
+import { verifications, users, sessions, accounts } from "$lib/server/db/schema";
 import { auth } from "$lib/server/auth/better-auth";
 import { randomBytes, scrypt } from "node:crypto";
 import { promisify } from "node:util";
@@ -42,10 +44,10 @@ export const load: PageServerLoad = async (event) => {
   }
 
   const invites = await db.query.verifications.findMany({
-    where: {
-      identifier: { startsWith: "invite:" },
-      expiresAt: { gt: new Date() },
-    },
+    where: and(
+      like(verifications.identifier, "invite:%"),
+      gt(verifications.expiresAt, new Date()),
+    ),
   });
 
   const invite = findInviteByToken(invites, token);
@@ -89,10 +91,10 @@ export const actions: Actions = {
 
     // Find and validate invite
     const invites = await db.query.verifications.findMany({
-      where: {
-        identifier: { startsWith: "invite:" },
-        expiresAt: { gt: new Date() },
-      },
+      where: and(
+        like(verifications.identifier, "invite:%"),
+        gt(verifications.expiresAt, new Date()),
+      ),
     });
 
     const invite = findInviteByToken(invites, token);
@@ -106,37 +108,34 @@ export const actions: Actions = {
     const data = JSON.parse(invite.value);
     const email = invite.identifier.replace("invite:", "");
 
-    const existingUser = await db.query.users.findFirst({ where: { email } });
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
 
     if (existingUser) {
       // Existing user (invite sent after user was already created)
       // Replace their credentials so they can log in with the new password
       try {
-        await db.sessions.deleteMany({ where: { userId: existingUser.id } });
-        await db.accounts.deleteMany({ where: { userId: existingUser.id } });
+        await db.delete(sessions).where(eq(sessions.userId, existingUser.id));
+        await db.delete(accounts).where(eq(accounts.userId, existingUser.id));
 
         const hashedPassword = await hashPassword(password);
-        await db.accounts.create({
-          data: {
-            id: crypto.randomUUID(),
-            userId: existingUser.id,
-            accountId: existingUser.id,
-            providerId: "credential",
-            password: hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        });
+        const [newAccount] = await db.insert(accounts).values({
+          id: crypto.randomUUID(),
+          userId: existingUser.id,
+          accountId: existingUser.id,
+          providerId: "credential",
+          password: hashedPassword,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).returning();
 
         // Update flags from invite data
-        await db.users.update({
-          where: { id: existingUser.id },
-          data: {
-            is_approved: data.is_approved ?? existingUser.is_approved,
-            is_staff: data.is_staff ?? existingUser.is_staff,
-            is_admin: data.is_admin ?? existingUser.is_admin,
-          },
-        });
+        await db.update(users).set({
+          is_approved: data.is_approved ?? existingUser.is_approved,
+          is_staff: data.is_staff ?? existingUser.is_staff,
+          is_admin: data.is_admin ?? existingUser.is_admin,
+        }).where(eq(users.id, existingUser.id));
       } catch (e: unknown) {
         const message = e instanceof Error
           ? e.message
@@ -151,14 +150,11 @@ export const actions: Actions = {
         });
 
         if (result.user) {
-          await db.users.update({
-            where: { id: result.user.id },
-            data: {
-              is_approved: data.is_approved ?? false,
-              is_staff: data.is_staff ?? false,
-              is_admin: data.is_admin ?? false,
-            },
-          });
+          await db.update(users).set({
+            is_approved: data.is_approved ?? false,
+            is_staff: data.is_staff ?? false,
+            is_admin: data.is_admin ?? false,
+          }).where(eq(users.id, result.user.id));
         }
       } catch (e: unknown) {
         const message = e instanceof Error
@@ -169,7 +165,7 @@ export const actions: Actions = {
     }
 
     // Clean up the invite
-    await db.verifications.delete({ where: { id: invite.id } });
+    await db.delete(verifications).where(eq(verifications.id, invite.id));
 
     redirect(302, "/login?invited=1");
   },

@@ -8,6 +8,8 @@ import { dirname, join } from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import { dbDirect } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles, work_experiences, education, side_projects } from "$lib/server/db/schema";
 import { getErrorMessage } from "$lib/server/utils/errors";
 
 const UPLOADS_DIR = join(process.cwd(), "uploads");
@@ -59,25 +61,25 @@ export async function validateEntityOwnership(
       break;
     }
     case "work_experience": {
-      const entity = await dbDirect.work_experiences.findUnique({
-        where: { id: entityId },
-        select: { profile_id: true },
+      const entity = await dbDirect.query.work_experiences.findFirst({
+        where: eq(work_experiences.id, entityId),
+        columns: { profile_id: true },
       });
       profileId = entity?.profile_id ?? null;
       break;
     }
     case "education": {
-      const entity = await dbDirect.education.findUnique({
-        where: { id: entityId },
-        select: { profile_id: true },
+      const entity = await dbDirect.query.education.findFirst({
+        where: eq(education.id, entityId),
+        columns: { profile_id: true },
       });
       profileId = entity?.profile_id ?? null;
       break;
     }
     case "side_project": {
-      const entity = await dbDirect.side_projects.findUnique({
-        where: { id: entityId },
-        select: { profile_id: true },
+      const entity = await dbDirect.query.side_projects.findFirst({
+        where: eq(side_projects.id, entityId),
+        columns: { profile_id: true },
       });
       profileId = entity?.profile_id ?? null;
       break;
@@ -87,9 +89,9 @@ export async function validateEntityOwnership(
   if (!profileId) return false;
 
   // Check profile ownership
-  const profile = await dbDirect.profiles.findFirst({
-    where: { id: profileId, user_id: userId },
-    select: { id: true },
+  const profile = await dbDirect.query.profiles.findFirst({
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, userId)),
+    columns: { id: true },
   });
 
   return !!profile;
@@ -245,35 +247,35 @@ async function getEntityMediaPath(
 ): Promise<string | null> {
   switch (entityType) {
     case "profile": {
-      const entity = await dbDirect.profiles.findUnique({
-        where: { id: entityId },
-        select: { profile_photo_path: true },
+      const entity = await dbDirect.query.profiles.findFirst({
+        where: eq(profiles.id, entityId),
+        columns: { profile_photo_path: true },
       });
       if (field === "profile_photo_path") return entity?.profile_photo_path ?? null;
       return null;
     }
     case "work_experience": {
-      const entity = await dbDirect.work_experiences.findUnique({
-        where: { id: entityId },
-        select: { logo_path: true, banner_path: true },
+      const entity = await dbDirect.query.work_experiences.findFirst({
+        where: eq(work_experiences.id, entityId),
+        columns: { logo_path: true, banner_path: true },
       });
       if (field === "logo_path") return entity?.logo_path ?? null;
       if (field === "banner_path") return entity?.banner_path ?? null;
       return null;
     }
     case "education": {
-      const entity = await dbDirect.education.findUnique({
-        where: { id: entityId },
-        select: { logo_path: true, banner_path: true },
+      const entity = await dbDirect.query.education.findFirst({
+        where: eq(education.id, entityId),
+        columns: { logo_path: true, banner_path: true },
       });
       if (field === "logo_path") return entity?.logo_path ?? null;
       if (field === "banner_path") return entity?.banner_path ?? null;
       return null;
     }
     case "side_project": {
-      const entity = await dbDirect.side_projects.findUnique({
-        where: { id: entityId },
-        select: { image_path: true, banner_path: true },
+      const entity = await dbDirect.query.side_projects.findFirst({
+        where: eq(side_projects.id, entityId),
+        columns: { image_path: true, banner_path: true },
       });
       if (field === "image_path") return entity?.image_path ?? null;
       if (field === "banner_path") return entity?.banner_path ?? null;
@@ -296,10 +298,8 @@ async function updateEntityMediaPath(
   switch (entityType) {
     case "profile":
       if (field === "profile_photo_path") {
-        await dbDirect.profiles.update({
-          where: { id: entityId },
-          data: { profile_photo_path: path, date_updated: new Date() },
-        });
+        await dbDirect.update(profiles).set({ profile_photo_path: path, date_updated: new Date() })
+          .where(eq(profiles.id, entityId));
       }
       break;
     case "work_experience":
@@ -309,41 +309,29 @@ async function updateEntityMediaPath(
         if (path === null) {
           data.logo_id = null;
         }
-        await dbDirect.work_experiences.update({
-          where: { id: entityId },
-          data,
-        });
+        await dbDirect.update(work_experiences).set(data)
+          .where(eq(work_experiences.id, entityId));
       } else if (field === "banner_path") {
-        await dbDirect.work_experiences.update({
-          where: { id: entityId },
-          data: { banner_path: path },
-        });
+        await dbDirect.update(work_experiences).set({ banner_path: path })
+          .where(eq(work_experiences.id, entityId));
       }
       break;
     case "education":
       if (field === "logo_path") {
-        await dbDirect.education.update({
-          where: { id: entityId },
-          data: { logo_path: path },
-        });
+        await dbDirect.update(education).set({ logo_path: path })
+          .where(eq(education.id, entityId));
       } else if (field === "banner_path") {
-        await dbDirect.education.update({
-          where: { id: entityId },
-          data: { banner_path: path },
-        });
+        await dbDirect.update(education).set({ banner_path: path })
+          .where(eq(education.id, entityId));
       }
       break;
     case "side_project":
       if (field === "image_path") {
-        await dbDirect.side_projects.update({
-          where: { id: entityId },
-          data: { image_path: path },
-        });
+        await dbDirect.update(side_projects).set({ image_path: path })
+          .where(eq(side_projects.id, entityId));
       } else if (field === "banner_path") {
-        await dbDirect.side_projects.update({
-          where: { id: entityId },
-          data: { banner_path: path },
-        });
+        await dbDirect.update(side_projects).set({ banner_path: path })
+          .where(eq(side_projects.id, entityId));
       }
       break;
   }

@@ -2,6 +2,8 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles, verification_email_addresses } from "$lib/server/db/schema";
 import {
   getOrCreateVerificationAddress,
   regenerateVerificationAddress,
@@ -22,8 +24,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Verify ownership
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: { id: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true },
   });
 
   if (!profile) {
@@ -64,8 +66,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   // Verify ownership
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: { id: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true },
   });
 
   if (!profile) {
@@ -105,18 +107,17 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // Verify ownership
   const profile = await db.query.profiles.findFirst({
-    where: { id: body.profileId, user_id: user.id },
-    select: { id: true },
+    where: and(eq(profiles.id, body.profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true },
   });
 
   if (!profile) {
     throw error(404, "Profile not found");
   }
 
-  await db.verification_email_addresses.updateMany({
-    where: { profile_id: body.profileId },
-    data: { is_active: body.isActive },
-  });
+  await db.update(verification_email_addresses)
+    .set({ is_active: body.isActive })
+    .where(eq(verification_email_addresses.profile_id, body.profileId));
 
   return json({
     success: true,

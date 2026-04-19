@@ -3,6 +3,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { ai_chats, application_letters, application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat, interpolatePrompt } from "./utils";
 
 /**
@@ -57,8 +59,8 @@ export async function createFollowupAiChat(
   let parent;
   try {
     parent = await db.query.ai_chats.findFirst({
-      where: { id: parentAiChatId },
-      select: {
+      where: eq(ai_chats.id, parentAiChatId),
+      columns: {
         profile_id: true,
         context: true,
         response: true,
@@ -102,8 +104,8 @@ export async function createFollowupAiChat(
     // Walk up the chain (with a safety limit to prevent infinite loops)
     for (let i = 0; i < 50 && currentId; i++) {
       const ancestor = await db.query.ai_chats.findFirst({
-        where: { id: currentId },
-        select: {
+        where: eq(ai_chats.id, currentId),
+        columns: {
           context: true,
           system_prompt: true,
           user_prompt: true,
@@ -202,8 +204,8 @@ export async function createFollowupAiChat(
   let linkedLetters;
   try {
     linkedLetters = await db.query.application_letters.findMany({
-      where: { ai_chat_id: parentAiChatId },
-      select: { id: true },
+      where: eq(application_letters.ai_chat_id, parentAiChatId),
+      columns: { id: true },
     });
   } catch (error) {
     const errorMessage = error instanceof Error
@@ -218,10 +220,8 @@ export async function createFollowupAiChat(
   // Update application_letters if needed
   if (linkedLetters.length > 0) {
     try {
-      await db.application_letters.updateMany({
-        where: { ai_chat_id: parentAiChatId },
-        data: { ai_chat_id: newAiChatId },
-      });
+      await db.update(application_letters).set({ ai_chat_id: newAiChatId })
+        .where(eq(application_letters.ai_chat_id, parentAiChatId));
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
@@ -237,8 +237,8 @@ export async function createFollowupAiChat(
   let linkedQuestions;
   try {
     linkedQuestions = await db.query.application_questions.findMany({
-      where: { ai_chat_id: parentAiChatId },
-      select: { id: true },
+      where: eq(application_questions.ai_chat_id, parentAiChatId),
+      columns: { id: true },
     });
   } catch (error) {
     const errorMessage = error instanceof Error
@@ -253,10 +253,8 @@ export async function createFollowupAiChat(
   // Update application_questions if needed
   if (linkedQuestions.length > 0) {
     try {
-      await db.application_questions.updateMany({
-        where: { ai_chat_id: parentAiChatId },
-        data: { ai_chat_id: newAiChatId },
-      });
+      await db.update(application_questions).set({ ai_chat_id: newAiChatId })
+        .where(eq(application_questions.ai_chat_id, parentAiChatId));
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message

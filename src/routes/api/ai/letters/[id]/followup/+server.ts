@@ -1,6 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, gte, desc } from "drizzle-orm";
+import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { parseBody, followupRequestSchema } from "$lib/server/validation/api-schemas";
 import { createApplicationLetterFollowup } from "$lib/server/ai-chat/application-letter-followup";
@@ -12,15 +14,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   // Verify ownership: letter -> application -> profile -> user
   const letter = await db.query.application_letters.findFirst({
-    where: { id: letterId },
+    where: eq(application_letters.id, letterId),
     with: {
-      applications: {
-        with: { profiles: { select: { user_id: true } } },
+      application: {
+        with: { profile: { columns: { user_id: true } } },
       },
     },
   });
 
-  if (!letter || letter.applications.profiles.user_id !== user.id) {
+  if (!letter || letter.application.profile.user_id !== user.id) {
     return json({ success: false, message: "Letter not found" }, { status: 404 });
   }
 
@@ -33,28 +35,29 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   if (replaceVersionId) {
     // Verify the version belongs to this letter
     const version = await db.query.letter_versions.findFirst({
-      where: { id: replaceVersionId, letter: letterId },
+      where: and(
+        eq(letter_versions.id, replaceVersionId),
+        eq(letter_versions.letter, letterId),
+      ),
     });
     if (!version) {
       return json({ success: false, message: "Version not found" }, { status: 404 });
     }
     // Delete this version and all versions after it
-    await db.letter_versions.deleteMany({
-      where: { letter: letterId, id: { gte: replaceVersionId } },
-    });
+    await db.delete(letter_versions).where(and(
+      eq(letter_versions.letter, letterId),
+      gte(letter_versions.id, replaceVersionId),
+    ));
 
     // Restore ai_chat pointer to the previous version's ai_chat (or the last remaining version's)
     const lastVersion = await db.query.letter_versions.findFirst({
-      where: { letter: letterId },
-      orderBy: { id: "desc" },
-      select: { ai_chat: true, content: true },
+      where: eq(letter_versions.letter, letterId),
+      orderBy: desc(letter_versions.id),
+      columns: { ai_chat: true, content: true },
     });
-    await db.application_letters.update({
-      where: { id: letterId },
-      data: {
-        ai_chat_id: lastVersion?.ai_chat ?? null,
-      },
-    });
+    await db.update(application_letters).set({
+      ai_chat_id: lastVersion?.ai_chat ?? null,
+    }).where(eq(application_letters.id, letterId));
   }
 
   await requireCredits(user.id, 5);

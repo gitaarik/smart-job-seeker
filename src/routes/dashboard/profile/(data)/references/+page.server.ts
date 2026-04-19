@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { references } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -10,51 +12,42 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const references = await db.query.references.findMany({
-    where: { profile_id: layoutData.selectedProfile.id },
-    orderBy: { sort: "asc" },
+  const items = await db.query.references.findMany({
+    where: eq(references.profile_id, layoutData.selectedProfile.id),
+    orderBy: asc(references.sort),
   });
 
-  return { references, profileId: layoutData.selectedProfile.id };
+  return { references: items, profileId: layoutData.selectedProfile.id };
 };
 
 export const actions: Actions = {
   create: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const author = formData.get("author") as string;
     const author_position = formData.get("author_position") as string;
     const text = formData.get("text") as string;
 
-    if (!author || author.trim().length === 0) {
-      return fail(400, { error: "Author name is required" });
-    }
+    if (!author || author.trim().length === 0) return fail(400, { error: "Author name is required" });
 
-    // Get the highest sort value
     const lastItem = await db.query.references.findFirst({
-      where: { profile_id: profileId },
-      orderBy: { sort: "desc" },
+      where: eq(references.profile_id, profileId),
+      orderBy: desc(references.sort),
     });
 
-    await db.references.create({
-      data: {
-        author: author.trim(),
-        author_position: author_position?.trim() || null,
-        text: text?.trim() || null,
-        profile_id: profileId,
-        sort: (lastItem?.sort ?? -1) + 1,
-        status: "published",
-        date_created: new Date(),
-      },
+    await db.insert(references).values({
+      author: author.trim(),
+      author_position: author_position?.trim() || null,
+      text: text?.trim() || null,
+      profile_id: profileId,
+      sort: (lastItem?.sort ?? -1) + 1,
+      status: "published",
+      date_created: new Date(),
     });
 
     return { success: true };
@@ -62,14 +55,10 @@ export const actions: Actions = {
 
   update: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
@@ -77,66 +66,41 @@ export const actions: Actions = {
     const author_position = formData.get("author_position") as string;
     const text = formData.get("text") as string;
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid reference ID" });
-    }
+    if (isNaN(id)) return fail(400, { error: "Invalid reference ID" });
+    if (!author || author.trim().length === 0) return fail(400, { error: "Author name is required" });
 
-    if (!author || author.trim().length === 0) {
-      return fail(400, { error: "Author name is required" });
-    }
-
-    // Verify ownership
     const existing = await db.query.references.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(references.id, id), eq(references.profile_id, profileId)),
     });
+    if (!existing) return fail(404, { error: "Reference not found" });
 
-    if (!existing) {
-      return fail(404, { error: "Reference not found" });
-    }
-
-    await db.references.update({
-      where: { id },
-      data: {
-        author: author.trim(),
-        author_position: author_position?.trim() || null,
-        text: text?.trim() || null,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(references).set({
+      author: author.trim(),
+      author_position: author_position?.trim() || null,
+      text: text?.trim() || null,
+      date_updated: new Date(),
+    }).where(eq(references.id, id));
 
     return { success: true };
   },
 
   delete: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
+    if (isNaN(id)) return fail(400, { error: "Invalid reference ID" });
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid reference ID" });
-    }
-
-    // Verify ownership
     const existing = await db.query.references.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(references.id, id), eq(references.profile_id, profileId)),
     });
+    if (!existing) return fail(404, { error: "Reference not found" });
 
-    if (!existing) {
-      return fail(404, { error: "Reference not found" });
-    }
-
-    await db.references.delete({
-      where: { id },
-    });
+    await db.delete(references).where(eq(references.id, id));
 
     return { success: true };
   },

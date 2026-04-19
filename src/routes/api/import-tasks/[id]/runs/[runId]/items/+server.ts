@@ -8,6 +8,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, asc } from "drizzle-orm";
+import { search_task_runs, search_task_run_items } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -17,23 +19,29 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
   // Verify the run belongs to this job search and the user owns it
   const run = await db.query.search_task_runs.findFirst({
-    where: {
-      id: runId,
-      search_task_id: searchTaskId,
-      search_tasks: { profiles: { user_id: user.id } },
+    where: and(
+      eq(search_task_runs.id, runId),
+      eq(search_task_runs.search_task_id, searchTaskId),
+    ),
+    columns: { id: true },
+    with: {
+      search_task: {
+        with: {
+          profile: { columns: { user_id: true } },
+        },
+      },
     },
-    select: { id: true },
   });
 
-  if (!run) {
+  if (!run || run.search_task.profile.user_id !== user.id) {
     throw error(404, "Run not found");
   }
 
   // Get all items for this run with job details for completed items
   const items = await db.query.search_task_run_items.findMany({
-    where: { run_id: runId },
-    orderBy: { position: "asc" },
-    select: {
+    where: eq(search_task_run_items.run_id, runId),
+    orderBy: asc(search_task_run_items.position),
+    columns: {
       id: true,
       position: true,
       clickable_id: true,
@@ -46,8 +54,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       was_created: true,
       created_at: true,
       processed_at: true,
-      jobs: {
-        select: {
+    },
+    with: {
+      job: {
+        columns: {
           id: true,
           title: true,
           company: true,

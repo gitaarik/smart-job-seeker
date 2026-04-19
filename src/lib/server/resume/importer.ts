@@ -4,6 +4,13 @@
  */
 
 import { dbDirect } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import {
+  profiles, work_experiences, work_experience_achievements, work_experience_technologies,
+  education, tech_skill_categories, tech_skills,
+  languages, side_projects, side_project_achievements, side_project_technologies,
+  certificates, references,
+} from "$lib/server/db/schema";
 import type {
   Certificate,
   Education,
@@ -50,8 +57,8 @@ export async function createProfileFromResume(
   let slugSuffix = 0;
   let finalSlug = slug;
   while (true) {
-    const existing = await dbDirect.profiles.findFirst({
-      where: { slug: finalSlug },
+    const existing = await dbDirect.query.profiles.findFirst({
+      where: eq(profiles.slug, finalSlug),
     });
     if (!existing) break;
     slugSuffix++;
@@ -59,29 +66,27 @@ export async function createProfileFromResume(
   }
 
   // Create the profile
-  const profile = await dbDirect.profiles.create({
-    data: {
-      name: data.basics.name,
-      title: data.basics.title || null,
-      slug: finalSlug,
-      user_id: userId,
-      is_default: false,
-      location: data.basics.location || null,
-      phone_number: data.basics.phone || null,
-      email_address: data.basics.email || null,
-      personal_website: data.basics.website || null,
-      subtitle: data.basics.subtitle || null,
-      core_stack: data.basics.coreStack || null,
-      linkedin_profile: data.basics.linkedin || null,
-      github_profile: data.basics.github || null,
-      stackoverflow_profile: data.basics.stackoverflow || null,
-      headline: data.basics.headline || null,
-      summary: data.basics.summary || null,
-      source_cv: sourceFileId || null,
-      date_created: new Date(),
-      date_updated: new Date(),
-    },
-  });
+  const [profile] = await dbDirect.insert(profiles).values({
+    name: data.basics.name,
+    title: data.basics.title || null,
+    slug: finalSlug,
+    user_id: userId,
+    is_default: false,
+    location: data.basics.location || null,
+    phone_number: data.basics.phone || null,
+    email_address: data.basics.email || null,
+    personal_website: data.basics.website || null,
+    subtitle: data.basics.subtitle || null,
+    core_stack: data.basics.coreStack || null,
+    linkedin_profile: data.basics.linkedin || null,
+    github_profile: data.basics.github || null,
+    stackoverflow_profile: data.basics.stackoverflow || null,
+    headline: data.basics.headline || null,
+    summary: data.basics.summary || null,
+    source_cv: sourceFileId || null,
+    date_created: new Date(),
+    date_updated: new Date(),
+  }).returning();
 
   const stats = {
     workExperiences: 0,
@@ -211,39 +216,28 @@ export async function createProfileFromResume(
   };
 }
 
-async function createWorkExperience(
-  profileId: number,
-  work: WorkExperience,
-): Promise<void> {
-  const createdWork = await dbDirect.work_experiences.create({
-    data: {
-      name: work.name,
-      position: work.position,
-      location: work.location || "",
-      description: "", // Field deprecated
-      summary: work.summary || "",
-      website: work.website || null,
-      start_date: parseDate(work.startDate),
-      end_date: parseDate(work.endDate),
-      status: "draft",
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
-  });
+async function createWorkExperience(profileId: number, work: WorkExperience): Promise<void> {
+  const [createdWork] = await dbDirect.insert(work_experiences).values({
+    profile_id: profileId,
+    name: work.name,
+    position: work.position,
+    location: work.location || "",
+    description: "",
+    summary: work.summary || "",
+    website: work.website || null,
+    start_date: parseDate(work.startDate),
+    end_date: parseDate(work.endDate),
+    status: "draft",
+  }).returning();
 
   if (work.achievements && work.achievements.length > 0) {
     let sort = 1;
     for (const achievement of work.achievements) {
-      await dbDirect.work_experience_achievements.create({
-        data: {
-          description: achievement,
-          status: "draft",
-          sort,
-          work_experiences: {
-            connect: { id: createdWork.id },
-          },
-        },
+      await dbDirect.insert(work_experience_achievements).values({
+        work_experience_id: createdWork.id,
+        description: achievement,
+        status: "draft",
+        sort,
       });
       sort++;
     }
@@ -252,73 +246,51 @@ async function createWorkExperience(
   if (work.technologies && work.technologies.length > 0) {
     let sort = 1;
     for (const tech of work.technologies) {
-      await dbDirect.work_experience_technologies.create({
-        data: {
-          name: tech,
-          status: "draft",
-          sort,
-          work_experiences: {
-            connect: { id: createdWork.id },
-          },
-        },
+      await dbDirect.insert(work_experience_technologies).values({
+        work_experience_id: createdWork.id,
+        name: tech,
+        status: "draft",
+        sort,
       });
       sort++;
     }
   }
 }
 
-async function createEducation(
-  profileId: number,
-  edu: Education,
-): Promise<void> {
-  await dbDirect.education.create({
-    data: {
-      institution: edu.institution,
-      area: edu.area || null,
-      study_type: edu.studyType || null,
-      location: edu.location || null,
-      url: edu.url || null,
-      start_date: parseDate(edu.startDate),
-      end_date: parseDate(edu.endDate),
-      graduation_year: edu.graduationYear || null,
-      summary: edu.summary || null,
-      status: "draft",
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
+async function createEducation(profileId: number, edu: Education): Promise<void> {
+  await dbDirect.insert(education).values({
+    profile_id: profileId,
+    institution: edu.institution,
+    area: edu.area || null,
+    study_type: edu.studyType || null,
+    location: edu.location || null,
+    url: edu.url || null,
+    start_date: parseDate(edu.startDate),
+    end_date: parseDate(edu.endDate),
+    graduation_year: edu.graduationYear || null,
+    summary: edu.summary || null,
+    status: "draft",
   });
 }
 
-async function createSkillCategory(
-  profileId: number,
-  category: SkillCategory,
-): Promise<number> {
-  const createdCategory = await dbDirect.tech_skill_categories.create({
-    data: {
-      name: category.name,
-      status: "draft",
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
-  });
+async function createSkillCategory(profileId: number, category: SkillCategory): Promise<number> {
+  const [createdCategory] = await dbDirect.insert(tech_skill_categories).values({
+    profile_id: profileId,
+    name: category.name,
+    status: "draft",
+  }).returning();
 
   let skillCount = 0;
   if (category.skills && category.skills.length > 0) {
     let sort = 1;
     for (const skill of category.skills) {
-      await dbDirect.tech_skills.create({
-        data: {
-          name: skill.name,
-          level: skill.level || null,
-          years_experience: skill.yearsExperience || null,
-          status: "draft",
-          sort,
-          tech_skill_categories: {
-            connect: { id: createdCategory.id },
-          },
-        },
+      await dbDirect.insert(tech_skills).values({
+        category_id: createdCategory.id,
+        name: skill.name,
+        level: skill.level || null,
+        years_experience: skill.yearsExperience || null,
+        status: "draft",
+        sort,
       });
       sort++;
       skillCount++;
@@ -328,54 +300,36 @@ async function createSkillCategory(
   return skillCount;
 }
 
-async function createLanguage(
-  profileId: number,
-  lang: Language,
-): Promise<void> {
-  await dbDirect.languages.create({
-    data: {
-      name: lang.name,
-      language_code: lang.languageCode || null,
-      proficiency: lang.proficiency || null,
-      status: "draft",
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
+async function createLanguage(profileId: number, lang: Language): Promise<void> {
+  await dbDirect.insert(languages).values({
+    profile_id: profileId,
+    name: lang.name,
+    language_code: lang.languageCode || null,
+    proficiency: lang.proficiency || null,
+    status: "draft",
   });
 }
 
-async function createSideProject(
-  profileId: number,
-  project: SideProject,
-): Promise<void> {
-  const createdProject = await dbDirect.side_projects.create({
-    data: {
-      name: project.name,
-      url: project.url || null,
-      url_label: project.urlLabel || null,
-      summary: project.summary || null,
-      start_date: parseDate(project.startDate),
-      end_date: parseDate(project.endDate),
-      stars: project.stars || null,
-      status: "draft",
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
-  });
+async function createSideProject(profileId: number, project: SideProject): Promise<void> {
+  const [createdProject] = await dbDirect.insert(side_projects).values({
+    profile_id: profileId,
+    name: project.name,
+    url: project.url || null,
+    url_label: project.urlLabel || null,
+    summary: project.summary || null,
+    start_date: parseDate(project.startDate),
+    end_date: parseDate(project.endDate),
+    stars: project.stars || null,
+    status: "draft",
+  }).returning();
 
   if (project.achievements && project.achievements.length > 0) {
     let sort = 1;
     for (const achievement of project.achievements) {
-      await dbDirect.side_project_achievements.create({
-        data: {
-          description: achievement,
-          sort,
-          side_projects: {
-            connect: { id: createdProject.id },
-          },
-        },
+      await dbDirect.insert(side_project_achievements).values({
+        side_project_id: createdProject.id,
+        description: achievement,
+        sort,
       });
       sort++;
     }
@@ -384,53 +338,35 @@ async function createSideProject(
   if (project.technologies && project.technologies.length > 0) {
     let sort = 1;
     for (const tech of project.technologies) {
-      await dbDirect.side_project_technologies.create({
-        data: {
-          name: tech,
-          sort,
-          side_projects: {
-            connect: { id: createdProject.id },
-          },
-        },
+      await dbDirect.insert(side_project_technologies).values({
+        side_project_id: createdProject.id,
+        name: tech,
+        sort,
       });
       sort++;
     }
   }
 }
 
-async function createCertificate(
-  profileId: number,
-  cert: Certificate,
-): Promise<void> {
-  await dbDirect.certificates.create({
-    data: {
-      name: cert.name,
-      issuer: cert.issuer || null,
-      date: parseDate(cert.date),
-      url: cert.url || null,
-      status: "draft",
-      sort: 0,
-      date_created: new Date(),
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
+async function createCertificate(profileId: number, cert: Certificate): Promise<void> {
+  await dbDirect.insert(certificates).values({
+    profile: profileId,
+    name: cert.name,
+    issuer: cert.issuer || null,
+    date: parseDate(cert.date),
+    url: cert.url || null,
+    status: "draft",
+    sort: 0,
+    date_created: new Date(),
   });
 }
 
-async function createReference(
-  profileId: number,
-  ref: Reference,
-): Promise<void> {
-  await dbDirect.references.create({
-    data: {
-      author: ref.author,
-      author_position: ref.authorPosition || null,
-      text: ref.text,
-      status: "draft",
-      profiles: {
-        connect: { id: profileId },
-      },
-    },
+async function createReference(profileId: number, ref: Reference): Promise<void> {
+  await dbDirect.insert(references).values({
+    profile_id: profileId,
+    author: ref.author,
+    author_position: ref.authorPosition || null,
+    text: ref.text,
+    status: "draft",
   });
 }

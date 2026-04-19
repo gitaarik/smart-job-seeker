@@ -4,6 +4,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles, collected_data } from "$lib/server/db/schema";
 import removeMd from "remove-markdown";
 
 interface SchemaNode {
@@ -190,8 +192,8 @@ function buildSchemaNode(
  */
 async function fetchProfileData(profileId: number) {
   return await db.query.profiles.findFirst({
-    where: { id: profileId },
-    select: {
+    where: eq(profiles.id, profileId),
+    columns: {
       name: true,
       title: true,
       location: true,
@@ -208,26 +210,28 @@ async function fetchProfileData(profileId: number) {
       nationality: true,
       location_url: true,
       location_timezone: true,
+    },
+    with: {
       highlights: {
-        select: { text: true },
-        orderBy: { sort: "asc" },
+        columns: { text: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       tech_skill_categories: {
-        select: {
-          name: true,
+        columns: { name: true },
+        with: {
           tech_skills: {
-            select: {
+            columns: {
               name: true,
               years_experience: true,
               level: true,
             },
-            orderBy: { sort: "desc" },
+            orderBy: (t: any, { desc }: any) => desc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       work_experiences: {
-        select: {
+        columns: {
           name: true,
           location: true,
           position: true,
@@ -235,38 +239,38 @@ async function fetchProfileData(profileId: number) {
           start_date: true,
           end_date: true,
           website: true,
+        },
+        with: {
           work_experience_achievements: {
-            select: {
-              description: true,
-            },
-            orderBy: { sort: "asc" },
+            columns: { description: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           work_experience_technologies: {
-            select: {
-              name: true,
-            },
-            orderBy: { sort: "asc" },
+            columns: { name: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           work_experience_projects: {
-            select: {
+            columns: {
               name: true,
               url: true,
               start_date: true,
               end_date: true,
               description: true,
               outcome: true,
+            },
+            with: {
               work_experience_project_technologies: {
-                select: { name: true },
-                orderBy: { sort: "asc" },
+                columns: { name: true },
+                orderBy: (t: any, { asc }: any) => asc(t.sort),
               },
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       side_projects: {
-        select: {
+        columns: {
           name: true,
           start_date: true,
           end_date: true,
@@ -274,23 +278,21 @@ async function fetchProfileData(profileId: number) {
           stars: true,
           summary: true,
           url_label: true,
+        },
+        with: {
           side_project_achievements: {
-            select: {
-              description: true,
-            },
-            orderBy: { sort: "asc" },
+            columns: { description: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           side_project_technologies: {
-            select: {
-              name: true,
-            },
-            orderBy: { sort: "asc" },
+            columns: { name: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       education: {
-        select: {
+        columns: {
           institution: true,
           location: true,
           url: true,
@@ -301,26 +303,26 @@ async function fetchProfileData(profileId: number) {
           end_date: true,
           summary: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       languages: {
-        select: {
+        columns: {
           name: true,
           language_code: true,
           proficiency: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       references: {
-        select: {
+        columns: {
           author: true,
           author_position: true,
           text: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       project_stories: {
-        select: {
+        columns: {
           title: true,
           situation: true,
           task: true,
@@ -329,17 +331,17 @@ async function fetchProfileData(profileId: number) {
           reflection: true,
           category: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       cheat_sheets: {
-        select: {
+        columns: {
           title: true,
           content: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       salary_expectations: {
-        select: {
+        columns: {
           job_title: true,
           company_type: true,
           employment_type: true,
@@ -351,7 +353,7 @@ async function fetchProfileData(profileId: number) {
           year_salary: true,
           daily_rate: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
     },
   });
@@ -368,8 +370,8 @@ export async function exportProfile(profileId: number): Promise<{
   try {
     // Verify profile exists
     const profile = await db.query.profiles.findFirst({
-      where: { id: profileId },
-      select: { id: true },
+      where: eq(profiles.id, profileId),
+      columns: { id: true },
     });
 
     if (!profile) {
@@ -392,26 +394,21 @@ export async function exportProfile(profileId: number): Promise<{
 
     // SINGLE DATABASE OPERATION - Update both fields atomically
     const existingCollectedData = await db.query.collected_data.findFirst({
-      where: { profile_id: profileId },
+      where: eq(collected_data.profile_id, profileId),
     });
 
     if (existingCollectedData) {
-      await db.collected_data.update({
-        where: { id: existingCollectedData.id },
-        data: {
-          schema: JSON.stringify(schema, null, 2),
-          data: JSON.stringify(data, null, 2),
-          date_updated: new Date(),
-        },
-      });
+      await db.update(collected_data).set({
+        schema: JSON.stringify(schema, null, 2),
+        data: JSON.stringify(data, null, 2),
+        date_updated: new Date(),
+      }).where(eq(collected_data.id, existingCollectedData.id));
     } else {
-      await db.collected_data.create({
-        data: {
-          profile_id: profileId,
-          schema: JSON.stringify(schema, null, 2),
-          data: JSON.stringify(data, null, 2),
-          date_updated: new Date(),
-        },
+      await db.insert(collected_data).values({
+        profile_id: profileId,
+        schema: JSON.stringify(schema, null, 2),
+        data: JSON.stringify(data, null, 2),
+        date_updated: new Date(),
       });
     }
 

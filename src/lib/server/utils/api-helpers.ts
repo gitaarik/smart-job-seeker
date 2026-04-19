@@ -4,6 +4,8 @@
 
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 
 /**
  * Require authenticated user from locals, or throw 401.
@@ -32,8 +34,8 @@ export function parseIntParam(value: string, label: string): number {
  */
 export async function requireProfileAccess(profileId: number, userId: string): Promise<void> {
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: userId },
-    select: { id: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, userId)),
+    columns: { id: true },
   });
   if (!profile) {
     error(403, "Not authorized");

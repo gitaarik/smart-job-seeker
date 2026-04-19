@@ -5,6 +5,8 @@ import { auth } from "$lib/server/auth/better-auth";
 import type { User } from "$lib/server/auth/better-auth";
 import { config } from "$lib/server/config";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { users } from "$lib/server/db/schema";
 import { initSentry, Sentry } from "$lib/server/monitoring/sentry";
 
 initSentry("sveltekit");
@@ -101,7 +103,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (impersonateId && event.locals.user) {
     if ((event.locals.user as { is_admin?: boolean }).is_admin) {
       const targetUser = await db.query.users.findFirst({
-        where: { id: impersonateId },
+        where: eq(users.id, impersonateId),
       });
       if (targetUser) {
         event.locals.adminUser = event.locals.user;

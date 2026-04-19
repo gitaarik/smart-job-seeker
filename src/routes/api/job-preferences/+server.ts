@@ -1,5 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles, match_config } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { jobPreferencesPatchSchema, jobPreferencesSchema, parseBody } from "$lib/server/validation/api-schemas";
 
@@ -11,7 +13,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   // Verify the profile belongs to this user
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -20,7 +22,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   // Check if config already exists
   const existing = await db.query.match_config.findFirst({
-    where: { profile_id: profile_id },
+    where: eq(match_config.profile_id, profile_id),
   });
 
   const data = {
@@ -39,18 +41,14 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   let result;
   if (existing) {
-    result = await db.match_config.update({
-      where: { id: existing.id },
-      data,
-    });
+    [result] = await db.update(match_config).set(data)
+      .where(eq(match_config.id, existing.id)).returning();
   } else {
-    result = await db.match_config.create({
-      data: {
-        ...data,
-        profile_id: profile_id,
-        date_created: new Date(),
-      },
-    });
+    [result] = await db.insert(match_config).values({
+      ...data,
+      profile_id: profile_id,
+      date_created: new Date(),
+    }).returning();
   }
 
   return json({ success: true, id: result.id });
@@ -66,7 +64,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
   // Verify the profile belongs to this user
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -74,7 +72,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = await db.query.match_config.findFirst({
-    where: { profile_id: profile_id },
+    where: eq(match_config.profile_id, profile_id),
   });
 
   if (!existing) {
@@ -108,10 +106,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   if (fields.community_max_age_days !== undefined)
     data.community_max_age_days = fields.community_max_age_days;
 
-  const result = await db.match_config.update({
-    where: { id: existing.id },
-    data,
-  });
+  const [result] = await db.update(match_config).set(data)
+    .where(eq(match_config.id, existing.id)).returning();
 
   return json({ success: true, id: result.id });
 };

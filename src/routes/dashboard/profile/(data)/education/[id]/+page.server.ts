@@ -1,6 +1,8 @@
 import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { education } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -14,23 +16,23 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/dashboard/profile/education");
   }
 
-  const education = await db.query.education.findFirst({
-    where: { id, profile_id: layoutData.selectedProfile.id },
+  const entry = await db.query.education.findFirst({
+    where: and(eq(education.id, id), eq(education.profile_id, layoutData.selectedProfile.id)),
   });
 
-  if (!education) {
+  if (!entry) {
     redirect(302, "/dashboard/profile/education");
   }
 
   // Get logo URL
-  const logoUrl = education?.logo_path
-    ? `/uploads/${education.logo_path}`
+  const logoUrl = entry?.logo_path
+    ? `/uploads/${entry.logo_path}`
     : null;
 
   // Get banner URL
-  const bannerUrl = education?.banner_path
-    ? `/uploads/${education.banner_path}`
+  const bannerUrl = entry?.banner_path
+    ? `/uploads/${entry.banner_path}`
     : null;
 
-  return { education, logoUrl, bannerUrl };
+  return { education: entry, logoUrl, bannerUrl };
 };

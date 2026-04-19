@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { side_projects, side_project_technologies, side_project_achievements } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 import {
   sideProjectBasicSchema,
@@ -15,16 +17,18 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
   // Verify ownership through profile
   const project = await db.query.side_projects.findFirst({
-    where: { id: projectId },
-    select: {
+    where: eq(side_projects.id, projectId),
+    columns: {
       id: true,
-      profiles: {
-        select: { user_id: true },
+    },
+    with: {
+      profile: {
+        columns: { user_id: true },
       },
     },
   });
 
-  if (!project || project.profiles.user_id !== user.id) {
+  if (!project || project.profile.user_id !== user.id) {
     error(403, "Access denied");
   }
 
@@ -49,18 +53,15 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
     { start_date: "date", end_date: "date", stars: "number" },
   );
 
-  await db.side_projects.update({
-    where: { id },
-    data: updateData,
-  });
+  await db.update(side_projects).set(updateData).where(eq(side_projects.id, id));
 
   return json({ success: true });
 }
 
 async function updateTechnologies(id: number, technologies: string[]) {
-  await db.side_project_technologies.deleteMany({
-    where: { side_project_id: id },
-  });
+  await db.delete(side_project_technologies).where(
+    eq(side_project_technologies.side_project_id, id),
+  );
 
   const now = new Date();
   const techData = technologies
@@ -74,16 +75,16 @@ async function updateTechnologies(id: number, technologies: string[]) {
     }));
 
   if (techData.length > 0) {
-    await db.side_project_technologies.createMany({ data: techData });
+    await db.insert(side_project_technologies).values(techData);
   }
 
   return json({ success: true });
 }
 
 async function updateAchievements(id: number, achievements: string[]) {
-  await db.side_project_achievements.deleteMany({
-    where: { side_project_id: id },
-  });
+  await db.delete(side_project_achievements).where(
+    eq(side_project_achievements.side_project_id, id),
+  );
 
   const achievementData = achievements
     .map((desc, i) => ({ description: desc?.trim(), sort: i }))
@@ -95,7 +96,7 @@ async function updateAchievements(id: number, achievements: string[]) {
     }));
 
   if (achievementData.length > 0) {
-    await db.side_project_achievements.createMany({ data: achievementData });
+    await db.insert(side_project_achievements).values(achievementData);
   }
 
   return json({ success: true });

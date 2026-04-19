@@ -4,6 +4,8 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc } from "drizzle-orm";
+import { profile_exports } from "$lib/server/db/schema";
 import { getFile } from "$lib/server/files";
 
 /**
@@ -22,27 +24,21 @@ interface ExportQuery {
  * @returns Export record with file details, or null if not found
  */
 export async function getLatestExport(query: ExportQuery) {
-  const whereClause: {
-    profile_id: number;
-    export_type: string;
-    file_type: string;
-    status: string;
-    export_format?: string;
-  } = {
-    profile_id: query.profileId,
-    export_type: query.exportType,
-    file_type: query.fileType,
-    status: "published",
-  };
+  const conditions = [
+    eq(profile_exports.profile_id, query.profileId),
+    eq(profile_exports.export_type, query.exportType),
+    eq(profile_exports.file_type, query.fileType),
+    eq(profile_exports.status, "published"),
+  ];
 
   // Filter by version/variant if provided
   if (query.exportFormat) {
-    whereClause.export_format = query.exportFormat;
+    conditions.push(eq(profile_exports.export_format, query.exportFormat));
   }
 
   return db.query.profile_exports.findFirst({
-    where: whereClause,
-    orderBy: { date_updated: "desc" },
+    where: and(...conditions),
+    orderBy: desc(profile_exports.date_updated),
   });
 }
 

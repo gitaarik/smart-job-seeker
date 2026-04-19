@@ -1,6 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { ai_chats } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { parseBody, followupRequestSchema } from "$lib/server/validation/api-schemas";
 import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
@@ -12,13 +14,13 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   // Verify ownership: ai_chat -> profile -> user
   const chat = await db.query.ai_chats.findFirst({
-    where: { id: chatId },
+    where: eq(ai_chats.id, chatId),
     with: {
-      profiles: { select: { user_id: true } },
+      profile: { columns: { user_id: true } },
     },
   });
 
-  if (!chat || chat.profiles.user_id !== user.id) {
+  if (!chat || chat.profile.user_id !== user.id) {
     return json({ success: false, message: "Chat not found" }, { status: 404 });
   }
 

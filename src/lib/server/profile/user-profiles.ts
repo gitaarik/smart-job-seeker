@@ -5,6 +5,8 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, count, asc, desc } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 
 /**
  * Lightweight profile data for dashboard navigation
@@ -26,8 +28,8 @@ export async function getProfilesByUserId(
   userId: string,
 ): Promise<ProfileSummary[]> {
   return db.query.profiles.findMany({
-    where: { user_id: userId },
-    select: {
+    where: eq(profiles.user_id, userId),
+    columns: {
       id: true,
       name: true,
       slug: true,
@@ -37,8 +39,8 @@ export async function getProfilesByUserId(
       profile_photo_path: true,
     },
     orderBy: [
-      { is_default: "desc" }, // Default profile first
-      { date_created: "asc" }, // Then by creation date
+      desc(profiles.is_default), // Default profile first
+      asc(profiles.date_created), // Then by creation date
     ],
   });
 }
@@ -51,20 +53,17 @@ export async function userOwnsProfile(
   profileId: number,
 ): Promise<boolean> {
   const profile = await db.query.profiles.findFirst({
-    where: {
-      id: profileId,
-      user_id: userId,
-    },
-    select: { id: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, userId)),
+    columns: { id: true },
   });
-  return profile !== null;
+  return !!profile;
 }
 
 /**
  * Get the count of profiles owned by a user
  */
 export async function getUserProfileCount(userId: string): Promise<number> {
-  return db.profiles.count({
-    where: { user_id: userId },
-  });
+  const [{ value }] = await db.select({ value: count() }).from(profiles)
+    .where(eq(profiles.user_id, userId));
+  return value;
 }

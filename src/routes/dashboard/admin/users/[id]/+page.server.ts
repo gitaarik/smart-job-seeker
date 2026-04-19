@@ -1,7 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { sql, type SQL } from "drizzle-orm";
+import { sql, type SQL, eq, and, gt, inArray, count } from "drizzle-orm";
 import { dbDirect as db, sqlJoin, queryRaw } from "$lib/server/db";
+import { users as usersTable, profiles, verifications, subscriptions, sessions, accounts } from "$lib/server/db/schema";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
 import { getEnv } from "$lib/tools/get-env";
@@ -14,23 +15,18 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
 
   const user = await db.query.users.findFirst({
-    where: { id: params.id },
+    where: eq(usersTable.id, params.id),
   });
 
   if (!user) {
     redirect(302, "/dashboard/admin/users");
   }
 
-  const profileCount = await db.profiles.count({
-    where: { user_id: user.id },
-  });
+  const [{ profileCount }] = await db.select({ profileCount: count() }).from(profiles).where(eq(profiles.user_id, user.id));
 
   const pendingInvite = await db.query.verifications.findFirst({
-    where: {
-      identifier: `invite:${user.email}`,
-      expiresAt: { gt: new Date() },
-    },
-    select: { id: true },
+    where: and(eq(verifications.identifier, `invite:${user.email}`), gt(verifications.expiresAt, new Date())),
+    columns: { id: true },
   });
 
   const [subscription, creditBalance, recentTransactions] = await Promise.all([
@@ -74,22 +70,19 @@ export const actions: Actions = {
       return fail(400, { error: "Cannot remove your own admin status" });
     }
 
-    const existing = await db.query.users.findFirst({ where: { id: params.id } });
+    const existing = await db.query.users.findFirst({ where: eq(usersTable.id, params.id) });
     if (!existing) {
       return fail(404, { error: "User not found" });
     }
 
-    await db.users.update({
-      where: { id: params.id },
-      data: {
-        name: name?.trim() || null,
-        email: email.trim(),
-        is_approved,
-        is_staff,
-        is_admin,
-        updatedAt: new Date(),
-      },
-    });
+    await db.update(usersTable).set({
+      name: name?.trim() || null,
+      email: email.trim(),
+      is_approved,
+      is_staff,
+      is_admin,
+      updatedAt: new Date(),
+    }).where(eq(usersTable.id, params.id));
 
     return { success: true };
   },
@@ -111,13 +104,8 @@ export const actions: Actions = {
 
     if (plan === "explorer") {
       // Cancel any active subscription
-      await db.subscriptions.updateMany({
-        where: {
-          user_id: userId,
-          status: { in: ["active", "trialing", "past_due"] },
-        },
-        data: { status: "canceled", date_updated: new Date() },
-      });
+      await db.update(subscriptions).set({ status: "canceled", date_updated: new Date() })
+        .where(and(eq(subscriptions.user_id, userId), inArray(subscriptions.status, ["active", "trialing", "past_due"])));
       return { success: true };
     }
 
@@ -135,27 +123,20 @@ export const actions: Actions = {
     }
 
     // Cancel any existing active subs first
-    await db.subscriptions.updateMany({
-      where: {
-        user_id: userId,
-        status: { in: ["active", "trialing", "past_due"] },
-      },
-      data: { status: "canceled", date_updated: new Date() },
-    });
+    await db.update(subscriptions).set({ status: "canceled", date_updated: new Date() })
+      .where(and(eq(subscriptions.user_id, userId), inArray(subscriptions.status, ["active", "trialing", "past_due"])));
 
     // Create admin-granted subscription (no Stripe IDs)
-    await db.subscriptions.create({
-      data: {
-        user_id: userId,
-        stripe_subscription_id: `admin_grant_${crypto.randomUUID()}`,
-        stripe_price_id: "admin_grant",
-        plan,
-        status: "active",
-        current_period_start: new Date(),
-        current_period_end: periodEnd,
-        cancel_at_period_end: false,
-        date_created: new Date(),
-      },
+    await db.insert(subscriptions).values({
+      user_id: userId,
+      stripe_subscription_id: `admin_grant_${crypto.randomUUID()}`,
+      stripe_price_id: "admin_grant",
+      plan,
+      status: "active",
+      current_period_start: new Date(),
+      current_period_end: periodEnd,
+      cancel_at_period_end: false,
+      date_created: new Date(),
     });
 
     return { success: true };
@@ -166,14 +147,12 @@ export const actions: Actions = {
       return fail(403, { error: "Admin access required" });
     }
 
-    const user = await db.query.users.findFirst({ where: { id: params.id } });
+    const user = await db.query.users.findFirst({ where: eq(usersTable.id, params.id) });
     if (!user) {
       return fail(404, { error: "User not found" });
     }
 
-    await db.verifications.deleteMany({
-      where: { identifier: `invite:${user.email}` },
-    });
+    await db.delete(verifications).where(eq(verifications.identifier, `invite:${user.email}`));
 
     const token = crypto.randomUUID();
     const inviteData = JSON.stringify({
@@ -184,14 +163,12 @@ export const actions: Actions = {
       is_admin: user.is_admin,
     });
 
-    await db.verifications.create({
-      data: {
-        id: crypto.randomUUID(),
-        identifier: `invite:${user.email}`,
-        value: inviteData,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(),
-      },
+    await db.insert(verifications).values({
+      id: crypto.randomUUID(),
+      identifier: `invite:${user.email}`,
+      value: inviteData,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
     });
 
     const baseUrl = getEnv("SJS_APP_URL_HOST", "http://localhost:5173");
@@ -208,9 +185,7 @@ export const actions: Actions = {
         `,
       });
     } catch (e: unknown) {
-      await db.verifications.deleteMany({
-        where: { identifier: `invite:${user.email}` },
-      });
+      await db.delete(verifications).where(eq(verifications.identifier, `invite:${user.email}`));
       const message = e instanceof Error ? e.message : "Failed to send email";
       return fail(500, { error: `Invite email failed: ${message}` });
     }
@@ -223,7 +198,7 @@ export const actions: Actions = {
       return fail(403, { error: "Admin access required" });
     }
 
-    const targetUser = await db.query.users.findFirst({ where: { id: params.id } });
+    const targetUser = await db.query.users.findFirst({ where: eq(usersTable.id, params.id) });
     if (!targetUser) {
       return fail(404, { error: "User not found" });
     }
@@ -243,21 +218,21 @@ export const actions: Actions = {
       return fail(403, { error: "Admin access required" });
     }
 
-    const user = await db.query.users.findFirst({ where: { id: params.id } });
+    const user = await db.query.users.findFirst({ where: eq(usersTable.id, params.id) });
     if (!user) {
       return fail(404, { error: "User not found" });
     }
 
-    const profiles = await db.query.profiles.findMany({
-      where: { user_id: params.id },
-      select: { id: true },
+    const userProfiles = await db.query.profiles.findMany({
+      where: eq(profiles.user_id, params.id),
+      columns: { id: true },
     });
 
-    if (profiles.length === 0) {
+    if (userProfiles.length === 0) {
       return fail(400, { error: "User has no profiles" });
     }
 
-    const profileIds = profiles.map((p) => p.id);
+    const profileIds = userProfiles.map((p) => p.id);
 
     const result = await queryRaw<{ cnt: bigint }[]>(sql`
       WITH deleted AS (
@@ -281,14 +256,14 @@ export const actions: Actions = {
       return fail(400, { error: "Cannot delete your own account" });
     }
 
-    const existing = await db.query.users.findFirst({ where: { id: params.id } });
+    const existing = await db.query.users.findFirst({ where: eq(usersTable.id, params.id) });
     if (!existing) {
       return fail(404, { error: "User not found" });
     }
 
-    await db.sessions.deleteMany({ where: { userId: params.id } });
-    await db.accounts.deleteMany({ where: { userId: params.id } });
-    await db.users.delete({ where: { id: params.id } });
+    await db.delete(sessions).where(eq(sessions.userId, params.id));
+    await db.delete(accounts).where(eq(accounts.userId, params.id));
+    await db.delete(usersTable).where(eq(usersTable.id, params.id));
 
     redirect(302, "/dashboard/admin/users");
   },

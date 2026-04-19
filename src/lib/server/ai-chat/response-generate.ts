@@ -4,6 +4,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { ai_chats, profiles } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import { getInterpolatedPrompts } from "./utils";
 import {
@@ -45,27 +47,24 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
     const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
 
     // Update the response field + token usage
-    await db.ai_chats.update({
-      where: { id: aiChatId },
-      data: {
-        response: completionResult.content,
-        input_tokens: usage?.inputTokens ?? null,
-        output_tokens: usage?.outputTokens ?? null,
-        total_tokens: usage?.totalTokens ?? null,
-        credits_charged: creditsCost || null,
-      },
-    });
+    await db.update(ai_chats).set({
+      response: completionResult.content,
+      input_tokens: usage?.inputTokens ?? null,
+      output_tokens: usage?.outputTokens ?? null,
+      total_tokens: usage?.totalTokens ?? null,
+      credits_charged: creditsCost || null,
+    }).where(eq(ai_chats.id, aiChatId));
 
     // Charge credits
     if (usage && creditsCost > 0) {
       const aiChat = await db.query.ai_chats.findFirst({
-        where: { id: aiChatId },
-        select: { profile_id: true },
+        where: eq(ai_chats.id, aiChatId),
+        columns: { profile_id: true },
       });
       if (aiChat) {
         const profile = await db.query.profiles.findFirst({
-          where: { id: aiChat.profile_id },
-          select: { user_id: true },
+          where: eq(profiles.id, aiChat.profile_id),
+          columns: { user_id: true },
         });
         if (profile?.user_id) {
           const providerCostUsd = estimateProviderCostUsd(

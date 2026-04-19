@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, or, like, desc } from "drizzle-orm";
+import { search_tasks, profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import { getSelectedProfileId } from "../../../profile/utils";
 
@@ -13,20 +15,25 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const profileId = layoutData.selectedProfile.id;
 
-  const [searchTasks, profile] = await Promise.all([
+  const [searchTasksList, profile] = await Promise.all([
     db.query.search_tasks.findMany({
-      where: { profile_id: profileId },
+      where: eq(search_tasks.profile_id, profileId),
       with: {
-        job_platforms: true,
-        platform_profiles: true,
+        job_platform: true,
+        platform_profile: true,
       },
-      orderBy: { date_created: "desc" },
+      orderBy: desc(search_tasks.date_created),
     }),
-    db.profiles.findUniqueOrThrow({
-      where: { id: profileId },
-      select: { ui_preferences: true, browser_country_code: true, country_code: true },
-    }),
+    (async () => {
+      const p = await db.query.profiles.findFirst({
+        where: eq(profiles.id, profileId),
+        columns: { ui_preferences: true, browser_country_code: true, country_code: true },
+      });
+      if (!p) throw new Error("Record not found");
+      return p;
+    })(),
   ]);
+  const searchTasks = searchTasksList;
 
   const uiPrefs = (profile.ui_preferences as Record<string, unknown>) ?? {};
 
@@ -55,10 +62,7 @@ async function getOrCreatePlatform(
   // If we have an existing platform ID and it's not new, update login_page_url if provided
   if (platformId && !isNew) {
     if (loginPageUrl !== null) {
-      await db.job_platforms.update({
-        where: { id: parseInt(platformId) },
-        data: { login_page_url: loginPageUrl || null },
-      });
+      await db.update(job_platforms).set({ login_page_url: loginPageUrl || null }).where(eq(job_platforms.id, parseInt(platformId)));
     }
     return parseInt(platformId);
   }
@@ -68,12 +72,10 @@ async function getOrCreatePlatform(
   const domain = parsed.hostname.replace(/^www\./, "");
 
   const existing = await db.query.job_platforms.findFirst({
-    where: {
-      OR: [
-        { url: { contains: domain, mode: "insensitive" } },
-        { key: { contains: domain.split(".")[0], mode: "insensitive" } },
-      ],
-    },
+    where: or(
+      like(job_platforms.url, `%${domain}%`),
+      like(job_platforms.key, `%${domain.split(".")[0]}%`),
+    ),
   });
 
   if (existing) {
@@ -86,16 +88,14 @@ async function getOrCreatePlatform(
     .replace(/[^a-z0-9]/gi, "-")
     .toLowerCase();
 
-  const platform = await db.job_platforms.create({
-    data: {
-      name: platformName || domain,
-      url: platformUrl,
-      key: `${key}-${Date.now().toString(36)}`, // Ensure unique key
-      login_page_url: loginPageUrl || null,
-      status: "published",
-      date_created: new Date(),
-    },
-  });
+  const [platform] = await db.insert(job_platforms).values({
+    name: platformName || domain,
+    url: platformUrl,
+    key: `${key}-${Date.now().toString(36)}`, // Ensure unique key
+    login_page_url: loginPageUrl || null,
+    status: "published",
+    date_created: new Date(),
+  }).returning();
 
   return platform.id;
 }
@@ -111,11 +111,7 @@ async function getOrCreateCredentials(
   // If using existing credentials
   if (credentialId && credentialId !== "none" && credentialId !== "new") {
     const existing = await db.query.platform_profiles.findFirst({
-      where: {
-        id: parseInt(credentialId),
-        profile_id: profileId,
-        platform_id: platformId,
-      },
+      where: and(eq(platform_profiles.id, parseInt(credentialId)), eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, platformId)),
     });
     if (existing) {
       return existing.id;
@@ -124,17 +120,15 @@ async function getOrCreateCredentials(
 
   // If adding new credentials
   if (credentialId === "new" && newUsername) {
-    const newCred = await db.platform_profiles.create({
-      data: {
-        profile_id: profileId,
-        platform_id: platformId,
-        username: newUsername,
-        password: newPassword || null,
-        security_answer: newSecurityAnswer || null,
-        status: "active",
-        date_created: new Date(),
-      },
-    });
+    const [newCred] = await db.insert(platform_profiles).values({
+      profile_id: profileId,
+      platform_id: platformId,
+      username: newUsername,
+      password: newPassword || null,
+      security_answer: newSecurityAnswer || null,
+      status: "active",
+      date_created: new Date(),
+    }).returning();
     return newCred.id;
   }
 
@@ -222,42 +216,37 @@ export const actions: Actions = {
     // Browser location
     const browserCountryCode = formData.get("browser_country_code") as string;
     if (browserCountryCode) {
-      await db.profiles.update({
-        where: { id: profileId },
-        data: { browser_country_code: browserCountryCode.trim().toUpperCase() || null },
-      });
+      await db.update(profiles).set({ browser_country_code: browserCountryCode.trim().toUpperCase() || null }).where(eq(profiles.id, profileId));
     }
 
     // Schedule
     const scheduleRaw = formData.get("schedule_interval_hours") as string;
     const scheduleIntervalHours = scheduleRaw ? parseInt(scheduleRaw) : null;
 
-    const newTask = await db.search_tasks.create({
-      data: {
-        note: note?.trim() || null,
-        search_url: search_url.trim(),
-        search_term: search_term?.trim() || null,
-        platform_id: resolvedPlatformId,
-        platform_profile_id: resolvedCredentialId,
-        login_mode: ["auto", "manual", "none"].includes(loginMode) ? loginMode : "auto",
-        is_active,
-        profile_id: profileId,
-        status: "idle",
-        browser_provider: browserProvider || config.defaultBrowserProvider,
-        max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
-        skip_first: isNaN(skipFirst as number) ? null : skipFirst,
-        stop_after_duplicates: isNaN(stopAfterDuplicates as number)
-          ? null
-          : stopAfterDuplicates,
-        skip_existing: skipExisting,
-        keep_minimized: keepMinimized,
-        schedule_interval_hours: scheduleIntervalHours && !isNaN(scheduleIntervalHours) ? scheduleIntervalHours : null,
-        next_scheduled_run: scheduleIntervalHours && !isNaN(scheduleIntervalHours)
-          ? new Date(Date.now() + scheduleIntervalHours * 3600_000)
-          : null,
-        date_created: new Date(),
-      },
-    });
+    const [newTask] = await db.insert(search_tasks).values({
+      note: note?.trim() || null,
+      search_url: search_url.trim(),
+      search_term: search_term?.trim() || null,
+      platform_id: resolvedPlatformId,
+      platform_profile_id: resolvedCredentialId,
+      login_mode: ["auto", "manual", "none"].includes(loginMode) ? loginMode : "auto",
+      is_active,
+      profile_id: profileId,
+      status: "idle",
+      browser_provider: browserProvider || config.defaultBrowserProvider,
+      max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
+      skip_first: isNaN(skipFirst as number) ? null : skipFirst,
+      stop_after_duplicates: isNaN(stopAfterDuplicates as number)
+        ? null
+        : stopAfterDuplicates,
+      skip_existing: skipExisting,
+      keep_minimized: keepMinimized,
+      schedule_interval_hours: scheduleIntervalHours && !isNaN(scheduleIntervalHours) ? scheduleIntervalHours : null,
+      next_scheduled_run: scheduleIntervalHours && !isNaN(scheduleIntervalHours)
+        ? new Date(Date.now() + scheduleIntervalHours * 3600_000)
+        : null,
+      date_created: new Date(),
+    }).returning();
 
     return { success: true, taskId: newTask.id };
   },
@@ -327,18 +316,15 @@ export const actions: Actions = {
       );
     }
 
-    await db.search_tasks.update({
-      where: { id },
-      data: {
-        note: note?.trim() || null,
-        search_url: search_url?.trim() || null,
-        search_term: search_term?.trim() || null,
-        platform_id: resolvedPlatformId,
-        platform_profile_id: resolvedCredentialId,
-        is_active,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(search_tasks).set({
+      note: note?.trim() || null,
+      search_url: search_url?.trim() || null,
+      search_term: search_term?.trim() || null,
+      platform_id: resolvedPlatformId,
+      platform_profile_id: resolvedCredentialId,
+      is_active,
+      date_updated: new Date(),
+    }).where(eq(search_tasks.id, id));
 
     return { success: true };
   },
@@ -369,9 +355,7 @@ export const actions: Actions = {
       return fail(404, { error: "Job search not found" });
     }
 
-    await db.search_tasks.delete({
-      where: { id },
-    });
+    await db.delete(search_tasks).where(eq(search_tasks.id, id));
 
     return { success: true };
   },

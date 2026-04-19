@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, gt, like, inArray, desc, count } from "drizzle-orm";
+import { users as usersTable, profiles, verifications, subscriptions } from "$lib/server/db/schema";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
 import { getEnv } from "$lib/tools/get-env";
@@ -10,25 +12,21 @@ export const load: PageServerLoad = async ({ parent }) => {
   await parent();
 
   const users = await db.query.users.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: desc(usersTable.createdAt),
   });
 
-  const profileCounts = await db.profiles.groupBy({
-    by: ["user_id"],
-    _count: { id: true },
-  });
+  const profileCounts = await db.select({ user_id: profiles.user_id, count: count() })
+    .from(profiles)
+    .groupBy(profiles.user_id);
 
   const profileCountMap = new Map(
-    profileCounts.map((p) => [p.user_id, p._count.id]),
+    profileCounts.map((p) => [p.user_id, p.count]),
   );
 
   // Fetch pending invites to show invite status per user
   const pendingInvites = await db.query.verifications.findMany({
-    where: {
-      identifier: { startsWith: "invite:" },
-      expiresAt: { gt: new Date() },
-    },
-    select: { identifier: true, value: true, expiresAt: true, createdAt: true },
+    where: and(like(verifications.identifier, "invite:%"), gt(verifications.expiresAt, new Date())),
+    columns: { identifier: true, value: true, expiresAt: true, createdAt: true },
   });
 
   const invitedEmails = new Set(
@@ -37,9 +35,9 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Fetch active subscriptions to show plan per user
   const activeSubs = await db.query.subscriptions.findMany({
-    where: { status: { in: ["active", "trialing", "past_due"] } },
-    orderBy: { date_created: "desc" },
-    select: { user_id: true, plan: true },
+    where: inArray(subscriptions.status, ["active", "trialing", "past_due"]),
+    orderBy: desc(subscriptions.date_created),
+    columns: { user_id: true, plan: true },
   });
 
   const userPlanMap = new Map<string, string>();
@@ -110,10 +108,7 @@ export const actions: Actions = {
       });
 
       if (result.user) {
-        await db.users.update({
-          where: { id: result.user.id },
-          data: { is_approved, is_staff, is_admin },
-        });
+        await db.update(usersTable).set({ is_approved, is_staff, is_admin }).where(eq(usersTable.id, result.user.id));
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Failed to create user";
@@ -140,16 +135,14 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.users.findFirst({
-      where: { email: email.trim() },
+      where: eq(usersTable.email, email.trim()),
     });
     if (existing) {
       return fail(400, { error: "A user with this email already exists" });
     }
 
     // Delete any existing invite for this email
-    await db.verifications.deleteMany({
-      where: { identifier: `invite:${email.trim()}` },
-    });
+    await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
 
     const token = crypto.randomUUID();
     const inviteData = JSON.stringify({
@@ -160,14 +153,12 @@ export const actions: Actions = {
       is_admin,
     });
 
-    await db.verifications.create({
-      data: {
-        id: crypto.randomUUID(),
-        identifier: `invite:${email.trim()}`,
-        value: inviteData,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        createdAt: new Date(),
-      },
+    await db.insert(verifications).values({
+      id: crypto.randomUUID(),
+      identifier: `invite:${email.trim()}`,
+      value: inviteData,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
     });
 
     const baseUrl = getEnv("SJS_APP_URL_HOST", "http://localhost:5173");
@@ -185,9 +176,7 @@ export const actions: Actions = {
       });
     } catch (e: unknown) {
       // Clean up the verification record if email fails
-      await db.verifications.deleteMany({
-        where: { identifier: `invite:${email.trim()}` },
-      });
+      await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
       const message = e instanceof Error ? e.message : "Failed to send email";
       return fail(500, { error: `Invite email failed: ${message}` });
     }
@@ -207,11 +196,9 @@ export const actions: Actions = {
       return fail(400, { error: "Email is required" });
     }
 
-    const deleted = await db.verifications.deleteMany({
-      where: { identifier: `invite:${email.trim()}` },
-    });
+    const deleted = await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
 
-    if (deleted.count === 0) {
+    if ((deleted.rowCount ?? 0) === 0) {
       return fail(404, { error: "Invitation not found" });
     }
 
@@ -236,12 +223,9 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid date" });
     }
 
-    const updated = await db.verifications.updateMany({
-      where: { identifier: `invite:${email.trim()}` },
-      data: { expiresAt: newExpiry },
-    });
+    const updated = await db.update(verifications).set({ expiresAt: newExpiry }).where(eq(verifications.identifier, `invite:${email.trim()}`));
 
-    if (updated.count === 0) {
+    if ((updated.rowCount ?? 0) === 0) {
       return fail(404, { error: "Invitation not found" });
     }
 

@@ -1,6 +1,8 @@
 import type { LayoutServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { applications, application_letters, application_questions, application_activity_log, application_status_log, letter_versions } from "$lib/server/db/schema";
 
 export const load: LayoutServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -15,40 +17,37 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
   }
 
   const application = await db.query.applications.findFirst({
-    where: {
-      id: appId,
-      profile_id: layoutData.selectedProfile.id,
-    },
+    where: and(eq(applications.id, appId), eq(applications.profile_id, layoutData.selectedProfile.id)),
     with: {
-      jobs: {
+      job: {
         with: {
-          job_platforms: {
-            select: { id: true, name: true, url: true },
+          job_platform: {
+            columns: { id: true, name: true, url: true },
           },
         },
       },
       application_letters: {
-        orderBy: { date_created: "desc" },
+        orderBy: desc(application_letters.date_created),
         with: {
           letter_versions: {
-            orderBy: { id: "asc" },
-            select: { id: true, source: true, content: true },
+            orderBy: asc(letter_versions.id),
+            columns: { id: true, source: true, content: true },
           },
         },
       },
       application_questions: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(application_questions.sort),
       },
-      application_activity_log: {
-        orderBy: { date: "desc" },
+      application_activity_logs: {
+        orderBy: desc(application_activity_log.date),
       },
-      application_status_log: {
-        orderBy: { date_created: "desc" },
+      application_status_logs: {
+        orderBy: desc(application_status_log.date_created),
       },
       applications_files: {
         with: {
-          files: {
-            select: {
+          file: {
+            columns: {
               id: true,
               filename_download: true,
               type: true,
@@ -58,8 +57,8 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
           },
         },
       },
-      files: {
-        select: {
+      file: {
+        columns: {
           id: true,
           filename_download: true,
           type: true,

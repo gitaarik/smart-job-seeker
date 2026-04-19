@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { profiles } from "$lib/server/db/schema";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import {
   createProfileFromResume,
@@ -208,15 +209,13 @@ export const actions: Actions = {
     }
 
     // Create the profile
-    const profile = await db.profiles.create({
-      data: {
-        name: name.trim(),
-        title: title?.trim() || null,
-        slug: finalSlug,
-        user_id: user.id,
-        is_default: false,
-      },
-    });
+    const [profile] = await db.insert(profiles).values({
+      name: name.trim(),
+      title: title?.trim() || null,
+      slug: finalSlug,
+      user_id: user.id,
+      is_default: false,
+    }).returning();
 
     redirect(303, `/dashboard?profile=${profile.id}&created=true`);
   },

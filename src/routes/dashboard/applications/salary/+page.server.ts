@@ -1,8 +1,9 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
-import { type SQL } from "drizzle-orm";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -12,8 +13,8 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: layoutData.selectedProfile.id },
-    select: {
+    where: eq(profiles.id, layoutData.selectedProfile.id),
+    columns: {
       id: true,
       salary_base_rate: true,
       salary_currency: true,
@@ -59,15 +60,12 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid region overrides format" });
     }
 
-    await db.profiles.update({
-      where: { id: profileId },
-      data: {
-        salary_base_rate: parseInt(baseRate),
-        salary_currency: currency || "EUR",
-        salary_region_overrides: regionOverrides as unknown as unknown,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(profiles).set({
+      salary_base_rate: parseInt(baseRate),
+      salary_currency: currency || "EUR",
+      salary_region_overrides: regionOverrides as unknown as unknown,
+      date_updated: new Date(),
+    }).where(eq(profiles.id, profileId));
 
     return { success: true };
   },
@@ -91,13 +89,10 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid adjustments format" });
     }
 
-    await db.profiles.update({
-      where: { id: profileId },
-      data: {
-        salary_adjustments: adjustments as unknown as unknown,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(profiles).set({
+      salary_adjustments: adjustments as unknown as unknown,
+      date_updated: new Date(),
+    }).where(eq(profiles.id, profileId));
 
     return { success: true };
   },

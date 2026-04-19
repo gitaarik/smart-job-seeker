@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -8,8 +10,8 @@ export const load: PageServerLoad = async ({ parent }) => {
   const profileId = layoutData.profileId;
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId },
-    select: {
+    where: eq(profiles.id, profileId),
+    columns: {
       salary_base_rate: true,
       salary_currency: true,
       salary_adjustments: true,
@@ -39,7 +41,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -57,15 +59,12 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid salary amount" });
     }
 
-    await db.applications.update({
-      where: { id: appId },
-      data: {
-        salary_expectation: amount,
-        salary_currency,
-        salary_period,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(applications).set({
+      salary_expectation: amount,
+      salary_currency,
+      salary_period,
+      date_updated: new Date(),
+    }).where(eq(applications.id, appId));
 
     return { success: true };
   },

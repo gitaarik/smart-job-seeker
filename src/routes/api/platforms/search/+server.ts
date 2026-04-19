@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { or, ilike, asc } from "drizzle-orm";
+import { job_platforms } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
@@ -31,16 +33,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Search for platforms matching the domain
   const platforms = await db.query.job_platforms.findMany({
-    where: {
-      OR: [
-        { url: { contains: domain, mode: "insensitive" } },
-        { name: { contains: domain, mode: "insensitive" } },
-      ],
-    },
-    orderBy: {
-      name: "asc",
-    },
-    select: {
+    where: or(
+      ilike(job_platforms.url, `%${domain}%`),
+      ilike(job_platforms.name, `%${domain}%`),
+    ),
+    orderBy: asc(job_platforms.name),
+    columns: {
       id: true,
       name: true,
       key: true,

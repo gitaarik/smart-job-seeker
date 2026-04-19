@@ -4,6 +4,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
 
 /** Profile data fields relevant for answering application questions */
@@ -34,11 +36,11 @@ export async function generateApplicationQuestionAnswer(
   let question;
   try {
     question = await db.query.application_questions.findFirst({
-      where: { id: questionId },
+      where: eq(application_questions.id, questionId),
       with: {
-        applications: {
+        application: {
           with: {
-            jobs: true,
+            job: true,
           },
         },
       },
@@ -61,8 +63,8 @@ export async function generateApplicationQuestionAnswer(
     };
   }
 
-  const profileId = question.applications.profile_id;
-  const jobDescription = question.applications.jobs?.job_description || "";
+  const profileId = question.application.profile_id;
+  const jobDescription = question.application.job?.job_description || "";
 
   // Generate AI chat (try block for async operation)
   let aiChatResult;
@@ -99,14 +101,11 @@ export async function generateApplicationQuestionAnswer(
 
   // Update the application_questions record (try block for database update)
   try {
-    await db.application_questions.update({
-      where: { id: questionId },
-      data: {
-        ai_chat_id: aiChat.id,
-        ai_chat_response: aiChat.response,
-        answer: aiChat.response,
-      },
-    });
+    await db.update(application_questions).set({
+      ai_chat_id: aiChat.id,
+      ai_chat_response: aiChat.response,
+      answer: aiChat.response,
+    }).where(eq(application_questions.id, questionId));
   } catch (error) {
     const errorMessage = error instanceof Error
       ? error.message

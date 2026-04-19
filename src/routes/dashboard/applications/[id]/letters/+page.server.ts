@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc } from "drizzle-orm";
+import { applications, application_letters, application_questions } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const load: PageServerLoad = async () => {
@@ -19,7 +21,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -32,17 +34,15 @@ export const actions: Actions = {
 
     // Get the next sort order
     const lastQuestion = await db.query.application_questions.findFirst({
-      where: { application_id: appId },
-      orderBy: { sort: "desc" },
+      where: eq(application_questions.application_id, appId),
+      orderBy: desc(application_questions.sort),
     });
 
-    await db.application_questions.create({
-      data: {
-        application_id: appId,
-        question: question.trim(),
-        sort: (lastQuestion?.sort ?? 0) + 1,
-        date_created: new Date(),
-      },
+    await db.insert(application_questions).values({
+      application_id: appId,
+      question: question.trim(),
+      sort: (lastQuestion?.sort ?? 0) + 1,
+      date_created: new Date(),
     });
 
     return { success: true };
@@ -59,7 +59,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -71,18 +71,15 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid letter ID" });
 
     const letter = await db.query.application_letters.findFirst({
-      where: { id, application_id: appId },
+      where: and(eq(application_letters.id, id), eq(application_letters.application_id, appId)),
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
-    await db.application_letters.update({
-      where: { id },
-      data: {
-        content: content || null,
-        status: status || "draft",
-        date_updated: new Date(),
-      },
-    });
+    await db.update(application_letters).set({
+      content: content || null,
+      status: status || "draft",
+      date_updated: new Date(),
+    }).where(eq(application_letters.id, id));
 
     return { success: true };
   },
@@ -98,7 +95,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -109,17 +106,14 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid question ID" });
 
     const question = await db.query.application_questions.findFirst({
-      where: { id, application_id: appId },
+      where: and(eq(application_questions.id, id), eq(application_questions.application_id, appId)),
     });
     if (!question) return fail(404, { error: "Question not found" });
 
-    await db.application_questions.update({
-      where: { id },
-      data: {
-        answer: answer || null,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(application_questions).set({
+      answer: answer || null,
+      date_updated: new Date(),
+    }).where(eq(application_questions.id, id));
 
     return { success: true };
   },
@@ -135,7 +129,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -144,11 +138,11 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid letter ID" });
 
     const letter = await db.query.application_letters.findFirst({
-      where: { id, application_id: appId },
+      where: and(eq(application_letters.id, id), eq(application_letters.application_id, appId)),
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
-    await db.application_letters.delete({ where: { id } });
+    await db.delete(application_letters).where(eq(application_letters.id, id));
 
     return { success: true };
   },
@@ -164,7 +158,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -173,11 +167,11 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid question ID" });
 
     const question = await db.query.application_questions.findFirst({
-      where: { id, application_id: appId },
+      where: and(eq(application_questions.id, id), eq(application_questions.application_id, appId)),
     });
     if (!question) return fail(404, { error: "Question not found" });
 
-    await db.application_questions.delete({ where: { id } });
+    await db.delete(application_questions).where(eq(application_questions.id, id));
 
     return { success: true };
   },

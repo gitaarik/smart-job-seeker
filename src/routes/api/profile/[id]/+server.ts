@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, ne } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 import { profileUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
@@ -10,8 +12,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
   // Verify ownership
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: { id: true, slug: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true, slug: true },
   });
 
   if (!profile) {
@@ -37,10 +39,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
     // Check if slug is already taken by another profile
     const existingProfile = await db.query.profiles.findFirst({
-      where: {
-        slug: slug,
-        id: { not: profileId },
-      },
+      where: and(
+        eq(profiles.slug, slug),
+        ne(profiles.id, profileId),
+      ),
     });
 
     if (existingProfile) {
@@ -61,10 +63,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     ],
   );
 
-  await db.profiles.update({
-    where: { id: profileId },
-    data: updateData,
-  });
+  await db.update(profiles).set(updateData).where(eq(profiles.id, profileId));
 
   return json({ success: true });
 };

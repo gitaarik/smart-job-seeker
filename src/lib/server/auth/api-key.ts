@@ -5,6 +5,8 @@
 
 import crypto from "crypto";
 import { db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { api_keys } from "$lib/server/db/schema";
 import { getErrorMessage } from "$lib/server/utils/errors";
 
 /**
@@ -69,8 +71,8 @@ export async function verifyApiKey(
 
   try {
     const apiKey = await db.query.api_keys.findFirst({
-      where: { key_hash: keyHash },
-      select: {
+      where: eq(api_keys.key_hash, keyHash),
+      columns: {
         id: true,
         profile_id: true,
         revoked: true,
@@ -93,12 +95,11 @@ export async function verifyApiKey(
     }
 
     // Update last_used timestamp (fire and forget)
-    db.api_keys.update({
-      where: { id: apiKey.id },
-      data: { last_used: new Date() },
-    }).catch(() => {
-      // Ignore errors updating last_used
-    });
+    db.update(api_keys).set({ last_used: new Date() })
+      .where(eq(api_keys.id, apiKey.id))
+      .catch(() => {
+        // Ignore errors updating last_used
+      });
 
     return apiKey.profile_id;
   } catch {
@@ -128,8 +129,8 @@ export async function verifyApiKeyDetailed(
 
   try {
     const apiKey = await db.query.api_keys.findFirst({
-      where: { key_hash: keyHash },
-      select: {
+      where: eq(api_keys.key_hash, keyHash),
+      columns: {
         id: true,
         profile_id: true,
         revoked: true,
@@ -150,12 +151,11 @@ export async function verifyApiKeyDetailed(
     }
 
     // Update last_used timestamp (fire and forget)
-    db.api_keys.update({
-      where: { id: apiKey.id },
-      data: { last_used: new Date() },
-    }).catch(() => {
-      // Ignore errors updating last_used
-    });
+    db.update(api_keys).set({ last_used: new Date() })
+      .where(eq(api_keys.id, apiKey.id))
+      .catch(() => {
+        // Ignore errors updating last_used
+      });
 
     return { valid: true, profileId: apiKey.profile_id };
   } catch (error) {
@@ -181,16 +181,13 @@ export async function createApiKey(
 ): Promise<{ id: number; key: string }> {
   const { key, hash } = generateApiKey();
 
-  const created = await db.api_keys.create({
-    data: {
-      profile_id: profileId,
-      name,
-      key_hash: hash,
-      key_plain: key,
-      expires_at: expiresAt,
-    },
-    select: { id: true },
-  });
+  const [created] = await db.insert(api_keys).values({
+    profile_id: profileId,
+    name,
+    key_hash: hash,
+    key_plain: key,
+    expires_at: expiresAt,
+  }).returning({ id: api_keys.id });
 
   return { id: created.id, key };
 }
@@ -206,16 +203,10 @@ export async function revokeApiKey(
   keyId: number,
   profileId: number,
 ): Promise<boolean> {
-  const result = await db.api_keys.updateMany({
-    where: {
-      id: keyId,
-      profile_id: profileId,
-      revoked: false,
-    },
-    data: { revoked: true },
-  });
+  const result = await db.update(api_keys).set({ revoked: true })
+    .where(and(eq(api_keys.id, keyId), eq(api_keys.profile_id, profileId), eq(api_keys.revoked, false)));
 
-  return result.count > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -225,16 +216,10 @@ export async function activateApiKey(
   keyId: number,
   profileId: number,
 ): Promise<boolean> {
-  const result = await db.api_keys.updateMany({
-    where: {
-      id: keyId,
-      profile_id: profileId,
-      revoked: true,
-    },
-    data: { revoked: false },
-  });
+  const result = await db.update(api_keys).set({ revoked: false })
+    .where(and(eq(api_keys.id, keyId), eq(api_keys.profile_id, profileId), eq(api_keys.revoked, true)));
 
-  return result.count > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -245,15 +230,10 @@ export async function renameApiKey(
   profileId: number,
   name: string,
 ): Promise<boolean> {
-  const result = await db.api_keys.updateMany({
-    where: {
-      id: keyId,
-      profile_id: profileId,
-    },
-    data: { name },
-  });
+  const result = await db.update(api_keys).set({ name })
+    .where(and(eq(api_keys.id, keyId), eq(api_keys.profile_id, profileId)));
 
-  return result.count > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -263,14 +243,10 @@ export async function deleteApiKey(
   keyId: number,
   profileId: number,
 ): Promise<boolean> {
-  const result = await db.api_keys.deleteMany({
-    where: {
-      id: keyId,
-      profile_id: profileId,
-    },
-  });
+  const result = await db.delete(api_keys)
+    .where(and(eq(api_keys.id, keyId), eq(api_keys.profile_id, profileId)));
 
-  return result.count > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -281,8 +257,8 @@ export async function deleteApiKey(
  */
 export async function listApiKeys(profileId: number) {
   return db.query.api_keys.findMany({
-    where: { profile_id: profileId },
-    select: {
+    where: eq(api_keys.profile_id, profileId),
+    columns: {
       id: true,
       name: true,
       key_plain: true,
@@ -291,6 +267,6 @@ export async function listApiKeys(profileId: number) {
       last_used: true,
       revoked: true,
     },
-    orderBy: { date_created: "desc" },
+    orderBy: (api_keys, { desc }) => desc(api_keys.date_created),
   });
 }

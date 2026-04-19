@@ -3,6 +3,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { jobs } from "$lib/server/db/schema";
 import { verifyApiKey } from "$lib/server/auth/api-key";
 
 /**
@@ -29,8 +31,9 @@ export async function getProfileIdFromApiKey(
 export async function findExistingJob(
   normalizedUrl: string,
 ): Promise<{ id: number; job_description: string | null } | null> {
-  return db.query.jobs.findFirst({
-    where: { source_url: normalizedUrl },
-    select: { id: true, job_description: true },
+  const result = await db.query.jobs.findFirst({
+    where: eq(jobs.source_url, normalizedUrl),
+    columns: { id: true, job_description: true },
   });
+  return result ?? null;
 }

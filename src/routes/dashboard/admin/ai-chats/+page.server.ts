@@ -1,5 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, desc, count } from "drizzle-orm";
+import { ai_chats } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
   await parent();
@@ -8,19 +10,16 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const perPage = 25;
   const requestType = url.searchParams.get("type") || "";
 
-  const where: Record<string, unknown> = {};
-  if (requestType) {
-    where.request_type = requestType;
-  }
+  const whereCondition = requestType ? eq(ai_chats.request_type, requestType) : undefined;
 
-  const [chats, total, requestTypes] = await Promise.all([
+  const [chats, [{ total }], requestTypes] = await Promise.all([
     // Only fetch lightweight columns for the list view — full content loaded on-demand
     db.query.ai_chats.findMany({
-      where,
-      orderBy: { id: "desc" },
+      where: whereCondition,
+      orderBy: desc(ai_chats.id),
       offset: (page - 1) * perPage,
       limit: perPage,
-      select: {
+      columns: {
         id: true,
         date_created: true,
         profile_id: true,
@@ -29,20 +28,21 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         provider: true,
         model: true,
         request_type: true,
-        profiles: {
-          select: {
+      },
+      with: {
+        profile: {
+          columns: {
             id: true,
             name: true,
           },
         },
       },
     }),
-    db.ai_chats.count({ where }),
-    db.ai_chats.groupBy({
-      by: ["request_type"],
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-    }),
+    db.select({ total: count() }).from(ai_chats).where(whereCondition),
+    db.select({ request_type: ai_chats.request_type, count: count() })
+      .from(ai_chats)
+      .groupBy(ai_chats.request_type)
+      .orderBy(desc(count())),
   ]);
 
   return {
@@ -54,6 +54,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     requestType,
     requestTypes: requestTypes
       .filter((r) => r.request_type)
-      .map((r) => ({ type: r.request_type!, count: r._count.id })),
+      .map((r) => ({ type: r.request_type!, count: r.count })),
   };
 };

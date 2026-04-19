@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, asc } from "drizzle-orm";
+import { applications, applications_files, profile_versions } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import { Buffer } from "buffer";
@@ -13,12 +15,9 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const profileVersions = await db.query.profile_versions.findMany({
-    where: {
-      profile_id: layoutData.selectedProfile.id,
-      status: "published",
-    },
-    select: { slug: true, name: true },
-    orderBy: { sort: "asc" },
+    where: and(eq(profile_versions.profile_id, layoutData.selectedProfile.id), eq(profile_versions.status, "published")),
+    columns: { slug: true, name: true },
+    orderBy: asc(profile_versions.sort),
   });
 
   return {
@@ -38,7 +37,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -62,11 +61,9 @@ export const actions: Actions = {
       title: file.name,
     });
 
-    await db.applications_files.create({
-      data: {
-        applications_id: appId,
-        file_id: uploaded.id,
-      },
+    await db.insert(applications_files).values({
+      applications_id: appId,
+      file_id: uploaded.id,
     });
 
     return { success: true };
@@ -83,7 +80,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -92,14 +89,12 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid file record ID" });
 
     const fileRecord = await db.query.applications_files.findFirst({
-      where: { id, applications_id: appId },
+      where: and(eq(applications_files.id, id), eq(applications_files.applications_id, appId)),
     });
     if (!fileRecord) return fail(404, { error: "File record not found" });
 
     // Delete the junction record
-    await db.applications_files.delete({
-      where: { id },
-    });
+    await db.delete(applications_files).where(eq(applications_files.id, id));
 
     // Delete the file
     if (fileRecord.file_id) {
@@ -124,7 +119,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -132,14 +127,11 @@ export const actions: Actions = {
     const versionSlug = (formData.get("version_slug") as string) || null;
     const cvSentThrough = (formData.get("cv_sent_through") as string) || null;
 
-    await db.applications.update({
-      where: { id: appId },
-      data: {
-        cv_version_sent: versionSlug,
-        cv_sent_through: cvSentThrough,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(applications).set({
+      cv_version_sent: versionSlug,
+      cv_sent_through: cvSentThrough,
+      date_updated: new Date(),
+    }).where(eq(applications.id, appId));
 
     return { success: true };
   },

@@ -1,6 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { application_questions } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
 import { requireCredits } from "$lib/server/billing/require-credits";
@@ -11,15 +13,15 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   // Verify ownership: question -> application -> profile -> user
   const question = await db.query.application_questions.findFirst({
-    where: { id: questionId },
+    where: eq(application_questions.id, questionId),
     with: {
-      applications: {
-        with: { profiles: { select: { user_id: true } } },
+      application: {
+        with: { profile: { columns: { user_id: true } } },
       },
     },
   });
 
-  if (!question || question.applications.profiles.user_id !== user.id) {
+  if (!question || question.application.profile.user_id !== user.id) {
     return json({ success: false, message: "Question not found" }, { status: 404 });
   }
 

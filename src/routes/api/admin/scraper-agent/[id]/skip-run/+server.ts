@@ -1,6 +1,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, desc } from "drizzle-orm";
+import { scraper_agent_sessions, scraper_agent_iterations, search_task_runs } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 export const POST: RequestHandler = async ({ params, locals }) => {
@@ -12,7 +14,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const sessionId = parseIntParam(params.id, "session");
 
   const session = await db.query.scraper_agent_sessions.findFirst({
-    where: { id: sessionId },
+    where: eq(scraper_agent_sessions.id, sessionId),
   });
 
   if (!session) throw error(404, "Session not found");
@@ -22,8 +24,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   // Find the latest iteration's run
   const latestIteration = await db.query.scraper_agent_iterations.findFirst({
-    where: { session_id: sessionId },
-    orderBy: { iteration: "desc" },
+    where: eq(scraper_agent_iterations.session_id, sessionId),
+    orderBy: desc(scraper_agent_iterations.iteration),
   });
 
   if (!latestIteration?.run_id) {
@@ -32,8 +34,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   // Check the run is actually blocked/running
   const run = await db.query.search_task_runs.findFirst({
-    where: { id: latestIteration.run_id },
-    select: { status: true },
+    where: eq(search_task_runs.id, latestIteration.run_id),
+    columns: { status: true },
   });
 
   if (!run || !["running", "queued", "blocked", "stopping"].includes(run.status)) {
@@ -41,14 +43,11 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Force the run to "partial" so the agent sees it as finished and evaluates
-  await db.search_task_runs.update({
-    where: { id: latestIteration.run_id },
-    data: {
-      status: "partial",
-      error_message: "Skipped by user (manual intervention bypassed)",
-      finished_at: new Date(),
-    },
-  });
+  await db.update(search_task_runs).set({
+    status: "partial",
+    error_message: "Skipped by user (manual intervention bypassed)",
+    finished_at: new Date(),
+  }).where(eq(search_task_runs.id, latestIteration.run_id));
 
   return json({ ok: true });
 };

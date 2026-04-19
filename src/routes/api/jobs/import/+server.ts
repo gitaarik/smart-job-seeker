@@ -9,6 +9,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { jobs, job_importers } from "$lib/server/db/schema";
 import { normalizeJobUrl } from "$lib/server/job/normalize-url";
 import { getProfileIdFromApiKey, findExistingJob } from "$lib/server/job/import-utils";
 import { getErrorMessage } from "$lib/server/utils/errors";
@@ -78,38 +80,36 @@ export const POST: RequestHandler = async (event) => {
 
     if (hasChanges) {
       // Update existing job
-      await db.jobs.update({
-        where: { id: existing.id },
-        data: {
-          title: jobData.title,
-          job_poster: jobData.company,
-          job_description: jobData.description,
-          office_location: jobData.location,
-          salary_min: jobData.salaryMin,
-          salary_max: jobData.salaryMax,
-          salary_currency: jobData.salaryCurrency,
-          salary_period: jobData.salaryPeriod,
-          salary_duration_weeks: jobData.salaryDurationWeeks,
-          work_location: jobData.remote ? [jobData.remote] : undefined,
-          job_types: jobData.jobType ? [jobData.jobType] : undefined,
-          experience_levels: jobData.experienceLevel
-            ? [jobData.experienceLevel]
-            : undefined,
-          skills_required: jobData.skills,
-          date_posted: jobData.postedAt
-            ? new Date(jobData.postedAt)
-            : undefined,
-          job_platform_id: jobData.platformId,
-          date_updated: new Date(),
-        },
-      });
+      await db.update(jobs).set({
+        title: jobData.title,
+        job_poster: jobData.company,
+        job_description: jobData.description,
+        office_location: jobData.location,
+        salary_min: jobData.salaryMin,
+        salary_max: jobData.salaryMax,
+        salary_currency: jobData.salaryCurrency,
+        salary_period: jobData.salaryPeriod,
+        salary_duration_weeks: jobData.salaryDurationWeeks,
+        work_location: jobData.remote ? [jobData.remote] : undefined,
+        job_types: jobData.jobType ? [jobData.jobType] : undefined,
+        experience_levels: jobData.experienceLevel
+          ? [jobData.experienceLevel]
+          : undefined,
+        skills_required: jobData.skills,
+        date_posted: jobData.postedAt
+          ? new Date(jobData.postedAt)
+          : undefined,
+        job_platform_id: jobData.platformId,
+        date_updated: new Date(),
+      }).where(eq(jobs.id, existing.id));
 
-      // Record who imported this job
-      await db.job_importers.upsert({
-        where: { job_profile: { job: existing.id, profile: profileId } },
-        create: { job: existing.id, profile: profileId },
-        update: {},
+      // Record who imported this job (upsert)
+      const existingImporter = await db.query.job_importers.findFirst({
+        where: (t, { and, eq }) => and(eq(t.job, existing.id), eq(t.profile, profileId)),
       });
+      if (!existingImporter) {
+        await db.insert(job_importers).values({ job: existing.id, profile: profileId });
+      }
 
       return json(
         {
@@ -121,12 +121,13 @@ export const POST: RequestHandler = async (event) => {
       );
     }
 
-    // No changes — still record the importer
-    await db.job_importers.upsert({
-      where: { job_profile: { job_id: existing.id, profile_id: profileId } },
-      create: { job_id: existing.id, profile_id: profileId },
-      update: {},
+    // No changes — still record the importer (upsert)
+    const existingImporter2 = await db.query.job_importers.findFirst({
+      where: (t, { and, eq }) => and(eq(t.job, existing.id), eq(t.profile, profileId)),
     });
+    if (!existingImporter2) {
+      await db.insert(job_importers).values({ job: existing.id, profile: profileId });
+    }
 
     return json(
       {
@@ -141,36 +142,32 @@ export const POST: RequestHandler = async (event) => {
 
   // Step 5: Create new job
   try {
-    const newJob = await db.jobs.create({
-      data: {
-        title: jobData.title,
-        job_poster: jobData.company,
-        source_url: normalizedUrl,
-        job_description: jobData.description,
-        office_location: jobData.location,
-        salary_min: jobData.salaryMin,
-        salary_max: jobData.salaryMax,
-        salary_currency: jobData.salaryCurrency,
-        salary_period: jobData.salaryPeriod,
-        salary_duration_weeks: jobData.salaryDurationWeeks,
-        work_location: jobData.remote ? [jobData.remote] : null,
-        job_types: jobData.jobType ? [jobData.jobType] : null,
-        experience_levels: jobData.experienceLevel
-          ? [jobData.experienceLevel]
-          : null,
-        skills_required: jobData.skills,
-        date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
-        job_platform_id: jobData.platformId,
-        status: "hiring",
-        date_created: new Date(),
-        date_updated: new Date(),
-      },
-    });
+    const [newJob] = await db.insert(jobs).values({
+      title: jobData.title,
+      job_poster: jobData.company,
+      source_url: normalizedUrl,
+      job_description: jobData.description,
+      office_location: jobData.location,
+      salary_min: jobData.salaryMin,
+      salary_max: jobData.salaryMax,
+      salary_currency: jobData.salaryCurrency,
+      salary_period: jobData.salaryPeriod,
+      salary_duration_weeks: jobData.salaryDurationWeeks,
+      work_location: jobData.remote ? [jobData.remote] : null,
+      job_types: jobData.jobType ? [jobData.jobType] : null,
+      experience_levels: jobData.experienceLevel
+        ? [jobData.experienceLevel]
+        : null,
+      skills_required: jobData.skills,
+      date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
+      job_platform_id: jobData.platformId,
+      status: "hiring",
+      date_created: new Date(),
+      date_updated: new Date(),
+    }).returning();
 
     // Record who imported this job
-    await db.job_importers.create({
-      data: { job: newJob.id, profile: profileId },
-    });
+    await db.insert(job_importers).values({ job: newJob.id, profile: profileId });
 
     return json(
       {

@@ -1,5 +1,8 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, like, inArray, desc, count, exists, notExists, type SQL } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { files, profiles, applications_files, user_feedback_files, profile_exports, applications as applicationsTable, import_logs } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ url }) => {
   const typeFilter = url.searchParams.get("type") || "";
@@ -7,73 +10,74 @@ export const load: PageServerLoad = async ({ url }) => {
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
   const pageSize = 50;
 
-  const where: Record<string, unknown> = {};
+  const conditions: SQL[] = [];
 
   if (typeFilter === "pdf") {
-    where.type = { contains: "pdf" };
+    conditions.push(like(files.type, "%pdf%"));
   } else if (typeFilter === "image") {
-    where.type = { startsWith: "image/" };
+    conditions.push(like(files.type, "image/%"));
   } else if (typeFilter === "document") {
-    where.type = {
-      in: [
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/html",
-        "text/plain",
-      ],
-    };
+    conditions.push(inArray(files.type, [
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/html",
+      "text/plain",
+    ]));
   } else if (typeFilter === "json") {
-    where.type = "application/json";
+    conditions.push(eq(files.type, "application/json"));
   }
 
   if (usageFilter === "cv") {
-    where.profiles = { some: {} };
+    conditions.push(exists(db.select({ v: sql`1` }).from(profiles).where(eq(profiles.profile_picture_id, files.id))));
   } else if (usageFilter === "application") {
-    where.applications_files = { some: {} };
+    conditions.push(exists(db.select({ v: sql`1` }).from(applications_files).where(eq(applications_files.file_id, files.id))));
   } else if (usageFilter === "feedback") {
-    where.user_feedback_files = { some: {} };
+    conditions.push(exists(db.select({ v: sql`1` }).from(user_feedback_files).where(eq(user_feedback_files.file_id, files.id))));
   } else if (usageFilter === "export") {
-    where.profile_exports = { some: {} };
+    conditions.push(exists(db.select({ v: sql`1` }).from(profile_exports).where(eq(profile_exports.file_id, files.id))));
   } else if (usageFilter === "orphan") {
-    where.AND = [
-      { profiles: { none: {} } },
-      { applications_files: { none: {} } },
-      { user_feedback_files: { none: {} } },
-      { profile_exports: { none: {} } },
-      { applications: { none: {} } },
-    ];
+    conditions.push(
+      notExists(db.select({ v: sql`1` }).from(profiles).where(eq(profiles.profile_picture_id, files.id))),
+      notExists(db.select({ v: sql`1` }).from(applications_files).where(eq(applications_files.file_id, files.id))),
+      notExists(db.select({ v: sql`1` }).from(user_feedback_files).where(eq(user_feedback_files.file_id, files.id))),
+      notExists(db.select({ v: sql`1` }).from(profile_exports).where(eq(profile_exports.file_id, files.id))),
+      notExists(db.select({ v: sql`1` }).from(applicationsTable).where(eq(applicationsTable.cv_file_sent_id, files.id))),
+    );
   }
 
-  const [files, total] = await Promise.all([
+  const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [fileResults, [{ total }]] = await Promise.all([
     db.query.files.findMany({
-      where,
-      orderBy: { created_on: "desc" },
+      where: whereCondition,
+      orderBy: desc(files.created_on),
       offset: (page - 1) * pageSize,
       limit: pageSize,
       with: {
-        profiles: { select: { id: true, name: true } },
+        profiles: { columns: { id: true, name: true } },
         applications_files: {
-          select: {
-            applications: {
-              select: { id: true, jobs: { select: { title: true, company: true } } },
+          with: {
+            application: {
+              columns: { id: true },
+              with: { job: { columns: { title: true, company: true } } },
             },
           },
         },
         user_feedback_files: {
-          select: { user_feedback: { select: { id: true, category: true } } },
+          with: { user_feedback: { columns: { id: true, category: true } } },
         },
-        profile_exports: { select: { id: true } },
+        profile_exports: { columns: { id: true } },
       },
     }),
-    db.files.count({ where }),
+    db.select({ total: count() }).from(files).where(whereCondition),
   ]);
 
   // Get import log entries for files that have them
-  const fileIds = files.map((f) => f.id);
-  const importLogs = fileIds.length
+  const fileIds = fileResults.map((f) => f.id);
+  const importLogResults = fileIds.length
     ? await db.query.import_logs.findMany({
-        where: { file_id: { in: fileIds } },
-        select: {
+        where: inArray(import_logs.file_id, fileIds),
+        columns: {
           file_id: true,
           event: true,
           date_created: true,
@@ -82,12 +86,12 @@ export const load: PageServerLoad = async ({ url }) => {
           sections: true,
           user_email: true,
         },
-        orderBy: { date_created: "desc" },
+        orderBy: desc(import_logs.date_created),
       })
     : [];
 
-  const importLogMap = new Map<string, typeof importLogs>();
-  for (const log of importLogs) {
+  const importLogMap = new Map<string, typeof importLogResults>();
+  for (const log of importLogResults) {
     if (!log.file_id) continue;
     const existing = importLogMap.get(log.file_id) || [];
     existing.push(log);
@@ -95,7 +99,7 @@ export const load: PageServerLoad = async ({ url }) => {
   }
 
   return {
-    files: files.map((f) => ({
+    files: fileResults.map((f) => ({
       ...f,
       filesize: f.filesize ? Number(f.filesize) : null,
       importLogs: importLogMap.get(f.id) || [],

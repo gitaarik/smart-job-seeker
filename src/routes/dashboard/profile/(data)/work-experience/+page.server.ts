@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { work_experiences, work_experience_achievements, work_experience_technologies } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -11,14 +13,14 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const experiences = await db.query.work_experiences.findMany({
-    where: { profile_id: layoutData.selectedProfile.id },
-    orderBy: { sort: "asc" },
+    where: eq(work_experiences.profile_id, layoutData.selectedProfile.id),
+    orderBy: asc(work_experiences.sort),
     with: {
       work_experience_achievements: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(work_experience_achievements.sort),
       },
       work_experience_technologies: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(work_experience_technologies.sort),
       },
     },
   });
@@ -29,14 +31,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 export const actions: Actions = {
   create: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
@@ -48,72 +46,49 @@ export const actions: Actions = {
     const start_date = formData.get("start_date") as string;
     const end_date = formData.get("end_date") as string;
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Company name is required" });
-    }
+    if (!name || name.trim().length === 0) return fail(400, { error: "Company name is required" });
+    if (!position || position.trim().length === 0) return fail(400, { error: "Position is required" });
 
-    if (!position || position.trim().length === 0) {
-      return fail(400, { error: "Position is required" });
-    }
-
-    // Get the highest sort value
     const lastItem = await db.query.work_experiences.findFirst({
-      where: { profile_id: profileId },
-      orderBy: { sort: "desc" },
+      where: eq(work_experiences.profile_id, profileId),
+      orderBy: desc(work_experiences.sort),
     });
 
-    const created = await db.work_experiences.create({
-      data: {
-        name: name.trim(),
-        position: position.trim(),
-        location: location?.trim() || "",
-        website: website?.trim() || null,
-        description: description?.trim() || "",
-        summary: summary?.trim() || "",
-        start_date: start_date ? new Date(start_date) : null,
-        end_date: end_date ? new Date(end_date) : null,
-        profile_id: profileId,
-        sort: (lastItem?.sort ?? -1) + 1,
-        status: "published",
-        date_created: new Date(),
-      },
-    });
+    const [created] = await db.insert(work_experiences).values({
+      name: name.trim(),
+      position: position.trim(),
+      location: location?.trim() || "",
+      website: website?.trim() || null,
+      description: description?.trim() || "",
+      summary: summary?.trim() || "",
+      start_date: start_date ? new Date(start_date) : null,
+      end_date: end_date ? new Date(end_date) : null,
+      profile_id: profileId,
+      sort: (lastItem?.sort ?? -1) + 1,
+      status: "published",
+      date_created: new Date(),
+    }).returning();
 
-    // Redirect to edit page for the new experience
     redirect(302, `/dashboard/profile/work-experience/${created.id}`);
   },
 
   delete: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
+    if (isNaN(id)) return fail(400, { error: "Invalid experience ID" });
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid experience ID" });
-    }
-
-    // Verify ownership
     const existing = await db.query.work_experiences.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(work_experiences.id, id), eq(work_experiences.profile_id, profileId)),
     });
+    if (!existing) return fail(404, { error: "Experience not found" });
 
-    if (!existing) {
-      return fail(404, { error: "Experience not found" });
-    }
-
-    // Delete will cascade to achievements, technologies, projects
-    await db.work_experiences.delete({
-      where: { id },
-    });
+    await db.delete(work_experiences).where(eq(work_experiences.id, id));
 
     return { success: true };
   },

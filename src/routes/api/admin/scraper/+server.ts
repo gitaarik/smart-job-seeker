@@ -8,6 +8,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
+import { eq, and, inArray, lt, desc, count } from "drizzle-orm";
+import { search_task_runs, search_task_run_items, search_tasks, users, jobs } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { searchTaskDisplayName } from "$lib/format";
 import {
@@ -29,10 +31,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   const statusWhere =
     statusFilter === "active"
-      ? { status: { in: ["running", "queued", "blocked", "stopping"] } }
+      ? inArray(search_task_runs.status, ["running", "queued", "blocked", "stopping"])
       : statusFilter === "failed"
-        ? { status: { in: ["failed", "cancelled"] } }
-        : {};
+        ? inArray(search_task_runs.status, ["failed", "cancelled"])
+        : undefined;
 
   // Health checks: detect common issues
   const healthChecks = await getHealthChecks();
@@ -40,21 +42,21 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const [runs, totalCount, queueStats] = await Promise.all([
     db.query.search_task_runs.findMany({
       where: statusWhere,
-      orderBy: { started_at: "desc" },
+      orderBy: desc(search_task_runs.started_at),
       limit: limit,
       offset: offset,
       with: {
-        search_tasks: {
+        search_task: {
           with: {
-            profiles: {
-              select: {
+            profile: {
+              columns: {
                 id: true,
                 name: true,
                 user_id: true,
               },
             },
-            job_platforms: {
-              select: {
+            job_platform: {
+              columns: {
                 id: true,
                 name: true,
               },
@@ -63,25 +65,25 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         },
       },
     }),
-    db.search_task_runs.count({ where: statusWhere }),
+    db.select({ value: count() }).from(search_task_runs).where(statusWhere).then(([r]) => r.value),
     getQueueStats(),
   ]);
 
   // Collect unique user_ids and fetch users separately (no FK relation in schema)
   const userIds = [...new Set(
-    runs.map((r) => r.search_tasks.profiles.user_id).filter(Boolean) as string[],
+    runs.map((r) => r.search_task.profile.user_id).filter(Boolean) as string[],
   )];
-  const users = userIds.length > 0
+  const userList = userIds.length > 0
     ? await db.query.users.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, name: true, email: true },
+        where: inArray(users.id, userIds),
+        columns: { id: true, name: true, email: true },
       })
     : [];
-  const userMap = new Map(users.map((u) => [u.id, u]));
+  const userMap = new Map(userList.map((u) => [u.id, u]));
 
   return json({
     runs: runs.map((r) => {
-      const u = userMap.get(r.search_tasks.profiles.user_id ?? "");
+      const u = userMap.get(r.search_task.profile.user_id ?? "");
       return {
         id: r.id,
         status: r.status,
@@ -92,16 +94,16 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         triggeredBy: r.triggered_by,
         liveUrl: r.live_url,
         searchTask: {
-          id: r.search_tasks.id,
-          name: searchTaskDisplayName(r.search_tasks.job_platforms?.name, r.search_tasks.note),
-          status: r.search_tasks.status,
-          browserProvider: r.search_tasks.browser_provider,
-          searchUrl: r.search_tasks.search_url,
-          platform: r.search_tasks.job_platforms?.name ?? null,
+          id: r.search_task.id,
+          name: searchTaskDisplayName(r.search_task.job_platform?.name, r.search_task.note),
+          status: r.search_task.status,
+          browserProvider: r.search_task.browser_provider,
+          searchUrl: r.search_task.search_url,
+          platform: r.search_task.job_platform?.name ?? null,
         },
         profile: {
-          id: r.search_tasks.profiles.id,
-          name: r.search_tasks.profiles.name,
+          id: r.search_task.profile.id,
+          name: r.search_task.profile.name,
         },
         user: u
           ? { id: u.id, name: u.name, email: u.email }
@@ -131,7 +133,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
 
   const [
     orphanedItems,
-    stuckRuns,
+    stuckRunsResult,
     statusMismatches,
   ] = await Promise.all([
     // Completed runs that still have pending/processing items
@@ -143,12 +145,12 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
         AND r.status IN ('success', 'error', 'cancelled', 'partial')
     `),
     // Runs stuck in running/queued/stopping for more than 30 minutes
-    db.search_task_runs.count({
-      where: {
-        status: { in: ["running", "queued", "stopping"] },
-        started_at: { lt: new Date(Date.now() - 30 * 60 * 1000) },
-      },
-    }),
+    db.select({ value: count() }).from(search_task_runs).where(
+      and(
+        inArray(search_task_runs.status, ["running", "queued", "stopping"]),
+        lt(search_task_runs.started_at, new Date(Date.now() - 30 * 60 * 1000)),
+      ),
+    ),
     // Search tasks where status says running/queued but latest run is finished
     queryRaw<{ count: bigint }[]>(sql`
       SELECT COUNT(*) as count
@@ -173,6 +175,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
     });
   }
 
+  const stuckRuns = stuckRunsResult[0]?.value ?? 0;
   if (stuckRuns > 0) {
     issues.push({
       severity: "error",
@@ -220,57 +223,58 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   // --- Health fix actions ---
 
   if (action === "fix-orphaned-items") {
-    const result = await db.search_task_run_items.updateMany({
-      where: {
-        status: { in: ["pending", "processing"] },
-        search_task_runs: {
-          status: { in: ["success", "error", "cancelled", "partial"] },
-        },
-      },
-      data: {
+    // Get run IDs with orphaned items via raw SQL since this involves a join condition
+    const orphanedRunIds = await queryRaw<{ run_id: number }[]>(sql`
+      SELECT DISTINCT ri.run_id
+      FROM search_task_run_items ri
+      JOIN search_task_runs r ON r.id = ri.run_id
+      WHERE ri.status IN ('pending', 'processing')
+        AND r.status IN ('success', 'error', 'cancelled', 'partial')
+    `);
+    const runIds = orphanedRunIds.map((r) => r.run_id);
+    if (runIds.length > 0) {
+      await db.update(search_task_run_items).set({
         status: "skipped",
         status_message: "Cleaned up by admin",
         processed_at: new Date(),
-      },
-    });
-    return json({ status: "fixed", fixed: result.count });
+      }).where(and(
+        inArray(search_task_run_items.status, ["pending", "processing"]),
+        inArray(search_task_run_items.run_id, runIds),
+      ));
+    }
+    return json({ status: "fixed", fixed: runIds.length });
   }
 
   if (action === "fix-stuck-runs") {
-    const stuckRuns = await db.query.search_task_runs.findMany({
-      where: {
-        status: { in: ["running", "queued", "stopping"] },
-        started_at: { lt: new Date(Date.now() - 30 * 60 * 1000) },
-      },
-      select: { id: true, search_task_id: true },
+    const stuckRunsList = await db.query.search_task_runs.findMany({
+      where: and(
+        inArray(search_task_runs.status, ["running", "queued", "stopping"]),
+        lt(search_task_runs.started_at, new Date(Date.now() - 30 * 60 * 1000)),
+      ),
+      columns: { id: true, search_task_id: true },
     });
-    if (stuckRuns.length > 0) {
-      await db.search_task_runs.updateMany({
-        where: { id: { in: stuckRuns.map((r) => r.id) } },
-        data: {
-          status: "error",
-          error_message: "Timed out (cleaned up by admin)",
-          finished_at: new Date(),
-        },
-      });
+    if (stuckRunsList.length > 0) {
+      const stuckIds = stuckRunsList.map((r) => r.id);
+      await db.update(search_task_runs).set({
+        status: "error",
+        error_message: "Timed out (cleaned up by admin)",
+        finished_at: new Date(),
+      }).where(inArray(search_task_runs.id, stuckIds));
       // Also clean up any pending items on those runs
-      await db.search_task_run_items.updateMany({
-        where: {
-          run_id: { in: stuckRuns.map((r) => r.id) },
-          status: { in: ["pending", "processing"] },
-        },
-        data: {
-          status: "skipped",
-          status_message: "Run timed out",
-          processed_at: new Date(),
-        },
-      });
+      await db.update(search_task_run_items).set({
+        status: "skipped",
+        status_message: "Run timed out",
+        processed_at: new Date(),
+      }).where(and(
+        inArray(search_task_run_items.run_id, stuckIds),
+        inArray(search_task_run_items.status, ["pending", "processing"]),
+      ));
     }
-    return json({ status: "fixed", fixed: stuckRuns.length });
+    return json({ status: "fixed", fixed: stuckRunsList.length });
   }
 
   if (action === "fix-status-mismatches") {
-    const stuckTasks = await queryRaw<{ id: number }[]>(sql`
+    const stuckTasksList = await queryRaw<{ id: number }[]>(sql`
       SELECT st.id
       FROM search_tasks st
       WHERE st.status IN ('running', 'queued', 'blocked', 'stopping')
@@ -280,18 +284,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
             AND r.status IN ('running', 'queued', 'stopping')
         )
     `);
-    if (stuckTasks.length > 0) {
-      await db.search_tasks.updateMany({
-        where: { id: { in: stuckTasks.map((t) => t.id) } },
-        data: {
-          status: "idle",
-          status_message: "Reset by admin",
-          date_updated: new Date(),
-          live_url: null,
-        },
-      });
+    if (stuckTasksList.length > 0) {
+      await db.update(search_tasks).set({
+        status: "idle",
+        status_message: "Reset by admin",
+        date_updated: new Date(),
+        live_url: null,
+      }).where(inArray(search_tasks.id, stuckTasksList.map((t) => t.id)));
     }
-    return json({ status: "fixed", fixed: stuckTasks.length });
+    return json({ status: "fixed", fixed: stuckTasksList.length });
   }
 
   // --- Run actions (require searchTaskId) ---
@@ -305,52 +306,48 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     const removed = await removeWaitingJob(searchTaskId);
     if (removed) {
       const queuedRun = await db.query.search_task_runs.findFirst({
-        where: { search_task_id: searchTaskId, status: "queued" },
-        orderBy: { started_at: "desc" },
+        where: and(
+          eq(search_task_runs.search_task_id, searchTaskId),
+          eq(search_task_runs.status, "queued"),
+        ),
+        orderBy: desc(search_task_runs.started_at),
       });
       if (queuedRun) {
-        await db.search_task_runs.update({
-          where: { id: queuedRun.id },
-          data: {
-            status: "cancelled",
-            error_message: "Cancelled by admin",
-            finished_at: new Date(),
-          },
-        });
+        await db.update(search_task_runs).set({
+          status: "cancelled",
+          error_message: "Cancelled by admin",
+          finished_at: new Date(),
+        }).where(eq(search_task_runs.id, queuedRun.id));
       }
-      await db.search_tasks.update({
-        where: { id: searchTaskId },
-        data: { status: "idle", status_message: null, date_updated: new Date() },
-      });
+      await db.update(search_tasks).set({
+        status: "idle",
+        status_message: null,
+        date_updated: new Date(),
+      }).where(eq(search_tasks.id, searchTaskId));
       return json({ status: "removed_from_queue" });
     }
 
     // Stop running job — set to "stopping" and let worker finalize
     const runningRun = await db.query.search_task_runs.findFirst({
-      where: {
-        search_task_id: searchTaskId,
-        status: { in: ["running", "blocked"] },
-      },
-      orderBy: { started_at: "desc" },
+      where: and(
+        eq(search_task_runs.search_task_id, searchTaskId),
+        inArray(search_task_runs.status, ["running", "blocked"]),
+      ),
+      orderBy: desc(search_task_runs.started_at),
     });
 
     if (!runningRun) {
       return json({ status: "not_found" });
     }
 
-    await db.search_task_runs.update({
-      where: { id: runningRun.id },
-      data: { status: "stopping" },
-    });
+    await db.update(search_task_runs).set({ status: "stopping" })
+      .where(eq(search_task_runs.id, runningRun.id));
 
-    await db.search_tasks.update({
-      where: { id: searchTaskId },
-      data: {
-        status: "stopping",
-        status_message: "Stopping...",
-        date_updated: new Date(),
-      },
-    });
+    await db.update(search_tasks).set({
+      status: "stopping",
+      status_message: "Stopping...",
+      date_updated: new Date(),
+    }).where(eq(search_tasks.id, searchTaskId));
 
     await removeActiveJob(searchTaskId);
 
@@ -359,8 +356,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   if (action === "restart") {
     const searchTask = await db.query.search_tasks.findFirst({
-      where: { id: searchTaskId },
-      with: { job_platforms: true },
+      where: eq(search_tasks.id, searchTaskId),
+      with: { job_platform: true },
     });
 
     if (!searchTask) {
@@ -371,29 +368,24 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       throw error(400, "Search task missing URL or platform");
     }
 
-    const run = await db.search_task_runs.create({
-      data: {
-        search_task_id: searchTaskId,
-        status: "queued",
-        triggered_by: "user",
-        settings: {
-          max_jobs: searchTask.max_jobs,
-          skip_existing: searchTask.skip_existing,
-          skip_first: (searchTask as Record<string, unknown>).skip_first as number | null,
-          stop_after_duplicates: (searchTask as Record<string, unknown>).stop_after_duplicates as number | null,
-          browser_provider: searchTask.browser_provider,
-        },
+    const [run] = await db.insert(search_task_runs).values({
+      search_task_id: searchTaskId,
+      status: "queued",
+      triggered_by: "user",
+      settings: {
+        max_jobs: searchTask.max_jobs,
+        skip_existing: searchTask.skip_existing,
+        skip_first: (searchTask as Record<string, unknown>).skip_first as number | null,
+        stop_after_duplicates: (searchTask as Record<string, unknown>).stop_after_duplicates as number | null,
+        browser_provider: searchTask.browser_provider,
       },
-    });
+    }).returning();
 
-    await db.search_tasks.update({
-      where: { id: searchTaskId },
-      data: {
-        status: "queued",
-        status_message: "Waiting in queue (admin restart)",
-        date_updated: new Date(),
-      },
-    });
+    await db.update(search_tasks).set({
+      status: "queued",
+      status_message: "Waiting in queue (admin restart)",
+      date_updated: new Date(),
+    }).where(eq(search_tasks.id, searchTaskId));
 
     let effectiveProvider = searchTask.browser_provider;
     if (!effectiveProvider) {
@@ -411,10 +403,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       ...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {}),
     });
 
-    await db.search_task_runs.update({
-      where: { id: run.id },
-      data: { bullmq_job_id: job.id },
-    });
+    await db.update(search_task_runs).set({ bullmq_job_id: job.id })
+      .where(eq(search_task_runs.id, run.id));
 
     return json({ status: "queued", runId: run.id });
   }

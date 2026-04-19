@@ -1,17 +1,16 @@
 import { dbDirect } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 
 export interface ExportedProfile {
   profile: {
     name?: string;
     title?: string;
     slug?: string;
-    // Location field
     location?: string;
-    // Contact fields
     phone_number?: string;
     email_address?: string;
     personal_website?: string;
-    // Social profiles
     linkedin_profile?: string;
     github_profile?: string;
     stackoverflow_profile?: string;
@@ -20,7 +19,6 @@ export interface ExportedProfile {
     signal_profile?: string;
     whatsapp_number?: string;
     telegram_username?: string;
-    // Professional info
     subtitle?: string;
     core_stack?: string;
     headline?: string;
@@ -30,11 +28,9 @@ export interface ExportedProfile {
     location_url?: string;
     location_timezone?: string;
     meta_image_url?: string;
-    // Experience years
     dev_start_year?: number | null;
     python_js_start_year?: number | null;
     remote_start_year?: number | null;
-    // Business info
     company_name?: string;
     street_address?: string;
     postal_code?: string;
@@ -45,7 +41,7 @@ export interface ExportedProfile {
       sort?: number | null;
       slug?: string;
       name?: string;
-      description?: string; // Legacy field (old format: display name)
+      description?: string;
       toggles?: any;
       extends_from?: string | null;
     }>;
@@ -197,208 +193,94 @@ export interface ExportedProfile {
 export async function buildProfileJsonExport(
   profileId: number,
 ): Promise<{ data: ExportedProfile; profileName: string }> {
-  const baseProfile = await dbDirect.profiles.findUnique({
-    where: { id: profileId },
-    include: {
+  const baseProfile = await dbDirect.query.profiles.findFirst({
+    where: eq(profiles.id, profileId),
+    with: {
       profile_versions_profile_versions_profileToprofiles: {
-        select: {
-          status: true,
-          sort: true,
-          slug: true,
-          name: true,
-          toggles: true,
-          profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
-            {
-              select: {
-                profile_versions_profile_version_extensions_extendedToprofile_versions:
-                  {
-                    select: {
-                      slug: true,
-                    },
-                  },
-              },
+        columns: { status: true, sort: true, slug: true, name: true, toggles: true },
+        with: {
+          profile_version_extensions_profile_version_extensions_extenderToprofile_versions: {
+            with: {
+              profile_version_extended_id: { columns: { slug: true } },
             },
+          },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       highlights: {
-        select: { status: true, sort: true, text: true, fa_icon: true },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, text: true, fa_icon: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       tech_skill_categories: {
-        select: {
-          status: true,
-          sort: true,
-          name: true,
-          fa_icon: true,
+        columns: { status: true, sort: true, name: true, fa_icon: true },
+        with: {
           tech_skills: {
-            select: {
-              status: true,
-              sort: true,
-              name: true,
-              years_experience: true,
-              level: true,
-              tech_skill_types: { select: { slug: true } },
-            },
-            orderBy: { sort: "asc" },
+            columns: { status: true, sort: true, name: true, years_experience: true, level: true },
+            with: { tech_skill_type: { columns: { slug: true } } },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       work_experiences: {
-        select: {
-          id: true,
-          name: true,
-          location: true,
-          position: true,
-          summary: true,
-          status: true,
-          sort: true,
-          start_date: true,
-          end_date: true,
-          website: true,
-          tags: true,
+        columns: { id: true, name: true, location: true, position: true, summary: true, status: true, sort: true, start_date: true, end_date: true, website: true, tags: true },
+        with: {
           work_experience_achievements: {
-            select: {
-              status: true,
-              sort: true,
-              description: true,
-              fa_icon: true,
-              tags: true,
-            },
-            orderBy: { sort: "asc" },
+            columns: { status: true, sort: true, description: true, fa_icon: true, tags: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           work_experience_technologies: {
-            select: { status: true, sort: true, name: true },
-            orderBy: { sort: "asc" },
+            columns: { status: true, sort: true, name: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           work_experience_projects: {
-            select: {
-              status: true,
-              sort: true,
-              name: true,
-              url: true,
-              start_date: true,
-              end_date: true,
-              description: true,
-              outcome: true,
+            columns: { status: true, sort: true, name: true, url: true, start_date: true, end_date: true, description: true, outcome: true },
+            with: {
               work_experience_project_technologies: {
-                select: { sort: true, name: true },
-                orderBy: { sort: "asc" },
+                columns: { sort: true, name: true },
+                orderBy: (t: any, { asc }: any) => asc(t.sort),
               },
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       side_projects: {
-        select: {
-          id: true,
-          status: true,
-          sort: true,
-          name: true,
-          start_date: true,
-          end_date: true,
-          url: true,
-          stars: true,
-          summary: true,
-          url_label: true,
-          tags: true,
-          side_project_achievements: {
-            select: {
-              description: true,
-              sort: true,
-            },
-            orderBy: { sort: "asc" },
-          },
-          side_project_technologies: {
-            select: { sort: true, name: true },
-            orderBy: { sort: "asc" },
-          },
+        columns: { id: true, status: true, sort: true, name: true, start_date: true, end_date: true, url: true, stars: true, summary: true, url_label: true, tags: true },
+        with: {
+          side_project_achievements: { columns: { description: true, sort: true }, orderBy: (t: any, { asc }: any) => asc(t.sort) },
+          side_project_technologies: { columns: { sort: true, name: true }, orderBy: (t: any, { asc }: any) => asc(t.sort) },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       education: {
-        select: {
-          status: true,
-          sort: true,
-          institution: true,
-          location: true,
-          url: true,
-          area: true,
-          study_type: true,
-          graduation_year: true,
-          start_date: true,
-          end_date: true,
-          summary: true,
-          tags: true,
-        },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, institution: true, location: true, url: true, area: true, study_type: true, graduation_year: true, start_date: true, end_date: true, summary: true, tags: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       languages: {
-        select: {
-          status: true,
-          sort: true,
-          name: true,
-          language_code: true,
-          proficiency: true,
-        },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, name: true, language_code: true, proficiency: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       references: {
-        select: {
-          status: true,
-          sort: true,
-          author: true,
-          author_position: true,
-          text: true,
-        },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, author: true, author_position: true, text: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       certificates: {
-        select: {
-          status: true,
-          sort: true,
-          name: true,
-          issuer: true,
-          date: true,
-          url: true,
-        },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, name: true, issuer: true, date: true, url: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       project_stories: {
-        select: {
-          sort: true,
-          title: true,
-          situation: true,
-          task: true,
-          action: true,
-          result: true,
-          reflection: true,
-          category: true,
-        },
-        orderBy: { sort: "asc" },
+        columns: { sort: true, title: true, situation: true, task: true, action: true, result: true, reflection: true, category: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       cheat_sheets: {
-        select: { sort: true, title: true, content: true },
-        orderBy: { sort: "asc" },
+        columns: { sort: true, title: true, content: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       salary_expectations: {
-        select: {
-          sort: true,
-          job_title: true,
-          company_type: true,
-          employment_type: true,
-          work_arrangement: true,
-          experience_level: true,
-          region: true,
-          hourly_rate: true,
-          month_salary: true,
-          year_salary: true,
-          daily_rate: true,
-        },
-        orderBy: { sort: "asc" },
+        columns: { sort: true, job_title: true, company_type: true, employment_type: true, work_arrangement: true, experience_level: true, region: true, hourly_rate: true, month_salary: true, year_salary: true, daily_rate: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
     },
   });
@@ -412,13 +294,10 @@ export async function buildProfileJsonExport(
       name: baseProfile.name || undefined,
       title: baseProfile.title || undefined,
       slug: baseProfile.slug || undefined,
-      // Location field
       location: baseProfile.location || undefined,
-      // Contact fields
       phone_number: baseProfile.phone_number || undefined,
       email_address: baseProfile.email_address || undefined,
       personal_website: baseProfile.personal_website || undefined,
-      // Social profiles
       linkedin_profile: baseProfile.linkedin_profile || undefined,
       github_profile: baseProfile.github_profile || undefined,
       stackoverflow_profile: baseProfile.stackoverflow_profile || undefined,
@@ -427,7 +306,6 @@ export async function buildProfileJsonExport(
       signal_profile: baseProfile.signal_profile || undefined,
       whatsapp_number: baseProfile.whatsapp_number || undefined,
       telegram_username: baseProfile.telegram_username || undefined,
-      // Professional info
       subtitle: baseProfile.subtitle || undefined,
       core_stack: baseProfile.core_stack || undefined,
       headline: baseProfile.headline || undefined,
@@ -437,11 +315,9 @@ export async function buildProfileJsonExport(
       location_url: baseProfile.location_url || undefined,
       location_timezone: baseProfile.location_timezone || undefined,
       meta_image_url: baseProfile.meta_image_url || undefined,
-      // Experience years
       dev_start_year: baseProfile.dev_start_year,
       python_js_start_year: baseProfile.python_js_start_year,
       remote_start_year: baseProfile.remote_start_year,
-      // Business info
       company_name: baseProfile.company_name || undefined,
       street_address: baseProfile.street_address || undefined,
       postal_code: baseProfile.postal_code || undefined,
@@ -458,7 +334,7 @@ export async function buildProfileJsonExport(
             extends_from: pv
               .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
               ?.[0]
-              ?.profile_versions_profile_version_extensions_extendedToprofile_versions
+              ?.profile_version_extended_id
               ?.slug,
           }),
         ),
@@ -474,7 +350,7 @@ export async function buildProfileJsonExport(
           name: skill.name || undefined,
           years_experience: skill.years_experience || undefined,
           level: skill.level || undefined,
-          tech_type: skill.tech_skill_types?.slug || null,
+          tech_type: skill.tech_skill_type?.slug || null,
         })),
       })),
       work_experiences: baseProfile.work_experiences.map((work) => ({

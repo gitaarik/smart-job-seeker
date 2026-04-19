@@ -8,6 +8,7 @@ import {
 } from "$lib/server/middleware/rate-limit";
 import { routeInboundEmail } from "$lib/server/email/inbound-router";
 import { db } from "$lib/server/db";
+import { inbound_emails } from "$lib/server/db/schema";
 
 /**
  * GET /api/email/inbound — health check
@@ -45,15 +46,13 @@ export const POST: RequestHandler = async (event) => {
       const peekBody = JSON.parse(rawBodyForLog);
       if (peekBody.type === "webhook_verification" && peekBody.verification_token) {
         console.log("[email/inbound] Webhook verification request, token:", peekBody.verification_token);
-        await db.inbound_emails.create({
-          data: {
-            recipient: peekBody.webhook?.url || "webhook-verification",
-            handler: "webhook-verification",
-            from_address: event.request.headers.get("user-agent") || "unknown",
-            subject: `Verification token: ${peekBody.verification_token}`,
-            body_text: rawBodyForLog,
-            status: "received",
-          },
+        await db.insert(inbound_emails).values({
+          recipient: peekBody.webhook?.url || "webhook-verification",
+          handler: "webhook-verification",
+          from_address: event.request.headers.get("user-agent") || "unknown",
+          subject: `Verification token: ${peekBody.verification_token}`,
+          body_text: rawBodyForLog,
+          status: "received",
         });
         return json({ verification_token: peekBody.verification_token });
       }

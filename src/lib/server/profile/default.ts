@@ -4,39 +4,41 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles, config } from "$lib/server/db/schema";
 
 /**
  * Standard include structure used across all profile queries
  * Matches the pattern from profile-loader.ts and portfolio page
  */
 const PROFILE_INCLUDE = {
-  languages: { orderBy: { sort: "asc" as const } },
-  highlights: { orderBy: { sort: "asc" as const } },
+  languages: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+  highlights: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
   tech_skill_categories: {
     with: {
-      tech_skills: { orderBy: { sort: "asc" as const } },
+      tech_skills: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
     },
-    orderBy: { sort: "asc" as const },
+    orderBy: (t: any, { asc }: any) => asc(t.sort),
   },
   work_experiences: {
     with: {
-      work_experience_achievements: { orderBy: { sort: "asc" as const } },
-      work_experience_technologies: { orderBy: { sort: "asc" as const } },
+      work_experience_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+      work_experience_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
     },
-    orderBy: { sort: "asc" as const },
+    orderBy: (t: any, { asc }: any) => asc(t.sort),
   },
-  education: { orderBy: { sort: "asc" as const } },
+  education: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
   side_projects: {
     with: {
-      side_project_achievements: { orderBy: { sort: "asc" as const } },
-      side_project_technologies: { orderBy: { sort: "asc" as const } },
+      side_project_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+      side_project_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
     },
-    orderBy: { sort: "asc" as const },
+    orderBy: (t: any, { asc }: any) => asc(t.sort),
   },
-  references: { orderBy: { sort: "asc" as const } },
-  certificates: { orderBy: { sort: "asc" as const } },
+  references: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+  certificates: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
   profile_versions_profile_versions_profileToprofiles: {
-    select: {
+    columns: {
       id: true,
       status: true,
       sort: true,
@@ -46,11 +48,12 @@ const PROFILE_INCLUDE = {
       name: true,
       profile_id: true,
       toggles: true,
-      profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
-        true,
     },
-    orderBy: { sort: "asc" as const },
-    where: { status: { equals: "published" } },
+    with: {
+      profile_version_extensions_profile_version_extensions_extenderToprofile_versions: true,
+    },
+    orderBy: (t: any, { asc }: any) => asc(t.sort),
+    where: (t: any, { eq }: any) => eq(t.status, "published"),
   },
 } as const;
 
@@ -59,17 +62,17 @@ const PROFILE_INCLUDE = {
  */
 export async function getDefaultProfile() {
   // Get config to find default profile ID
-  const config = await db.query.config.findFirst({
-    select: { default_profile: true },
+  const configRecord = await db.query.config.findFirst({
+    columns: { default_profile: true },
   });
 
-  if (!config?.default_profile) {
+  if (!configRecord?.default_profile) {
     return null;
   }
 
   // Fetch the profile with all relations
   return db.query.profiles.findFirst({
-    where: { id: config.default_profile },
+    where: eq(profiles.id, configRecord.default_profile),
     with: PROFILE_INCLUDE,
   });
 }
@@ -82,7 +85,7 @@ export async function getDefaultProfile() {
 export async function getProfileOrDefault(profileId?: number) {
   if (profileId !== undefined) {
     const profile = await db.query.profiles.findFirst({
-      where: { id: profileId },
+      where: eq(profiles.id, profileId),
       with: PROFILE_INCLUDE,
     });
     if (profile) return profile;
@@ -97,19 +100,16 @@ export async function getProfileOrDefault(profileId?: number) {
  */
 export async function setDefaultProfile(profileId: number) {
   // Get or create config record
-  const config = await db.query.config.findFirst();
+  const configRecord = await db.query.config.findFirst();
 
-  if (config) {
+  if (configRecord) {
     // Update existing config
-    return db.config.update({
-      where: { id: config.id },
-      data: { default_profile: profileId },
-    });
+    return db.update(config).set({ default_profile: profileId })
+      .where(eq(config.id, configRecord.id));
   } else {
     // Create new config
-    return db.config.create({
-      data: { default_profile: profileId },
-    });
+    const [result] = await db.insert(config).values({ default_profile: profileId }).returning();
+    return result;
   }
 }
 
@@ -117,11 +117,11 @@ export async function setDefaultProfile(profileId: number) {
  * Get default profile ID only (lightweight query for scripts)
  */
 export async function getDefaultProfileId(): Promise<number | null> {
-  const config = await db.query.config.findFirst({
-    select: { default_profile: true },
+  const configRecord = await db.query.config.findFirst({
+    columns: { default_profile: true },
   });
 
-  return config?.default_profile ?? null;
+  return configRecord?.default_profile ?? null;
 }
 
 /**
@@ -142,14 +142,14 @@ export async function getProfileByIdentifier(
 
   if (!isNaN(id)) {
     const profile = await db.query.profiles.findFirst({
-      where: { id },
+      where: eq(profiles.id, id),
       with: PROFILE_INCLUDE,
     });
     if (profile) return profile;
   }
 
   return db.query.profiles.findFirst({
-    where: { slug: String(identifier) },
+    where: eq(profiles.slug, String(identifier)),
     with: PROFILE_INCLUDE,
   });
 }

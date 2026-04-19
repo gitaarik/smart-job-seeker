@@ -9,6 +9,8 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getAllMatcherStates, isMatcherAlive } from "$lib/server/job/matcher-state";
 import { dbDirect as db } from "$lib/server/db";
+import { inArray } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getMatchCounts } from "$lib/server/job/match-counts";
 
@@ -21,7 +23,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   const [states, configs, matcherAlive] = await Promise.all([
     getAllMatcherStates(),
     db.query.match_config.findMany({
-      select: {
+      columns: {
         profile_id: true,
         match_community_jobs: true,
       },
@@ -31,15 +33,15 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   // Get profile names for all profiles with match_config
   const profileIds = configs.map((c) => c.profile_id);
-  const profiles = await db.query.profiles.findMany({
-    where: { id: { in: profileIds } },
-    select: { id: true, name: true },
+  const profileList = await db.query.profiles.findMany({
+    where: inArray(profiles.id, profileIds),
+    columns: { id: true, name: true },
   });
 
   // Get per-profile match stats using shared match counting
   const configMap = new Map(configs.map((c) => [c.profile_id, c]));
   const profileStats = await Promise.all(
-    profiles.map(async (p) => {
+    profileList.map(async (p) => {
       const matchCommunityJobs = configMap.get(p.id)?.match_community_jobs ?? false;
       const counts = await getMatchCounts(p.id, matchCommunityJobs);
 

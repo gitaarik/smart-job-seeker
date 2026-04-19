@@ -1,4 +1,6 @@
 import { db } from "$lib/server/db";
+import { eq, sql } from "drizzle-orm";
+import { profile_tokens, profile_versions } from "$lib/server/db/schema";
 import { hashToken } from "./token-generator";
 
 export interface TokenValidationResult {
@@ -21,7 +23,7 @@ export async function validateToken(
   const tokenHash = hashToken(tokenString);
 
   const token = await db.query.profile_tokens.findFirst({
-    where: { token_hash: tokenHash },
+    where: eq(profile_tokens.token_hash, tokenHash),
   });
 
   if (!token) {
@@ -40,8 +42,8 @@ export async function validateToken(
 
   // Look up the profile_version to verify profile ownership
   const profileVersion = await db.query.profile_versions.findFirst({
-    where: { id: token.profile_version },
-    select: { profile_id: true },
+    where: eq(profile_versions.id, token.profile_version),
+    columns: { profile_id: true },
   });
 
   if (!profileVersion || profileVersion.profile_id !== profileId) {
@@ -84,12 +86,9 @@ export async function incrementTokenVisit(
   tokenId: number,
   ipAddress?: string,
 ): Promise<void> {
-  await db.profile_tokens.update({
-    where: { id: tokenId },
-    data: {
-      visit_count: { increment: 1 },
-      last_accessed_at: new Date(),
-      last_accessed_ip: ipAddress || null,
-    },
-  });
+  await db.update(profile_tokens).set({
+    visit_count: sql`${profile_tokens.visit_count} + 1`,
+    last_accessed_at: new Date(),
+    last_accessed_ip: ipAddress || null,
+  }).where(eq(profile_tokens.id, tokenId));
 }

@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, inArray, desc } from "drizzle-orm";
+import { profile_exports } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { createProfileExport } from "$lib/server/profile/exports";
 import { buildExportUrl } from "$lib/server/utils/export-url-builder";
@@ -20,14 +22,11 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const exports = await db.query.profile_exports.findMany({
-    where: {
-      profile_id: layoutData.selectedProfile.id,
-      export_type: "structured_data",
-    },
+    where: and(eq(profile_exports.profile_id, layoutData.selectedProfile.id), eq(profile_exports.export_type, "structured_data")),
     with: {
-      files: true,
+      file: true,
     },
-    orderBy: { date_created: "desc" },
+    orderBy: desc(profile_exports.date_created),
   });
 
   return {

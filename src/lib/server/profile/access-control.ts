@@ -1,5 +1,7 @@
 import type { Profiles } from "$lib/server/db/schema";
 import { db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profile_versions } from "$lib/server/db/schema";
 import { validateToken } from "../auth/token-validation";
 
 export interface AccessControlOptions {
@@ -99,8 +101,8 @@ export async function getVersionSlugById(
   versionId: number,
 ): Promise<string | null> {
   const version = await db.query.profile_versions.findFirst({
-    where: { id: versionId },
-    select: { slug: true },
+    where: eq(profile_versions.id, versionId),
+    columns: { slug: true },
   });
 
   return version?.slug || null;
@@ -114,8 +116,8 @@ export async function getVersionIdBySlug(
   versionSlug: string,
 ): Promise<number | null> {
   const version = await db.query.profile_versions.findFirst({
-    where: { profile_id: profileId, slug: versionSlug },
-    select: { id: true },
+    where: and(eq(profile_versions.profile_id, profileId), eq(profile_versions.slug, versionSlug)),
+    columns: { id: true },
   });
 
   return version?.id ?? null;

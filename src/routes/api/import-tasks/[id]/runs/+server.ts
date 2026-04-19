@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, desc, count } from "drizzle-orm";
+import { search_tasks, search_task_runs } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
@@ -14,9 +16,9 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   // Get the job search and verify ownership
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
+    where: eq(search_tasks.id, searchTaskId),
     with: {
-      profiles: true,
+      profile: true,
     },
   });
 
@@ -24,7 +26,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
     throw error(404, "Job search not found");
   }
 
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
@@ -33,13 +35,13 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   const offset = parseInt(url.searchParams.get("offset") || "0");
 
   // Get runs
-  const [runs, total] = await Promise.all([
+  const [runs, totalResult] = await Promise.all([
     db.query.search_task_runs.findMany({
-      where: { search_task_id: searchTaskId },
-      orderBy: { started_at: "desc" },
+      where: eq(search_task_runs.search_task_id, searchTaskId),
+      orderBy: desc(search_task_runs.started_at),
       limit: limit,
       offset: offset,
-      select: {
+      columns: {
         id: true,
         status: true,
         started_at: true,
@@ -52,14 +54,14 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
         settings: true,
       },
     }),
-    db.search_task_runs.count({
-      where: { search_task_id: searchTaskId },
-    }),
+    db.select({ value: count() })
+      .from(search_task_runs)
+      .where(eq(search_task_runs.search_task_id, searchTaskId)),
   ]);
 
   return json({
     runs,
-    total,
+    total: totalResult[0].value,
     limit,
     offset,
   });

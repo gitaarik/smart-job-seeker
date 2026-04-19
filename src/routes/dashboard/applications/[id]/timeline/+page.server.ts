@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { applications, application_status_log } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const load: PageServerLoad = async () => {
@@ -19,7 +21,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -30,14 +32,12 @@ export const actions: Actions = {
       return fail(400, { error: "Description is required" });
     }
 
-    await db.application_status_log.create({
-      data: {
-        application: appId,
-        date_created: new Date(),
-        from_status: existing.status,
-        to_status: existing.status,
-        description: description.trim(),
-      },
+    await db.insert(application_status_log).values({
+      application: appId,
+      date_created: new Date(),
+      from_status: existing.status,
+      to_status: existing.status,
+      description: description.trim(),
     });
 
     return { success: true };
@@ -54,7 +54,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -65,16 +65,13 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid entry ID" });
 
     const entry = await db.query.application_status_log.findFirst({
-      where: { id, application: appId },
+      where: and(eq(application_status_log.id, id), eq(application_status_log.application, appId)),
     });
     if (!entry) return fail(404, { error: "Entry not found" });
 
-    await db.application_status_log.update({
-      where: { id },
-      data: {
-        description: description?.trim() || null,
-      },
-    });
+    await db.update(application_status_log).set({
+      description: description?.trim() || null,
+    }).where(eq(application_status_log.id, id));
 
     return { success: true };
   },
@@ -90,7 +87,7 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: { id: appId, profile_id: profileId },
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -99,11 +96,11 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid entry ID" });
 
     const entry = await db.query.application_status_log.findFirst({
-      where: { id, application: appId },
+      where: and(eq(application_status_log.id, id), eq(application_status_log.application, appId)),
     });
     if (!entry) return fail(404, { error: "Entry not found" });
 
-    await db.application_status_log.delete({ where: { id } });
+    await db.delete(application_status_log).where(eq(application_status_log.id, id));
 
     return { success: true };
   },

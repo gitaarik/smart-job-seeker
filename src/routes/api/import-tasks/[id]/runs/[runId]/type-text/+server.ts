@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { search_tasks, search_task_runs } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { chromium } from "patchright";
 
@@ -39,20 +41,25 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 
   // Verify ownership and get job search details
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
-    select: {
+    where: eq(search_tasks.id, searchTaskId),
+    columns: {
       profile_id: true,
-      profiles: { select: { user_id: true, browser_profile_id: true } },
+    },
+    with: {
+      profile: { columns: { user_id: true, browser_profile_id: true } },
     },
   });
 
   if (!searchTask) throw error(404, "Job search not found");
-  if (searchTask.profiles.user_id !== user.id) throw error(403, "Not authorized");
+  if (searchTask.profile.user_id !== user.id) throw error(403, "Not authorized");
 
   // Verify run is active
   const run = await db.query.search_task_runs.findFirst({
-    where: { id: runId, search_task_id: searchTaskId },
-    select: { status: true },
+    where: and(
+      eq(search_task_runs.id, runId),
+      eq(search_task_runs.search_task_id, searchTaskId),
+    ),
+    columns: { status: true },
   });
 
   if (!run) throw error(404, "Run not found");
@@ -61,7 +68,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Get GoLogin profile ID from the user's profile (one browser identity per user)
-  const providerProfileId = searchTask.profiles.browser_profile_id;
+  const providerProfileId = searchTask.profile.browser_profile_id;
 
   if (!providerProfileId) {
     throw error(400, "No browser profile associated with this profile");

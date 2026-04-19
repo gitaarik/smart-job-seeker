@@ -3,6 +3,8 @@
  */
 
 import { dbDirect } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import type {
   ExportedProfileData,
   ProfileExportData,
@@ -16,54 +18,58 @@ export async function buildProfileExport(
   profileId: number,
   includeMedia: boolean = false,
 ): Promise<{ data: ProfileExportData; mediaFiles: MediaFile[] }> {
-  const profile = await dbDirect.profiles.findUnique({
-    where: { id: profileId },
-    include: {
+  const profile = await dbDirect.query.profiles.findFirst({
+    where: eq(profiles.id, profileId),
+    with: {
       profile_versions_profile_versions_profileToprofiles: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           slug: true,
           name: true,
           toggles: true,
-          profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
-            {
-              select: {
-                profile_versions_profile_version_extensions_extendedToprofile_versions:
-                  {
-                    select: { slug: true },
-                  },
+        },
+        with: {
+          profile_version_extensions_profile_version_extensions_extenderToprofile_versions: {
+            with: {
+              profile_version_extended_id: {
+                columns: { slug: true },
               },
             },
+          },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       highlights: {
-        select: { status: true, sort: true, text: true, fa_icon: true },
-        orderBy: { sort: "asc" },
+        columns: { status: true, sort: true, text: true, fa_icon: true },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       tech_skill_categories: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           name: true,
           fa_icon: true,
+        },
+        with: {
           tech_skills: {
-            select: {
+            columns: {
               status: true,
               sort: true,
               name: true,
               years_experience: true,
               level: true,
-              tech_skill_types: { select: { slug: true } },
             },
-            orderBy: { sort: "asc" },
+            with: {
+              tech_skill_type: { columns: { slug: true } },
+            },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       work_experiences: {
-        select: {
+        columns: {
           id: true,
           name: true,
           location: true,
@@ -76,22 +82,24 @@ export async function buildProfileExport(
           website: true,
           tags: true,
           logo_path: true,
+        },
+        with: {
           work_experience_achievements: {
-            select: {
+            columns: {
               status: true,
               sort: true,
               description: true,
               fa_icon: true,
               tags: true,
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           work_experience_technologies: {
-            select: { status: true, sort: true, name: true },
-            orderBy: { sort: "asc" },
+            columns: { status: true, sort: true, name: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           work_experience_projects: {
-            select: {
+            columns: {
               status: true,
               sort: true,
               name: true,
@@ -100,18 +108,20 @@ export async function buildProfileExport(
               end_date: true,
               description: true,
               outcome: true,
+            },
+            with: {
               work_experience_project_technologies: {
-                select: { sort: true, name: true },
-                orderBy: { sort: "asc" },
+                columns: { sort: true, name: true },
+                orderBy: (t: any, { asc }: any) => asc(t.sort),
               },
             },
-            orderBy: { sort: "asc" },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       side_projects: {
-        select: {
+        columns: {
           id: true,
           status: true,
           sort: true,
@@ -124,19 +134,21 @@ export async function buildProfileExport(
           url_label: true,
           image_path: true,
           tags: true,
+        },
+        with: {
           side_project_achievements: {
-            select: { description: true, sort: true },
-            orderBy: { sort: "asc" },
+            columns: { description: true, sort: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
           side_project_technologies: {
-            select: { sort: true, name: true },
-            orderBy: { sort: "asc" },
+            columns: { sort: true, name: true },
+            orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       education: {
-        select: {
+        columns: {
           id: true,
           status: true,
           sort: true,
@@ -152,30 +164,30 @@ export async function buildProfileExport(
           logo_path: true,
           tags: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       languages: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           name: true,
           language_code: true,
           proficiency: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       references: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           author: true,
           author_position: true,
           text: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
       certificates: {
-        select: {
+        columns: {
           status: true,
           sort: true,
           name: true,
@@ -183,7 +195,7 @@ export async function buildProfileExport(
           date: true,
           url: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
     },
   });
@@ -298,7 +310,7 @@ export async function buildProfileExport(
         extends_from:
           pv
             .profile_version_extensions_profile_version_extensions_extenderToprofile_versions?.[0]
-            ?.profile_versions_profile_version_extensions_extendedToprofile_versions
+            ?.profile_version_extended_id
             ?.slug || null,
       })),
 
@@ -320,7 +332,7 @@ export async function buildProfileExport(
         name: skill.name || undefined,
         years_experience: skill.years_experience?.toString() || undefined,
         level: skill.level || undefined,
-        tech_type: skill.tech_skill_types?.slug || null,
+        tech_type: skill.tech_skill_type?.slug || null,
       })),
     })),
 
@@ -444,9 +456,9 @@ export async function buildProfileExport(
  * Get profile name for filename
  */
 export async function getProfileName(profileId: number): Promise<string> {
-  const profile = await dbDirect.profiles.findUnique({
-    where: { id: profileId },
-    select: { name: true },
+  const profile = await dbDirect.query.profiles.findFirst({
+    where: eq(profiles.id, profileId),
+    columns: { name: true },
   });
   return profile?.name?.replace(/\s+/g, "-").toLowerCase() || "profile";
 }

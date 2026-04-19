@@ -1,6 +1,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { scraper_agent_sessions } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 export const POST: RequestHandler = async ({ params, locals }) => {
@@ -12,7 +14,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const sessionId = parseIntParam(params.id, "session");
 
   const session = await db.query.scraper_agent_sessions.findFirst({
-    where: { id: sessionId },
+    where: eq(scraper_agent_sessions.id, sessionId),
   });
 
   if (!session) throw error(404, "Session not found");
@@ -20,10 +22,10 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(400, `Cannot resume session with status "${session.status}"`);
   }
 
-  await db.scraper_agent_sessions.update({
-    where: { id: sessionId },
-    data: { status: "active", updated_at: new Date() },
-  });
+  await db.update(scraper_agent_sessions).set({
+    status: "active",
+    updated_at: new Date(),
+  }).where(eq(scraper_agent_sessions.id, sessionId));
 
   return json({ status: "active" });
 };

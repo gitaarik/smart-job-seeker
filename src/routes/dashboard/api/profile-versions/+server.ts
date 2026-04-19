@@ -1,6 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, desc } from "drizzle-orm";
+import { profile_versions } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../profile/utils";
 
@@ -13,9 +15,9 @@ export const GET: RequestHandler = async ({ locals, cookies }) => {
   }
 
   const versions = await db.query.profile_versions.findMany({
-    where: { profile_id: profileId },
-    select: { slug: true },
-    orderBy: { date_created: "desc" },
+    where: eq(profile_versions.profile_id, profileId),
+    columns: { slug: true },
+    orderBy: desc(profile_versions.date_created),
   });
 
   return json(versions.map((v) => v.slug).filter(Boolean));

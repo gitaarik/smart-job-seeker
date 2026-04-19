@@ -1,6 +1,8 @@
 import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, asc } from "drizzle-orm";
+import { work_experiences, work_experience_achievements, work_experience_technologies } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -15,13 +17,13 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const experience = await db.query.work_experiences.findFirst({
-    where: { id, profile_id: layoutData.selectedProfile.id },
+    where: and(eq(work_experiences.id, id), eq(work_experiences.profile_id, layoutData.selectedProfile.id)),
     with: {
       work_experience_achievements: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(work_experience_achievements.sort),
       },
       work_experience_technologies: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(work_experience_technologies.sort),
       },
     },
   });

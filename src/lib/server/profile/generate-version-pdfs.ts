@@ -1,6 +1,8 @@
 import { launchBrowser } from "$lib/server/browser/utils";
 import { config } from "$lib/server/config";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { createProfileExport } from "$lib/server/profile/exports";
 import { buildExportUrl } from "$lib/server/utils/export-url-builder";
 
@@ -29,8 +31,8 @@ export async function generateVersionPdfs(
   versionSlug: string,
 ): Promise<void> {
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId },
-    select: { slug: true, name: true, user_id: true },
+    where: eq(profiles.id, profileId),
+    columns: { slug: true, name: true, user_id: true },
   });
 
   if (!profile?.slug) {

@@ -1,5 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { match_config } from "$lib/server/db/schema";
 
 // Preference options for the matching config form.
 // These are the values stored in the database. They don't map 1:1 to the
@@ -27,19 +29,19 @@ export const load: PageServerLoad = async ({ parent }) => {
   const { profileId } = await parent();
 
   // Get or auto-create config for this profile
-  let config = await db.query.match_config.findFirst({
-    where: { profile_id: profileId },
+  let matchConfigResult = await db.query.match_config.findFirst({
+    where: eq(match_config.profile_id, profileId),
   });
 
-  if (!config) {
-    config = await db.match_config.create({
-      data: {
-        profile_id: profileId,
-        date_created: new Date(),
-        date_updated: new Date(),
-      },
-    });
+  if (!matchConfigResult) {
+    const [created] = await db.insert(match_config).values({
+      profile_id: profileId,
+      date_created: new Date(),
+      date_updated: new Date(),
+    }).returning();
+    matchConfigResult = created;
   }
+  const config = matchConfigResult;
 
   return {
     config: {

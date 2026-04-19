@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { search_tasks } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
@@ -14,11 +16,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const searchTaskId = parseIntParam(params.id, "job search");
 
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
-    with: { profiles: { select: { user_id: true } } },
+    where: eq(search_tasks.id, searchTaskId),
+    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (!searchTask || searchTask.profiles.user_id !== user.id) {
+  if (!searchTask || searchTask.profile.user_id !== user.id) {
     throw error(403, "Access denied");
   }
 
@@ -30,10 +32,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const existing = (searchTask.ui_preferences as Record<string, unknown>) ?? {};
   const merged = { ...existing, ...body };
 
-  await db.search_tasks.update({
-    where: { id: searchTaskId },
-    data: { ui_preferences: merged },
-  });
+  await db.update(search_tasks).set({ ui_preferences: merged })
+    .where(eq(search_tasks.id, searchTaskId));
 
   return json({ ok: true });
 };

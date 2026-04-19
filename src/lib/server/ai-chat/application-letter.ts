@@ -4,6 +4,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
 /**
  * Map letter types to their corresponding AI chat prompt request types
@@ -60,11 +62,11 @@ export async function generateApplicationLetter(
   let letter;
   try {
     letter = await db.query.application_letters.findFirst({
-      where: { id: letterId },
+      where: eq(application_letters.id, letterId),
       with: {
-        applications: {
+        application: {
           with: {
-            jobs: true,
+            job: true,
           },
         },
       },
@@ -87,7 +89,7 @@ export async function generateApplicationLetter(
     };
   }
 
-  if (!letter.applications) {
+  if (!letter.application) {
     return {
       success: false,
       message:
@@ -95,15 +97,15 @@ export async function generateApplicationLetter(
     };
   }
 
-  if (!letter.applications.jobs) {
+  if (!letter.application.job) {
     return {
       success: false,
       message: `Application for letter ${letterId} does not have a linked job`,
     };
   }
 
-  const profileId = letter.applications.profile_id;
-  const job = letter.applications.jobs;
+  const profileId = letter.application.profile_id;
+  const job = letter.application.job;
   const letterType = letter.letter_type;
 
   // Get the appropriate prompt type based on letter type and mode
@@ -209,40 +211,32 @@ export async function generateApplicationLetter(
       updateData.content = letterContent;
     }
 
-    await db.application_letters.update({
-      where: { id: letterId },
-      data: updateData,
-    });
+    await db.update(application_letters).set(updateData)
+      .where(eq(application_letters.id, letterId));
 
     // Record version in letter_versions
     if (mode === "review") {
-      await db.letter_versions.create({
-        data: {
-          letter: letterId,
-          content: letterContent,
-          source: "ai_review",
-          ai_chat: aiChat.id,
-          ai_feedback: aiFeedback,
-        },
+      await db.insert(letter_versions).values({
+        letter: letterId,
+        content: letterContent,
+        source: "ai_review",
+        ai_chat: aiChat.id,
+        ai_feedback: aiFeedback,
       });
     } else if (mode === "advice") {
-      await db.letter_versions.create({
-        data: {
-          letter: letterId,
-          content: null,
-          source: "ai_advice",
-          ai_chat: aiChat.id,
-          ai_feedback: aiChat.response,
-        },
+      await db.insert(letter_versions).values({
+        letter: letterId,
+        content: null,
+        source: "ai_advice",
+        ai_chat: aiChat.id,
+        ai_feedback: aiChat.response,
       });
     } else if (mode === "generate" && letterContent) {
-      await db.letter_versions.create({
-        data: {
-          letter: letterId,
-          content: letterContent,
-          source: "ai_generation",
-          ai_chat: aiChat.id,
-        },
+      await db.insert(letter_versions).values({
+        letter: letterId,
+        content: letterContent,
+        source: "ai_generation",
+        ai_chat: aiChat.id,
       });
     }
   } catch (error) {

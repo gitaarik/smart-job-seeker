@@ -3,6 +3,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { ai_chats, collected_data, profiles } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import {
   generateChatCompletionTracked,
@@ -97,8 +99,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
 > {
   // Fetch the ai_chatss record
   const aiChat = await db.query.ai_chats.findFirst({
-    where: { id: aiChatId },
-    select: { system_prompt: true, user_prompt: true, profile_id: true },
+    where: eq(ai_chats.id, aiChatId),
+    columns: { system_prompt: true, user_prompt: true, profile_id: true },
   });
 
   if (!aiChat) {
@@ -106,15 +108,15 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
   }
 
   // Fetch the collected_data for this profile
-  const collectedData = await db.query.collected_data.findFirst({
-    where: { profile_id: aiChat.profile_id },
-    select: { schema: true, data: true },
+  const collectedDataRecord = await db.query.collected_data.findFirst({
+    where: eq(collected_data.profile_id, aiChat.profile_id),
+    columns: { schema: true, data: true },
   });
 
   // Prepare replacements (use empty objects as defaults)
   const variables = {
-    schema: collectedData?.schema || "{}",
-    data: collectedData?.data || "{}",
+    schema: collectedDataRecord?.schema || "{}",
+    data: collectedDataRecord?.data || "{}",
   };
 
   // Interpolate variables in both prompts
@@ -174,8 +176,8 @@ export async function createAndGenerateAiChat(
   try {
     // Check credits before doing any work
     const profile = await db.query.profiles.findFirst({
-      where: { id: profileId },
-      select: { user_id: true },
+      where: eq(profiles.id, profileId),
+      columns: { user_id: true },
     });
     if (profile?.user_id) {
       const { getBalance } = await import("$lib/server/billing/credits");
@@ -200,17 +202,17 @@ export async function createAndGenerateAiChat(
     }
 
     // Step 2: Fetch collected_data for the profile
-    const collectedData = await db.query.collected_data.findFirst({
-      where: { profile_id: profileId },
-      select: { schema: true, data: true },
+    const collectedDataRecord = await db.query.collected_data.findFirst({
+      where: eq(collected_data.profile_id, profileId),
+      columns: { schema: true, data: true },
     });
 
     // Step 3: Parse schema and data from JSON strings to objects
     // These will be stored as raw JSON in context, but stringified for interpolation
-    let schemaJson = collectedData?.schema
-      ? JSON.parse(collectedData.schema)
+    let schemaJson = collectedDataRecord?.schema
+      ? JSON.parse(collectedDataRecord.schema)
       : {};
-    let dataJson = collectedData?.data ? JSON.parse(collectedData.data) : {};
+    let dataJson = collectedDataRecord?.data ? JSON.parse(collectedDataRecord.data) : {};
 
     // Step 3b: Filter to requested profile data fields if specified
     const profileDataFields = options?.profileDataFields;
@@ -281,19 +283,17 @@ export async function createAndGenerateAiChat(
     );
 
     // Step 7: Create the ai_chats record with template prompts (not interpolated)
-    const aiChat = await db.ai_chats.create({
-      data: {
-        profile_id: profileId,
-        system_prompt: promptTemplate.system_prompt,
-        user_prompt: promptTemplate.user_prompt,
-        context: JSON.parse(JSON.stringify(context)),
-        followup_to: followupTo,
-        date_created: new Date(),
-        provider: config.llmProvider,
-        model: config.llmModel,
-        request_type: "llm",
-      },
-    });
+    const [aiChat] = await db.insert(ai_chats).values({
+      profile_id: profileId,
+      system_prompt: promptTemplate.system_prompt,
+      user_prompt: promptTemplate.user_prompt,
+      context: JSON.parse(JSON.stringify(context)),
+      followup_to: followupTo,
+      date_created: new Date(),
+      provider: config.llmProvider,
+      model: config.llmModel,
+      request_type: "llm",
+    }).returning();
     aiChatId = aiChat.id;
 
     // Step 6: Generate and save full_prompt (interpolated combination)
@@ -302,10 +302,8 @@ export async function createAndGenerateAiChat(
       interpolatedUserPrompt,
     );
 
-    await db.ai_chats.update({
-      where: { id: aiChat.id },
-      data: { full_prompt: fullPrompt },
-    });
+    await db.update(ai_chats).set({ full_prompt: fullPrompt })
+      .where(eq(ai_chats.id, aiChat.id));
 
     // Step 7: Generate AI response using generic LLM function
     // Look up Zod schema from code registry (no longer using database format field)
@@ -334,31 +332,28 @@ export async function createAndGenerateAiChat(
     const usage = completionResult.usage;
     const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
 
-    await db.ai_chats.update({
-      where: { id: aiChat.id },
-      data: {
-        response: responseToSave,
-        input_tokens: usage?.inputTokens ?? null,
-        output_tokens: usage?.outputTokens ?? null,
-        total_tokens: usage?.totalTokens ?? null,
-        credits_charged: creditsCost || null,
-      },
-    });
+    await db.update(ai_chats).set({
+      response: responseToSave,
+      input_tokens: usage?.inputTokens ?? null,
+      output_tokens: usage?.outputTokens ?? null,
+      total_tokens: usage?.totalTokens ?? null,
+      credits_charged: creditsCost || null,
+    }).where(eq(ai_chats.id, aiChat.id));
 
     // Charge credits if we have a user and usage
     if (usage && creditsCost > 0) {
-      const profile = await db.query.profiles.findFirst({
-        where: { id: profileId },
-        select: { user_id: true },
+      const profileForCredits = await db.query.profiles.findFirst({
+        where: eq(profiles.id, profileId),
+        columns: { user_id: true },
       });
-      if (profile?.user_id) {
+      if (profileForCredits?.user_id) {
         const { chargeCredits } = await import("$lib/server/billing/credits");
         const providerCostUsd = estimateProviderCostUsd(
           config.llmProvider, config.llmModel,
           usage.inputTokens, usage.outputTokens,
         );
         await chargeCredits(
-          profile.user_id,
+          profileForCredits.user_id,
           creditsCost,
           "ai_generation",
           `${promptKey} (${usage.totalTokens} tokens)`,
@@ -373,8 +368,8 @@ export async function createAndGenerateAiChat(
 
     // Step 9: Fetch and return the complete ai_chats record
     const completeAiChat = await db.query.ai_chats.findFirst({
-      where: { id: aiChat.id },
-      select: {
+      where: eq(ai_chats.id, aiChat.id),
+      columns: {
         id: true,
         profile_id: true,
         system_prompt: true,
@@ -406,10 +401,8 @@ export async function createAndGenerateAiChat(
 
     // Save error to ai_chats record if it was created
     if (aiChatId) {
-      await db.ai_chats.update({
-        where: { id: aiChatId },
-        data: { error: errorMessage },
-      });
+      await db.update(ai_chats).set({ error: errorMessage })
+        .where(eq(ai_chats.id, aiChatId));
       console.error(
         `      📋 Error details: ai_chat ID ${aiChatId}`,
       );

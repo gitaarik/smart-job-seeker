@@ -8,6 +8,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, asc } from "drizzle-orm";
+import { scraper_agent_sessions, scraper_agent_iterations, search_task_runs } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskDisplayName } from "$lib/format";
 
@@ -20,21 +22,23 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const sessionId = parseIntParam(params.id, "session");
 
   const session = await db.query.scraper_agent_sessions.findFirst({
-    where: { id: sessionId },
+    where: eq(scraper_agent_sessions.id, sessionId),
     with: {
-      search_tasks: {
-        select: {
+      search_task: {
+        columns: {
           id: true,
           note: true,
           search_url: true,
           platform_id: true,
           browser_provider: true,
-          job_platforms: { select: { name: true } },
+        },
+        with: {
+          job_platform: { columns: { name: true } },
         },
       },
-      iterations: {
-        orderBy: { iteration: "asc" },
-        select: {
+      scraper_agent_iterations: {
+        orderBy: asc(scraper_agent_iterations.iteration),
+        columns: {
           id: true,
           iteration: true,
           stage: true,
@@ -61,12 +65,12 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   }
 
   // Check if the latest iteration's run is blocked
-  const latestIter = session.iterations[session.iterations.length - 1];
+  const latestIter = session.scraper_agent_iterations[session.scraper_agent_iterations.length - 1];
   let blockedMessage: string | null = null;
   if (latestIter?.stage === "blocked" && latestIter.run_id) {
     const run = await db.query.search_task_runs.findFirst({
-      where: { id: latestIter.run_id },
-      select: { error_message: true },
+      where: eq(search_task_runs.id, latestIter.run_id),
+      columns: { error_message: true },
     });
     blockedMessage = run?.error_message ?? null;
   }
@@ -75,7 +79,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     session: {
       id: session.id,
       searchTaskId: session.search_task_id,
-      searchTaskName: searchTaskDisplayName(session.search_tasks.job_platforms?.name, session.search_tasks.note),
+      searchTaskName: searchTaskDisplayName(session.search_task.job_platform?.name, session.search_task.note),
       status: session.status,
       goal: session.goal,
       maxIterations: session.max_iterations,
@@ -91,7 +95,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       updatedAt: session.updated_at,
       finishedAt: session.finished_at,
     },
-    iterations: session.iterations.map((i) => ({
+    iterations: session.scraper_agent_iterations.map((i) => ({
       id: i.id,
       iteration: i.iteration,
       stage: i.stage,
@@ -121,7 +125,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const sessionId = parseIntParam(params.id, "session");
 
   const session = await db.query.scraper_agent_sessions.findFirst({
-    where: { id: sessionId },
+    where: eq(scraper_agent_sessions.id, sessionId),
   });
 
   if (!session) throw error(404, "Session not found");
@@ -137,10 +141,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     data.max_iterations = val;
   }
 
-  await db.scraper_agent_sessions.update({
-    where: { id: sessionId },
-    data,
-  });
+  await db.update(scraper_agent_sessions).set(data)
+    .where(eq(scraper_agent_sessions.id, sessionId));
 
   return json({ ok: true });
 };

@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { education } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -10,25 +12,21 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/dashboard");
   }
 
-  const education = await db.query.education.findMany({
-    where: { profile_id: layoutData.selectedProfile.id },
-    orderBy: { sort: "asc" },
+  const items = await db.query.education.findMany({
+    where: eq(education.profile_id, layoutData.selectedProfile.id),
+    orderBy: asc(education.sort),
   });
 
-  return { education, profileId: layoutData.selectedProfile.id };
+  return { education: items, profileId: layoutData.selectedProfile.id };
 };
 
 export const actions: Actions = {
   create: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const institution = formData.get("institution") as string;
@@ -41,68 +39,49 @@ export const actions: Actions = {
     const end_date = formData.get("end_date") as string;
     const summary = formData.get("summary") as string;
 
-    if (!institution || institution.trim().length === 0) {
-      return fail(400, { error: "Institution is required" });
-    }
+    if (!institution || institution.trim().length === 0) return fail(400, { error: "Institution is required" });
 
-    // Get the highest sort value
     const lastItem = await db.query.education.findFirst({
-      where: { profile_id: profileId },
-      orderBy: { sort: "desc" },
+      where: eq(education.profile_id, profileId),
+      orderBy: desc(education.sort),
     });
 
-    const created = await db.education.create({
-      data: {
-        institution: institution.trim(),
-        area: area?.trim() || null,
-        study_type: study_type?.trim() || null,
-        location: location?.trim() || null,
-        url: url?.trim() || null,
-        graduation_year: graduation_year ? parseInt(graduation_year) : null,
-        start_date: start_date ? new Date(start_date) : null,
-        end_date: end_date ? new Date(end_date) : null,
-        summary: summary?.trim() || null,
-        profile_id: profileId,
-        sort: (lastItem?.sort ?? -1) + 1,
-        status: "published",
-        date_created: new Date(),
-      },
-    });
+    const [created] = await db.insert(education).values({
+      institution: institution.trim(),
+      area: area?.trim() || null,
+      study_type: study_type?.trim() || null,
+      location: location?.trim() || null,
+      url: url?.trim() || null,
+      graduation_year: graduation_year ? parseInt(graduation_year) : null,
+      start_date: start_date ? new Date(start_date) : null,
+      end_date: end_date ? new Date(end_date) : null,
+      summary: summary?.trim() || null,
+      profile_id: profileId,
+      sort: (lastItem?.sort ?? -1) + 1,
+      status: "published",
+      date_created: new Date(),
+    }).returning();
 
-    // Redirect to edit page for the new education entry
     redirect(302, `/dashboard/profile/education/${created.id}`);
   },
 
   delete: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
+    if (isNaN(id)) return fail(400, { error: "Invalid education ID" });
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid education ID" });
-    }
-
-    // Verify ownership
     const existing = await db.query.education.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(education.id, id), eq(education.profile_id, profileId)),
     });
+    if (!existing) return fail(404, { error: "Education entry not found" });
 
-    if (!existing) {
-      return fail(404, { error: "Education entry not found" });
-    }
-
-    await db.education.delete({
-      where: { id },
-    });
+    await db.delete(education).where(eq(education.id, id));
 
     return { success: true };
   },

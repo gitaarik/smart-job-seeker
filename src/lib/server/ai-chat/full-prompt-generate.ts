@@ -4,6 +4,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { ai_chats } from "$lib/server/db/schema";
 import { getInterpolatedPrompts, makeFullPrompt } from "./utils";
 
 /**
@@ -28,10 +30,8 @@ export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
     const fullPrompt = makeFullPrompt(prompts.systemPrompt, prompts.userPrompt);
 
     // Update the full_prompt field
-    await db.ai_chats.update({
-      where: { id: aiChatId },
-      data: { full_prompt: fullPrompt },
-    });
+    await db.update(ai_chats).set({ full_prompt: fullPrompt })
+      .where(eq(ai_chats.id, aiChatId));
 
     return {
       success: true,

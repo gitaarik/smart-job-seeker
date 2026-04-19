@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
+import { profile_versions, profile_version_extensions, profiles } from "$lib/server/db/schema";
+import { eq, and, or, asc } from "drizzle-orm";
 import { getSelectedProfileId } from "../../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
@@ -50,7 +52,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   // Get all other versions for "extends" options
   const allVersions = await db.query.profile_versions.findMany({
     where: { profile_id: layoutData.selectedProfile.id, id: { not: id } },
-    orderBy: { name: "asc" },
+    orderBy: asc(profile_versions.name),
     select: { id: true, name: true, slug: true },
   });
 
@@ -155,14 +157,11 @@ export const actions: Actions = {
       return fail(404, { error: "Version not found" });
     }
 
-    await db.profile_versions.update({
-      where: { id },
-      data: {
-        slug: slug.trim(),
-        name: name?.trim() || null,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(profile_versions).set({
+      slug: slug.trim(),
+      name: name?.trim() || null,
+      date_updated: new Date(),
+    }).where(eq(profile_versions.id, id));
 
     // Update public resume/cv version on profile
     const profile = await db.query.profiles.findFirst({
@@ -192,27 +191,20 @@ export const actions: Actions = {
     }
 
     if (Object.keys(profileUpdate).length > 0) {
-      await db.profiles.update({
-        where: { id: profileId },
-        data: profileUpdate,
-      });
+      await db.update(profiles).set(profileUpdate).where(eq(profiles.id, profileId));
     }
 
     // Update extensions: remove old, add new ones
-    await db.profile_version_extensions.deleteMany({
-      where: { extender_id: id },
-    });
+    await db.delete(profile_version_extensions).where(eq(profile_version_extensions.extender_id, id));
 
     for (const parentId of extendsIds) {
       const parent = await db.query.profile_versions.findFirst({
         where: { id: parentId, profile_id: profileId },
       });
       if (parent) {
-        await db.profile_version_extensions.create({
-          data: {
-            extender_id: id,
-            extended_id: parentId,
-          },
+        await db.insert(profile_version_extensions).values({
+          extender_id: id,
+          extended_id: parentId,
         });
       }
     }
@@ -267,20 +259,15 @@ export const actions: Actions = {
     }
 
     if (Object.keys(profileUpdate).length > 0) {
-      await db.profiles.update({
-        where: { id: profileId },
-        data: profileUpdate,
-      });
+      await db.update(profiles).set(profileUpdate).where(eq(profiles.id, profileId));
     }
 
     // Remove extension records where this version is extender or extended
-    await db.profile_version_extensions.deleteMany({
-      where: { OR: [{ extender_id: id }, { extended_id: id }] },
-    });
+    await db.delete(profile_version_extensions).where(
+      or(eq(profile_version_extensions.extender_id, id), eq(profile_version_extensions.extended_id, id))
+    );
 
-    await db.profile_versions.delete({
-      where: { id },
-    });
+    await db.delete(profile_versions).where(eq(profile_versions.id, id));
 
     redirect(302, "/dashboard/profile/resume");
   },

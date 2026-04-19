@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, inArray, desc } from "drizzle-orm";
+import { search_tasks, search_task_runs, search_task_run_items } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import {
   addScrapeJob,
@@ -28,10 +30,10 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 
   // Get the job search and verify ownership
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
+    where: eq(search_tasks.id, searchTaskId),
     with: {
-      profiles: true,
-      job_platforms: true,
+      profile: true,
+      job_platform: true,
     },
   });
 
@@ -40,7 +42,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Verify the user owns this profile
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized to run this job search");
   }
 
@@ -86,30 +88,25 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Create a run record with a snapshot of current scraping settings
-  const run = await db.search_task_runs.create({
-    data: {
-      search_task_id: searchTaskId,
-      status: "queued",
-      triggered_by: "user",
-      settings: {
-        max_jobs: searchTask.max_jobs,
-        skip_existing: searchTask.skip_existing,
-        skip_first: searchTask.skip_first,
-        stop_after_duplicates: (searchTask as Record<string, unknown>).stop_after_duplicates as number | null ?? null,
-        browser_provider: searchTask.browser_provider,
-      },
+  const [run] = await db.insert(search_task_runs).values({
+    search_task_id: searchTaskId,
+    status: "queued",
+    triggered_by: "user",
+    settings: {
+      max_jobs: searchTask.max_jobs,
+      skip_existing: searchTask.skip_existing,
+      skip_first: searchTask.skip_first,
+      stop_after_duplicates: (searchTask as Record<string, unknown>).stop_after_duplicates as number | null ?? null,
+      browser_provider: searchTask.browser_provider,
     },
-  });
+  }).returning();
 
   // Update search_tasks status to queued
-  await db.search_tasks.update({
-    where: { id: searchTaskId },
-    data: {
-      status: "queued",
-      status_message: "Waiting in queue",
-      date_updated: new Date(),
-    },
-  });
+  await db.update(search_tasks).set({
+    status: "queued",
+    status_message: "Waiting in queue",
+    date_updated: new Date(),
+  }).where(eq(search_tasks.id, searchTaskId));
 
   // Resolve effective browser provider for queue routing.
   // When the search task has no explicit provider, check the server default
@@ -132,10 +129,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   });
 
   // Update run with BullMQ job ID
-  await db.search_task_runs.update({
-    where: { id: run.id },
-    data: { bullmq_job_id: job.id },
-  });
+  await db.update(search_task_runs).set({ bullmq_job_id: job.id })
+    .where(eq(search_task_runs.id, run.id));
 
   // Note: actual credit charging happens in the worker after scrape completion
   // based on dynamic factors (job count, time, cloud browser, etc.)
@@ -165,9 +160,9 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 
   // Get the job search and verify ownership
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
+    where: eq(search_tasks.id, searchTaskId),
     with: {
-      profiles: true,
+      profile: true,
     },
   });
 
@@ -176,49 +171,42 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   }
 
   // Verify the user owns this profile
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized to stop this job search");
   }
 
   // Force stop: directly cancel a stuck "stopping" run
   if (force) {
     const stoppingRun = await db.query.search_task_runs.findFirst({
-      where: {
-        search_task_id: searchTaskId,
-        status: { in: ["stopping", "running", "blocked"] },
-      },
-      orderBy: { started_at: "desc" },
+      where: and(
+        eq(search_task_runs.search_task_id, searchTaskId),
+        inArray(search_task_runs.status, ["stopping", "running", "blocked"]),
+      ),
+      orderBy: desc(search_task_runs.started_at),
     });
 
     if (stoppingRun) {
-      await db.search_task_runs.update({
-        where: { id: stoppingRun.id },
-        data: {
-          status: "cancelled",
-          error_message: "Force stopped by user",
-          finished_at: new Date(),
-          live_url: null,
-        },
-      });
+      await db.update(search_task_runs).set({
+        status: "cancelled",
+        error_message: "Force stopped by user",
+        finished_at: new Date(),
+        live_url: null,
+      }).where(eq(search_task_runs.id, stoppingRun.id));
 
-      await db.search_task_run_items.updateMany({
-        where: {
-          run_id: stoppingRun.id,
-          status: { in: ["pending", "in_progress"] },
-        },
-        data: { status: "cancelled" },
-      });
+      await db.update(search_task_run_items).set({
+        status: "cancelled",
+      }).where(and(
+        eq(search_task_run_items.run_id, stoppingRun.id),
+        inArray(search_task_run_items.status, ["pending", "in_progress"]),
+      ));
     }
 
-    await db.search_tasks.update({
-      where: { id: searchTaskId },
-      data: {
-        status: "idle",
-        status_message: "Force stopped by user",
-        date_updated: new Date(),
-        live_url: null,
-      },
-    });
+    await db.update(search_tasks).set({
+      status: "idle",
+      status_message: "Force stopped by user",
+      date_updated: new Date(),
+      live_url: null,
+    }).where(eq(search_tasks.id, searchTaskId));
 
     await removeActiveJob(searchTaskId);
 
@@ -231,32 +219,26 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   if (removed) {
     // Find the queued run and update it
     const queuedRun = await db.query.search_task_runs.findFirst({
-      where: {
-        search_task_id: searchTaskId,
-        status: "queued",
-      },
-      orderBy: { started_at: "desc" },
+      where: and(
+        eq(search_task_runs.search_task_id, searchTaskId),
+        eq(search_task_runs.status, "queued"),
+      ),
+      orderBy: desc(search_task_runs.started_at),
     });
 
     if (queuedRun) {
-      await db.search_task_runs.update({
-        where: { id: queuedRun.id },
-        data: {
-          status: "cancelled",
-          error_message: "Cancelled before start",
-          finished_at: new Date(),
-        },
-      });
+      await db.update(search_task_runs).set({
+        status: "cancelled",
+        error_message: "Cancelled before start",
+        finished_at: new Date(),
+      }).where(eq(search_task_runs.id, queuedRun.id));
     }
 
-    await db.search_tasks.update({
-      where: { id: searchTaskId },
-      data: {
-        status: "idle",
-        status_message: null,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(search_tasks).set({
+      status: "idle",
+      status_message: null,
+      date_updated: new Date(),
+    }).where(eq(search_tasks.id, searchTaskId));
 
     console.log(`[API] Removed queued job for search ${searchTaskId}`);
     return json({ status: "removed_from_queue" });
@@ -264,11 +246,11 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 
   // Find the running/blocked run in the database
   const runningRun = await db.query.search_task_runs.findFirst({
-    where: {
-      search_task_id: searchTaskId,
-      status: { in: ["running", "blocked"] },
-    },
-    orderBy: { started_at: "desc" },
+    where: and(
+      eq(search_task_runs.search_task_id, searchTaskId),
+      inArray(search_task_runs.status, ["running", "blocked"]),
+    ),
+    orderBy: desc(search_task_runs.started_at),
   });
 
   if (!runningRun) {
@@ -278,21 +260,15 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   // Mark as "stopping" so the worker picks it up via isRunCancelled()
   // and the UI shows the in-progress cancellation to all users.
   // The worker will set the final "cancelled" status when it actually stops.
-  await db.search_task_runs.update({
-    where: { id: runningRun.id },
-    data: {
-      status: "stopping",
-    },
-  });
+  await db.update(search_task_runs).set({
+    status: "stopping",
+  }).where(eq(search_task_runs.id, runningRun.id));
 
-  await db.search_tasks.update({
-    where: { id: searchTaskId },
-    data: {
-      status: "stopping",
-      status_message: "Stopping...",
-      date_updated: new Date(),
-    },
-  });
+  await db.update(search_tasks).set({
+    status: "stopping",
+    status_message: "Stopping...",
+    date_updated: new Date(),
+  }).where(eq(search_tasks.id, searchTaskId));
 
   // Try to force-fail the BullMQ job (best-effort — it may not be found
   // if the worker restarted or BullMQ state diverged, but that's OK)
@@ -312,9 +288,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const searchTaskId = parseIntParam(params.id, "job search");
 
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
+    where: eq(search_tasks.id, searchTaskId),
     with: {
-      profiles: true,
+      profile: true,
     },
   });
 
@@ -322,14 +298,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     throw error(404, "Job search not found");
   }
 
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
   // Get the most recent run
   const latestRun = await db.query.search_task_runs.findFirst({
-    where: { search_task_id: searchTaskId },
-    orderBy: { started_at: "desc" },
+    where: eq(search_task_runs.search_task_id, searchTaskId),
+    orderBy: desc(search_task_runs.started_at),
   });
 
   return json({

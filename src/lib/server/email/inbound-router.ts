@@ -7,6 +7,7 @@
  */
 
 import { db } from "$lib/server/db";
+import { inbound_emails } from "$lib/server/db/schema";
 import {
   extractTokenFromRecipient,
   processInboundEmail,
@@ -86,15 +87,13 @@ export async function routeInboundEmail(email: InboundEmail): Promise<RouteResul
  * Store an inbound email in the database for admin review.
  */
 async function storeEmail(email: InboundEmail, handler: string, status: string) {
-  await db.inbound_emails.create({
-    data: {
-      recipient: email.recipient,
-      handler,
-      from_address: email.fromAddress,
-      subject: email.subject?.slice(0, 500) || null,
-      body_text: email.bodyText,
-      body_html: email.bodyHtml,
-      status,
-    },
+  await db.insert(inbound_emails).values({
+    recipient: email.recipient,
+    handler,
+    from_address: email.fromAddress,
+    subject: email.subject?.slice(0, 500) || null,
+    body_text: email.bodyText,
+    body_html: email.bodyHtml,
+    status,
   });
 }

@@ -1,5 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { and, inArray, gte, lt, eq, desc, asc } from "drizzle-orm";
+import { credit_transactions, subscriptions, users as usersTable } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
   await parent();
@@ -28,11 +30,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Fetch AI cost transactions for the period
   const aiTransactions = await db.query.credit_transactions.findMany({
-    where: {
-      operation: { in: ["ai_generation", "resume_parse_ai"] },
-      created_at: { gte: periodStart, lt: periodEnd },
-    },
-    select: {
+    where: and(
+      inArray(credit_transactions.operation, ["ai_generation", "resume_parse_ai"]),
+      gte(credit_transactions.created_at, periodStart),
+      lt(credit_transactions.created_at, periodEnd),
+    ),
+    columns: {
       user_id: true,
       amount: true,
       operation: true,
@@ -43,9 +46,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Fetch active subscriptions to map users to plans
   const activeSubs = await db.query.subscriptions.findMany({
-    where: { status: { in: ["active", "trialing", "past_due"] } },
-    orderBy: { date_created: "desc" },
-    select: { user_id: true, plan: true },
+    where: inArray(subscriptions.status, ["active", "trialing", "past_due"]),
+    orderBy: desc(subscriptions.date_created),
+    columns: { user_id: true, plan: true },
   });
 
   const userPlanMap = new Map<string, string>();
@@ -176,8 +179,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const topUserIds = topUsers.map((u) => u.userId);
   const topUserRecords = topUserIds.length > 0
     ? await db.query.users.findMany({
-        where: { id: { in: topUserIds } },
-        select: { id: true, email: true, name: true },
+        where: inArray(usersTable.id, topUserIds),
+        columns: { id: true, email: true, name: true },
       })
     : [];
   const userInfoMap = new Map(topUserRecords.map((u) => [u.id, u]));
@@ -196,9 +199,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   // Available months (for period selector)
   const firstTx = await db.query.credit_transactions.findFirst({
-    where: { operation: { in: ["ai_generation", "resume_parse_ai"] } },
-    orderBy: { created_at: "asc" },
-    select: { created_at: true },
+    where: inArray(credit_transactions.operation, ["ai_generation", "resume_parse_ai"]),
+    orderBy: asc(credit_transactions.created_at),
+    columns: { created_at: true },
   });
 
   const availableMonths: { value: string; label: string }[] = [];

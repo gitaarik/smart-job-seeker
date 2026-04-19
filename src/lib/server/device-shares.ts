@@ -3,6 +3,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq, and, inArray, desc } from "drizzle-orm";
+import { api_keys, device_shares, users } from "$lib/server/db/schema";
 import { areContacts } from "$lib/server/contacts";
 import { createNotification } from "$lib/server/notifications";
 
@@ -16,11 +18,12 @@ export async function shareDevice(
 ): Promise<{ success: boolean; error?: string }> {
   // Verify the API key belongs to the owner
   const apiKey = await db.query.api_keys.findFirst({
-    where: { id: apiKeyId, revoked: false },
-    select: { id: true, profiles: { select: { user_id: true } } },
+    where: and(eq(api_keys.id, apiKeyId), eq(api_keys.revoked, false)),
+    columns: { id: true },
+    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (!apiKey || apiKey.profiles.user_id !== ownerId) {
+  if (!apiKey || apiKey.profile.user_id !== ownerId) {
     return { success: false, error: "Device not found" };
   }
 
@@ -31,24 +34,22 @@ export async function shareDevice(
 
   // Check if already shared
   const existing = await db.query.device_shares.findFirst({
-    where: { api_key_id: apiKeyId, shared_with: sharedWithUserId },
+    where: and(eq(device_shares.api_key_id, apiKeyId), eq(device_shares.shared_with, sharedWithUserId)),
   });
 
   if (existing) {
     return { success: false, error: "Device is already shared with this contact" };
   }
 
-  await db.device_shares.create({
-    data: {
-      api_key_id: apiKeyId,
-      shared_with: sharedWithUserId,
-    },
+  await db.insert(device_shares).values({
+    api_key_id: apiKeyId,
+    shared_with: sharedWithUserId,
   });
 
   // Notify the recipient
   const ownerUser = await db.query.users.findFirst({
-    where: { id: ownerId },
-    select: { name: true, email: true },
+    where: eq(users.id, ownerId),
+    columns: { name: true, email: true },
   });
   const ownerName = ownerUser?.name || ownerUser?.email || "Someone";
   await createNotification({
@@ -71,19 +72,20 @@ export async function unshareDevice(
 ): Promise<boolean> {
   // Verify ownership
   const apiKey = await db.query.api_keys.findFirst({
-    where: { id: apiKeyId },
-    select: { id: true, profiles: { select: { user_id: true } } },
+    where: eq(api_keys.id, apiKeyId),
+    columns: { id: true },
+    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (!apiKey || apiKey.profiles.user_id !== ownerId) {
+  if (!apiKey || apiKey.profile.user_id !== ownerId) {
     return false;
   }
 
-  const result = await db.device_shares.deleteMany({
-    where: { api_key_id: apiKeyId, shared_with: sharedWithUserId },
-  });
+  const result = await db.delete(device_shares).where(
+    and(eq(device_shares.api_key_id, apiKeyId), eq(device_shares.shared_with, sharedWithUserId)),
+  );
 
-  return result.count > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -91,13 +93,15 @@ export async function unshareDevice(
  */
 export async function listDeviceShares(apiKeyId: number) {
   return db.query.device_shares.findMany({
-    where: { api_key_id: apiKeyId },
-    select: {
+    where: eq(device_shares.api_key_id, apiKeyId),
+    columns: {
       id: true,
       date_created: true,
-      user: { select: { id: true, name: true, email: true, image: true } },
     },
-    orderBy: { date_created: "desc" },
+    with: {
+      user: { columns: { id: true, name: true, email: true, image: true } },
+    },
+    orderBy: desc(device_shares.date_created),
   });
 }
 
@@ -106,36 +110,40 @@ export async function listDeviceShares(apiKeyId: number) {
  */
 export async function listSharedWithMe(userId: string) {
   const shares = await db.query.device_shares.findMany({
-    where: { shared_with: userId },
-    select: {
+    where: eq(device_shares.shared_with, userId),
+    columns: {
       id: true,
       date_created: true,
+    },
+    with: {
       api_key: {
-        select: {
+        columns: {
           id: true,
           name: true,
           key_plain: true,
-          profiles: {
-            select: { user_id: true },
+        },
+        with: {
+          profile: {
+            columns: { user_id: true },
           },
         },
       },
     },
-    orderBy: { date_created: "desc" },
+    orderBy: desc(device_shares.date_created),
   });
 
   // Resolve owner names from user_ids
-  const ownerIds = [...new Set(shares.map((s) => s.api_key.profiles.user_id).filter(Boolean))] as string[];
+  const ownerIds = [...new Set(shares.map((s) => s.api_key.profile.user_id).filter(Boolean))] as string[];
   const owners = ownerIds.length > 0
     ? await db.query.users.findMany({
-        where: { id: { in: ownerIds } },
-        select: { id: true, name: true, email: true },
+        where: inArray(users.id, ownerIds),
+        columns: { id: true, name: true, email: true },
       })
     : [];
   const ownerMap = new Map(owners.map((o) => [o.id, o]));
 
   return shares.map((s) => {
-    const owner = ownerMap.get(s.api_key.profiles.user_id ?? "") ?? null;
+    const owner = ownerMap.get(s.api_key.profile.user_id ?? "") ?? null;
     return {
       id: s.id,
       date_created: s.date_created,
@@ -155,18 +163,19 @@ export async function listSharedWithMe(userId: string) {
 export async function hasDeviceAccess(apiKeyId: number, userId: string): Promise<boolean> {
   // Check ownership
   const owned = await db.query.api_keys.findFirst({
-    where: { id: apiKeyId, revoked: false },
-    select: { id: true, profiles: { select: { user_id: true } } },
+    where: and(eq(api_keys.id, apiKeyId), eq(api_keys.revoked, false)),
+    columns: { id: true },
+    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (owned && owned.profiles.user_id === userId) {
+  if (owned && owned.profile.user_id === userId) {
     return true;
   }
 
   // Check shared access
   const shared = await db.query.device_shares.findFirst({
-    where: { api_key_id: apiKeyId, shared_with: userId },
-    select: { id: true },
+    where: and(eq(device_shares.api_key_id, apiKeyId), eq(device_shares.shared_with, userId)),
+    columns: { id: true },
   });
 
   return !!shared;

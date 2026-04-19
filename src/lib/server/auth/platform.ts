@@ -4,6 +4,8 @@
  */
 
 import { dbDirect } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { platform_profiles } from "$lib/server/db/schema";
 
 export interface PlatformCredentials {
   platformId: number;
@@ -22,11 +24,8 @@ export async function getPlatformCredentials(
   profileId: number,
   platformId: number,
 ): Promise<PlatformCredentials | null> {
-  const platformProfile = await dbDirect.platform_profiles.findFirst({
-    where: {
-      profile_id: profileId,
-      platform_id: platformId,
-    },
+  const platformProfile = await dbDirect.query.platform_profiles.findFirst({
+    where: and(eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, platformId)),
   });
 
   if (!platformProfile) {
@@ -52,19 +51,13 @@ export async function updateLoginError(
   platformId: number,
   error: string,
 ): Promise<void> {
-  const existingProfile = await dbDirect.platform_profiles.findFirst({
-    where: {
-      profile_id: profileId,
-      platform_id: platformId,
-    },
+  const existingProfile = await dbDirect.query.platform_profiles.findFirst({
+    where: and(eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, platformId)),
   });
 
   if (existingProfile) {
-    await dbDirect.platform_profiles.update({
-      where: { id: existingProfile.id },
-      data: {
-        login_error: error,
-      },
-    });
+    await dbDirect.update(platform_profiles).set({
+      login_error: error,
+    }).where(eq(platform_profiles.id, existingProfile.id));
   }
 }

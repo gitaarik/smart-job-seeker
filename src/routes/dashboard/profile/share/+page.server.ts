@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { profile_tokens } from "$lib/server/db/schema";
+import { eq, asc, desc } from "drizzle-orm";
 import { getSelectedProfileId } from "../utils";
 import {
   DEFAULT_FORMAT,
@@ -28,7 +30,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   // Get profile versions for this profile to use in the dropdown
   const versions = await db.query.profile_versions.findMany({
     where: { profile_id: layoutData.selectedProfile.id },
-    orderBy: { name: "asc" },
+    orderBy: asc(profile_versions.name),
   });
 
   // Get all tokens for versions belonging to this profile
@@ -37,7 +39,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const tokens = versionIds.length > 0
     ? await db.query.profile_tokens.findMany({
       where: { profile_version: { in: versionIds } },
-      orderBy: { date_created: "desc" },
+      orderBy: desc(profile_tokens.date_created),
     })
     : [];
 
@@ -106,19 +108,17 @@ export const actions: Actions = {
     const token = generateToken();
     const token_hash = hashToken(token);
 
-    await db.profile_tokens.create({
-      data: {
-        token,
-        token_hash,
-        name: name?.trim() || null,
-        notes: notes?.trim() || null,
-        profile_version: parseInt(profile_version),
-        format,
-        view_mode,
-        visit_limit: visit_limit ? parseInt(visit_limit) : null,
-        expires_at: expires_at ? new Date(expires_at) : null,
-        date_created: new Date(),
-      },
+    await db.insert(profile_tokens).values({
+      token,
+      token_hash,
+      name: name?.trim() || null,
+      notes: notes?.trim() || null,
+      profile_version: parseInt(profile_version),
+      format,
+      view_mode,
+      visit_limit: visit_limit ? parseInt(visit_limit) : null,
+      expires_at: expires_at ? new Date(expires_at) : null,
+      date_created: new Date(),
     });
 
     return { success: true };
@@ -185,20 +185,17 @@ export const actions: Actions = {
       newVersionId = newVersion.id;
     }
 
-    await db.profile_tokens.update({
-      where: { id },
-      data: {
-        name: name?.trim() || null,
-        notes: notes?.trim() || null,
-        profile_version: newVersionId,
-        format: format && isValidFormat(format) ? format : (existingToken.format || DEFAULT_FORMAT),
-        view_mode: view_mode && isValidViewMode(view_mode) ? view_mode : (existingToken.view_mode || DEFAULT_VIEW_MODE),
-        visit_limit: visit_limit ? parseInt(visit_limit) : null,
-        expires_at: expires_at ? new Date(expires_at) : null,
-        status: status || "published",
-        date_updated: new Date(),
-      },
-    });
+    await db.update(profile_tokens).set({
+      name: name?.trim() || null,
+      notes: notes?.trim() || null,
+      profile_version: newVersionId,
+      format: format && isValidFormat(format) ? format : (existingToken.format || DEFAULT_FORMAT),
+      view_mode: view_mode && isValidViewMode(view_mode) ? view_mode : (existingToken.view_mode || DEFAULT_VIEW_MODE),
+      visit_limit: visit_limit ? parseInt(visit_limit) : null,
+      expires_at: expires_at ? new Date(expires_at) : null,
+      status: status || "published",
+      date_updated: new Date(),
+    }).where(eq(profile_tokens.id, id));
 
     return { success: true };
   },
@@ -241,9 +238,7 @@ export const actions: Actions = {
       return fail(403, { error: "Not authorized" });
     }
 
-    await db.profile_tokens.delete({
-      where: { id },
-    });
+    await db.delete(profile_tokens).where(eq(profile_tokens.id, id));
 
     return { success: true };
   },

@@ -1,5 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles, certificates } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import {
   certificateReorderSchema,
@@ -13,7 +15,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     parseBody(certificateReorderSchema, await request.json());
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -22,10 +24,9 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
   await Promise.all(
     order.map((id, index) =>
-      db.certificates.updateMany({
-        where: { id, profile: profile_id },
-        data: { sort: index, date_updated: new Date() },
-      })
+      db.update(certificates)
+        .set({ sort: index, date_updated: new Date() })
+        .where(and(eq(certificates.id, id), eq(certificates.profile, profile_id)))
     ),
   );
 

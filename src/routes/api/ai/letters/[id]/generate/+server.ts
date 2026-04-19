@@ -1,6 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { application_letters } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { parseBody, letterGenerateSchema } from "$lib/server/validation/api-schemas";
 import { generateApplicationLetter } from "$lib/server/ai-chat/application-letter";
@@ -12,15 +14,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   // Verify ownership: letter -> application -> profile -> user
   const letter = await db.query.application_letters.findFirst({
-    where: { id: letterId },
+    where: eq(application_letters.id, letterId),
     with: {
-      applications: {
-        with: { profiles: { select: { user_id: true } } },
+      application: {
+        with: { profile: { columns: { user_id: true } } },
       },
     },
   });
 
-  if (!letter || letter.applications.profiles.user_id !== user.id) {
+  if (!letter || letter.application.profile.user_id !== user.id) {
     return json({ success: false, message: "Letter not found" }, { status: 404 });
   }
 

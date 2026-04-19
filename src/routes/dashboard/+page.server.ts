@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
+import { eq, and, inArray, desc } from "drizzle-orm";
+import { match_config, profiles, search_tasks, job_matches, applications } from "$lib/server/db/schema";
 import { getMatchCounts } from "$lib/server/job/match-counts";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import {
@@ -30,8 +32,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Fetch match config first — needed for visibility scope in getMatchCounts
   const matchConfig = await db.query.match_config.findFirst({
-    where: { profile_id: profileId },
-    select: {
+    where: eq(match_config.profile_id, profileId),
+    columns: {
       id: true,
       job_types: true,
       experience_levels: true,
@@ -55,27 +57,27 @@ export const load: PageServerLoad = async ({ parent }) => {
   ] = await Promise.all([
     // Lightweight profile fields for completeness check
     db.query.profiles.findFirst({
-      where: { id: profileId },
-      select: {
+      where: eq(profiles.id, profileId),
+      columns: {
         title: true,
         headline: true,
         city: true,
         country_code: true,
+      },
+      with: {
         tech_skill_categories: {
-          select: {
-            id: true,
-            tech_skills: { select: { id: true } },
-          },
+          columns: { id: true },
+          with: { tech_skills: { columns: { id: true } } },
         },
-        work_experiences: { select: { id: true } },
-        education: { select: { id: true } },
+        work_experiences: { columns: { id: true } },
+        educations: { columns: { id: true } },
       },
     }),
 
     // Search tasks for this profile
     db.query.search_tasks.findMany({
-      where: { profile_id: profileId },
-      select: {
+      where: eq(search_tasks.profile_id, profileId),
+      columns: {
         id: true,
         note: true,
         is_active: true,
@@ -83,9 +85,11 @@ export const load: PageServerLoad = async ({ parent }) => {
         status_message: true,
         last_run: true,
         last_run_jobs_found: true,
-        job_platforms: { select: { name: true } },
       },
-      orderBy: { last_run: "desc" },
+      with: {
+        job_platform: { columns: { name: true } },
+      },
+      orderBy: desc(search_tasks.last_run),
     }),
 
     // Match stats — "total" uses shared getMatchCounts (same as Match Progress page)
@@ -119,11 +123,11 @@ export const load: PageServerLoad = async ({ parent }) => {
     `).then(async (ids) => {
       if (ids.length === 0) return [];
       return db.query.job_matches.findMany({
-        where: { id: { in: ids.map((r) => r.id) } },
-        orderBy: { score: "desc" },
+        where: inArray(job_matches.id, ids.map((r) => r.id)),
+        orderBy: desc(job_matches.score),
         with: {
-          jobs: {
-            select: {
+          job: {
+            columns: {
               id: true,
               title: true,
               company: true,
@@ -140,7 +144,9 @@ export const load: PageServerLoad = async ({ parent }) => {
               experience_levels: true,
               date_posted: true,
               date_created: true,
-              job_platforms: { select: { id: true, name: true } },
+            },
+            with: {
+              job_platform: { columns: { id: true, name: true } },
             },
           },
         },
@@ -152,18 +158,15 @@ export const load: PageServerLoad = async ({ parent }) => {
 
     // Active applications
     db.query.applications.findMany({
-      where: {
-        profile_id: profileId,
-        status: { in: activeApplicationStatuses },
-      },
+      where: and(eq(applications.profile_id, profileId), inArray(applications.status, activeApplicationStatuses)),
       with: {
-        jobs: {
+        job: {
           with: {
-            job_platforms: true,
+            job_platform: true,
           },
         },
       },
-      orderBy: { date_updated: "desc" },
+      orderBy: desc(applications.date_updated),
     }),
   ]);
 
@@ -189,12 +192,12 @@ export const load: PageServerLoad = async ({ parent }) => {
     ) ?? 0;
 
   const hasWorkExperience = (profileData?.work_experiences?.length ?? 0) > 0;
-  const hasEducation = (profileData?.education?.length ?? 0) > 0;
+  const hasEducation = (profileData?.educations?.length ?? 0) > 0;
 
   const profileCompleteness = {
     hasSkills: totalSkills > 0,
     skillCount: totalSkills,
-    hasMatchConfig: matchConfig !== null
+    hasMatchConfig: matchConfig != null
       && ((matchConfig.job_types as string[]) ?? []).length > 0
       && ((matchConfig.work_location as string[]) ?? []).length > 0,
     hasWorkExperience,
@@ -219,14 +222,14 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   // Process top matches (filter out matches where the job was deleted)
   const topMatches = topMatchesRaw
-    .filter((m) => m.jobs != null)
+    .filter((m) => m.job != null)
     .map((m) => ({
       id: m.id,
       score: m.score,
       match_summary: m.match_summary,
       matched_skills: m.matched_skills,
       skill_match_percentage: m.skill_match_percentage,
-      job: m.jobs!,
+      job: m.job!,
     }));
 
   return {

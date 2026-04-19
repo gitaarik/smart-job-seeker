@@ -1,5 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, desc } from "drizzle-orm";
+import { profiles, cheat_sheets } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import {
   cheatSheetCreateSchema,
@@ -16,7 +18,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     parseBody(cheatSheetCreateSchema, await request.json());
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -24,19 +26,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   const lastItem = await db.query.cheat_sheets.findFirst({
-    where: { profile_id: profile_id },
-    orderBy: { sort: "desc" },
+    where: eq(cheat_sheets.profile_id, profile_id),
+    orderBy: desc(cheat_sheets.sort),
   });
 
-  const sheet = await db.cheat_sheets.create({
-    data: {
-      title: title.trim(),
-      content: content?.trim() || null,
-      profile_id: profile_id,
-      sort: (lastItem?.sort ?? -1) + 1,
-      date_created: new Date(),
-    },
-  });
+  const [sheet] = await db.insert(cheat_sheets).values({
+    title: title.trim(),
+    content: content?.trim() || null,
+    profile_id: profile_id,
+    sort: (lastItem?.sort ?? -1) + 1,
+    date_created: new Date(),
+  }).returning();
 
   return json({ success: true, sheet });
 };
@@ -48,7 +48,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     parseBody(cheatSheetUpdateSchema, await request.json());
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -56,21 +56,18 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = await db.query.cheat_sheets.findFirst({
-    where: { id, profile_id: profile_id },
+    where: and(eq(cheat_sheets.id, id), eq(cheat_sheets.profile_id, profile_id)),
   });
 
   if (!existing) {
     return json({ error: "Cheat sheet not found" }, { status: 404 });
   }
 
-  const sheet = await db.cheat_sheets.update({
-    where: { id },
-    data: {
-      title: title.trim(),
-      content: content?.trim() || null,
-      date_updated: new Date(),
-    },
-  });
+  const [sheet] = await db.update(cheat_sheets).set({
+    title: title.trim(),
+    content: content?.trim() || null,
+    date_updated: new Date(),
+  }).where(eq(cheat_sheets.id, id)).returning();
 
   return json({ success: true, sheet });
 };
@@ -82,7 +79,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     parseBody(cheatSheetReorderSchema, await request.json());
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -91,10 +88,9 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
   await Promise.all(
     order.map((id, index) =>
-      db.cheat_sheets.updateMany({
-        where: { id, profile_id: profile_id },
-        data: { sort: index, date_updated: new Date() },
-      })
+      db.update(cheat_sheets)
+        .set({ sort: index, date_updated: new Date() })
+        .where(and(eq(cheat_sheets.id, id), eq(cheat_sheets.profile_id, profile_id)))
     ),
   );
 
@@ -107,7 +103,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   const { profile_id, id } = parseBody(cheatSheetDeleteSchema, await request.json());
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profile_id, user_id: user.id },
+    where: and(eq(profiles.id, profile_id), eq(profiles.user_id, user.id)),
   });
 
   if (!profile) {
@@ -115,16 +111,14 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = await db.query.cheat_sheets.findFirst({
-    where: { id, profile_id: profile_id },
+    where: and(eq(cheat_sheets.id, id), eq(cheat_sheets.profile_id, profile_id)),
   });
 
   if (!existing) {
     return json({ error: "Cheat sheet not found" }, { status: 404 });
   }
 
-  await db.cheat_sheets.delete({
-    where: { id },
-  });
+  await db.delete(cheat_sheets).where(eq(cheat_sheets.id, id));
 
   return json({ success: true });
 };

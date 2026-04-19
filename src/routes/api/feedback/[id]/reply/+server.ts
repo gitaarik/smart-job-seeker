@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { user_feedback, feedback_replies } from "$lib/server/db/schema";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = locals.user;
@@ -14,8 +16,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   if (!message) error(400, "Message is required");
 
   const feedback = await db.query.user_feedback.findFirst({
-    where: { id: feedbackId },
-    with: { subscribers: { select: { user_id: true } } },
+    where: eq(user_feedback.id, feedbackId),
+    with: { user_feedback_subscribers: { columns: { user_id: true } } },
   });
   if (!feedback) error(404, "Feedback not found");
 
@@ -25,20 +27,18 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   // Check authorization: owner, subscriber, or admin
   const isOwner = feedback.user_id === user.id;
-  const isSubscriber = feedback.subscribers.some((s) => s.user_id === user.id);
+  const isSubscriber = feedback.user_feedback_subscribers.some((s) => s.user_id === user.id);
   const isAdmin = user.is_admin === true;
 
   if (!isOwner && !isSubscriber && !isAdmin) {
     error(403, "Not authorized");
   }
 
-  await db.feedback_replies.create({
-    data: {
-      feedback_id: feedbackId,
-      user_id: user.id,
-      is_admin: isAdmin,
-      message,
-    },
+  await db.insert(feedback_replies).values({
+    feedback_id: feedbackId,
+    user_id: user.id,
+    is_admin: isAdmin,
+    message,
   });
 
   // Auto-update status based on who replied
@@ -49,13 +49,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     newStatus = "reviewed";
   }
 
-  await db.user_feedback.update({
-    where: { id: feedbackId },
-    data: {
-      date_updated: new Date(),
-      ...(newStatus ? { status: newStatus } : {}),
-    },
-  });
+  await db.update(user_feedback).set({
+    date_updated: new Date(),
+    ...(newStatus ? { status: newStatus } : {}),
+  }).where(eq(user_feedback.id, feedbackId));
 
   return json({ success: true });
 };

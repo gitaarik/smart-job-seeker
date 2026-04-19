@@ -8,6 +8,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { getCommunityJobCountsByWindow } from "$lib/server/job/match-counts";
 
 const WINDOWS = [7, 30, 90, null]; // null = all time
@@ -25,8 +27,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
   // Verify profile belongs to user
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: { id: true },
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: { id: true },
   });
   if (!profile) {
     throw error(403, "Profile not found or not owned by user");

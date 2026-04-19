@@ -7,6 +7,8 @@
 
 import { createAndGenerateAiChat } from "./utils.js";
 import { dbDirect } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { search_tasks } from "$lib/server/db/schema";
 
 /**
  * Result type for job scraping AI chat operations
@@ -48,8 +50,8 @@ export async function createJobScrapingAiChat<T>(
 ): Promise<JobScrapingAiChatResult<T>> {
   // Look up profile from search_tasks
   const searchTask = await dbDirect.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
-    select: { profile_id: true },
+    where: eq(search_tasks.id, searchTaskId),
+    columns: { profile_id: true },
   });
 
   if (!searchTask) {
@@ -132,27 +134,6 @@ export async function createJobScrapingAiChat<T>(
  * @param promptKey - Template identifier from ai_chat_templates table
  * @param customVariables - Variables to interpolate (job data, preferences, etc.)
  * @returns Result with parsed response and aiChatId for database linking
- *
- * @example
- * const result = await createJobMatchingAiChat<MatchScoreType>(
- *   userProfileId,
- *   "score_job_match",
- *   {
- *     "preferences.job_types": JSON.stringify(preferences.job_types),
- *     jobDescription: job.job_description
- *   }
- * );
- *
- * if (result.success && result.response) {
- *   // Save match score and link aiChatId to job_matches record
- *   await db.job_matches.create({
- *     data: {
- *       score: result.response.score,
- *       ai_chat_scoring: result.aiChatId,
- *       // ... other fields
- *     }
- *   });
- * }
  */
 export async function createJobMatchingAiChat<T>(
   profileId: number,

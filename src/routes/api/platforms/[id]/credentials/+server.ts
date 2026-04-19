@@ -1,6 +1,8 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, inArray } from "drizzle-orm";
+import { profiles, job_platforms, platform_profiles, search_tasks } from "$lib/server/db/schema";
 import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 import {
   parseBody,
@@ -23,15 +25,18 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   // Verify user owns this profile
   const profile = await db.query.profiles.findFirst({
-    where: { id: parseInt(profileId), user_id: user.id },
+    where: and(eq(profiles.id, parseInt(profileId)), eq(profiles.user_id, user.id)),
   });
   if (!profile) {
     throw error(403, "Not authorized");
   }
 
   const credentials = await db.query.platform_profiles.findMany({
-    where: { profile_id: profile.id, platform_id: platformId },
-    select: { id: true, username: true, security_answer: true },
+    where: and(
+      eq(platform_profiles.profile_id, profile.id),
+      eq(platform_profiles.platform_id, platformId),
+    ),
+    columns: { id: true, username: true, security_answer: true },
   });
 
   return json(credentials);
@@ -53,10 +58,10 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
 
   // Verify user owns this profile
   const profile = await db.query.profiles.findFirst({
-    where: {
-      id: profileId,
-      user_id: user.id,
-    },
+    where: and(
+      eq(profiles.id, profileId),
+      eq(profiles.user_id, user.id),
+    ),
   });
 
   if (!profile) {
@@ -65,10 +70,10 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
 
   // Check platform exists
   const platform = await db.query.job_platforms.findFirst({
-    where: {
-      id: platformId,
-      status: "published",
-    },
+    where: and(
+      eq(job_platforms.id, platformId),
+      eq(job_platforms.status, "published"),
+    ),
   });
 
   if (!platform) {
@@ -77,36 +82,31 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
 
   // Upsert credentials
   const existing = await db.query.platform_profiles.findFirst({
-    where: {
-      profile_id: profile.id,
-      platform_id: platformId,
-    },
+    where: and(
+      eq(platform_profiles.profile_id, profile.id),
+      eq(platform_profiles.platform_id, platformId),
+    ),
   });
 
   if (existing) {
     // Update existing
-    await db.platform_profiles.update({
-      where: { id: existing.id },
-      data: {
-        username: username || null,
-        password: password || null,
-        security_answer: security_answer || null,
-        login_error: null, // Clear any previous error
-        date_updated: new Date(),
-      },
-    });
+    await db.update(platform_profiles).set({
+      username: username || null,
+      password: password || null,
+      security_answer: security_answer || null,
+      login_error: null, // Clear any previous error
+      date_updated: new Date(),
+    }).where(eq(platform_profiles.id, existing.id));
   } else {
     // Create new
-    await db.platform_profiles.create({
-      data: {
-        profile_id: profile.id,
-        platform_id: platformId,
-        username: username || null,
-        password: password || null,
-        security_answer: security_answer || null,
-        status: "active",
-        date_created: new Date(),
-      },
+    await db.insert(platform_profiles).values({
+      profile_id: profile.id,
+      platform_id: platformId,
+      username: username || null,
+      password: password || null,
+      security_answer: security_answer || null,
+      status: "active",
+      date_created: new Date(),
     });
   }
 
@@ -131,10 +131,10 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 
   // Verify user owns this profile
   const profile = await db.query.profiles.findFirst({
-    where: {
-      id: parseInt(profileId),
-      user_id: user.id,
-    },
+    where: and(
+      eq(profiles.id, parseInt(profileId)),
+      eq(profiles.user_id, user.id),
+    ),
   });
 
   if (!profile) {
@@ -146,52 +146,49 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   if (credentialId) {
     // Delete specific credential
     const cred = await db.query.platform_profiles.findFirst({
-      where: {
-        id: parseInt(credentialId),
-        profile_id: profile.id,
-        platform_id: platformId,
-      },
+      where: and(
+        eq(platform_profiles.id, parseInt(credentialId)),
+        eq(platform_profiles.profile_id, profile.id),
+        eq(platform_profiles.platform_id, platformId),
+      ),
     });
     if (!cred) {
       throw error(404, "Credential not found");
     }
 
-    await db.platform_profiles.delete({
-      where: { id: cred.id },
-    });
+    await db.delete(platform_profiles).where(eq(platform_profiles.id, cred.id));
 
     // Clear platform_profile_id on any job searches using this credential
-    await db.search_tasks.updateMany({
-      where: {
-        platform_profile_id: cred.id,
-        profile_id: profile.id,
-      },
-      data: { platform_profile_id: null },
-    });
+    await db.update(search_tasks)
+      .set({ platform_profile_id: null })
+      .where(and(
+        eq(search_tasks.platform_profile_id, cred.id),
+        eq(search_tasks.profile_id, profile.id),
+      ));
   } else {
     // Delete all credentials for this platform
     const creds = await db.query.platform_profiles.findMany({
-      where: { profile_id: profile.id, platform_id: platformId },
-      select: { id: true },
+      where: and(
+        eq(platform_profiles.profile_id, profile.id),
+        eq(platform_profiles.platform_id, platformId),
+      ),
+      columns: { id: true },
     });
     const credIds = creds.map((c) => c.id);
 
-    await db.platform_profiles.deleteMany({
-      where: {
-        profile_id: profile.id,
-        platform_id: platformId,
-      },
-    });
+    await db.delete(platform_profiles).where(and(
+      eq(platform_profiles.profile_id, profile.id),
+      eq(platform_profiles.platform_id, platformId),
+    ));
 
     // Clear platform_profile_id on any job searches using these credentials
     if (credIds.length > 0) {
-      await db.search_tasks.updateMany({
-        where: {
-          platform_profile_id: { in: credIds },
-          profile_id: profile.id,
-        },
-        data: { platform_profile_id: null },
-      });
+      await db.update(search_tasks)
+        .set({ platform_profile_id: null })
+        .where(and(
+          inArray(search_tasks.platform_profile_id, credIds),
+          eq(search_tasks.profile_id, profile.id),
+        ));
     }
   }
 

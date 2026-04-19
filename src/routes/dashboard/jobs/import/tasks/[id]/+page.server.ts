@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
         platform_id: searchTask.platform_id,
       },
       select: { id: true, username: true, security_answer: true },
-      orderBy: { date_created: "asc" },
+      orderBy: asc(search_task_runs.date_created),
     });
   }
 

@@ -7,6 +7,8 @@
 
 import { randomBytes } from "crypto";
 import { db } from "$lib/server/db";
+import { eq, and, desc } from "drizzle-orm";
+import { verification_email_addresses, inbound_emails, search_task_runs, search_tasks } from "$lib/server/db/schema";
 import { parseVerificationEmail } from "./verification-parser";
 
 const VERIFY_DOMAIN = "smartjobseeker.com";
@@ -22,7 +24,7 @@ export async function getOrCreateVerificationAddress(profileId: number): Promise
 }> {
   // Check for existing address
   const existing = await db.query.verification_email_addresses.findFirst({
-    where: { profile_id: profileId },
+    where: eq(verification_email_addresses.profile_id, profileId),
   });
 
   if (existing) {
@@ -38,13 +40,11 @@ export async function getOrCreateVerificationAddress(profileId: number): Promise
   const emailToken = randomBytes(4).toString("hex"); // 8 hex chars
   const fullAddress = `verify-${emailToken}@${VERIFY_DOMAIN}`;
 
-  const created = await db.verification_email_addresses.create({
-    data: {
-      profile_id: profileId,
-      email_token: emailToken,
-      full_address: fullAddress,
-    },
-  });
+  const [created] = await db.insert(verification_email_addresses).values({
+    profile_id: profileId,
+    email_token: emailToken,
+    full_address: fullAddress,
+  }).returning();
 
   return {
     id: created.id,
@@ -64,14 +64,13 @@ export async function regenerateVerificationAddress(profileId: number): Promise<
   const emailToken = randomBytes(4).toString("hex"); // 8 hex chars
   const fullAddress = `verify-${emailToken}@${VERIFY_DOMAIN}`;
 
-  await db.verification_email_addresses.upsert({
-    where: { profile_id: profileId },
-    create: {
-      profile_id: profileId,
-      email_token: emailToken,
-      full_address: fullAddress,
-    },
-    update: {
+  await db.insert(verification_email_addresses).values({
+    profile_id: profileId,
+    email_token: emailToken,
+    full_address: fullAddress,
+  }).onConflictDoUpdate({
+    target: verification_email_addresses.profile_id,
+    set: {
       email_token: emailToken,
       full_address: fullAddress,
     },
@@ -107,8 +106,8 @@ export async function processInboundEmail(params: {
 
   // 1. Find the verification address
   const verifyAddr = await db.query.verification_email_addresses.findFirst({
-    where: { email_token: recipientToken },
-    with: { profiles: true },
+    where: eq(verification_email_addresses.email_token, recipientToken),
+    with: { profile: true },
   });
 
   if (!verifyAddr) {
@@ -122,41 +121,44 @@ export async function processInboundEmail(params: {
   const profileId = verifyAddr.profile_id;
 
   // Update last_used_at
-  await db.verification_email_addresses.update({
-    where: { id: verifyAddr.id },
-    data: { last_used_at: new Date() },
-  });
+  await db.update(verification_email_addresses).set({ last_used_at: new Date() })
+    .where(eq(verification_email_addresses.id, verifyAddr.id));
 
   // 2. Find an active blocked run for this profile
-  const blockedRun = await db.query.search_task_runs.findFirst({
-    where: {
-      status: "blocked",
-      search_tasks: {
-        profile_id: profileId,
-      },
-    },
-    orderBy: { started_at: "desc" },
-  });
+  // We need to find search_task_runs where status is "blocked" and the search_task belongs to this profile
+  const blockedRunResults = await db
+    .select({
+      id: search_task_runs.id,
+      started_at: search_task_runs.started_at,
+    })
+    .from(search_task_runs)
+    .innerJoin(search_tasks, eq(search_task_runs.search_task_id, search_tasks.id))
+    .where(and(
+      eq(search_task_runs.status, "blocked"),
+      eq(search_tasks.profile_id, profileId),
+    ))
+    .orderBy(desc(search_task_runs.started_at))
+    .limit(1);
+
+  const blockedRun = blockedRunResults[0] ?? null;
 
   // 3. Parse the email
   const parsed = await parseVerificationEmail(subject, bodyText, bodyHtml);
 
   // 4. Store the email record
-  const emailRecord = await db.inbound_emails.create({
-    data: {
-      recipient: `verify-${recipientToken}@${VERIFY_DOMAIN}`,
-      handler: "verification-relay",
-      verification_address_id: verifyAddr.id,
-      run_id: blockedRun?.id || null,
-      from_address: fromAddress,
-      subject: subject?.slice(0, 500) || null,
-      body_text: bodyText,
-      body_html: bodyHtml,
-      extracted_code: parsed?.code?.slice(0, 50) || null,
-      extracted_link: parsed?.link?.slice(0, 2000) || null,
-      status: blockedRun ? "matched" : "received",
-    },
-  });
+  const [emailRecord] = await db.insert(inbound_emails).values({
+    recipient: `verify-${recipientToken}@${VERIFY_DOMAIN}`,
+    handler: "verification-relay",
+    verification_address_id: verifyAddr.id,
+    run_id: blockedRun?.id || null,
+    from_address: fromAddress,
+    subject: subject?.slice(0, 500) || null,
+    body_text: bodyText,
+    body_html: bodyHtml,
+    extracted_code: parsed?.code?.slice(0, 50) || null,
+    extracted_link: parsed?.link?.slice(0, 2000) || null,
+    status: blockedRun ? "matched" : "received",
+  }).returning();
 
   console.log(
     `[verification-relay] Email received for profile ${profileId}` +
@@ -166,24 +168,19 @@ export async function processInboundEmail(params: {
 
   // 5. If we found a blocked run AND extracted verification data, inject it
   if (blockedRun && parsed && (parsed.code || parsed.link)) {
-    await db.search_task_runs.update({
-      where: { id: blockedRun.id },
-      data: {
-        verification_data: {
-          code: parsed.code || null,
-          link: parsed.link || null,
-          emailId: emailRecord.id,
-          confidence: parsed.confidence,
-        },
-        user_response: "continue",
+    await db.update(search_task_runs).set({
+      verification_data: {
+        code: parsed.code || null,
+        link: parsed.link || null,
+        emailId: emailRecord.id,
+        confidence: parsed.confidence,
       },
-    });
+      user_response: "continue",
+    }).where(eq(search_task_runs.id, blockedRun.id));
 
     // Mark email as applied
-    await db.inbound_emails.update({
-      where: { id: emailRecord.id },
-      data: { status: "applied", applied_at: new Date() },
-    });
+    await db.update(inbound_emails).set({ status: "applied", applied_at: new Date() })
+      .where(eq(inbound_emails.id, emailRecord.id));
 
     return {
       success: true,

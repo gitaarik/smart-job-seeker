@@ -3,6 +3,8 @@
  */
 
 import { db } from "$lib/server/db";
+import { eq, and, or, isNotNull, desc, asc } from "drizzle-orm";
+import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 
 /** Profile data fields relevant for letter followups */
@@ -44,15 +46,15 @@ function parseLetterResponse(response: string | null): { letter: string | null; 
 /** Build a condensed conversation history from previous letter versions */
 async function buildConversationHistory(letterId: number): Promise<string> {
   const versions = await db.query.letter_versions.findMany({
-    where: {
-      letter: letterId,
-      OR: [
-        { user_request: { not: null } },
-        { ai_feedback: { not: null } },
-      ],
-    },
-    orderBy: { id: "asc" },
-    select: { user_request: true, ai_feedback: true },
+    where: and(
+      eq(letter_versions.letter, letterId),
+      or(
+        isNotNull(letter_versions.user_request),
+        isNotNull(letter_versions.ai_feedback),
+      ),
+    ),
+    orderBy: asc(letter_versions.id),
+    columns: { user_request: true, ai_feedback: true },
   });
 
   if (versions.length === 0) return "";
@@ -86,14 +88,17 @@ export async function createApplicationLetterFollowup(
   let extraVariables: Record<string, unknown> | undefined;
   if (mode === "review" || updateContent) {
     const letterRecord = await db.query.application_letters.findFirst({
-      where: { id: letterId },
-      select: {
+      where: eq(application_letters.id, letterId),
+      columns: {
         letter_type: true,
         content: true,
-        applications: {
-          select: {
-            jobs: {
-              select: {
+      },
+      with: {
+        application: {
+          columns: {},
+          with: {
+            job: {
+              columns: {
                 title: true,
                 job_description: true,
                 company_description: true,
@@ -105,14 +110,14 @@ export async function createApplicationLetterFollowup(
       },
     });
     if (letterRecord) {
-      const job = letterRecord.applications?.jobs;
+      const job = letterRecord.application?.job;
       const jobDetailsText = job ? formatJobDetails(job) : "";
 
       // Get the latest letter content: check letter_versions first, fall back to application_letters.content
       const latestVersion = await db.query.letter_versions.findFirst({
-        where: { letter: letterId, content: { not: null } },
-        orderBy: { id: "desc" },
-        select: { content: true },
+        where: and(eq(letter_versions.letter, letterId), isNotNull(letter_versions.content)),
+        orderBy: desc(letter_versions.id),
+        columns: { content: true },
       });
       const currentLetterContent = latestVersion?.content || letterRecord.content || "";
 
@@ -151,22 +156,19 @@ export async function createApplicationLetterFollowup(
     profileDataFields: LETTER_PROFILE_FIELDS,
     fetchEntity: (id) =>
       db.query.application_letters.findFirst({
-        where: { id },
-        select: { id: true, ai_chat_id: true },
-      }),
+        where: eq(application_letters.id, id),
+        columns: { id: true, ai_chat_id: true },
+      }).then((r) => r ?? null),
     updateEntity: async (id, aiChatId, aiChatResponse) => {
       // Parse structured response (letter + feedback)
       const { letter, feedback: revisionFeedback } = updateContent
         ? parseLetterResponse(aiChatResponse)
         : { letter: aiChatResponse, feedback: null };
 
-      await db.application_letters.update({
-        where: { id },
-        data: {
-          ai_chat_id: aiChatId,
-          ai_chat_response: aiChatResponse,
-        },
-      });
+      await db.update(application_letters).set({
+        ai_chat_id: aiChatId,
+        ai_chat_response: aiChatResponse,
+      }).where(eq(application_letters.id, id));
 
       // Record version in letter_versions
       if (mode === "review") {
@@ -184,26 +186,22 @@ export async function createApplicationLetterFollowup(
             aiFeedback = aiChatResponse;
           }
         }
-        await db.letter_versions.create({
-          data: {
-            letter: id,
-            content: revisedLetter,
-            source: "ai_review",
-            ai_chat: aiChatId,
-            ai_feedback: aiFeedback,
-            user_request: followupRequest,
-          },
+        await db.insert(letter_versions).values({
+          letter: id,
+          content: revisedLetter,
+          source: "ai_review",
+          ai_chat: aiChatId,
+          ai_feedback: aiFeedback,
+          user_request: followupRequest,
         });
       } else if (updateContent && letter) {
-        await db.letter_versions.create({
-          data: {
-            letter: id,
-            content: letter,
-            source: "ai_revision",
-            ai_chat: aiChatId,
-            ai_feedback: revisionFeedback,
-            user_request: followupRequest,
-          },
+        await db.insert(letter_versions).values({
+          letter: id,
+          content: letter,
+          source: "ai_revision",
+          ai_chat: aiChatId,
+          ai_feedback: revisionFeedback,
+          user_request: followupRequest,
         });
       }
     },

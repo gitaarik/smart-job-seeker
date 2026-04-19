@@ -9,6 +9,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
+import { eq, and, inArray, desc } from "drizzle-orm";
+import { jobs } from "$lib/server/db/schema";
 import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 import {
   addRescrapeJob,
@@ -48,8 +50,8 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   const job = await db.query.jobs.findFirst({
-    where: { id: jobId },
-    select: {
+    where: eq(jobs.id, jobId),
+    columns: {
       id: true,
       source_url: true,
       job_platform_id: true,
@@ -86,15 +88,12 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Update job status to queued
-  await db.jobs.update({
-    where: { id: jobId },
-    data: {
-      rescrape_status: "queued",
-      rescrape_message: "Waiting in queue...",
-    },
-  });
+  await db.update(jobs).set({
+    rescrape_status: "queued",
+    rescrape_message: "Waiting in queue...",
+  }).where(eq(jobs.id, jobId));
 
-  // Create rescrape run record
+  // Create rescrape run record (table may not exist yet)
   let rescrapeRunId: number | undefined;
   try {
     const run = await db.rescrape_runs.create({
@@ -148,8 +147,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const jobId = parseIntParam(params.id, "job");
 
   const job = await db.query.jobs.findFirst({
-    where: { id: jobId },
-    select: {
+    where: eq(jobs.id, jobId),
+    columns: {
       id: true,
       rescrape_status: true,
       rescrape_message: true,
@@ -162,7 +161,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     return json({ error: "Job not found" }, { status: 404 });
   }
 
-  // Fetch run history (last 10 runs)
+  // Fetch run history (last 10 runs) - table may not exist
   let history: {
     id: number;
     status: string;
@@ -234,14 +233,11 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
       // rescrape_runs table may not exist
     }
 
-    await db.jobs.update({
-      where: { id: jobId },
-      data: {
-        rescrape_status: "idle",
-        rescrape_message: null,
-        rescrape_live_url: null,
-      },
-    });
+    await db.update(jobs).set({
+      rescrape_status: "idle",
+      rescrape_message: null,
+      rescrape_live_url: null,
+    }).where(eq(jobs.id, jobId));
 
     console.log(`[API] Removed queued rescrape for job ${jobId}`);
     return json({ status: "removed_from_queue" });
@@ -249,8 +245,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
   // Check if actively scraping
   const job = await db.query.jobs.findFirst({
-    where: { id: jobId },
-    select: { rescrape_status: true },
+    where: eq(jobs.id, jobId),
+    columns: { rescrape_status: true },
   });
 
   if (!job || !["queued", "scraping"].includes(job.rescrape_status || "")) {
@@ -258,14 +254,11 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   }
 
   // Mark as cancelled in the database
-  await db.jobs.update({
-    where: { id: jobId },
-    data: {
-      rescrape_status: "cancelled",
-      rescrape_message: "Cancelled by user",
-      rescrape_live_url: null,
-    },
-  });
+  await db.update(jobs).set({
+    rescrape_status: "cancelled",
+    rescrape_message: "Cancelled by user",
+    rescrape_live_url: null,
+  }).where(eq(jobs.id, jobId));
 
   // Update the rescrape run record
   try {

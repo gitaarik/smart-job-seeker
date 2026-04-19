@@ -2,8 +2,18 @@
  * Import export data (v2.0 format)
  */
 
-import { sql, type SQL } from "drizzle-orm";
+import { sql, eq, and, ne, type SQL } from "drizzle-orm";
 import { dbDirect } from "$lib/server/db";
+import {
+  profiles, highlights, education, languages, references, certificates,
+  project_stories, cheat_sheets, salary_expectations,
+  tech_skill_categories, tech_skills, tech_skill_types,
+  work_experiences, work_experience_achievements, work_experience_technologies,
+  work_experience_projects, work_experience_project_technologies,
+  side_projects, side_project_achievements, side_project_technologies,
+  profile_versions, profile_version_extensions,
+  applications, application_letters, application_questions,
+} from "$lib/server/db/schema";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import type {
   ExportData,
@@ -35,12 +45,13 @@ async function getUniqueProfileName(
   userId: string,
   excludeProfileId?: number,
 ): Promise<string> {
+  const whereClause = excludeProfileId
+    ? and(eq(profiles.user_id, userId), ne(profiles.id, excludeProfileId))
+    : eq(profiles.user_id, userId);
+
   const existingNames = await dbDirect.query.profiles.findMany({
-    where: {
-      user_id: userId,
-      ...(excludeProfileId ? { id: { not: excludeProfileId } } : {}),
-    },
-    select: { name: true },
+    where: whereClause,
+    columns: { name: true },
   });
   const nameSet = new Set(existingNames.map((r) => r.name));
 
@@ -73,7 +84,7 @@ export async function importExportData(
   if (overwriteProfileId) {
     // Overwrite existing profile - delete all child records first
     const existingProfile = await dbDirect.query.profiles.findFirst({
-      where: { id: overwriteProfileId, user_id: userId },
+      where: and(eq(profiles.id, overwriteProfileId), eq(profiles.user_id, userId)),
     });
 
     if (!existingProfile) {
@@ -88,10 +99,8 @@ export async function importExportData(
     finalName = await getUniqueProfileName(baseName, userId, overwriteProfileId);
 
     // Update the profile
-    await dbDirect.profiles.update({
-      where: { id: overwriteProfileId },
-      data: buildProfileUpdateData(p, finalName),
-    });
+    await dbDirect.update(profiles).set(buildProfileUpdateData(p, finalName))
+      .where(eq(profiles.id, overwriteProfileId));
 
     profileId = overwriteProfileId;
   } else {
@@ -102,15 +111,13 @@ export async function importExportData(
     // Generate unique slug
     const finalSlug = await generateUniqueSlug(finalName);
 
-    const profile = await dbDirect.profiles.create({
-      data: {
-        user_id: userId,
-        is_default: false,
-        slug: finalSlug,
-        ...buildProfileUpdateData(p, finalName),
-        date_created: new Date(),
-      },
-    });
+    const [profile] = await dbDirect.insert(profiles).values({
+      user_id: userId,
+      is_default: false,
+      slug: finalSlug,
+      ...buildProfileUpdateData(p, finalName),
+      date_created: new Date(),
+    }).returning();
 
     profileId = profile.id;
   }
@@ -131,78 +138,76 @@ export async function importExportData(
  */
 async function deleteProfileChildren(profileId: number): Promise<void> {
   // Delete simple child records
-  await dbDirect.highlights.deleteMany({ where: { profile_id: profileId } });
-  await dbDirect.education.deleteMany({ where: { profile_id: profileId } });
-  await dbDirect.languages.deleteMany({ where: { profile_id: profileId } });
-  await dbDirect.references.deleteMany({ where: { profile_id: profileId } });
-  await dbDirect.certificates.deleteMany({ where: { profile: profileId } });
-  await dbDirect.project_stories.deleteMany({ where: { profile_id: profileId } });
-  await dbDirect.cheat_sheets.deleteMany({ where: { profile_id: profileId } });
-  await dbDirect.salary_expectations.deleteMany({ where: { profile_id: profileId } });
+  await dbDirect.delete(highlights).where(eq(highlights.profile_id, profileId));
+  await dbDirect.delete(education).where(eq(education.profile_id, profileId));
+  await dbDirect.delete(languages).where(eq(languages.profile_id, profileId));
+  await dbDirect.delete(references).where(eq(references.profile_id, profileId));
+  await dbDirect.delete(certificates).where(eq(certificates.profile, profileId));
+  await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
+  await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
+  await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
 
   // Delete tech skills (need to delete skills before categories)
-  const techCategories = await dbDirect.query.tech_skill_categories.findMany({
-    where: { profile_id: profileId },
-    select: { id: true },
+  const techCats = await dbDirect.query.tech_skill_categories.findMany({
+    where: eq(tech_skill_categories.profile_id, profileId),
+    columns: { id: true },
   });
-  for (const cat of techCategories) {
-    await dbDirect.tech_skills.deleteMany({ where: { category_id: cat.id } });
+  for (const cat of techCats) {
+    await dbDirect.delete(tech_skills).where(eq(tech_skills.category_id, cat.id));
   }
-  await dbDirect.tech_skill_categories.deleteMany({ where: { profile_id: profileId } });
+  await dbDirect.delete(tech_skill_categories).where(eq(tech_skill_categories.profile_id, profileId));
 
   // Delete work experiences and children
   const workExps = await dbDirect.query.work_experiences.findMany({
-    where: { profile_id: profileId },
-    select: { id: true },
+    where: eq(work_experiences.profile_id, profileId),
+    columns: { id: true },
   });
   for (const we of workExps) {
-    await dbDirect.work_experience_achievements.deleteMany({ where: { work_experience_id: we.id } });
-    await dbDirect.work_experience_technologies.deleteMany({ where: { work_experience_id: we.id } });
+    await dbDirect.delete(work_experience_achievements).where(eq(work_experience_achievements.work_experience_id, we.id));
+    await dbDirect.delete(work_experience_technologies).where(eq(work_experience_technologies.work_experience_id, we.id));
     const projects = await dbDirect.query.work_experience_projects.findMany({
-      where: { work_experience_id: we.id },
-      select: { id: true },
+      where: eq(work_experience_projects.work_experience_id, we.id),
+      columns: { id: true },
     });
     for (const proj of projects) {
-      await dbDirect.work_experience_project_technologies.deleteMany({
-        where: { work_experience_project_id: proj.id },
-      });
+      await dbDirect.delete(work_experience_project_technologies).where(eq(work_experience_project_technologies.work_experience_project_id, proj.id));
     }
-    await dbDirect.work_experience_projects.deleteMany({ where: { work_experience_id: we.id } });
+    await dbDirect.delete(work_experience_projects).where(eq(work_experience_projects.work_experience_id, we.id));
   }
-  await dbDirect.work_experiences.deleteMany({ where: { profile_id: profileId } });
+  await dbDirect.delete(work_experiences).where(eq(work_experiences.profile_id, profileId));
 
   // Delete side projects and children
   const sideProjs = await dbDirect.query.side_projects.findMany({
-    where: { profile_id: profileId },
-    select: { id: true },
+    where: eq(side_projects.profile_id, profileId),
+    columns: { id: true },
   });
   for (const sp of sideProjs) {
-    await dbDirect.side_project_achievements.deleteMany({ where: { side_project_id: sp.id } });
-    await dbDirect.side_project_technologies.deleteMany({ where: { side_project_id: sp.id } });
+    await dbDirect.delete(side_project_achievements).where(eq(side_project_achievements.side_project_id, sp.id));
+    await dbDirect.delete(side_project_technologies).where(eq(side_project_technologies.side_project_id, sp.id));
   }
-  await dbDirect.side_projects.deleteMany({ where: { profile_id: profileId } });
+  await dbDirect.delete(side_projects).where(eq(side_projects.profile_id, profileId));
 
   // Delete profile versions and extensions
-  const versions = await dbDirect.query.profile_versions.findMany({
-    where: { profile_id: profileId },
-    select: { id: true },
+  const vers = await dbDirect.query.profile_versions.findMany({
+    where: eq(profile_versions.profile_id, profileId),
+    columns: { id: true },
   });
-  for (const v of versions) {
-    await dbDirect.profile_version_extensions.deleteMany({ where: { extender_id: v.id } });
-    await dbDirect.profile_version_extensions.deleteMany({ where: { extended_id: v.id } });
+  for (const v of vers) {
+    await dbDirect.delete(profile_version_extensions).where(eq(profile_version_extensions.extender_id, v.id));
+    await dbDirect.delete(profile_version_extensions).where(eq(profile_version_extensions.extended_id, v.id));
   }
-  await dbDirect.profile_versions.deleteMany({ where: { profile_id: profileId } });
+  await dbDirect.delete(profile_versions).where(eq(profile_versions.profile_id, profileId));
 
   // Delete applications and children
-  const applications = await dbDirect.query.applications.findMany({
-    where: { profile_id: profileId },
-    select: { id: true },
+  const apps = await dbDirect.query.applications.findMany({
+    where: eq(applications.profile_id, profileId),
+    columns: { id: true },
   });
-  for (const app of applications) {
-    await dbDirect.application_letters.deleteMany({ where: { application_id: app.id } });
-    await dbDirect.application_questions.deleteMany({ where: { application_id: app.id } });
+  for (const app of apps) {
+    await dbDirect.delete(application_letters).where(eq(application_letters.application_id, app.id));
+    await dbDirect.delete(application_questions).where(eq(application_questions.application_id, app.id));
   }
-  await dbDirect.applications.deleteMany({ where: { profile_id: profileId } });
+  await dbDirect.delete(applications).where(eq(applications.profile_id, profileId));
 }
 
 /**
@@ -260,7 +265,7 @@ async function generateUniqueSlug(name: string): Promise<string> {
 
   while (true) {
     const existing = await dbDirect.query.profiles.findFirst({
-      where: { slug: finalSlug },
+      where: eq(profiles.slug, finalSlug),
     });
     if (!existing) break;
     slugSuffix++;
@@ -280,37 +285,33 @@ async function importProfileEntities(
 ): Promise<void> {
   // Highlights
   for (const h of p.highlights ?? []) {
-    await dbDirect.highlights.create({
-      data: {
-        profile_id: profileId,
-        status: h.status || "draft",
-        sort: h.sort ?? null,
-        text: h.text || null,
-        fa_icon: h.fa_icon || null,
-      },
+    await dbDirect.insert(highlights).values({
+      profile_id: profileId,
+      status: h.status || "draft",
+      sort: h.sort ?? null,
+      text: h.text || null,
+      fa_icon: h.fa_icon || null,
     });
   }
 
   // Education
   for (const e of p.education ?? []) {
-    const created = await dbDirect.education.create({
-      data: {
-        profile_id: profileId,
-        status: e.status || "draft",
-        sort: e.sort ?? null,
-        institution: e.institution || null,
-        location: e.location || null,
-        url: e.url || null,
-        area: e.area || null,
-        study_type: e.study_type || null,
-        graduation_year: e.graduation_year ?? null,
-        start_date: e.start_date ? new Date(e.start_date) : null,
-        end_date: e.end_date ? new Date(e.end_date) : null,
-        summary: e.summary || null,
-        tags: toJsonValue(e.tags),
-        // logo_path will be set via media import
-      },
-    });
+    const [created] = await dbDirect.insert(education).values({
+      profile_id: profileId,
+      status: e.status || "draft",
+      sort: e.sort ?? null,
+      institution: e.institution || null,
+      location: e.location || null,
+      url: e.url || null,
+      area: e.area || null,
+      study_type: e.study_type || null,
+      graduation_year: e.graduation_year ?? null,
+      start_date: e.start_date ? new Date(e.start_date) : null,
+      end_date: e.end_date ? new Date(e.end_date) : null,
+      summary: e.summary || null,
+      tags: toJsonValue(e.tags),
+      // logo_path will be set via media import
+    }).returning();
     // Track for media mapping
     if (e.logo_path) {
       mediaPathMapping.set(`education:${created.id}:logo_path`, e.logo_path);
@@ -319,101 +320,89 @@ async function importProfileEntities(
 
   // Languages
   for (const l of p.languages ?? []) {
-    await dbDirect.languages.create({
-      data: {
-        profile_id: profileId,
-        status: l.status || "draft",
-        sort: l.sort ?? null,
-        name: l.name || null,
-        language_code: l.language_code || null,
-        proficiency: l.proficiency || null,
-      },
+    await dbDirect.insert(languages).values({
+      profile_id: profileId,
+      status: l.status || "draft",
+      sort: l.sort ?? null,
+      name: l.name || null,
+      language_code: l.language_code || null,
+      proficiency: l.proficiency || null,
     });
   }
 
   // References
   for (const r of p.references ?? []) {
-    await dbDirect.references.create({
-      data: {
-        profile_id: profileId,
-        status: r.status || "draft",
-        sort: r.sort ?? null,
-        author: r.author || "",
-        author_position: r.author_position || null,
-        text: r.text || null,
-      },
+    await dbDirect.insert(references).values({
+      profile_id: profileId,
+      status: r.status || "draft",
+      sort: r.sort ?? null,
+      author: r.author || "",
+      author_position: r.author_position || null,
+      text: r.text || null,
     });
   }
 
   // Certificates
   for (const cert of p.certificates ?? []) {
-    await dbDirect.certificates.create({
-      data: {
-        profile: profileId,
-        status: cert.status || "draft",
-        sort: cert.sort ?? null,
-        name: cert.name || "",
-        issuer: cert.issuer || null,
-        date: cert.date ? new Date(cert.date) : null,
-        url: cert.url || null,
-        date_created: new Date(),
-      },
+    await dbDirect.insert(certificates).values({
+      profile: profileId,
+      status: cert.status || "draft",
+      sort: cert.sort ?? null,
+      name: cert.name || "",
+      issuer: cert.issuer || null,
+      date: cert.date ? new Date(cert.date) : null,
+      url: cert.url || null,
+      date_created: new Date(),
     });
   }
 
   // Tech skill categories + tech skills
-  const techTypes = await dbDirect.query.tech_skill_types.findMany({
-    select: { id: true, slug: true },
+  const techTypesList = await dbDirect.query.tech_skill_types.findMany({
+    columns: { id: true, slug: true },
   });
-  const techTypeBySlug = new Map(techTypes.map((t) => [t.slug, t.id]));
+  const techTypeBySlug = new Map(techTypesList.map((t) => [t.slug, t.id]));
 
   for (const cat of p.tech_skill_categories ?? []) {
-    const createdCat = await dbDirect.tech_skill_categories.create({
-      data: {
-        profile_id: profileId,
-        status: cat.status || "draft",
-        sort: cat.sort ?? null,
-        name: cat.name || null,
-        fa_icon: cat.fa_icon || null,
-      },
-    });
+    const [createdCat] = await dbDirect.insert(tech_skill_categories).values({
+      profile_id: profileId,
+      status: cat.status || "draft",
+      sort: cat.sort ?? null,
+      name: cat.name || null,
+      fa_icon: cat.fa_icon || null,
+    }).returning();
 
     for (const skill of cat.tech_skills ?? []) {
-      await dbDirect.tech_skills.create({
-        data: {
-          category_id: createdCat.id,
-          status: skill.status || "draft",
-          sort: skill.sort ?? null,
-          name: skill.name || null,
-          years_experience: skill.years_experience
-            ? parseInt(String(skill.years_experience))
-            : null,
-          level: skill.level || null,
-          tech_type_id: skill.tech_type ? techTypeBySlug.get(skill.tech_type) ?? null : null,
-        },
+      await dbDirect.insert(tech_skills).values({
+        category_id: createdCat.id,
+        status: skill.status || "draft",
+        sort: skill.sort ?? null,
+        name: skill.name || null,
+        years_experience: skill.years_experience
+          ? parseInt(String(skill.years_experience))
+          : null,
+        level: skill.level || null,
+        tech_type_id: skill.tech_type ? techTypeBySlug.get(skill.tech_type) ?? null : null,
       });
     }
   }
 
   // Work experiences + children
   for (const w of p.work_experiences ?? []) {
-    const createdWork = await dbDirect.work_experiences.create({
-      data: {
-        profile_id: profileId,
-        name: w.name || "",
-        location: w.location || "",
-        description: "", // Field deprecated
-        position: w.position || "",
-        summary: w.summary || "",
-        status: w.status || "draft",
-        sort: w.sort ?? null,
-        start_date: w.start_date ? new Date(w.start_date) : null,
-        end_date: w.end_date ? new Date(w.end_date) : null,
-        website: w.website || null,
-        tags: toJsonValue(w.tags),
-        // logo_path will be set via media import
-      },
-    });
+    const [createdWork] = await dbDirect.insert(work_experiences).values({
+      profile_id: profileId,
+      name: w.name || "",
+      location: w.location || "",
+      description: "", // Field deprecated
+      position: w.position || "",
+      summary: w.summary || "",
+      status: w.status || "draft",
+      sort: w.sort ?? null,
+      start_date: w.start_date ? new Date(w.start_date) : null,
+      end_date: w.end_date ? new Date(w.end_date) : null,
+      website: w.website || null,
+      tags: toJsonValue(w.tags),
+      // logo_path will be set via media import
+    }).returning();
 
     // Track for media mapping
     if (w.logo_path) {
@@ -421,51 +410,43 @@ async function importProfileEntities(
     }
 
     for (const a of w.achievements ?? []) {
-      await dbDirect.work_experience_achievements.create({
-        data: {
-          work_experience_id: createdWork.id,
-          status: a.status || "draft",
-          sort: a.sort ?? null,
-          description: a.description || a.title || null,
-          fa_icon: a.fa_icon || null,
-          tags: toJsonValue(a.tags),
-        },
+      await dbDirect.insert(work_experience_achievements).values({
+        work_experience_id: createdWork.id,
+        status: a.status || "draft",
+        sort: a.sort ?? null,
+        description: a.description || a.title || null,
+        fa_icon: a.fa_icon || null,
+        tags: toJsonValue(a.tags),
       });
     }
 
     for (const t of w.technologies ?? []) {
-      await dbDirect.work_experience_technologies.create({
-        data: {
-          work_experience_id: createdWork.id,
-          status: t.status || "draft",
-          sort: t.sort ?? null,
-          name: t.name || null,
-        },
+      await dbDirect.insert(work_experience_technologies).values({
+        work_experience_id: createdWork.id,
+        status: t.status || "draft",
+        sort: t.sort ?? null,
+        name: t.name || null,
       });
     }
 
     for (const proj of w.projects ?? []) {
-      const createdProj = await dbDirect.work_experience_projects.create({
-        data: {
-          work_experience_id: createdWork.id,
-          status: proj.status || "draft",
-          sort: proj.sort ?? null,
-          name: proj.name || null,
-          url: proj.url || null,
-          start_date: proj.start_date ? new Date(proj.start_date) : null,
-          end_date: proj.end_date ? new Date(proj.end_date) : null,
-          description: proj.description || null,
-          outcome: proj.outcome || null,
-        },
-      });
+      const [createdProj] = await dbDirect.insert(work_experience_projects).values({
+        work_experience_id: createdWork.id,
+        status: proj.status || "draft",
+        sort: proj.sort ?? null,
+        name: proj.name || null,
+        url: proj.url || null,
+        start_date: proj.start_date ? new Date(proj.start_date) : null,
+        end_date: proj.end_date ? new Date(proj.end_date) : null,
+        description: proj.description || null,
+        outcome: proj.outcome || null,
+      }).returning();
 
       for (const pt of proj.technologies ?? []) {
-        await dbDirect.work_experience_project_technologies.create({
-          data: {
-            work_experience_project_id: createdProj.id,
-            sort: pt.sort ?? null,
-            name: pt.name || null,
-          },
+        await dbDirect.insert(work_experience_project_technologies).values({
+          work_experience_project_id: createdProj.id,
+          sort: pt.sort ?? null,
+          name: pt.name || null,
         });
       }
     }
@@ -473,22 +454,20 @@ async function importProfileEntities(
 
   // Side projects + children
   for (const sp of p.side_projects ?? []) {
-    const createdSp = await dbDirect.side_projects.create({
-      data: {
-        profile_id: profileId,
-        status: sp.status || "draft",
-        sort: sp.sort ?? null,
-        name: sp.name || null,
-        start_date: sp.start_date ? new Date(sp.start_date) : null,
-        end_date: sp.end_date ? new Date(sp.end_date) : null,
-        url: sp.url || null,
-        stars: sp.stars ?? null,
-        summary: sp.summary || null,
-        url_label: sp.url_label || null,
-        tags: toJsonValue(sp.tags),
-        // image_path will be set via media import
-      },
-    });
+    const [createdSp] = await dbDirect.insert(side_projects).values({
+      profile_id: profileId,
+      status: sp.status || "draft",
+      sort: sp.sort ?? null,
+      name: sp.name || null,
+      start_date: sp.start_date ? new Date(sp.start_date) : null,
+      end_date: sp.end_date ? new Date(sp.end_date) : null,
+      url: sp.url || null,
+      stars: sp.stars ?? null,
+      summary: sp.summary || null,
+      url_label: sp.url_label || null,
+      tags: toJsonValue(sp.tags),
+      // image_path will be set via media import
+    }).returning();
 
     // Track for media mapping
     if (sp.image_path) {
@@ -496,22 +475,18 @@ async function importProfileEntities(
     }
 
     for (const a of sp.achievements ?? []) {
-      await dbDirect.side_project_achievements.create({
-        data: {
-          side_project_id: createdSp.id,
-          description: a.description || null,
-          sort: a.sort ?? null,
-        },
+      await dbDirect.insert(side_project_achievements).values({
+        side_project_id: createdSp.id,
+        description: a.description || null,
+        sort: a.sort ?? null,
       });
     }
 
     for (const t of sp.technologies ?? []) {
-      await dbDirect.side_project_technologies.create({
-        data: {
-          side_project_id: createdSp.id,
-          sort: t.sort ?? null,
-          name: t.name || null,
-        },
+      await dbDirect.insert(side_project_technologies).values({
+        side_project_id: createdSp.id,
+        sort: t.sort ?? null,
+        name: t.name || null,
       });
     }
   }
@@ -523,16 +498,14 @@ async function importProfileEntities(
     // Backward compat: old exports have name=slug, description=display name
     const slug = pv.slug || pv.name || null;
     const name = pv.slug ? (pv.name || null) : (pv.description || null);
-    const createdPv = await dbDirect.profile_versions.create({
-      data: {
-        profile_id: profileId,
-        status: pv.status || "draft",
-        sort: pv.sort ?? null,
-        slug: slug,
-        name: name,
-        toggles: toJsonValue(pv.toggles),
-      },
-    });
+    const [createdPv] = await dbDirect.insert(profile_versions).values({
+      profile_id: profileId,
+      status: pv.status || "draft",
+      sort: pv.sort ?? null,
+      slug: slug,
+      name: name,
+      toggles: toJsonValue(pv.toggles),
+    }).returning();
     if (slug) {
       versionSlugToId.set(slug, createdPv.id);
     }
@@ -545,11 +518,9 @@ async function importProfileEntities(
       const extenderId = versionSlugToId.get(slug);
       const extendedId = versionSlugToId.get(pv.extends_from);
       if (extenderId && extendedId) {
-        await dbDirect.profile_version_extensions.create({
-          data: {
-            extender_id: extenderId,
-            extended_id: extendedId,
-          },
+        await dbDirect.insert(profile_version_extensions).values({
+          extender_id: extenderId,
+          extended_id: extendedId,
         });
       }
     }
@@ -578,45 +549,38 @@ async function importFullAccountEntities(
 ): Promise<void> {
   // Project stories
   for (const ps of data.project_stories ?? []) {
-    await dbDirect.project_stories.create({
-      data: {
-        profile_id: profileId,
-        sort: ps.sort ?? null,
-        title: ps.title || null,
-        situation: ps.situation || null,
-        task: ps.task || null,
-        action: ps.action || null,
-        result: ps.result || null,
-        reflection: ps.reflection || null,
-        category: ps.category || null,
-      },
+    await dbDirect.insert(project_stories).values({
+      profile_id: profileId,
+      sort: ps.sort ?? null,
+      title: ps.title || null,
+      situation: ps.situation || null,
+      task: ps.task || null,
+      action: ps.action || null,
+      result: ps.result || null,
+      reflection: ps.reflection || null,
+      category: ps.category || null,
     });
   }
 
   // Cheat sheets
   for (const cs of data.cheat_sheets ?? []) {
-    await dbDirect.cheat_sheets.create({
-      data: {
-        profile_id: profileId,
-        sort: cs.sort ?? null,
-        title: cs.title || null,
-        content: cs.content || null,
-      },
+    await dbDirect.insert(cheat_sheets).values({
+      profile_id: profileId,
+      sort: cs.sort ?? null,
+      title: cs.title || null,
+      content: cs.content || null,
     });
   }
 
   // Salary settings (new format)
   if (data.salary_settings) {
     const ss = data.salary_settings;
-    await dbDirect.profiles.update({
-      where: { id: profileId },
-      data: {
-        salary_base_rate: ss.base_rate ?? null,
-        salary_currency: ss.currency ?? "EUR",
-        salary_adjustments: ss.adjustments ? (ss.adjustments as unknown) : undefined,
-        salary_region_overrides: ss.region_overrides ? (ss.region_overrides as unknown) : undefined,
-      },
-    });
+    await dbDirect.update(profiles).set({
+      salary_base_rate: ss.base_rate ?? null,
+      salary_currency: ss.currency ?? "EUR",
+      salary_adjustments: ss.adjustments ? (ss.adjustments as unknown) : undefined,
+      salary_region_overrides: ss.region_overrides ? (ss.region_overrides as unknown) : undefined,
+    }).where(eq(profiles.id, profileId));
   }
 
   // Note: Applications are not imported by default as they reference external jobs

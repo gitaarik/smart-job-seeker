@@ -3,6 +3,8 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { tech_skills, tech_skill_categories } from "$lib/server/db/schema";
 
 /**
  * Extract tech skills from a profile
@@ -10,18 +12,13 @@ import { dbDirect as db } from "$lib/server/db";
  * @returns Array of skill names
  */
 export async function getProfileSkills(profileId: number): Promise<string[]> {
-  const skills = await db.query.tech_skills.findMany({
-    where: {
-      tech_skill_categories: {
-        profile_id: profileId,
-      },
-    },
-    select: {
-      name: true,
-    },
-  });
+  const rows = await db
+    .select({ name: tech_skills.name })
+    .from(tech_skills)
+    .innerJoin(tech_skill_categories, eq(tech_skills.category_id, tech_skill_categories.id))
+    .where(eq(tech_skill_categories.profile_id, profileId));
 
-  return skills
+  return rows
     .map((s) => s.name)
     .filter((name): name is string => !!name);
 }
@@ -35,21 +32,18 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
 export async function getProfileSkillLevels(
   profileId: number,
 ): Promise<Record<string, "strong" | "weak">> {
-  const skills = await db.query.tech_skills.findMany({
-    where: {
-      tech_skill_categories: {
-        profile_id: profileId,
-      },
-    },
-    select: {
-      name: true,
-      level: true,
-      years_experience: true,
-    },
-  });
+  const rows = await db
+    .select({
+      name: tech_skills.name,
+      level: tech_skills.level,
+      years_experience: tech_skills.years_experience,
+    })
+    .from(tech_skills)
+    .innerJoin(tech_skill_categories, eq(tech_skills.category_id, tech_skill_categories.id))
+    .where(eq(tech_skill_categories.profile_id, profileId));
 
   const result: Record<string, "strong" | "weak"> = {};
-  for (const skill of skills) {
+  for (const skill of rows) {
     if (!skill.name) continue;
     const key = skill.name.toLowerCase();
 

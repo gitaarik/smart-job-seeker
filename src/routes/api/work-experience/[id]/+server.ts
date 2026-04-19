@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { work_experiences, work_experience_technologies, work_experience_achievements } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 import {
   workExperienceBasicSchema,
@@ -15,16 +17,18 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
   // Verify ownership through profile
   const workExperience = await db.query.work_experiences.findFirst({
-    where: { id: workExperienceId },
-    select: {
+    where: eq(work_experiences.id, workExperienceId),
+    columns: {
       id: true,
-      profiles: {
-        select: { user_id: true },
+    },
+    with: {
+      profile: {
+        columns: { user_id: true },
       },
     },
   });
 
-  if (!workExperience || workExperience.profiles.user_id !== user.id) {
+  if (!workExperience || workExperience.profile.user_id !== user.id) {
     error(403, "Access denied");
   }
 
@@ -49,18 +53,15 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
     { start_date: "date", end_date: "date" },
   );
 
-  await db.work_experiences.update({
-    where: { id },
-    data: updateData,
-  });
+  await db.update(work_experiences).set(updateData).where(eq(work_experiences.id, id));
 
   return json({ success: true });
 }
 
 async function updateTechnologies(id: number, technologies: string[]) {
-  await db.work_experience_technologies.deleteMany({
-    where: { work_experience_id: id },
-  });
+  await db.delete(work_experience_technologies).where(
+    eq(work_experience_technologies.work_experience_id, id),
+  );
 
   const now = new Date();
   const techData = technologies
@@ -75,16 +76,16 @@ async function updateTechnologies(id: number, technologies: string[]) {
     }));
 
   if (techData.length > 0) {
-    await db.work_experience_technologies.createMany({ data: techData });
+    await db.insert(work_experience_technologies).values(techData);
   }
 
   return json({ success: true });
 }
 
 async function updateAchievements(id: number, achievements: { description: string; tags?: string[] | null }[]) {
-  await db.work_experience_achievements.deleteMany({
-    where: { work_experience_id: id },
-  });
+  await db.delete(work_experience_achievements).where(
+    eq(work_experience_achievements.work_experience_id, id),
+  );
 
   const now = new Date();
   const filtered = achievements
@@ -96,8 +97,8 @@ async function updateAchievements(id: number, achievements: { description: strin
     }));
 
   if (filtered.length > 0) {
-    await db.work_experience_achievements.createMany({
-      data: filtered.map((a) => ({
+    await db.insert(work_experience_achievements).values(
+      filtered.map((a) => ({
         description: a.description,
         ...(a.tags && a.tags.length > 0 ? { tags: a.tags } : {}),
         work_experience_id: id,
@@ -105,7 +106,7 @@ async function updateAchievements(id: number, achievements: { description: strin
         status: "published",
         date_created: now,
       })),
-    });
+    );
   }
 
   return json({ success: true });

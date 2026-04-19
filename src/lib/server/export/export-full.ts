@@ -3,6 +3,8 @@
  */
 
 import { dbDirect } from "$lib/server/db";
+import { eq, desc, asc } from "drizzle-orm";
+import { project_stories, cheat_sheets, profiles } from "$lib/server/db/schema";
 import { buildProfileExport } from "./export-profile";
 import type {
   FullExportData,
@@ -27,12 +29,12 @@ export async function buildFullExport(
   );
 
   // Fetch additional data
-  const [projectStories, cheatSheets, profile, applications] =
+  const [projectStoriesData, cheatSheetsData, profile, applications] =
     await Promise.all([
       // Project stories
-      dbDirect.project_stories.findMany({
-        where: { profile_id: profileId },
-        select: {
+      dbDirect.query.project_stories.findMany({
+        where: eq(project_stories.profile_id, profileId),
+        columns: {
           sort: true,
           title: true,
           situation: true,
@@ -42,24 +44,24 @@ export async function buildFullExport(
           reflection: true,
           category: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: asc(project_stories.sort),
       }),
 
       // Cheat sheets
-      dbDirect.cheat_sheets.findMany({
-        where: { profile_id: profileId },
-        select: {
+      dbDirect.query.cheat_sheets.findMany({
+        where: eq(cheat_sheets.profile_id, profileId),
+        columns: {
           sort: true,
           title: true,
           content: true,
         },
-        orderBy: { sort: "asc" },
+        orderBy: asc(cheat_sheets.sort),
       }),
 
       // Profile salary settings
-      dbDirect.profiles.findUnique({
-        where: { id: profileId },
-        select: {
+      dbDirect.query.profiles.findFirst({
+        where: eq(profiles.id, profileId),
+        columns: {
           salary_base_rate: true,
           salary_currency: true,
           salary_adjustments: true,
@@ -68,35 +70,35 @@ export async function buildFullExport(
       }),
 
       // Applications with related data
-      dbDirect.applications.findMany({
-        where: { profile_id: profileId },
-        include: {
-          jobs: {
-            select: {
+      dbDirect.query.applications.findMany({
+        where: (t: any, { eq }: any) => eq(t.profile_id, profileId),
+        with: {
+          job: {
+            columns: {
               title: true,
               company: true,
               source_url: true,
             },
           },
           application_letters: {
-            select: {
+            columns: {
               letter_type: true,
               content: true,
             },
           },
           application_questions: {
-            select: {
+            columns: {
               question: true,
               answer: true,
             },
           },
         },
-        orderBy: { date_created: "desc" },
+        orderBy: (t: any, { desc }: any) => desc(t.date_created),
       }),
     ]);
 
   // Transform project stories
-  const exportedProjectStories: ExportedProjectStory[] = projectStories.map(
+  const exportedProjectStories: ExportedProjectStory[] = projectStoriesData.map(
     (ps) => ({
       sort: ps.sort,
       title: ps.title || undefined,
@@ -110,7 +112,7 @@ export async function buildFullExport(
   );
 
   // Transform cheat sheets
-  const exportedCheatSheets: ExportedCheatSheet[] = cheatSheets.map((cs) => ({
+  const exportedCheatSheets: ExportedCheatSheet[] = cheatSheetsData.map((cs) => ({
     sort: cs.sort,
     title: cs.title || undefined,
     content: cs.content || undefined,
@@ -128,9 +130,9 @@ export async function buildFullExport(
   const exportedApplications: ExportedApplication[] = applications.map(
     (app) => ({
       status: app.status || undefined,
-      job_title: app.jobs?.title || undefined,
-      company: app.jobs?.company || undefined,
-      source_url: app.jobs?.source_url || undefined,
+      job_title: app.job?.title || undefined,
+      company: app.job?.company || undefined,
+      source_url: app.job?.source_url || undefined,
       application_sent_date: app.application_sent_date?.toISOString().split("T")[0],
       application_note: app.application_note || undefined,
       salary_expectation: app.salary_expectation

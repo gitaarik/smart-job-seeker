@@ -16,6 +16,8 @@ import { getProfileAsResumeData } from "$lib/server/resume/profile-to-resume-dat
 import { applyDiffToProfile, type DiffApplyPayload } from "$lib/server/resume/apply-diff";
 import { logImportEvent } from "$lib/server/import-log";
 import { dbDirect as db } from "$lib/server/db";
+import { desc } from "drizzle-orm";
+import { import_logs } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -52,7 +54,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   if (isAdmin) {
     try {
       const logs = await db.query.import_logs.findMany({
-        orderBy: { date_created: "desc" },
+        orderBy: desc(import_logs.date_created),
         limit: 50,
       });
       importLogs = logs.map((l) => ({

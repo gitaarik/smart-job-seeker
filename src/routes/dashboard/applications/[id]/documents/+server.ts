@@ -1,6 +1,8 @@
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { applications, applications_files, files } from "$lib/server/db/schema";
 import { getFile } from "$lib/server/files";
 import { getSelectedProfileId } from "../../../profile/utils";
 
@@ -15,7 +17,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   if (isNaN(appId)) error(400, "Invalid application ID");
 
   const application = await db.query.applications.findFirst({
-    where: { id: appId, profile_id: profileId },
+    where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
   });
   if (!application) error(404, "Application not found");
 
@@ -24,14 +26,14 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
 
   // Verify file belongs to this application (either as attached file or CV sent)
   const isAttached = await db.query.applications_files.findFirst({
-    where: { applications_id: appId, file_id: fileId },
+    where: and(eq(applications_files.applications_id, appId), eq(applications_files.file_id, fileId)),
   });
   const isCvFile = application.cv_file_sent_id === fileId;
   if (!isAttached && !isCvFile) error(403, "File not associated with this application");
 
   const fileMeta = await db.query.files.findFirst({
-    where: { id: fileId },
-    select: { filename_download: true, type: true },
+    where: eq(files.id, fileId),
+    columns: { filename_download: true, type: true },
   });
 
   const buffer = await getFile(fileId);

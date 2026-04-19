@@ -1,4 +1,6 @@
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, ne } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 
 export function generateSlug(text: string): string {
   return text
@@ -20,11 +22,12 @@ export async function ensureUniqueSlug(
   let counter = 2;
 
   while (true) {
+    const whereClause = excludeProfileId
+      ? and(eq(profiles.slug, slug), ne(profiles.id, excludeProfileId))
+      : eq(profiles.slug, slug);
+
     const existing = await db.query.profiles.findFirst({
-      where: {
-        slug,
-        ...(excludeProfileId ? { id: { not: excludeProfileId } } : {}),
-      },
+      where: whereClause,
     });
 
     if (!existing) return slug;

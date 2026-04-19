@@ -1,6 +1,8 @@
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profile_exports } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../profile/utils";
 import { getFile } from "$lib/server/files";
@@ -19,12 +21,9 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
   }
 
   const exp = await db.query.profile_exports.findFirst({
-    where: {
-      id: parseInt(exportId, 10),
-      profile_id: profileId,
-    },
+    where: and(eq(profile_exports.id, parseInt(exportId, 10)), eq(profile_exports.profile_id, profileId)),
     with: {
-      files: true,
+      file: true,
     },
   });
 
@@ -34,7 +33,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
 
   const fileBuffer = await getFile(exp.file_id);
   const filename =
-    exp.files?.filename_download || `export-${exp.id}.${exp.file_type}`;
+    exp.file?.filename_download || `export-${exp.id}.${exp.file_type}`;
 
   // Determine content type based on file type
   let contentType: string;

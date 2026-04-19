@@ -1,7 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { sql, type SQL } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { tech_skill_categories, tech_skills } from "$lib/server/db/schema";
 import { SKILL_LEVELS } from "$lib/data/field-labels";
 import { getSelectedProfileId } from "../../utils";
 
@@ -13,11 +14,11 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const categories = await db.query.tech_skill_categories.findMany({
-    where: { profile_id: layoutData.selectedProfile.id },
-    orderBy: { sort: "asc" },
+    where: eq(tech_skill_categories.profile_id, layoutData.selectedProfile.id),
+    orderBy: asc(tech_skill_categories.sort),
     with: {
       tech_skills: {
-        orderBy: { sort: "asc" },
+        orderBy: asc(tech_skills.sort),
       },
     },
   });
@@ -30,36 +31,27 @@ export const load: PageServerLoad = async ({ parent }) => {
 export const actions: Actions = {
   createCategory: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Category name is required" });
-    }
+    if (!name || name.trim().length === 0) return fail(400, { error: "Category name is required" });
 
-    // Get the highest sort value
     const lastItem = await db.query.tech_skill_categories.findFirst({
-      where: { profile_id: profileId },
-      orderBy: { sort: "desc" },
+      where: eq(tech_skill_categories.profile_id, profileId),
+      orderBy: desc(tech_skill_categories.sort),
     });
 
-    await db.tech_skill_categories.create({
-      data: {
-        name: name.trim(),
-        profile_id: profileId,
-        sort: (lastItem?.sort ?? -1) + 1,
-        status: "published",
-        date_created: new Date(),
-      },
+    await db.insert(tech_skill_categories).values({
+      name: name.trim(),
+      profile_id: profileId,
+      sort: (lastItem?.sort ?? -1) + 1,
+      status: "published",
+      date_created: new Date(),
     });
 
     return { success: true };
@@ -67,92 +59,58 @@ export const actions: Actions = {
 
   updateCategory: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
     const name = formData.get("name") as string;
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid category ID" });
-    }
+    if (isNaN(id)) return fail(400, { error: "Invalid category ID" });
+    if (!name || name.trim().length === 0) return fail(400, { error: "Category name is required" });
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Category name is required" });
-    }
-
-    // Verify ownership
     const existing = await db.query.tech_skill_categories.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(tech_skill_categories.id, id), eq(tech_skill_categories.profile_id, profileId)),
     });
+    if (!existing) return fail(404, { error: "Category not found" });
 
-    if (!existing) {
-      return fail(404, { error: "Category not found" });
-    }
-
-    await db.tech_skill_categories.update({
-      where: { id },
-      data: {
-        name: name.trim(),
-        date_updated: new Date(),
-      },
-    });
+    await db.update(tech_skill_categories).set({
+      name: name.trim(),
+      date_updated: new Date(),
+    }).where(eq(tech_skill_categories.id, id));
 
     return { success: true };
   },
 
   deleteCategory: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
+    if (isNaN(id)) return fail(400, { error: "Invalid category ID" });
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid category ID" });
-    }
-
-    // Verify ownership
     const existing = await db.query.tech_skill_categories.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(tech_skill_categories.id, id), eq(tech_skill_categories.profile_id, profileId)),
     });
+    if (!existing) return fail(404, { error: "Category not found" });
 
-    if (!existing) {
-      return fail(404, { error: "Category not found" });
-    }
-
-    // Delete will cascade to skills
-    await db.tech_skill_categories.delete({
-      where: { id },
-    });
+    await db.delete(tech_skill_categories).where(eq(tech_skill_categories.id, id));
 
     return { success: true };
   },
 
   createSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const categoryId = parseInt(formData.get("categoryId") as string);
@@ -161,44 +119,32 @@ export const actions: Actions = {
     const years_experience = formData.get("years_experience") as string;
     const tagsJson = formData.get("tags") as string;
 
-    if (isNaN(categoryId)) {
-      return fail(400, { error: "Invalid category ID" });
-    }
+    if (isNaN(categoryId)) return fail(400, { error: "Invalid category ID" });
+    if (!name || name.trim().length === 0) return fail(400, { error: "Skill name is required" });
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Skill name is required" });
-    }
-
-    // Verify category ownership
     const category = await db.query.tech_skill_categories.findFirst({
-      where: { id: categoryId, profile_id: profileId },
+      where: and(eq(tech_skill_categories.id, categoryId), eq(tech_skill_categories.profile_id, profileId)),
     });
+    if (!category) return fail(404, { error: "Category not found" });
 
-    if (!category) {
-      return fail(404, { error: "Category not found" });
-    }
-
-    // Get the highest sort value
     const lastItem = await db.query.tech_skills.findFirst({
-      where: { category_id: categoryId },
-      orderBy: { sort: "desc" },
+      where: eq(tech_skills.category_id, categoryId),
+      orderBy: desc(tech_skills.sort),
     });
 
     let tags: string[] | null = null;
     try { tags = tagsJson ? JSON.parse(tagsJson) : null; } catch { /* ignore */ }
     if (tags && tags.length === 0) tags = null;
 
-    await db.tech_skills.create({
-      data: {
-        name: name.trim(),
-        level: level || null,
-        years_experience: years_experience ? parseInt(years_experience) : null,
-        ...(tags ? { tags } : {}),
-        category_id: categoryId,
-        sort: (lastItem?.sort ?? -1) + 1,
-        status: "published",
-        date_created: new Date(),
-      },
+    await db.insert(tech_skills).values({
+      name: name.trim(),
+      level: level || null,
+      years_experience: years_experience ? parseInt(years_experience) : null,
+      ...(tags ? { tags } : {}),
+      category_id: categoryId,
+      sort: (lastItem?.sort ?? -1) + 1,
+      status: "published",
+      date_created: new Date(),
     });
 
     return { success: true };
@@ -206,14 +152,10 @@ export const actions: Actions = {
 
   updateSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
@@ -222,24 +164,14 @@ export const actions: Actions = {
     const years_experience = formData.get("years_experience") as string;
     const tagsJson = formData.get("tags") as string;
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid skill ID" });
-    }
+    if (isNaN(id)) return fail(400, { error: "Invalid skill ID" });
+    if (!name || name.trim().length === 0) return fail(400, { error: "Skill name is required" });
 
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: "Skill name is required" });
-    }
-
-    // Verify ownership through category
     const existing = await db.query.tech_skills.findFirst({
-      where: { id },
-      with: { tech_skill_categories: true },
+      where: eq(tech_skills.id, id),
+      with: { tech_skill_category: true },
     });
-
-    if (
-      !existing ||
-      existing.tech_skill_categories.profile_id !== profileId
-    ) {
+    if (!existing || existing.tech_skill_category.profile_id !== profileId) {
       return fail(404, { error: "Skill not found" });
     }
 
@@ -247,62 +179,42 @@ export const actions: Actions = {
     try { tags = tagsJson ? JSON.parse(tagsJson) : null; } catch { /* ignore */ }
     if (tags && tags.length === 0) tags = null;
 
-    await db.tech_skills.update({
-      where: { id },
-      data: {
-        name: name.trim(),
-        level: level || null,
-        years_experience: years_experience ? parseInt(years_experience) : null,
-        tags: tags ?? null,
-        date_updated: new Date(),
-      },
-    });
+    await db.update(tech_skills).set({
+      name: name.trim(),
+      level: level || null,
+      years_experience: years_experience ? parseInt(years_experience) : null,
+      tags: tags ?? null,
+      date_updated: new Date(),
+    }).where(eq(tech_skills.id, id));
 
     return { success: true };
   },
 
   reorderSkills: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const categoryId = parseInt(formData.get("categoryId") as string);
     const orderJson = formData.get("order") as string;
 
-    if (isNaN(categoryId)) {
-      return fail(400, { error: "Invalid category ID" });
-    }
+    if (isNaN(categoryId)) return fail(400, { error: "Invalid category ID" });
 
     let order: number[];
-    try {
-      order = JSON.parse(orderJson);
-    } catch {
-      return fail(400, { error: "Invalid order data" });
-    }
+    try { order = JSON.parse(orderJson); } catch { return fail(400, { error: "Invalid order data" }); }
 
-    // Verify category ownership
     const category = await db.query.tech_skill_categories.findFirst({
-      where: { id: categoryId, profile_id: profileId },
+      where: and(eq(tech_skill_categories.id, categoryId), eq(tech_skill_categories.profile_id, profileId)),
     });
+    if (!category) return fail(404, { error: "Category not found" });
 
-    if (!category) {
-      return fail(404, { error: "Category not found" });
-    }
-
-    // Update sort field for each skill
     await Promise.all(
       order.map((skillId, index) =>
-        db.tech_skills.updateMany({
-          where: { id: skillId, category_id: categoryId },
-          data: { sort: index, date_updated: new Date() },
-        })
+        db.update(tech_skills).set({ sort: index, date_updated: new Date() })
+          .where(and(eq(tech_skills.id, skillId), eq(tech_skills.category_id, categoryId)))
       ),
     );
 
@@ -311,32 +223,21 @@ export const actions: Actions = {
 
   reorderCategories: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const orderJson = formData.get("order") as string;
 
     let order: number[];
-    try {
-      order = JSON.parse(orderJson);
-    } catch {
-      return fail(400, { error: "Invalid order data" });
-    }
+    try { order = JSON.parse(orderJson); } catch { return fail(400, { error: "Invalid order data" }); }
 
-    // Update sort field for each category
     await Promise.all(
       order.map((categoryId, index) =>
-        db.tech_skill_categories.updateMany({
-          where: { id: categoryId, profile_id: profileId },
-          data: { sort: index, date_updated: new Date() },
-        })
+        db.update(tech_skill_categories).set({ sort: index, date_updated: new Date() })
+          .where(and(eq(tech_skill_categories.id, categoryId), eq(tech_skill_categories.profile_id, profileId)))
       ),
     );
 
@@ -345,38 +246,24 @@ export const actions: Actions = {
 
   deleteSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
-    if (!user) {
-      return fail(401, { error: "Not authenticated" });
-    }
+    if (!user) return fail(401, { error: "Not authenticated" });
 
     const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) {
-      return fail(400, { error: "No profile selected" });
-    }
+    if (!profileId) return fail(400, { error: "No profile selected" });
 
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
+    if (isNaN(id)) return fail(400, { error: "Invalid skill ID" });
 
-    if (isNaN(id)) {
-      return fail(400, { error: "Invalid skill ID" });
-    }
-
-    // Verify ownership through category
     const existing = await db.query.tech_skills.findFirst({
-      where: { id },
-      with: { tech_skill_categories: true },
+      where: eq(tech_skills.id, id),
+      with: { tech_skill_category: true },
     });
-
-    if (
-      !existing ||
-      existing.tech_skill_categories.profile_id !== profileId
-    ) {
+    if (!existing || existing.tech_skill_category.profile_id !== profileId) {
       return fail(404, { error: "Skill not found" });
     }
 
-    await db.tech_skills.delete({
-      where: { id },
-    });
+    await db.delete(tech_skills).where(eq(tech_skills.id, id));
 
     return { success: true };
   },

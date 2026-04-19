@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { profile_versions, profile_version_extensions } from "$lib/server/db/schema";
+import { eq, asc } from "drizzle-orm";
 import { getSelectedProfileId } from "../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
@@ -31,7 +33,7 @@ export const load: PageServerLoad = async ({ parent }) => {
             },
           },
       },
-      orderBy: { name: "asc" },
+      orderBy: asc(profile_versions.name),
     }),
     db.query.profile_exports.findMany({
       where: {
@@ -100,25 +102,21 @@ export const actions: Actions = {
       return fail(400, { error: "Slug is required" });
     }
 
-    const created = await db.profile_versions.create({
-      data: {
-        slug: slug.trim(),
-        name: name?.trim() || null,
-        profile_id: profileId,
-        date_created: new Date(),
-      },
-    });
+    const [created] = await db.insert(profile_versions).values({
+      slug: slug.trim(),
+      name: name?.trim() || null,
+      profile_id: profileId,
+      date_created: new Date(),
+    }).returning();
 
     for (const parentId of extendsIds) {
       const parent = await db.query.profile_versions.findFirst({
         where: { id: parentId, profile_id: profileId },
       });
       if (parent) {
-        await db.profile_version_extensions.create({
-          data: {
-            extender_id: created.id,
-            extended_id: parentId,
-          },
+        await db.insert(profile_version_extensions).values({
+          extender_id: created.id,
+          extended_id: parentId,
         });
       }
     }

@@ -16,6 +16,8 @@ import {
 import { getFile } from "$lib/server/files";
 import { logImportEvent } from "$lib/server/import-log";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { import_logs } from "$lib/server/db/schema";
 
 const FORMAT_TO_MIME: Record<string, string> = {
   PDF: "application/pdf",
@@ -36,7 +38,9 @@ function requireAdmin(locals: App.Locals) {
 }
 
 async function getLogWithFile(logId: number) {
-  const log = await db.query.import_logs.findFirst({ where: { id: logId } });
+  const log = await db.query.import_logs.findFirst({
+    where: eq(import_logs.id, logId),
+  });
   if (!log) error(404, "Import log entry not found");
   if (!log.file_id) error(400, "No file stored for this log entry");
   return log;

@@ -4,6 +4,7 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
+import { import_logs } from "$lib/server/db/schema";
 import type { ResumeData } from "$lib/server/resume/types";
 import type { DiffApplyPayload } from "$lib/server/resume/apply-diff";
 
@@ -90,57 +91,49 @@ export async function logImportEvent<E extends keyof EventMap>(
       const sections = summariseSections(parsedData);
       const docType = detectDocType(parsedData);
       console.log(`[Import] Parse: user=${user.email || user.id} file="${fileName}" format=${fileFormat} type=${docType} sections=${JSON.stringify(sections)}`);
-      await db.import_logs.create({
-        data: {
-          user_id: user.id,
-          user_email: user.email ?? null,
-          event: "parse",
-          file_name: fileName,
-          file_format: fileFormat,
-          doc_type: docType,
-          sections: sections as Record<string, unknown>,
-          parsed_data: parsedData as unknown as Record<string, unknown>,
-          file_id: fileId ?? null,
-        },
+      await db.insert(import_logs).values({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        event: "parse",
+        file_name: fileName,
+        file_format: fileFormat,
+        doc_type: docType,
+        sections: sections as Record<string, unknown>,
+        parsed_data: parsedData as unknown as Record<string, unknown>,
+        file_id: fileId ?? null,
       });
     } else if (event === "parse_error") {
       const { fileName, fileFormat, error, fileId } = opts as ParseErrorOpts;
       console.error(`[Import] Parse failed: user=${user.email || user.id} file="${fileName}" format=${fileFormat} error="${error}"`);
-      await db.import_logs.create({
-        data: {
-          user_id: user.id,
-          user_email: user.email ?? null,
-          event: "parse_error",
-          file_name: fileName,
-          file_format: fileFormat,
-          file_id: fileId ?? null,
-          error,
-        },
+      await db.insert(import_logs).values({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        event: "parse_error",
+        file_name: fileName,
+        file_format: fileFormat,
+        file_id: fileId ?? null,
+        error,
       });
     } else if (event === "apply") {
       const { profileId, payload } = opts as ApplyOpts;
       const changes = summariseChanges(payload);
       console.log(`[Import] Apply: user=${user.email || user.id} profile=${profileId} changes=${JSON.stringify(changes)}`);
-      await db.import_logs.create({
-        data: {
-          user_id: user.id,
-          user_email: user.email ?? null,
-          profile_id: profileId,
-          event: "apply",
-          changes: changes as Record<string, unknown>,
-        },
+      await db.insert(import_logs).values({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        profile_id: profileId,
+        event: "apply",
+        changes: changes as Record<string, unknown>,
       });
     } else if (event === "apply_error") {
       const { profileId, error } = opts as ApplyErrorOpts;
       console.error(`[Import] Apply failed: user=${user.email || user.id} profile=${profileId} error="${error}"`);
-      await db.import_logs.create({
-        data: {
-          user_id: user.id,
-          user_email: user.email ?? null,
-          profile_id: profileId,
-          event: "apply_error",
-          error,
-        },
+      await db.insert(import_logs).values({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        profile_id: profileId,
+        event: "apply_error",
+        error,
       });
     }
   } catch (err) {

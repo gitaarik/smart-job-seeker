@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, or, ilike, isNotNull } from "drizzle-orm";
+import { profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
@@ -24,10 +26,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Verify user owns this profile
   const profile = await db.query.profiles.findFirst({
-    where: {
-      id: parseInt(profileId),
-      user_id: user.id,
-    },
+    where: and(
+      eq(profiles.id, parseInt(profileId)),
+      eq(profiles.user_id, user.id),
+    ),
   });
 
   if (!profile) {
@@ -49,12 +51,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Try to find existing platform by URL/domain
   const existingPlatform = await db.query.job_platforms.findFirst({
-    where: {
-      OR: [
-        { url: { contains: domain, mode: "insensitive" } },
-        { key: { contains: domain.split(".")[0], mode: "insensitive" } },
-      ],
-    },
+    where: or(
+      ilike(job_platforms.url, `%${domain}%`),
+      ilike(job_platforms.key, `%${domain.split(".")[0]}%`),
+    ),
   });
 
   let platform: {
@@ -82,12 +82,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
     // Get existing credentials for this platform and profile
     const platformProfiles = await db.query.platform_profiles.findMany({
-      where: {
-        platform_id: existingPlatform.id,
-        profile_id: profile.id,
-        username: { not: null },
-      },
-      select: {
+      where: and(
+        eq(platform_profiles.platform_id, existingPlatform.id),
+        eq(platform_profiles.profile_id, profile.id),
+        isNotNull(platform_profiles.username),
+      ),
+      columns: {
         id: true,
         username: true,
         status: true,

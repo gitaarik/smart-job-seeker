@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and, isNotNull } from "drizzle-orm";
+import { profiles, platform_profiles } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
@@ -18,10 +20,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Verify user owns this profile
   const profile = await db.query.profiles.findFirst({
-    where: {
-      id: parseInt(profileId),
-      user_id: user.id,
-    },
+    where: and(
+      eq(profiles.id, parseInt(profileId)),
+      eq(profiles.user_id, user.id),
+    ),
   });
 
   if (!profile) {
@@ -30,18 +32,20 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Get platforms where the user has credentials configured
   const platformProfiles = await db.query.platform_profiles.findMany({
-    where: {
-      profile_id: profile.id,
-      username: { not: null },
-    },
-    select: {
+    where: and(
+      eq(platform_profiles.profile_id, profile.id),
+      isNotNull(platform_profiles.username),
+    ),
+    columns: {
       id: true,
       username: true,
       status: true,
       last_login_at: true,
       login_error: true,
-      job_platforms: {
-        select: {
+    },
+    with: {
+      job_platform: {
+        columns: {
           id: true,
           name: true,
           key: true,
@@ -54,13 +58,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   // Transform to the expected structure
   const platforms = platformProfiles
-    .filter((pp) => pp.job_platforms)
+    .filter((pp) => pp.job_platform)
     .map((pp) => ({
-      id: pp.job_platforms!.id,
-      name: pp.job_platforms!.name,
-      key: pp.job_platforms!.key,
-      url: pp.job_platforms!.url,
-      loginPageUrl: pp.job_platforms!.login_page_url,
+      id: pp.job_platform!.id,
+      name: pp.job_platform!.name,
+      key: pp.job_platform!.key,
+      url: pp.job_platform!.url,
+      loginPageUrl: pp.job_platform!.login_page_url,
       hasCredentials: true,
       credentials: {
         id: pp.id,

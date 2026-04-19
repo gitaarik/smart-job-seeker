@@ -1,6 +1,8 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { dbDirect as db } from "$lib/server/db";
+import { dbDirect as db, queryRaw } from "$lib/server/db";
+import { eq, and, inArray, isNotNull, ne, desc, sql } from "drizzle-orm";
+import { applications, application_letters, application_status_log, job_platforms } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
 
 const activeStatuses = ["preparing", "sent", "interviewing", "negotiating"];
@@ -19,80 +21,79 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const platform = url.searchParams.get("platform") || "";
   const search = url.searchParams.get("q") || "";
 
-  const where: Record<string, unknown> = {
-    profile_id: layoutData.selectedProfile.id,
-  };
+  const conditions = [eq(applications.profile_id, layoutData.selectedProfile.id)];
 
-  if (group === "active") {
-    where.status = { in: activeStatuses };
-  } else if (group === "action") {
-    where.status = { in: activeStatuses };
-    where.status_action = { notIn: [...waitingActions, ""] };
-    where.NOT = { status_action: null };
+  if (group === "active" || group === "action") {
+    conditions.push(inArray(applications.status, activeStatuses));
+    if (group === "action") {
+      conditions.push(isNotNull(applications.status_action));
+      conditions.push(ne(applications.status_action, ""));
+      // Exclude waiting actions
+      for (const wa of waitingActions) {
+        conditions.push(ne(applications.status_action, wa));
+      }
+    }
   } else if (group === "finished") {
-    where.status = { in: finishedStatuses };
+    conditions.push(inArray(applications.status, finishedStatuses));
   }
 
   if (phase) {
-    where.status = phase;
+    conditions.push(eq(applications.status, phase));
   }
 
-  if (platform) {
-    where.jobs = { job_platform_id: parseInt(platform) };
-  }
-
-  if (search) {
-    const searchConditions = [
-      { jobs: { title: { contains: search, mode: "insensitive" } } },
-      { jobs: { company: { contains: search, mode: "insensitive" } } },
-      { application_note: { contains: search, mode: "insensitive" } },
-    ];
-    if (platform) {
-      // Combine platform filter with search via AND
-      const andConditions: Record<string, unknown>[] = [
-        { jobs: where.jobs },
-        { OR: searchConditions },
-      ];
-      delete where.jobs;
-      where.AND = andConditions;
-    } else {
-      where.OR = searchConditions;
-    }
-  }
-
-  const applications = await db.query.applications.findMany({
-    where,
+  // Note: platform and search filters that reference related job fields
+  // can't easily be done in Drizzle relational queries, so we filter in-memory
+  const allApplications = await db.query.applications.findMany({
+    where: and(...conditions),
     with: {
-      jobs: {
+      job: {
         with: {
-          job_platforms: true,
+          job_platform: true,
         },
       },
       application_letters: {
-        where: { status: "published" },
+        where: eq(application_letters.status, "published"),
         limit: 1,
       },
     },
-    orderBy: { date_created: "desc" },
+    orderBy: desc(applications.date_created),
   });
+
+  // Apply platform and search filters in-memory
+  let filteredApplications = allApplications;
+
+  if (platform) {
+    const platformId = parseInt(platform);
+    filteredApplications = filteredApplications.filter(
+      (app) => app.job?.job_platform?.id === platformId
+    );
+  }
+
+  if (search) {
+    const q = search.toLowerCase();
+    filteredApplications = filteredApplications.filter((app) =>
+      app.job?.title?.toLowerCase().includes(q) ||
+      app.job?.company?.toLowerCase().includes(q) ||
+      app.application_note?.toLowerCase().includes(q)
+    );
+  }
 
   // Get platforms that have applications for this profile (for the filter)
-  const platforms = await db.query.job_platforms.findMany({
-    where: {
-      jobs: {
-        some: {
-          applications: {
-            some: { profile_id: layoutData.selectedProfile.id },
-          },
-        },
-      },
-    },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const platformIds = new Set(
+    allApplications
+      .map((app) => app.job?.job_platform?.id)
+      .filter((id): id is number => id != null)
+  );
+
+  const platforms = platformIds.size > 0
+    ? await db.query.job_platforms.findMany({
+        where: inArray(job_platforms.id, [...platformIds]),
+        columns: { id: true, name: true },
+      })
+    : [];
 
   return {
-    applications,
+    applications: filteredApplications,
     platforms,
     currentGroup: group,
     currentPhase: phase,
@@ -115,25 +116,21 @@ export const actions: Actions = {
     }
 
     const now = new Date();
-    const application = await db.applications.create({
-      data: {
-        profile_id: profileId,
-        status: "preparing",
-        status_action: "Send application",
-        date_created: now,
-        date_updated: now,
-        application_seen_date: now,
-      },
-    });
+    const [application] = await db.insert(applications).values({
+      profile_id: profileId,
+      status: "preparing",
+      status_action: "Send application",
+      date_created: now,
+      date_updated: now,
+      application_seen_date: now,
+    }).returning();
 
-    await db.application_status_log.create({
-      data: {
-        application: application.id,
-        date_created: now,
-        from_status: null,
-        to_status: "preparing",
-        description: "Application created",
-      },
+    await db.insert(application_status_log).values({
+      application: application.id,
+      date_created: now,
+      from_status: null,
+      to_status: "preparing",
+      description: "Application created",
     });
 
     redirect(302, `/dashboard/applications/${application.id}`);
@@ -159,7 +156,7 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.applications.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(applications.id, id), eq(applications.profile_id, profileId)),
     });
 
     if (!existing) {
@@ -167,21 +164,16 @@ export const actions: Actions = {
     }
 
     const now = new Date();
-    await db.applications.update({
-      where: { id },
-      data: {
-        status,
-        date_updated: now,
-      },
-    });
+    await db.update(applications).set({
+      status,
+      date_updated: now,
+    }).where(eq(applications.id, id));
 
-    await db.application_status_log.create({
-      data: {
-        application: id,
-        date_created: now,
-        from_status: existing.status,
-        to_status: status,
-      },
+    await db.insert(application_status_log).values({
+      application: id,
+      date_created: now,
+      from_status: existing.status,
+      to_status: status,
     });
 
     return { success: true };
@@ -206,16 +198,14 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.applications.findFirst({
-      where: { id, profile_id: profileId },
+      where: and(eq(applications.id, id), eq(applications.profile_id, profileId)),
     });
 
     if (!existing) {
       return fail(404, { error: "Application not found" });
     }
 
-    await db.applications.delete({
-      where: { id },
-    });
+    await db.delete(applications).where(eq(applications.id, id));
 
     return { success: true };
   },

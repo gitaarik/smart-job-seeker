@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { search_tasks, search_task_runs } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
@@ -41,9 +43,9 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 
   // Get the job search and verify ownership
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
+    where: eq(search_tasks.id, searchTaskId),
     with: {
-      profiles: true,
+      profile: true,
     },
   });
 
@@ -51,16 +53,16 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
     throw error(404, "Job search not found");
   }
 
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
   // Get the run and verify it belongs to this job search
   const run = await db.query.search_task_runs.findFirst({
-    where: {
-      id: runId,
-      search_task_id: searchTaskId,
-    },
+    where: and(
+      eq(search_task_runs.id, runId),
+      eq(search_task_runs.search_task_id, searchTaskId),
+    ),
   });
 
   if (!run) {
@@ -73,24 +75,18 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Update the run with the user's response
-  await db.search_task_runs.update({
-    where: { id: runId },
-    data: {
-      user_response: response,
-      // If cancelling, also update status immediately
-      ...(response === "cancel" ? { status: "cancelled" } : {}),
-    },
-  });
+  await db.update(search_task_runs).set({
+    user_response: response,
+    // If cancelling, also update status immediately
+    ...(response === "cancel" ? { status: "cancelled" } : {}),
+  }).where(eq(search_task_runs.id, runId));
 
   // If cancelling, also update the search_tasks table
   if (response === "cancel") {
-    await db.search_tasks.update({
-      where: { id: searchTaskId },
-      data: {
-        status: "cancelled",
-        status_message: "Cancelled by user",
-      },
-    });
+    await db.update(search_tasks).set({
+      status: "cancelled",
+      status_message: "Cancelled by user",
+    }).where(eq(search_tasks.id, searchTaskId));
   }
 
   return json({

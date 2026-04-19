@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { profiles } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { browserInfoSchema, parseBody } from "$lib/server/validation/api-schemas";
 
@@ -16,8 +18,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   const profileId = parseIntParam(params.id, "profile");
 
   const profile = await db.query.profiles.findFirst({
-    where: { id: profileId, user_id: user.id },
-    select: {
+    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+    columns: {
       id: true,
       browser_language: true,
       browser_timezone: true,
@@ -42,10 +44,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   }
 
   if (Object.keys(updateData).length > 0) {
-    await db.profiles.update({
-      where: { id: profileId },
-      data: { ...updateData, date_updated: new Date() },
-    });
+    await db.update(profiles).set({ ...updateData, date_updated: new Date() })
+      .where(eq(profiles.id, profileId));
   }
 
   return json({ success: true, updated: Object.keys(updateData) });

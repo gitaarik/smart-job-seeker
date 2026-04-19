@@ -9,6 +9,8 @@ import { writeFile, readFile, mkdir, unlink } from "node:fs/promises";
 import { join, extname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { files } from "$lib/server/db/schema";
 
 const UPLOADS_DIR = join(process.cwd(), "uploads", "files");
 
@@ -61,16 +63,14 @@ export async function uploadFile(
   await mkdir(UPLOADS_DIR, { recursive: true });
   await writeFile(filePath, options.buffer);
 
-  await db.files.create({
-    data: {
-      id,
-      storage: "local",
-      filename_disk: diskName,
-      filename_download: options.filename,
-      title: options.title || options.filename,
-      type: mimeType,
-      filesize: BigInt(options.buffer.length),
-    },
+  await db.insert(files).values({
+    id,
+    storage: "local",
+    filename_disk: diskName,
+    filename_download: options.filename,
+    title: options.title || options.filename,
+    type: mimeType,
+    filesize: BigInt(options.buffer.length),
   });
 
   return {
@@ -84,8 +84,8 @@ export async function uploadFile(
 
 export async function deleteFile(fileId: string): Promise<void> {
   const file = await db.query.files.findFirst({
-    where: { id: fileId },
-    select: { filename_disk: true },
+    where: eq(files.id, fileId),
+    columns: { filename_disk: true },
   });
 
   if (file?.filename_disk) {
@@ -96,13 +96,13 @@ export async function deleteFile(fileId: string): Promise<void> {
     }
   }
 
-  await db.files.delete({ where: { id: fileId } }).catch(() => {});
+  await db.delete(files).where(eq(files.id, fileId)).catch(() => {});
 }
 
 export async function getFile(fileId: string): Promise<Buffer> {
   const file = await db.query.files.findFirst({
-    where: { id: fileId },
-    select: { filename_disk: true },
+    where: eq(files.id, fileId),
+    columns: { filename_disk: true },
   });
 
   if (!file?.filename_disk) {

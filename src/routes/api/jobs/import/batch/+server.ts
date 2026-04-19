@@ -9,6 +9,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { jobs, job_importers } from "$lib/server/db/schema";
 import { normalizeJobUrl } from "$lib/server/job/normalize-url";
 import { getProfileIdFromApiKey, findExistingJob } from "$lib/server/job/import-utils";
 import { getErrorMessage } from "$lib/server/utils/errors";
@@ -40,37 +42,36 @@ async function importSingleJob(
 
     if (hasChanges) {
       // Update existing job
-      await db.jobs.update({
-        where: { id: existing.id },
-        data: {
-          title: jobData.title,
-          job_poster: jobData.company,
-          job_description: jobData.description,
-          office_location: jobData.location,
-          salary_min: jobData.salaryMin,
-          salary_max: jobData.salaryMax,
-          salary_currency: jobData.salaryCurrency,
-          salary_period: jobData.salaryPeriod,
-          salary_duration_weeks: jobData.salaryDurationWeeks,
-          work_location: jobData.remote ? [jobData.remote] : undefined,
-          job_types: jobData.jobType ? [jobData.jobType] : undefined,
-          experience_levels: jobData.experienceLevel
-            ? [jobData.experienceLevel]
-            : undefined,
-          skills_required: jobData.skills,
-          date_posted: jobData.postedAt
-            ? new Date(jobData.postedAt)
-            : undefined,
-          job_platform_id: jobData.platformId,
-          date_updated: new Date(),
-        },
-      });
+      await db.update(jobs).set({
+        title: jobData.title,
+        job_poster: jobData.company,
+        job_description: jobData.description,
+        office_location: jobData.location,
+        salary_min: jobData.salaryMin,
+        salary_max: jobData.salaryMax,
+        salary_currency: jobData.salaryCurrency,
+        salary_period: jobData.salaryPeriod,
+        salary_duration_weeks: jobData.salaryDurationWeeks,
+        work_location: jobData.remote ? [jobData.remote] : undefined,
+        job_types: jobData.jobType ? [jobData.jobType] : undefined,
+        experience_levels: jobData.experienceLevel
+          ? [jobData.experienceLevel]
+          : undefined,
+        skills_required: jobData.skills,
+        date_posted: jobData.postedAt
+          ? new Date(jobData.postedAt)
+          : undefined,
+        job_platform_id: jobData.platformId,
+        date_updated: new Date(),
+      }).where(eq(jobs.id, existing.id));
 
-      await db.job_importers.upsert({
-        where: { job_profile: { job: existing.id, profile: profileId } },
-        create: { job: existing.id, profile: profileId },
-        update: {},
+      // Upsert importer
+      const existingImporter = await db.query.job_importers.findFirst({
+        where: (t, { and, eq }) => and(eq(t.job, existing.id), eq(t.profile, profileId)),
       });
+      if (!existingImporter) {
+        await db.insert(job_importers).values({ job: existing.id, profile: profileId });
+      }
 
       return {
         success: true,
@@ -80,12 +81,13 @@ async function importSingleJob(
       };
     }
 
-    // No changes — still record the importer
-    await db.job_importers.upsert({
-      where: { job_profile: { job_id: existing.id, profile_id: profileId } },
-      create: { job_id: existing.id, profile_id: profileId },
-      update: {},
+    // No changes — still record the importer (upsert)
+    const existingImporter = await db.query.job_importers.findFirst({
+      where: (t, { and, eq }) => and(eq(t.job, existing.id), eq(t.profile, profileId)),
     });
+    if (!existingImporter) {
+      await db.insert(job_importers).values({ job: existing.id, profile: profileId });
+    }
 
     return {
       success: true,
@@ -98,35 +100,31 @@ async function importSingleJob(
 
   // Create new job
   try {
-    const newJob = await db.jobs.create({
-      data: {
-        title: jobData.title,
-        job_poster: jobData.company,
-        source_url: normalizedUrl,
-        job_description: jobData.description,
-        office_location: jobData.location,
-        salary_min: jobData.salaryMin,
-        salary_max: jobData.salaryMax,
-        salary_currency: jobData.salaryCurrency,
-        salary_period: jobData.salaryPeriod,
-        salary_duration_weeks: jobData.salaryDurationWeeks,
-        work_location: jobData.remote ? [jobData.remote] : null,
-        job_types: jobData.jobType ? [jobData.jobType] : null,
-        experience_levels: jobData.experienceLevel
-          ? [jobData.experienceLevel]
-          : null,
-        skills_required: jobData.skills,
-        date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
-        job_platform_id: jobData.platformId,
-        status: "hiring",
-        date_created: new Date(),
-        date_updated: new Date(),
-      },
-    });
+    const [newJob] = await db.insert(jobs).values({
+      title: jobData.title,
+      job_poster: jobData.company,
+      source_url: normalizedUrl,
+      job_description: jobData.description,
+      office_location: jobData.location,
+      salary_min: jobData.salaryMin,
+      salary_max: jobData.salaryMax,
+      salary_currency: jobData.salaryCurrency,
+      salary_period: jobData.salaryPeriod,
+      salary_duration_weeks: jobData.salaryDurationWeeks,
+      work_location: jobData.remote ? [jobData.remote] : null,
+      job_types: jobData.jobType ? [jobData.jobType] : null,
+      experience_levels: jobData.experienceLevel
+        ? [jobData.experienceLevel]
+        : null,
+      skills_required: jobData.skills,
+      date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
+      job_platform_id: jobData.platformId,
+      status: "hiring",
+      date_created: new Date(),
+      date_updated: new Date(),
+    }).returning();
 
-    await db.job_importers.create({
-      data: { job: newJob.id, profile: profileId },
-    });
+    await db.insert(job_importers).values({ job: newJob.id, profile: profileId });
 
     return {
       success: true,
@@ -191,7 +189,7 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  const { jobs } = validation.data;
+  const { jobs: jobsList } = validation.data;
 
   // Step 3: Process each job
   const results: JobImportResponse[] = [];
@@ -200,7 +198,7 @@ export const POST: RequestHandler = async (event) => {
   let skipped = 0;
   let failed = 0;
 
-  for (const jobData of jobs) {
+  for (const jobData of jobsList) {
     try {
       const result = await importSingleJob(jobData, profileId);
       results.push(result);
@@ -234,7 +232,7 @@ export const POST: RequestHandler = async (event) => {
   const response: BatchJobImportResponse = {
     success: failed === 0,
     summary: {
-      total: jobs.length,
+      total: jobsList.length,
       created,
       updated,
       skipped,

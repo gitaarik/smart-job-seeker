@@ -1,5 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
+import { eq, and } from "drizzle-orm";
+import { jobs, job_statuses } from "$lib/server/db/schema";
 
 /**
  * Shared form action handlers for save/unsave/reject/unreject job statuses.
@@ -7,7 +9,7 @@ import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
  */
 
 export async function saveJob(profileId: number, jobId: number) {
-  const job = await db.query.jobs.findFirst({ where: { id: jobId } });
+  const job = await db.query.jobs.findFirst({ where: eq(jobs.id, jobId) });
   if (!job) return fail(404, { error: "Job not found" });
 
   const now = new Date();
@@ -22,15 +24,15 @@ export async function saveJob(profileId: number, jobId: number) {
 }
 
 export async function unsaveJob(profileId: number, jobId: number) {
-  await db.job_statuses.deleteMany({
-    where: { profile: profileId, job: jobId },
-  });
+  await db.delete(job_statuses).where(
+    and(eq(job_statuses.profile, profileId), eq(job_statuses.job, jobId)),
+  );
 
   return { success: true, action: "unsaved", jobId };
 }
 
 export async function rejectJob(profileId: number, jobId: number) {
-  const job = await db.query.jobs.findFirst({ where: { id: jobId } });
+  const job = await db.query.jobs.findFirst({ where: eq(jobs.id, jobId) });
   if (!job) return fail(404, { error: "Job not found" });
 
   const now = new Date();
@@ -45,9 +47,9 @@ export async function rejectJob(profileId: number, jobId: number) {
 }
 
 export async function unrejectJob(profileId: number, jobId: number) {
-  await db.job_statuses.deleteMany({
-    where: { profile: profileId, job: jobId },
-  });
+  await db.delete(job_statuses).where(
+    and(eq(job_statuses.profile, profileId), eq(job_statuses.job, jobId)),
+  );
 
   return { success: true, action: "unrejected", jobId };
 }

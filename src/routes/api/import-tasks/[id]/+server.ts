@@ -1,6 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { search_tasks, platform_profiles } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 import { hasDeviceAccess } from "$lib/server/device-shares";
@@ -15,15 +17,15 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   const searchTaskId = parseIntParam(params.id, "job search");
 
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
-    with: { profiles: true },
+    where: eq(search_tasks.id, searchTaskId),
+    with: { profile: true },
   });
 
   if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
@@ -63,16 +65,14 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   // Create new credential and assign it
   if (body.new_credential && searchTask.platform_id) {
-    const newCred = await db.platform_profiles.create({
-      data: {
-        profile_id: searchTask.profile_id,
-        platform_id: searchTask.platform_id,
-        username: body.new_credential.username,
-        password: body.new_credential.password || null,
-        status: "active",
-        date_created: new Date(),
-      },
-    });
+    const [newCred] = await db.insert(platform_profiles).values({
+      profile_id: searchTask.profile_id,
+      platform_id: searchTask.platform_id,
+      username: body.new_credential.username,
+      password: body.new_credential.password || null,
+      status: "active",
+      date_created: new Date(),
+    }).returning();
     data.platform_profile_id = newCred.id;
   }
   // Or select existing credential / clear credential
@@ -82,11 +82,11 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     } else {
       // Verify the credential belongs to this user and platform
       const cred = await db.query.platform_profiles.findFirst({
-        where: {
-          id: body.platform_profile_id,
-          profile_id: searchTask.profile_id,
-          platform_id: searchTask.platform_id ?? undefined,
-        },
+        where: (t, { and, eq }) => and(
+          eq(t.id, body.platform_profile_id!),
+          eq(t.profile_id, searchTask.profile_id),
+          ...(searchTask.platform_id ? [eq(t.platform_id, searchTask.platform_id)] : []),
+        ),
       });
       if (!cred) {
         throw error(404, "Credential not found");
@@ -95,10 +95,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     }
   }
 
-  await db.search_tasks.update({
-    where: { id: searchTaskId },
-    data,
-  });
+  await db.update(search_tasks).set(data)
+    .where(eq(search_tasks.id, searchTaskId));
 
   return json({ ok: true });
 };
@@ -113,21 +111,19 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   const searchTaskId = parseIntParam(params.id, "job search");
 
   const searchTask = await db.query.search_tasks.findFirst({
-    where: { id: searchTaskId },
-    with: { profiles: { select: { user_id: true } } },
+    where: eq(search_tasks.id, searchTaskId),
+    with: { profile: { columns: { user_id: true } } },
   });
 
   if (!searchTask) {
     throw error(404, "Job search not found");
   }
 
-  if (searchTask.profiles.user_id !== user.id) {
+  if (searchTask.profile.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
-  await db.search_tasks.delete({
-    where: { id: searchTaskId },
-  });
+  await db.delete(search_tasks).where(eq(search_tasks.id, searchTaskId));
 
   return json({ ok: true });
 };
