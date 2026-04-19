@@ -5,6 +5,14 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.78] - 2026-04-19
+
+2 commits since v0.4.77.
+
+### Fixed
+- CJS/ESM module conflicts in Docker builds and SSR bundle
+- Docker build caching performance
+
 ## [0.4.77] - 2026-04-19
 
 2 commits since v0.4.76.
