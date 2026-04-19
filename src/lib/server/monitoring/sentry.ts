@@ -5,7 +5,7 @@
  * Environment name is derived from SJS_APP_URL_HOST.
  */
 
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/sveltekit";
 
 function getEnvironmentName(): string {
   const host = process.env.SJS_APP_URL_HOST || "";

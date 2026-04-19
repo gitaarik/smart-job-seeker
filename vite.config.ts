@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit";
 import { enhancedImages } from "@sveltejs/enhanced-img";
 import { defineConfig } from "vite";
 
@@ -7,18 +8,13 @@ export default defineConfig({
   plugins: [
     enhancedImages(), // must come before the SvelteKit plugin
     tailwindcss(),
+    sentrySvelteKit({ autoInstrument: false }),
     sveltekit(),
   ],
   ssr: {
     // Keep CJS packages external so Node loads them natively instead of
     // bundling require() calls into the ESM server build.
-    external: [
-      "cheerio",
-      "drizzle-orm",
-      "bullmq",
-      "import-in-the-middle",
-      "require-in-the-middle",
-    ],
+    external: ["cheerio", "drizzle-orm", "bullmq"],
   },
   server: {
     allowedHosts: [
