@@ -259,9 +259,10 @@ export async function buildProfileExport(
     }
   }
 
-  // Helper to format dates
-  const formatDate = (date: Date | null): string | null => {
-    return date ? date.toISOString().split("T")[0] : null;
+  // Helper to format dates (handles both Date objects and date strings from Drizzle)
+  const formatDate = (date: Date | string | null): string | null => {
+    if (!date) return null;
+    return date instanceof Date ? date.toISOString().split("T")[0] : String(date);
   };
 
   // Build profile data

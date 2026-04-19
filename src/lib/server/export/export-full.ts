@@ -133,7 +133,11 @@ export async function buildFullExport(
       job_title: app.job?.title || undefined,
       company: app.job?.company || undefined,
       source_url: app.job?.source_url || undefined,
-      application_sent_date: app.application_sent_date?.toISOString().split("T")[0],
+      application_sent_date: app.application_sent_date
+        ? (app.application_sent_date instanceof Date
+            ? app.application_sent_date.toISOString().split("T")[0]
+            : String(app.application_sent_date))
+        : undefined,
       application_note: app.application_note || undefined,
       salary_expectation: app.salary_expectation
         ? Number(app.salary_expectation)
