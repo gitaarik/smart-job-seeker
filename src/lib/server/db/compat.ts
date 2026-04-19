@@ -18,30 +18,56 @@ type WhereClause = Record<string, unknown>;
 /**
  * Prisma uses table names for one() relations (e.g., 'jobs', 'profiles').
  * Drizzle introspection uses singular names (e.g., 'job', 'profile').
- * This map normalizes Prisma-style keys to Drizzle relation property names.
+ * This builds a context-aware mapping using the actual relation definitions.
  */
-const RELATION_KEY_MAP: Record<string, string> = {
-  ai_chat_templates: "ai_chat_template",
-  ai_chats: "ai_chat",
-  api_keys: "api_key",
-  application_letters: "application_letter",
-  applications: "application",
-  files: "file",
-  job_platforms: "job_platform",
-  jobs: "job",
-  platform_profiles: "platform_profile",
-  profiles: "profile",
-  scraper_agent_sessions: "scraper_agent_session",
-  search_task_runs: "search_task_run",
-  search_tasks: "search_task",
-  side_projects: "side_project",
-  tech_skill_categories: "tech_skill_category",
-  tech_skill_types: "tech_skill_type",
-  users: "user",
-  verification_email_addresses: "verification_email_address",
-  work_experience_projects: "work_experience_project",
-  work_experiences: "work_experience",
-};
+let _relationMap: Map<string, Map<string, string>> | undefined;
+
+function getRelationMap(schema: Record<string, unknown>): Map<string, Map<string, string>> {
+  if (_relationMap) return _relationMap;
+  _relationMap = new Map();
+  // Build map from schema's relation definitions
+  for (const [key, value] of Object.entries(schema)) {
+    if (!key.endsWith("Relations") || typeof value !== "object" || !value) continue;
+    const tableName = key.replace("Relations", "");
+    const relConfig = value as any;
+    // Access the relation config to get property names
+    // Relations are functions that return objects with property names
+    if (relConfig?.config) {
+      const propMap = new Map<string, string>();
+      for (const [propName] of Object.entries(relConfig.config)) {
+        propMap.set(propName, propName);
+      }
+      _relationMap.set(tableName, propMap);
+    }
+  }
+  return _relationMap;
+}
+
+/**
+ * Try to resolve a Prisma-style relation key to the actual Drizzle relation name.
+ * Checks: exact match first, then tries removing trailing 's' for one() relations.
+ */
+function resolveRelationKey(key: string, availableRelations?: Set<string>): string {
+  if (!availableRelations) return key;
+  // Exact match
+  if (availableRelations.has(key)) return key;
+  // Try singular (remove trailing 's') for one() relations
+  if (key.endsWith("s")) {
+    const singular = key.slice(0, -1);
+    if (availableRelations.has(singular)) return singular;
+  }
+  // Try removing 'es' suffix
+  if (key.endsWith("es")) {
+    const singular = key.slice(0, -2);
+    if (availableRelations.has(singular)) return singular;
+  }
+  // Try adding 's' for many() relations
+  if (!key.endsWith("s")) {
+    const plural = key + "s";
+    if (availableRelations.has(plural)) return plural;
+  }
+  return key; // fallback to original
+}
 
 /**
  * Convert a Prisma-style where clause to Drizzle SQL conditions.
@@ -275,7 +301,12 @@ function convertOrderBy(table: PgTable, orderBy: unknown): unknown {
  * Wrap a Drizzle relational query's options to convert Prisma-style
  * where objects and orderBy into Drizzle SQL conditions.
  */
-function convertQueryOptions(table: PgTable, options: any, tables?: Record<string, PgTable>): any {
+function convertQueryOptions(
+  table: PgTable,
+  options: any,
+  tables?: Record<string, PgTable>,
+  drizzleSchema?: any,
+): any {
   if (!options || typeof options !== "object") return options;
 
   const converted = { ...options };
@@ -301,13 +332,22 @@ function convertQueryOptions(table: PgTable, options: any, tables?: Record<strin
   if (converted.with && tables) {
     const convertedWith: Record<string, unknown> = {};
 
+    // Get available relation names for this table from the Drizzle schema
+    const tableName = Object.entries(tables).find(([, t]) => t === table)?.[0];
+    let availableRelations: Set<string> | undefined;
+    if (drizzleSchema && tableName) {
+      const tableSchema = drizzleSchema[tableName];
+      if (tableSchema?.relations) {
+        availableRelations = new Set(Object.keys(tableSchema.relations));
+      }
+    }
+
     for (const [relName, relOptions] of Object.entries(converted.with)) {
-      // Normalize Prisma relation names to Drizzle names (e.g., 'jobs' → 'job')
-      const drizzleKey = RELATION_KEY_MAP[relName] || relName;
+      const drizzleKey = resolveRelationKey(relName, availableRelations);
       const relTable = tables[relName] || tables[drizzleKey];
       const opts = relOptions === true ? true
         : typeof relOptions === "object" && relOptions !== null
-          ? convertQueryOptions(relTable || table, relOptions, tables)
+          ? convertQueryOptions(relTable || table, relOptions, tables, drizzleSchema)
           : relOptions;
       convertedWith[drizzleKey] = opts;
     }
@@ -323,6 +363,7 @@ function convertQueryOptions(table: PgTable, options: any, tables?: Record<strin
  */
 function createQueryProxy(drizzleDb: any, tables: Record<string, PgTable>) {
   const rawQuery = drizzleDb.query;
+  const drizzleSchema = drizzleDb._.schema;
 
   return new Proxy(rawQuery, {
     get(target: any, tableName: string) {
@@ -336,9 +377,17 @@ function createQueryProxy(drizzleDb: any, tables: Record<string, PgTable>) {
           const original = tTarget[method];
           if (typeof original !== "function") return original;
 
-          if (method === "findFirst" || method === "findMany") {
+          if (method === "findFirst") {
+            return async (options?: any) => {
+              const converted = convertQueryOptions(table, options, tables, drizzleSchema);
+              const result = await original.call(tTarget, converted);
+              return result ?? null; // Prisma returns null for not-found, Drizzle returns undefined
+            };
+          }
+
+          if (method === "findMany") {
             return (options?: any) => {
-              const converted = convertQueryOptions(table, options, tables);
+              const converted = convertQueryOptions(table, options, tables, drizzleSchema);
               return original.call(tTarget, converted);
             };
           }
