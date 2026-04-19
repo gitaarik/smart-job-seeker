@@ -50,6 +50,7 @@ RUN npx patchright install --with-deps chromium
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=build /app/drizzle ./drizzle
 
 # .env files are mounted at runtime via docker-compose volumes
 
