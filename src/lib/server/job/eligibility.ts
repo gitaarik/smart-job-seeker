@@ -12,7 +12,7 @@ import { sqlJoin, sql } from "$lib/server/db";
  * that produces human-readable failure reasons).
  */
 
-import { sql, type SQL } from "drizzle-orm";
+import { type SQL } from "drizzle-orm";
 import {
   JOB_TYPES,
   WORK_LOCATIONS,

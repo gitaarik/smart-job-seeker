@@ -6,7 +6,7 @@
  * Uses the same visibility scope (match_community_jobs) as the matcher itself.
  */
 
-import { sql, type SQL } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { buildEligibilityFilter } from "$lib/server/job/eligibility";
 import { getProfileSkills } from "$lib/server/job/match-utils";
