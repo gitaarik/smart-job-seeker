@@ -179,13 +179,13 @@
                 {job.office_location}
               </span>
             {/if}
-            {#if job.job_platforms}
+            {#if job.job_platform}
               <span class="flex items-center gap-1">
                 <PlatformLogo
-                  platformUrl={job.job_platforms.url}
+                  platformUrl={job.job_platform.url}
                   size="w-4 h-4"
                 />
-                {job.job_platforms.name}
+                {job.job_platform.name}
               </span>
             {/if}
           </div>
@@ -781,7 +781,7 @@
   <RescrapeMonitor
     jobId={job.id}
     sourceUrl={job.source_url}
-    platformName={job.job_platforms?.name ?? null}
+    platformName={job.job_platform?.name ?? null}
     platformCredentials={data.rescrapeConfig?.platformCredentials ?? []}
     platformId={data.rescrapeConfig?.platformId ?? 0}
     profileId={data.profileId}

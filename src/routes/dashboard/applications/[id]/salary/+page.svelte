@@ -43,7 +43,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
-  let job = $derived(app.jobs);
+  let job = $derived(app.job);
   let salarySettings = $derived(data.salarySettings);
 
   let editing = $state(false);

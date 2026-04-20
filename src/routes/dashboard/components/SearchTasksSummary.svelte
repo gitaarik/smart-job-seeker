@@ -14,7 +14,7 @@
     status_message: string | null;
     last_run: Date | string | null;
     last_run_jobs_found: number | null;
-    job_platforms: { name: string } | null;
+    job_platform: { name: string } | null;
   }
 
   interface SearchTasksData {
@@ -111,7 +111,7 @@
 
           <!-- Platform name + optional note -->
           <span class="text-[var(--dash-text)] truncate flex-1 min-w-0">
-            {searchTaskDisplayName(task.job_platforms?.name, task.note)}
+            {searchTaskDisplayName(task.job_platform?.name, task.note)}
           </span>
 
           <!-- Jobs found -->

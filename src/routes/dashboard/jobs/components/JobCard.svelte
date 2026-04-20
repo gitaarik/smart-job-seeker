@@ -37,7 +37,7 @@
     experience_levels?: unknown; // JsonValue - string[]
     date_posted: Date | string | null;
     date_created: Date | string | null;
-    job_platforms?: { name: string; url?: string } | null;
+    job_platform?: { name: string; url?: string } | null;
   }
 
   interface Match {
@@ -201,13 +201,13 @@
                 <span class="truncate max-w-[100px] sm:max-w-none">{job.office_location}</span>
               </span>
             {/if}
-            {#if job.job_platforms}
+            {#if job.job_platform}
               <span class="flex items-center gap-1">
                 <PlatformLogo
-                  platformUrl={job.job_platforms.url}
+                  platformUrl={job.job_platform.url}
                   size="w-3.5 h-3.5"
                 />
-                {job.job_platforms.name}
+                {job.job_platform.name}
               </span>
             {/if}
           </div>

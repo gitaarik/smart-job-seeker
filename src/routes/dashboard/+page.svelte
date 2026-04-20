@@ -127,7 +127,7 @@
       </div>
       <div class="space-y-2">
         {#each activeApplications as app (app.id)}
-          {@const job = app.jobs}
+          {@const job = app.job}
           <a
             href="/dashboard/applications/{app.id}"
             class="block"

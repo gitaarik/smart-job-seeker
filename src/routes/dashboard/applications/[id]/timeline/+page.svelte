@@ -20,7 +20,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
-  let entries = $derived(app.application_status_log || []);
+  let entries = $derived(app.application_status_logs || []);
 
   let showAddForm = $state(false);
   let editingId = $state<number | null>(null);

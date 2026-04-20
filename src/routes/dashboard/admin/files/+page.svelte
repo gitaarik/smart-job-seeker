@@ -71,9 +71,9 @@
       labels.push({ label: "Source CV", detail: p.name || `Profile #${p.id}` });
     }
     for (const af of file.applications_files || []) {
-      const app = af.applications;
+      const app = af.application;
       if (app) {
-        const job = app.jobs;
+        const job = app.job;
         labels.push({
           label: "Application",
           detail: job ? `${job.title} @ ${job.company}` : `#${app.id}`,

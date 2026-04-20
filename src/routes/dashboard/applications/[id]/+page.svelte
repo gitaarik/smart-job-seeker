@@ -35,7 +35,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
-  let job = $derived(app.jobs);
+  let job = $derived(app.job);
 
   let noteValue = $state(app.application_note || "");
   let noteSaving = $state(false);
@@ -129,9 +129,9 @@
     ).length || 0,
   );
   let fileCount = $derived(app.applications_files?.length || 0);
-  let statusLogCount = $derived(app.application_status_log?.length || 0);
+  let statusLogCount = $derived(app.application_status_logs?.length || 0);
   let recentStatusLog = $derived(
-    app.application_status_log?.slice(0, 5) || [],
+    app.application_status_logs?.slice(0, 5) || [],
   );
 
   let showDeleteConfirm = $state(false);
@@ -165,13 +165,13 @@
             {job.office_location}
           </span>
         {/if}
-        {#if job.job_platforms}
+        {#if job.job_platform}
           <span class="flex items-center gap-1">
             <PlatformLogo
-              platformUrl={job.job_platforms.url}
+              platformUrl={job.job_platform.url}
               size="w-4 h-4"
             />
-            {job.job_platforms.name}
+            {job.job_platform.name}
           </span>
         {/if}
       </div>

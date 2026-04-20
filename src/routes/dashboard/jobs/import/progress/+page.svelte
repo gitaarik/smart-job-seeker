@@ -35,7 +35,7 @@
     date_created: string | null;
     skill_match_percentage: number | null;
     match_summary: string | null;
-    jobs: {
+    job: {
       id: number;
       title: string | null;
       company: string | null;
@@ -426,15 +426,15 @@
               <!-- Job Info -->
               <div class="flex-1 min-w-0">
                 <div class="text-sm font-medium text-[var(--dash-text)] truncate">
-                  {match.jobs?.title || "Untitled Job"}
+                  {match.job?.title || "Untitled Job"}
                 </div>
                 <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
-                  {#if match.jobs?.company}
-                    <span>{match.jobs.company}</span>
+                  {#if match.job?.company}
+                    <span>{match.job.company}</span>
                   {/if}
-                  {#if match.jobs?.office_location}
+                  {#if match.job?.office_location}
                     <span class="text-[var(--dash-text-muted)]">
-                      {match.jobs.office_location}
+                      {match.job.office_location}
                     </span>
                   {/if}
                 </div>

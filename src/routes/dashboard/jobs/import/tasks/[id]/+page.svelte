@@ -217,7 +217,7 @@
     status_message: string | null;
     job_id: number | null;
     was_created: boolean | null;
-    jobs: JobDetails | null;
+    job: JobDetails | null;
   }
 
   interface RunItemsData {
@@ -1456,14 +1456,14 @@
                   <button
                     type="button"
                     onclick={() =>
-                      item.jobs &&
+                      item.job &&
                       toggleItemExpanded(item.id)}
                     class={`w-full flex items-start sm:items-center gap-2 sm:gap-3 px-3 py-2 text-left transition-all ${
-                      item.jobs
+                      item.job
                         ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
                         : "cursor-default"
                     }`}
-                    disabled={!item.jobs}
+                    disabled={!item.job}
                   >
                     <!-- Position + status indicator -->
                     <div class="flex items-center gap-2 pt-0.5 sm:pt-0 shrink-0">
@@ -1491,7 +1491,7 @@
                       <div class="flex flex-wrap items-center gap-2">
                         {#if item.job_id && item.status === "completed"}
                           <span class="text-sm font-medium text-[var(--dash-primary)]">
-                            {item.jobs?.title || item.title || "Untitled"}
+                            {item.job?.title || item.title || "Untitled"}
                           </span>
                         {:else}
                           <span class="text-sm font-medium text-[var(--dash-text)]">
@@ -1509,7 +1509,7 @@
                         >
                           {item.status}
                         </span>
-                        {#if item.jobs}
+                        {#if item.job}
                           <FontAwesomeIcon
                             icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
                             class="hidden sm:block w-3 h-3 text-[var(--dash-text-muted)] shrink-0"
@@ -1517,16 +1517,16 @@
                         {/if}
                       </div>
                       <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]">
-                        {#if item.jobs?.company || item.company}
+                        {#if item.job?.company || item.company}
                           <span class="flex items-center gap-1">
                             <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
-                            {item.jobs?.company || item.company}
+                            {item.job?.company || item.company}
                           </span>
                         {/if}
-                        {#if item.jobs?.office_location || item.location}
+                        {#if item.job?.office_location || item.location}
                           <span class="flex items-center gap-1">
                             <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
-                            {item.jobs?.office_location || item.location}
+                            {item.job?.office_location || item.location}
                           </span>
                         {/if}
                         <!-- Status badge on mobile: shown in meta row -->
@@ -1535,7 +1535,7 @@
                         >
                           {item.status}
                         </span>
-                        {#if item.jobs}
+                        {#if item.job}
                           <FontAwesomeIcon
                             icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
                             class="sm:hidden w-3 h-3 text-[var(--dash-text-muted)]"
@@ -1551,8 +1551,8 @@
                   </button>
 
                   <!-- Expanded job details -->
-                  {#if expandedItemId === item.id && item.jobs}
-                    {@const job = item.jobs}
+                  {#if expandedItemId === item.id && item.job}
+                    {@const job = item.job}
                     {@const workLocs = Array.isArray(job.work_location) ? job.work_location : []}
                     {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
                     {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
@@ -1716,7 +1716,7 @@
 {/snippet}
 
 <svelte:head>
-  <title>{searchTaskDisplayName(searchTask.job_platforms?.name, searchTask.note)} - Import Tasks - Smart Job Seeker</title>
+  <title>{searchTaskDisplayName(searchTask.job_platform?.name, searchTask.note)} - Import Tasks - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -1732,9 +1732,9 @@
     <span class="text-lg text-[var(--dash-text-muted)] hidden sm:inline">·</span>
     <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
       <div class="flex items-center gap-3 shrink-0">
-        {#if searchTask.job_platforms}
-          <PlatformLogo platformUrl={searchTask.job_platforms.url} size="w-5 h-5" />
-          <span class="text-lg font-medium text-[var(--dash-text)]">{searchTask.job_platforms.name}</span>
+        {#if searchTask.job_platform}
+          <PlatformLogo platformUrl={searchTask.job_platform.url} size="w-5 h-5" />
+          <span class="text-lg font-medium text-[var(--dash-text)]">{searchTask.job_platform.name}</span>
         {/if}
         {#if !isEditingNote && !searchTask.note}
           <button
@@ -1829,7 +1829,7 @@
               </p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
                 Scraping jobs from {
-                  searchTask.job_platforms?.name || "platform"
+                  searchTask.job_platform?.name || "platform"
                 }
               </p>
             </div>

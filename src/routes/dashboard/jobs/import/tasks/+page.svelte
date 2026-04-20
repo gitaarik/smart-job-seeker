@@ -47,8 +47,8 @@
     switch (sortBy) {
       case "alpha":
         return tasks.sort((a, b) => {
-          const nameA = a.job_platforms?.name?.toLowerCase() ?? "";
-          const nameB = b.job_platforms?.name?.toLowerCase() ?? "";
+          const nameA = a.job_platform?.name?.toLowerCase() ?? "";
+          const nameB = b.job_platform?.name?.toLowerCase() ?? "";
           return nameA.localeCompare(nameB);
         });
       case "last_run": {
@@ -401,7 +401,7 @@
                 "
               >
                 <PlatformLogo
-                  platformUrl={search.job_platforms?.url}
+                  platformUrl={search.job_platform?.url}
                   size="w-7 h-7"
                 />
               </div>
@@ -413,7 +413,7 @@
                 <h3
                   class="font-medium text-[var(--dash-text)] text-sm sm:text-base"
                 >
-                  {search.job_platforms?.name || "Search task"}
+                  {search.job_platform?.name || "Search task"}
                   {#if search.note}
                     <span class="text-[var(--dash-text-secondary)] font-normal">—</span>
                     <span
@@ -561,7 +561,7 @@
                 "
               >
                 <PlatformLogo
-                  platformUrl={search.job_platforms?.url}
+                  platformUrl={search.job_platform?.url}
                   size="w-6 h-6"
                 />
               </div>

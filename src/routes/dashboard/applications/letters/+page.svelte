@@ -231,7 +231,7 @@
                 </div>
                 <p class="text-sm text-[var(--dash-text-secondary)] truncate">
                   {
-                    item.application.jobs?.title ||
+                    item.application.job?.title ||
                       "Unknown Position"
                   } •
                   {

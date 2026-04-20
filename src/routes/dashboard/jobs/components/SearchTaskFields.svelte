@@ -192,7 +192,7 @@
   let searchUrlInput = $state<string>(searchTask?.search_url ?? "");
   let searchTermInput = $state<string>(searchTask?.search_term ?? "");
   let loginUrlInput = $state<string>(
-    searchTask?.job_platforms?.login_page_url ?? "",
+    searchTask?.job_platform?.login_page_url ?? "",
   );
   let isSavingSearchUrl = $state(false);
   let isSavingSearchTerm = $state(false);
@@ -206,7 +206,7 @@
   let loginUrlDirty = $derived(
     isEdit &&
       loginUrlInput.trim() !==
-        (searchTask?.job_platforms?.login_page_url ?? ""),
+        (searchTask?.job_platform?.login_page_url ?? ""),
   );
 
   let showAdvancedSearch = $state(false);
@@ -394,8 +394,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login_page_url: url }),
       });
-      if (searchTask.job_platforms) {
-        searchTask.job_platforms.login_page_url = url;
+      if (searchTask.job_platform) {
+        searchTask.job_platform.login_page_url = url;
       }
     } catch (err) {
       console.error("Failed to save login URL:", err);
@@ -598,7 +598,7 @@
   }) {
     searchUrlInput = newData.searchTask.search_url ?? "";
     searchTermInput = newData.searchTask.search_term ?? "";
-    loginUrlInput = newData.searchTask.job_platforms?.login_page_url ?? "";
+    loginUrlInput = newData.searchTask.job_platform?.login_page_url ?? "";
     maxJobsEnabled = newData.searchTask.max_jobs != null;
     maxJobsInput = newData.searchTask.max_jobs?.toString() ?? "";
     skipFirstEnabled = newData.searchTask.skip_first != null;
@@ -656,7 +656,7 @@
     if (isEdit && searchTask) {
       searchUrlInput = searchTask.search_url ?? "";
       searchTermInput = searchTask.search_term ?? "";
-      loginUrlInput = searchTask.job_platforms?.login_page_url ?? "";
+      loginUrlInput = searchTask.job_platform?.login_page_url ?? "";
       maxJobsEnabled = searchTask.max_jobs != null;
       maxJobsInput = searchTask.max_jobs?.toString() ?? "";
       skipFirstEnabled = searchTask.skip_first != null;
@@ -989,9 +989,9 @@
                     placeholder="https://..."
                     class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                   />
-                  {#if searchTask?.job_platforms?.login_page_url}
+                  {#if searchTask?.job_platform?.login_page_url}
                     <a
-                      href={searchTask.job_platforms.login_page_url}
+                      href={searchTask.job_platform.login_page_url}
                       target="_blank"
                       rel="noopener"
                       class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
@@ -1011,18 +1011,18 @@
               isSavingLoginUrl,
               saveLoginUrl,
               () => (loginUrlInput =
-                searchTask?.job_platforms?.login_page_url ?? ""),
+                searchTask?.job_platform?.login_page_url ?? ""),
             )}
                   </div>
                 {/if}
-              {:else if searchTask?.job_platforms?.login_page_url}
+              {:else if searchTask?.job_platform?.login_page_url}
                 <a
-                  href={searchTask.job_platforms.login_page_url}
+                  href={searchTask.job_platform.login_page_url}
                   target="_blank"
                   rel="noopener"
                   class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
                 >
-                  {searchTask.job_platforms.login_page_url}
+                  {searchTask.job_platform.login_page_url}
                   <FontAwesomeIcon
                     icon={faExternalLinkAlt}
                     class="w-3 h-3 flex-shrink-0"
@@ -1208,7 +1208,7 @@
               bind:loginMode={editLoginMode}
               platformId={searchTask?.platform_id}
               {profileId}
-              platformName={searchTask?.job_platforms?.name}
+              platformName={searchTask?.job_platform?.name}
               oncredentialadded={() => {
                 // Auto-save credential selection when a new one is added via "Add & Select"
                 saveCredential();

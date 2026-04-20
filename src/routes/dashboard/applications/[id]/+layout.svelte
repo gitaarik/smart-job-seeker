@@ -37,7 +37,7 @@
 </script>
 
 <svelte:head>
-  <title>{app.jobs?.title || 'Application'} - Applications - Smart Job Seeker</title>
+  <title>{app.job?.title || 'Application'} - Applications - Smart Job Seeker</title>
 </svelte:head>
 
 <TabNav {tabs} isActive={isTabActive} inset>
@@ -51,8 +51,8 @@
         <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
         <span class="text-sm">All Applications</span>
       </a>
-      {#if app.jobs?.title}
-        <h1 class="text-sm font-medium text-[var(--dash-text)] mt-1 truncate">{app.jobs.title}</h1>
+      {#if app.job?.title}
+        <h1 class="text-sm font-medium text-[var(--dash-text)] mt-1 truncate">{app.job.title}</h1>
       {/if}
     </div>
   {/snippet}

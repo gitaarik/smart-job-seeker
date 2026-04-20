@@ -362,7 +362,7 @@
   {:else}
     <div class="space-y-3">
       {#each applications as app (app.id)}
-        {@const job = app.jobs}
+        {@const job = app.job}
         <a
           href="/dashboard/applications/{app.id}"
           data-app-id={app.id}
@@ -389,13 +389,13 @@
                     <span class="truncate max-w-[100px] sm:max-w-none">{job.office_location}</span>
                   </span>
                 {/if}
-                {#if job?.job_platforms}
+                {#if job?.job_platform}
                   <span class="flex items-center gap-1">
                     <PlatformLogo
-                      platformUrl={job.job_platforms.url}
+                      platformUrl={job.job_platform.url}
                       size="w-3.5 h-3.5"
                     />
-                    {job.job_platforms.name}
+                    {job.job_platform.name}
                   </span>
                 {/if}
               </div>

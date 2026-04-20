@@ -15,7 +15,7 @@
     skills_required: unknown;
     date_posted: Date | string | null;
     date_created: Date | string | null;
-    job_platforms?: { name: string } | null;
+    job_platform?: { name: string } | null;
   }
 
   interface Match {
