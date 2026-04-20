@@ -2318,7 +2318,24 @@
         </div>
         <!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
         <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video {showBrowserLogs ? 'hidden' : ''}">
-          {#if browserViewMode === "screenshot"}
+          {#if expectsCloudBrowser && browserViewUrl}
+            <iframe
+              src={browserViewUrl}
+              class="absolute inset-0 w-full h-full border-0"
+              title="Cloud browser view"
+            ></iframe>
+          {:else if expectsCloudBrowser}
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
+            >
+              <div class="text-center">
+                <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
+                <p class="text-sm text-[var(--dash-text-muted)]">
+                  Starting cloud browser...
+                </p>
+              </div>
+            </div>
+          {:else if browserViewMode === "screenshot"}
             {#if screenshotSrc}
               <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
               <div
