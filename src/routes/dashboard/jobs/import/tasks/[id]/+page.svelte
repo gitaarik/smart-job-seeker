@@ -1355,6 +1355,26 @@
     });
   });
 
+  // Reactively start/stop desktop connection polling when tunnel mode changes
+  $effect(() => {
+    if (isTunnelMode) {
+      checkDesktopStatus();
+      desktopPollInterval = setInterval(checkDesktopStatus, 15000);
+    } else {
+      if (desktopPollInterval) {
+        clearInterval(desktopPollInterval);
+        desktopPollInterval = null;
+      }
+      desktopConnected = null;
+    }
+    return () => {
+      if (desktopPollInterval) {
+        clearInterval(desktopPollInterval);
+        desktopPollInterval = null;
+      }
+    };
+  });
+
   onMount(() => {
     // Load runs history
     loadRuns();
@@ -1363,17 +1383,10 @@
     if (needsIntervention || isQueued || isStoppingStatus) {
       startPolling();
     }
-
-    // Poll desktop connection status (only relevant in tunnel mode)
-    if (isTunnelMode) {
-      checkDesktopStatus();
-      desktopPollInterval = setInterval(checkDesktopStatus, 15000);
-    }
   });
 
   onDestroy(() => {
     stopPolling();
-    if (desktopPollInterval) clearInterval(desktopPollInterval);
     // Clean up all log and item polling intervals
     Object.values(logPollIntervals).forEach((interval) =>
       clearInterval(interval)
