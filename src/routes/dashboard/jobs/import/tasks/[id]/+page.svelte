@@ -252,13 +252,18 @@
 
   // Featured run = shown in the status card instead of history.
   // Stays there for the lifetime of this page session (even after completing).
-  // On page load, we pick the currently active run (if any). Once set, it sticks.
+  // On page load, we pick the currently active run (if any), or fall back to the
+  // most recent run. Once set, it sticks.
   const activeRunStatuses = ["running", "queued", "blocked", "stopping"];
   let featuredRunId = $state<number | null>(null);
   $effect(() => {
     if (featuredRunId !== null) return; // already locked in
     const active = runs.find((r) => activeRunStatuses.includes(r.status));
-    if (active) featuredRunId = active.id;
+    if (active) {
+      featuredRunId = active.id;
+    } else if (runs.length > 0) {
+      featuredRunId = runs[0].id; // most recent run (runs are sorted by date desc)
+    }
   });
   let featuredRun = $derived(featuredRunId !== null ? (runs.find((r) => r.id === featuredRunId) ?? null) : null);
   let historyRuns = $derived(runs.filter((r) => r.id !== featuredRunId));
@@ -2268,7 +2273,12 @@
               </a>
             {/if}
             <button
-              onclick={() => (showBrowserLogs = !showBrowserLogs)}
+              onclick={() => {
+                showBrowserLogs = !showBrowserLogs;
+                if (showBrowserLogs && featuredRunId && !runLogs[featuredRunId]) {
+                  loadRunLogs(featuredRunId);
+                }
+              }}
               class="
                 px-2 py-1 text-xs rounded transition-colors {showBrowserLogs
                 ? 'bg-[var(--dash-primary)] text-white'
