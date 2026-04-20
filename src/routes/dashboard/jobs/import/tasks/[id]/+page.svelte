@@ -709,7 +709,17 @@
       );
       if (response.ok) {
         const data = await response.json();
-        runLogs[runId] = data.logs;
+        // Merge with any logs that polling may have added concurrently
+        const existing = runLogs[runId] || [];
+        if (existing.length === 0) {
+          runLogs[runId] = data.logs;
+        } else {
+          const existingIds = new Set(existing.map((l: { id: number }) => l.id));
+          const newLogs = data.logs.filter((l: { id: number }) => !existingIds.has(l.id));
+          if (newLogs.length > 0) {
+            runLogs[runId] = [...existing, ...newLogs];
+          }
+        }
         scrollLogToBottom(runId);
       }
     } catch (err) {
@@ -914,8 +924,13 @@
         if (response.ok) {
           const data = await response.json();
           if (data.logs.length > 0) {
-            runLogs[runId] = [...existingLogs, ...data.logs];
-            scrollLogToBottom(runId);
+            // Deduplicate by log id to prevent Svelte keyed each errors
+            const existingIds = new Set(existingLogs.map((l: { id: number }) => l.id));
+            const newLogs = data.logs.filter((l: { id: number }) => !existingIds.has(l.id));
+            if (newLogs.length > 0) {
+              runLogs[runId] = [...existingLogs, ...newLogs];
+              scrollLogToBottom(runId);
+            }
           }
 
           // Stop polling if run is complete
