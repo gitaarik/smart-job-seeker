@@ -389,7 +389,7 @@
     isSavingLoginUrl = true;
     try {
       const url = loginUrlInput.trim() || null;
-      await fetch(`/api/platforms/${searchTask.platform}`, {
+      await fetch(`/api/platforms/${searchTask.platform_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login_page_url: url }),
