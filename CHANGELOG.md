@@ -5,6 +5,18 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.85] - 2026-04-20
+
+5 commits since v0.4.84.
+
+### Changed
+- Completed migration of scraper worker from Prisma to Drizzle ORM
+
+### Fixed
+- Fixed duplicate key error and improved log loading behavior in browser popup
+- Fixed matcher toISOString crash when converting database query date strings
+- Resolved scraper Drizzle migration issues
+
 ## [0.4.84] - 2026-04-20
 
 2 commits since v0.4.83.
