@@ -407,9 +407,19 @@
 
   {#if credentials.length === 0 && !showAddForm}
     <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-      No credentials configured{platformName ? ` for ${platformName}` : ""}. Add
-      credentials for automatic login.
+      No credentials configured{platformName ? ` for ${platformName}` : ""}.
     </p>
+  {/if}
+
+  {#if !showAddForm && !disabled && loginMode === "auto"}
+    <button
+      type="button"
+      onclick={() => (showAddForm = true)}
+      class="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--dash-primary)] border border-dashed border-[var(--dash-border)] rounded-md hover:bg-[var(--dash-bg)] transition-colors w-full justify-center"
+    >
+      <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+      Add credentials
+    </button>
   {/if}
 
   {#if showAddForm && !disabled}

@@ -1214,7 +1214,7 @@
                 saveCredential();
               }}
               oncredentialdeleted={(credId) => {
-                if (searchTask?.platform_id_profile_id === credId) {
+                if (searchTask?.platform_profile_id === credId) {
                   searchTask.platform_profile_id = null;
                   editSavedCredentialId = "none";
                 }

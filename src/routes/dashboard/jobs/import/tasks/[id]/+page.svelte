@@ -144,6 +144,7 @@
   let isStarting = $state(false);
   let isStopping = $state(false);
   let isSendingFeedback = $state(false);
+  let feedbackSent = $state(false);
   let errorMessage = $state<string | null>(null);
   let showBrowser = $state(false);
   let showBrowserLogs = $state(false);
@@ -1017,6 +1018,9 @@
         );
         const result = await response.json();
 
+        if (feedbackSent && result.status !== "blocked") {
+          feedbackSent = false;
+        }
         searchTask.status = result.status;
         searchTask.status_message = result.statusMessage;
         searchTask.last_run = result.lastRun;
@@ -1181,7 +1185,11 @@
         liveUrl = null;
         await loadRuns();
       }
-      // For continue/skip, the scraper will pick it up and status will update via polling
+      // For continue/skip, keep feedbackSent=true so buttons stay disabled
+      // until the status changes from "blocked" via polling
+      if (response !== "cancel") {
+        feedbackSent = true;
+      }
     } catch (err) {
       errorMessage = `Failed to send ${response} response`;
       console.error(err);
@@ -2055,19 +2063,19 @@
           {#if searchTask.status === "blocked"}
             <button
               onclick={() => sendFeedback("continue")}
-              disabled={isSendingFeedback}
+              disabled={isSendingFeedback || feedbackSent}
               class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {#if isSendingFeedback}
+              {#if isSendingFeedback || feedbackSent}
                 <Spinner size="w-4 h-4" />
               {:else}
                 <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
               {/if}
-              <span>Continue</span>
+              <span>{feedbackSent ? "Resuming..." : "Continue"}</span>
             </button>
             <button
               onclick={() => sendFeedback("skip")}
-              disabled={isSendingFeedback}
+              disabled={isSendingFeedback || feedbackSent}
               class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-bg)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="Skip current action and move to next"
             >
@@ -2523,19 +2531,19 @@
               <div class="flex items-center gap-2 shrink-0">
                 <button
                   onclick={() => sendFeedback("continue")}
-                  disabled={isSendingFeedback}
+                  disabled={isSendingFeedback || feedbackSent}
                   class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  {#if isSendingFeedback}
+                  {#if isSendingFeedback || feedbackSent}
                     <Spinner size="w-3 h-3" />
                   {:else}
                     <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
                   {/if}
-                  <span>Continue</span>
+                  <span>{feedbackSent ? "Resuming..." : "Continue"}</span>
                 </button>
                 <button
                   onclick={() => sendFeedback("skip")}
-                  disabled={isSendingFeedback}
+                  disabled={isSendingFeedback || feedbackSent}
                   class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   title="Skip current action"
                 >
