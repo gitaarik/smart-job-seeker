@@ -2461,9 +2461,8 @@
           {/if}
         <!-- Logs overlay (on top of browser view, semi-transparent) -->
         {#if showBrowserLogs}
-          <div class="absolute inset-0 z-10 flex flex-col">
-            <div class="flex-1 flex flex-col bg-[var(--dash-card)]/90 backdrop-blur-sm">
-              <div class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)]/95 border-b border-[var(--dash-border)] shrink-0">
+          <div class="absolute inset-0 z-10 flex flex-col bg-black/80 backdrop-blur-sm">
+              <div class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)] border-b border-[var(--dash-border)] shrink-0">
                 <div class="flex items-center gap-2">
                   <select
                     bind:value={logLevelFilter}
@@ -2487,7 +2486,7 @@
               </div>
               <div
                 bind:this={browserLogRef}
-                class="overflow-y-auto flex-1 bg-[var(--dash-card)]"
+                class="overflow-y-auto flex-1"
               >
                 {#if !featuredRunId || !runLogs[featuredRunId] || runLogs[featuredRunId].length === 0}
                   <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
@@ -2515,7 +2514,6 @@
                   </div>
                 {/if}
               </div>
-            </div>
           </div>
         {/if}
         <!-- Intervention controls overlay (anchored to bottom of browser view) -->
