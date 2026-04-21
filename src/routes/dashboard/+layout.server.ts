@@ -63,15 +63,18 @@ export const load: LayoutServerLoad = async (event) => {
     selectedProfileId = profiles[0].id;
   }
 
-  // Set cookie for persistence (must happen before async work below,
-  // otherwise response streaming may start before the cookie is set)
-  event.cookies.set("selected_profile_id", String(selectedProfileId), {
-    path: "/dashboard",
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    httpOnly: true,
-    sameSite: "lax",
-    secure: event.url.protocol === "https:",
-  });
+  // Only set cookie when the value changed — avoids "Cannot use cookies.set()
+  // after the response has been generated" errors with SvelteKit streaming
+  const currentCookie = event.cookies.get("selected_profile_id");
+  if (currentCookie !== String(selectedProfileId)) {
+    event.cookies.set("selected_profile_id", String(selectedProfileId), {
+      path: "/dashboard",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      httpOnly: true,
+      sameSite: "lax",
+      secure: event.url.protocol === "https:",
+    });
+  }
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
