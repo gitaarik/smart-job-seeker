@@ -1903,11 +1903,14 @@
                   <code class="text-xs font-mono text-[var(--dash-primary)] select-all break-all">{verificationEmailAddress}</code>
                   <button
                     onclick={copyVerificationEmail}
-                    class="shrink-0 p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+                    class="shrink-0 p-1 transition-colors {copiedVerifyEmail ? 'text-green-600' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]'}"
                     title="Copy email address"
                   >
                     <FontAwesomeIcon icon={copiedVerifyEmail ? faCheck : faCopy} class="w-3 h-3" />
                   </button>
+                  {#if copiedVerifyEmail}
+                    <span class="text-xs text-green-600">Copied!</span>
+                  {/if}
                 </div>
               {/if}
             </div>
@@ -2338,7 +2341,7 @@
           </div>
         </div>
         <!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
-        <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video {showBrowserLogs ? 'hidden' : ''}">
+        <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video">
           {#if expectsCloudBrowser && browserViewUrl}
             <iframe
               src={browserViewUrl}
@@ -2456,12 +2459,11 @@
               </div>
             </div>
           {/if}
-        </div>
-        <!-- Logs view (same size as browser, shown when logs tab is active) -->
+        <!-- Logs overlay (on top of browser view, semi-transparent) -->
         {#if showBrowserLogs}
-          <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video flex flex-col">
-            <div class="absolute inset-0 flex flex-col">
-              <div class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)] border-b border-[var(--dash-border)] shrink-0">
+          <div class="absolute inset-0 z-10 flex flex-col">
+            <div class="flex-1 flex flex-col bg-[var(--dash-card)]/90 backdrop-blur-sm">
+              <div class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)]/95 border-b border-[var(--dash-border)] shrink-0">
                 <div class="flex items-center gap-2">
                   <select
                     bind:value={logLevelFilter}
@@ -2516,9 +2518,10 @@
             </div>
           </div>
         {/if}
+        <!-- Intervention controls overlay (anchored to bottom of browser view) -->
         {#if isBlocked}
           <div
-            class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)] space-y-2 shrink-0 overflow-y-auto max-h-[45vh] sm:max-h-none"
+            class="absolute bottom-0 left-0 right-0 z-10 p-3 bg-[var(--dash-card)]/95 backdrop-blur-sm border-t border-[var(--dash-warning)]/30 space-y-2 overflow-y-auto max-h-[60%] shadow-[0_-2px_8px_rgba(0,0,0,0.1)]"
           >
             <!-- Intervention message + action buttons -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -2535,9 +2538,12 @@
                     <FontAwesomeIcon icon={faEnvelope} class="w-3 h-3 text-[var(--dash-primary)]" />
                     <span>Auto-verify: forward the email to</span>
                     <code class="font-mono text-[var(--dash-primary)] select-all">{verificationEmailAddress}</code>
-                    <button onclick={copyVerificationEmail} class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]" title="Copy">
+                    <button onclick={copyVerificationEmail} class="transition-colors {copiedVerifyEmail ? 'text-green-600' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]'}" title="Copy">
                       <FontAwesomeIcon icon={copiedVerifyEmail ? faCheck : faCopy} class="w-2.5 h-2.5" />
                     </button>
+                    {#if copiedVerifyEmail}
+                      <span class="text-green-600">Copied!</span>
+                    {/if}
                   </p>
                 {/if}
               </div>
@@ -2659,6 +2665,7 @@
             </div>
           </div>
         {/if}
+        </div>
       </Card>
     </div>
   {/if}
