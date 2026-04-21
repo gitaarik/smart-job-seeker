@@ -1797,7 +1797,7 @@
           </div>
         {/if}
 
-        <!-- Keep Minimized (desktop/tunnel mode) -->
+        <!-- Background mode (desktop tunnel only — Docker/headless always shows tabs) -->
         {#if isTunnelMode}
           <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
             <div class="flex items-center flex-wrap gap-3">
@@ -1815,7 +1815,7 @@
                   class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
                 />
                 <span class="text-sm text-[var(--dash-text-secondary)]"
-                >Keep Chrome minimized</span>
+                >Background mode</span>
               </label>
               {#if isAdd}
                 <input
@@ -1833,8 +1833,8 @@
               {/if}
             </div>
             <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              When enabled, Chrome is automatically minimized while the scraper
-              runs. Disable to watch the browser in real-time.
+              When enabled, Chrome won't steal focus while the scraper runs.
+              Disable to watch tab switches in real-time via the browser view.
             </p>
           </div>
         {/if}
