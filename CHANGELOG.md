@@ -5,6 +5,19 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.105] - 2026-04-22
+
+4 commits since v0.4.104.
+
+### Added
+- 15-second timeout to CDP connections to prevent indefinite hangs
+
+### Changed
+- Import task display improvements: clock icon for queued status and schedule time in the status pill
+
+### Fixed
+- Cancel checker now properly detects 'stopping' status
+
 ## [0.4.104] - 2026-04-22
 
 1 commit since v0.4.103.
