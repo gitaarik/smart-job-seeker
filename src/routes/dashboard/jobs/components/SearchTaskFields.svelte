@@ -147,6 +147,9 @@
     { value: "24", label: "Every 24 hours" },
     { value: "48", label: "Every 2 days" },
     { value: "72", label: "Every 3 days" },
+    { value: "120", label: "Every 5 days" },
+    { value: "168", label: "Every week" },
+    { value: "336", label: "Every 2 weeks" },
   ];
 
   // ── Edit-mode state ──

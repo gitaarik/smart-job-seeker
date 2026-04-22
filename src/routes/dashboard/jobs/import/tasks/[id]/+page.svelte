@@ -2043,7 +2043,11 @@
           <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)] mt-2">
             <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
             <span>
-              Auto-runs every {searchTask.schedule_interval_hours}h
+              Auto-runs {searchTask.schedule_interval_hours >= 168
+                ? `every ${searchTask.schedule_interval_hours / 168 === 1 ? '' : searchTask.schedule_interval_hours / 168 + ' '}week${searchTask.schedule_interval_hours / 168 === 1 ? '' : 's'}`
+                : searchTask.schedule_interval_hours >= 48
+                  ? `every ${searchTask.schedule_interval_hours / 24} days`
+                  : `every ${searchTask.schedule_interval_hours}h`}
               {#if searchTask.next_scheduled_run}
                 {@const nextRun = new Date(searchTask.next_scheduled_run)}
                 {@const diffMs = nextRun.getTime() - Date.now()}
