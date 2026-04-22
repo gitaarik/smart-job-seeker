@@ -1919,6 +1919,10 @@ export const profiles = pgTable("profiles", {
 	salary_currency: varchar({ length: 10 }).default('EUR'),
 	salary_adjustments: json(),
 	salary_region_overrides: json(),
+	email_digest_enabled: boolean().default(false),
+	email_digest_frequency_days: integer().default(7),
+	email_digest_min_score: integer().default(70),
+	email_digest_last_sent_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 }, (table) => [
 	index("profiles_user_id_idx").using("btree", table.user_id.asc().nullsLast().op("text_ops")),
 	foreignKey({

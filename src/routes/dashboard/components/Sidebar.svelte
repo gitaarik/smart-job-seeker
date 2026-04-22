@@ -81,7 +81,7 @@
       icon: faSearch,
       children: [
         {
-          label: "Import Jobs",
+          label: "Import Settings",
           href: "/dashboard/jobs/import",
           icon: faBullseye,
         },
