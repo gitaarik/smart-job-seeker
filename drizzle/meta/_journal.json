@@ -15,6 +15,13 @@
       "when": 1776835529037,
       "tag": "0001_opposite_wolfpack",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776846187228,
+      "tag": "0002_big_swarm",
+      "breakpoints": true
     }
   ]
 }
