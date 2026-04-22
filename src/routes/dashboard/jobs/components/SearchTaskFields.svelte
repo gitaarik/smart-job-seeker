@@ -5,7 +5,9 @@
     faCheck,
     faChevronDown,
     faChevronRight,
+    faClock,
     faCopy,
+    faPenToSquare,
     faDesktop,
     faEnvelope,
     faExternalLinkAlt,
@@ -61,6 +63,7 @@
     desktopConnected?: boolean | null;
     devices?: Array<{ apiKeyId: number; apiKeyName: string; connected: boolean }>;
     verificationEmailAddress?: string | null;
+    userTimezone?: string;
   }
 
   let {
@@ -91,6 +94,7 @@
     desktopConnected = null,
     devices = [],
     verificationEmailAddress = null,
+    userTimezone = "",
   }: Props = $props();
 
   const isAdd = mode === "add";
@@ -141,16 +145,19 @@
 
   // Schedule options (shared)
   const SCHEDULE_OPTIONS = [
-    { value: "", label: "Off" },
-    { value: "6", label: "Every 6 hours" },
-    { value: "12", label: "Every 12 hours" },
-    { value: "24", label: "Every 24 hours" },
+    { value: "24", label: "Every day" },
     { value: "48", label: "Every 2 days" },
     { value: "72", label: "Every 3 days" },
     { value: "120", label: "Every 5 days" },
     { value: "168", label: "Every week" },
     { value: "336", label: "Every 2 weeks" },
   ];
+
+  const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
+    const ampm = i < 12 ? "AM" : "PM";
+    const h12 = i === 0 ? 12 : i > 12 ? i - 12 : i;
+    return { value: i, label: `${h12}:00 ${ampm}` };
+  });
 
   // ── Edit-mode state ──
   // Collapsible sections
@@ -179,9 +186,10 @@
         search: loadSectionOpen("search"),
         auth: loadSectionOpen("auth"),
         options: loadSectionOpen("options"),
+        schedule: loadSectionOpen("schedule"),
         browser: loadSectionOpen("browser"),
       }
-      : { search: true, auth: true, options: true, browser: true },
+      : { search: true, auth: true, options: true, schedule: true, browser: true },
   );
 
   // Parse helpers
@@ -286,14 +294,25 @@
   let isSavingKeepMinimized = $state(false);
 
   // Schedule (edit)
+  let scheduleEnabled = $state<boolean>(searchTask?.schedule_interval_hours != null);
   let scheduleIntervalInput = $state<string>(
-    searchTask?.schedule_interval_hours?.toString() ?? "",
+    searchTask?.schedule_interval_hours?.toString() ?? "24",
   );
+  let schedulePreferredHour = $state<number>(searchTask?.schedule_preferred_hour ?? 9);
+  let savedScheduleEnabled = $state<boolean>(searchTask?.schedule_interval_hours != null);
+  let savedScheduleInterval = $state<string>(
+    searchTask?.schedule_interval_hours?.toString() ?? "24",
+  );
+  let savedSchedulePreferredHour = $state<number>(searchTask?.schedule_preferred_hour ?? 9);
   let isSavingSchedule = $state(false);
   let scheduleDirty = $derived(
-    isEdit &&
-      (scheduleIntervalInput || "") !==
-        (searchTask?.schedule_interval_hours?.toString() ?? ""),
+    isEdit && (
+      scheduleEnabled !== savedScheduleEnabled ||
+      (scheduleEnabled && (
+        scheduleIntervalInput !== savedScheduleInterval ||
+        schedulePreferredHour !== savedSchedulePreferredHour
+      ))
+    ),
   );
 
   // Browser location (edit)
@@ -502,9 +521,16 @@
   async function saveSchedule() {
     isSavingSchedule = true;
     try {
-      const val = scheduleIntervalInput ? parseInt(scheduleIntervalInput) : null;
-      await patchSearchTask({ schedule_interval_hours: val });
-      searchTask.schedule_interval_hours = val;
+      const intervalVal = scheduleEnabled ? parseInt(scheduleIntervalInput) : null;
+      await patchSearchTask({
+        schedule_interval_hours: intervalVal,
+        schedule_preferred_hour: schedulePreferredHour,
+      });
+      searchTask.schedule_interval_hours = intervalVal;
+      searchTask.schedule_preferred_hour = schedulePreferredHour;
+      savedScheduleEnabled = scheduleEnabled;
+      savedScheduleInterval = scheduleIntervalInput;
+      savedSchedulePreferredHour = schedulePreferredHour;
     } catch (err) {
       console.error("Failed to save schedule:", err);
     } finally {
@@ -615,7 +641,12 @@
     savedBrowserProvider = newData.searchTask.browser_provider ?? null;
     keepMinimized = newData.searchTask.keep_minimized ?? true;
     savedKeepMinimized = newData.searchTask.keep_minimized ?? true;
-    scheduleIntervalInput = newData.searchTask.schedule_interval_hours?.toString() ?? "";
+    scheduleEnabled = newData.searchTask.schedule_interval_hours != null;
+    scheduleIntervalInput = newData.searchTask.schedule_interval_hours?.toString() ?? "24";
+    schedulePreferredHour = newData.searchTask.schedule_preferred_hour ?? 9;
+    savedScheduleEnabled = scheduleEnabled;
+    savedScheduleInterval = scheduleIntervalInput;
+    savedSchedulePreferredHour = schedulePreferredHour;
     editBrowserCountryCode = newData.browserCountryCode;
     savedBrowserCountryCode = newData.browserCountryCode;
     browserLanguage = newData.browserFingerprint.language;
@@ -645,6 +676,10 @@
         const v = newData.uiPreferences["task_sections_options"];
         return v === undefined ? true : Boolean(v);
       })(),
+      schedule: (() => {
+        const v = newData.uiPreferences["task_sections_schedule"];
+        return v === undefined ? true : Boolean(v);
+      })(),
       browser: (() => {
         const v = newData.uiPreferences["task_sections_browser"];
         return v === undefined ? true : Boolean(v);
@@ -671,7 +706,12 @@
       savedBrowserProvider = searchTask.browser_provider ?? null;
       keepMinimized = searchTask.keep_minimized ?? true;
       savedKeepMinimized = searchTask.keep_minimized ?? true;
-      scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ?? "";
+      scheduleEnabled = searchTask.schedule_interval_hours != null;
+      scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ?? "24";
+      schedulePreferredHour = searchTask.schedule_preferred_hour ?? 9;
+      savedScheduleEnabled = scheduleEnabled;
+      savedScheduleInterval = scheduleIntervalInput;
+      savedSchedulePreferredHour = schedulePreferredHour;
       editBrowserCountryCode = initialBrowserCountryCode;
       savedBrowserCountryCode = initialBrowserCountryCode;
       browserLanguage = browserFingerprint.language;
@@ -1528,37 +1568,112 @@
     {/if}
 
     <!-- Schedule -->
-    <div class="flex items-center flex-wrap gap-3">
-      <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">
-        Auto-run
-      </span>
-      {#if isAdd}
-        <select
-          name="schedule_interval_hours"
-          bind:value={addScheduleInterval}
-          class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        >
-          {#each SCHEDULE_OPTIONS as opt}
-            <option value={opt.value}>{opt.label}</option>
-          {/each}
-        </select>
-      {:else}
-        <select
-          bind:value={scheduleIntervalInput}
-          class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        >
-          {#each SCHEDULE_OPTIONS as opt}
-            <option value={opt.value}>{opt.label}</option>
-          {/each}
-        </select>
-        {@render saveCancel(
-          scheduleDirty,
-          isSavingSchedule,
-          saveSchedule,
-          () => (scheduleIntervalInput = searchTask?.schedule_interval_hours?.toString() ?? ""),
-        )}
-      {/if}
-    </div>
+    <hr class="border-[var(--dash-border)] mt-4" />
+    {#if isEdit}
+      {@render sectionToggle("schedule", "Schedule")}
+    {:else}
+      <h3
+        class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+      >
+        Schedule
+      </h3>
+    {/if}
+
+    {#if isAdd || sectionOpen.schedule}
+      <div class="space-y-3">
+        {#if isAdd}
+          <!-- Add mode: simple toggle + options -->
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={addScheduleInterval !== ""}
+              onchange={(e) => {
+                const checked = (e.target as HTMLInputElement).checked;
+                addScheduleInterval = checked ? "24" : "";
+              }}
+              class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+            />
+            <span class="text-sm text-[var(--dash-text)]">Enable auto-run</span>
+          </label>
+          {#if addScheduleInterval}
+            <div class="space-y-2 pl-6">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Frequency</span>
+                <select
+                  name="schedule_interval_hours"
+                  bind:value={addScheduleInterval}
+                  class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+                >
+                  {#each SCHEDULE_OPTIONS as opt}
+                    <option value={opt.value}>{opt.label}</option>
+                  {/each}
+                </select>
+              </div>
+            </div>
+          {/if}
+        {:else}
+          <!-- Edit mode: toggle + frequency + preferred hour -->
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              bind:checked={scheduleEnabled}
+              class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+            />
+            <span class="text-sm text-[var(--dash-text)]">Enable auto-run</span>
+          </label>
+          {#if scheduleEnabled}
+            <div class="space-y-3 pl-6">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Frequency</span>
+                <select
+                  bind:value={scheduleIntervalInput}
+                  class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+                >
+                  {#each SCHEDULE_OPTIONS as opt}
+                    <option value={opt.value}>{opt.label}</option>
+                  {/each}
+                </select>
+              </div>
+              <div>
+                <span class="block text-sm text-[var(--dash-text-secondary)] mb-1">Preferred time</span>
+                <div class="flex items-center gap-2">
+                  <select
+                    bind:value={schedulePreferredHour}
+                    class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+                  >
+                    {#each HOUR_OPTIONS as opt}
+                      <option value={opt.value}>{opt.label}</option>
+                    {/each}
+                  </select>
+                  {#if userTimezone}
+                    <span class="text-xs text-[var(--dash-text-muted)]">{userTimezone.split("/").pop()?.replace(/_/g, " ")}</span>
+                    <a
+                      href="/dashboard/settings#timezone"
+                      class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                      title="Change timezone"
+                    >
+                      <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
+                    </a>
+                  {:else}
+                    <a href="/dashboard/settings#timezone" class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]">Set timezone</a>
+                  {/if}
+                </div>
+              </div>
+            </div>
+          {/if}
+          {@render saveCancel(
+            scheduleDirty,
+            isSavingSchedule,
+            saveSchedule,
+            () => {
+              scheduleEnabled = savedScheduleEnabled;
+              scheduleIntervalInput = savedScheduleInterval;
+              schedulePreferredHour = savedSchedulePreferredHour;
+            },
+          )}
+        {/if}
+      </div>
+    {/if}
 
     <!-- Browser Control -->
     <hr class="border-[var(--dash-border)] mt-4" />

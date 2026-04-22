@@ -1687,6 +1687,7 @@ export const search_tasks = pgTable("search_tasks", {
 	extracted_jobs_json: text(),
 	note: varchar({ length: 500 }),
 	schedule_interval_hours: integer(),
+	schedule_preferred_hour: integer().default(9),
 	next_scheduled_run: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 	tunnel_api_key: integer(),
 	login_mode: varchar({ length: 10 }).default('auto').notNull(),

@@ -2,10 +2,58 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { search_tasks, platform_profiles } from "$lib/server/db/schema";
+import { search_tasks, platform_profiles, users } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 import { hasDeviceAccess } from "$lib/server/device-shares";
+
+/**
+ * Calculate next scheduled run at the preferred hour in the user's timezone.
+ * For any interval, the next run is the soonest future occurrence of preferredHour
+ * in the given timezone (today if still upcoming, otherwise tomorrow).
+ */
+function calculateNextScheduledRun(
+  _intervalHours: number, preferredHour: number, timezone: string,
+): Date {
+  const now = new Date();
+
+  // Get current date parts in the user's timezone
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
+
+  const tzYear = get("year");
+  const tzMonth = get("month");
+  const tzDay = get("day");
+  const tzHour = get("hour");
+
+  // Build "today at preferred hour" in the user's timezone using a temp date trick:
+  // Create an ISO-like string and resolve via the timezone offset
+  const buildDateInTz = (year: number, month: number, day: number, hour: number): Date => {
+    // Use Intl to find the UTC offset for this specific date/time in the timezone
+    const probe = new Date(Date.UTC(year, month - 1, day, hour));
+    const utcStr = probe.toLocaleString("en-US", { timeZone: "UTC", hour12: false });
+    const tzStr = probe.toLocaleString("en-US", { timeZone: timezone, hour12: false });
+    const utcDate = new Date(utcStr);
+    const tzDate = new Date(tzStr);
+    const offsetMs = utcDate.getTime() - tzDate.getTime();
+    return new Date(Date.UTC(year, month - 1, day, hour) + offsetMs);
+  };
+
+  let nextRun = buildDateInTz(tzYear, tzMonth, tzDay, preferredHour);
+
+  // If preferred hour already passed today, schedule for tomorrow
+  if (nextRun.getTime() <= now.getTime()) {
+    const tomorrow = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay + 1));
+    nextRun = buildDateInTz(tomorrow.getUTCFullYear(), tomorrow.getUTCMonth() + 1, tomorrow.getUTCDate(), preferredHour);
+  }
+
+  return nextRun;
+}
 
 /**
  * PATCH /api/import-tasks/[id]
@@ -31,7 +79,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(searchTaskUpdateSchema, await request.json());
 
-  const data: { note?: string | null; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; login_mode?: string; keep_minimized?: boolean; schedule_interval_hours?: number | null; next_scheduled_run?: Date | null; tunnel_api_key?: number | null } = {};
+  const data: { note?: string | null; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; login_mode?: string; keep_minimized?: boolean; schedule_interval_hours?: number | null; schedule_preferred_hour?: number; next_scheduled_run?: Date | null; tunnel_api_key?: number | null } = {};
 
   if (body.note !== undefined) data.note = body.note || null;
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
@@ -52,15 +100,36 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     }
     data.tunnel_api_key = body.tunnel_api_key;
   }
+  if (body.schedule_preferred_hour !== undefined) {
+    data.schedule_preferred_hour = body.schedule_preferred_hour;
+  }
+
   if (body.schedule_interval_hours !== undefined) {
     data.schedule_interval_hours = body.schedule_interval_hours;
     if (body.schedule_interval_hours === null) {
       data.next_scheduled_run = null;
     } else {
-      data.next_scheduled_run = new Date(
-        Date.now() + body.schedule_interval_hours * 3600_000,
+      // Calculate next run based on preferred hour in user's timezone
+      const preferredHour = body.schedule_preferred_hour ?? searchTask.schedule_preferred_hour ?? 9;
+      const userRecord = await db.query.users.findFirst({
+        where: eq(users.id, user.id),
+        columns: { timezone: true },
+      });
+      const tz = userRecord?.timezone || "UTC";
+      data.next_scheduled_run = calculateNextScheduledRun(
+        body.schedule_interval_hours, preferredHour, tz,
       );
     }
+  } else if (body.schedule_preferred_hour !== undefined && searchTask.schedule_interval_hours) {
+    // Only preferred hour changed, recalculate next run
+    const userRecord = await db.query.users.findFirst({
+      where: eq(users.id, user.id),
+      columns: { timezone: true },
+    });
+    const tz = userRecord?.timezone || "UTC";
+    data.next_scheduled_run = calculateNextScheduledRun(
+      searchTask.schedule_interval_hours, body.schedule_preferred_hour, tz,
+    );
   }
 
   // Create new credential and assign it

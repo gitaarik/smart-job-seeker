@@ -196,6 +196,7 @@
     </div>
   </Card>
 
+  <div id="timezone">
   <Card padding="lg">
     <div class="space-y-5">
       <div>
@@ -244,4 +245,5 @@
       </button>
     </div>
   </Card>
+  </div>
 </div>
