@@ -503,7 +503,7 @@
                   }</span>
                 {:else if search.status === "running"}
                   <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" />
-                  <span>Running...</span>
+                  <span>{search.status_message || "Running..."}</span>
                 {:else if search.status === "stopping"}
                   <Spinner size={statusIcon.iconSize} color="var(--dash-error)" />
                   <span class="text-orange-600">Stopping...</span>
