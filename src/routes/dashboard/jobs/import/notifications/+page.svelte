@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCheck } from "@fortawesome/free-solid-svg-icons";
+  import { faCheck, faPenToSquare, faPencil } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
-  import RadioGroup from "../../../components/RadioGroup.svelte";
+  import Checkbox from "../../../components/Checkbox.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
 
@@ -13,21 +13,34 @@
   let digestFrequency = $state(data.emailDigest.frequency_days);
   let digestMinScore = $state(data.emailDigest.min_score);
   let digestPreferredHour = $state(data.emailDigest.preferred_hour);
-  let digestSendTo = $state(data.emailDigest.send_to);
+  let sendToProfile = $state(
+    data.emailDigest.send_to === "profile" || data.emailDigest.send_to === "both",
+  );
+  let sendToAccount = $state(
+    data.emailDigest.send_to === "account" || data.emailDigest.send_to === "both",
+  );
   let digestTimezone = $state(data.emailDigest.timezone || "");
+  let sendToExpanded = $state(false);
   let digestSaving = $state(false);
   let digestSaved = $state(false);
   let digestError = $state("");
 
   const hasEmail = $derived(!!data.emailDigest.email_address);
   const hasAnyEmail = $derived(hasEmail || !!data.emailDigest.account_email);
-  const sameEmail = $derived(
-    !!data.emailDigest.email_address &&
-    data.emailDigest.email_address === data.emailDigest.account_email,
+  const digestSendTo = $derived(
+    sendToProfile && sendToAccount ? "both" :
+    sendToAccount ? "account" : "profile",
   );
   const canEnable = $derived(
     digestSendTo === "account" ? !!data.emailDigest.account_email : hasEmail,
   );
+  const sendToSummary = $derived.by(() => {
+    const emails: string[] = [];
+    if (sendToProfile && data.emailDigest.email_address) emails.push(data.emailDigest.email_address);
+    if (sendToAccount && data.emailDigest.account_email) emails.push(data.emailDigest.account_email);
+    // deduplicate if same email
+    return [...new Set(emails)].join(", ") || "No email selected";
+  });
 
   const FREQUENCY_OPTIONS = [
     { value: 1, label: "Every day" },
@@ -50,20 +63,6 @@
     const ampm = i < 12 ? "AM" : "PM";
     const h12 = i === 0 ? 12 : i > 12 ? i - 12 : i;
     return { value: i, label: `${h12}:00 ${ampm}` };
-  });
-
-  const SEND_TO_OPTIONS = $derived.by(() => {
-    const opts: { value: string; label: string }[] = [];
-    if (data.emailDigest.email_address) {
-      opts.push({ value: "profile", label: `${data.emailDigest.email_address} (profile)` });
-    }
-    if (data.emailDigest.account_email) {
-      opts.push({ value: "account", label: `${data.emailDigest.account_email} (account)` });
-    }
-    if (data.emailDigest.email_address && data.emailDigest.account_email) {
-      opts.push({ value: "both", label: "Both" });
-    }
-    return opts;
   });
 
   // Common timezones grouped by region
@@ -191,8 +190,49 @@
     {#if digestEnabled}
       <!-- Send to -->
       <div>
-        <span class="block text-sm font-medium text-[var(--dash-text)] mb-2">Send to</span>
-        <RadioGroup options={SEND_TO_OPTIONS} bind:value={digestSendTo} />
+        <span class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">Send to</span>
+        <button
+          type="button"
+          onclick={() => sendToExpanded = !sendToExpanded}
+          class="inline-flex items-center gap-1.5 text-sm text-[var(--dash-text)] hover:text-[var(--dash-primary)] transition-colors"
+        >
+          <span>{sendToSummary}</span>
+          <FontAwesomeIcon icon={faPencil} class="w-3 h-3 opacity-50" />
+        </button>
+        {#if sendToExpanded}
+          <div class="flex flex-col gap-2 mt-2">
+            {#if data.emailDigest.email_address}
+              <div class="flex items-center gap-1.5">
+                <Checkbox
+                  bind:checked={sendToProfile}
+                  label="{data.emailDigest.email_address} (profile)"
+                />
+                <a
+                  href="/dashboard/profile/edit#email_address"
+                  class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                  title="Edit profile email"
+                >
+                  <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
+                </a>
+              </div>
+            {/if}
+            {#if data.emailDigest.account_email}
+              <div class="flex items-center gap-1.5">
+                <Checkbox
+                  bind:checked={sendToAccount}
+                  label="{data.emailDigest.account_email} (account)"
+                />
+                <a
+                  href="/dashboard/settings#account-email"
+                  class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                  title="Edit account email"
+                >
+                  <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
+                </a>
+              </div>
+            {/if}
+          </div>
+        {/if}
         {#if digestSendTo === "profile" && !hasEmail}
           <p class="mt-1.5 text-xs" style="color: var(--dash-warning);">
             This profile doesn't have an email address. Add one in
@@ -219,32 +259,24 @@
         </select>
       </div>
 
-      <!-- Preferred time & Timezone -->
-      <div class="flex flex-wrap gap-4">
-        <div>
-          <label for="digest-hour" class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">
-            Preferred time
-          </label>
+      <!-- Time & Timezone -->
+      <div>
+        <span class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">Time</span>
+        <div class="flex flex-wrap gap-3">
           <select
             id="digest-hour"
             bind:value={digestPreferredHour}
-            class="w-full px-3 py-2 border border-[var(--dash-border-input)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+            class="px-3 py-2 border border-[var(--dash-border-input)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:border-transparent"
             style="--tw-ring-color: var(--dash-primary);"
           >
             {#each HOUR_OPTIONS as opt}
               <option value={opt.value}>{opt.label}</option>
             {/each}
           </select>
-        </div>
-
-        <div class="flex-1 min-w-[200px]">
-          <label for="digest-timezone" class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">
-            Timezone
-          </label>
           <select
             id="digest-timezone"
             bind:value={digestTimezone}
-            class="w-full px-3 py-2 border border-[var(--dash-border-input)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+            class="px-3 py-2 border border-[var(--dash-border-input)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:border-transparent"
             style="--tw-ring-color: var(--dash-primary);"
           >
             <option value="">Select timezone...</option>
@@ -256,10 +288,10 @@
               </optgroup>
             {/each}
           </select>
-          <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-            Applies to all your profiles.
-          </p>
         </div>
+        <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+          Timezone applies to all your profiles.
+        </p>
       </div>
 
       <!-- Minimum Score -->

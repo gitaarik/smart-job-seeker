@@ -27,6 +27,22 @@ export const auth = betterAuth({
 
   user: {
     modelName: "users",
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailVerification: async ({ user, newEmail, url }) => {
+        await sendEmail({
+          to: newEmail,
+          subject: "Verify your new email address",
+          html: `
+            <h2>Verify your new email</h2>
+            <p>Click the link below to confirm changing your email to <strong>${newEmail}</strong>:</p>
+            <p><a href="${url}">Verify Email</a></p>
+            <p>If you didn't request this, you can safely ignore this email.</p>
+            <p>This link will expire in 1 hour.</p>
+          `,
+        });
+      },
+    },
     additionalFields: {
       is_admin: {
         type: "boolean",
@@ -44,6 +60,21 @@ export const auth = betterAuth({
   },
   account: { modelName: "accounts" },
   verification: { modelName: "verifications" },
+
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your email address",
+        html: `
+          <h2>Verify your email</h2>
+          <p>Click the link below to verify your email address:</p>
+          <p><a href="${url}">Verify Email</a></p>
+          <p>If you didn't request this, you can safely ignore this email.</p>
+        `,
+      });
+    },
+  },
 
   emailAndPassword: {
     enabled: true,

@@ -19,6 +19,7 @@ export const load: LayoutServerLoad = async (event) => {
     "/dashboard/billing",
     "/dashboard/contacts",
     "/dashboard/feedback",
+    "/dashboard/settings",
   ];
   if (profiles.length === 0) {
     if (!noProfileAllowed.some((p) => event.url.pathname.startsWith(p))) {
