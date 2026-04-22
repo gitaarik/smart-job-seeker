@@ -173,6 +173,7 @@ export const actions: Actions = {
           <p><a href="${baseUrl}/signup/invite?token=${token}">Accept Invitation & Set Password</a></p>
           <p>This invitation expires in 30 days.</p>
         `,
+        type: "invite",
       });
     } catch (e: unknown) {
       // Clean up the verification record if email fails

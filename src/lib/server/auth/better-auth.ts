@@ -40,6 +40,8 @@ export const auth = betterAuth({
             <p>If you didn't request this, you can safely ignore this email.</p>
             <p>This link will expire in 1 hour.</p>
           `,
+          type: "email_change",
+          userId: user.id,
         });
       },
     },
@@ -72,6 +74,8 @@ export const auth = betterAuth({
           <p><a href="${url}">Verify Email</a></p>
           <p>If you didn't request this, you can safely ignore this email.</p>
         `,
+        type: "verification",
+        userId: user.id,
       });
     },
   },
@@ -90,6 +94,8 @@ export const auth = betterAuth({
           <p>If you didn't request this, you can safely ignore this email.</p>
           <p>This link will expire in 1 hour.</p>
         `,
+        type: "password_reset",
+        userId: user.id,
       });
     },
   },
@@ -122,6 +128,8 @@ export const auth = betterAuth({
               <p>Your account has been created and is pending approval.</p>
               <p>You'll receive an email once your account has been activated.</p>
             `,
+            type: "welcome",
+            userId: user.id,
           }).catch((err) =>
             console.error("[auth] Failed to send welcome email:", err)
           );
@@ -137,6 +145,7 @@ export const auth = betterAuth({
                 <p><strong>Email:</strong> ${user.email}</p>
                 <p>Log in to the admin panel to approve this user.</p>
               `,
+              type: "admin_notification",
             }).catch((err) =>
               console.error("[auth] Failed to send admin notification:", err)
             );

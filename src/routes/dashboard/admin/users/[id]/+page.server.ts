@@ -183,6 +183,8 @@ export const actions: Actions = {
           <p><a href="${baseUrl}/signup/invite?token=${token}">Accept Invitation & Set Password</a></p>
           <p>This invitation expires in 7 days.</p>
         `,
+        type: "invite",
+        userId: user.id,
       });
     } catch (e: unknown) {
       await db.delete(verifications).where(eq(verifications.identifier, `invite:${user.email}`));

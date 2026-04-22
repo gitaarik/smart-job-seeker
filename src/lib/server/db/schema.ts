@@ -2307,6 +2307,24 @@ export const inbound_emails = pgTable("inbound_emails", {
 		}).onDelete("set null"),
 ]);
 
+export const sent_emails = pgTable("sent_emails", {
+	id: serial().primaryKey().notNull(),
+	to: varchar({ length: 255 }).notNull(),
+	subject: varchar({ length: 500 }).notNull(),
+	html: text().notNull(),
+	type: varchar({ length: 50 }).notNull(),
+	status: varchar({ length: 20 }).default('sent').notNull(),
+	error: text(),
+	sent_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	user_id: text(),
+	metadata: jsonb(),
+}, (table) => [
+	index("idx_sent_emails_type").using("btree", table.type.asc().nullsLast().op("text_ops")),
+	index("idx_sent_emails_status").using("btree", table.status.asc().nullsLast().op("text_ops")),
+	index("idx_sent_emails_sent_at").using("btree", table.sent_at.asc().nullsLast().op("timestamptz_ops")),
+	index("idx_sent_emails_user").using("btree", table.user_id.asc().nullsLast().op("text_ops")),
+]);
+
 export const contacts = pgTable("contacts", {
 	id: serial().primaryKey().notNull(),
 	requester_id: text().notNull(),
@@ -2518,3 +2536,4 @@ export type FeedbackReplies = typeof feedback_replies.$inferSelect;
 export type UserFeedbackSubscribers = typeof user_feedback_subscribers.$inferSelect;
 export type Notifications = typeof notifications.$inferSelect;
 export type Files = typeof files.$inferSelect;
+export type SentEmails = typeof sent_emails.$inferSelect;

@@ -221,6 +221,11 @@
           icon: faEnvelope,
         },
         {
+          label: "Emails",
+          href: "/dashboard/admin/emails",
+          icon: faPaperPlane,
+        },
+        {
           label: "Costs",
           href: "/dashboard/admin/costs",
           icon: faChartLine,

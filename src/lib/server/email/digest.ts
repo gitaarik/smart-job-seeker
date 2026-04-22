@@ -124,5 +124,7 @@ export async function sendDigestEmail(opts: DigestOptions): Promise<void> {
     to: opts.to,
     subject,
     html,
+    type: "digest",
+    metadata: { profileName: opts.profileName, jobCount: opts.jobs.length, minScore: opts.minScore },
   });
 }
