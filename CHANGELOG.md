@@ -5,6 +5,16 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.100] - 2026-04-22
+
+4 commits since v0.4.99.
+
+### Added
+- Email digest notifications for job matches with corresponding worker loop
+
+### Changed
+- Import task scheduling now uses longer intervals (weekly and bi-weekly)
+
 ## [0.4.99] - 2026-04-22
 
 1 commit since v0.4.98.
