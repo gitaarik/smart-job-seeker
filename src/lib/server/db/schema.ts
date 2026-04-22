@@ -1321,6 +1321,7 @@ export const users = pgTable("users", {
 	is_admin: boolean().default(false).notNull(),
 	is_staff: boolean().default(false).notNull(),
 	is_approved: boolean().default(false).notNull(),
+	timezone: varchar({ length: 100 }),
 });
 
 export const side_projects = pgTable("side_projects", {
@@ -1923,6 +1924,8 @@ export const profiles = pgTable("profiles", {
 	email_digest_frequency_days: integer().default(7),
 	email_digest_min_score: integer().default(70),
 	email_digest_last_sent_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	email_digest_preferred_hour: integer().default(9),
+	email_digest_send_to: varchar({ length: 20 }).default('profile'),
 }, (table) => [
 	index("profiles_user_id_idx").using("btree", table.user_id.asc().nullsLast().op("text_ops")),
 	foreignKey({
