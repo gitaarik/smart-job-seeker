@@ -475,14 +475,17 @@
                 {/if}
                 {#if search.schedule_interval_hours}
                   {@const days = search.schedule_interval_hours / 24}
+                  {@const prefHour = search.schedule_preferred_hour ?? 9}
+                  {@const h12 = prefHour === 0 ? 12 : prefHour > 12 ? prefHour - 12 : prefHour}
+                  {@const ampm = prefHour < 12 ? "AM" : "PM"}
                   <span
                     class="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 whitespace-nowrap"
-                    title="Scheduled auto-run"
+                    title="Scheduled auto-run at {h12}:00 {ampm}"
                   >
                     {days >= 14 ? `Every ${days / 7} weeks`
                       : days >= 7 ? "Weekly"
                       : days > 1 ? `Every ${days} days`
-                      : "Daily"}
+                      : "Daily"} at {h12} {ampm}
                   </span>
                 {/if}
               </div>
