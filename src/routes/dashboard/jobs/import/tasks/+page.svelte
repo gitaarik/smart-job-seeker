@@ -5,6 +5,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { onMount } from "svelte";
   import {
+    faCalendar,
     faDesktop,
     faExclamationTriangle,
     faPlus,
@@ -553,6 +554,24 @@
                   <span class="text-[var(--dash-text-muted)]">Never run</span>
                 {/if}
               </div>
+
+              {#if search.schedule_interval_hours && search.next_scheduled_run}
+                {@const nextRun = new Date(search.next_scheduled_run)}
+                {@const diffMs = nextRun.getTime() - Date.now()}
+                {@const prefHour = search.schedule_preferred_hour ?? 9}
+                {@const ampm = prefHour < 12 ? "AM" : "PM"}
+                {@const h12 = prefHour === 0 ? 12 : prefHour > 12 ? prefHour - 12 : prefHour}
+                <div class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] mt-1">
+                  <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                  <span>
+                    Next run {diffMs <= 0 ? "due now" :
+                      diffMs < 3600000 ? `in ${Math.floor(diffMs / 60000)}m` :
+                      diffMs < 86400000 ? `in ${Math.floor(diffMs / 3600000)}h ${Math.floor((diffMs % 3600000) / 60000)}m` :
+                      `${nextRun.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`}
+                    at {h12}:00 {ampm}
+                  </span>
+                </div>
+              {/if}
             </div>
 
             <!-- Mobile: Platform logo on the right -->
