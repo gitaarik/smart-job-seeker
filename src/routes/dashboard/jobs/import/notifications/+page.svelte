@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCheck, faPenToSquare, faPencil } from "@fortawesome/free-solid-svg-icons";
+  import { faCheck, faEnvelope, faCalendarAlt, faPenToSquare, faPencil } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import Checkbox from "../../../components/Checkbox.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
@@ -41,6 +41,43 @@
     // deduplicate if same email
     return [...new Set(emails)].join(", ") || "No email selected";
   });
+
+  const lastSentDate = $derived(
+    data.emailDigest.last_sent_at ? new Date(data.emailDigest.last_sent_at) : null,
+  );
+  const nextSendDate = $derived.by(() => {
+    if (!lastSentDate) return null;
+    const next = new Date(lastSentDate);
+    next.setDate(next.getDate() + digestFrequency);
+    return next;
+  });
+
+  function formatRelative(date: Date): string {
+    const now = new Date();
+    const diffMs = date.getTime() - now.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (diffDays < -1) return `${Math.abs(diffDays)} days ago`;
+    return `In ${diffDays} days`;
+  }
+
+  function formatTime(date: Date): string {
+    return date.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function formatDateShort(date: Date): string {
+    return date.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }
 
   const FREQUENCY_OPTIONS = [
     { value: 1, label: "Every day" },
@@ -162,10 +199,6 @@
 </svelte:head>
 
 <Card padding="lg">
-  <p class="text-sm text-[var(--dash-text-secondary)] mb-5">
-    Receive periodic emails with your top job matches.
-  </p>
-
   {#if !hasAnyEmail}
     <div
       class="rounded-lg border p-4 mb-4"
@@ -179,7 +212,7 @@
     </div>
   {/if}
 
-  <div class="space-y-5">
+  <div class="space-y-5" style="max-width: 400px;">
     <ToggleSwitch
       bind:checked={digestEnabled}
       disabled={!canEnable}
@@ -188,6 +221,28 @@
     />
 
     {#if digestEnabled}
+      <!-- Schedule overview -->
+      {#if lastSentDate || nextSendDate}
+        <div class="flex flex-col gap-2 rounded-lg border border-[var(--dash-border)] p-3 text-sm">
+          {#if lastSentDate}
+            <div class="flex items-center gap-2">
+              <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Last sent</span>
+              <span class="text-[var(--dash-text)]">{formatRelative(lastSentDate)} {formatTime(lastSentDate)}</span>
+              <span class="text-[var(--dash-text-muted)]">({formatDateShort(lastSentDate)})</span>
+            </div>
+          {/if}
+          {#if nextSendDate}
+            <div class="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCalendarAlt} class="w-3.5 h-3.5 text-[var(--dash-primary)]" />
+              <span class="text-[var(--dash-text-muted)]">Next</span>
+              <span class="font-medium text-[var(--dash-text)]">{formatRelative(nextSendDate)} {formatTime(nextSendDate)}</span>
+              <span class="text-[var(--dash-text-muted)]">({formatDateShort(nextSendDate)})</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
       <!-- Send to -->
       <div>
         <span class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">Send to</span>
@@ -262,7 +317,7 @@
       <!-- Time & Timezone -->
       <div>
         <span class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">Time</span>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3 max-w-xs">
           <select
             id="digest-hour"
             bind:value={digestPreferredHour}
@@ -276,7 +331,7 @@
           <select
             id="digest-timezone"
             bind:value={digestTimezone}
-            class="px-3 py-2 border border-[var(--dash-border-input)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+            class="min-w-0 flex-1 px-3 py-2 border border-[var(--dash-border-input)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] text-sm focus:outline-none focus:ring-2 focus:border-transparent truncate"
             style="--tw-ring-color: var(--dash-primary);"
           >
             <option value="">Select timezone...</option>
@@ -334,10 +389,5 @@
       {digestSaved ? "Saved" : "Save"}
     </button>
 
-    {#if data.emailDigest.last_sent_at}
-      <p class="text-xs text-[var(--dash-text-muted)]">
-        Last digest sent: {new Date(data.emailDigest.last_sent_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
-      </p>
-    {/if}
   </div>
 </Card>
