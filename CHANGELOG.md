@@ -5,6 +5,13 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.111] - 2026-04-23
+
+1 commit since v0.4.110.
+
+### Added
+- Deploy script: interactive deployment picker, ~N syntax support, and improved Docker cleanup
+
 ## [0.4.110] - 2026-04-23
 
 1 commit since v0.4.109.
