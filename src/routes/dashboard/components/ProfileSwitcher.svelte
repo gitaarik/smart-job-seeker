@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
@@ -17,6 +18,7 @@
 
   let { profiles, selectedProfile }: Props = $props();
   let dropdown: HeaderDropdown;
+  let isCreatePage = $derived($page.url.pathname.startsWith("/dashboard/profile/create"));
 
   function selectProfile(profile: ProfileSummary) {
     dropdown.close();
@@ -27,9 +29,9 @@
 <HeaderDropdown bind:this={dropdown} id="profile" width="w-64">
   {#snippet trigger({ isOpen })}
     <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
-      <FontAwesomeIcon icon={faUser} class="w-4 h-4 text-[var(--dash-chrome-text)]" />
+      <FontAwesomeIcon icon={isCreatePage ? faPlus : faUser} class="w-4 h-4 text-[var(--dash-chrome-text)]" />
       <span class="text-[var(--dash-chrome-text)] text-sm font-medium max-w-32 truncate">
-        {selectedProfile.name || "Unnamed Profile"}
+        {isCreatePage ? "New Profile" : (selectedProfile.name || "Unnamed Profile")}
       </span>
       <FontAwesomeIcon
         icon={faChevronDown}
@@ -46,10 +48,10 @@
     {#each profiles as profile (profile.id)}
       <button
         onclick={() => selectProfile(profile)}
-        class="w-full px-3 py-2 text-left hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-2 {profile.id === selectedProfile.id ? 'bg-[var(--dash-bg)]' : ''}"
+        class="w-full px-3 py-2 text-left hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-2 {!isCreatePage && profile.id === selectedProfile.id ? 'bg-[var(--dash-bg)]' : ''}"
       >
         <span class="flex-1 truncate text-[var(--dash-text)]">{profile.name || "Unnamed Profile"}</span>
-        {#if profile.id === selectedProfile.id}
+        {#if !isCreatePage && profile.id === selectedProfile.id}
           <FontAwesomeIcon icon={faCheck} class="w-3 h-3 text-[var(--dash-primary)]" />
         {/if}
       </button>

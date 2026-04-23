@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { getEnv } from "$lib/tools/get-env";
 import {
   createRateLimitResponse,
@@ -32,11 +32,24 @@ export const POST: RequestHandler = async (event) => {
   // Clone request so we can read the body for logging and still parse it
   const clonedRequest = event.request.clone();
   const rawBodyForLog = await clonedRequest.text();
+  const isBroadcast = event.request.headers.get("x-sjs-broadcast") === "true";
   console.log("[email/inbound] POST received", {
     contentType: event.request.headers.get("content-type"),
     userAgent: event.request.headers.get("user-agent"),
+    broadcast: isBroadcast,
     body: rawBodyForLog.slice(0, 2000),
   });
+
+  // Authenticate broadcast requests via shared secret
+  if (isBroadcast) {
+    const broadcastSecret = getEnv("SJS_EMAIL_BROADCAST_SECRET", "");
+    const providedSecret = event.request.headers.get("x-sjs-broadcast-secret") || "";
+    if (!broadcastSecret || !providedSecret || !safeEqual(broadcastSecret, providedSecret)) {
+      console.warn("[email/inbound] Invalid broadcast secret");
+      return json({ success: false, error: "Invalid broadcast secret" }, { status: 403 });
+    }
+    console.log("[email/inbound] Authenticated broadcast from peer");
+  }
 
   try {
     const contentType = event.request.headers.get("content-type") || "";
@@ -74,7 +87,7 @@ export const POST: RequestHandler = async (event) => {
       const rawBody = await event.request.text();
 
       const hmacKey = getEnv("SJS_EMAILCONNECT_HMAC_KEY", "");
-      if (hmacKey) {
+      if (hmacKey && !isBroadcast) {
         const webhookId = event.request.headers.get("webhook-id") || "";
         const webhookTimestamp = event.request.headers.get("webhook-timestamp") || "";
         const webhookSignature = event.request.headers.get("webhook-signature") || "";
@@ -139,7 +152,7 @@ export const POST: RequestHandler = async (event) => {
       const formData = await event.request.formData();
 
       const signingKey = getEnv("SJS_MAILGUN_SIGNING_KEY", "");
-      if (signingKey) {
+      if (signingKey && !isBroadcast) {
         const timestamp = formData.get("timestamp") as string;
         const token = formData.get("token") as string;
         const signature = formData.get("signature") as string;
@@ -191,6 +204,11 @@ export const POST: RequestHandler = async (event) => {
       bodyHtml,
     });
 
+    // Broadcast to other environments (fire-and-forget, only if this is NOT a broadcast itself)
+    if (!isBroadcast) {
+      broadcastToTargets(rawBodyForLog, event.request.headers);
+    }
+
     return json(result, { status: result.success ? 200 : 400 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -198,3 +216,52 @@ export const POST: RequestHandler = async (event) => {
     return json({ success: false, error: "Internal error" }, { status: 500 });
   }
 };
+
+/**
+ * Timing-safe string comparison to prevent timing attacks on secret comparison.
+ */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+/**
+ * Broadcast the raw webhook payload to configured target environments.
+ * Fire-and-forget — errors are logged but don't affect the response.
+ */
+function broadcastToTargets(rawBody: string, originalHeaders: Headers): void {
+  const targets = getEnv("SJS_EMAIL_BROADCAST_TARGETS", "");
+  const secret = getEnv("SJS_EMAIL_BROADCAST_SECRET", "");
+  if (!targets || !secret) return;
+
+  const urls = targets
+    .split(",")
+    .map((u) => u.trim())
+    .filter(Boolean);
+
+  for (const targetUrl of urls) {
+    const headers: Record<string, string> = {
+      "content-type": originalHeaders.get("content-type") || "application/json",
+      "x-sjs-broadcast": "true",
+      "x-sjs-broadcast-secret": secret,
+    };
+
+    // Forward original EmailConnect signature headers (for logging/debugging, not verification)
+    for (const h of ["webhook-id", "webhook-timestamp", "webhook-signature"]) {
+      const val = originalHeaders.get(h);
+      if (val) headers[h] = val;
+    }
+
+    fetch(targetUrl, {
+      method: "POST",
+      headers,
+      body: rawBody,
+    })
+      .then((res) => {
+        console.log(`[email/inbound] Broadcast to ${targetUrl}: ${res.status}`);
+      })
+      .catch((err) => {
+        console.error(`[email/inbound] Broadcast to ${targetUrl} failed:`, err.message);
+      });
+  }
+}
