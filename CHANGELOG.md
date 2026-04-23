@@ -5,6 +5,16 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.109] - 2026-04-23
+
+2 commits since v0.4.108.
+
+### Fixed
+- Verification emails are now always stored in admin inbox, even for unknown tokens
+
+### Changed
+- Broadcast targets are now stored unencrypted
+
 ## [0.4.108] - 2026-04-23
 
 4 commits since v0.4.107.
