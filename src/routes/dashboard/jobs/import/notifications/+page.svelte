@@ -24,6 +24,9 @@
   let digestSaving = $state(false);
   let digestSaved = $state(false);
   let digestError = $state("");
+  let sendingNow = $state(false);
+  let sendNowResult = $state<{ sent_to: string[]; job_count: number } | null>(null);
+  let resettingLastSent = $state(false);
 
   const hasEmail = $derived(!!data.emailDigest.email_address);
   const hasAnyEmail = $derived(hasEmail || !!data.emailDigest.account_email);
@@ -49,6 +52,12 @@
     if (!lastSentDate) return null;
     const next = new Date(lastSentDate);
     next.setDate(next.getDate() + digestFrequency);
+    // Snap to the preferred hour
+    next.setHours(digestPreferredHour, 0, 0, 0);
+    // If that's in the past, move to tomorrow at the preferred hour
+    if (next <= new Date()) {
+      next.setDate(next.getDate() + 1);
+    }
     return next;
   });
 
@@ -192,6 +201,61 @@
       digestSaving = false;
     }
   }
+
+  async function sendDigestNow() {
+    sendingNow = true;
+    digestError = "";
+    sendNowResult = null;
+
+    try {
+      const res = await fetch(`/api/profile/${data.profileId}/email-digest`, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ message: "Failed to send" }));
+        digestError = body.message || `Error ${res.status}`;
+        return;
+      }
+
+      const result = await res.json();
+      sendNowResult = result;
+      data.emailDigest.last_sent_at = new Date().toISOString();
+      setTimeout(() => (sendNowResult = null), 5000);
+    } catch {
+      digestError = "Network error, please try again";
+    } finally {
+      sendingNow = false;
+    }
+  }
+
+  async function resetLastSent() {
+    if (!confirm(`Reset last sent date to ${digestFrequency} day${digestFrequency === 1 ? "" : "s"} ago?`)) return;
+    resettingLastSent = true;
+    digestError = "";
+
+    try {
+      const res = await fetch(`/api/profile/${data.profileId}/email-digest`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset_last_sent: true }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ message: "Failed to reset" }));
+        digestError = body.message || `Error ${res.status}`;
+        return;
+      }
+
+      // Update the local state to reflect the reset
+      const resetDate = new Date(Date.now() - digestFrequency * 86400_000);
+      data.emailDigest.last_sent_at = resetDate.toISOString();
+    } catch {
+      digestError = "Network error, please try again";
+    } finally {
+      resettingLastSent = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -241,6 +305,16 @@
             </div>
           {/if}
         </div>
+        {#if lastSentDate}
+          <button
+            type="button"
+            onclick={resetLastSent}
+            disabled={resettingLastSent}
+            class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors disabled:opacity-50"
+          >
+            {resettingLastSent ? "Resetting..." : "Reset last sent date"}
+          </button>
+        {/if}
       {/if}
 
       <!-- Send to -->
@@ -375,19 +449,43 @@
     {/if}
 
     <!-- Save button -->
-    <button
-      type="button"
-      onclick={saveDigestSettings}
-      disabled={digestSaving}
-      class="px-4 py-2 text-sm text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-[var(--dash-primary)]"
-    >
-      {#if digestSaving}
-        <Spinner size="w-4 h-4" />
-      {:else if digestSaved}
-        <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        onclick={saveDigestSettings}
+        disabled={digestSaving}
+        class="px-4 py-2 text-sm text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-[var(--dash-primary)]"
+      >
+        {#if digestSaving}
+          <Spinner size="w-4 h-4" />
+        {:else if digestSaved}
+          <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+        {/if}
+        {digestSaved ? "Saved" : "Save"}
+      </button>
+
+      {#if digestEnabled}
+        <button
+          type="button"
+          onclick={sendDigestNow}
+          disabled={sendingNow}
+          class="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--dash-border-input)] text-[var(--dash-text)] hover:bg-[var(--dash-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {#if sendingNow}
+            <Spinner size="w-4 h-4" />
+          {:else}
+            <FontAwesomeIcon icon={faEnvelope} class="w-4 h-4" />
+          {/if}
+          Send now
+        </button>
       {/if}
-      {digestSaved ? "Saved" : "Save"}
-    </button>
+    </div>
+
+    {#if sendNowResult}
+      <p class="text-sm" style="color: var(--dash-success, #16a34a);">
+        Sent {sendNowResult.job_count} job{sendNowResult.job_count === 1 ? "" : "s"} to {sendNowResult.sent_to.join(", ")}
+      </p>
+    {/if}
 
   </div>
 </Card>

@@ -1,9 +1,10 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { profiles, users } from "$lib/server/db/schema";
+import { eq, gte, and, desc } from "drizzle-orm";
+import { profiles, users, job_matches, jobs } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
+import { sendDigestEmail, type DigestJob } from "$lib/server/email/digest";
 
 const ALLOWED_FREQUENCIES = [1, 2, 3, 5, 7, 14];
 const ALLOWED_MIN_SCORES = [50, 60, 70, 80, 90];
@@ -115,6 +116,23 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     profileUpdate.email_digest_send_to = body.send_to;
   }
 
+  // Reset last_sent_at to re-include the previous period's jobs
+  if (body.reset_last_sent === true) {
+    const freq = body.frequency_days ?? profileUpdate.email_digest_frequency_days;
+    // Look up current frequency if not in this request
+    let frequencyDays = 7;
+    if (typeof freq === "number") {
+      frequencyDays = freq;
+    } else {
+      const current = await db.query.profiles.findFirst({
+        where: eq(profiles.id, profileId),
+        columns: { email_digest_frequency_days: true },
+      });
+      frequencyDays = current?.email_digest_frequency_days ?? 7;
+    }
+    profileUpdate.email_digest_last_sent_at = new Date(Date.now() - frequencyDays * 86400_000);
+  }
+
   // Timezone is saved on the user, not the profile
   if (typeof body.timezone === "string") {
     try {
@@ -130,4 +148,132 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   }
 
   return json({ ok: true });
+};
+
+const DIGEST_MAX_JOBS = 20;
+
+/**
+ * POST /api/profile/[id]/email-digest
+ *
+ * Send the digest email immediately (for testing). Uses the profile's
+ * configured min_score and send_to settings, and includes matches since
+ * last_sent_at (or the last frequency_days if never sent).
+ */
+export const POST: RequestHandler = async ({ params, locals, url }) => {
+  const user = requireAuth(locals);
+  const profileId = parseIntParam(params.id, "profile");
+  await requireProfileAccess(profileId, user.id);
+
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, profileId),
+    columns: {
+      name: true,
+      email_address: true,
+      user_id: true,
+      email_digest_frequency_days: true,
+      email_digest_min_score: true,
+      email_digest_last_sent_at: true,
+      email_digest_send_to: true,
+    },
+  });
+
+  if (!profile) throw error(404, "Profile not found");
+
+  const minScore = profile.email_digest_min_score ?? 70;
+  const frequencyDays = profile.email_digest_frequency_days ?? 7;
+  const sendTo = profile.email_digest_send_to ?? "profile";
+
+  // Determine recipients
+  const recipients: string[] = [];
+  if ((sendTo === "profile" || sendTo === "both") && profile.email_address) {
+    recipients.push(profile.email_address);
+  }
+  if (sendTo === "account" || sendTo === "both") {
+    recipients.push(user.email);
+  }
+  // Deduplicate
+  const uniqueRecipients = [...new Set(recipients)];
+  if (uniqueRecipients.length === 0) {
+    throw error(400, "No email address configured for digest");
+  }
+
+  // Cutoff: either last_sent_at or frequency_days ago
+  const since = profile.email_digest_last_sent_at
+    ?? new Date(Date.now() - frequencyDays * 86400_000);
+
+  const matches = await db
+    .select({
+      job_id: job_matches.job_id,
+      score: job_matches.score,
+      matched_skills: job_matches.matched_skills,
+      title: jobs.title,
+      company: jobs.company,
+      source_url: jobs.source_url,
+      office_location: jobs.office_location,
+      salary_min: jobs.salary_min,
+      salary_max: jobs.salary_max,
+      salary_currency: jobs.salary_currency,
+      salary_period: jobs.salary_period,
+      work_location: jobs.work_location,
+      job_types: jobs.job_types,
+      experience_levels: jobs.experience_levels,
+      skills_required: jobs.skills_required,
+      skills_preferred: jobs.skills_preferred,
+      job_description: jobs.job_description,
+    })
+    .from(job_matches)
+    .innerJoin(jobs, eq(job_matches.job_id, jobs.id))
+    .where(
+      and(
+        eq(job_matches.profile_id, profileId),
+        gte(job_matches.score, minScore),
+        gte(job_matches.date_created, since),
+      ),
+    )
+    .orderBy(desc(job_matches.score))
+    .limit(DIGEST_MAX_JOBS);
+
+  const digestJobs: DigestJob[] = matches.map((m) => ({
+    id: m.job_id,
+    title: m.title ?? "Untitled",
+    company: m.company,
+    score: m.score,
+    source_url: m.source_url,
+    office_location: m.office_location,
+    salary_min: m.salary_min,
+    salary_max: m.salary_max,
+    salary_currency: m.salary_currency,
+    salary_period: m.salary_period,
+    work_location: m.work_location as string[] | null,
+    job_types: m.job_types as string[] | null,
+    experience_levels: m.experience_levels as string[] | null,
+    skills_required: m.skills_required as string[] | null,
+    skills_preferred: m.skills_preferred as string[] | null,
+    matched_skills: m.matched_skills as string[] | null,
+    job_description: m.job_description,
+  }));
+
+  const appUrl = url.origin;
+  const profileName = profile.name ?? "Your profile";
+
+  for (const to of uniqueRecipients) {
+    await sendDigestEmail({
+      to,
+      profileName,
+      jobs: digestJobs,
+      minScore,
+      appUrl,
+    });
+  }
+
+  // Update last_sent_at
+  await db.update(profiles)
+    .set({ email_digest_last_sent_at: new Date() })
+    .where(eq(profiles.id, profileId));
+
+  return json({
+    ok: true,
+    sent_to: uniqueRecipients,
+    job_count: digestJobs.length,
+  });
 };
