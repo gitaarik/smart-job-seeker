@@ -103,6 +103,7 @@ export async function processInboundEmail(params: {
   extractedLink?: string;
 }> {
   const { recipientToken, fromAddress, subject, bodyText, bodyHtml } = params;
+  const recipientAddress = `verify-${recipientToken}@${VERIFY_DOMAIN}`;
 
   // 1. Find the verification address
   const verifyAddr = await db.query.verification_email_addresses.findFirst({
@@ -110,11 +111,33 @@ export async function processInboundEmail(params: {
     with: { profile: true },
   });
 
+  // Always store the email so it's visible in admin inbox
   if (!verifyAddr) {
+    await db.insert(inbound_emails).values({
+      recipient: recipientAddress,
+      handler: "verification-relay",
+      from_address: fromAddress,
+      subject: subject?.slice(0, 500) || null,
+      body_text: bodyText,
+      body_html: bodyHtml,
+      status: "dropped",
+    });
+    console.log(`[verification-relay] Unknown token ${recipientToken} from ${fromAddress}`);
     return { success: false, message: "Unknown verification email token" };
   }
 
   if (!verifyAddr.is_active) {
+    await db.insert(inbound_emails).values({
+      recipient: recipientAddress,
+      handler: "verification-relay",
+      verification_address_id: verifyAddr.id,
+      from_address: fromAddress,
+      subject: subject?.slice(0, 500) || null,
+      body_text: bodyText,
+      body_html: bodyHtml,
+      status: "dropped",
+    });
+    console.log(`[verification-relay] Disabled address for profile ${verifyAddr.profile_id} from ${fromAddress}`);
     return { success: false, message: "Verification email address is disabled" };
   }
 
@@ -125,7 +148,6 @@ export async function processInboundEmail(params: {
     .where(eq(verification_email_addresses.id, verifyAddr.id));
 
   // 2. Find an active blocked run for this profile
-  // We need to find search_task_runs where status is "blocked" and the search_task belongs to this profile
   const blockedRunResults = await db
     .select({
       id: search_task_runs.id,
@@ -147,7 +169,7 @@ export async function processInboundEmail(params: {
 
   // 4. Store the email record
   const [emailRecord] = await db.insert(inbound_emails).values({
-    recipient: `verify-${recipientToken}@${VERIFY_DOMAIN}`,
+    recipient: recipientAddress,
     handler: "verification-relay",
     verification_address_id: verifyAddr.id,
     run_id: blockedRun?.id || null,
