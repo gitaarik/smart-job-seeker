@@ -1,5 +1,5 @@
 import type { Handle, HandleServerError } from "@sveltejs/kit";
-import { json } from "@sveltejs/kit";
+import { json, redirect } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { auth } from "$lib/server/auth/better-auth";
 import type { User } from "$lib/server/auth/better-auth";
@@ -81,6 +81,12 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.user = { id: internalUserId } as User;
     event.locals.session = null;
     return await resolve(event);
+  }
+
+  // Backward compat: redirect old /dashboard/* URLs to new paths
+  if (event.url.pathname.startsWith("/dashboard")) {
+    const newPath = event.url.pathname.replace(/^\/dashboard/, "") || "/home";
+    redirect(301, newPath + event.url.search);
   }
 
   // Get session and populate locals FIRST, before svelteKitHandler

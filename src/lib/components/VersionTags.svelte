@@ -38,7 +38,7 @@
   async function loadVersions() {
     if (loaded) return;
     try {
-      const res = await fetch("/dashboard/api/profile-versions");
+      const res = await fetch("/api/profile-versions");
       if (res.ok) {
         versionSlugs = await res.json();
       }

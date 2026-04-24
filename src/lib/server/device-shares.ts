@@ -56,7 +56,7 @@ export async function shareDevice(
     userId: sharedWithUserId,
     type: "device_share",
     title: `${ownerName} shared a device with you`,
-    link: "/dashboard/contacts",
+    link: "/contacts",
   }).catch(() => {});
 
   return { success: true };

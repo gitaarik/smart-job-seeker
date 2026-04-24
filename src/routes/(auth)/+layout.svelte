@@ -1,5 +1,4 @@
 <script lang="ts">
-  import "../dashboard/dashboard.css";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   let { children } = $props();

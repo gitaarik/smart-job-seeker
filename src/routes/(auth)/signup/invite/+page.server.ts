@@ -35,7 +35,7 @@ function findInviteByToken(
 export const load: PageServerLoad = async (event) => {
   // If already logged in, redirect away
   if (event.locals.user) {
-    redirect(302, "/dashboard");
+    redirect(302, "/home");
   }
 
   const token = event.url.searchParams.get("token");

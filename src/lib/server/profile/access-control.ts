@@ -24,8 +24,8 @@ export interface AccessControlResult {
 /**
  * Check if a request has access to a profile's resume/CV
  * Access is granted in this order:
- * 1. Public version is set (no auth/token required)
- * 2. Logged-in user owns the profile
+ * 1. Logged-in user owns the profile (allows ?version param)
+ * 2. Public version is set (no auth/token required)
  * 3. Valid token is provided
  * Otherwise, access is denied
  */
@@ -34,7 +34,17 @@ export async function checkProfileAccess(
 ): Promise<AccessControlResult> {
   const { profile, token, userId, routeType } = options;
 
-  // 1. Check for public version access
+  // 1. Check if logged-in user owns this profile (before public, so owner can use ?version param)
+  if (userId && profile.user_id === userId) {
+    return {
+      allowed: true,
+      statusCode: 200,
+      message: "Owner access granted",
+      accessType: "owner",
+    };
+  }
+
+  // 2. Check for public version access
   const publicVersionId = routeType === "cv"
     ? profile.public_cv_version_id
     : profile.public_resume_version_id;
@@ -46,16 +56,6 @@ export async function checkProfileAccess(
       message: "Public access granted",
       versionId: publicVersionId,
       accessType: "public",
-    };
-  }
-
-  // 2. Check if logged-in user owns this profile
-  if (userId && profile.user_id === userId) {
-    return {
-      allowed: true,
-      statusCode: 200,
-      message: "Owner access granted",
-      accessType: "owner",
     };
   }
 

@@ -3,6 +3,7 @@
   config.autoAddCss = false;
 
   import "../app.css";
+  import "./(app)/dashboard.css";
   import { onMount } from "svelte";
   import { initializeTheme } from "$lib/stores/theme.svelte";
   import type { LayoutData } from "./$types";

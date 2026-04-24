@@ -94,5 +94,5 @@ export async function loginViaUI(
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL("**/dashboard**", { timeout: 10000 });
+  await page.waitForURL("**/home**", { timeout: 10000 });
 }

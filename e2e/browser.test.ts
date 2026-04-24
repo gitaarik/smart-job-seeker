@@ -41,7 +41,7 @@ describe("login flow", () => {
 
   it("logs in with valid credentials and lands on dashboard", async () => {
     await loginViaUI(b.page);
-    expect(b.page.url()).toContain("/dashboard");
+    expect(b.page.url()).toContain("/home");
     const heading = await b.page.locator("h1").first().textContent();
     expect(heading?.trim()).toBe("Dashboard");
   });
@@ -68,7 +68,7 @@ describe("dashboard", () => {
   });
 
   it("shows billing plan info in sidebar", async () => {
-    const planLink = b.page.locator('a[href="/dashboard/billing"]').first();
+    const planLink = b.page.locator('a[href="/billing"]').first();
     expect(await planLink.isVisible()).toBe(true);
     const planText = await planLink.textContent();
     expect(planText?.toLowerCase()).toContain("plan");
@@ -84,7 +84,7 @@ describe("profile creation page", () => {
 
   it("shows create profile heading and upload form", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/profile/create");
+    await b.page.goto("/profile/create");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -123,7 +123,7 @@ describe("profile creation flow", () => {
 
   it("creates a profile via manual entry", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/profile/create");
+    await b.page.goto("/profile/create");
     await b.page.waitForLoadState("networkidle");
 
     // Switch to manual entry form (basic info section is already expanded)
@@ -136,9 +136,9 @@ describe("profile creation flow", () => {
     // Fill optional: Professional Title (second text input)
     await b.page.locator('input[type="text"]').nth(1).fill("Senior QA Engineer");
 
-    // Submit and wait for redirect to /dashboard?profile=<id>
+    // Submit and wait for redirect to /home?profile=<id>
     await b.page.getByRole("button", { name: /create profile/i }).click();
-    await b.page.waitForURL(/\/dashboard\?profile=\d+/, { timeout: 15000 });
+    await b.page.waitForURL(/\/home\?profile=\d+/, { timeout: 15000 });
 
     // Extract profile ID from redirect URL
     const match = b.page.url().match(/profile=(\d+)/);
@@ -151,10 +151,10 @@ describe("profile creation flow", () => {
 
   it("shows the new profile in the edit page", async () => {
     // First ensure the new profile is selected via URL param
-    await b.page.goto(`/dashboard?profile=${profileId}`);
+    await b.page.goto(`/home?profile=${profileId}`);
     await b.page.waitForLoadState("networkidle");
 
-    await b.page.goto("/dashboard/profile/edit");
+    await b.page.goto("/profile/edit");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -166,7 +166,7 @@ describe("profile creation flow", () => {
   });
 
   it("shows work experience page with add button", async () => {
-    await b.page.goto("/dashboard/profile/work-experience");
+    await b.page.goto("/profile/work-experience");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -177,7 +177,7 @@ describe("profile creation flow", () => {
   });
 
   it("shows education page with add button", async () => {
-    await b.page.goto("/dashboard/profile/education");
+    await b.page.goto("/profile/education");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -188,7 +188,7 @@ describe("profile creation flow", () => {
   });
 
   it("shows skills page with add categories", async () => {
-    await b.page.goto("/dashboard/profile/skills");
+    await b.page.goto("/profile/skills");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -199,7 +199,7 @@ describe("profile creation flow", () => {
   });
 
   it("shows languages page", async () => {
-    await b.page.goto("/dashboard/profile/languages");
+    await b.page.goto("/profile/languages");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -208,10 +208,10 @@ describe("profile creation flow", () => {
 
   it("deletes the test profile via settings danger zone", async () => {
     // First ensure the test profile is selected
-    await b.page.goto(`/dashboard?profile=${profileId}`);
+    await b.page.goto(`/home?profile=${profileId}`);
     await b.page.waitForLoadState("networkidle");
 
-    await b.page.goto("/dashboard/export/settings");
+    await b.page.goto("/export/settings");
     await b.page.waitForLoadState("networkidle");
 
     // Type the profile name in the confirmation input
@@ -226,9 +226,9 @@ describe("profile creation flow", () => {
     const finalDelete = b.page.getByRole("button", { name: /yes.*delete permanently/i });
     await finalDelete.click();
 
-    // Should redirect to dashboard after deletion
-    await b.page.waitForURL("**/dashboard**", { timeout: 10000 });
-    expect(b.page.url()).toContain("/dashboard");
+    // Should redirect to home after deletion
+    await b.page.waitForURL("**/home**", { timeout: 10000 });
+    expect(b.page.url()).toContain("/home");
   });
 });
 
@@ -241,7 +241,7 @@ describe("jobs page", () => {
 
   it("shows jobs heading and search bar", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/jobs");
+    await b.page.goto("/jobs");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -279,7 +279,7 @@ describe("billing page", () => {
 
   it("shows plan and usage heading", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/billing");
+    await b.page.goto("/billing");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -308,7 +308,7 @@ describe("contacts page", () => {
 
   it("shows contacts heading", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/contacts");
+    await b.page.goto("/contacts");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -347,7 +347,7 @@ describe("export/import page", () => {
 
   it("shows import & export heading", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/export/import");
+    await b.page.goto("/export/import");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -364,7 +364,7 @@ describe("settings page", () => {
 
   it("shows settings heading", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/export/settings");
+    await b.page.goto("/export/settings");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -381,18 +381,18 @@ describe("sidebar navigation", () => {
 
   it("navigates via sidebar section links", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/jobs");
+    await b.page.goto("/jobs");
     await b.page.waitForLoadState("networkidle");
 
     // Navigate back to Overview
     await b.page.locator("aside a").filter({ hasText: "Overview" }).click();
-    await b.page.waitForURL("**/dashboard", { timeout: 5000 });
-    expect(b.page.url()).toMatch(/\/dashboard$/);
+    await b.page.waitForURL("**/home", { timeout: 5000 });
+    expect(b.page.url()).toMatch(/\/home$/);
 
     // Navigate to billing via plan link
-    await b.page.locator('aside a[href="/dashboard/billing"]').first().click();
+    await b.page.locator('aside a[href="/billing"]').first().click();
     await b.page.waitForURL("**/billing", { timeout: 5000 });
-    expect(b.page.url()).toContain("/dashboard/billing");
+    expect(b.page.url()).toContain("/billing");
   });
 
   it("expands Job Search and navigates to sub-pages", async () => {
@@ -405,7 +405,7 @@ describe("sidebar navigation", () => {
 
     await allJobsLink.click();
     await b.page.waitForURL("**/jobs", { timeout: 5000 });
-    expect(b.page.url()).toContain("/dashboard/jobs");
+    expect(b.page.url()).toContain("/jobs");
   });
 
   it("expands Applying and navigates to applications", async () => {
@@ -417,7 +417,7 @@ describe("sidebar navigation", () => {
 
     await appLink.click();
     await b.page.waitForURL("**/applications/**", { timeout: 5000 });
-    expect(b.page.url()).toContain("/dashboard/applications");
+    expect(b.page.url()).toContain("/applications");
   });
 
   it("expands Profile and navigates to profile data", async () => {
@@ -429,7 +429,7 @@ describe("sidebar navigation", () => {
 
     await profileLink.click();
     await b.page.waitForURL("**/profile/edit", { timeout: 5000 });
-    expect(b.page.url()).toContain("/dashboard/profile/edit");
+    expect(b.page.url()).toContain("/profile/edit");
   });
 
   it("expands Data & Settings and navigates to import", async () => {
@@ -441,7 +441,7 @@ describe("sidebar navigation", () => {
 
     await importLink.click();
     await b.page.waitForURL("**/export/import", { timeout: 5000 });
-    expect(b.page.url()).toContain("/dashboard/export/import");
+    expect(b.page.url()).toContain("/export/import");
   });
 });
 
@@ -558,7 +558,7 @@ describe("applications pages", () => {
 
   it("shows all applications heading", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/applications/active");
+    await b.page.goto("/applications/active");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -566,7 +566,7 @@ describe("applications pages", () => {
   });
 
   it("shows salary prep page", async () => {
-    await b.page.goto("/dashboard/applications/salary");
+    await b.page.goto("/applications/salary");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -583,11 +583,11 @@ describe("job detail page", () => {
 
   it("navigates to a job detail from the jobs list", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/jobs");
+    await b.page.goto("/jobs");
     await b.page.waitForLoadState("networkidle");
 
     // Click the first job card link
-    const jobLink = b.page.locator('main a[href*="/dashboard/jobs/"]').first();
+    const jobLink = b.page.locator('main a[href*="/jobs/"]').first();
     expect(await jobLink.isVisible()).toBe(true);
 
     const href = await jobLink.getAttribute("href");
@@ -619,7 +619,7 @@ describe("profile edit and save", () => {
 
   it("loads the edit page with profile data", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/profile/edit");
+    await b.page.goto("/profile/edit");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -671,14 +671,14 @@ describe("cross-page navigation", () => {
     await loginViaUI(b.page);
 
     const routes = [
-      { path: "/dashboard", heading: "Dashboard" },
-      { path: "/dashboard/jobs", heading: "Jobs" },
-      { path: "/dashboard/applications/active", heading: "Applications" },
-      { path: "/dashboard/billing", heading: "Plan" },
-      { path: "/dashboard/contacts", heading: "Contacts" },
-      { path: "/dashboard/export/import", heading: "Import" },
-      { path: "/dashboard/export/settings", heading: "Settings" },
-      { path: "/dashboard/profile/create", heading: "Create" },
+      { path: "/home", heading: "Dashboard" },
+      { path: "/jobs", heading: "Jobs" },
+      { path: "/applications/active", heading: "Applications" },
+      { path: "/billing", heading: "Plan" },
+      { path: "/contacts", heading: "Contacts" },
+      { path: "/export/import", heading: "Import" },
+      { path: "/export/settings", heading: "Settings" },
+      { path: "/profile/create", heading: "Create" },
     ];
 
     for (const route of routes) {
@@ -753,7 +753,7 @@ describe("export page", () => {
 
   it("shows export options with scope selection", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/export/data");
+    await b.page.goto("/export/data");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -798,7 +798,7 @@ describe("import page", () => {
 
   it("shows import area with file upload", async () => {
     await loginViaUI(b.page);
-    await b.page.goto("/dashboard/export/import");
+    await b.page.goto("/export/import");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
@@ -845,10 +845,10 @@ describe("unauthenticated access", () => {
 
   it("redirects all dashboard routes to login", async () => {
     const routes = [
-      "/dashboard",
-      "/dashboard/jobs",
-      "/dashboard/billing",
-      "/dashboard/contacts",
+      "/home",
+      "/jobs",
+      "/billing",
+      "/contacts",
     ];
 
     for (const route of routes) {
@@ -869,7 +869,7 @@ describe("logout", () => {
   it("clearing cookies removes access to dashboard", async () => {
     await loginViaUI(b.page);
     await b.context.clearCookies();
-    await b.page.goto("/dashboard");
+    await b.page.goto("/home");
     await b.page.waitForTimeout(1000);
     expect(b.page.url()).toContain("/login");
   });

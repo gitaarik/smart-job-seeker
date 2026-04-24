@@ -5,7 +5,7 @@ import type { RequestEvent } from "@sveltejs/kit";
 
 function createMockEvent(
   user: any = null,
-  pathname = "/dashboard",
+  pathname = "/home",
   search = "",
 ): RequestEvent {
   return {
@@ -22,22 +22,22 @@ describe("requireAuth", () => {
   });
 
   it("redirects to login when not authenticated", () => {
-    expect(() => requireAuth(createMockEvent(null, "/dashboard"))).toThrow();
+    expect(() => requireAuth(createMockEvent(null, "/home"))).toThrow();
 
     try {
-      requireAuth(createMockEvent(null, "/dashboard"));
+      requireAuth(createMockEvent(null, "/home"));
     } catch (e: any) {
       expect(e.status).toBe(302);
-      expect(e.location).toBe("/login?redirect=%2Fdashboard");
+      expect(e.location).toBe("/login?redirect=%2Fhome");
     }
   });
 
   it("preserves search params in redirect", () => {
     try {
-      requireAuth(createMockEvent(null, "/dashboard/jobs", "?page=2"));
+      requireAuth(createMockEvent(null, "/jobs", "?page=2"));
     } catch (e: any) {
       expect(e.status).toBe(302);
-      expect(e.location).toBe("/login?redirect=%2Fdashboard%2Fjobs%3Fpage%3D2");
+      expect(e.location).toBe("/login?redirect=%2Fjobs%3Fpage%3D2");
     }
   });
 });
@@ -60,10 +60,10 @@ describe("redirectIfAuthenticated", () => {
   it("redirects to custom path when authenticated", () => {
     const user = { id: "user-1" };
     try {
-      redirectIfAuthenticated(createMockEvent(user), "/dashboard");
+      redirectIfAuthenticated(createMockEvent(user), "/home");
     } catch (e: any) {
       expect(e.status).toBe(302);
-      expect(e.location).toBe("/dashboard");
+      expect(e.location).toBe("/home");
     }
   });
 });

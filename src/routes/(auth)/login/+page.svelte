@@ -28,7 +28,7 @@
       }
 
       // Redirect to the intended page or dashboard
-      goto(data.redirectTo || "/dashboard");
+      goto(data.redirectTo || "/home");
     } catch (err) {
       error = err instanceof Error ? err.message : "An error occurred";
     } finally {

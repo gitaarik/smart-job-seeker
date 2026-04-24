@@ -43,8 +43,8 @@ describe("public pages", () => {
     expect([200, 302]).toContain(res.status);
   });
 
-  it("unauthenticated /dashboard redirects to /login", async () => {
-    const res = await request("/dashboard", { auth: false });
+  it("unauthenticated /home redirects to /login", async () => {
+    const res = await request("/home", { auth: false });
     expect(res.status).toBe(302);
     const location = res.headers.get("location");
     expect(location).toContain("/login");
@@ -78,31 +78,31 @@ describe("authentication", () => {
 
 describe("dashboard pages", () => {
   it("dashboard home renders", async () => {
-    await expectPage("/dashboard");
+    await expectPage("/home");
   });
 
   it("jobs page renders", async () => {
-    await expectPage("/dashboard/jobs");
+    await expectPage("/jobs");
   });
 
   it("applications page renders", async () => {
-    await expectPage("/dashboard/applications/active");
+    await expectPage("/applications/active");
   });
 
   it("profile create page renders", async () => {
-    await expectPage("/dashboard/profile/create");
+    await expectPage("/profile/create");
   });
 
   it("billing page renders", async () => {
-    await expectPage("/dashboard/billing");
+    await expectPage("/billing");
   });
 
   it("contacts page renders", async () => {
-    await expectPage("/dashboard/contacts");
+    await expectPage("/contacts");
   });
 
   it("export page renders", async () => {
-    await expectPage("/dashboard/export/import");
+    await expectPage("/export/import");
   });
 });
 

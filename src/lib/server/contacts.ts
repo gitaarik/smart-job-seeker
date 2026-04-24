@@ -157,7 +157,7 @@ export async function sendContactRequest(
     userId: recipient.id,
     type: "contact_request",
     title: `${requesterName} sent you a contact request`,
-    link: "/dashboard/contacts",
+    link: "/contacts",
   }).catch(() => {});
 
   return {

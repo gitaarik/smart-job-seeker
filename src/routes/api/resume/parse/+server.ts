@@ -1,7 +1,7 @@
 /**
  * POST /api/resume/parse
  * Parses a CV/resume file (PDF, DOCX, HTML) or JSON Resume and returns ResumeData.
- * Used by both /dashboard/profile/create and /dashboard/export/import.
+ * Used by both /profile/create and /export/import.
  */
 
 import { json, error } from "@sveltejs/kit";

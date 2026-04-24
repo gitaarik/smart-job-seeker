@@ -28,7 +28,7 @@ export function requireAuth(event: RequestEvent) {
 }
 
 /**
- * Require admin access. Redirects to /dashboard if user is not an admin.
+ * Require admin access. Redirects to /home if user is not an admin.
  */
 export function requireAdmin(event: RequestEvent) {
   const user = requireAuth(event);
@@ -36,7 +36,7 @@ export function requireAdmin(event: RequestEvent) {
     !(user as { is_admin?: boolean }).is_admin &&
     !(event.locals.adminUser as { is_admin?: boolean } | null)?.is_admin
   ) {
-    redirect(302, "/dashboard");
+    redirect(302, "/home");
   }
   return user;
 }
