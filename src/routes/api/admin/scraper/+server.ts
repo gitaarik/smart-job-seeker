@@ -14,7 +14,6 @@ import { requireAuth } from "$lib/server/utils/api-helpers";
 import { searchTaskDisplayName } from "$lib/format";
 import {
   addScrapeJob,
-  removeActiveJob,
   removeWaitingJob,
   getQueueStats,
 } from "$lib/server/queue";
@@ -349,7 +348,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       date_updated: new Date(),
     }).where(eq(search_tasks.id, searchTaskId));
 
-    await removeActiveJob(searchTaskId);
+    // Don't call removeActiveJob() — it interferes with the worker's
+    // cancelJob() mechanism. The cancel checker handles it via abort signal.
 
     return json({ status: "cancellation_requested" });
   }

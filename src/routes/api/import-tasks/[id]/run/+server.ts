@@ -270,9 +270,11 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
     date_updated: new Date(),
   }).where(eq(search_tasks.id, searchTaskId));
 
-  // Try to force-fail the BullMQ job (best-effort — it may not be found
-  // if the worker restarted or BullMQ state diverged, but that's OK)
-  await removeActiveJob(searchTaskId);
+  // The worker's cancel checker (5s poll) detects "stopping" and calls
+  // worker.cancelJob() which sends the abort signal to the child process.
+  // We do NOT call removeActiveJob() here — it would moveToFailed() in Redis
+  // which prevents cancelJob() from delivering the abort signal, leaving the
+  // child process running and the run stuck in "stopping" state.
 
   console.log(`[API] Requested stop for search ${searchTaskId}`);
   return json({ status: "cancellation_requested" });
