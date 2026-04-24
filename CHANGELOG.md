@@ -7,15 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-04-24
 
-4 commits since v0.4.113.
-
 ### Changed
-- Removed `/dashboard` prefix from routes for cleaner URLs
-- Renamed "API Key" to "Device Key" throughout the application and error messages
+- Removed `/dashboard` prefix from all app routes for cleaner URLs
+- Renamed "API Key" to "Device Key" throughout the UI and error messages
 - Devices tab now uses a desktop icon
 
 ### Fixed
-- Resume version handling bugs
+- Resume version `?version` query param now works for logged-in profile owners
+- Public access checkboxes on resume version page now update correctly after saving
+- Feedback page 500 error (Prisma-to-Drizzle migration leftover)
+- Feedback file attachments not rendering (wrong relation name)
 
 ## [0.4.113] - 2026-04-24
 
