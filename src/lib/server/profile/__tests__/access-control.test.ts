@@ -149,12 +149,12 @@ describe("checkProfileAccess", () => {
   });
 
   // Priority order
-  it("prefers public over owner when no token", async () => {
+  it("prefers owner over public when user is the profile owner", async () => {
     const result = await checkProfileAccess(opts({
       profile: { ...baseProfile, public_cv_version_id: 10 },
       userId: "owner-123",
     }));
-    expect(result.accessType).toBe("public");
+    expect(result.accessType).toBe("owner");
   });
 
   it("prefers owner over denial when not public and no token", async () => {

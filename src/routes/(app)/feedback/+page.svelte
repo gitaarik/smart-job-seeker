@@ -151,10 +151,10 @@
                     {statusLabels[entry.status] || entry.status}
                   </span>
                   <span class="text-xs text-[var(--dash-text-muted)]">#{entry.id}</span>
-                  {#if entry._count.feedback_replies > 0}
+                  {#if entry.feedback_replies.length > 0}
                     <span class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)]">
                       <FontAwesomeIcon icon={faReply} class="w-3 h-3" />
-                      {entry._count.feedback_replies}
+                      {entry.feedback_replies.length}
                     </span>
                   {/if}
                 </div>
@@ -181,14 +181,14 @@
               {#if entry.user_feedback_files?.length > 0}
                 <div class="flex flex-wrap gap-2">
                   {#each entry.user_feedback_files as fileRecord}
-                    {#if fileRecord.files}
+                    {#if fileRecord.file}
                       <a
-                        href="/api/feedback/{entry.id}/files?fileId={fileRecord.files.id}"
+                        href="/api/feedback/{entry.id}/files?fileId={fileRecord.file.id}"
                         class="flex items-center gap-1.5 px-2 py-1 text-xs bg-[var(--dash-bg)] rounded border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors"
                       >
                         <FontAwesomeIcon icon={faDownload} class="w-3 h-3" />
-                        <span class="truncate max-w-32">{fileRecord.files.filename_download}</span>
-                        <span class="text-[var(--dash-text-muted)]">{formatFileSize(fileRecord.files.filesize)}</span>
+                        <span class="truncate max-w-32">{fileRecord.file.filename_download}</span>
+                        <span class="text-[var(--dash-text-muted)]">{formatFileSize(fileRecord.file.filesize)}</span>
                       </a>
                     {/if}
                   {/each}
