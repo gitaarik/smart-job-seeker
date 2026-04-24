@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, or, like, desc } from "drizzle-orm";
-import { search_tasks, profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
+import { search_tasks, profiles, job_platforms, platform_profiles, users } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import { getSelectedProfileId } from "../../../profile/utils";
 
@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const profileId = layoutData.selectedProfile.id;
 
-  const [searchTasksList, profile] = await Promise.all([
+  const [searchTasksList, profile, userRecord] = await Promise.all([
     db.query.search_tasks.findMany({
       where: eq(search_tasks.profile_id, profileId),
       with: {
@@ -32,6 +32,14 @@ export const load: PageServerLoad = async ({ parent }) => {
       if (!p) throw new Error("Record not found");
       return p;
     })(),
+    (async () => {
+      const user = layoutData.user;
+      if (!user) return null;
+      return db.query.users.findFirst({
+        where: eq(users.id, user.id),
+        columns: { timezone: true },
+      });
+    })(),
   ]);
   const searchTasks = searchTasksList;
 
@@ -47,6 +55,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     defaultMaxJobs: config.defaultMaxJobs,
     browserCountryCode: profile.browser_country_code ?? "",
     defaultCountryCode: profile.country_code ?? "",
+    userTimezone: userRecord?.timezone || "",
   };
 };
 

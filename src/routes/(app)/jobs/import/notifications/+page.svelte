@@ -52,13 +52,33 @@
     if (!lastSentDate) return null;
     const next = new Date(lastSentDate);
     next.setDate(next.getDate() + digestFrequency);
-    // Snap to the preferred hour
-    next.setHours(digestPreferredHour, 0, 0, 0);
-    // If that's in the past, move to tomorrow at the preferred hour
-    if (next <= new Date()) {
-      next.setDate(next.getDate() + 1);
+    // Snap to the preferred hour in the user's timezone
+    const tz = digestTimezone || undefined;
+    try {
+      // Get the current date parts in the user's timezone for the "next" date
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false,
+      }).formatToParts(next);
+      const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
+      // Build a date at the preferred hour in the user's timezone
+      const probe = new Date(Date.UTC(get("year"), get("month") - 1, get("day"), digestPreferredHour));
+      // Adjust for timezone offset
+      const utcStr = probe.toLocaleString("en-US", { timeZone: "UTC", hour12: false });
+      const tzStr = probe.toLocaleString("en-US", { timeZone: tz, hour12: false });
+      const offsetMs = new Date(utcStr).getTime() - new Date(tzStr).getTime();
+      const snapped = new Date(probe.getTime() + offsetMs);
+      // If that's in the past, move to next day
+      if (snapped <= new Date()) {
+        return new Date(snapped.getTime() + 86400_000);
+      }
+      return snapped;
+    } catch {
+      // Fallback to browser timezone
+      next.setHours(digestPreferredHour, 0, 0, 0);
+      if (next <= new Date()) next.setDate(next.getDate() + 1);
+      return next;
     }
-    return next;
   });
 
   function formatRelative(date: Date): string {
@@ -74,17 +94,19 @@
   }
 
   function formatTime(date: Date): string {
-    return date.toLocaleTimeString(undefined, {
+    return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: digestTimezone || undefined,
     });
   }
 
   function formatDateShort(date: Date): string {
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
+      timeZone: digestTimezone || undefined,
     });
   }
 

@@ -28,6 +28,33 @@
   const originalTimezone = data.timezone || "";
   const tzChanged = $derived(timezone !== originalTimezone);
 
+  // Live clock for selected timezone
+  let currentTime = $state("");
+
+  $effect(() => {
+    if (!timezone) {
+      currentTime = "";
+      return;
+    }
+    function updateTime() {
+      try {
+        currentTime = new Intl.DateTimeFormat("en-US", {
+          timeZone: timezone,
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+          weekday: "short",
+          hour12: true,
+        }).format(new Date());
+      } catch {
+        currentTime = "";
+      }
+    }
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  });
+
   const TIMEZONE_OPTIONS = [
     { group: "Americas", zones: [
       "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
@@ -218,6 +245,11 @@
             </optgroup>
           {/each}
         </select>
+        {#if currentTime}
+          <p class="mt-2 text-sm text-[var(--dash-text)]">
+            Current time: <span class="font-medium">{currentTime}</span>
+          </p>
+        {/if}
         <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
           Used for email digest scheduling. Applies to all your profiles.
         </p>

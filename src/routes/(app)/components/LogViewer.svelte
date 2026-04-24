@@ -12,9 +12,10 @@
     logs: LogEntry[];
     loading?: boolean;
     maxHeight?: string;
+    timezone?: string;
   }
 
-  let { logs, loading = false, maxHeight = "max-h-64" }: Props = $props();
+  let { logs, loading = false, maxHeight = "max-h-64", timezone }: Props = $props();
 
   const LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
   const LOG_LEVEL_RANK: Record<string, number> = {
@@ -107,7 +108,7 @@
       {#each filteredLogs as log (log.id)}
         <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
           <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-            {new Date(log.timestamp).toLocaleTimeString()}
+            {new Date(log.timestamp).toLocaleTimeString("en-US", { timeZone: timezone || undefined })}
           </span>
           <span class="uppercase w-12 {getLogLevelColor(log.level)}">
             {log.level}

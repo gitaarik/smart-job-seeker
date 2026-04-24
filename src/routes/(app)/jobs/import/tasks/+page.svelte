@@ -130,6 +130,8 @@
   // Debounce timer
   let urlDebounce: ReturnType<typeof setTimeout> | null = null;
 
+  const tz = $derived(data.userTimezone || undefined);
+
   function formatDate(date: Date | string | null): string {
     if (!date) return "Never";
     const d = typeof date === "string" ? new Date(date) : date;
@@ -139,6 +141,7 @@
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: tz,
     });
   }
 
@@ -176,7 +179,7 @@
     const diffDays = Math.floor(diffMs / 86400000);
     if (diffDays === 1) return "Tomorrow";
     if (diffDays < 7) return `In ${diffDays} days`;
-    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: tz });
   }
 
   async function detectPlatformFromUrl(searchUrl: string) {

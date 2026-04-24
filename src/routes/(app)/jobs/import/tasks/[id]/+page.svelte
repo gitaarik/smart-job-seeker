@@ -605,6 +605,8 @@
     if (screenshotSrc) URL.revokeObjectURL(screenshotSrc);
   });
 
+  const tz = $derived(data.userTimezone || undefined);
+
   function formatDate(date: Date | string | null): string {
     if (!date) return "Never";
     const d = typeof date === "string" ? new Date(date) : date;
@@ -614,6 +616,7 @@
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: tz,
     });
   }
 
@@ -1740,7 +1743,7 @@
               {#each runLogs[run.id] as log (log.id)}
                 <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
                   <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                    {new Date(log.timestamp).toLocaleTimeString()}
+                    {new Date(log.timestamp).toLocaleTimeString("en-US", { timeZone: tz })}
                   </span>
                   <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                     {log.level}
@@ -2510,7 +2513,7 @@
                     {#each runLogs[featuredRunId] as log (log.id)}
                       <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
                         <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                          {new Date(log.timestamp).toLocaleTimeString()}
+                          {new Date(log.timestamp).toLocaleTimeString("en-US", { timeZone: tz })}
                         </span>
                         <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                           {log.level}
