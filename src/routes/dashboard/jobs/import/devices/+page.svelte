@@ -313,7 +313,7 @@
 
 <div class="space-y-4">
   <p class="text-sm text-[var(--dash-text-secondary)]">
-    Connect a device to scrape from your own IP address. Use the desktop app on your computer or a self-hosted Docker container on a NAS or server.
+    Connect a device to import jobs from your own IP address. Use the desktop app on your computer or a self-hosted Docker container on a NAS or server.
   </p>
 
   <!-- Connection Status -->
@@ -492,7 +492,7 @@ volumes:
               </div>
 
               <p class="text-xs text-[var(--dash-text-secondary)]">
-                You can view and control the browser directly from the dashboard during scraping — no extra ports needed.
+                You can view and control the browser directly from the dashboard during import — no extra ports needed.
               </p>
             </div>
           {/if}
@@ -521,12 +521,12 @@ volumes:
         </div>
       </li>
 
-      <!-- Step 4: Start scraping -->
+      <!-- Step 4: Start importing -->
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">4</span>
         <div>
-          <p class="text-[var(--dash-text)]">Start scraping</p>
-          <p>Once connected (shown above), start a scrape from your Import Task page. Select "My device" as the browser and choose which device to use.</p>
+          <p class="text-[var(--dash-text)]">Start importing</p>
+          <p>Once connected (shown above), start an import from the Import Jobs page. Select "My device" as the browser and choose which device to use.</p>
         </div>
       </li>
     </ol>

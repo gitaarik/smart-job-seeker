@@ -1945,12 +1945,10 @@
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Completed</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                {formatDate(searchTask.last_run)}
-                {#if searchTask.last_run_jobs_found}
-                  • {searchTask.last_run_jobs_found} jobs found
-                {/if}
+              <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+                {formatRelativeTime(searchTask.last_run)}{#if searchTask.last_run_jobs_found} &nbsp;•&nbsp; {searchTask.last_run_jobs_found} jobs found{/if}
               </p>
+              <p class="text-xs text-[var(--dash-text-muted)]">{formatDate(searchTask.last_run)}</p>
             </div>
           {:else if searchTask.status === "partial"}
             <div
@@ -1965,9 +1963,10 @@
               <p class="font-medium text-[var(--dash-text)]">
                 Completed with issues
               </p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                {formatDate(searchTask.last_run)} • {searchTask.status_message}
+              <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+                {formatRelativeTime(searchTask.last_run)} &nbsp;•&nbsp; {searchTask.status_message}
               </p>
+              <p class="text-xs text-[var(--dash-text-muted)]">{formatDate(searchTask.last_run)}</p>
             </div>
           {:else if searchTask.status === "error"}
             <div
@@ -2014,12 +2013,10 @@
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Idle</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                Last run: {formatDate(searchTask.last_run)}
-                {#if searchTask.last_run_jobs_found}
-                  • {searchTask.last_run_jobs_found} jobs found
-                {/if}
+              <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+                Last run: {formatRelativeTime(searchTask.last_run)}{#if searchTask.last_run_jobs_found} &nbsp;•&nbsp; {searchTask.last_run_jobs_found} jobs found{/if}
               </p>
+              <p class="text-xs text-[var(--dash-text-muted)]">{formatDate(searchTask.last_run)}</p>
             </div>
           {:else}
             <div
@@ -2048,22 +2045,24 @@
           {@const prefHour = searchTask.schedule_preferred_hour ?? 9}
           {@const ampm = prefHour < 12 ? "AM" : "PM"}
           {@const h12 = prefHour === 0 ? 12 : prefHour > 12 ? prefHour - 12 : prefHour}
-          <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)] mt-2">
-            <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-            <span>
-              Auto-runs {freqLabel} at {h12}:00 {ampm}{data.userTimezone ? ` (${data.userTimezone.split("/").pop()?.replace(/_/g, " ")})` : ""}
+          <div class="mt-4 space-y-1.5">
+            <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Schedule</h3>
+            <div class="text-xs text-[var(--dash-text-secondary)] space-y-1">
+              <div class="flex items-center gap-2">
+                <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                <span>Auto-runs {freqLabel} at {h12}:00 {ampm}{data.userTimezone ? ` (${data.userTimezone.split("/").pop()?.replace(/_/g, " ")})` : ""}</span>
+              </div>
               {#if searchTask.next_scheduled_run}
                 {@const nextRun = new Date(searchTask.next_scheduled_run)}
                 {@const diffMs = nextRun.getTime() - Date.now()}
-                {#if diffMs <= 0}
-                  — next run due now
-                {:else}
-                  {@const diffMins = Math.floor(diffMs / 60000)}
-                  {@const diffHours = Math.floor(diffMs / 3600000)}
-                  — next run in {diffHours > 0 ? `${diffHours}h ${diffMins % 60}m` : `${diffMins}m`}
-                {/if}
+                <div class="flex items-center gap-2 ml-5">
+                  <span>
+                    Next run {#if diffMs <= 0}due now{:else}{@const diffMins = Math.floor(diffMs / 60000)}{@const diffHours = Math.floor(diffMs / 3600000)}{@const diffDays = Math.floor(diffMs / 86400000)}{diffDays >= 1 ? `in ${diffDays}d ${diffHours % 24}h` : diffHours > 0 ? `in ${diffHours}h ${diffMins % 60}m` : `in ${diffMins}m`}{/if}
+                  </span>
+                  <span class="text-[var(--dash-text-muted)]">{formatDate(searchTask.next_scheduled_run)}</span>
+                </div>
               {/if}
-            </span>
+            </div>
           </div>
         {/if}
 

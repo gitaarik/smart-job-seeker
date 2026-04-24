@@ -142,6 +142,43 @@
     });
   }
 
+  function formatRelativeTime(date: Date | string | null): string {
+    if (!date) return "Never";
+    const d = typeof date === "string" ? new Date(date) : date;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMs / 3600000);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 14) return "1 week ago";
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks < 5) return `${diffWeeks} weeks ago`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths === 1) return "1 month ago";
+    if (diffMonths < 12) return `${diffMonths} months ago`;
+    return formatDate(date);
+  }
+
+  function formatFutureRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffMs = date.getTime() - now.getTime();
+    if (diffMs <= 0) return "Due now";
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 60) return `In ${diffMins}m`;
+    const diffHours = Math.floor(diffMs / 3600000);
+    const remainMins = Math.floor((diffMs % 3600000) / 60000);
+    if (diffHours < 24) return `In ${diffHours}h ${remainMins}m`;
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays < 7) return `In ${diffDays} days`;
+    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  }
+
   async function detectPlatformFromUrl(searchUrl: string) {
     if (!searchUrl) {
       detectedPlatform = null;
@@ -494,90 +531,77 @@
               </div>
 
               <!-- Status info -->
-              <div
-                class="flex items-center gap-1 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap"
-              >
+              <div class="mt-2 text-xs space-y-1.5">
                 {#if search.status === "queued"}
-                  <span class="text-[var(--dash-text-muted)]">{
+                  <div class="text-[var(--dash-text-muted)]">{
                     search.status_message || "Waiting in queue..."
-                  }</span>
+                  }</div>
                 {:else if search.status === "running"}
-                  <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" />
-                  <span>{search.status_message || "Running..."}</span>
+                  <div class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
+                    <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" />
+                    <span>{search.status_message || "Running..."}</span>
+                  </div>
                 {:else if search.status === "stopping"}
-                  <Spinner size={statusIcon.iconSize} color="var(--dash-error)" />
-                  <span class="text-orange-600">Stopping...</span>
-                {:else if search.status === "success"}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
-                  />
-                  <span>{formatDate(search.last_run)}</span>
-                  {#if search.last_run_jobs_found}
-                    <span class="text-[var(--dash-text-muted)]"
-                    >({search.last_run_jobs_found} jobs)</span>
-                  {/if}
+                  <div class="flex items-center gap-1">
+                    <Spinner size={statusIcon.iconSize} color="var(--dash-error)" />
+                    <span class="text-orange-600">Stopping...</span>
+                  </div>
                 {:else if search.status === "blocked"}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
-                  />
-                  <span class="text-[var(--dash-warning)]">{
-                    search.status_message
-                  }</span>
-                {:else if search.status === "partial"}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
-                  />
-                  <span>{formatDate(search.last_run)}</span>
-                  <span class="text-[var(--dash-text-muted)]">— {
-                      search.status_message
-                    }</span>
+                  <div class="flex items-center gap-1">
+                    <FontAwesomeIcon
+                      icon={statusIcon.icon}
+                      class="{statusIcon.iconSize} {statusIcon.colorClass}"
+                    />
+                    <span class="text-[var(--dash-warning)]">{search.status_message}</span>
+                  </div>
                 {:else if search.status === "error"}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
-                  />
-                  <span class="text-[var(--dash-error)]">{
-                    search.status_message
-                  }</span>
+                  <div class="flex items-center gap-1">
+                    <FontAwesomeIcon
+                      icon={statusIcon.icon}
+                      class="{statusIcon.iconSize} {statusIcon.colorClass}"
+                    />
+                    <span class="text-[var(--dash-error)]">{search.status_message}</span>
+                  </div>
+                {:else if search.status === "partial"}
+                  <div class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
+                    <FontAwesomeIcon
+                      icon={statusIcon.icon}
+                      class="{statusIcon.iconSize} {statusIcon.colorClass}"
+                    />
+                    <span class="font-medium text-[var(--dash-text-secondary)]">Last run</span>
+                    <span>{formatRelativeTime(search.last_run)}</span>
+                    <span class="text-[var(--dash-text-muted)]">— {search.status_message}</span>
+                  </div>
                 {:else if search.status === "cancelled"}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
-                  />
-                  <span class="text-[var(--dash-text-muted)]">{
-                    search.status_message || "Cancelled"
-                  }</span>
+                  <div class="flex items-center gap-1">
+                    <FontAwesomeIcon
+                      icon={statusIcon.icon}
+                      class="{statusIcon.iconSize} {statusIcon.colorClass}"
+                    />
+                    <span class="text-[var(--dash-text-muted)]">{search.status_message || "Cancelled"}</span>
+                  </div>
                 {:else if search.last_run}
-                  <FontAwesomeIcon
-                    icon={statusIcon.icon}
-                    class="{statusIcon.iconSize} {statusIcon.colorClass}"
-                  />
-                  <span>{formatDate(search.last_run)}</span>
+                  <div class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
+                    <FontAwesomeIcon
+                      icon={statusIcon.icon}
+                      class="{statusIcon.iconSize} {statusIcon.colorClass}"
+                    />
+                    <span class="font-medium text-[var(--dash-text-secondary)]">Last run</span>
+                    <span>{formatRelativeTime(search.last_run)}{#if search.last_run_jobs_found}{" "}({search.last_run_jobs_found} jobs){/if}</span>
+                  </div>
                 {:else}
-                  <span class="text-[var(--dash-text-muted)]">Never run</span>
+                  <div class="text-[var(--dash-text-muted)]">Never run</div>
+                {/if}
+
+                {#if search.schedule_interval_hours && search.next_scheduled_run}
+                  {@const nextRun = new Date(search.next_scheduled_run)}
+                  <div class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
+                    <FontAwesomeIcon icon={faCalendar} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+                    <span class="font-medium text-[var(--dash-text-secondary)]">Next run</span>
+                    <span>{formatFutureRelativeTime(nextRun)}</span>
+                  </div>
                 {/if}
               </div>
-
-              {#if search.schedule_interval_hours && search.next_scheduled_run}
-                {@const nextRun = new Date(search.next_scheduled_run)}
-                {@const diffMs = nextRun.getTime() - Date.now()}
-                {@const prefHour = search.schedule_preferred_hour ?? 9}
-                {@const ampm = prefHour < 12 ? "AM" : "PM"}
-                {@const h12 = prefHour === 0 ? 12 : prefHour > 12 ? prefHour - 12 : prefHour}
-                <div class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] mt-1">
-                  <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                  <span>
-                    Next run {diffMs <= 0 ? "due now" :
-                      diffMs < 3600000 ? `in ${Math.floor(diffMs / 60000)}m` :
-                      diffMs < 86400000 ? `in ${Math.floor(diffMs / 3600000)}h ${Math.floor((diffMs % 3600000) / 60000)}m` :
-                      `${nextRun.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`}
-                    at {h12}:00 {ampm}
-                  </span>
-                </div>
-              {/if}
             </div>
 
             <!-- Mobile: Platform logo on the right -->

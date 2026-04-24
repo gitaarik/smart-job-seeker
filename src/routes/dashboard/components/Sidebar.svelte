@@ -7,7 +7,6 @@
     faBars,
     faBookmark,
     faBriefcase,
-    faBullseye,
     faChartBar,
     faChartLine,
     faChevronDown,
@@ -81,9 +80,9 @@
       icon: faSearch,
       children: [
         {
-          label: "Import Settings",
+          label: "Import Config",
           href: "/dashboard/jobs/import",
-          icon: faBullseye,
+          icon: faRobot,
         },
         {
           label: "Job Matches",
