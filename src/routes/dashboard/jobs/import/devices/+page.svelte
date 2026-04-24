@@ -72,7 +72,7 @@
         apiKeys = data.apiKeys;
       }
     } catch {
-      errorMessage = "Failed to rename API key";
+      errorMessage = "Failed to rename device key";
     }
   }
 
@@ -137,7 +137,7 @@
       const result = await res.json();
 
       if (!res.ok) {
-        errorMessage = result.error || result.message || "Failed to create API key";
+        errorMessage = result.error || result.message || "Failed to create device key";
         return;
       }
 
@@ -147,14 +147,14 @@
       await invalidateAll();
       apiKeys = data.apiKeys;
     } catch {
-      errorMessage = "Failed to create API key";
+      errorMessage = "Failed to create device key";
     } finally {
       isCreating = false;
     }
   }
 
   async function revokeApiKey(keyId: number) {
-    if (!confirm("Revoke this API key? The device will be disconnected.")) return;
+    if (!confirm("Revoke this device key? The device will be disconnected.")) return;
 
     try {
       const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, { method: "DELETE" });
@@ -163,7 +163,7 @@
         apiKeys = data.apiKeys;
       }
     } catch {
-      errorMessage = "Failed to revoke API key";
+      errorMessage = "Failed to revoke device key";
     }
   }
 
@@ -179,12 +179,12 @@
         apiKeys = data.apiKeys;
       }
     } catch {
-      errorMessage = "Failed to activate API key";
+      errorMessage = "Failed to activate device key";
     }
   }
 
   async function deleteApiKey(keyId: number) {
-    if (!confirm("Delete this API key? This cannot be undone.")) return;
+    if (!confirm("Delete this device key? This cannot be undone.")) return;
 
     try {
       const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}&permanent=true`, { method: "DELETE" });
@@ -193,7 +193,7 @@
         apiKeys = data.apiKeys;
       }
     } catch {
-      errorMessage = "Failed to delete API key";
+      errorMessage = "Failed to delete device key";
     }
   }
 
@@ -320,7 +320,7 @@
   <Card padding="md">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class={`w-3 h-3 rounded-full ${tunnelConnected ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-text-muted)]'}`}></div>
+        <FontAwesomeIcon icon={faDesktop} class={`w-4 h-4 ${tunnelConnected ? 'text-green-500' : 'text-[var(--dash-text-muted)]'}`} />
         <div>
           <p class="font-medium text-[var(--dash-text)]">
             {#if tunnelStatus === "checking"}
@@ -499,12 +499,12 @@ volumes:
         </div>
       </li>
 
-      <!-- Step 2: Create API key -->
+      <!-- Step 2: Create device key -->
       <li class="flex gap-3">
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">2</span>
         <div>
-          <p class="text-[var(--dash-text)]">Create an API key below</p>
-          <p>Each device needs its own API key. The key name identifies the device.</p>
+          <p class="text-[var(--dash-text)]">Create a device key below</p>
+          <p>Each device needs its own key. The key name identifies the device.</p>
         </div>
       </li>
 
@@ -514,9 +514,9 @@ volumes:
         <div>
           <p class="text-[var(--dash-text)]">Connect the device</p>
           {#if installTab === "desktop"}
-            <p>In the desktop app, select the <strong>{typeof window !== 'undefined' && (window.location.host.startsWith('app.') ? 'Production' : window.location.host.startsWith('preview.') ? 'Preview' : 'Dev')}</strong> server and enter your API key.</p>
+            <p>In the desktop app, select the <strong>{typeof window !== 'undefined' && (window.location.host.startsWith('app.') ? 'Production' : window.location.host.startsWith('preview.') ? 'Preview' : 'Dev')}</strong> server and enter your device key.</p>
           {:else}
-            <p>Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs">your-api-key-here</code> in the config with your API key and start the container.</p>
+            <p>Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs">your-api-key-here</code> in the config with your device key and start the container.</p>
           {/if}
         </div>
       </li>
@@ -536,7 +536,7 @@ volumes:
   {#if newlyCreatedKey}
     <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
       <div class="flex items-center justify-between">
-        <p class="font-medium text-[var(--dash-success)]">API key created. You can view and copy it from the list below.</p>
+        <p class="font-medium text-[var(--dash-success)]">Device key created. You can view and copy it from the list below.</p>
         <button
           type="button"
           onclick={() => { newlyCreatedKey = null; }}
@@ -555,12 +555,12 @@ volumes:
     </div>
   {/if}
 
-  <!-- API Keys -->
+  <!-- Device Keys -->
   <Card>
     <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
       <div class="flex items-center gap-2">
         <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
-        <h2 class="font-medium text-[var(--dash-text)]">API Keys</h2>
+        <h2 class="font-medium text-[var(--dash-text)]">Device Keys</h2>
       </div>
       {#if !showAddForm}
         <button
@@ -616,7 +616,7 @@ volumes:
     {#if apiKeys.length === 0}
       <div class="p-8 text-center text-[var(--dash-text-secondary)]">
         <FontAwesomeIcon icon={faKey} class="w-8 h-8 mb-2 opacity-30" />
-        <p>No API keys yet. Create one to connect a device.</p>
+        <p>No device keys yet. Create one to connect a device.</p>
       </div>
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">

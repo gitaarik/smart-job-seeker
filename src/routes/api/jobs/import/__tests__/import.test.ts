@@ -117,7 +117,7 @@ describe("POST /api/jobs/import - Single Job Import", () => {
 
   describe("authentication", () => {
     it("should reject request without authentication", async () => {
-      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "API key required" });
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "Device key required" });
 
       const request = createMockRequest(validJob);
       const event = createMockEvent(request);
@@ -127,11 +127,11 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
-      expect(data.message).toContain("API key required");
+      expect(data.message).toContain("Device key required");
     });
 
-    it("should reject invalid API key", async () => {
-      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "Invalid API key" });
+    it("should reject invalid device key", async () => {
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "Invalid device key" });
 
       const request = createMockRequest(validJob, "sjs_invalid_key");
       const event = createMockEvent(request);
@@ -141,10 +141,10 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
-      expect(data.message).toBe("Invalid API key");
+      expect(data.message).toBe("Invalid device key");
     });
 
-    it("should accept valid API key", async () => {
+    it("should accept valid device key", async () => {
       mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: 1 });
       mockFindExistingJob.mockResolvedValueOnce(null); // No existing job
       mockInsertReturning.mockResolvedValueOnce([{ id: 42 }]);
@@ -361,7 +361,7 @@ describe("POST /api/jobs/import/batch - Batch Job Import", () => {
 
   describe("authentication", () => {
     it("should reject request without authentication", async () => {
-      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "API key required" });
+      mockGetProfileIdFromApiKey.mockResolvedValueOnce({ profileId: null, error: "Device key required" });
 
       const request = createMockRequest({ jobs: validJobs });
       const event = createMockEvent(request);

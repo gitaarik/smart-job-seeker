@@ -118,11 +118,11 @@ export async function verifyApiKeyDetailed(
 ): Promise<ApiKeyVerificationResult> {
   // Basic format validation
   if (!key) {
-    return { valid: false, error: "API key is required" };
+    return { valid: false, error: "Device key is required" };
   }
 
   if (!key.startsWith(API_KEY_PREFIX)) {
-    return { valid: false, error: "Invalid API key format" };
+    return { valid: false, error: "Invalid device key format" };
   }
 
   const keyHash = hashApiKey(key);
@@ -139,15 +139,15 @@ export async function verifyApiKeyDetailed(
     });
 
     if (!apiKey) {
-      return { valid: false, error: "Invalid API key" };
+      return { valid: false, error: "Invalid device key" };
     }
 
     if (apiKey.revoked) {
-      return { valid: false, error: "API key has been revoked" };
+      return { valid: false, error: "Device key has been revoked" };
     }
 
     if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
-      return { valid: false, error: "API key has expired" };
+      return { valid: false, error: "Device key has expired" };
     }
 
     // Update last_used timestamp (fire and forget)

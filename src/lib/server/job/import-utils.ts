@@ -19,10 +19,10 @@ export async function getProfileIdFromApiKey(
     if (profileId) {
       return { profileId };
     }
-    return { profileId: null, error: "Invalid API key" };
+    return { profileId: null, error: "Invalid device key" };
   }
 
-  return { profileId: null, error: "API key required" };
+  return { profileId: null, error: "Device key required" };
 }
 
 /**

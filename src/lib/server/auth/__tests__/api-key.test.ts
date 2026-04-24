@@ -140,18 +140,18 @@ describe("verifyApiKeyDetailed", () => {
 
   it("returns error for empty key", async () => {
     const result = await verifyApiKeyDetailed("");
-    expect(result).toEqual({ valid: false, error: "API key is required" });
+    expect(result).toEqual({ valid: false, error: "Device key is required" });
   });
 
   it("returns error for wrong prefix", async () => {
     const result = await verifyApiKeyDetailed("bad_prefix");
-    expect(result).toEqual({ valid: false, error: "Invalid API key format" });
+    expect(result).toEqual({ valid: false, error: "Invalid device key format" });
   });
 
   it("returns error for unknown key", async () => {
     mockFindFirst.mockResolvedValue(null);
     const result = await verifyApiKeyDetailed("sjs_unknown");
-    expect(result).toEqual({ valid: false, error: "Invalid API key" });
+    expect(result).toEqual({ valid: false, error: "Invalid device key" });
   });
 
   it("returns error for revoked key", async () => {
@@ -159,7 +159,7 @@ describe("verifyApiKeyDetailed", () => {
       id: 1, profile_id: 42, revoked: true, expires_at: null,
     });
     const result = await verifyApiKeyDetailed("sjs_revoked");
-    expect(result).toEqual({ valid: false, error: "API key has been revoked" });
+    expect(result).toEqual({ valid: false, error: "Device key has been revoked" });
   });
 
   it("returns error for expired key", async () => {
@@ -167,7 +167,7 @@ describe("verifyApiKeyDetailed", () => {
       id: 1, profile_id: 42, revoked: false, expires_at: new Date("2020-01-01"),
     });
     const result = await verifyApiKeyDetailed("sjs_expired");
-    expect(result).toEqual({ valid: false, error: "API key has expired" });
+    expect(result).toEqual({ valid: false, error: "Device key has expired" });
   });
 
   it("returns valid with profileId for valid key", async () => {

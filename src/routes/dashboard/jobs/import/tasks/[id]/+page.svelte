@@ -14,6 +14,7 @@
     faBuilding,
     faCalendar,
     faCheck,
+    faClock,
     faChevronDown,
     faChevronRight,
     faCloud,
@@ -1848,9 +1849,9 @@
       <div class="flex items-center gap-3 min-w-0">
           {#if searchTask.status === "queued"}
             <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
+              class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0"
             >
-              <Spinner size="w-5 h-5" color="var(--dash-primary)" />
+              <FontAwesomeIcon icon={faClock} class="w-5 h-5 text-blue-500" />
             </div>
             <div class="min-w-0">
               <p class="font-medium text-[var(--dash-text)]">Queued</p>

@@ -17,7 +17,7 @@ export const PATCH: RequestHandler = async ({ params, locals, url, request }) =>
   if (body.action === "activate") {
     const activated = await activateApiKey(keyId, profileId);
     if (!activated) {
-      throw error(404, "API key not found or not revoked");
+      throw error(404, "Device key not found or not revoked");
     }
     return json({ success: true });
   }
@@ -27,7 +27,7 @@ export const PATCH: RequestHandler = async ({ params, locals, url, request }) =>
     if (!name) throw error(400, "Name is required");
     const renamed = await renameApiKey(keyId, profileId, name);
     if (!renamed) {
-      throw error(404, "API key not found");
+      throw error(404, "Device key not found");
     }
     return json({ success: true });
   }
@@ -48,14 +48,14 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   if (permanent) {
     const deleted = await deleteApiKey(keyId, profileId);
     if (!deleted) {
-      throw error(404, "API key not found");
+      throw error(404, "Device key not found");
     }
     return json({ success: true });
   }
 
   const revoked = await revokeApiKey(keyId, profileId);
   if (!revoked) {
-    throw error(404, "API key not found");
+    throw error(404, "Device key not found");
   }
 
   return json({ success: true });
