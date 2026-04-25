@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.4] - 2026-04-25
+
+2 commits since v0.5.3.
+
+### Fixed
+- Worker now respects user profile timezone with proper fallback cascade
+
 ## [0.5.3] - 2026-04-25
 
 5 commits since v0.5.2.
