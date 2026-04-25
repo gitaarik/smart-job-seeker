@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.2] - 2026-04-25
+
+17 commits since v0.5.1.
+
+### Added
+- Encrypt platform credentials at rest with SJS_CREDENTIALS_KEY environment variable
+- Configurable time format (12h/24h) with automatic timezone detection
+- Cheat sheet type for workbench
+
+### Changed
+- Renamed "letters" to "texts" throughout the application
+- Renamed "Import Config" to "Job Import" and "Import Jobs" to "Import Tasks"
+- Restructured application and job detail pages with improved styling
+- Redesigned job import interface with status pills and improved spacing
+- Enhanced dashboard layout and timeline presentation
+
+### Fixed
+- Improved scraper validation and data quality
+- Simplified scraper stop reason messages
+
+### Removed
+- Reasoning field from job details and scraper matcher
+
 ## [0.5.1] - 2026-04-24
 
 ### Added
