@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { profiles } from "$lib/server/db/schema";
+import { profiles, profile_versions } from "$lib/server/db/schema";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import {
   createProfileFromResume,
@@ -217,6 +217,14 @@ export const actions: Actions = {
       user_id: user.id,
       is_default: false,
     }).returning();
+
+    // Create a default Resume / CV version
+    await db.insert(profile_versions).values({
+      slug: "default",
+      name: "Default",
+      profile_id: profile.id,
+      date_created: new Date(),
+    });
 
     redirect(303, `/home?profile=${profile.id}&created=true`);
   },

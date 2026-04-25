@@ -923,12 +923,12 @@ export const platform_profiles = pgTable("platform_profiles", {
 	profile_id: integer().notNull(),
 	platform_id: integer(),
 	username: varchar({ length: 255 }),
-	password: varchar({ length: 255 }),
+	password: text(),
 	api_token: text(),
 	last_login_at: timestamp({ withTimezone: true, mode: 'date' }),
 	login_error: text(),
 	provider_profile_id: varchar({ length: 255 }),
-	security_answer: varchar({ length: 500 }),
+	security_answer: text(),
 }, (table) => [
 	foreignKey({
 			columns: [table.platform_id],

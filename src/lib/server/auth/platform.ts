@@ -6,6 +6,7 @@
 import { dbDirect } from "$lib/server/db";
 import { eq, and } from "drizzle-orm";
 import { platform_profiles } from "$lib/server/db/schema";
+import { decryptCredential } from "./crypto";
 
 export interface PlatformCredentials {
   platformId: number;
@@ -36,7 +37,7 @@ export async function getPlatformCredentials(
     platformId,
     profileId,
     username: platformProfile.username,
-    password: platformProfile.password,
+    password: decryptCredential(platformProfile.password),
   };
 }
 

@@ -8,6 +8,7 @@ import { config } from "$lib/server/config";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
 import { getOrCreateVerificationAddress } from "$lib/server/email/verification-relay";
 import { listApiKeys } from "$lib/server/auth/api-key";
+import { decryptCredential } from "$lib/server/auth/crypto";
 import { listSharedWithMe } from "$lib/server/device-shares";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
@@ -41,11 +42,15 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     security_answer: string | null;
   }> = [];
   if (searchTask.platform_id) {
-    platformCredentials = await db.query.platform_profiles.findMany({
+    const rawCredentials = await db.query.platform_profiles.findMany({
       where: and(eq(platform_profiles.profile_id, layoutData.selectedProfile.id), eq(platform_profiles.platform_id, searchTask.platform_id)),
       columns: { id: true, username: true, security_answer: true },
       orderBy: asc(platform_profiles.date_created),
     });
+    platformCredentials = rawCredentials.map((c) => ({
+      ...c,
+      security_answer: decryptCredential(c.security_answer),
+    }));
   }
 
   // Check if user is staff or admin

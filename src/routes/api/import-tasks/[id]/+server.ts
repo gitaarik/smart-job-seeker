@@ -6,6 +6,7 @@ import { search_tasks, platform_profiles, users } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 import { hasDeviceAccess } from "$lib/server/device-shares";
+import { encryptCredential } from "$lib/server/auth/crypto";
 
 /**
  * Calculate next scheduled run at the preferred hour in the user's timezone.
@@ -138,7 +139,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       profile_id: searchTask.profile_id,
       platform_id: searchTask.platform_id,
       username: body.new_credential.username,
-      password: body.new_credential.password || null,
+      password: encryptCredential(body.new_credential.password || null),
       status: "active",
       date_created: new Date(),
     }).returning();

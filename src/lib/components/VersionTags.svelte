@@ -97,7 +97,7 @@
 <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
   <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-1">
     <FontAwesomeIcon icon={faTags} class="w-4 h-4 mr-1.5 text-[var(--dash-text-secondary)]" />
-    CV / Resume Versions
+    Resume / CV Versions
   </h2>
   <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
     Control which versions of your CV or resume include this item. No tags means it appears in all versions.

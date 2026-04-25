@@ -6,7 +6,7 @@
 import { dbDirect } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import {
-  profiles, work_experiences, work_experience_achievements, work_experience_technologies,
+  profiles, profile_versions, work_experiences, work_experience_achievements, work_experience_technologies,
   education, tech_skill_categories, tech_skills,
   languages, side_projects, side_project_achievements, side_project_technologies,
   certificates, references,
@@ -87,6 +87,14 @@ export async function createProfileFromResume(
     date_created: new Date(),
     date_updated: new Date(),
   }).returning();
+
+  // Create a default Resume / CV version
+  await dbDirect.insert(profile_versions).values({
+    slug: "default",
+    name: "Default",
+    profile_id: profile.id,
+    date_created: new Date(),
+  });
 
   const stats = {
     workExperiences: 0,

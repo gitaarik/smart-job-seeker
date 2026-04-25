@@ -4,6 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq, and, or, like, desc } from "drizzle-orm";
 import { search_tasks, profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
+import { encryptCredential } from "$lib/server/auth/crypto";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -124,8 +125,8 @@ async function getOrCreateCredentials(
       profile_id: profileId,
       platform_id: platformId,
       username: newUsername,
-      password: newPassword || null,
-      security_answer: newSecurityAnswer || null,
+      password: encryptCredential(newPassword || null),
+      security_answer: encryptCredential(newSecurityAnswer || null),
       status: "active",
       date_created: new Date(),
     }).returning();

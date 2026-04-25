@@ -8,6 +8,7 @@ import {
   parseBody,
   platformCredentialsSchema,
 } from "$lib/server/validation/api-schemas";
+import { encryptCredential, decryptCredential } from "$lib/server/auth/crypto";
 
 /**
  * GET /api/platforms/[id]/credentials?profileId=X
@@ -39,7 +40,10 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
     columns: { id: true, username: true, security_answer: true },
   });
 
-  return json(credentials);
+  return json(credentials.map((c) => ({
+    ...c,
+    security_answer: decryptCredential(c.security_answer),
+  })));
 };
 
 /**
@@ -92,8 +96,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
     // Update existing
     await db.update(platform_profiles).set({
       username: username || null,
-      password: password || null,
-      security_answer: security_answer || null,
+      password: encryptCredential(password || null),
+      security_answer: encryptCredential(security_answer || null),
       login_error: null, // Clear any previous error
       date_updated: new Date(),
     }).where(eq(platform_profiles.id, existing.id));
@@ -103,8 +107,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
       profile_id: profile.id,
       platform_id: platformId,
       username: username || null,
-      password: password || null,
-      security_answer: security_answer || null,
+      password: encryptCredential(password || null),
+      security_answer: encryptCredential(security_answer || null),
       status: "active",
       date_created: new Date(),
     });

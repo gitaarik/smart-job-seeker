@@ -9,6 +9,9 @@ export {
   updateLoginError,
 } from "./platform";
 
+// Credential encryption
+export { encryptCredential, decryptCredential } from "./crypto";
+
 // Token generation
 export { generateToken, hashToken } from "./token-generator";
 

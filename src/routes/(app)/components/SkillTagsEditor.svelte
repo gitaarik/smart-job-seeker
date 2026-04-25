@@ -2,6 +2,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
+    faChevronDown,
+    faChevronRight,
     faCircleNotch,
     faGripVertical,
     faPlus,
@@ -76,6 +78,7 @@
   let editingIndex = $state<number | null>(null);
   let editingSnapshot = $state<SkillItem | null>(null);
   let editingIsNew = $state(false);
+  let showVersionTags_popup = $state(false);
 
   let reorderSnapshot = $state<SkillItem[] | null>(null);
   let reorderSaving = $state(false);
@@ -214,6 +217,7 @@
     editingSnapshot = { ...skills[index], tags: skills[index].tags ? [...skills[index].tags] : null };
     editingIsNew = false;
     editingIndex = index;
+    showVersionTags_popup = !!(skills[index].tags && skills[index].tags.length > 0);
     pushEditHistory();
   }
 
@@ -222,6 +226,7 @@
     editingIndex = skills.length - 1;
     editingSnapshot = null;
     editingIsNew = true;
+    showVersionTags_popup = false;
     pushEditHistory();
   }
 
@@ -559,44 +564,52 @@
                 class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-transparent text-[var(--dash-text)] focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)]"
               />
             </div>
-            <!-- Version Tags -->
+            <!-- Version Tags (collapsible) -->
             {#if versionSlugs.length > 0}
               <div>
-                <label
-                  class="block text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1"
+                <button
+                  type="button"
+                  onclick={() => (showVersionTags_popup = !showVersionTags_popup)}
+                  class="flex items-center gap-1 text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors mb-1"
                 >
-                  <FontAwesomeIcon icon={faTags} class="w-2.5 h-2.5 mr-0.5" />
-                  CV / Resume Versions
-                </label>
-                {#if editingTags.length > 0}
-                  <div class="flex flex-wrap gap-1.5 mb-1.5">
-                    {#each editingTags as tag}
-                      <button
-                        type="button"
-                        onclick={() => removeSkillTag(tag)}
-                        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
-                      >
-                        {tag}
-                        <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
-                      </button>
-                    {/each}
-                  </div>
-                {:else}
-                  <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
-                {/if}
-                {#if allSuggestions.length > 0}
-                  <div class="flex flex-wrap gap-1.5">
-                    {#each allSuggestions as suggestion}
-                      <button
-                        type="button"
-                        onclick={() => addSkillTag(suggestion)}
-                        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
-                      >
-                        <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
-                        {suggestion}
-                      </button>
-                    {/each}
-                  </div>
+                  <FontAwesomeIcon icon={showVersionTags_popup ? faChevronDown : faChevronRight} class="w-2 h-2" />
+                  <FontAwesomeIcon icon={faTags} class="w-2.5 h-2.5" />
+                  Resume / CV Versions
+                  {#if !showVersionTags_popup && editingTags.length > 0}
+                    <span class="normal-case text-[var(--dash-primary)]">({editingTags.length})</span>
+                  {/if}
+                </button>
+                {#if showVersionTags_popup}
+                  {#if editingTags.length > 0}
+                    <div class="flex flex-wrap gap-1.5 mb-1.5">
+                      {#each editingTags as tag}
+                        <button
+                          type="button"
+                          onclick={() => removeSkillTag(tag)}
+                          class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+                        >
+                          {tag}
+                          <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+                        </button>
+                      {/each}
+                    </div>
+                  {:else}
+                    <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
+                  {/if}
+                  {#if allSuggestions.length > 0}
+                    <div class="flex flex-wrap gap-1.5">
+                      {#each allSuggestions as suggestion}
+                        <button
+                          type="button"
+                          onclick={() => addSkillTag(suggestion)}
+                          class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
+                        >
+                          <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                          {suggestion}
+                        </button>
+                      {/each}
+                    </div>
+                  {/if}
                 {/if}
               </div>
             {/if}
@@ -605,7 +618,7 @@
               <button
                 type="button"
                 onclick={() => removeSkill(index)}
-                class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
+                class="mr-2 px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
                 aria-label="Delete skill"
               >
                 <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />

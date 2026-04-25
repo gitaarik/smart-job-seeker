@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faPlus, faTimes, faUndo, faPencil, faTags } from "@fortawesome/free-solid-svg-icons";
+  import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
   export interface AchievementItem {
     description: string;
@@ -62,6 +62,7 @@
   let editingIndex = $state<number | null>(null);
   let editDescription = $state("");
   let editTags = $state<string[]>([]);
+  let showVersionTags_popup = $state(false);
 
   const builtinTags = ["resume", "cv"];
 
@@ -76,6 +77,7 @@
     const item = getItem(index);
     editDescription = item.description;
     editTags = [...(item.tags || [])];
+    showVersionTags_popup = editTags.length > 0;
   }
 
   function closeEdit() {
@@ -164,12 +166,6 @@
             <span class="flex-1 text-[var(--dash-text)] {!item.description ? 'text-[var(--dash-text-secondary)] italic' : ''}">
               {item.description || "Click to edit..."}
             </span>
-            {#if showTags && item.tags && item.tags.length > 0}
-              <span class="flex items-center gap-1 text-xs text-[var(--dash-text-secondary)]">
-                <FontAwesomeIcon icon={faTags} class="w-3 h-3" />
-                {item.tags.join(", ")}
-              </span>
-            {/if}
             <FontAwesomeIcon icon={faPencil} class="w-3 h-3 text-[var(--dash-text-secondary)]" />
           </div>
           <button
@@ -223,49 +219,60 @@
         ></textarea>
       </div>
 
-      <!-- Version Tags (only for work experience achievements) -->
+      <!-- Version Tags (collapsible) -->
       {#if showTags && versionSlugs.length > 0}
         <div class="mb-4">
-          <label class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-            <FontAwesomeIcon icon={faTags} class="w-3.5 h-3.5 mr-1 text-[var(--dash-text-secondary)]" />
-            CV / Resume Versions
-          </label>
-          <p class="text-xs text-[var(--dash-text-secondary)] mb-2">
-            No tags means this achievement appears in all versions.
-          </p>
+          <button
+            type="button"
+            onclick={() => (showVersionTags_popup = !showVersionTags_popup)}
+            class="flex items-center gap-1.5 text-sm font-medium text-[var(--dash-text)] hover:text-[var(--dash-primary)] transition-colors mb-1"
+          >
+            <FontAwesomeIcon icon={showVersionTags_popup ? faChevronDown : faChevronRight} class="w-3 h-3" />
+            <FontAwesomeIcon icon={faTags} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+            Resume / CV Versions
+            {#if !showVersionTags_popup && editTags.length > 0}
+              <span class="text-xs font-normal text-[var(--dash-primary)]">({editTags.length})</span>
+            {/if}
+          </button>
 
-          <!-- Current tags -->
-          {#if editTags.length > 0}
-            <div class="flex flex-wrap gap-1.5 mb-2">
-              {#each editTags as tag}
-                <button
-                  type="button"
-                  onclick={() => removeEditTag(tag)}
-                  class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
-                >
-                  {tag}
-                  <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
-                </button>
-              {/each}
-            </div>
-          {:else}
-            <p class="text-xs text-[var(--dash-text-muted)] italic mb-2">All versions</p>
-          {/if}
+          {#if showVersionTags_popup}
+            <p class="text-xs text-[var(--dash-text-secondary)] mb-2">
+              No tags means this achievement appears in all versions.
+            </p>
 
-          <!-- Suggestions -->
-          {#if allSuggestions.length > 0}
-            <div class="flex flex-wrap gap-1.5">
-              {#each allSuggestions as suggestion}
-                <button
-                  type="button"
-                  onclick={() => addEditTag(suggestion)}
-                  class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
-                  {suggestion}
-                </button>
-              {/each}
-            </div>
+            <!-- Current tags -->
+            {#if editTags.length > 0}
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                {#each editTags as tag}
+                  <button
+                    type="button"
+                    onclick={() => removeEditTag(tag)}
+                    class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+                  >
+                    {tag}
+                    <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+                  </button>
+                {/each}
+              </div>
+            {:else}
+              <p class="text-xs text-[var(--dash-text-muted)] italic mb-2">All versions</p>
+            {/if}
+
+            <!-- Suggestions -->
+            {#if allSuggestions.length > 0}
+              <div class="flex flex-wrap gap-1.5">
+                {#each allSuggestions as suggestion}
+                  <button
+                    type="button"
+                    onclick={() => addEditTag(suggestion)}
+                    class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                    {suggestion}
+                  </button>
+                {/each}
+              </div>
+            {/if}
           {/if}
         </div>
       {/if}

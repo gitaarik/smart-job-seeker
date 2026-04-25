@@ -20,6 +20,7 @@
   let version = $derived(data.version);
   let versionTitle = $derived(version.name || version.slug || 'Version');
   let showDeleteModal = $state(false);
+  let showAdvanced = $state(false);
 
   // Form states — re-sync when data changes (e.g. after form submission with use:enhance)
   let editName = $state(data.version.name || "");
@@ -27,6 +28,23 @@
   let editExtendsIds = $state<number[]>([...data.version.extendsIds]);
   let editPublicResume = $state(data.publicResumeVersionId === data.version.id);
   let editPublicCv = $state(data.publicCvVersionId === data.version.id);
+  let slugManual = $state(false);
+
+  function slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function handleNameInput() {
+    if (!slugManual) {
+      editSlug = slugify(editName);
+    }
+  }
 
   $effect(() => {
     editName = data.version.name || "";
@@ -34,6 +52,7 @@
     editExtendsIds = [...data.version.extendsIds];
     editPublicResume = data.publicResumeVersionId === data.version.id;
     editPublicCv = data.publicCvVersionId === data.version.id;
+    slugManual = false;
   });
 
   let tagUsage = $derived(data.tagUsage);
@@ -116,85 +135,96 @@
           >
             Basic Info
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                for="edit-name"
-                class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="edit-name"
-                name="name"
-                bind:value={editName}
-                placeholder="e.g., Full Stack Developer Resume"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label
-                for="edit-slug"
-                class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-              >
-                Slug <span class="text-[var(--dash-error)]">*</span>
-              </label>
-              <input
-                type="text"
-                id="edit-slug"
-                name="slug"
-                bind:value={editSlug}
-                required
-                pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm"
-              />
-              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                Used in URLs and version tags
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Extends -->
-        {#if data.allVersions.length > 0}
           <div>
-            <h3
-              class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide mb-3"
+            <label
+              for="edit-name"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              Extends
-            </h3>
-            <div class="flex flex-wrap gap-x-4 gap-y-2">
-              {#each data.allVersions as v}
-                <label
-                  class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    name="extendsIds"
-                    value={v.id}
-                    checked={editExtendsIds.includes(v.id)}
-                    onchange={(e) => {
-                      if (e.currentTarget.checked) {
-                        editExtendsIds = [...editExtendsIds, v.id];
-                      } else {
-                        editExtendsIds = editExtendsIds.filter(
-                          (id) => id !== v.id,
-                        );
-                      }
-                    }}
-                    class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                  />
-                  {v.name || v.slug || "Untitled"}
-                </label>
-              {/each}
-            </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-              Inherit tags and toggles from other versions
-            </p>
+              Name
+            </label>
+            <input
+              type="text"
+              id="edit-name"
+              name="name"
+              bind:value={editName}
+              oninput={handleNameInput}
+              placeholder="e.g., Full Stack Developer Resume"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            />
           </div>
-        {/if}
+
+          <!-- Hidden slug field -->
+          <input type="hidden" name="slug" value={editSlug} />
+
+          <!-- Advanced toggle -->
+          <button
+            type="button"
+            onclick={() => (showAdvanced = !showAdvanced)}
+            class="text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors mt-3"
+          >
+            {showAdvanced ? "Hide" : "Show"} advanced options
+          </button>
+
+          {#if showAdvanced}
+            <div class="space-y-4 border-t border-[var(--dash-border)] pt-4 mt-3">
+              <div>
+                <label
+                  for="edit-slug"
+                  class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                >
+                  Slug
+                </label>
+                <input
+                  type="text"
+                  id="edit-slug"
+                  bind:value={editSlug}
+                  oninput={() => (slugManual = true)}
+                  pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
+                  class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm"
+                />
+                <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                  Auto-generated from name. Used in URLs and version tags.
+                </p>
+              </div>
+
+              {#if data.allVersions.length > 0}
+                <div>
+                  <p class="block text-sm font-medium text-[var(--dash-text)] mb-2">
+                    Extends
+                  </p>
+                  <div class="flex flex-wrap gap-x-4 gap-y-2">
+                    {#each data.allVersions as v}
+                      <label
+                        class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          name="extendsIds"
+                          value={v.id}
+                          checked={editExtendsIds.includes(v.id)}
+                          onchange={(e) => {
+                            if (e.currentTarget.checked) {
+                              editExtendsIds = [...editExtendsIds, v.id];
+                            } else {
+                              editExtendsIds = editExtendsIds.filter(
+                                (id) => id !== v.id,
+                              );
+                            }
+                          }}
+                          class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                        />
+                        {v.name || v.slug || "Untitled"}
+                      </label>
+                    {/each}
+                  </div>
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                    Inherit tags and toggles from other versions
+                  </p>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
 
         <!-- Public Access -->
         <div>

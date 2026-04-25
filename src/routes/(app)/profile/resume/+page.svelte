@@ -23,6 +23,7 @@
   let publicCvVersionId = $derived(data.publicCvVersionId);
 
   let showAddForm = $state(false);
+  let showAddAdvanced = $state(false);
   let generatingSlug = $state<string | null>(null);
   let generatedSlug = $state<string | null>(null);
 
@@ -64,6 +65,7 @@
 
   function resetAddForm() {
     showAddForm = false;
+    showAddAdvanced = false;
     newName = "";
     newSlug = "";
     newSlugManual = false;
@@ -141,78 +143,90 @@
         Add New Version
       </h3>
       <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              for="new-name"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Name
-            </label>
-            <input
-              type="text"
-              id="new-name"
-              name="name"
-              bind:value={newName}
-              oninput={handleNewNameInput}
-              placeholder="e.g., Full Stack Developer Resume"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="new-slug"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Slug <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <input
-              type="text"
-              id="new-slug"
-              name="slug"
-              bind:value={newSlug}
-              oninput={handleNewSlugInput}
-              placeholder="e.g., fullstack-developer"
-              required
-              pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm"
-            />
-            <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-              Used in URLs and version tags
-            </p>
-          </div>
+        <div>
+          <label
+            for="new-name"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Name
+          </label>
+          <input
+            type="text"
+            id="new-name"
+            name="name"
+            bind:value={newName}
+            oninput={handleNewNameInput}
+            placeholder="e.g., Full Stack Developer Resume"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
         </div>
 
-        {#if versions.length > 0}
-          <div>
-            <p class="block text-sm font-medium text-[var(--dash-text)] mb-2">
-              Extends
-            </p>
-            <div class="flex flex-wrap gap-x-4 gap-y-2">
-              {#each versions as v}
-                <label class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="extendsIds"
-                    value={v.id}
-                    checked={newExtendsIds.includes(v.id)}
-                    onchange={(e) => {
-                      if (e.currentTarget.checked) {
-                        newExtendsIds = [...newExtendsIds, v.id];
-                      } else {
-                        newExtendsIds = newExtendsIds.filter((id) => id !== v.id);
-                      }
-                    }}
-                    class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                  />
-                  {v.name || v.slug || "Untitled"}
-                </label>
-              {/each}
+        <!-- Hidden slug field (auto-generated from name) -->
+        <input type="hidden" name="slug" value={newSlug} />
+
+        <!-- Advanced toggle -->
+        <button
+          type="button"
+          onclick={() => (showAddAdvanced = !showAddAdvanced)}
+          class="text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+        >
+          {showAddAdvanced ? "Hide" : "Show"} advanced options
+        </button>
+
+        {#if showAddAdvanced}
+          <div class="space-y-4 border-t border-[var(--dash-border)] pt-4">
+            <div>
+              <label
+                for="new-slug"
+                class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+              >
+                Slug
+              </label>
+              <input
+                type="text"
+                id="new-slug"
+                bind:value={newSlug}
+                oninput={handleNewSlugInput}
+                placeholder="e.g., fullstack-developer"
+                pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm"
+              />
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                Auto-generated from name. Used in URLs and version tags.
+              </p>
             </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-              Inherit tags and toggles from other versions
-            </p>
+
+            {#if versions.length > 0}
+              <div>
+                <p class="block text-sm font-medium text-[var(--dash-text)] mb-2">
+                  Extends
+                </p>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  {#each versions as v}
+                    <label class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="extendsIds"
+                        value={v.id}
+                        checked={newExtendsIds.includes(v.id)}
+                        onchange={(e) => {
+                          if (e.currentTarget.checked) {
+                            newExtendsIds = [...newExtendsIds, v.id];
+                          } else {
+                            newExtendsIds = newExtendsIds.filter((id) => id !== v.id);
+                          }
+                        }}
+                        class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                      />
+                      {v.name || v.slug || "Untitled"}
+                    </label>
+                  {/each}
+                </div>
+                <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                  Inherit tags and toggles from other versions
+                </p>
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
@@ -276,9 +290,7 @@
           {/snippet}
 
           {#snippet subtitle()}
-            <span class="font-mono text-xs">{version.slug}</span>
             {#if version.date_created}
-              <span class="mx-1">•</span>
               Created {formatDate(version.date_created)}
             {/if}
           {/snippet}

@@ -94,16 +94,27 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
-    const slug = formData.get("slug") as string;
+    let slug = (formData.get("slug") as string)?.trim() || "";
     const name = formData.get("name") as string;
     const extendsIds = formData.getAll("extendsIds").map((v) => parseInt(v as string)).filter((v) => !isNaN(v));
 
-    if (!slug || slug.trim().length === 0) {
-      return fail(400, { error: "Slug is required" });
+    // Auto-generate slug from name if not provided
+    if (!slug && name?.trim()) {
+      slug = name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/[\s_]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    if (!slug) {
+      return fail(400, { error: "Name is required" });
     }
 
     const [created] = await db.insert(profile_versions).values({
-      slug: slug.trim(),
+      slug,
       name: name?.trim() || null,
       profile_id: profileId,
       date_created: new Date(),
