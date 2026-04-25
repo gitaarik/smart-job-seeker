@@ -1390,11 +1390,11 @@
           {/if}
         </div>
 
-        <!-- Already imported behavior -->
+        <!-- Duplicate jobs behavior -->
         <div class="flex items-center flex-wrap gap-3">
           <span
             class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
-          >Already imported jobs</span>
+          >Duplicate jobs</span>
           <div
             class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
           >
@@ -1490,7 +1490,7 @@
             class:opacity-40={isAdd
               ? !addStopAfterDuplicatesEnabled
               : !stopAfterDuplicatesEnabled}
-          >already imported jobs in a row</span>
+          >duplicates in a row</span>
           {#if isEdit}
             {@render           saveCancel(
             stopAfterDuplicatesDirty,

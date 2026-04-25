@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCheck, faEnvelope, faCalendarAlt, faPenToSquare, faPencil } from "@fortawesome/free-solid-svg-icons";
+  import { faCheck, faEnvelope, faCalendarAlt, faPenToSquare, faPencil, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import Checkbox from "../../../components/Checkbox.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
@@ -225,6 +225,7 @@
   }
 
   async function sendDigestNow() {
+    if (!confirm("Send email digest now?")) return;
     sendingNow = true;
     digestError = "";
     sendNowResult = null;
@@ -309,34 +310,34 @@
     {#if digestEnabled}
       <!-- Schedule overview -->
       {#if lastSentDate || nextSendDate}
-        <div class="flex flex-col gap-2 rounded-lg border border-[var(--dash-border)] p-3 text-sm">
+        <div class="flex flex-col gap-3 rounded-lg border border-[var(--dash-border)] p-3 text-sm">
           {#if lastSentDate}
             <div class="flex items-center gap-2">
-              <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              <span class="text-[var(--dash-text-muted)]">Last sent</span>
-              <span class="text-[var(--dash-text)]">{formatRelative(lastSentDate)} {formatTime(lastSentDate)}</span>
-              <span class="text-[var(--dash-text-muted)]">({formatDateShort(lastSentDate)})</span>
+              <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)] flex-shrink-0" />
+              <div>
+                <p class="font-medium text-[var(--dash-text-secondary)]">Last sent
+                  <button
+                    type="button"
+                    onclick={resetLastSent}
+                    disabled={resettingLastSent}
+                    title="Reset last sent date"
+                    class="ml-1.5 font-normal text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors disabled:opacity-50"
+                  ><FontAwesomeIcon icon={faRotateLeft} class="w-3 h-3 {resettingLastSent ? 'animate-spin' : ''}" /></button>
+                </p>
+                <p class="text-[var(--dash-text)]">{formatRelative(lastSentDate)} {formatTime(lastSentDate)} <span class="text-[var(--dash-text-secondary)]">({formatDateShort(lastSentDate)})</span></p>
+              </div>
             </div>
           {/if}
           {#if nextSendDate}
             <div class="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCalendarAlt} class="w-3.5 h-3.5 text-[var(--dash-primary)]" />
-              <span class="text-[var(--dash-text-muted)]">Next</span>
-              <span class="font-medium text-[var(--dash-text)]">{formatRelative(nextSendDate)} {formatTime(nextSendDate)}</span>
-              <span class="text-[var(--dash-text-muted)]">({formatDateShort(nextSendDate)})</span>
+              <FontAwesomeIcon icon={faCalendarAlt} class="w-3.5 h-3.5 text-[var(--dash-primary)] flex-shrink-0" />
+              <div>
+                <p class="font-medium text-[var(--dash-text-secondary)]">Next</p>
+                <p class="text-[var(--dash-text)]">{formatRelative(nextSendDate)} {formatTime(nextSendDate)} <span class="text-[var(--dash-text-secondary)]">({formatDateShort(nextSendDate)})</span></p>
+              </div>
             </div>
           {/if}
         </div>
-        {#if lastSentDate}
-          <button
-            type="button"
-            onclick={resetLastSent}
-            disabled={resettingLastSent}
-            class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors disabled:opacity-50"
-          >
-            {resettingLastSent ? "Resetting..." : "Reset last sent date"}
-          </button>
-        {/if}
       {/if}
 
       <!-- Send to -->

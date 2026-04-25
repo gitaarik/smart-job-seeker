@@ -817,10 +817,17 @@
     return text.substring(0, maxLength) + "...";
   }
 
-  function getItemStatusBg(status: string): string {
+  function getItemStatusBg(status: string, wasCreated?: boolean | null, skipExisting?: boolean): string {
+    if (status === "completed" && wasCreated === true) {
+      return "bg-[var(--dash-success-light)]";
+    }
+    if (status === "completed" && wasCreated === false && skipExisting) {
+      return "bg-slate-500/10";
+    }
+    if (status === "completed") {
+      return "bg-[var(--dash-success-light)]";
+    }
     switch (status) {
-      case "completed":
-        return "bg-[var(--dash-success-light)]";
       case "processing":
         return "bg-[var(--dash-primary-light)]";
       case "pending":
@@ -1471,9 +1478,6 @@
               </div>
             {/if}
           </div>
-          {#if loadingItems[run.id]}
-            <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-          {/if}
         </div>
 
         <div
@@ -1495,7 +1499,7 @@
               {#each runItems[run.id].items as item (item.id)}
                 <div
                   data-item-status={item.status}
-                  class={`${getItemStatusBg(item.status)} ${expandedItemId === item.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}`}
+                  class={`${getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)} ${expandedItemId === item.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}`}
                 >
                   <!-- Item header (clickable for completed items with job details) -->
                   <button
@@ -1503,37 +1507,24 @@
                     onclick={() =>
                       item.job &&
                       toggleItemExpanded(item.id)}
-                    class={`w-full flex items-start sm:items-center gap-2 sm:gap-3 px-3 py-2 text-left transition-all ${
+                    class={`relative w-full pl-2 pr-3 py-2 text-left transition-all ${
                       item.job
                         ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
                         : "cursor-default"
                     }`}
                     disabled={!item.job}
                   >
-                    <!-- Position + status indicator -->
-                    <div class="flex items-center gap-2 pt-0.5 sm:pt-0 shrink-0">
-                      <span class="text-xs text-[var(--dash-text-muted)] w-5 text-right">
+                    {#if item.job}
+                      <span class="absolute top-2 right-3 inline-block transition-transform duration-200 {expandedItemId === item.id ? 'rotate-90' : ''} text-[var(--dash-text-muted)]">
+                        <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3" />
+                      </span>
+                    {/if}
+                    <!-- Row 1: Position number + title -->
+                    <div class="flex items-baseline gap-2">
+                      <span class="text-xs text-[var(--dash-text-muted)] shrink-0 w-4 text-center">
                         {item.position}
                       </span>
-                      <div
-                        class={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          item.status === "completed"
-                            ? "bg-[var(--dash-success)]"
-                            : item.status === "processing"
-                            ? "bg-[var(--dash-primary)] animate-pulse"
-                            : item.status === "skipped"
-                            ? "bg-[var(--dash-warning)]"
-                            : item.status === "error"
-                            ? "bg-[var(--dash-error)]"
-                            : "bg-[var(--dash-text-muted)]"
-                        }`}
-                      >
-                      </div>
-                    </div>
-
-                    <!-- Job info -->
-                    <div class="flex-1 min-w-0">
-                      <div class="flex flex-wrap items-center gap-2">
+                      <div class="flex-1 min-w-0 pr-14">
                         {#if item.job_id && item.status === "completed"}
                           <span class="text-sm font-medium text-[var(--dash-primary)]">
                             {item.job?.title || item.title || "Untitled"}
@@ -1543,25 +1534,11 @@
                             {item.title || "Untitled"}
                           </span>
                         {/if}
-                        {#if item.was_created === true}
-                          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success)] text-white shrink-0">new</span>
-                        {:else if item.was_created === false && item.status === "completed"}
-                          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)] shrink-0">{run.settings?.skip_existing ? 'skipped' : 'updated'}</span>
-                        {/if}
-                        <!-- Status badge + chevron: inline on sm+, hidden here on mobile -->
-                        <span
-                          class={`hidden sm:inline text-xs capitalize shrink-0 ${getItemStatusColor(item.status)}`}
-                        >
-                          {item.status}
-                        </span>
-                        {#if item.job}
-                          <FontAwesomeIcon
-                            icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
-                            class="hidden sm:block w-3 h-3 text-[var(--dash-text-muted)] shrink-0"
-                          />
-                        {/if}
                       </div>
-                      <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]">
+                    </div>
+                    <!-- Row 2: details -->
+                    {#if (item.job?.company || item.company || item.job?.office_location || item.location)}
+                      <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)] mt-1 pl-6 pr-14">
                         {#if item.job?.company || item.company}
                           <span class="flex items-center gap-1">
                             <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
@@ -1574,25 +1551,42 @@
                             {item.job?.office_location || item.location}
                           </span>
                         {/if}
-                        <!-- Status badge on mobile: shown in meta row -->
-                        <span
-                          class={`sm:hidden text-xs capitalize ${getItemStatusColor(item.status)}`}
-                        >
-                          {item.status}
-                        </span>
-                        {#if item.job}
-                          <FontAwesomeIcon
-                            icon={expandedItemId === item.id ? faChevronDown : faChevronRight}
-                            class="sm:hidden w-3 h-3 text-[var(--dash-text-muted)]"
-                          />
-                        {/if}
                       </div>
-                      {#if item.status_message && (item.status === "skipped" || item.status === "error" || item.status === "cancelled")}
-                        <div class={`text-xs mt-0.5 ${getItemStatusColor(item.status)}`}>
-                          {item.status_message}
-                        </div>
+                    {/if}
+                    <!-- Status pill (bottom-right) -->
+                    <span class="absolute bottom-2 right-3 text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 {
+                      item.status === 'completed' && item.was_created === true
+                        ? 'bg-[var(--dash-success)] text-white'
+                        : item.status === 'completed' && item.was_created === false && run.settings?.skip_existing
+                        ? 'bg-slate-500 text-white'
+                        : item.status === 'completed'
+                        ? 'bg-[var(--dash-success)]/70 text-white'
+                        : item.status === 'processing'
+                        ? 'bg-[var(--dash-primary-light)] text-[var(--dash-primary)]'
+                        : item.status === 'skipped'
+                        ? 'bg-[var(--dash-warning-light,rgba(234,179,8,0.1))] text-[var(--dash-warning)]'
+                        : item.status === 'error'
+                        ? 'bg-[var(--dash-error-light,rgba(239,68,68,0.1))] text-[var(--dash-error)]'
+                        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'
+                    }">
+                      {#if item.status === "completed" && item.was_created === false && run.settings?.skip_existing}
+                        <FontAwesomeIcon icon={faForward} class="w-2.5 h-2.5" />
+                        duplicate
+                      {:else if item.status === "completed"}
+                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                        {item.was_created === true ? 'new' : item.was_created === false ? 'updated' : ''}
+                      {:else if item.status === "processing"}
+                        <FontAwesomeIcon icon={faSync} class="w-2.5 h-2.5 animate-spin" />
+                      {:else if item.status === "skipped"}
+                        <FontAwesomeIcon icon={faForward} class="w-2.5 h-2.5" />
+                        {item.status_message || 'skipped'}
+                      {:else if item.status === "error"}
+                        <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+                        {item.status_message || 'error'}
+                      {:else}
+                        <FontAwesomeIcon icon={faClock} class="w-2.5 h-2.5" />
                       {/if}
-                    </div>
+                    </span>
                   </button>
 
                   <!-- Expanded job details -->
@@ -1602,7 +1596,7 @@
                     {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
                     {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
                     {@const salaryText = formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-                    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status)}">
+                    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)}">
                       <!-- Category pills -->
                       {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
                         <div class="flex items-center gap-1.5 flex-wrap">
@@ -2755,11 +2749,9 @@
                       • {run.jobs_found} new {run.jobs_found === 1 ? 'job' : 'jobs'}
                     </span>
                   {/if}
-                  {#if                 run.error_message && run.status !== "success"}
-                    <span
-                      class="text-sm text-[var(--dash-text-muted)] truncate"
-                    >
-                      • {run.error_message}
+                  {#if run.error_message && run.status !== "success"}
+                    <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                      {run.error_message}
                     </span>
                   {/if}
                 </div>
@@ -2809,12 +2801,12 @@
                     {/if}
                     {#if run.settings.skip_existing}
                       <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
-                        skip existing
+                        skip duplicates
                       </span>
                     {/if}
                     {#if run.settings.stop_after_duplicates}
                       <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
-                        stop after: {run.settings.stop_after_duplicates} dupes
+                        stop after: {run.settings.stop_after_duplicates} duplicates
                       </span>
                     {/if}
                     {#if run.settings.browser_provider}
