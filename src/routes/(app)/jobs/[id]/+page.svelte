@@ -200,6 +200,7 @@
               <span class="text-[var(--dash-text)]">{job.office_location}</span>
             </div>
           {/if}
+          {#if job.salary_min || job.salary_max}
           <div class="flex items-center gap-1.5">
             <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
             <span class="text-[var(--dash-text-muted)]">Salary</span>
@@ -217,13 +218,14 @@
               </span>
             {/if}
           </div>
+          {/if}
           <div class="flex items-center gap-1.5">
             <FontAwesomeIcon icon={faCalendar} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
             <span class="text-[var(--dash-text-muted)]">Posted</span>
             <span class="text-[var(--dash-text)]">{timeAgo(job.date_posted || job.date_created)}</span>
             <span class="text-[var(--dash-text-muted)]/50">{formatDate(job.date_posted || job.date_created)}</span>
           </div>
-          {#if job.job_poster}
+          {#if job.job_poster && job.job_poster !== job.job_platform?.name}
             <div class="flex items-center gap-1.5">
               <FontAwesomeIcon icon={faUser} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
               <span class="text-[var(--dash-text-muted)]">Posted by</span>

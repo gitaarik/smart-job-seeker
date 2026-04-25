@@ -7,6 +7,7 @@
     faBuilding,
     faCalendar,
     faCheck,
+    faChevronDown,
     faClipboardList,
     faEnvelope,
     faExternalLinkAlt,
@@ -16,6 +17,7 @@
     faGlobe,
     faHandPointRight,
     faMapMarkerAlt,
+    faPencil,
     faMoneyBillWave,
     faSave,
     faStickyNote,
@@ -141,6 +143,7 @@
   );
 
   let showDeleteConfirm = $state(false);
+  let showMore = $state(false);
 </script>
 
 {#if form?.error}
@@ -152,17 +155,17 @@
 {/if}
 
 <div class="space-y-6">
-  <!-- Job Header -->
+  <!-- Title -->
+  <h2 class="text-2xl font-bold text-[var(--dash-text)]">
+    {job?.title || "Untitled Position"}
+  </h2>
+
+  <!-- Job Details -->
   <Card padding="lg">
     {#if job}
-      <!-- Title -->
-      <h2 class="text-2xl font-bold text-[var(--dash-text)]">
-        {job.title || "Untitled Position"}
-      </h2>
-
       <!-- Tags -->
       {#if job.job_types || job.work_location || job.experience_levels}
-        <div class="flex flex-wrap gap-2 mt-3">
+        <div class="flex flex-wrap gap-2 mb-3">
           {#if job.job_types && Array.isArray(job.job_types)}
             {#each job.job_types as type}
               <CategoryPill category="job_type" value={type} />
@@ -182,7 +185,7 @@
       {/if}
 
       <!-- Details -->
-      <div class="flex flex-col gap-2 text-sm mt-4 mb-1">
+      <div class="flex flex-col gap-2 text-sm">
         {#if job.company}
           <div class="flex items-center gap-1.5">
             <FontAwesomeIcon icon={faBuilding} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
@@ -252,8 +255,10 @@
     {/if}
   </Card>
 
+  <!-- Status + Application Details -->
+  <div class="flex flex-col lg:flex-row gap-6">
   <!-- Status Widget -->
-  <Card padding="lg">
+  <Card padding="lg" class="flex-1 min-w-0">
     <div class="space-y-3">
       <div class="flex items-center gap-2 mb-2">
         <FontAwesomeIcon
@@ -270,9 +275,9 @@
       <button
         type="button"
         onclick={openStatusPicker}
-        class="w-full flex items-start gap-3 px-4 py-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
+        class="inline-flex items-center gap-5 px-4 py-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
       >
-        <div class="flex-1 min-w-0 space-y-1">
+        <div class="min-w-0 space-y-1">
           <p class="text-sm font-semibold uppercase tracking-wide {getStatusDotColor(app.status)}">
             {getStatusLabel(app.status)}
           </p>
@@ -293,234 +298,128 @@
             </p>
           {/if}
         </div>
-        <span class="ml-auto text-[var(--dash-text-muted)] text-xs flex-shrink-0 mt-1">Change</span>
+        <FontAwesomeIcon icon={faPencil} class="w-3 h-3 text-[var(--dash-text-muted)] flex-shrink-0" />
       </button>
     </div>
   </Card>
 
-  <!-- Recent Activity -->
-  <Card padding="lg">
-      <div class="space-y-3">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <FontAwesomeIcon
-              icon={faCalendar}
-              class="w-4 h-4 text-[var(--dash-text-secondary)]"
-            />
-            <h2
-              class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-            >
-              Recent Activity
-            </h2>
-          </div>
-          {#if statusLogCount > 5}
-            <a
-              href="/applications/{app.id}/timeline"
-              class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
-            >
-              View all ({statusLogCount})
-              <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-            </a>
-          {/if}
-        </div>
+  <!-- Application Details (Texts, Documents, Salary) -->
+  <Card padding="lg" class="flex-1 min-w-0">
+    <div class="space-y-4">
+      <div class="flex items-center gap-2 mb-2">
+        <FontAwesomeIcon
+          icon={faFileAlt}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+        >
+          Application Details
+        </h2>
+      </div>
 
-        {#if recentStatusLog.length > 0}
-          <div class="relative">
-            <div class="absolute left-[13px] top-0 bottom-0 w-0.5 bg-[var(--dash-border)]"></div>
-            <div class="space-y-0">
-              {#each recentStatusLog as entry}
-                <div class="relative flex gap-3.5 pb-4">
-                  <div class="relative z-10 flex-shrink-0 w-7 flex justify-center">
-                    <div class="w-3.5 h-3.5 rounded-full {getStatusBgColor(entry.to_status)} border-2 border-[var(--dash-card)] mt-0.5"></div>
-                  </div>
-                  <div class="flex-1 min-w-0 -mt-0.5 space-y-0.5">
-                    {#if entry.from_status !== entry.to_status}
-                      <div class="mb-1.5">
-                        <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(entry.to_status)}">
-                          {getStatusLabel(entry.to_status)}
-                        </span>
-                      </div>
-                    {/if}
-                    {#if entry.step}
-                      <p class="text-xs text-[var(--dash-text-secondary)] italic">{entry.step}</p>
-                    {/if}
-                    {#if entry.action}
-                      <p class="text-xs text-[var(--dash-primary)] font-medium">
-                        → {entry.action}
-                        {#if entry.action_date}
-                          — {formatDate(entry.action_date)}
-                        {/if}
-                      </p>
-                    {/if}
-                    {#if entry.description}
-                      <p class="text-xs text-[var(--dash-text)]">{entry.description}</p>
-                    {/if}
-                    {#if entry.date_created}
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5 flex items-center gap-1">
-                        <FontAwesomeIcon icon={faCalendar} class="w-2.5 h-2.5" />
-                        {formatDate(entry.date_created)}
-                      </p>
-                    {/if}
-                  </div>
-                </div>
-              {/each}
-            </div>
+      <div class="flex flex-col gap-3 text-sm">
+        <!-- Letters -->
+        {#if letterCount > 0}
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              Letters
+            </span>
+            <a href="/applications/{app.id}/letters" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {readyLetterCount} ready{#if letterCount > readyLetterCount} <span class="text-[var(--dash-text-muted)]">/ {letterCount} total</span>{/if}
+            </a>
           </div>
-        {:else}
-          <p class="text-sm text-[var(--dash-text-muted)]">
-            No activity recorded yet. Activity will be logged when you change the
-            application status.
-          </p>
         {/if}
 
-        {#if statusLogCount <= 5 && statusLogCount > 0}
-          <a
-            href="/applications/{app.id}/timeline"
-            class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
-          >
-            View full timeline
-            <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+        <!-- Questions -->
+        {#if questionCount > 0}
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faClipboardList} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              Questions
+            </span>
+            <a href="/applications/{app.id}/letters" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {answeredQuestionCount} answered{#if questionCount > answeredQuestionCount} <span class="text-[var(--dash-text-muted)]">/ {questionCount} total</span>{/if}
+            </a>
+          </div>
+        {/if}
+
+        <!-- Documents -->
+        {#if fileCount > 0}
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faFileAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              Documents
+            </span>
+            <a href="/applications/{app.id}/documents" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {fileCount} attached
+            </a>
+          </div>
+        {/if}
+
+        <!-- CV Sent -->
+        {#if app.files?.filename_download}
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faFileAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              CV Sent
+            </span>
+            <span class="text-[var(--dash-text)] font-medium truncate ml-2">{app.files.filename_download}</span>
+          </div>
+        {/if}
+
+        <!-- Salary Expectation -->
+        {#if app.salary_expectation}
+          <div class="flex items-center justify-between">
+            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              Salary Expectation
+            </span>
+            <a href="/applications/{app.id}/salary" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {formatCurrency(app.salary_expectation, app.salary_currency, app.salary_period)}
+            </a>
+          </div>
+        {/if}
+
+        <!-- Links to add missing items -->
+        {#if letterCount === 0 && fileCount === 0 && !app.salary_expectation}
+          <p class="text-sm text-[var(--dash-text-muted)]">No details added yet.</p>
+        {/if}
+      </div>
+
+      <!-- Footer links -->
+      <div class="flex items-center gap-4 -mx-6 -mb-6 mt-2 px-6 py-3 border-t border-[var(--dash-border)]">
+        {#if letterCount === 0}
+          <a href="/applications/{app.id}/letters" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Write texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        {:else}
+          <a href="/applications/{app.id}/letters" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Manage texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        {/if}
+        {#if fileCount === 0}
+          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Add documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        {:else}
+          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Manage documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        {/if}
+        {#if !app.salary_expectation}
+          <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Set salary <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        {:else}
+          <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Manage salary <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {/if}
       </div>
-    </Card>
-
-
-  <!-- Three-column grid for counts -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-    <!-- Texts -->
-    <Card padding="lg">
-      <div class="space-y-3">
-        <div class="flex items-center gap-2">
-          <FontAwesomeIcon
-            icon={faEnvelope}
-            class="w-4 h-4 text-[var(--dash-text-secondary)]"
-          />
-          <h2
-            class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-          >
-            Texts
-          </h2>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-[var(--dash-text-secondary)]">Letters</span>
-            <span class="text-[var(--dash-text)] font-medium">
-              {readyLetterCount} ready
-              {#if letterCount > readyLetterCount}
-                <span class="text-[var(--dash-text-muted)]">
-                  / {letterCount} total
-                </span>
-              {/if}
-            </span>
-          </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-[var(--dash-text-secondary)]">Questions</span>
-            <span class="text-[var(--dash-text)] font-medium">
-              {answeredQuestionCount} answered
-              {#if questionCount > answeredQuestionCount}
-                <span class="text-[var(--dash-text-muted)]">
-                  / {questionCount} total
-                </span>
-              {/if}
-            </span>
-          </div>
-        </div>
-
-        <a
-          href="/applications/{app.id}/letters"
-          class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
-        >
-          Manage texts
-          <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-        </a>
-      </div>
-    </Card>
-
-    <!-- Documents -->
-    <Card padding="lg">
-      <div class="space-y-3">
-        <div class="flex items-center gap-2">
-          <FontAwesomeIcon
-            icon={faFileAlt}
-            class="w-4 h-4 text-[var(--dash-text-secondary)]"
-          />
-          <h2
-            class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-          >
-            Documents
-          </h2>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-[var(--dash-text-secondary)]">Files</span>
-            <span class="text-[var(--dash-text)] font-medium">
-              {fileCount} attached
-            </span>
-          </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-[var(--dash-text-secondary)]">CV Sent</span>
-            <span class="text-[var(--dash-text)] font-medium truncate ml-2">
-              {app.files?.filename_download || "None"}
-            </span>
-          </div>
-        </div>
-
-        <a
-          href="/applications/{app.id}/documents"
-          class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
-        >
-          Manage documents
-          <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-        </a>
-      </div>
-    </Card>
-
-    <!-- Salary -->
-    <Card padding="lg">
-      <div class="space-y-3">
-        <div class="flex items-center gap-2">
-          <FontAwesomeIcon
-            icon={faMoneyBillWave}
-            class="w-4 h-4 text-[var(--dash-text-secondary)]"
-          />
-          <h2
-            class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-          >
-            Salary
-          </h2>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-[var(--dash-text-secondary)]">Expectation</span>
-            <span class="text-[var(--dash-text)] font-medium">
-              {
-                formatCurrency(app.salary_expectation, app.salary_currency, app.salary_period)
-              }
-            </span>
-          </div>
-          {#if job?.salary_min || job?.salary_max}
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-[var(--dash-text-secondary)]">{isSalarySingleValue(job.salary_min, job.salary_max) ? "Salary Indication" : "Job Range"}</span>
-              <span class="text-[var(--dash-text)] font-medium">
-                {formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-              </span>
-            </div>
-          {/if}
-        </div>
-
-        <a
-          href="/applications/{app.id}/salary"
-          class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
-        >
-          Manage salary
-          <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-        </a>
-      </div>
-    </Card>
+    </div>
+  </Card>
   </div>
 
   <!-- Notes -->
@@ -602,35 +501,116 @@
     </Card>
   {/if}
 
-  <!-- Delete Application -->
+  <!-- Recent Activity -->
   <Card padding="lg">
     <div class="space-y-3">
-      <div class="flex items-center gap-2 mb-2">
-        <FontAwesomeIcon
-          icon={faTrash}
-          class="w-4 h-4 text-[var(--dash-text-secondary)]"
-        />
-        <h2
-          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-        >
-          Danger Zone
-        </h2>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <FontAwesomeIcon
+            icon={faCalendar}
+            class="w-4 h-4 text-[var(--dash-text-secondary)]"
+          />
+          <h2
+            class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+          >
+            Recent Activity
+          </h2>
+        </div>
+        {#if statusLogCount > 5}
+          <a
+            href="/applications/{app.id}/timeline"
+            class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
+          >
+            View all ({statusLogCount})
+            <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+          </a>
+        {/if}
       </div>
 
-      <p class="text-sm text-[var(--dash-text-secondary)]">
-        Permanently remove this application and all associated data including texts, documents, and timeline history.
-      </p>
+      {#if recentStatusLog.length > 0}
+        <div class="relative">
+          <div class="absolute left-[13px] top-0 bottom-0 w-0.5 bg-[var(--dash-border)]"></div>
+          <div class="space-y-0">
+            {#each recentStatusLog as entry}
+              <div class="relative flex gap-3.5 pb-4">
+                <div class="relative z-10 flex-shrink-0 w-7 flex justify-center">
+                  <div class="w-3.5 h-3.5 rounded-full {getStatusBgColor(entry.to_status)} border-2 border-[var(--dash-card)] mt-0.5"></div>
+                </div>
+                <div class="flex-1 min-w-0 -mt-0.5 space-y-0.5">
+                  {#if entry.from_status !== entry.to_status}
+                    <div class="mb-1.5">
+                      <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(entry.to_status)}">
+                        {getStatusLabel(entry.to_status)}
+                      </span>
+                    </div>
+                  {/if}
+                  {#if entry.step}
+                    <p class="text-xs text-[var(--dash-text-secondary)] italic">{entry.step}</p>
+                  {/if}
+                  {#if entry.action}
+                    <p class="text-xs text-[var(--dash-primary)] font-medium">
+                      → {entry.action}
+                      {#if entry.action_date}
+                        — {formatDate(entry.action_date)}
+                      {/if}
+                    </p>
+                  {/if}
+                  {#if entry.description}
+                    <p class="text-xs text-[var(--dash-text)]">{entry.description}</p>
+                  {/if}
+                  {#if entry.date_created}
+                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5 flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCalendar} class="w-2.5 h-2.5" />
+                      {formatDate(entry.date_created)}
+                    </p>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {:else}
+        <p class="text-sm text-[var(--dash-text-muted)]">
+          No activity recorded yet. Activity will be logged when you change the
+          application status.
+        </p>
+      {/if}
 
-      <button
-        type="button"
-        onclick={() => showDeleteConfirm = true}
-        class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
-      >
-        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-        Delete Application
-      </button>
+      {#if statusLogCount <= 5 && statusLogCount > 0}
+        <a
+          href="/applications/{app.id}/timeline"
+          class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
+        >
+          View full timeline
+          <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+        </a>
+      {/if}
     </div>
   </Card>
+
+  <!-- More (collapsible) -->
+  <div>
+    <button
+      type="button"
+      onclick={() => showMore = !showMore}
+      class="flex items-center gap-2 text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+    >
+      <FontAwesomeIcon icon={faChevronDown} class="w-3 h-3 transition-transform {showMore ? 'rotate-180' : ''}" />
+      More
+    </button>
+    {#if showMore}
+      <div class="mt-4">
+        <button
+          type="button"
+          onclick={() => showDeleteConfirm = true}
+          class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+        >
+          <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+          Delete Application
+        </button>
+      </div>
+    {/if}
+  </div>
 
 </div>
 
