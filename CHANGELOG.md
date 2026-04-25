@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.3] - 2026-04-25
+
+5 commits since v0.5.2.
+
+### Changed
+- Dashboard home sections reordered with restyled import tasks and updated configuration headings
+- Docker builds now use BuildKit with --pull flag for improved performance and cache freshness
+
+### Fixed
+- Fixed billing page overlay path following route restructuring
+
 ## [0.5.2] - 2026-04-25
 
 17 commits since v0.5.1.
