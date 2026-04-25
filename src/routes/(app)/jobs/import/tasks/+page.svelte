@@ -2,6 +2,7 @@
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { onMount } from "svelte";
   import {
@@ -16,6 +17,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import { searchTaskDisplayName } from "$lib/format";
+  import { formatDateTime as fmtDateTime } from "$lib/format-date";
   import Spinner from "$lib/components/Spinner.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
@@ -130,19 +132,11 @@
   // Debounce timer
   let urlDebounce: ReturnType<typeof setTimeout> | null = null;
 
-  const tz = $derived(data.userTimezone || undefined);
+  const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
+  const tf = $derived(($page.data as { timeFormat: import('$lib/format-date').TimeFormat }).timeFormat);
 
   function formatDate(date: Date | string | null): string {
-    if (!date) return "Never";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: tz,
-    });
+    return fmtDateTime(date, tf, { timezone: tz || null, fallback: "Never" });
   }
 
   function formatRelativeTime(date: Date | string | null): string {
@@ -377,6 +371,7 @@
           {detectingPlatform}
           {existingCredentials}
           onsearchurlinput={handleSearchUrlInput}
+          timeFormat={($page.data as { timeFormat: import('$lib/format-date').TimeFormat }).timeFormat}
         />
 
         <!-- Optional note -->

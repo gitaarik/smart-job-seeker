@@ -39,6 +39,7 @@
     getStatusBgColor,
   } from "$lib/application-status";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
+  import { formatDate as fmtDate } from "$lib/format-date";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -87,13 +88,7 @@
   });
 
   function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return fmtDate(date, { fallback: "" });
   }
 
   function formatRelativeDate(date: Date | string | null): string {

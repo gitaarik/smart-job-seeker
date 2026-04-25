@@ -4,6 +4,10 @@ import { redirect } from "@sveltejs/kit";
 import { getProfilesByUserId } from "$lib/server/profile/user-profiles";
 import { getBalance } from "$lib/server/billing/credits";
 import { getUnreadCount } from "$lib/server/notifications";
+import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
+import { users } from "$lib/server/db/schema";
+import { resolveTimeFormat } from "$lib/format-date";
 
 export const load: LayoutServerLoad = async (event) => {
   // Require authentication - redirects to /login?redirect=<current-path>
@@ -25,7 +29,13 @@ export const load: LayoutServerLoad = async (event) => {
     if (!noProfileAllowed.some((p) => event.url.pathname.startsWith(p))) {
       redirect(302, "/profile/create");
     }
-    // Return minimal data for pages that don't require a profile
+
+    // Still load user settings for time format / timezone
+    const userRecord = await db.query.users.findFirst({
+      where: eq(users.id, user.id),
+      columns: { timezone: true, time_format: true },
+    });
+
     return {
       user,
       profiles: [],
@@ -33,6 +43,8 @@ export const load: LayoutServerLoad = async (event) => {
       adminUser,
       creditBalance: 0,
       unreadNotifications: 0,
+      userTimezone: userRecord?.timezone ?? null,
+      timeFormat: resolveTimeFormat(userRecord?.time_format ?? null, userRecord?.timezone ?? null),
     };
   }
 
@@ -80,9 +92,13 @@ export const load: LayoutServerLoad = async (event) => {
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
   // Start remaining queries in parallel
-  const [creditBalance, unreadNotifications] = await Promise.all([
+  const [creditBalance, unreadNotifications, userRecord] = await Promise.all([
     getBalance(user.id),
     getUnreadCount(user.id),
+    db.query.users.findFirst({
+      where: eq(users.id, user.id),
+      columns: { timezone: true, time_format: true },
+    }),
   ]);
 
   return {
@@ -92,5 +108,7 @@ export const load: LayoutServerLoad = async (event) => {
     adminUser,
     creditBalance,
     unreadNotifications,
+    userTimezone: userRecord?.timezone ?? null,
+    timeFormat: resolveTimeFormat(userRecord?.time_format ?? null, userRecord?.timezone ?? null),
   };
 };

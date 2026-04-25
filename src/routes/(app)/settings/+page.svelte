@@ -7,6 +7,9 @@
   import Card from "../components/Card.svelte";
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { TIMEZONE_OPTIONS, formatTzLabel } from "$lib/timezone";
+  import { defaultTimeFormat, resolveTimeFormat, isHour12 } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
 
   let { data }: { data: PageData } = $props();
 
@@ -26,7 +29,24 @@
   let tzError = $state("");
 
   const originalTimezone = data.timezone || "";
-  const tzChanged = $derived(timezone !== originalTimezone);
+
+  // Time format: null = auto, "12h", "24h"
+  let timeFormat = $state<string | null>(data.timeFormatRaw);
+
+  const originalTimeFormat = data.timeFormatRaw;
+
+  const settingsChanged = $derived(
+    timezone !== originalTimezone || timeFormat !== originalTimeFormat,
+  );
+
+  // Resolved format for display (never null)
+  const resolvedFormat = $derived(
+    resolveTimeFormat(timeFormat, timezone),
+  );
+
+  const autoLabel = $derived(
+    `Auto (${defaultTimeFormat(timezone) === "12h" ? "12-hour" : "24-hour"})`,
+  );
 
   // Live clock for selected timezone
   let currentTime = $state("");
@@ -36,6 +56,7 @@
       currentTime = "";
       return;
     }
+    const fmt = resolvedFormat;
     function updateTime() {
       try {
         currentTime = new Intl.DateTimeFormat("en-US", {
@@ -44,7 +65,7 @@
           minute: "2-digit",
           second: "2-digit",
           weekday: "short",
-          hour12: true,
+          hour12: isHour12(fmt),
         }).format(new Date());
       } catch {
         currentTime = "";
@@ -54,50 +75,6 @@
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   });
-
-  const TIMEZONE_OPTIONS = [
-    { group: "Americas", zones: [
-      "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-      "America/Anchorage", "America/Toronto", "America/Vancouver",
-      "America/Mexico_City", "America/Bogota", "America/Lima",
-      "America/Sao_Paulo", "America/Argentina/Buenos_Aires",
-    ]},
-    { group: "Europe", zones: [
-      "Europe/London", "Europe/Dublin", "Europe/Paris", "Europe/Berlin",
-      "Europe/Amsterdam", "Europe/Brussels", "Europe/Madrid", "Europe/Rome",
-      "Europe/Zurich", "Europe/Vienna", "Europe/Stockholm", "Europe/Oslo",
-      "Europe/Copenhagen", "Europe/Helsinki", "Europe/Warsaw", "Europe/Prague",
-      "Europe/Bucharest", "Europe/Athens", "Europe/Istanbul", "Europe/Moscow",
-      "Europe/Lisbon",
-    ]},
-    { group: "Asia & Pacific", zones: [
-      "Asia/Dubai", "Asia/Kolkata", "Asia/Bangkok", "Asia/Singapore",
-      "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Tokyo", "Asia/Seoul",
-      "Asia/Jakarta", "Asia/Karachi", "Asia/Dhaka", "Asia/Taipei",
-      "Australia/Sydney", "Australia/Melbourne", "Australia/Perth",
-      "Pacific/Auckland",
-    ]},
-    { group: "Africa & Middle East", zones: [
-      "Africa/Cairo", "Africa/Lagos", "Africa/Johannesburg", "Africa/Nairobi",
-      "Africa/Casablanca", "Asia/Jerusalem", "Asia/Riyadh",
-    ]},
-  ];
-
-  function formatTzLabel(tz: string): string {
-    try {
-      const now = new Date();
-      const formatter = new Intl.DateTimeFormat("en-US", {
-        timeZone: tz,
-        timeZoneName: "shortOffset",
-      });
-      const parts = formatter.formatToParts(now);
-      const offset = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
-      const city = tz.split("/").pop()?.replace(/_/g, " ") ?? tz;
-      return `${city} (${offset})`;
-    } catch {
-      return tz;
-    }
-  }
 
   // Auto-detect timezone from browser if none is saved
   $effect(() => {
@@ -138,8 +115,8 @@
     }
   }
 
-  async function saveTimezone() {
-    if (!tzChanged || !timezone) return;
+  async function saveSettings() {
+    if (!settingsChanged || !timezone) return;
 
     tzSaving = true;
     tzError = "";
@@ -149,7 +126,7 @@
       const res = await fetch("/api/account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone }),
+        body: JSON.stringify({ timezone, time_format: timeFormat }),
       });
 
       if (!res.ok) {
@@ -255,14 +232,52 @@
         </p>
       </div>
 
+      <div>
+        <label class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">
+          Time format
+        </label>
+        <div class="inline-flex rounded-lg border border-[var(--dash-border-input)] overflow-hidden">
+          <button
+            type="button"
+            onclick={() => (timeFormat = null)}
+            class="px-3 py-1.5 text-sm transition-colors {timeFormat === null
+              ? 'bg-[var(--dash-primary)] text-white'
+              : 'bg-[var(--dash-card)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+          >
+            {autoLabel}
+          </button>
+          <button
+            type="button"
+            onclick={() => (timeFormat = "12h")}
+            class="px-3 py-1.5 text-sm border-x border-[var(--dash-border-input)] transition-colors {timeFormat === '12h'
+              ? 'bg-[var(--dash-primary)] text-white'
+              : 'bg-[var(--dash-card)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+          >
+            12-hour
+          </button>
+          <button
+            type="button"
+            onclick={() => (timeFormat = "24h")}
+            class="px-3 py-1.5 text-sm transition-colors {timeFormat === '24h'
+              ? 'bg-[var(--dash-primary)] text-white'
+              : 'bg-[var(--dash-card)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+          >
+            24-hour
+          </button>
+        </div>
+        <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+          Controls how times are displayed across the app.
+        </p>
+      </div>
+
       {#if tzError}
         <p class="text-sm" style="color: var(--dash-error);">{tzError}</p>
       {/if}
 
       <button
         type="button"
-        onclick={saveTimezone}
-        disabled={tzSaving || !tzChanged || !timezone}
+        onclick={saveSettings}
+        disabled={tzSaving || !settingsChanged || !timezone}
         class="px-4 py-2 text-sm text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-[var(--dash-primary)]"
       >
         {#if tzSaving}

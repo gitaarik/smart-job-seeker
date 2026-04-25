@@ -1322,6 +1322,7 @@ export const users = pgTable("users", {
 	is_staff: boolean().default(false).notNull(),
 	is_approved: boolean().default(false).notNull(),
 	timezone: varchar({ length: 100 }),
+	time_format: varchar("time_format", { length: 10 }),
 });
 
 export const side_projects = pgTable("side_projects", {

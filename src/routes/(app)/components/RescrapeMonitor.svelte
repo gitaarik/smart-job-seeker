@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
+  import { formatDateTime } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBan,
@@ -278,13 +281,7 @@
   }
 
   function formatRunDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return formatDateTime(dateStr, ($page.data as { timeFormat: TimeFormat }).timeFormat);
   }
 
   function statusColor(s: string): string {
@@ -583,7 +580,7 @@
           {/if}
 
           <!-- Logs -->
-          <LogViewer {logs} loading={isActive} maxHeight="max-h-48" />
+          <LogViewer {logs} loading={isActive} maxHeight="max-h-48" timeFormat={($page.data as { timeFormat: import('$lib/format-date').TimeFormat }).timeFormat} />
 
           <!-- Completed extraction summary -->
           {#if           isComplete && message &&

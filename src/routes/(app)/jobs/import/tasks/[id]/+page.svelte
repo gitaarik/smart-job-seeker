@@ -9,6 +9,9 @@
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
   import { formatJobType, formatWorkLocation, formatSalaryRange, searchTaskDisplayName } from "$lib/format";
+  import { page } from "$app/stores";
+  import { formatDateTime, formatTime as fmtTime } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
   import {
     faArrowLeft,
     faBuilding,
@@ -605,19 +608,11 @@
     if (screenshotSrc) URL.revokeObjectURL(screenshotSrc);
   });
 
-  const tz = $derived(data.userTimezone || undefined);
+  const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
+  const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
 
   function formatDate(date: Date | string | null): string {
-    if (!date) return "Never";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: tz,
-    });
+    return formatDateTime(date, tf, { timezone: tz || null, fallback: "Never" });
   }
 
   function formatRelativeTime(date: Date | string | null): string {
@@ -1743,7 +1738,7 @@
               {#each runLogs[run.id] as log (log.id)}
                 <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
                   <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                    {new Date(log.timestamp).toLocaleTimeString("en-US", { timeZone: tz })}
+                    {fmtTime(log.timestamp, tf, { timezone: tz || null })}
                   </span>
                   <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                     {log.level}
@@ -2212,7 +2207,8 @@
         {desktopConnected}
         {devices}
         verificationEmailAddress={data.verificationEmailAddress}
-        userTimezone={data.userTimezone}
+        userTimezone={tz || ""}
+        timeFormat={tf}
       />
     {/key}
   </Card>
@@ -2513,7 +2509,7 @@
                     {#each runLogs[featuredRunId] as log (log.id)}
                       <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
                         <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                          {new Date(log.timestamp).toLocaleTimeString("en-US", { timeZone: tz })}
+                          {fmtTime(log.timestamp, tf, { timezone: tz || null })}
                         </span>
                         <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                           {log.level}

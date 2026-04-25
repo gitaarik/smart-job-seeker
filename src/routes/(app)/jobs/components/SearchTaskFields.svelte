@@ -21,6 +21,8 @@
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CredentialSelector from "./CredentialSelector.svelte";
   import BrowserProviderToggle from "./BrowserProviderToggle.svelte";
+  import { buildHourOptions } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
 
   interface Props {
     mode: "add" | "edit";
@@ -64,6 +66,7 @@
     devices?: Array<{ apiKeyId: number; apiKeyName: string; connected: boolean }>;
     verificationEmailAddress?: string | null;
     userTimezone?: string;
+    timeFormat?: TimeFormat;
   }
 
   let {
@@ -95,6 +98,7 @@
     devices = [],
     verificationEmailAddress = null,
     userTimezone = "",
+    timeFormat = "12h",
   }: Props = $props();
 
   const isAdd = mode === "add";
@@ -153,11 +157,7 @@
     { value: "336", label: "Every 2 weeks" },
   ];
 
-  const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
-    const ampm = i < 12 ? "AM" : "PM";
-    const h12 = i === 0 ? 12 : i > 12 ? i - 12 : i;
-    return { value: i, label: `${h12}:00 ${ampm}` };
-  });
+  const HOUR_OPTIONS = $derived(buildHourOptions(timeFormat));
 
   // ── Edit-mode state ──
   // Collapsible sections

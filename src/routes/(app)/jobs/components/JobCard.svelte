@@ -18,6 +18,7 @@
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import ScoreBadge from "./ScoreBadge.svelte";
   import { formatSalaryRange, timeAgo } from "$lib/format";
+  import { formatDate as fmtDate } from "$lib/format-date";
 
   interface Job {
     id: number;
@@ -102,13 +103,7 @@
   }
 
   function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return fmtDate(date, { fallback: "" });
   }
 
   function truncate(text: string | null, maxLength: number): string {

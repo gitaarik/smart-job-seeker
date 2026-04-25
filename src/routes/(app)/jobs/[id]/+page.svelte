@@ -32,6 +32,9 @@
   import { formatJobStatus, formatSalaryRange, timeAgo } from "$lib/format";
   import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from "$lib/salary/conversion";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
+  import { page } from "$app/stores";
+  import { formatDateLong, formatDateTime as fmtDateTime } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -84,27 +87,14 @@
     return "strong";
   }
 
+  const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
+
   function formatDate(date: Date | string | null): string {
-    if (!date) return "N/A";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+    return formatDateLong(date);
   }
 
   function formatDateTime(date: Date | string | null): string {
-    if (!date) return "N/A";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return fmtDateTime(date, tf);
   }
 
   // formatSalary delegates to shared utility

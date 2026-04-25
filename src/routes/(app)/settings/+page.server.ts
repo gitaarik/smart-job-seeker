@@ -9,10 +9,11 @@ export const load: PageServerLoad = async (event) => {
 
   const userRecord = await db.query.users.findFirst({
     where: eq(users.id, user.id),
-    columns: { timezone: true },
+    columns: { timezone: true, time_format: true },
   });
 
   return {
     timezone: userRecord?.timezone ?? null,
+    timeFormatRaw: userRecord?.time_format ?? null,
   };
 };

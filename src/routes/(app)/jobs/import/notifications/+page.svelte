@@ -1,11 +1,15 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faCheck, faEnvelope, faCalendarAlt, faPenToSquare, faPencil, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import Checkbox from "../../../components/Checkbox.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { TIMEZONE_OPTIONS, formatTzLabel } from "$lib/timezone";
+  import { formatTimeShort, formatDateShort as fmtDateShort, buildHourOptions } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
 
   let { data }: { data: PageData } = $props();
 
@@ -93,21 +97,14 @@
     return `In ${diffDays} days`;
   }
 
+  const timeFormat = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
+
   function formatTime(date: Date): string {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone: digestTimezone || undefined,
-    });
+    return formatTimeShort(date, timeFormat, { timezone: digestTimezone || null });
   }
 
   function formatDateShort(date: Date): string {
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      timeZone: digestTimezone || undefined,
-    });
+    return fmtDateShort(date, { timezone: digestTimezone || null });
   }
 
   const FREQUENCY_OPTIONS = [
@@ -127,56 +124,7 @@
     { value: 90, label: "90+ (excellent matches only)" },
   ];
 
-  const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
-    const ampm = i < 12 ? "AM" : "PM";
-    const h12 = i === 0 ? 12 : i > 12 ? i - 12 : i;
-    return { value: i, label: `${h12}:00 ${ampm}` };
-  });
-
-  // Common timezones grouped by region
-  const TIMEZONE_OPTIONS = [
-    { group: "Americas", zones: [
-      "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-      "America/Anchorage", "America/Toronto", "America/Vancouver",
-      "America/Mexico_City", "America/Bogota", "America/Lima",
-      "America/Sao_Paulo", "America/Argentina/Buenos_Aires",
-    ]},
-    { group: "Europe", zones: [
-      "Europe/London", "Europe/Dublin", "Europe/Paris", "Europe/Berlin",
-      "Europe/Amsterdam", "Europe/Brussels", "Europe/Madrid", "Europe/Rome",
-      "Europe/Zurich", "Europe/Vienna", "Europe/Stockholm", "Europe/Oslo",
-      "Europe/Copenhagen", "Europe/Helsinki", "Europe/Warsaw", "Europe/Prague",
-      "Europe/Bucharest", "Europe/Athens", "Europe/Istanbul", "Europe/Moscow",
-      "Europe/Lisbon",
-    ]},
-    { group: "Asia & Pacific", zones: [
-      "Asia/Dubai", "Asia/Kolkata", "Asia/Bangkok", "Asia/Singapore",
-      "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Tokyo", "Asia/Seoul",
-      "Asia/Jakarta", "Asia/Karachi", "Asia/Dhaka", "Asia/Taipei",
-      "Australia/Sydney", "Australia/Melbourne", "Australia/Perth",
-      "Pacific/Auckland",
-    ]},
-    { group: "Africa & Middle East", zones: [
-      "Africa/Cairo", "Africa/Lagos", "Africa/Johannesburg", "Africa/Nairobi",
-      "Africa/Casablanca", "Asia/Jerusalem", "Asia/Riyadh",
-    ]},
-  ];
-
-  function formatTzLabel(tz: string): string {
-    try {
-      const now = new Date();
-      const formatter = new Intl.DateTimeFormat("en-US", {
-        timeZone: tz,
-        timeZoneName: "shortOffset",
-      });
-      const parts = formatter.formatToParts(now);
-      const offset = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
-      const city = tz.split("/").pop()?.replace(/_/g, " ") ?? tz;
-      return `${city} (${offset})`;
-    } catch {
-      return tz;
-    }
-  }
+  const HOUR_OPTIONS = $derived(buildHourOptions(timeFormat));
 
   // Auto-detect timezone from browser if none is saved
   $effect(() => {

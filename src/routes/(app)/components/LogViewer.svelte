@@ -1,5 +1,7 @@
 <script lang="ts">
   import Spinner from "$lib/components/Spinner.svelte";
+  import { formatTime } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
 
   interface LogEntry {
     id: number | string;
@@ -13,9 +15,10 @@
     loading?: boolean;
     maxHeight?: string;
     timezone?: string;
+    timeFormat?: TimeFormat;
   }
 
-  let { logs, loading = false, maxHeight = "max-h-64", timezone }: Props = $props();
+  let { logs, loading = false, maxHeight = "max-h-64", timezone, timeFormat = "12h" }: Props = $props();
 
   const LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
   const LOG_LEVEL_RANK: Record<string, number> = {
@@ -108,7 +111,7 @@
       {#each filteredLogs as log (log.id)}
         <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
           <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-            {new Date(log.timestamp).toLocaleTimeString("en-US", { timeZone: timezone || undefined })}
+            {formatTime(log.timestamp, timeFormat, { timezone: timezone || null })}
           </span>
           <span class="uppercase w-12 {getLogLevelColor(log.level)}">
             {log.level}

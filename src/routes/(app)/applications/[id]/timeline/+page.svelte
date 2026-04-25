@@ -16,11 +16,15 @@
   import EmptyState from "../../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
   import { getStatusLabel, getStatusColor, getStatusBgColor } from "$lib/application-status";
+  import { page } from "$app/stores";
+  import { formatDate as fmtDate, formatTimeShort } from "$lib/format-date";
+  import type { TimeFormat } from "$lib/format-date";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
   let entries = $derived(app.application_status_logs || []);
+  const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
 
   let showAddForm = $state(false);
   let editingId = $state<number | null>(null);
@@ -34,15 +38,11 @@
   let editDescription = $state("");
 
   function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    return fmtDate(date, { fallback: "" });
   }
 
   function formatTime(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    return formatTimeShort(date, tf, { fallback: "" });
   }
 
   function startEdit(entry: (typeof entries)[0]) {

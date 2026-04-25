@@ -2,7 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, ne, inArray, asc } from "drizzle-orm";
-import { search_tasks, profiles, platform_profiles, users } from "$lib/server/db/schema";
+import { search_tasks, profiles, platform_profiles } from "$lib/server/db/schema";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { config } from "$lib/server/config";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
@@ -93,12 +93,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   const subscription = user ? await getActiveSubscription(user.id) : null;
 
-  // Load user timezone for schedule preferred hour display
-  const userRecord = user ? await db.query.users.findFirst({
-    where: eq(users.id, user.id),
-    columns: { timezone: true },
-  }) : null;
-
   // Auto-generate verification email forwarding address on first visit
   const verificationAddress = await getOrCreateVerificationAddress(layoutData.selectedProfile.id);
 
@@ -145,6 +139,5 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     uiPreferences: ((searchTask as any).ui_preferences ?? {}) as Record<string, unknown>,
     verificationEmailAddress: verificationAddress.fullAddress,
     apiKeyDevices,
-    userTimezone: userRecord?.timezone || "",
   };
 };
