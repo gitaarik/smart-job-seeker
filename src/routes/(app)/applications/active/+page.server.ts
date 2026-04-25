@@ -130,7 +130,7 @@ export const actions: Actions = {
       date_created: now,
       from_status: null,
       to_status: "preparing",
-      description: "Application created",
+      action: "Send application",
     });
 
     redirect(302, `/applications/${application.id}`);

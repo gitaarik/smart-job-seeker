@@ -6,23 +6,29 @@
   import {
     faBuilding,
     faCalendar,
+    faCalendarCheck,
     faChevronDown,
+    faClock,
     faFilter,
     faGlobe,
+    faHandPointRight,
     faLayerGroup,
     faMapMarkerAlt,
+    faMoneyBillWave,
     faPaperPlane,
     faPlus,
     faSearch,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
-  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
+  import CategoryPill from "$lib/components/CategoryPill.svelte";
+  import { formatSalaryRange, timeAgo } from "$lib/format";
   import {
     statusOptions,
     getStatusLabel,
     getStatusColor,
+    getStatusDotColor,
   } from "$lib/application-status";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -116,6 +122,20 @@
       day: "numeric",
       year: "numeric",
     });
+  }
+
+  function formatSalary(
+    min: number | null,
+    max: number | null,
+    currency: string | null,
+    period: string | null,
+  ): string {
+    const result = formatSalaryRange(min, max, currency, period);
+    return result === "Not specified" ? "" : result;
+  }
+
+  function asStringArray(value: unknown): string[] {
+    return Array.isArray(value) ? value : [];
   }
 
 </script>
@@ -363,71 +383,105 @@
     <div class="space-y-3">
       {#each applications as app (app.id)}
         {@const job = app.job}
+        {@const salaryText = job ? formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period) : ""}
+        {@const workLocations = asStringArray(job?.work_location)}
+        {@const jobTypes = asStringArray(job?.job_types)}
+        {@const experienceLevels = asStringArray(job?.experience_levels)}
         <a
           href="/applications/{app.id}"
           data-app-id={app.id}
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden hover:border-[var(--dash-primary)] hover:ring-2 hover:ring-[var(--dash-primary)]/20 transition-all"
         >
           <div class="p-3 sm:p-4">
-            <div class="flex-1 min-w-0">
-              <!-- Title -->
-              <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate">
-                {job?.title || "Unknown Position"}
-              </h3>
+            <!-- Title (full width) -->
+            <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate">
+              {job?.title || "Unknown Position"}
+            </h3>
 
-              <!-- Company, location, platform -->
-              <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
-                {#if job?.company}
-                  <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
-                    <span class="truncate max-w-[120px] sm:max-w-none">{job.company}</span>
-                  </span>
-                {/if}
-                {#if job?.office_location}
-                  <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
-                    <span class="truncate max-w-[100px] sm:max-w-none">{job.office_location}</span>
-                  </span>
-                {/if}
-                {#if job?.job_platform}
-                  <span class="flex items-center gap-1">
-                    <PlatformLogo
-                      platformUrl={job.job_platform.url}
-                      size="w-3.5 h-3.5"
-                    />
-                    {job.job_platform.name}
-                  </span>
-                {/if}
-              </div>
-
-              <!-- Status and action info -->
-              <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}">
-                  {getStatusLabel(app.status)}
-                </span>
-                {#if app.status_step}
-                  <span class="text-xs text-[var(--dash-text-secondary)] italic">{app.status_step}</span>
-                {/if}
-              </div>
-
-              {#if app.status_action}
-                <p class="text-xs text-[var(--dash-primary)] font-medium mt-1">
-                  → {app.status_action}
-                  {#if app.status_action === "Scheduled" && app.status_action_date}
-                    — {formatDate(app.status_action_date)}
+            <!-- Details + Status widget row -->
+            <div class="flex items-start gap-3 mt-1">
+              <!-- Details -->
+              <div class="flex-1 min-w-0">
+                <!-- Company, location, platform -->
+                <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
+                  {#if job?.company}
+                    <span class="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
+                      <span class="truncate max-w-[120px] sm:max-w-none">{job.company}</span>
+                    </span>
                   {/if}
-                </p>
-              {/if}
-
-              <!-- Date -->
-              {#if app.date_created}
-                <div class="flex items-center gap-2 mt-1.5 text-xs text-[var(--dash-text-muted)]">
-                  <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                    {formatDate(app.date_created)}
-                  </span>
+                  {#if job?.office_location}
+                    <span class="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
+                      <span class="truncate max-w-[100px] sm:max-w-none">{job.office_location}</span>
+                    </span>
+                  {/if}
+                  {#if job?.job_platform}
+                    <span class="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                      {job.job_platform.name}
+                    </span>
+                  {/if}
                 </div>
-              {/if}
+
+                <!-- Tags: work location, job type, experience level -->
+                {#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
+                  <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {#each workLocations as loc}
+                      <CategoryPill category="work_location" value={loc} />
+                    {/each}
+                    {#each jobTypes as type}
+                      <CategoryPill category="job_type" value={type} />
+                    {/each}
+                    {#each experienceLevels as level}
+                      <CategoryPill category="experience_level" value={level} />
+                    {/each}
+                  </div>
+                {/if}
+
+                <!-- Salary and Date row -->
+                <div class="flex items-center justify-between mt-1.5 sm:mt-2">
+                  <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap">
+                    {#if salaryText}
+                      <span class="flex items-center gap-1 text-[var(--dash-success)]">
+                        <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
+                        <span class="truncate max-w-[140px] sm:max-w-none">{salaryText}</span>
+                      </span>
+                    {/if}
+                    {#if app.date_created}
+                      <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
+                        <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                        {timeAgo(app.date_created)}
+                        <span class="opacity-50">{formatDate(app.date_created)}</span>
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Status widget (right side) -->
+              <div class="flex-shrink-0 self-center">
+                <div class="rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg)] flex flex-col items-center justify-center gap-1 px-3 py-2.5">
+                  <span class="text-xs font-semibold uppercase tracking-wide {getStatusDotColor(app.status)} whitespace-nowrap">
+                    {getStatusLabel(app.status)}
+                  </span>
+                  {#if app.status_step}
+                    <span class="text-xs text-[var(--dash-text-secondary)] italic whitespace-nowrap">
+                      {app.status_step}
+                    </span>
+                  {/if}
+                  {#if app.status_action}
+                    {@const isWaiting = app.status_action.startsWith("Awaiting")}
+                    {@const isScheduled = app.status_action === "Scheduled"}
+                    <span class="text-xs font-medium whitespace-nowrap flex items-center gap-1 {isWaiting ? 'text-[var(--dash-text-muted)]' : isScheduled ? 'text-[var(--dash-success)]' : 'text-[var(--dash-primary)]'}">
+                      {#key app.status_action}
+                        <FontAwesomeIcon icon={isWaiting ? faClock : isScheduled ? faCalendarCheck : faHandPointRight} class="w-3 h-3" />
+                      {/key}
+                      {app.status_action}
+                    </span>
+                  {/if}
+                </div>
+              </div>
             </div>
           </div>
         </a>

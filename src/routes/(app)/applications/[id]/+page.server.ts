@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull, asc } from "drizzle-orm";
 import { applications, application_status_log } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
 
@@ -65,16 +65,48 @@ export const actions: Actions = {
 
     await db.update(applications).set(updateData).where(eq(applications.id, appId));
 
-    await db.insert(application_status_log).values({
-      application: appId,
-      date_created: now,
-      from_status: existing.status,
-      to_status: status,
-      step,
-      action,
-      action_date: actionDate ? new Date(actionDate) : null,
-      description: description || null,
-    });
+    // If still in the initial phase (from_status is null = the creation entry),
+    // and the phase hasn't changed, replace that initial entry instead of creating a new one.
+    // Once the initial entry has been replaced (or phase changes), always create new entries.
+    let replaced = false;
+    if (!phaseChanged) {
+      const initialEntry = await db.query.application_status_log.findFirst({
+        where: and(
+          eq(application_status_log.application, appId),
+          isNull(application_status_log.from_status),
+        ),
+      });
+
+      // Count total log entries — only replace if the initial entry is the only one
+      const allEntries = await db.query.application_status_log.findMany({
+        where: eq(application_status_log.application, appId),
+        columns: { id: true },
+      });
+
+      if (initialEntry && allEntries.length === 1) {
+        await db.update(application_status_log).set({
+          step,
+          action,
+          action_date: actionDate ? new Date(actionDate) : null,
+          description: description || null,
+          date_created: now,
+        }).where(eq(application_status_log.id, initialEntry.id));
+        replaced = true;
+      }
+    }
+
+    if (!replaced) {
+      await db.insert(application_status_log).values({
+        application: appId,
+        date_created: now,
+        from_status: existing.status,
+        to_status: status,
+        step,
+        action,
+        action_date: actionDate ? new Date(actionDate) : null,
+        description: description || null,
+      });
+    }
 
     return { success: true };
   },
