@@ -147,15 +147,15 @@
                     <p class="text-xs text-[var(--dash-text-secondary)] truncate">{job.company}</p>
                   {/if}
                 </div>
-                <div class="flex-shrink-0 text-right space-y-0.5">
+                <div class="flex-shrink-0 text-right">
                   <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}">
                     {getStatusLabel(app.status)}
                   </span>
                   {#if app.status_step}
-                    <p class="text-xs text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
+                    <p class="text-xs text-[var(--dash-text-secondary)] italic mt-2">{app.status_step}</p>
                   {/if}
                   {#if app.status_action}
-                    <p class="text-xs text-[var(--dash-primary)] font-medium">
+                    <p class="text-xs text-[var(--dash-primary)] font-medium mt-2">
                       → {app.status_action}
                       {#if app.status_action === "Scheduled" && app.status_action_date}
                         — {formatDate(app.status_action_date)}
