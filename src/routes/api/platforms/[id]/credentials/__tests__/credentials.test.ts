@@ -60,6 +60,11 @@ vi.mock("$lib/server/db/schema", () => ({
   },
 }));
 
+vi.mock("$lib/server/auth/crypto", () => ({
+  encryptCredential: (v: any) => v,
+  decryptCredential: (v: any) => v,
+}));
+
 import { PUT, DELETE } from "../+server";
 
 function createPutEvent(body: any, user?: any) {
