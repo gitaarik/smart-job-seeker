@@ -171,14 +171,6 @@
     </div>
   {/if}
 
-  <!-- Import Tasks & Match Config -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    {#if searchTasks}
-      <SearchTasksSummary {searchTasks} />
-    {/if}
-    <MatchConfigSummary {matchConfig} />
-  </div>
-
   <!-- Top Matches -->
   {#if hasMatches && topMatches && topMatches.length > 0}
     <div>
@@ -197,5 +189,13 @@
       <JobCardList items={topMatches} {profileSkillLevels} />
     </div>
   {/if}
+
+  <!-- Import Tasks & Match Config -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {#if searchTasks}
+      <SearchTasksSummary {searchTasks} />
+    {/if}
+    <MatchConfigSummary {matchConfig} />
+  </div>
 
 </div>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faPlay, faSearch } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import { searchTaskDisplayName } from "$lib/format";
   import Card from "./Card.svelte";
@@ -47,10 +46,6 @@
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
-  const hasRunning = $derived(
-    searchTasks.tasks.some((t) => t.status === "running"),
-  );
-
   // Show the 5 most recently run tasks
   const recentTasks = $derived(
     [...searchTasks.tasks]
@@ -63,33 +58,22 @@
   );
 </script>
 
-<Card padding="md">
-  <div class="flex items-start justify-between gap-3 mb-3">
-    <div class="flex items-center gap-2.5">
-      <div
-        class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
-      >
-        <FontAwesomeIcon
-          icon={hasRunning ? faPlay : faSearch}
-          class="w-4 h-4 {hasRunning
-            ? 'text-green-500 animate-pulse'
-            : 'text-[var(--dash-text-muted)]'}"
-        />
-      </div>
-      <div>
-        <p class="text-sm font-medium text-[var(--dash-text)]">Import Tasks</p>
-        <p class="text-xs text-[var(--dash-text-secondary)]">
-          {searchTasks.activeCount} active / {searchTasks.totalCount} total
-        </p>
-      </div>
-    </div>
+<div>
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-base font-semibold text-[var(--dash-text)]">
+      Import Tasks
+    </h3>
     <a
       href="/jobs/import/tasks"
-      class="px-2.5 py-1 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0"
+      class="text-sm text-[var(--dash-primary)] hover:underline"
     >
       {searchTasks.totalCount === 0 ? "Add" : "Manage"}
     </a>
   </div>
+  <Card padding="md">
+    <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+      {searchTasks.activeCount} active / {searchTasks.totalCount} total
+    </p>
 
   {#if searchTasks.totalCount === 0}
     <p class="text-xs text-[var(--dash-text-secondary)]">
@@ -143,4 +127,5 @@
       {/if}
     </div>
   {/if}
-</Card>
+  </Card>
+</div>

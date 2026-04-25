@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faSliders } from "@fortawesome/free-solid-svg-icons";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import Card from "./Card.svelte";
 
@@ -29,35 +27,27 @@
   const isConfigured = $derived(jobTypes.length > 0 && workLocations.length > 0);
 </script>
 
-<Card padding="md">
-  <div class="flex items-start justify-between gap-3 mb-3">
-    <div class="flex items-center gap-2.5">
-      <div
-        class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
-      >
-        <FontAwesomeIcon
-          icon={faSliders}
-          class="w-4 h-4 text-[var(--dash-text-muted)]"
-        />
-      </div>
-      <p class="text-sm font-medium text-[var(--dash-text)]">Match Config</p>
-    </div>
+<div>
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-base font-semibold text-[var(--dash-text)]">
+      Match Config
+    </h3>
     <a
       href="/jobs/import/config"
-      class="px-2.5 py-1 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] transition-colors whitespace-nowrap shrink-0"
+      class="text-sm text-[var(--dash-primary)] hover:underline"
     >
       {isConfigured ? "Edit" : "Configure"}
     </a>
   </div>
-
+  <Card padding="md">
   {#if !isConfigured}
     <p class="text-xs text-[var(--dash-text-secondary)]">
       No match config set yet. Configure what types of jobs you're looking for.
     </p>
   {:else}
-    <div class="space-y-2 text-xs">
-      <div class="flex items-baseline gap-2">
-        <span class="text-[var(--dash-text-secondary)] shrink-0">Work location</span>
+    <div class="space-y-3 text-xs">
+      <div>
+        <span class="font-semibold text-[var(--dash-text)] block mb-1">Work location</span>
         {#if workLocations.length > 0}
           <div class="flex flex-wrap gap-1.5">
             {#each workLocations as loc}
@@ -68,8 +58,8 @@
           <span class="text-[var(--dash-text-muted)]">Any</span>
         {/if}
       </div>
-      <div class="flex items-baseline gap-2">
-        <span class="text-[var(--dash-text-secondary)] shrink-0">Job type</span>
+      <div>
+        <span class="font-semibold text-[var(--dash-text)] block mb-1">Job type</span>
         {#if jobTypes.length > 0}
           <div class="flex flex-wrap gap-1.5">
             {#each jobTypes as type}
@@ -80,8 +70,8 @@
           <span class="text-[var(--dash-text-muted)]">Any</span>
         {/if}
       </div>
-      <div class="flex items-baseline gap-2">
-        <span class="text-[var(--dash-text-secondary)] shrink-0">Experience</span>
+      <div>
+        <span class="font-semibold text-[var(--dash-text)] block mb-1">Experience</span>
         {#if experienceLevels.length > 0}
           <div class="flex flex-wrap gap-1.5">
             {#each experienceLevels as level}
@@ -93,8 +83,8 @@
         {/if}
       </div>
       {#if locations.length > 0}
-        <div class="flex items-baseline gap-2">
-          <span class="text-[var(--dash-text-secondary)] shrink-0">Locations</span>
+        <div>
+          <span class="font-semibold text-[var(--dash-text)] block mb-1">Locations</span>
           <div class="flex flex-wrap gap-1.5">
             {#each locations as loc}
               <span class="px-2 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-amber-700">
@@ -106,4 +96,5 @@
       {/if}
     </div>
   {/if}
-</Card>
+  </Card>
+</div>
