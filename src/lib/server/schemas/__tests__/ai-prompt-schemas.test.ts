@@ -129,7 +129,6 @@ describe("AI Prompt Schemas", () => {
       const validData = {
         score: 85,
         summary: "Strong match with minor gaps",
-        reasoning: "Detailed reasoning here",
         skill_match_percentage: 80,
         strengths: [
           "Strong React experience",
@@ -146,7 +145,6 @@ describe("AI Prompt Schemas", () => {
       const invalidScore = {
         score: 150, // > 100
         summary: "Summary",
-        reasoning: "Reasoning",
         skill_match_percentage: 80,
         strengths: ["Strength 1"],
         gaps: ["Gap 1"],
@@ -159,7 +157,6 @@ describe("AI Prompt Schemas", () => {
       const invalidRecommendation = {
         score: 85,
         summary: "Summary",
-        reasoning: "Reasoning",
         skill_match_percentage: 80,
         strengths: ["Strength 1"],
         gaps: ["Gap 1"],
@@ -172,7 +169,6 @@ describe("AI Prompt Schemas", () => {
       const tooManyStrengths = {
         score: 85,
         summary: "Summary",
-        reasoning: "Reasoning",
         skill_match_percentage: 80,
         strengths: Array(15).fill("Strength"), // > 10
         gaps: ["Gap 1"],

@@ -240,7 +240,7 @@ export const actions: Actions = {
       WITH deleted AS (
         DELETE FROM job_matches
         WHERE profile_id IN (${sqlJoin(profileIds)})
-        AND reasoning IS NOT NULL
+        AND recommendation IS NOT NULL
         RETURNING id
       )
       SELECT COUNT(*) as cnt FROM deleted

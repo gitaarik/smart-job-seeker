@@ -5,11 +5,13 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
+    faBan,
     faBriefcase,
     faBuilding,
     faCalendar,
     faCheck,
     faExternalLinkAlt,
+    faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
     faPaperPlane,
@@ -17,6 +19,7 @@
     faStar as faStarSolid,
     faSync,
     faTimes,
+    faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
@@ -26,7 +29,7 @@
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
-  import { formatJobStatus, formatSalaryRange } from "$lib/format";
+  import { formatJobStatus, formatSalaryRange, timeAgo } from "$lib/format";
   import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from "$lib/salary/conversion";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
 
@@ -107,22 +110,6 @@
   // formatSalary delegates to shared utility
   const formatSalary = formatSalaryRange;
 
-  function getRecommendationLabel(rec: string | null): string {
-    switch (rec) {
-      case "highly_recommend":
-        return "Highly Recommended";
-      case "recommend":
-        return "Recommended";
-      case "consider":
-        return "Consider";
-      case "not_recommended":
-        return "Not Recommended";
-      case "filtered_out":
-        return "Filtered Out";
-      default:
-        return rec || "Unknown";
-    }
-  }
 </script>
 
 <svelte:head>
@@ -157,45 +144,19 @@
     <div class="lg:col-span-2 space-y-6">
       <!-- Job Header Card -->
       <Card padding="lg">
+        <!-- Score badge (floated) -->
+        <div class="float-right ml-4 mb-2">
+          <ScoreBadge
+            score={match?.score ?? null}
+            matched={!!match?.recommendation}
+            size="xl"
+          />
+        </div>
+
         <!-- Title -->
         <h1 class="text-2xl font-bold text-[var(--dash-text)]">
           {job.title || "Untitled Job"}
         </h1>
-
-        <!-- Company, location, score -->
-        <div class="flex items-center justify-between gap-4 mt-2">
-          <div
-            class="flex items-center gap-3 text-[var(--dash-text-secondary)] flex-wrap"
-          >
-            {#if job.company}
-              <span class="flex items-center gap-1">
-                <FontAwesomeIcon icon={faBuilding} class="w-4 h-4" />
-                {job.company}
-              </span>
-            {/if}
-            {#if job.office_location}
-              <span class="flex items-center gap-1">
-                <FontAwesomeIcon icon={faMapMarkerAlt} class="w-4 h-4" />
-                {job.office_location}
-              </span>
-            {/if}
-            {#if job.job_platform}
-              <span class="flex items-center gap-1">
-                <PlatformLogo
-                  platformUrl={job.job_platform.url}
-                  size="w-4 h-4"
-                />
-                {job.job_platform.name}
-              </span>
-            {/if}
-          </div>
-          <div class="flex-shrink-0">
-            <ScoreBadge
-              score={match?.score ?? null}
-              matched={!!match?.reasoning}
-            />
-          </div>
-        </div>
 
         <!-- Tags (status, job types, work location) -->
         <div class="flex flex-wrap gap-2 mt-3">
@@ -223,163 +184,156 @@
           {/if}
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex flex-col gap-2 mt-4 sm:items-start">
-          {#if data.existingApplication}
-            <a
-              href="/applications/{data.existingApplication.id}"
-              class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-success)] bg-[var(--dash-success-light)] text-[var(--dash-success)] hover:bg-[var(--dash-success)] hover:text-white transition-colors whitespace-nowrap"
-            >
-              <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
-              View Application
-              <span class="text-xs capitalize">({data.existingApplication.status})</span>
-            </a>
-          {:else}
-            <form
-              method="POST"
-              action="?/startApplication"
-              use:enhance
-              class="w-full sm:w-auto"
-            >
-              <button
-                type="submit"
-                class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
-              >
-                <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
-                Start Application
-              </button>
-            </form>
+        <!-- Details -->
+        <div class="flex flex-col gap-2 text-sm mt-4 mb-1">
+          {#if job.company}
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faBuilding} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Company</span>
+              <span class="text-[var(--dash-text)]">{job.company}</span>
+            </div>
           {/if}
-
-          <div class="flex items-center gap-2">
-            <form
-              method="POST"
-              action={isSaved ? "?/unsaveJob" : "?/saveJob"}
-              use:enhance={() => {
-                isSaving = true;
-                return async ({ update }) => {
-                  await update();
-                  isSaving = false;
-                };
-              }}
-              class="flex-1 sm:flex-initial"
-            >
-              <button
-                type="submit"
-                disabled={isSaving}
-                class="
-                  w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {isSaved
-                  ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'} disabled:opacity-50
-                "
-                title={isSaved ? "Unsave job" : "Save job"}
-              >
-                <FontAwesomeIcon
-                  icon={isSaved ? faStarSolid : faStarRegular}
-                  class="w-4 h-4"
-                />
-                {isSaved ? "Saved" : "Save"}
-              </button>
-            </form>
-
-            <form
-              method="POST"
-              action="?/updateStatus"
-              use:enhance={() => {
-                return async ({ update }) => {
-                  await update();
-                };
-              }}
-              class="flex-1 sm:flex-initial"
-            >
-              <input type="hidden" name="status" value="rejected" />
-              <button
-                type="submit"
-                class="
-                  w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {jobStatus === 'rejected'
-                  ? 'bg-red-500 text-white border-red-500'
-                  : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
-                "
-                title="Not interested in this job"
-              >
-                <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-                Not Interested
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {#if job.source_url}
-          <a
-            href={job.source_url}
-            target="_blank"
-            rel="noopener"
-            class="text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5 truncate mt-4"
-          >
-            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-            <span class="truncate">{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}</span>
-          </a>
-        {/if}
-      </Card>
-
-      <!-- Salary & Details -->
-      <Card padding="lg">
-        <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
-          Details
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p class="text-sm text-[var(--dash-text-secondary)] mb-1">Salary</p>
-            <p
-              class="font-medium text-[var(--dash-text)] flex items-center gap-2"
-            >
-              <FontAwesomeIcon
-                icon={faMoneyBillWave}
-                class="w-4 h-4 text-[var(--dash-success)]"
-              />
-              {
-                formatSalary(
-                  job.salary_min,
-                  job.salary_max,
-                  job.salary_currency,
-                  job.salary_period,
-                )
-              }
+          {#if job.office_location}
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Location</span>
+              <span class="text-[var(--dash-text)]">{job.office_location}</span>
+            </div>
+          {/if}
+          <div class="flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+            <span class="text-[var(--dash-text-muted)]">Salary</span>
+            <span class="text-[var(--dash-text)]">
+              {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
               {#if job.salary_duration_weeks}
-                <span class="text-sm font-normal text-[var(--dash-text-secondary)]">
+                <span class="text-[var(--dash-text-secondary)]">
                   ({job.salary_duration_weeks} week{job.salary_duration_weeks === 1 ? "" : "s"})
                 </span>
               {/if}
-            </p>
+            </span>
             {#if normalizeSalaryPeriod(job.salary_period) === "project" && job.salary_duration_weeks && job.salary_min}
-              <p class="text-xs text-[var(--dash-text-muted)] mt-0.5 ml-6">
-                ≈ {formatCurrency(Math.round(projectToHourly(job.salary_min, job.salary_duration_weeks)), job.salary_currency || "USD")}/hr equivalent
-              </p>
+              <span class="text-xs text-[var(--dash-text-muted)]">
+                ≈ {formatCurrency(Math.round(projectToHourly(job.salary_min, job.salary_duration_weeks)), job.salary_currency || "USD")}/hr
+              </span>
             {/if}
           </div>
-          <div>
-            <p class="text-sm text-[var(--dash-text-secondary)] mb-1">Posted</p>
-            <p
-              class="font-medium text-[var(--dash-text)] flex items-center gap-2"
-            >
-              <FontAwesomeIcon icon={faCalendar} class="w-4 h-4" />
-              {
-                formatDate(
-                  job.date_posted || job.date_created,
-                )
-              }
-            </p>
+          <div class="flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faCalendar} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+            <span class="text-[var(--dash-text-muted)]">Posted</span>
+            <span class="text-[var(--dash-text)]">{timeAgo(job.date_posted || job.date_created)}</span>
+            <span class="text-[var(--dash-text-muted)]/50">{formatDate(job.date_posted || job.date_created)}</span>
           </div>
           {#if job.job_poster}
-            <div>
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
-                Posted By
-              </p>
-              <p class="font-medium text-[var(--dash-text)]">
-                {job.job_poster}
-              </p>
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faUser} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Posted by</span>
+              <span class="text-[var(--dash-text)]">{job.job_poster}</span>
             </div>
           {/if}
+          {#if job.job_platform}
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Platform</span>
+              <span class="text-[var(--dash-text)]">{job.job_platform.name}</span>
+            </div>
+          {/if}
+          {#if job.source_url}
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Source</span>
+              <a
+                href={job.source_url}
+                target="_blank"
+                rel="noopener"
+                class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors truncate"
+              >
+                {job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
+              </a>
+            </div>
+          {/if}
+        </div>
+
+        <!-- Action Buttons (footer) -->
+        <div class="flex flex-wrap items-center gap-2 -mx-6 -mb-6 mt-4 px-6 py-4 border-t border-[var(--dash-border)]">
+          <form
+            method="POST"
+            action="?/updateStatus"
+            use:enhance={() => {
+              return async ({ update }) => {
+                await update();
+              };
+            }}
+          >
+            <input type="hidden" name="status" value={jobStatus === 'rejected' ? 'new' : 'rejected'} />
+            <button
+              type="submit"
+              class="
+                flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {jobStatus === 'rejected'
+                ? 'bg-red-500 text-white border-red-500'
+                : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
+              "
+              title="Not interested in this job"
+            >
+              <FontAwesomeIcon icon={faBan} class="w-4 h-4" />
+              Not Interested
+            </button>
+          </form>
+
+          <form
+            method="POST"
+            action={isSaved ? "?/unsaveJob" : "?/saveJob"}
+            use:enhance={() => {
+              isSaving = true;
+              return async ({ update }) => {
+                await update();
+                isSaving = false;
+              };
+            }}
+          >
+            <button
+              type="submit"
+              disabled={isSaving}
+              class="
+                flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap {isSaved
+                ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
+                : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'} disabled:opacity-50
+              "
+              title={isSaved ? "Unsave job" : "Save job"}
+            >
+              <FontAwesomeIcon
+                icon={isSaved ? faStarSolid : faStarRegular}
+                class="w-4 h-4"
+              />
+              {isSaved ? "Saved" : "Save"}
+            </button>
+          </form>
+
+          <div class="ml-auto">
+            {#if data.existingApplication}
+              <a
+                href="/applications/{data.existingApplication.id}"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-success)] bg-[var(--dash-success-light)] text-[var(--dash-success)] hover:bg-[var(--dash-success)] hover:text-white transition-colors whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
+                View Application
+                <span class="text-xs capitalize">({data.existingApplication.status})</span>
+              </a>
+            {:else}
+              <form
+                method="POST"
+                action="?/startApplication"
+                use:enhance
+              >
+                <button
+                  type="submit"
+                  class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors whitespace-nowrap"
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} class="w-4 h-4" />
+                  Start Application
+                </button>
+              </form>
+            {/if}
+          </div>
         </div>
       </Card>
 
@@ -398,7 +352,7 @@
             Array.isArray(job.skills_required) &&
             job.skills_required.length > 0}
             <div class="mb-4">
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-muted)] mb-2">
                 Required
               </p>
               <div class="flex flex-wrap gap-2">
@@ -434,7 +388,7 @@
             Array.isArray(job.skills_preferred) &&
             job.skills_preferred.length > 0}
             <div>
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-muted)] mb-2">
                 Preferred
               </p>
               <div class="flex flex-wrap gap-2">
@@ -505,8 +459,7 @@
           Match Analysis
         </h2>
 
-        {#if           match && match.reasoning &&
-            match.recommendation === "filtered_out"}
+        {#if match && match.recommendation === "filtered_out"}
           <!-- Filtered out - didn't pass eligibility -->
           <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
             This job was filtered out before AI scoring because it doesn't fit
@@ -527,12 +480,8 @@
               {/each}
             </ul>
           {/if}
-        {:else if match && match.reasoning}
+        {:else if match && match.recommendation}
           <!-- AI-scored match -->
-          <p class="font-medium text-[var(--dash-text)] mb-4">
-            {getRecommendationLabel(match.recommendation)}
-          </p>
-
           {#if           match.strengths && Array.isArray(match.strengths) &&
             match.strengths.length > 0}
             <div class="mb-4">
@@ -555,7 +504,7 @@
 
           {#if           match.gaps && Array.isArray(match.gaps) &&
             match.gaps.length > 0}
-            <div class="mb-4">
+            <div>
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Gaps</p>
               <ul class="space-y-1">
                 {#each match.gaps as gap}
@@ -568,15 +517,6 @@
                   </li>
                 {/each}
               </ul>
-            </div>
-          {/if}
-
-          {#if match.reasoning}
-            <div>
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
-                Analysis
-              </p>
-              <p class="text-sm text-[var(--dash-text)]">{match.reasoning}</p>
             </div>
           {/if}
         {:else}
@@ -629,11 +569,11 @@
               }}
             >
               <button
-                type={match?.reasoning ? "button" : "submit"}
-                onclick={match?.reasoning ? () => (showRematchConfirm = true) : undefined}
+                type={match?.recommendation ? "button" : "submit"}
+                onclick={match?.recommendation ? () => (showRematchConfirm = true) : undefined}
                 disabled={isRematching}
                 class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                title={match?.reasoning
+                title={match?.recommendation
                   ? "Re-run AI scoring for this job"
                   : "Run AI scoring for this job"}
               >
@@ -641,14 +581,14 @@
                   <Spinner size="w-4 h-4" />
                 {:else}
                   <FontAwesomeIcon
-                    icon={match?.reasoning ? faSync : faSearch}
+                    icon={match?.recommendation ? faSync : faSearch}
                     class="w-4 h-4"
                   />
                 {/if}
                 {
                   isRematching
                     ? "Scoring..."
-                    : match?.reasoning
+                    : match?.recommendation
                     ? "Re-score"
                     : "Score"
                 }
@@ -687,7 +627,7 @@
             <div class="flex justify-between">
               <dt class="text-[var(--dash-text-secondary)]">Added</dt>
               <dd class="text-[var(--dash-text)]">
-                {formatDate(job.date_created)}
+                {timeAgo(job.date_created)} <span class="text-[var(--dash-text-muted)]/50">{formatDate(job.date_created)}</span>
               </dd>
             </div>
           </dl>

@@ -723,7 +723,6 @@ Be objective and constructive. Highlight both strengths and gaps clearly.`,
 Provide your analysis in JSON format with:
 - score (0-100)
 - summary (1-2 paragraph overview of the match)
-- reasoning (detailed explanation as a plain text string, not an object)
 - skill_match_percentage (0-100)
 - strengths (array of 3-5 top reasons this is a good match)
 - gaps (array of areas where candidate doesn't fully meet requirements)

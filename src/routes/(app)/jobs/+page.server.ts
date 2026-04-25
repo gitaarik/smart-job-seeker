@@ -275,7 +275,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
             skill_match_percentage: m.skill_match_percentage,
             matched_skills: m.matched_skills,
             match_summary: m.match_summary,
-            reasoning: m.reasoning,
+            recommendation: m.recommendation,
           },
         ])
       );
@@ -329,7 +329,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
           skill_match_percentage: true,
           matched_skills: true,
           match_summary: true,
-          reasoning: true,
+          recommendation: true,
         },
       });
 
@@ -476,7 +476,7 @@ async function countMatchingJobs(
     JOIN jobs j ON j.id = jm.job_id
     ${statusJoin}
     WHERE jm.profile_id = ${profileId}
-    AND jm.reasoning IS NOT NULL
+    AND jm.recommendation IS NOT NULL
     AND ${statusFilter}
     AND ${scoreFilter}
     AND ${searchFilter}
@@ -609,7 +609,7 @@ export const actions: Actions = {
       USING jobs j ${statusJoin}
       WHERE j.id = jm.job_id
       AND jm.profile_id = ${profileId}
-      AND jm.reasoning IS NOT NULL
+      AND jm.recommendation IS NOT NULL
       AND ${statusFilter}
       AND ${scoreFilter}
       AND ${searchFilter}

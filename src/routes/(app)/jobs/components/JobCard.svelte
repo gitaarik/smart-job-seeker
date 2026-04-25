@@ -8,7 +8,7 @@
     faCalendar,
     faCheck,
     faChevronRight,
-    faExternalLinkAlt,
+    faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
     faStar as faStarSolid,
@@ -17,8 +17,7 @@
   import type { Snippet } from "svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import ScoreBadge from "./ScoreBadge.svelte";
-  import PlatformLogo from "$lib/components/PlatformLogo.svelte";
-  import { formatSalaryRange } from "$lib/format";
+  import { formatSalaryRange, timeAgo } from "$lib/format";
 
   interface Job {
     id: number;
@@ -203,10 +202,7 @@
             {/if}
             {#if job.job_platform}
               <span class="flex items-center gap-1">
-                <PlatformLogo
-                  platformUrl={job.job_platform.url}
-                  size="w-3.5 h-3.5"
-                />
+                <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
                 {job.job_platform.name}
               </span>
             {/if}
@@ -237,9 +233,10 @@
                 </span>
               {/if}
               {#if job.date_posted || job.date_created}
-                <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
+                <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
                   <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                  {formatDate(job.date_posted || job.date_created)}
+                  {timeAgo(job.date_posted || job.date_created)}
+                  <span class="opacity-50">{formatDate(job.date_posted || job.date_created)}</span>
                 </span>
               {/if}
             </div>
@@ -263,19 +260,6 @@
   <!-- Expanded Content -->
   {#if isExpanded}
     <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4">
-      <!-- Source link -->
-      {#if job.source_url}
-        <a
-          href={job.source_url}
-          target="_blank"
-          rel="noopener"
-          class="text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5 truncate"
-        >
-          <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-          <span class="truncate">{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}</span>
-        </a>
-      {/if}
-
       {#if expandedContent}
         {@render expandedContent()}
       {:else}

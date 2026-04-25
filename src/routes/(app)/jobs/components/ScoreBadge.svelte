@@ -6,7 +6,7 @@
   interface Props {
     score: number | null;
     matched?: boolean;
-    size?: "sm" | "lg";
+    size?: "sm" | "lg" | "xl";
   }
 
   let { score = null, matched = false, size = "lg" }: Props = $props();
@@ -14,11 +14,12 @@
   const hasScore = $derived(score !== null && score > 0);
   const colors = $derived(hasScore ? getScoreGradient(score!) : null);
 
-  const sizeClasses = $derived(
-    size === "lg"
-      ? { box: "w-15 h-15", score: "text-2xl", label: "text-xs", icon: "w-5 h-5" }
-      : { box: "w-10 h-10", score: "text-lg", label: "text-[7px]", icon: "w-3.5 h-3.5" }
-  );
+  const sizeMap = {
+    sm: { box: "w-10 h-10", score: "text-lg", label: "text-[7px]", icon: "w-3.5 h-3.5" },
+    lg: { box: "w-15 h-15", score: "text-2xl", label: "text-xs", icon: "w-5 h-5" },
+    xl: { box: "w-18 h-18", score: "text-3xl", label: "text-xs", icon: "w-6 h-6" },
+  };
+  const sizeClasses = $derived(sizeMap[size]);
 </script>
 
 {#if hasScore && colors}

@@ -115,7 +115,7 @@
 
   function isMatched(jobId: number): boolean {
     const m = matchesByJobId[jobId];
-    return !!m?.reasoning;
+    return !!m?.recommendation;
   }
 
   let profileSkillLevels = $derived(data.profileSkillLevels);
@@ -311,16 +311,6 @@
         window.scrollBy(0, updatedRect.top - viewportOffset);
       }
     }
-  }
-
-  function formatDate(date: Date | string | null): string {
-    if (!date) return "N/A";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
   }
 
   function truncate(text: string | null, maxLength: number): string {
@@ -932,21 +922,6 @@
               </div>
             {/if}
 
-            <!-- Metadata -->
-            <div
-              class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-x-4 gap-y-1 text-xs text-[var(--dash-text-muted)] flex-wrap"
-            >
-              <span>ID: {job.id}</span>
-              {#if job.date_posted}
-                <span>Posted: {formatDate(job.date_posted)}</span>
-              {/if}
-              {#if job.date}
-                <span>Imported: {formatDate(job.date)}</span>
-              {/if}
-              {#if job.scrape_count}
-                <span>Scraped {job.scrape_count}x</span>
-              {/if}
-            </div>
           {/snippet}
         </JobCard>
       {/each}

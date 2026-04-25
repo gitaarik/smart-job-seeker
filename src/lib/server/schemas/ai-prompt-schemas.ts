@@ -95,7 +95,6 @@ export const scoreJobMatchSchema = z.object({
     .max(100)
     .describe("Overall match score"),
   summary: z.string().describe("One concise sentence (max 100 chars) summarizing why this job matches the candidate"),
-  reasoning: z.string().describe("Detailed explanation of the score"),
   skill_match_percentage: z
     .number()
     .int()
