@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc, asc } from "drizzle-orm";
-import { applications, application_letters, application_questions, application_activity_log, application_status_log, letter_versions } from "$lib/server/db/schema";
+import { applications, application_letters, application_questions, application_activity_log, application_status_log, letter_versions, profile_versions } from "$lib/server/db/schema";
 
 export const load: LayoutServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -73,8 +73,19 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
     error(404, "Application not found");
   }
 
+  // Resolve CV version name from slug
+  let cvVersionName: string | null = null;
+  if (application.cv_version_sent) {
+    const version = await db.query.profile_versions.findFirst({
+      where: and(eq(profile_versions.slug, application.cv_version_sent), eq(profile_versions.profile_id, layoutData.selectedProfile.id)),
+      columns: { name: true },
+    });
+    cvVersionName = version?.name || null;
+  }
+
   return {
     application,
+    cvVersionName,
     profileId: layoutData.selectedProfile.id,
   };
 };

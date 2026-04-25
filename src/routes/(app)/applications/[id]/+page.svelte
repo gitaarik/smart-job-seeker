@@ -21,6 +21,7 @@
     faMoneyBillWave,
     faSave,
     faStickyNote,
+    faWrench,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
@@ -40,11 +41,14 @@
   } from "$lib/application-status";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
   import { formatDate as fmtDate } from "$lib/format-date";
+  import { profileDocUrl } from "$lib/utils/profile-doc-url";
+  import type { DocType } from "$lib/utils/profile-doc-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
   let job = $derived(app.job);
+  let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
 
   let noteValue = $state(app.application_note || "");
   let noteSaving = $state(false);
@@ -119,18 +123,15 @@
     return period ? `${formatted} / ${period}` : formatted;
   }
 
+  const letterTypeLabels: Record<string, string> = {
+    cover_letter: "Cover Letter",
+    follow_up_email: "Follow-up Email",
+    thank_you_letter: "Thank You Letter",
+    cheat_sheet: "Cheat Sheet",
+  };
+
   let letterCount = $derived(app.application_letters?.length || 0);
-  let readyLetterCount = $derived(
-    app.application_letters?.filter(
-      (l: { status: string }) => l.status === "ready" || l.status === "sent",
-    ).length || 0,
-  );
   let questionCount = $derived(app.application_questions?.length || 0);
-  let answeredQuestionCount = $derived(
-    app.application_questions?.filter(
-      (q: { answer: string | null }) => q.answer,
-    ).length || 0,
-  );
   let fileCount = $derived(app.applications_files?.length || 0);
   let statusLogCount = $derived(app.application_status_logs?.length || 0);
   let recentStatusLog = $derived(
@@ -149,7 +150,7 @@
   </div>
 {/if}
 
-<div class="space-y-6">
+<div class="space-y-6 pb-8">
   <!-- Title -->
   <h2 class="text-2xl font-bold text-[var(--dash-text)]">
     {job?.title || "Untitled Position"}
@@ -301,41 +302,61 @@
   <!-- Application Details (Texts, Documents, Salary) -->
   <Card padding="lg" class="flex-1 min-w-0">
     <div class="space-y-4">
-      <div class="flex items-center gap-2 mb-2">
+      <div class="flex items-center gap-2 mb-4">
         <FontAwesomeIcon
-          icon={faFileAlt}
+          icon={faWrench}
           class="w-4 h-4 text-[var(--dash-text-secondary)]"
         />
         <h2
           class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
         >
-          Application Details
+          Workbench
         </h2>
       </div>
 
       <div class="flex flex-col gap-3 text-sm">
-        <!-- Letters -->
-        {#if letterCount > 0}
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              Letters
-            </span>
-            <a href="/applications/{app.id}/letters" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
-              {readyLetterCount} ready{#if letterCount > readyLetterCount} <span class="text-[var(--dash-text-muted)]">/ {letterCount} total</span>{/if}
+        <!-- CV/Resume Sent -->
+        {#if app.cv_sent_through}
+          {@const dt = app.cv_sent_through as DocType}
+          <div class="flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faFileAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+            <span class="text-[var(--dash-text-secondary)]">{dt === "cv" ? "CV" : "Resume"} sent</span>
+            <a href="/applications/{app.id}/documents" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {data.cvVersionName || (dt === "cv" ? "CV" : "Resume")}
             </a>
+            {#if app.cv_version_sent && profileSlug}
+              <a
+                href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
+                target="_blank"
+                rel="noopener"
+                class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+              >
+                <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+              </a>
+            {/if}
           </div>
         {/if}
+
+        <!-- Letters -->
+        {#each app.application_letters || [] as letter}
+          <div class="flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+            <a href="/applications/{app.id}/texts/{letter.id}" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {letterTypeLabels[letter.letter_type] || letter.letter_type}
+            </a>
+            <span class="text-[var(--dash-text-muted)]">({letter.status})</span>
+          </div>
+        {/each}
 
         <!-- Questions -->
         {#if questionCount > 0}
           <div class="flex items-center justify-between">
             <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
               <FontAwesomeIcon icon={faClipboardList} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              Questions
+              Application Questions
             </span>
-            <a href="/applications/{app.id}/letters" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
-              {answeredQuestionCount} answered{#if questionCount > answeredQuestionCount} <span class="text-[var(--dash-text-muted)]">/ {questionCount} total</span>{/if}
+            <a href="/applications/{app.id}/texts" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+              {questionCount}
             </a>
           </div>
         {/if}
@@ -353,47 +374,33 @@
           </div>
         {/if}
 
-        <!-- CV Sent -->
-        {#if app.files?.filename_download}
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faFileAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              CV Sent
-            </span>
-            <span class="text-[var(--dash-text)] font-medium truncate ml-2">{app.files.filename_download}</span>
-          </div>
-        {/if}
-
         <!-- Salary Expectation -->
         {#if app.salary_expectation}
-          <div class="flex items-center justify-between">
-            <span class="text-[var(--dash-text-secondary)] flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              Salary Expectation
-            </span>
+          <div class="flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+            <span class="text-[var(--dash-text-secondary)]">Salary Expectation</span>
             <a href="/applications/{app.id}/salary" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
               {formatCurrency(app.salary_expectation, app.salary_currency, app.salary_period)}
             </a>
           </div>
         {/if}
 
-        <!-- Links to add missing items -->
-        {#if letterCount === 0 && fileCount === 0 && !app.salary_expectation}
-          <p class="text-sm text-[var(--dash-text-muted)]">No details added yet.</p>
+        <!-- No items -->
+        {#if !app.cv_sent_through && letterCount === 0 && questionCount === 0 && fileCount === 0 && !app.salary_expectation}
+          <p class="text-sm text-[var(--dash-text-muted)]">No items added yet.</p>
         {/if}
       </div>
 
       <!-- Footer links -->
       <div class="flex items-center gap-4 -mx-6 -mb-6 mt-2 px-6 py-3 border-t border-[var(--dash-border)]">
-        {#if letterCount === 0}
-          <a href="/applications/{app.id}/letters" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
-            Write texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-          </a>
-        {:else}
-          <a href="/applications/{app.id}/letters" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
-            Manage texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+        {#if !app.cv_sent_through}
+          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+            Set resume/CV <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {/if}
+        <a href="/applications/{app.id}/texts" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+          Write texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+        </a>
         {#if fileCount === 0}
           <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
             Add documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
@@ -406,10 +413,6 @@
         {#if !app.salary_expectation}
           <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
             Set salary <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-          </a>
-        {:else}
-          <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
-            Manage salary <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {/if}
       </div>

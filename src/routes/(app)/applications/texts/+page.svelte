@@ -49,6 +49,9 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
+    follow_up_email: "Follow-up Email",
+    thank_you_letter: "Thank You Letter",
+    cheat_sheet: "Cheat Sheet",
   };
 
   function getItemId(item: (typeof items)[0]): string {

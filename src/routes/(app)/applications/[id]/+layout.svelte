@@ -21,7 +21,7 @@
 
   const tabs = $derived([
     { label: "Overview", href: basePath, icon: faClipboardList },
-    { label: "Texts", href: `${basePath}/letters`, icon: faEnvelope },
+    { label: "Texts", href: `${basePath}/texts`, icon: faEnvelope },
     { label: "Salary", href: `${basePath}/salary`, icon: faMoneyBillWave },
     { label: "Documents", href: `${basePath}/documents`, icon: faFileAlt },
     { label: "Timeline", href: `${basePath}/timeline`, icon: faHistory },

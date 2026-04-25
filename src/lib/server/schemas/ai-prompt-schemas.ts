@@ -245,23 +245,46 @@ export const estimateSalaryExpectationsSchema = z.object({
 });
 
 /**
- * Preprocess to normalize letter key names from LLMs that use alternative names
- * (e.g. "coverLetter", "cover_letter", "content", "email", "text")
+ * Preprocess to normalize the "text" key from LLMs that use alternative names
+ * (e.g. "coverLetter", "cover_letter", "letter", "content", "email")
  */
-const normalizeLetterKey = (val: unknown) => {
-  if (val && typeof val === "object" && !("letter" in val)) {
+const normalizeTextKey = (val: unknown) => {
+  if (val && typeof val === "object") {
     const obj = val as Record<string, unknown>;
-    // Find the first string value that looks like the letter content
-    const altKeys = [
-      "coverLetter", "cover_letter",
-      "followUpEmail", "follow_up_email",
-      "thankYouLetter", "thank_you_letter",
-      "content", "email", "text", "body",
-      "revisedLetter", "revised_letter",
-    ];
-    for (const key of altKeys) {
-      if (key in obj && typeof obj[key] === "string") {
-        return { ...obj, letter: obj[key] };
+
+    // If "text" exists but is an array (e.g. structured cheat sheet), flatten to markdown
+    if ("text" in obj && Array.isArray(obj.text)) {
+      const flatten = (items: unknown[]): string =>
+        items.map((item) => {
+          if (typeof item === "string") return item;
+          if (item && typeof item === "object") {
+            const o = item as Record<string, unknown>;
+            const parts: string[] = [];
+            if (typeof o.title === "string") parts.push(`## ${o.title}`);
+            if (Array.isArray(o.points)) parts.push(...o.points.map((p: unknown) => `- ${p}`));
+            if (typeof o.content === "string") parts.push(o.content);
+            return parts.join("\n");
+          }
+          return String(item);
+        }).join("\n\n");
+      return { ...obj, text: flatten(obj.text) };
+    }
+
+    // If "text" key is missing, try alternative key names
+    if (!("text" in obj)) {
+      const altKeys = [
+        "letter", "coverLetter", "cover_letter",
+        "followUpEmail", "follow_up_email",
+        "thankYouLetter", "thank_you_letter",
+        "cheatSheet", "cheat_sheet",
+        "content", "email", "body",
+        "revisedLetter", "revised_letter",
+        "revisedText", "revised_text",
+      ];
+      for (const key of altKeys) {
+        if (key in obj && typeof obj[key] === "string") {
+          return { ...obj, text: obj[key] };
+        }
       }
     }
   }
@@ -269,29 +292,29 @@ const normalizeLetterKey = (val: unknown) => {
 };
 
 /**
- * Schema for letter generation prompts (cover letter, follow-up email, etc.)
- * Returns the letter text only, no preamble or commentary.
+ * Schema for text generation prompts (cover letter, follow-up email, cheat sheet, etc.)
+ * Returns the text content only, no preamble or commentary.
  */
-export const writeLetterSchema = z.preprocess(normalizeLetterKey, z.object({
-  letter: z.string().describe("The complete letter text, ready to use. No preamble or commentary."),
+export const writeLetterSchema = z.preprocess(normalizeTextKey, z.object({
+  text: z.string().describe("The complete text, ready to use. No preamble or commentary."),
 }));
 
 /**
- * Schema for letter followup prompts (feedback-based revisions)
- * Returns the revised letter plus brief feedback on the user's version.
+ * Schema for text followup prompts (feedback-based revisions)
+ * Returns the revised text plus brief feedback on the user's version.
  */
-export const followupLetterSchema = z.preprocess(normalizeLetterKey, z.object({
-  letter: z.string().nullable().describe("The complete revised letter text, ready to use. Include ONLY when substantive changes are needed. Set to null when the letter is good and only minor tweaks are needed. No preamble or commentary."),
-  feedback: z.string().optional().describe("Brief, friendly feedback on the user's current letter — what works well, what you improved, and any tips. 2-3 sentences max."),
+export const followupLetterSchema = z.preprocess(normalizeTextKey, z.object({
+  text: z.string().nullable().describe("The complete revised text, ready to use. Include ONLY when substantive changes are needed. Set to null when the text is good and only minor tweaks are needed. No preamble or commentary."),
+  feedback: z.string().optional().describe("Brief, friendly feedback on the user's current text — what works well, what you improved, and any tips. 2-3 sentences max."),
 }));
 
 /**
- * Schema for letter review prompts
- * Returns feedback (markdown) and optionally a revised version of the letter.
+ * Schema for text review prompts
+ * Returns feedback (markdown) and optionally a revised version of the text.
  */
 export const reviewLetterSchema = z.object({
   feedback: z.string().describe("A single markdown string with concise, friendly feedback. What works, what to improve, with specific suggestions. NOT an array — one cohesive markdown text."),
-  revisedLetter: z.string().nullable().describe("The complete revised letter text incorporating suggestions. Include ONLY when substantive changes are needed. Set to null when the letter is good and feedback is minor (e.g. small tweaks the user can make themselves). Plain text, ready to use as-is. No markdown formatting, no preamble."),
+  revisedText: z.string().nullable().describe("The complete revised text incorporating suggestions. Include ONLY when substantive changes are needed. Set to null when the text is good and feedback is minor (e.g. small tweaks the user can make themselves). Plain text, ready to use as-is. No markdown formatting, no preamble."),
 });
 
 /**
@@ -310,10 +333,12 @@ export const aiPromptSchemas = {
   write_cover_letter: writeLetterSchema,
   write_follow_up_email: writeLetterSchema,
   write_thank_you_letter: writeLetterSchema,
+  write_cheat_sheet: writeLetterSchema,
   followup_letter: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,
   review_follow_up_email: reviewLetterSchema,
   review_thank_you_letter: reviewLetterSchema,
+  review_cheat_sheet: reviewLetterSchema,
 } as const;
 
 /**

@@ -65,6 +65,9 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
+    follow_up_email: "Follow-up Email",
+    thank_you_letter: "Thank You Letter",
+    cheat_sheet: "Cheat Sheet",
   };
 
   const typeFilters = [
@@ -185,7 +188,7 @@
           <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
             {#each Object.entries(letterTypes) as [value, label]}
               <a
-                href="/applications/{app.id}/letters/new?type={value}"
+                href="/applications/{app.id}/texts/new?type={value}"
                 class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
                 onclick={() => (showAddMenu = false)}
               >
@@ -269,7 +272,7 @@
           <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
             {#each Object.entries(letterTypes) as [value, label]}
               <a
-                href="/applications/{app.id}/letters/new?type={value}"
+                href="/applications/{app.id}/texts/new?type={value}"
                 class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
                 onclick={() => (showAddMenu = false)}
               >
@@ -360,7 +363,7 @@
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0">
                   <a
-                    href="/applications/{app.id}/letters/{item.id}"
+                    href="/applications/{app.id}/texts/{item.id}"
                     class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
                     aria-label="Edit"
                     onclick={(e) => e.stopPropagation()}

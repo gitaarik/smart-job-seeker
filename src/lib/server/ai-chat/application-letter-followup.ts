@@ -20,6 +20,7 @@ const LETTER_TYPE_TO_REVIEW_PROMPT: Record<string, string> = {
   cover_letter: "review_cover_letter",
   follow_up_email: "review_follow_up_email",
   thank_you_letter: "review_thank_you_letter",
+  cheat_sheet: "review_cheat_sheet",
 };
 
 /**
@@ -31,9 +32,12 @@ function parseLetterResponse(response: string | null): { letter: string | null; 
   if (!response) return { letter: null, feedback: null };
   try {
     const parsed = JSON.parse(response);
-    if (parsed && (typeof parsed.letter === "string" || typeof parsed.feedback === "string")) {
+    const text = typeof parsed.text === "string" ? parsed.text
+      : typeof parsed.letter === "string" ? parsed.letter
+      : null;
+    if (text || typeof parsed.feedback === "string") {
       return {
-        letter: typeof parsed.letter === "string" ? parsed.letter : null,
+        letter: text,
         feedback: typeof parsed.feedback === "string" ? parsed.feedback : null,
       };
     }
@@ -172,15 +176,17 @@ export async function createApplicationLetterFollowup(
 
       // Record version in letter_versions
       if (mode === "review") {
-        // Parse review response for feedback + revisedLetter
+        // Parse review response for feedback + revisedText
         let aiFeedback: string | null = null;
-        let revisedLetter: string | null = null;
+        let revisedText: string | null = null;
         if (aiChatResponse) {
           try {
             const parsed = JSON.parse(aiChatResponse);
             if (parsed && typeof parsed.feedback === "string") {
               aiFeedback = parsed.feedback;
-              revisedLetter = typeof parsed.revisedLetter === "string" ? parsed.revisedLetter : null;
+              revisedText = typeof parsed.revisedText === "string" ? parsed.revisedText
+                : typeof parsed.revisedLetter === "string" ? parsed.revisedLetter
+                : null;
             }
           } catch {
             aiFeedback = aiChatResponse;
@@ -188,7 +194,7 @@ export async function createApplicationLetterFollowup(
         }
         await db.insert(letter_versions).values({
           letter: id,
-          content: revisedLetter,
+          content: revisedText,
           source: "ai_review",
           ai_chat: aiChatId,
           ai_feedback: aiFeedback,

@@ -156,7 +156,9 @@ export async function createFollowupAiChat(
   if (previousResponse) {
     try {
       const parsed = JSON.parse(previousResponse);
-      if (parsed && typeof parsed.letter === "string") {
+      if (parsed && typeof parsed.text === "string") {
+        previousResponse = parsed.text;
+      } else if (parsed && typeof parsed.letter === "string") {
         previousResponse = parsed.letter;
       }
     } catch {

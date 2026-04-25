@@ -125,7 +125,7 @@ export const actions: Actions = {
       });
     }
 
-    redirect(303, `/applications/${appId}/letters/${newLetter.id}`);
+    redirect(303, `/applications/${appId}/texts/${newLetter.id}`);
   },
 
   update: async ({ request, locals, cookies, params }) => {
@@ -212,6 +212,6 @@ export const actions: Actions = {
 
     await db.delete(application_letters).where(eq(application_letters.id, letterId));
 
-    redirect(303, `/applications/${appId}/letters`);
+    redirect(303, `/applications/${appId}/texts`);
   },
 };

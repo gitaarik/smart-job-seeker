@@ -34,6 +34,11 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
     advice: "advise_thank_you_letter",
     review: "review_thank_you_letter",
   },
+  cheat_sheet: {
+    generate: "write_cheat_sheet",
+    advice: "advise_cheat_sheet",
+    review: "review_cheat_sheet",
+  },
 };
 
 /**
@@ -184,17 +189,22 @@ export async function generateApplicationLetter(
 
   // Update the application_letter record (try block for database update)
   try {
-    // Extract letter content and feedback from structured JSON response
+    // Extract text content and feedback from structured JSON response
     let letterContent = aiChat.response;
     let aiFeedback: string | null = null;
     if (letterContent) {
       try {
         const parsed = JSON.parse(letterContent);
-        if (parsed && typeof parsed.letter === "string") {
+        if (parsed && typeof parsed.text === "string") {
+          letterContent = parsed.text;
+        } else if (parsed && typeof parsed.letter === "string") {
+          // Backwards compat: older prompts may still return "letter"
           letterContent = parsed.letter;
         } else if (parsed && typeof parsed.feedback === "string") {
           aiFeedback = parsed.feedback;
-          letterContent = typeof parsed.revisedLetter === "string" ? parsed.revisedLetter : null;
+          letterContent = typeof parsed.revisedText === "string" ? parsed.revisedText
+            : typeof parsed.revisedLetter === "string" ? parsed.revisedLetter
+            : null;
         }
       } catch {
         // Not JSON, use raw response as-is

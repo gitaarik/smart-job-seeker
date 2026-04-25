@@ -45,6 +45,9 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
+    follow_up_email: "Follow-up Email",
+    thank_you_letter: "Thank You Letter",
+    cheat_sheet: "Cheat Sheet",
   };
 
   // Inline edit state: tracks which version is being edited (by index), or -1 for new letter
@@ -271,7 +274,7 @@
     }
 
     // Navigate to the real URL so subsequent actions and page data work
-    await goto(`/applications/${appId}/letters/${result.letterId}`, { replaceState: true });
+    await goto(`/applications/${appId}/texts/${result.letterId}`, { replaceState: true });
     return result.letterId;
   }
 
@@ -290,7 +293,7 @@
         formData.set("content", content);
         formData.set("status", letter.status || "draft");
         formData.set("source", "manual_edit");
-        await fetch(`/applications/${appId}/letters/${letterId}?/update`, { method: "POST", body: formData });
+        await fetch(`/applications/${appId}/texts/${letterId}?/update`, { method: "POST", body: formData });
         await invalidateAll();
       }
 
@@ -406,7 +409,7 @@
   <!-- Back link -->
   <div>
     <a
-      href="/applications/{appId}/letters"
+      href="/applications/{appId}/texts"
       class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />

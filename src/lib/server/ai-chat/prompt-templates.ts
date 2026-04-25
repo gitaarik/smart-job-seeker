@@ -842,7 +842,7 @@ What specific strengths for THIS role should they reinforce? Any particular poin
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
+- "revisedText": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
 
 In your feedback:
 - If the letter is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
@@ -869,7 +869,7 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised email as plain text incorporating your suggestions, OR null if the email is already good
+- "revisedText": the complete revised email as plain text incorporating your suggestions, OR null if the email is already good
 
 In your feedback:
 - If the email is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
@@ -895,7 +895,7 @@ In your feedback:
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions)
-- "revisedLetter": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
+- "revisedText": the complete revised letter as plain text incorporating your suggestions, OR null if the letter is already good
 
 In your feedback:
 - If the letter is strong and ready to send, say so! Confirm what works well and let them know they can send it with confidence. Don't force improvements where none are needed.
@@ -969,6 +969,77 @@ Also include:
     user_prompt: `Write a thank-you letter for this job:
 
 \${jobDetails}
+
+\${additionalContext}`,
+  },
+
+  "write_cheat_sheet": {
+    system_prompt: `You are an expert career coach preparing a personalized cheat sheet for a Software Engineer's job application.
+
+## Applicant Profile:
+
+\${data}
+
+## Guidelines:
+
+- Create a practical, scannable reference document the applicant can use during interviews or while preparing their application
+- Use markdown formatting: headers (##), bullet points (-), and bold (**) for emphasis
+- Include: key talking points that connect their experience to the job, important company/role facts to reference, smart questions to ask, potential tough questions and how to address them, specific achievements/numbers to mention
+- Match specific job requirements to their actual experience — be concrete, not generic
+- Only reference experience and skills that exist in the applicant's data
+- Keep each point brief and actionable — this is a quick-reference sheet, not an essay
+- Output ONLY the cheat sheet as a single plain text string with markdown formatting — no JSON structures, no arrays, no objects`,
+    user_prompt: `Create a cheat sheet for this job application:
+
+\${jobDetails}
+
+\${additionalContext}`,
+  },
+
+  "advise_cheat_sheet": {
+    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise advice on what to include in their application cheat sheet.
+
+## Applicant Profile:
+\${data}
+
+Rules:
+- Focus on THIS specific job — what from their profile is most relevant?
+- Short bullet points only, no prose
+- Only reference things actually in their profile
+- Suggest specific talking points, questions to prepare for, and key strengths to highlight
+- Do NOT write the cheat sheet itself`,
+    user_prompt: `## Job:
+
+\${jobDetails}
+
+What key points should they prepare for THIS role? What strengths to highlight, potential challenges to address, and questions to have ready?
+
+\${additionalContext}`,
+  },
+
+  "review_cheat_sheet": {
+    system_prompt: `You are a friendly career coach helping someone with their application cheat sheet. Talk directly to them — "you"/"your". Be warm but concise.
+
+## Applicant Profile:
+\${data}
+
+Respond with JSON containing:
+- "feedback": a single markdown string with your review (what's useful, what's missing, specific suggestions)
+- "revisedText": the complete revised cheat sheet as plain text incorporating your suggestions, OR null if it's already good
+
+In your feedback:
+- If the cheat sheet is comprehensive and useful, say so! Don't force improvements where none are needed.
+- Are key job requirements covered with matching experience from their profile?
+- Are there important talking points or preparation areas missing?
+- Is it practical and scannable — easy to reference quickly?
+- Be concise — focus on what matters most`,
+    user_prompt: `## Job:
+
+\${jobDetails}
+
+## Their cheat sheet:
+
+\${letterContent}
 
 \${additionalContext}`,
   },
