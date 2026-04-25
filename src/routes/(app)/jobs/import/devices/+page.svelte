@@ -308,7 +308,7 @@
 </script>
 
 <svelte:head>
-  <title>My Devices - Import Jobs - Smart Job Seeker</title>
+  <title>My Devices - Job Import - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-4">
@@ -526,7 +526,7 @@ volumes:
         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">4</span>
         <div>
           <p class="text-[var(--dash-text)]">Start importing</p>
-          <p>Once connected (shown above), start an import from the Import Jobs page. Select "My device" as the browser and choose which device to use.</p>
+          <p>Once connected (shown above), start an import from the Import Tasks page. Select "My device" as the browser and choose which device to use.</p>
         </div>
       </li>
     </ol>

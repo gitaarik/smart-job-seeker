@@ -80,7 +80,7 @@
       icon: faSearch,
       children: [
         {
-          label: "Import Config",
+          label: "Job Import",
           href: "/jobs/import",
           icon: faRobot,
         },

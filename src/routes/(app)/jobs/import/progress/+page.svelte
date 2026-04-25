@@ -199,7 +199,7 @@
 </script>
 
 <svelte:head>
-  <title>Match Progress - Import Jobs - Smart Job Seeker</title>
+  <title>Match Progress - Job Import - Smart Job Seeker</title>
 </svelte:head>
 
 <div>

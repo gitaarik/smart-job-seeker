@@ -8,7 +8,7 @@
   let { children }: { children: Snippet } = $props();
 
   const tabs = [
-    { label: "Import Jobs", href: "/jobs/import/tasks", icon: faDownload },
+    { label: "Import Tasks", href: "/jobs/import/tasks", icon: faDownload },
     { label: "Match Config", href: "/jobs/import/config", icon: faSliders },
     { label: "Match Progress", href: "/jobs/import/progress", icon: faChartBar },
     { label: "My Devices", href: "/jobs/import/devices", icon: faDesktop },
@@ -22,7 +22,7 @@
 
 <TabNav {tabs} isActive={isTabActive} inset>
   {#snippet header()}
-    <SectionHeader title="Import Config" icon={faRobot} />
+    <SectionHeader title="Job Import" icon={faRobot} />
   {/snippet}
   {@render children()}
 </TabNav>

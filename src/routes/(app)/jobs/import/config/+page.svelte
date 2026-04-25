@@ -197,7 +197,7 @@
 </script>
 
 <svelte:head>
-  <title>Match Config - Import Jobs - Smart Job Seeker</title>
+  <title>Match Config - Job Import - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-4">

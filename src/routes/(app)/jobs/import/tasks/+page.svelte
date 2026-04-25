@@ -286,7 +286,7 @@
 </script>
 
 <svelte:head>
-  <title>Import Tasks - Import Jobs - Smart Job Seeker</title>
+  <title>Import Tasks - Job Import - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-4">
