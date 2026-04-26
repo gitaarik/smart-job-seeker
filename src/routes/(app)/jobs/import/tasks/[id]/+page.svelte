@@ -354,7 +354,7 @@
   );
   // Tunnel mode: uses desktop app browser (no VNC, no live URL by default)
   let isTunnelMode = $derived(
-    (searchTask as any).browser_provider === "local" ||
+    (searchTask as any).browser_provider === "tunnel" ||
       (!(searchTask as any).browser_provider &&
         data.browserProvider === "tunnel"),
   );

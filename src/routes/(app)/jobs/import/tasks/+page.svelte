@@ -81,7 +81,7 @@
   let connectedDeviceNames = $state<string[]>([]);
 
   let anyTaskUsesDesktop = $derived(
-    searchTasks.some((s) => s.browser_provider === "local"),
+    searchTasks.some((s) => s.browser_provider === "tunnel"),
   );
 
   async function checkDesktopStatus() {
@@ -458,7 +458,7 @@
                     >{search.note}</span>
                   {/if}
                 </h3>
-                {#if search.browser_provider === "local"}
+                {#if search.browser_provider === "tunnel"}
                   <span
                     class={desktopConnected ? 'text-green-500' : desktopConnected === false ? 'text-red-400' : 'text-[var(--dash-text-muted)]'}
                     title={desktopConnected ? connectedDeviceNames.join(", ") : "No device connected"}

@@ -73,7 +73,7 @@
     mode,
     localBrowserAllowed,
     serverBrowserProvider,
-    defaultBrowserProvider = "local",
+    defaultBrowserProvider = "tunnel",
     defaultMaxJobs = 25,
     // Add mode
     searchUrl = $bindable(""),
@@ -367,7 +367,7 @@
       (!effectiveBrowserProvider && serverBrowserProvider === "goLogin"),
   );
   let isTunnelMode = $derived(
-    effectiveBrowserProvider === "local" ||
+    effectiveBrowserProvider === "tunnel" ||
       (!effectiveBrowserProvider && serverBrowserProvider === "tunnel"),
   );
 

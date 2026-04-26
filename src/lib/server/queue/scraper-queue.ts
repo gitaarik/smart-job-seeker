@@ -78,7 +78,7 @@ export {
  * Resolve which queue a job should go to based on the browser provider.
  *
  * "hosted" → hosted queue (GoLogin cloud browser)
- * Everything else (null, "local", "tunnel") → desktop queue
+ * Everything else (null, "tunnel") → desktop queue
  */
 function resolveQueue(
   browserProvider?: string | null,
