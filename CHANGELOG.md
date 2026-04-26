@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.6] - 2026-04-26
+
+3 commits since v0.5.5.
+
+### Changed
+- Browser provider configuration option renamed from 'local' to 'tunnel' for clarity
+
+### Fixed
+- Fixed Glitchtip debug script query: corrected org slug, sorting, and filtering
+
 ## [0.5.5] - 2026-04-26
 
 4 commits since v0.5.4.
