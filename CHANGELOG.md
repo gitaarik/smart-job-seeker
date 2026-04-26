@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.5] - 2026-04-26
+
+4 commits since v0.5.4.
+
+### Added
+- Debug API endpoint and infrastructure for inspecting remote scraper runs
+- BuildKit cache cleanup in release and deploy scripts
+
+### Fixed
+- Desktop scraper now retries on startup crash (up to 3 attempts)
+
 ## [0.5.4] - 2026-04-25
 
 2 commits since v0.5.3.
