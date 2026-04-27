@@ -40,6 +40,7 @@
   import { formatDate as fmtDate } from "$lib/format-date";
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
   import type { DocType } from "$lib/utils/profile-doc-url";
+  import { linkify } from "$lib/utils/linkify";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -52,10 +53,16 @@
   let notes = $derived([...((app.application_notes || []) as Note[])].reverse());
   let newNoteText = $state("");
   let addingNote = $state(false);
-  let newNoteInput = $state<HTMLInputElement | null>(null);
+  let newNoteInput = $state<HTMLTextAreaElement | null>(null);
   let editingNoteId = $state<string | null>(null);
   let editingNoteText = $state("");
   let confirmingDeleteId = $state<string | null>(null);
+
+  function autoResizeOnMount(el: HTMLTextAreaElement) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+    el.focus();
+  }
 
   // Status widget
   let statusPickerOpen = $state(false);
@@ -407,7 +414,7 @@
           <button
             type="button"
             onclick={() => { addingNote = true; tick().then(() => newNoteInput?.focus()); }}
-            class="text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+            class="text-xs px-2.5 py-1 rounded-md border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] hover:border-[var(--dash-primary)] transition-colors"
           >
             + Add
           </button>
@@ -427,16 +434,17 @@
             };
           }}
         >
-          <div class="flex items-center gap-2">
-            <input
-              type="text"
+          <div class="flex items-start gap-2">
+            <textarea
               name="text"
               bind:this={newNoteInput}
               bind:value={newNoteText}
-              onkeydown={(e) => { if (e.key === 'Escape') { addingNote = false; newNoteText = ""; } }}
+              oninput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
+              onkeydown={(e) => { if (e.key === 'Escape') { addingNote = false; newNoteText = ""; } else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (newNoteText.trim()) e.currentTarget.form?.requestSubmit(); } }}
               placeholder="Add a note..."
-              class="flex-1 px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-            />
+              rows={1}
+              class="flex-1 px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)] resize-none overflow-hidden"
+            ></textarea>
             <button
               type="submit"
               disabled={!newNoteText.trim()}
@@ -458,7 +466,7 @@
                 <form
                   method="POST"
                   action="?/updateNote"
-                  class="flex-1 flex items-center gap-2"
+                  class="flex-1 flex items-start gap-2"
                   use:enhance={() => {
                     return async ({ update }) => {
                       await update();
@@ -467,13 +475,15 @@
                   }}
                 >
                   <input type="hidden" name="note_id" value={note.id} />
-                  <input
-                    type="text"
+                  <textarea
                     name="text"
                     bind:value={editingNoteText}
-                    onkeydown={(e) => { if (e.key === 'Escape') editingNoteId = null; }}
-                    class="flex-1 px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-                  />
+                    oninput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
+                    onkeydown={(e) => { if (e.key === 'Escape') editingNoteId = null; else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (editingNoteText.trim()) e.currentTarget.form?.requestSubmit(); } }}
+                    use:autoResizeOnMount
+                    rows={1}
+                    class="flex-1 px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)] resize-none overflow-hidden"
+                  ></textarea>
                   <button type="submit" class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors p-1">
                     <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
                   </button>
@@ -484,7 +494,7 @@
               {:else}
                 <!-- View mode -->
                 <div class="flex-1 min-w-0 border-l-2 border-[var(--dash-border)] pl-3">
-                  <span class="text-sm text-white leading-relaxed">{note.text}</span>
+                  <span class="text-sm text-white leading-relaxed whitespace-pre-wrap">{@html linkify(note.text)}</span>
                   <span class="text-xs text-[var(--dash-text-muted)] ml-2">{timeAgo(note.created_at)}</span>
                 </div>
                 <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
@@ -496,12 +506,15 @@
                     <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
                   </button>
                   {#if confirmingDeleteId === note.id}
-                    <form method="POST" action="?/deleteNote" use:enhance={() => { return async ({ update }) => { await update(); confirmingDeleteId = null; }; }}>
+                    <form method="POST" action="?/deleteNote" class="flex items-center gap-1" use:enhance={() => { return async ({ update }) => { await update(); confirmingDeleteId = null; }; }}>
                       <input type="hidden" name="note_id" value={note.id} />
-                      <button type="submit" class="text-xs text-[var(--dash-error)] hover:text-[var(--dash-error)] font-medium px-1 py-0.5">
+                      <button type="submit" class="text-xs text-[var(--dash-error)] font-medium px-1 py-0.5">
                         Delete?
                       </button>
                     </form>
+                    <button type="button" onclick={() => confirmingDeleteId = null} class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors p-1">
+                      <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+                    </button>
                   {:else}
                     <button type="button" onclick={() => confirmingDeleteId = note.id} class="text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors p-1">
                       <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
