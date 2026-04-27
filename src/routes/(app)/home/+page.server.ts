@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
 
-  const activeApplicationStatuses = ["preparing", "sent", "interviewing", "negotiating"];
+  const activeApplicationStatuses = ["applying", "interviewing", "negotiating"];
 
   const [
     profileData,

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
+  import { tick } from "svelte";
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
@@ -19,26 +20,22 @@
     faMapMarkerAlt,
     faPencil,
     faMoneyBillWave,
-    faSave,
     faStickyNote,
     faWrench,
     faTrash,
+    faPlus,
+    faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import Card from "../../components/Card.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import {
-    statusOptions,
-    stepsByPhase,
-    actionsByPhase,
-    defaultStepByPhase,
-    defaultActionByPhase,
-    defaultActionByStep,
     getStatusLabel,
-    getStatusColor,
     getStatusDotColor,
     getStatusBgColor,
+    getStatusColor,
   } from "$lib/application-status";
+  import StatusStepper from "./StatusStepper.svelte";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
   import { formatDate as fmtDate } from "$lib/format-date";
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
@@ -50,46 +47,19 @@
   let job = $derived(app.job);
   let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
 
-  let noteValue = $state(app.application_note || "");
-  let noteSaving = $state(false);
-  let noteSaved = $state(false);
+  // Notes
+  type Note = { id: string; text: string; created_at: string };
+  let notes = $derived([...((app.application_notes || []) as Note[])].reverse());
+  let newNoteText = $state("");
+  let addingNote = $state(false);
+  let newNoteInput = $state<HTMLInputElement | null>(null);
+  let editingNoteId = $state<string | null>(null);
+  let editingNoteText = $state("");
+  let confirmingDeleteId = $state<string | null>(null);
 
   // Status widget
   let statusPickerOpen = $state(false);
-  let pickerPhase = $state("");
-  let pickerStep = $state("");
-  let pickerAction = $state("");
-  let pickerDescription = $state("");
   let statusSaving = $state(false);
-  let customStepActive = $state(false);
-  let customStepText = $state("");
-  let customActionActive = $state(false);
-  let customActionText = $state("");
-  let pickerActionDate = $state("");
-
-  let pickerStepOptions = $derived(stepsByPhase[pickerPhase] || []);
-  let pickerActionOptions = $derived(actionsByPhase[pickerPhase] || []);
-
-  function openStatusPicker() {
-    pickerPhase = app.status;
-    pickerStep = app.status_step || "";
-    pickerAction = app.status_action || "";
-    pickerActionDate = app.status_action_date ? new Date(app.status_action_date).toISOString().split("T")[0] : "";
-    pickerDescription = "";
-    customStepActive = false;
-    customStepText = "";
-    customActionActive = false;
-    customActionText = "";
-    statusPickerOpen = true;
-  }
-
-  function closeStatusPicker() {
-    statusPickerOpen = false;
-  }
-
-  $effect(() => {
-    noteValue = app.application_note || "";
-  });
 
   function formatDate(date: Date | string | null): string {
     return fmtDate(date, { fallback: "" });
@@ -270,10 +240,10 @@
 
       <button
         type="button"
-        onclick={openStatusPicker}
-        class="inline-flex items-center gap-5 px-4 py-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
+        onclick={() => statusPickerOpen = true}
+        class="inline-flex items-center gap-5 px-5 py-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
       >
-        <div class="min-w-0 space-y-1">
+        <div class="min-w-0 space-y-1.5">
           <p class="text-sm font-semibold uppercase tracking-wide {getStatusDotColor(app.status)}">
             {getStatusLabel(app.status)}
           </p>
@@ -392,26 +362,26 @@
       </div>
 
       <!-- Footer links -->
-      <div class="flex items-center gap-4 -mx-6 -mb-6 mt-2 px-6 py-3 border-t border-[var(--dash-border)]">
+      <div class="flex flex-wrap items-center gap-4 -mx-6 -mb-6 mt-2 px-6 py-3 border-t border-[var(--dash-border)]">
         {#if !app.cv_sent_through}
-          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
             Set resume/CV <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {/if}
-        <a href="/applications/{app.id}/texts" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+        <a href="/applications/{app.id}/texts" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
           Write texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
         </a>
         {#if fileCount === 0}
-          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
             Add documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {:else}
-          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
             Manage documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {/if}
         {#if !app.salary_expectation}
-          <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline">
+          <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
             Set salary <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         {/if}
@@ -423,61 +393,126 @@
   <!-- Notes -->
   <Card padding="lg">
     <div class="space-y-3">
-      <div class="flex items-center gap-2 mb-4">
+      <div class="flex items-center gap-2">
         <FontAwesomeIcon
           icon={faStickyNote}
           class="w-4 h-4 text-[var(--dash-text-secondary)]"
         />
         <h2
-          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide flex-1"
         >
           Notes
         </h2>
+        {#if !addingNote}
+          <button
+            type="button"
+            onclick={() => { addingNote = true; tick().then(() => newNoteInput?.focus()); }}
+            class="text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+          >
+            + Add
+          </button>
+        {/if}
       </div>
 
-      <form
-        method="POST"
-        action="?/updateNote"
-        use:enhance={() => {
-          noteSaving = true;
-          noteSaved = false;
-          return async ({ update }) => {
-            await update();
-            noteSaving = false;
-            noteSaved = true;
-            setTimeout(() => {
-              noteSaved = false;
-            }, 2000);
-          };
-        }}
-      >
-        <textarea
-          name="note"
-          bind:value={noteValue}
-          placeholder="Add notes about this application..."
-          rows="4"
-          class="w-full px-3 py-2 text-sm rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)] resize-y"
-        ></textarea>
-
-        <div class="flex items-center justify-end gap-3 mt-2">
-          {#if noteSaved}
-            <span
-              class="text-xs text-[var(--dash-success)] flex items-center gap-1"
+      <!-- Add note input -->
+      {#if addingNote}
+        <form
+          method="POST"
+          action="?/addNote"
+          use:enhance={() => {
+            return async ({ update }) => {
+              await update();
+              newNoteText = "";
+              addingNote = false;
+            };
+          }}
+        >
+          <div class="flex items-center gap-2">
+            <input
+              type="text"
+              name="text"
+              bind:this={newNoteInput}
+              bind:value={newNoteText}
+              onkeydown={(e) => { if (e.key === 'Escape') { addingNote = false; newNoteText = ""; } }}
+              placeholder="Add a note..."
+              class="flex-1 px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
+            />
+            <button
+              type="submit"
+              disabled={!newNoteText.trim()}
+              class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors disabled:opacity-30"
             >
-              <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-              Saved
-            </span>
-          {/if}
-          <button
-            type="submit"
-            disabled={noteSaving}
-            class="flex items-center gap-2 px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
-          >
-            <FontAwesomeIcon icon={faSave} class="w-3 h-3" />
-            {noteSaving ? "Saving..." : "Save Note"}
-          </button>
-        </div>
-      </form>
+              <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
+            </button>
+          </div>
+        </form>
+      {/if}
+
+      <!-- Note list -->
+      {#if notes.length > 0}
+        <ul class="mt-2 space-y-0.5">
+          {#each notes as note (note.id)}
+            <li class="group flex items-start gap-2 rounded-md px-2 py-1.5 -mx-2 hover:bg-[var(--dash-bg)] transition-colors">
+              {#if editingNoteId === note.id}
+                <!-- Editing mode -->
+                <form
+                  method="POST"
+                  action="?/updateNote"
+                  class="flex-1 flex items-center gap-2"
+                  use:enhance={() => {
+                    return async ({ update }) => {
+                      await update();
+                      editingNoteId = null;
+                    };
+                  }}
+                >
+                  <input type="hidden" name="note_id" value={note.id} />
+                  <input
+                    type="text"
+                    name="text"
+                    bind:value={editingNoteText}
+                    onkeydown={(e) => { if (e.key === 'Escape') editingNoteId = null; }}
+                    class="flex-1 px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
+                  />
+                  <button type="submit" class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors p-1">
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  </button>
+                  <button type="button" onclick={() => editingNoteId = null} class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors p-1">
+                    <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+                  </button>
+                </form>
+              {:else}
+                <!-- View mode -->
+                <div class="flex-1 min-w-0 border-l-2 border-[var(--dash-border)] pl-3">
+                  <span class="text-sm text-white leading-relaxed">{note.text}</span>
+                  <span class="text-xs text-[var(--dash-text-muted)] ml-2">{timeAgo(note.created_at)}</span>
+                </div>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <button
+                    type="button"
+                    onclick={() => { editingNoteId = note.id; editingNoteText = note.text; }}
+                    class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors p-1"
+                  >
+                    <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+                  </button>
+                  {#if confirmingDeleteId === note.id}
+                    <form method="POST" action="?/deleteNote" use:enhance={() => { return async ({ update }) => { await update(); confirmingDeleteId = null; }; }}>
+                      <input type="hidden" name="note_id" value={note.id} />
+                      <button type="submit" class="text-xs text-[var(--dash-error)] hover:text-[var(--dash-error)] font-medium px-1 py-0.5">
+                        Delete?
+                      </button>
+                    </form>
+                  {:else}
+                    <button type="button" onclick={() => confirmingDeleteId = note.id} class="text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors p-1">
+                      <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
     </div>
   </Card>
 
@@ -630,175 +665,22 @@
 
 <!-- Status Picker Modal -->
 {#if statusPickerOpen}
-  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog">
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" onclick={(e) => { if (e.target === e.currentTarget) statusPickerOpen = false; }} onkeydown={(e) => { if (e.key === 'Escape') statusPickerOpen = false; }}>
     <div class="bg-[var(--dash-card)] rounded-xl shadow-lg max-w-lg w-full p-6">
       <h3 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Update Status</h3>
 
-      <form
-        method="POST"
-        action="?/updateStatus"
-        use:enhance={() => {
-          statusSaving = true;
-          return async ({ update }) => {
-            await update();
-            statusSaving = false;
-            statusPickerOpen = false;
-          };
-        }}
-      >
-        <input type="hidden" name="status" value={pickerPhase} />
-        <input type="hidden" name="step" value={customStepActive ? customStepText : pickerStep} />
-        <input type="hidden" name="action" value={customActionActive ? customActionText : pickerAction} />
-        <input type="hidden" name="action_date" value={(customActionActive ? customActionText : pickerAction) === "Scheduled" ? pickerActionDate : ""} />
-
-        <!-- Phase selection -->
-        <div class="mb-4">
-          <label for="picker-phase" class="block text-xs text-[var(--dash-text-secondary)] mb-1 uppercase tracking-wide">Phase</label>
-          <select
-            id="picker-phase"
-            value={pickerPhase}
-            onchange={(e) => {
-              const phase = e.currentTarget.value;
-              pickerPhase = phase;
-              pickerStep = defaultStepByPhase[phase] || "";
-              const stepDefault = pickerStep && defaultActionByStep[pickerStep];
-              pickerAction = stepDefault || defaultActionByPhase[phase] || "";
-              customStepActive = false;
-              customStepText = "";
-              customActionActive = false;
-              customActionText = "";
-            }}
-            class="w-full px-3 py-2 text-sm rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-          >
-            {#each statusOptions as option}
-              <option value={option.value}>{option.label}</option>
-            {/each}
-          </select>
-        </div>
-
-        <!-- Step selection -->
-        {#if pickerStepOptions.length > 0}
-          <div class="mb-4">
-            <label for="picker-step" class="block text-xs text-[var(--dash-text-secondary)] mb-1 uppercase tracking-wide">Step</label>
-            <select
-              id="picker-step"
-              value={customStepActive ? "__custom__" : pickerStep}
-              onchange={(e) => {
-                const val = e.currentTarget.value;
-                if (val === "__custom__") {
-                  customStepActive = true;
-                  pickerStep = "";
-                } else {
-                  customStepActive = false;
-                  customStepText = "";
-                  pickerStep = val;
-                  // Set default action for this step
-                  if (val && defaultActionByStep[val]) {
-                    pickerAction = defaultActionByStep[val];
-                    customActionActive = false;
-                    customActionText = "";
-                  }
-                }
-              }}
-              class="w-full px-3 py-2 text-sm rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-            >
-              <option value="">— No step —</option>
-              {#each pickerStepOptions as step}
-                <option value={step}>{step}</option>
-              {/each}
-              <option value="__custom__">Custom...</option>
-            </select>
-            {#if customStepActive}
-              <input
-                type="text"
-                bind:value={customStepText}
-                placeholder="Custom step..."
-                class="mt-2 w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-              />
-            {/if}
-          </div>
-        {/if}
-
-        <!-- Follow-up action -->
-        {#if pickerActionOptions.length > 0}
-          <div class="mb-4">
-            <label for="picker-action" class="block text-xs text-[var(--dash-text-secondary)] mb-1 uppercase tracking-wide">Action</label>
-            <select
-              id="picker-action"
-              value={customActionActive ? "__custom__" : pickerAction}
-              onchange={(e) => {
-                const val = e.currentTarget.value;
-                if (val === "__custom__") {
-                  customActionActive = true;
-                  pickerAction = "";
-                } else {
-                  customActionActive = false;
-                  customActionText = "";
-                  pickerAction = val;
-                }
-              }}
-              class="w-full px-3 py-2 text-sm rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-            >
-              <option value="">— No action —</option>
-              {#each pickerActionOptions as action}
-                <option value={action}>{action}</option>
-              {/each}
-              <option value="__custom__">Custom...</option>
-            </select>
-            {#if customActionActive}
-              <input
-                type="text"
-                bind:value={customActionText}
-                placeholder="Custom action..."
-                class="mt-2 w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-              />
-            {/if}
-            {#if (customActionActive ? customActionText : pickerAction) === "Scheduled"}
-              <div class="mt-2">
-                <label for="picker-action-date" class="block text-xs text-[var(--dash-text-secondary)] mb-1 uppercase tracking-wide">Scheduled Date</label>
-                <input
-                  id="picker-action-date"
-                  type="date"
-                  bind:value={pickerActionDate}
-                  class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-                />
-              </div>
-            {/if}
-          </div>
-        {/if}
-
-        <!-- Optional note -->
-        <div class="mb-4">
-          <label for="picker-description" class="block text-xs text-[var(--dash-text-secondary)] mb-1 uppercase tracking-wide">
-            Note <span class="normal-case text-[var(--dash-text-muted)]">(optional)</span>
-          </label>
-          <textarea
-            id="picker-description"
-            name="description"
-            bind:value={pickerDescription}
-            rows={2}
-            placeholder="Any additional context..."
-            class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-lg bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)] resize-y"
-          ></textarea>
-        </div>
-
-        <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            onclick={closeStatusPicker}
-            class="px-4 py-2 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={statusSaving}
-            class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
-          >
-            {statusSaving ? "Saving..." : "Save"}
-          </button>
-        </div>
-      </form>
+      {#key app.status + (app.status_step || '') + (app.status_action || '')}
+        <StatusStepper
+          status={app.status}
+          statusStep={app.status_step}
+          statusAction={app.status_action}
+          statusActionDate={app.status_action_date ? new Date(app.status_action_date).toISOString().split("T")[0] : null}
+          bind:saving={statusSaving}
+          oncancel={() => statusPickerOpen = false}
+          onsave={() => statusPickerOpen = false}
+        />
+      {/key}
     </div>
   </div>
 {/if}

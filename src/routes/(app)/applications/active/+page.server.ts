@@ -5,7 +5,7 @@ import { eq, and, inArray, isNotNull, ne, desc, sql } from "drizzle-orm";
 import { applications, application_letters, application_status_log, job_platforms } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
 
-const activeStatuses = ["preparing", "sent", "interviewing", "negotiating"];
+const activeStatuses = ["applying", "interviewing", "negotiating"];
 const finishedStatuses = ["accepted", "withdrawn", "rejected"];
 const waitingActions = ["Awaiting response", "Awaiting result"];
 
@@ -118,7 +118,8 @@ export const actions: Actions = {
     const now = new Date();
     const [application] = await db.insert(applications).values({
       profile_id: profileId,
-      status: "preparing",
+      status: "applying",
+      status_step: "Preparing",
       status_action: "Send application",
       date_created: now,
       date_updated: now,
@@ -129,7 +130,8 @@ export const actions: Actions = {
       application: application.id,
       date_created: now,
       from_status: null,
-      to_status: "preparing",
+      to_status: "applying",
+      step: "Preparing",
       action: "Send application",
     });
 

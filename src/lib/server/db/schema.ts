@@ -1613,7 +1613,7 @@ export const applications = pgTable("applications", {
 	application_sent_date: date(),
 	discontinued_reason: varchar({ length: 255 }),
 	discontinued_note: text(),
-	application_note: text(),
+	application_notes: jsonb().$type<Array<{ id: string; text: string; created_at: string }>>().default([]),
 	application_seen_date: date(),
 	salary_expectation: numeric({ precision: 10, scale:  2 }),
 	salary_currency: varchar({ length: 255 }).default('EUR'),

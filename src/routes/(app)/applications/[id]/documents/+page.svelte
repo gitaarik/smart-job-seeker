@@ -116,7 +116,7 @@
             name="version_slug"
             class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm"
           >
-            <option value="">None</option>
+            <option value="">Select</option>
             {#each versions as v}
               <option value={v.slug} selected={v.slug === app.cv_version_sent}>
                 {v.name}

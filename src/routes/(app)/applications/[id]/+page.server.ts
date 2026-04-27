@@ -50,9 +50,15 @@ export const actions: Actions = {
       date_updated: now,
     };
 
-    // Auto-set applied date when status changes to "sent" (Applied)
-    if (status === "sent" && !existing.application_sent_date) {
-      updateData.application_sent_date = now;
+    // Auto-set applied date when moving past "Preparing",
+    // or when moving past the applying phase
+    if (!existing.application_sent_date) {
+      if (
+        (status === "applying" && step && step !== "Preparing") ||
+        (status !== "applying" && status !== "draft")
+      ) {
+        updateData.application_sent_date = now;
+      }
     }
 
     // Clear step/action when phase changes (unless new ones were selected)
@@ -111,6 +117,36 @@ export const actions: Actions = {
     return { success: true };
   },
 
+  addNote: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const existing = await db.query.applications.findFirst({
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    const formData = await request.formData();
+    const text = (formData.get("text") as string)?.trim();
+    if (!text) return fail(400, { error: "Note text is required" });
+
+    const notes = (existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
+    notes.push({ id: crypto.randomUUID(), text, created_at: new Date().toISOString() });
+
+    await db.update(applications).set({
+      application_notes: notes,
+      date_updated: new Date(),
+    }).where(eq(applications.id, appId));
+
+    return { success: true };
+  },
+
   updateNote: async ({ request, locals, cookies, params }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });
@@ -127,10 +163,46 @@ export const actions: Actions = {
     if (!existing) return fail(404, { error: "Application not found" });
 
     const formData = await request.formData();
-    const note = formData.get("note") as string;
+    const noteId = formData.get("note_id") as string;
+    const text = (formData.get("text") as string)?.trim();
+    if (!text) return fail(400, { error: "Note text is required" });
+
+    const notes = (existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
+    const note = notes.find((n) => n.id === noteId);
+    if (!note) return fail(404, { error: "Note not found" });
+    note.text = text;
 
     await db.update(applications).set({
-      application_note: note || null,
+      application_notes: notes,
+      date_updated: new Date(),
+    }).where(eq(applications.id, appId));
+
+    return { success: true };
+  },
+
+  deleteNote: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const existing = await db.query.applications.findFirst({
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    const formData = await request.formData();
+    const noteId = formData.get("note_id") as string;
+
+    const notes = (existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
+    const filtered = notes.filter((n) => n.id !== noteId);
+
+    await db.update(applications).set({
+      application_notes: filtered,
       date_updated: new Date(),
     }).where(eq(applications.id, appId));
 

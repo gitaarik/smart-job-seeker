@@ -50,6 +50,20 @@
       "when": 1777350000000,
       "tag": "0006_rename_local_to_tunnel",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777500000000,
+      "tag": "0007_merge_preparing_sent_to_applying",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777550000000,
+      "tag": "0008_application_notes_jsonb",
+      "breakpoints": true
     }
   ]
 }

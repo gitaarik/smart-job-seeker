@@ -1,6 +1,7 @@
+// --- Phase definitions ---
+
 export const statusOptions = [
-  { value: "preparing", label: "Preparing" },
-  { value: "sent", label: "Applied" },
+  { value: "applying", label: "Applying" },
   { value: "interviewing", label: "Interviewing" },
   { value: "negotiating", label: "Negotiating" },
   { value: "accepted", label: "Accepted" },
@@ -15,8 +16,9 @@ export const statusFilters = [
 
 export const statusLabels: Record<string, string> = {
   draft: "Draft",
-  preparing: "Preparing",
-  sent: "Applied",
+  applying: "Applying",
+  preparing: "Applying", // backward compat
+  sent: "Applying", // backward compat
   interviewing: "Interviewing",
   negotiating: "Negotiating",
   offered: "Negotiating", // backward compat
@@ -32,87 +34,43 @@ export function getStatusLabel(status: string): string {
   );
 }
 
-export function getStatusColor(status: string): string {
-  switch (status) {
-    case "draft":
-    case "sent":
-      return "bg-[var(--dash-info-light)] text-[var(--dash-info)]";
-    case "seen":
-      return "bg-[var(--dash-purple-light)] text-[var(--dash-purple)]";
-    case "preparing":
-      return "bg-gray-200 text-gray-700";
-    case "interviewing":
-      return "bg-[var(--dash-warning-light)] text-[var(--dash-warning)]";
-    case "negotiating":
-    case "offered":
-      return "bg-[var(--dash-success-light)] text-[var(--dash-success)]";
-    case "accepted":
-      return "bg-green-100 text-green-700";
-    case "rejected":
-      return "bg-[var(--dash-error-light)] text-[var(--dash-error)]";
-    case "withdrawn":
-      return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
-    default:
-      return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
-  }
+// --- Stepper ---
+
+export const stepperPhases = [
+  { value: "applying", label: "Applying" },
+  { value: "interviewing", label: "Interviewing" },
+  { value: "negotiating", label: "Negotiating" },
+  { value: "result", label: "Result" },
+] as const;
+
+export const resultOptions = [
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Not Selected" },
+  { value: "withdrawn", label: "Discontinued" },
+] as const;
+
+export const finishedStatuses = ["accepted", "rejected", "withdrawn"];
+
+export function isFinishedStatus(status: string): boolean {
+  return finishedStatuses.includes(status);
 }
 
-export function getStatusDotColor(status: string): string {
-  switch (status) {
-    case "draft":
-    case "sent":
-      return "text-[var(--dash-info)]";
-    case "preparing":
-      return "text-[var(--dash-text-secondary)]";
-    case "seen":
-      return "text-[var(--dash-purple)]";
-    case "interviewing":
-      return "text-[var(--dash-warning)]";
-    case "negotiating":
-    case "offered":
-      return "text-[var(--dash-success)]";
-    case "accepted":
-      return "text-green-700";
-    case "rejected":
-      return "text-[var(--dash-error)]";
-    case "withdrawn":
-      return "text-[var(--dash-text-muted)]";
-    default:
-      return "text-[var(--dash-text-muted)]";
-  }
+export function getStepperPhase(status: string): string {
+  if (finishedStatuses.includes(status)) return "result";
+  if (status === "preparing" || status === "sent") return "applying";
+  if (status === "offered") return "negotiating";
+  return status;
 }
 
-export function getStatusBgColor(status: string): string {
-  switch (status) {
-    case "draft":
-    case "sent":
-      return "bg-[var(--dash-info)]";
-    case "preparing":
-      return "bg-[var(--dash-text-secondary)]";
-    case "seen":
-      return "bg-[var(--dash-purple)]";
-    case "interviewing":
-      return "bg-[var(--dash-warning)]";
-    case "negotiating":
-    case "offered":
-      return "bg-[var(--dash-success)]";
-    case "accepted":
-      return "bg-green-600";
-    case "rejected":
-      return "bg-[var(--dash-error)]";
-    case "withdrawn":
-      return "bg-[var(--dash-text-muted)]";
-    default:
-      return "bg-[var(--dash-text-muted)]";
-  }
-}
+// --- Steps & actions ---
 
 export const stepsByPhase: Record<string, string[]> = {
-  sent: [
-    "Job board message sent",
+  applying: [
+    "Preparing",
+    "Applied through job platform",
     "Application form completed",
     "E-mail sent",
-    "Resume / CV sent",
+    "Resume / CV submitted",
   ],
   interviewing: [
     "Screening call",
@@ -130,14 +88,46 @@ export const stepsByPhase: Record<string, string[]> = {
   ],
 };
 
-export const actionsByPhase: Record<string, string[]> = {
-  preparing: [
+export const actionsByStep: Record<string, string[]> = {
+  // Applying
+  "Preparing": [
     "Send application",
     "Tailor Resume/CV",
     "Write cover letter",
     "Complete platform profile",
   ],
-  sent: [
+  "Applied through job platform": [
+    "Awaiting response",
+  ],
+  "Application form completed": [
+    "Awaiting response",
+  ],
+  "E-mail sent": [
+    "Awaiting response",
+  ],
+  "Resume / CV submitted": [
+    "Awaiting response",
+  ],
+  // Interviewing
+  "Screening call": ["Need to schedule", "Scheduled", "Need to complete", "Awaiting result"],
+  "AI interview": ["Need to complete", "Awaiting result"],
+  "Assessment / test": ["Need to complete", "Awaiting result"],
+  "Coding challenge": ["Need to complete", "Awaiting result"],
+  "Take-home assignment": ["Need to complete", "Awaiting result"],
+  "Technical interview": ["Need to schedule", "Scheduled", "Need to complete", "Awaiting result"],
+  "Hiring manager call": ["Need to schedule", "Scheduled", "Need to complete", "Awaiting result"],
+  "Team interview": ["Need to schedule", "Scheduled", "Need to complete", "Awaiting result"],
+  // Negotiating
+  "Offer received": ["Respond", "Provide references", "Awaiting response"],
+  "Counter-offer sent": ["Awaiting response"],
+};
+
+export const actionsByPhase: Record<string, string[]> = {
+  applying: [
+    "Send application",
+    "Tailor Resume/CV",
+    "Write cover letter",
+    "Complete platform profile",
     "Awaiting response",
   ],
   interviewing: [
@@ -155,19 +145,22 @@ export const actionsByPhase: Record<string, string[]> = {
 };
 
 export const defaultStepByPhase: Record<string, string> = {
-  sent: "Job board message sent",
+  applying: "Preparing",
   interviewing: "Screening call",
   negotiating: "Offer received",
 };
 
 export const defaultActionByPhase: Record<string, string> = {
-  preparing: "Send application",
-  sent: "Awaiting response",
+  applying: "Send application",
   negotiating: "Respond",
 };
 
-// Step-specific default actions (overrides phase default when a step is selected)
 export const defaultActionByStep: Record<string, string> = {
+  "Preparing": "Send application",
+  "Applied through job platform": "Awaiting response",
+  "Application form completed": "Awaiting response",
+  "E-mail sent": "Awaiting response",
+  "Resume / CV submitted": "Awaiting response",
   "Screening call": "Scheduled",
   "Technical interview": "Need to schedule",
   "Hiring manager call": "Need to schedule",
@@ -179,3 +172,80 @@ export const defaultActionByStep: Record<string, string> = {
   "Offer received": "Respond",
   "Counter-offer sent": "Awaiting response",
 };
+
+// --- Status colors ---
+
+export function getStatusColor(status: string): string {
+  switch (status) {
+    case "draft":
+      return "bg-[var(--dash-info-light)] text-[var(--dash-info)]";
+    case "applying":
+    case "preparing": // backward compat
+    case "sent": // backward compat
+      return "bg-[var(--dash-info-light)] text-[var(--dash-info)]";
+    case "seen":
+      return "bg-[var(--dash-purple-light)] text-[var(--dash-purple)]";
+    case "interviewing":
+      return "bg-[var(--dash-warning-light)] text-[var(--dash-warning)]";
+    case "negotiating":
+    case "offered":
+      return "bg-[var(--dash-success-light)] text-[var(--dash-success)]";
+    case "accepted":
+      return "bg-green-100 text-green-700";
+    case "rejected":
+    case "withdrawn":
+      return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
+    default:
+      return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
+  }
+}
+
+export function getStatusDotColor(status: string): string {
+  switch (status) {
+    case "draft":
+      return "text-[var(--dash-info)]";
+    case "applying":
+    case "preparing": // backward compat
+    case "sent": // backward compat
+      return "text-[var(--dash-info)]";
+    case "seen":
+      return "text-[var(--dash-purple)]";
+    case "interviewing":
+      return "text-[var(--dash-warning)]";
+    case "negotiating":
+    case "offered":
+      return "text-[var(--dash-success)]";
+    case "accepted":
+      return "text-green-700";
+    case "rejected":
+    case "withdrawn":
+      return "text-[var(--dash-text-muted)]";
+    default:
+      return "text-[var(--dash-text-muted)]";
+  }
+}
+
+export function getStatusBgColor(status: string): string {
+  switch (status) {
+    case "draft":
+      return "bg-[var(--dash-info)]";
+    case "applying":
+    case "preparing": // backward compat
+    case "sent": // backward compat
+      return "bg-[var(--dash-info)]";
+    case "seen":
+      return "bg-[var(--dash-purple)]";
+    case "interviewing":
+      return "bg-[var(--dash-warning)]";
+    case "negotiating":
+    case "offered":
+      return "bg-[var(--dash-success)]";
+    case "accepted":
+      return "bg-green-600";
+    case "rejected":
+    case "withdrawn":
+      return "bg-[var(--dash-text-muted)]";
+    default:
+      return "bg-[var(--dash-text-muted)]";
+  }
+}

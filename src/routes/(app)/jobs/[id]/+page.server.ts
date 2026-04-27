@@ -360,7 +360,8 @@ export const actions: Actions = {
     const [application] = await db.insert(applications).values({
       job_id: jobId,
       profile_id: profileId,
-      status: "preparing",
+      status: "applying",
+      status_step: "Preparing",
       status_action: "Send application",
       date_created: now,
       date_updated: now,
@@ -372,7 +373,8 @@ export const actions: Actions = {
       application: application.id,
       date_created: now,
       from_status: null,
-      to_status: "preparing",
+      to_status: "applying",
+      step: "Preparing",
       action: "Send application",
     });
 
