@@ -19,6 +19,7 @@
   import { marked } from "marked";
   import Card from "../../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import SimpleEditor from "$lib/components/SimpleEditor.svelte";
   import ConfirmModal from "../../../../profile/components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -588,13 +589,12 @@
             <input type="hidden" name="letter_type" value={letter.letter_type} />
           {/if}
           <input type="hidden" name="status" value={editStatus} />
-          <textarea
-            name="content"
-            bind:value={editContent}
-            rows={14}
+          <input type="hidden" name="content" value={editContent} />
+          <SimpleEditor
+            bind:content={editContent}
+            markdown={true}
             placeholder="Write your {(letterTypes[letter.letter_type] || letter.letter_type).toLowerCase()} here..."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-          ></textarea>
+          />
           <div class="flex items-center justify-end gap-2 mt-2">
             <button
               type="button"
@@ -640,13 +640,12 @@
           {#if editingIndex === entryIndex}
             {@const editingPrevious = isEditingPreviousVersion()}
             <form method="POST" action="?/update" use:enhance={handleSave}>
-              <textarea
-                name="content"
-                bind:value={editContent}
-                rows={14}
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-              ></textarea>
+              <input type="hidden" name="content" value={editContent} />
               <input type="hidden" name="status" value={editStatus} />
+              <SimpleEditor
+                bind:content={editContent}
+                markdown={true}
+              />
               <div class="flex items-center gap-1.5 mt-2">
                 {#if editingPrevious}
                   <button
@@ -695,7 +694,7 @@
               {@const segments = computeDiff(prevContent || "", entry.content || "")}
               <pre class="whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{#each segments as seg}{#if seg.type === "added"}<span class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">{seg.text}</span>{:else if seg.type === "removed"}<span class="bg-red-500/20 text-red-700 dark:text-red-300 line-through">{seg.text}</span>{:else}{seg.text}{/if}{/each}</pre>
             {:else}
-              <pre class="whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{entry.content}</pre>
+              <div class="rendered-content text-sm leading-relaxed text-[var(--dash-text)]">{@html marked(entry.content || "")}</div>
             {/if}
             {#if !isEditing}
               {#if hasPrevious}
@@ -824,16 +823,14 @@
           <input type="hidden" name="letter_type" value={letter.letter_type} />
         {/if}
         <input type="hidden" name="status" value={editStatus} />
+        <input type="hidden" name="content" value={editContent} />
         <div>
           <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Or write it yourself</h3>
-          <textarea
-            id="new-content"
-            name="content"
-            bind:value={editContent}
-            rows={14}
+          <SimpleEditor
+            bind:content={editContent}
+            markdown={true}
             placeholder="Start writing your letter here..."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-          ></textarea>
+          />
         </div>
         <div class="flex items-center justify-end gap-2 mt-4">
           <button
@@ -919,5 +916,50 @@
   :global(.ai-feedback h3) {
     font-weight: 600;
     margin: 0.75rem 0 0.25rem;
+  }
+  :global(.rendered-content p) {
+    margin-bottom: 0.5rem;
+  }
+  :global(.rendered-content p:last-child) {
+    margin-bottom: 0;
+  }
+  :global(.rendered-content ul),
+  :global(.rendered-content ol) {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+  :global(.rendered-content ul) {
+    list-style-type: disc;
+  }
+  :global(.rendered-content ol) {
+    list-style-type: decimal;
+  }
+  :global(.rendered-content li) {
+    margin-bottom: 0.25rem;
+  }
+  :global(.rendered-content strong) {
+    font-weight: 600;
+  }
+  :global(.rendered-content h1),
+  :global(.rendered-content h2),
+  :global(.rendered-content h3) {
+    font-weight: 600;
+    margin: 0.75rem 0 0.25rem;
+  }
+  :global(.rendered-content h1) {
+    font-size: 1.5em;
+  }
+  :global(.rendered-content h2) {
+    font-size: 1.25em;
+  }
+  :global(.rendered-content h3) {
+    font-size: 1.1em;
+  }
+  :global(.rendered-content a) {
+    color: var(--dash-primary);
+    text-decoration: none;
+  }
+  :global(.rendered-content a:hover) {
+    text-decoration: underline;
   }
 </style>
