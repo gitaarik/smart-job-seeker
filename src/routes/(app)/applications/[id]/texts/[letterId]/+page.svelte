@@ -45,9 +45,7 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
-    follow_up_email: "Follow-up Email",
-    thank_you_letter: "Thank You Letter",
-    cheat_sheet: "Cheat Sheet",
+    cheat_sheet: "Interview Cheat Sheet",
   };
 
   // Inline edit state: tracks which version is being edited (by index), or -1 for new letter
@@ -392,7 +390,7 @@
   function entryLabel(entry: ConversationEntry): string {
     switch (entry.type) {
       case "manual_edit": return "Manual edit";
-      case "ai_generation": return "AI generated letter";
+      case "ai_generation": return "AI assisted letter";
       case "ai_advice": return "AI recommendations";
       case "ai_review": return "AI review";
       case "ai_revision": return "AI revised letter";
@@ -633,7 +631,7 @@
           {:else}
             <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5 {iconColor}" />
           {/if}
-          Version {versionNum}{#if !userEntry} <span class="normal-case font-normal">({versionNum === 1 ? "AI generated" : "AI revised"})</span>{/if}
+          Version {versionNum}{#if !userEntry} <span class="normal-case font-normal">({versionNum === 1 ? "AI assisted" : "AI revised"})</span>{/if}
           {#if entry.date}
             <span class="normal-case font-normal text-[var(--dash-text-muted)]">&middot; {formatDate(entry.date)}</span>
           {/if}

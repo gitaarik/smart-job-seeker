@@ -18,8 +18,6 @@ const LETTER_PROFILE_FIELDS = [
 /** Maps letter_type to the review_* prompt template name */
 const LETTER_TYPE_TO_REVIEW_PROMPT: Record<string, string> = {
   cover_letter: "review_cover_letter",
-  follow_up_email: "review_follow_up_email",
-  thank_you_letter: "review_thank_you_letter",
   cheat_sheet: "review_cheat_sheet",
 };
 

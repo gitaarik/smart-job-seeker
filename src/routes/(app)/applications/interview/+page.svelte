@@ -34,7 +34,7 @@
   let currentType = $state("all");
   const typeFilters = [
     { value: "all", label: "All", icon: faLayerGroup },
-    { value: "cheatsheets", label: "Cheat Sheets", icon: faStickyNote },
+    { value: "cheatsheets", label: "Interview Cheat Sheets", icon: faStickyNote },
     { value: "stories", label: "Project Stories", icon: faBook },
   ];
 
@@ -530,7 +530,7 @@
               class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
             >
               <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
-              Cheat Sheet
+              Interview Cheat Sheet
             </button>
             <button
               type="button"
@@ -570,10 +570,10 @@
     </div>
   {/if}
 
-  <!-- Add Cheat Sheet Form -->
+  <!-- Add Interview Cheat Sheet Form -->
   {#if showAddCheatSheet}
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4">
-      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Cheat Sheet</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Interview Cheat Sheet</h3>
       <div class="space-y-4">
         <div>
           <label for="new-sheet-title" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
@@ -681,7 +681,7 @@
     <!-- Reorder Mode -->
     {#snippet reorderConfirmCancel()}
       <div class="flex items-center justify-end gap-2">
-        <span class="text-xs text-[var(--dash-text-muted)]">Reorder {reorderType === "cheatsheets" ? "Cheat Sheets" : "Stories"}</span>
+        <span class="text-xs text-[var(--dash-text-muted)]">Reorder {reorderType === "cheatsheets" ? "Interview Cheat Sheets" : "Stories"}</span>
         <button
           type="button"
           onclick={cancelReorder}
@@ -726,7 +726,7 @@
                 {dndItem.item.title || "Untitled"}
               </h3>
               <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0">
-                {dndItem.item.itemType === "cheatsheet" ? "Cheat Sheet" : "Story"}
+                {dndItem.item.itemType === "cheatsheet" ? "Interview Cheat Sheet" : "Story"}
               </span>
             </div>
           </Card>
@@ -768,7 +768,7 @@
                   <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-14">
                     {sheet.title || "Untitled"}
                   </h3>
-                  <span class="text-xs text-[var(--dash-text-muted)]">Cheat Sheet</span>
+                  <span class="text-xs text-[var(--dash-text-muted)]">Interview Cheat Sheet</span>
                 </div>
                 <div class="flex-shrink-0 md:hidden flex flex-col items-end">
                   <div class="h-6 mb-1"></div>
@@ -1002,9 +1002,9 @@
 <!-- Delete Confirmation Modal -->
 <ConfirmModal
   isOpen={deleteKey !== null}
-  title={deleteType === "cheatsheet" ? "Delete Cheat Sheet" : "Delete Story"}
+  title={deleteType === "cheatsheet" ? "Delete Interview Cheat Sheet" : "Delete Story"}
   message={deleteType === "cheatsheet"
-    ? "Are you sure you want to delete this cheat sheet? This action cannot be undone."
+    ? "Are you sure you want to delete this interview cheat sheet? This action cannot be undone."
     : "Are you sure you want to delete this project story? This action cannot be undone."}
   onCancel={() => (deleteKey = null)}
   onConfirm={handleDelete}

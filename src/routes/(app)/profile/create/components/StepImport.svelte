@@ -59,7 +59,7 @@
       add("Highlights", p.highlights);
       add("References", p.references);
       add("Project stories", p.project_stories);
-      add("Cheat sheets", p.cheat_sheets);
+      add("Interview cheat sheets", p.cheat_sheets);
       if (p.salary_settings) {
         counts.push({ label: "Salary settings", count: 1 });
       } else {

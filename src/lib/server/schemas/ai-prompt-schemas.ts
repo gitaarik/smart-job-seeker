@@ -274,8 +274,6 @@ const normalizeTextKey = (val: unknown) => {
     if (!("text" in obj)) {
       const altKeys = [
         "letter", "coverLetter", "cover_letter",
-        "followUpEmail", "follow_up_email",
-        "thankYouLetter", "thank_you_letter",
         "cheatSheet", "cheat_sheet",
         "content", "email", "body",
         "revisedLetter", "revised_letter",
@@ -292,7 +290,7 @@ const normalizeTextKey = (val: unknown) => {
 };
 
 /**
- * Schema for text generation prompts (cover letter, follow-up email, cheat sheet, etc.)
+ * Schema for text generation prompts (cover letter, cheat sheet, etc.)
  * Returns the text content only, no preamble or commentary.
  */
 export const writeLetterSchema = z.preprocess(normalizeTextKey, z.object({
@@ -331,13 +329,9 @@ export const aiPromptSchemas = {
   check_login_state: checkLoginStateSchema,
   estimate_salary_expectations: estimateSalaryExpectationsSchema,
   write_cover_letter: writeLetterSchema,
-  write_follow_up_email: writeLetterSchema,
-  write_thank_you_letter: writeLetterSchema,
   write_cheat_sheet: writeLetterSchema,
   followup_letter: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,
-  review_follow_up_email: reviewLetterSchema,
-  review_thank_you_letter: reviewLetterSchema,
   review_cheat_sheet: reviewLetterSchema,
 } as const;
 

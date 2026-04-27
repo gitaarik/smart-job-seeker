@@ -102,9 +102,7 @@
 
   const letterTypeLabels: Record<string, string> = {
     cover_letter: "Cover Letter",
-    follow_up_email: "Follow-up Email",
-    thank_you_letter: "Thank You Letter",
-    cheat_sheet: "Cheat Sheet",
+    cheat_sheet: "Interview Cheat Sheet",
   };
 
   let letterCount = $derived(app.application_letters?.length || 0);

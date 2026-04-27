@@ -65,9 +65,7 @@
 
   const letterTypes: Record<string, string> = {
     cover_letter: "Cover Letter",
-    follow_up_email: "Follow-up Email",
-    thank_you_letter: "Thank You Letter",
-    cheat_sheet: "Cheat Sheet",
+    cheat_sheet: "Interview Cheat Sheet",
   };
 
   const typeFilters = [
@@ -349,7 +347,7 @@
                       <span class="mx-1">&middot;</span>
                       <span class="inline-flex items-center gap-1">
                         <FontAwesomeIcon icon={isAiStarted ? faRobot : faPen} class="w-3 h-3" />
-                        {isAiStarted ? "AI generated" : "Self-written"}
+                        {isAiStarted ? "AI assisted" : "Self-written"}
                       </span>
                       {#if versionCount > 1}
                         <span class="mx-1">&middot;</span>

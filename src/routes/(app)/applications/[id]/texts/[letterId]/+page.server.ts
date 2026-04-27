@@ -8,7 +8,7 @@ import { getSelectedProfileId } from "../../../../profile/utils";
 /**
  * source values for letter_versions:
  * - "manual_edit" — user edited and saved manually
- * - "ai_generation" — AI generated the letter
+ * - "ai_generation" — AI assisted (generated initial version)
  * - "ai_revision" — AI revised the letter based on feedback
  * - "ai_review" — AI reviewed (feedback only, content is the user's version that was reviewed)
  * - "ai_advice" — AI gave recommendations (no letter content)
