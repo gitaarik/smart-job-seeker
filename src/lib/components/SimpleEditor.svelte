@@ -101,6 +101,10 @@
         );
       }
     }
+    const dom = editor.view?.dom as HTMLElement | undefined;
+    if (dom) {
+      dom.style.minHeight = editable ? "200px" : "";
+    }
   });
 
   onDestroy(() => {
@@ -147,7 +151,7 @@
   }
 </script>
 
-<div class="rounded-md overflow-hidden {editable ? 'border border-[var(--dash-border)] editor-editable' : ''}">
+<div class="rounded-md overflow-hidden {editable ? 'border border-[var(--dash-border)]' : ''}">
   <!-- Toolbar -->
   {#if toolbar && editable}
     <div class="flex items-center gap-1 px-2 py-1 border-b border-[var(--dash-border)] bg-[var(--dash-bg)]">
@@ -280,9 +284,6 @@
     color: var(--dash-text-secondary);
     pointer-events: none;
     height: 0;
-  }
-  .editor-editable :global(.tiptap) {
-    min-height: 200px;
   }
   :global(.tiptap h1) {
     font-size: 1.5em;
