@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.7] - 2026-04-27
+
+12 commits since v0.5.6.
+
+### Added
+- Rich text editor with bubble menu for inline formatting in letters
+- Password change option in account settings
+- Linkify utility for notes
+
+### Changed
+- Letter content now uses full-featured Tiptap markdown editor instead of plain textarea
+- Letter editor always displayed but read-only by default
+- Email digest job titles link to Smart Job Seeker detail pages
+- "Cheat Sheet" renamed to "Interview Cheat Sheet"
+- "AI generated" renamed to "AI assisted"
+- Application status system and notes interface redesigned
+
+### Removed
+- Follow-up and thank-you letter types
+
+### Fixed
+- Editor layout and spacing in read-only mode
+
 ## [0.5.6] - 2026-04-26
 
 3 commits since v0.5.5.
