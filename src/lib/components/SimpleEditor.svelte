@@ -319,6 +319,9 @@
   :global(.tiptap li) {
     margin-bottom: 0.25em;
   }
+  :global(.tiptap > *:last-child) {
+    margin-bottom: 0;
+  }
   :global(.tiptap a) {
     color: var(--dash-primary);
     text-decoration: none;
