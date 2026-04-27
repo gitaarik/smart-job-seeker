@@ -53,6 +53,8 @@ services:
       SJS_EMAIL_FROM: ${SJS_EMAIL_FROM:-}
       # EmailConnect.eu for inbound verification email relay
       SJS_EMAILCONNECT_HMAC_KEY: ${SJS_EMAILCONNECT_HMAC_KEY:-}
+      # Encryption key for platform credentials at rest
+      SJS_CREDENTIALS_KEY: ${SJS_CREDENTIALS_KEY:-}
   adminer:
     image: adminer:latest
     restart: unless-stopped
