@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.8] - 2026-04-27
+
+1 commit since v0.5.7.
+
+### Fixed
+- Fixed deployment cleanup failing when no old container images match
+
 ## [0.5.7] - 2026-04-27
 
 12 commits since v0.5.6.
