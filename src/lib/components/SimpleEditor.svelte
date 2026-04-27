@@ -81,7 +81,7 @@
       },
       editorProps: {
         attributes: {
-          class: "focus:outline-none min-h-[200px] px-3 py-2",
+          class: "focus:outline-none px-3 py-2",
         },
       },
     });
@@ -147,7 +147,7 @@
   }
 </script>
 
-<div class="rounded-md overflow-hidden {editable ? 'border border-[var(--dash-border)]' : ''}">
+<div class="rounded-md overflow-hidden {editable ? 'border border-[var(--dash-border)] editor-editable' : ''}">
   <!-- Toolbar -->
   {#if toolbar && editable}
     <div class="flex items-center gap-1 px-2 py-1 border-b border-[var(--dash-border)] bg-[var(--dash-bg)]">
@@ -281,7 +281,7 @@
     pointer-events: none;
     height: 0;
   }
-  :global(.tiptap) {
+  .editor-editable :global(.tiptap) {
     min-height: 200px;
   }
   :global(.tiptap h1) {
