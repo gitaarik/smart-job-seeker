@@ -17,6 +17,7 @@
     placeholder?: string;
     markdown?: boolean;
     toolbar?: boolean;
+    editable?: boolean;
     onUpdate?: (content: string) => void;
   }
 
@@ -25,6 +26,7 @@
     placeholder = "Start typing...",
     markdown = false,
     toolbar = true,
+    editable = true,
     onUpdate,
   }: Props = $props();
 
@@ -53,9 +55,7 @@
       BubbleMenu.configure({
         element: bubbleMenuElement,
         shouldShow: ({ editor: ed, from, to }) => {
-          // Hide on empty selection or when a link is active (so we don't
-          // overlap with the inline link click target).
-          return from !== to && !ed.isActive("link");
+          return ed.isEditable && from !== to && !ed.isActive("link");
         },
       }),
     ];
@@ -69,6 +69,7 @@
       element,
       extensions,
       content,
+      editable,
       ...(markdown ? { contentType: "markdown" as const } : {}),
       onUpdate: ({ editor: ed }) => {
         if (markdown) {
@@ -84,6 +85,22 @@
         },
       },
     });
+  });
+
+  // Sync editable state and reset content when leaving edit mode (e.g. on Cancel).
+  $effect(() => {
+    if (!editor) return;
+    const wasEditable = editor.isEditable;
+    if (wasEditable !== editable) {
+      editor.setEditable(editable);
+      if (!editable) {
+        // Discard unsaved edits — restore from canonical `content` prop value.
+        editor.commands.setContent(
+          content,
+          markdown ? { contentType: "markdown" } : undefined,
+        );
+      }
+    }
   });
 
   onDestroy(() => {
@@ -130,9 +147,9 @@
   }
 </script>
 
-<div class="border border-[var(--dash-border)] rounded-md overflow-hidden">
+<div class="rounded-md overflow-hidden {editable ? 'border border-[var(--dash-border)]' : ''}">
   <!-- Toolbar -->
-  {#if toolbar}
+  {#if toolbar && editable}
     <div class="flex items-center gap-1 px-2 py-1 border-b border-[var(--dash-border)] bg-[var(--dash-bg)]">
       <button
         type="button"

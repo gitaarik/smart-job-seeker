@@ -624,6 +624,10 @@
     {/if}
     <!-- Version box: standalone for user edits, separate bubble for AI entries -->
     {#if entry.content}
+      {@const isEditingThis = editingIndex === entryIndex}
+      {@const editingPrevious = isEditingPreviousVersion()}
+      {@const hasPrevious = getPreviousContent(entryIndex) !== null}
+      {@const showingDiff = !isEditingThis && hasPrevious && (diffShown.has(entryIndex) || (!diffHidden.has(entryIndex) && shouldAutoShowDiff(entryIndex)))}
       <div class="{userEntry ? 'ml-6' : ''} rounded-lg border {borderColor} {versionBgColor}">
         <div class="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)]">
           {#if userEntry}
@@ -637,15 +641,36 @@
           {/if}
         </div>
         <div class="px-3 pb-3">
-          {#if editingIndex === entryIndex}
-            {@const editingPrevious = isEditingPreviousVersion()}
+          {#if !isEditingThis && hasPrevious && !isEditing}
+            <div class="flex justify-end mb-1">
+              <button
+                type="button"
+                onclick={() => toggleDiff(entryIndex, showingDiff)}
+                class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={showingDiff ? faEyeSlash : faEye} class="w-2.5 h-2.5" />
+                {showingDiff ? "Hide changes" : "Show changes"}
+              </button>
+            </div>
+          {/if}
+          {#if showingDiff}
+            {@const prevContent = getPreviousContent(entryIndex)}
+            {@const segments = computeDiff(prevContent || "", entry.content || "")}
+            <pre class="whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{#each segments as seg}{#if seg.type === "added"}<span class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">{seg.text}</span>{:else if seg.type === "removed"}<span class="bg-red-500/20 text-red-700 dark:text-red-300 line-through">{seg.text}</span>{:else}{seg.text}{/if}{/each}</pre>
+          {:else}
+            <SimpleEditor
+              content={entry.content || ""}
+              editable={isEditingThis}
+              markdown={true}
+              onUpdate={(md) => {
+                if (editingIndex === entryIndex) editContent = md;
+              }}
+            />
+          {/if}
+          {#if isEditingThis}
             <form method="POST" action="?/update" use:enhance={handleSave}>
               <input type="hidden" name="content" value={editContent} />
               <input type="hidden" name="status" value={editStatus} />
-              <SimpleEditor
-                bind:content={editContent}
-                markdown={true}
-              />
               <div class="flex items-center gap-1.5 mt-2">
                 {#if editingPrevious}
                   <button
@@ -674,11 +699,9 @@
                 </button>
               </div>
             </form>
-          {:else}
-            {@const hasPrevious = getPreviousContent(entryIndex) !== null}
-            {@const showingDiff = hasPrevious && (diffShown.has(entryIndex) || (!diffHidden.has(entryIndex) && shouldAutoShowDiff(entryIndex)))}
-            {#if hasPrevious && !isEditing}
-              <div class="flex justify-end mb-1">
+          {:else if !isEditing}
+            {#if hasPrevious}
+              <div class="flex justify-end mt-2">
                 <button
                   type="button"
                   onclick={() => toggleDiff(entryIndex, showingDiff)}
@@ -689,52 +712,31 @@
                 </button>
               </div>
             {/if}
-            {#if showingDiff}
-              {@const prevContent = getPreviousContent(entryIndex)}
-              {@const segments = computeDiff(prevContent || "", entry.content || "")}
-              <pre class="whitespace-pre-wrap text-xs leading-relaxed text-[var(--dash-text)]">{#each segments as seg}{#if seg.type === "added"}<span class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">{seg.text}</span>{:else if seg.type === "removed"}<span class="bg-red-500/20 text-red-700 dark:text-red-300 line-through">{seg.text}</span>{:else}{seg.text}{/if}{/each}</pre>
-            {:else}
-              <div class="rendered-content text-sm leading-relaxed text-[var(--dash-text)]">{@html marked(entry.content || "")}</div>
-            {/if}
-            {#if !isEditing}
-              {#if hasPrevious}
-                <div class="flex justify-end mt-2">
-                  <button
-                    type="button"
-                    onclick={() => toggleDiff(entryIndex, showingDiff)}
-                    class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
-                  >
-                    <FontAwesomeIcon icon={showingDiff ? faEyeSlash : faEye} class="w-2.5 h-2.5" />
-                    {showingDiff ? "Hide changes" : "Show changes"}
-                  </button>
-                </div>
-              {/if}
-              <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--dash-border)]/50">
+            <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--dash-border)]/50">
+              <button
+                type="button"
+                onclick={() => startEdit(entry.content ?? undefined, entryIndex)}
+                class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
+                Edit
+              </button>
+              {#if isLast}
                 <button
                   type="button"
-                  onclick={() => startEdit(entry.content ?? undefined, entryIndex)}
-                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+                  onclick={() => reviewVersion(entry.content!)}
+                  disabled={generating}
+                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >
-                  <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
-                  Edit
+                  {#if generating && generatingMode === "review"}
+                    <Spinner size="w-2.5 h-2.5" />
+                  {:else}
+                    <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
+                  {/if}
+                  AI review
                 </button>
-                {#if isLast}
-                  <button
-                    type="button"
-                    onclick={() => reviewVersion(entry.content!)}
-                    disabled={generating}
-                    class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  >
-                    {#if generating && generatingMode === "review"}
-                      <Spinner size="w-2.5 h-2.5" />
-                    {:else}
-                      <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
-                    {/if}
-                    AI review
-                  </button>
-                {/if}
-              </div>
-            {/if}
+              {/if}
+            </div>
           {/if}
         </div>
       </div>
@@ -916,50 +918,5 @@
   :global(.ai-feedback h3) {
     font-weight: 600;
     margin: 0.75rem 0 0.25rem;
-  }
-  :global(.rendered-content p) {
-    margin-bottom: 0.5rem;
-  }
-  :global(.rendered-content p:last-child) {
-    margin-bottom: 0;
-  }
-  :global(.rendered-content ul),
-  :global(.rendered-content ol) {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
-  }
-  :global(.rendered-content ul) {
-    list-style-type: disc;
-  }
-  :global(.rendered-content ol) {
-    list-style-type: decimal;
-  }
-  :global(.rendered-content li) {
-    margin-bottom: 0.25rem;
-  }
-  :global(.rendered-content strong) {
-    font-weight: 600;
-  }
-  :global(.rendered-content h1),
-  :global(.rendered-content h2),
-  :global(.rendered-content h3) {
-    font-weight: 600;
-    margin: 0.75rem 0 0.25rem;
-  }
-  :global(.rendered-content h1) {
-    font-size: 1.5em;
-  }
-  :global(.rendered-content h2) {
-    font-size: 1.25em;
-  }
-  :global(.rendered-content h3) {
-    font-size: 1.1em;
-  }
-  :global(.rendered-content a) {
-    color: var(--dash-primary);
-    text-decoration: none;
-  }
-  :global(.rendered-content a:hover) {
-    text-decoration: underline;
   }
 </style>
