@@ -119,10 +119,7 @@ function buildDigestHtml(opts: DigestOptions): string {
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td style="vertical-align: top;">
               <div style="margin-bottom: 4px;">
-                ${job.source_url
-                  ? `<a href="${job.source_url}" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 15px;">${escapeHtml(job.title || "Untitled")}</a>`
-                  : `<span style="font-weight: 600; font-size: 15px; color: #111827;">${escapeHtml(job.title || "Untitled")}</span>`
-                }
+                <a href="${opts.appUrl}/jobs/${job.id}" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 15px;">${escapeHtml(job.title || "Untitled")}</a>
               </div>
               <!-- Company & Location -->
               <div style="font-size: 13px; color: #6b7280; margin-bottom: 6px;">
