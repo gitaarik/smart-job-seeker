@@ -29,6 +29,7 @@
   }: Props = $props();
 
   let element: HTMLDivElement;
+  let bubbleMenuElement: HTMLDivElement;
   let editor: any = $state(null);
 
   onMount(async () => {
@@ -38,6 +39,7 @@
     const StarterKit = (await import("@tiptap/starter-kit")).default;
     const Placeholder = (await import("@tiptap/extension-placeholder")).default;
     const Link = (await import("@tiptap/extension-link")).default;
+    const BubbleMenu = (await import("@tiptap/extension-bubble-menu")).default;
 
     const extensions: any[] = [
       StarterKit,
@@ -46,6 +48,14 @@
         openOnClick: false,
         HTMLAttributes: {
           class: "text-[var(--dash-primary)] hover:underline cursor-pointer",
+        },
+      }),
+      BubbleMenu.configure({
+        element: bubbleMenuElement,
+        shouldShow: ({ editor: ed, from, to }) => {
+          // Hide on empty selection or when a link is active (so we don't
+          // overlap with the inline link click target).
+          return from !== to && !ed.isActive("link");
         },
       }),
     ];
@@ -213,6 +223,39 @@
   <div bind:this={element} class="prose prose-sm max-w-none text-[var(--dash-text)]"></div>
 </div>
 
+<!-- Bubble menu (shown on text selection) -->
+<div
+  bind:this={bubbleMenuElement}
+  class="bubble-menu flex items-center gap-0.5 px-1 py-0.5 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-md shadow-lg"
+>
+  {#if editor}
+    <button
+      type="button"
+      onclick={toggleBold}
+      class="p-1.5 rounded hover:bg-[var(--dash-bg)] transition-colors {editor.isActive('bold') ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)]'}"
+      title="Bold"
+    >
+      <FontAwesomeIcon icon={faBold} class="w-3 h-3" />
+    </button>
+    <button
+      type="button"
+      onclick={toggleItalic}
+      class="p-1.5 rounded hover:bg-[var(--dash-bg)] transition-colors {editor.isActive('italic') ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)]'}"
+      title="Italic"
+    >
+      <FontAwesomeIcon icon={faItalic} class="w-3 h-3" />
+    </button>
+    <button
+      type="button"
+      onclick={toggleLink}
+      class="p-1.5 rounded hover:bg-[var(--dash-bg)] transition-colors {editor.isActive('link') ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)]'}"
+      title="Link"
+    >
+      <FontAwesomeIcon icon={faLink} class="w-3 h-3" />
+    </button>
+  {/if}
+</div>
+
 <style>
   :global(.tiptap p.is-editor-empty:first-child::before) {
     content: attr(data-placeholder);
@@ -265,5 +308,11 @@
   }
   :global(.tiptap a:hover) {
     text-decoration: underline;
+  }
+  .bubble-menu {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+    z-index: 50;
   }
 </style>
