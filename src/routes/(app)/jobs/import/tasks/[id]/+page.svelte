@@ -24,6 +24,7 @@
     faCog,
     faCopy,
     faDesktop,
+    faEllipsisV,
     faEnvelope,
     faExclamationTriangle,
     faExternalLinkAlt,
@@ -161,6 +162,12 @@
   let typeTextValue = $state("");
   let isTypingText = $state(false);
   let typeTextMessage = $state<string | null>(null);
+
+  // Intervention controls overlay (auto-opens when run blocks; user can dismiss)
+  let showInterventionControls = $state(false);
+  let prevIsBlocked = false;
+  // Header overflow menu (kebab, mobile only)
+  let headerMenuOpen = $state(false);
 
   // Navigate-URL feature (for magic link login)
   let navigateUrlValue = $state("");
@@ -325,6 +332,10 @@
   let isQueued = $derived(searchTask.status === "queued");
   let isStoppingStatus = $derived(searchTask.status === "stopping");
   let needsIntervention = $derived(isRunning || isBlocked);
+  $effect(() => {
+    if (isBlocked && !prevIsBlocked) showInterventionControls = true;
+    prevIsBlocked = isBlocked;
+  });
   let hasOtherRunning = $state(data.hasOtherRunning);
   let isCloudMode = $derived(!!liveUrl);
   let isMagicLink = $derived(
@@ -2264,13 +2275,6 @@
             {/if}
           </div>
           <div class="flex items-center gap-2">
-            {#if isBlocked}
-              <span
-                class="text-sm text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-2 py-1 rounded"
-              >
-                Action needed
-              </span>
-            {/if}
             {#if isTunnelMode}
               <div class="flex rounded overflow-hidden border border-[var(--dash-border)]">
                 <button
@@ -2292,16 +2296,17 @@
                 </button>
               </div>
               {#if browserViewMode === "screenshot"}
+                <!-- Inline (desktop) -->
                 <button
                   onclick={() => { interactiveMode = !interactiveMode; }}
-                  class="p-1 transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+                  class="hidden sm:inline-flex p-1 transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
                   title="{interactiveMode ? 'Disable' : 'Enable'} interactive mode"
                 >
                   <FontAwesomeIcon icon={faHandPointer} class="w-3.5 h-3.5" />
                 </button>
                 <button
                   onclick={fetchScreenshot}
-                  class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                  class="hidden sm:inline-flex p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   title="Refresh screenshot"
                 >
                   <FontAwesomeIcon icon={faSync} class="w-3.5 h-3.5" />
@@ -2313,7 +2318,7 @@
                 href={liveUrl}
                 target="_blank"
                 rel="noopener"
-                class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                class="hidden sm:inline-flex p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                 title="Open in new tab"
               >
                 <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
@@ -2336,6 +2341,57 @@
               <FontAwesomeIcon icon={faTerminal} class="w-3 h-3 mr-1" />
               Logs
             </button>
+            <!-- Kebab menu for situational buttons on small screens -->
+            {#if (isTunnelMode && browserViewMode === "screenshot") || (isCloudMode && liveUrl)}
+              <div class="relative sm:hidden">
+                <button
+                  onclick={() => { headerMenuOpen = !headerMenuOpen; }}
+                  class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                  aria-label="More actions"
+                >
+                  <FontAwesomeIcon icon={faEllipsisV} class="w-4 h-4" />
+                </button>
+                {#if headerMenuOpen}
+                  <!-- backdrop -->
+                  <button
+                    type="button"
+                    class="fixed inset-0 z-30 cursor-default"
+                    aria-label="Close menu"
+                    onclick={() => { headerMenuOpen = false; }}
+                  ></button>
+                  <div class="absolute right-0 top-full mt-1 z-40 min-w-[180px] py-1 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg">
+                    {#if isTunnelMode && browserViewMode === "screenshot"}
+                      <button
+                        onclick={() => { interactiveMode = !interactiveMode; headerMenuOpen = false; }}
+                        class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text)]'}"
+                      >
+                        <FontAwesomeIcon icon={faHandPointer} class="w-3.5 h-3.5" />
+                        {interactiveMode ? "Disable" : "Enable"} interactive
+                      </button>
+                      <button
+                        onclick={() => { fetchScreenshot(); headerMenuOpen = false; }}
+                        class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+                      >
+                        <FontAwesomeIcon icon={faSync} class="w-3.5 h-3.5" />
+                        Refresh screenshot
+                      </button>
+                    {/if}
+                    {#if isCloudMode && liveUrl}
+                      <a
+                        href={liveUrl}
+                        target="_blank"
+                        rel="noopener"
+                        onclick={() => { headerMenuOpen = false; }}
+                        class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+                      >
+                        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3.5 h-3.5" />
+                        Open in new tab
+                      </a>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
             <button
               onclick={() => {
                 showBrowser = false;
@@ -2348,6 +2404,25 @@
             </button>
           </div>
         </div>
+        <!-- Action-needed banner — hard to miss when blocked, replaces a cramped header badge -->
+        {#if isBlocked}
+          <div
+            class="shrink-0 flex items-center justify-between gap-2 px-3 py-2 bg-[var(--dash-warning-light)] border-b border-[var(--dash-warning)]/30 text-sm"
+          >
+            <div class="flex items-center gap-2 text-[var(--dash-warning)] font-medium min-w-0">
+              <FontAwesomeIcon icon={faExclamationTriangle} class="w-4 h-4 shrink-0" />
+              <span class="truncate">Action needed</span>
+            </div>
+            <button
+              onclick={() => { showInterventionControls = !showInterventionControls; }}
+              class="px-3 py-1 text-xs rounded transition-colors shrink-0 {showInterventionControls
+                ? 'bg-[var(--dash-warning)] text-white'
+                : 'bg-[var(--dash-card)] text-[var(--dash-warning)] border border-[var(--dash-warning)]/40 hover:bg-[var(--dash-warning)] hover:text-white'}"
+            >
+              {showInterventionControls ? "Hide controls" : "Show controls"}
+            </button>
+          </div>
+        {/if}
         <!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
         <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video">
           {#if expectsCloudBrowser && browserViewUrl}
@@ -2524,10 +2599,10 @@
               </div>
           </div>
         {/if}
-        <!-- Intervention controls overlay (anchored to bottom of browser view) -->
-        {#if isBlocked}
+        <!-- Intervention controls overlay (full overlay, dismissable so user can see browser view) -->
+        {#if isBlocked && showInterventionControls}
           <div
-            class="absolute bottom-0 left-0 right-0 z-10 p-3 bg-[var(--dash-card)]/95 backdrop-blur-sm border-t border-[var(--dash-warning)]/30 space-y-2 overflow-y-auto max-h-[60%] shadow-[0_-2px_8px_rgba(0,0,0,0.1)]"
+            class="absolute inset-0 z-20 p-3 bg-[var(--dash-card)]/95 backdrop-blur-sm border border-[var(--dash-warning)]/30 space-y-2 overflow-y-auto"
           >
             <!-- Intervention message + action buttons -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -2609,15 +2684,18 @@
                 }</span>
               {/if}
             </div>
-            <!-- Type text into browser (for 2FA codes) -->
+            <!-- Type text into browser (2FA codes, or any focused field — username, password, etc.) -->
             <div
               class="flex flex-col gap-2 pt-2 border-t border-[var(--dash-border)]"
             >
+              <p class="text-xs text-[var(--dash-text-muted)]">
+                Sends to the focused field in the browser. For username/password, click the field in the browser view first.
+              </p>
               <div class="flex items-center gap-2">
                 <input
                   type="text"
                   bind:value={typeTextValue}
-                  placeholder="2FA / verification code"
+                  placeholder="Text to send (2FA code, username, password, …)"
                   disabled={isTypingText}
                   onkeydown={(e) => {
                     if (e.key === "Enter") sendTypeText(true);

@@ -884,6 +884,7 @@ export const search_task_runs = pgTable("search_task_runs", {
 	user_response: varchar({ length: 20 }),
 	settings: jsonb(),
 	verification_data: jsonb(),
+	pending_action: jsonb(),
 }, (table) => [
 	index("search_task_runs_search_task_id_started_at_idx").using("btree", table.search_task_id.asc().nullsLast().op("int4_ops"), table.started_at.asc().nullsLast().op("int4_ops")),
 	foreignKey({

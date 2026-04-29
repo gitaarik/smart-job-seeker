@@ -64,6 +64,13 @@
       "when": 1777550000000,
       "tag": "0008_application_notes_jsonb",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777800000000,
+      "tag": "0009_pending_action",
+      "breakpoints": true
     }
   ]
 }
