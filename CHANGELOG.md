@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.9] - 2026-04-29
+
+3 commits since v0.5.8.
+
+### Added
+- New `/api/debug/queue` endpoint and `debug-queue` script for inspecting task queue and run state
+
+### Fixed
+- Release cleanup no longer fails when no old images match the filter
+
 ## [0.5.8] - 2026-04-27
 
 1 commit since v0.5.7.
