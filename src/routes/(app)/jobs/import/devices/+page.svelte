@@ -1,15 +1,15 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import { onMount, onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faChevronDown,
     faChevronUp,
     faDesktop,
+    faEllipsisVertical,
     faEye,
     faEyeSlash,
-    faEllipsisVertical,
     faKey,
     faPencil,
     faPlus,
@@ -29,7 +29,10 @@
   let { data }: { data: PageData } = $props();
 
   let apiKeys = $state(data.apiKeys);
-  let sortedApiKeys = $derived([...apiKeys].sort((a, b) => Number(!!a.revoked) - Number(!!b.revoked)));
+  let sharedDevices = $derived(data.sharedDevices);
+  let sortedApiKeys = $derived(
+    [...apiKeys].sort((a, b) => Number(!!a.revoked) - Number(!!b.revoked)),
+  );
   let showAddForm = $state(false);
   let showManualInstall = $state(false);
   let newKeyName = $state("");
@@ -50,7 +53,7 @@
       menuOpenKeyId = null;
       return;
     }
-    const button = (event.currentTarget as HTMLElement);
+    const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
     menuDropUp = rect.bottom + 200 > window.innerHeight;
     menuOpenKeyId = keyId;
@@ -61,11 +64,14 @@
     if (!name) return;
 
     try {
-      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "rename", name }),
-      });
+      const res = await fetch(
+        `/api/api-keys/${keyId}?profileId=${data.profileId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "rename", name }),
+        },
+      );
       if (res.ok) {
         editingKeyId = null;
         await invalidateAll();
@@ -131,13 +137,17 @@
       const res = await fetch("/api/api-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName.trim(), profileId: data.profileId }),
+        body: JSON.stringify({
+          name: newKeyName.trim(),
+          profileId: data.profileId,
+        }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        errorMessage = result.error || result.message || "Failed to create device key";
+        errorMessage = result.error || result.message ||
+          "Failed to create device key";
         return;
       }
 
@@ -154,10 +164,15 @@
   }
 
   async function revokeApiKey(keyId: number) {
-    if (!confirm("Revoke this device key? The device will be disconnected.")) return;
+    if (!confirm("Revoke this device key? The device will be disconnected.")) {
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, { method: "DELETE" });
+      const res = await fetch(
+        `/api/api-keys/${keyId}?profileId=${data.profileId}`,
+        { method: "DELETE" },
+      );
       if (res.ok) {
         await invalidateAll();
         apiKeys = data.apiKeys;
@@ -169,11 +184,14 @@
 
   async function activateApiKey(keyId: number) {
     try {
-      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "activate" }),
-      });
+      const res = await fetch(
+        `/api/api-keys/${keyId}?profileId=${data.profileId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "activate" }),
+        },
+      );
       if (res.ok) {
         await invalidateAll();
         apiKeys = data.apiKeys;
@@ -187,7 +205,10 @@
     if (!confirm("Delete this device key? This cannot be undone.")) return;
 
     try {
-      const res = await fetch(`/api/api-keys/${keyId}?profileId=${data.profileId}&permanent=true`, { method: "DELETE" });
+      const res = await fetch(
+        `/api/api-keys/${keyId}?profileId=${data.profileId}&permanent=true`,
+        { method: "DELETE" },
+      );
       if (res.ok) {
         await invalidateAll();
         apiKeys = data.apiKeys;
@@ -313,14 +334,20 @@
 
 <div class="space-y-4">
   <p class="text-sm text-[var(--dash-text-secondary)]">
-    Connect a device to import jobs from your own IP address. Use the desktop app on your computer or a self-hosted Docker container on a NAS or server.
+    Connect a device to import jobs from your own IP address. Use the desktop
+    app on your computer or a self-hosted Docker container on a NAS or server.
   </p>
 
   <!-- Connection Status -->
   <Card padding="md">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <FontAwesomeIcon icon={faDesktop} class={`w-4 h-4 ${tunnelConnected ? 'text-green-500' : 'text-[var(--dash-text-muted)]'}`} />
+        <FontAwesomeIcon
+          icon={faDesktop}
+          class={`w-4 h-4 ${
+            tunnelConnected ? "text-green-500" : "text-[var(--dash-text-muted)]"
+          }`}
+        />
         <div>
           <p class="font-medium text-[var(--dash-text)]">
             {#if tunnelStatus === "checking"}
@@ -336,7 +363,9 @@
           {#if connectedDevices.length === 1}
             <p class="text-sm text-[var(--dash-text-muted)]">
               v{connectedDevices[0].clientVersion}
-              &middot; connected {formatRelativeTime(connectedDevices[0].connectedAt)}
+              &middot; connected {
+                formatRelativeTime(connectedDevices[0].connectedAt)
+              }
             </p>
           {:else if connectedDevices.length > 1}
             <p class="text-sm text-[var(--dash-text-muted)]">
@@ -359,18 +388,23 @@
   <Card padding="lg">
     <h2 class="font-medium text-[var(--dash-text)] mb-4">Setup Instructions</h2>
     <ol class="space-y-4 text-sm text-[var(--dash-text-secondary)]">
-
       <!-- Step 1: Install -->
       <li class="flex gap-3">
-        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">1</span>
+        <span
+          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+        >1</span>
         <div class="flex-1">
           <p class="text-[var(--dash-text)] mb-2">Install</p>
 
           <!-- Install type tabs -->
-          <div class="flex rounded-md overflow-hidden border border-[var(--dash-border)] w-fit mb-3">
+          <div
+            class="flex rounded-md overflow-hidden border border-[var(--dash-border)] w-fit mb-3"
+          >
             <button
               type="button"
-              onclick={() => { installTab = "desktop"; }}
+              onclick={() => {
+                installTab = "desktop";
+              }}
               class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {installTab === 'desktop' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
             >
               <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
@@ -378,7 +412,9 @@
             </button>
             <button
               type="button"
-              onclick={() => { installTab = "docker"; }}
+              onclick={() => {
+                installTab = "docker";
+              }}
               class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {installTab === 'docker' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
             >
               <FontAwesomeIcon icon={faServer} class="w-3 h-3" />
@@ -388,65 +424,142 @@
 
           {#if installTab === "desktop"}
             <!-- Desktop App instructions -->
-            <p>Download the installer for your platform from <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">GitHub Releases</a>:</p>
+            <p>
+              Download the installer for your platform from <a
+                href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                target="_blank"
+                rel="noopener"
+                class="text-[var(--dash-primary)] hover:underline"
+              >GitHub Releases</a>:
+            </p>
             <div class="mt-2 space-y-1.5 text-xs">
               <div class="flex items-center gap-2">
-                <span class="text-[var(--dash-text-secondary)] w-16">macOS</span>
-                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.dmg</a>
+                <span class="text-[var(--dash-text-secondary)] w-16"
+                >macOS</span>
+                <a
+                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-[var(--dash-primary)] hover:underline font-mono"
+                >.dmg</a>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-[var(--dash-text-secondary)] w-16">Windows</span>
-                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.exe installer</a>
+                <span class="text-[var(--dash-text-secondary)] w-16"
+                >Windows</span>
+                <a
+                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-[var(--dash-primary)] hover:underline font-mono"
+                >.exe installer</a>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-[var(--dash-text-secondary)] w-16">Linux</span>
-                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.deb</a>
+                <span class="text-[var(--dash-text-secondary)] w-16"
+                >Linux</span>
+                <a
+                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-[var(--dash-primary)] hover:underline font-mono"
+                >.deb</a>
                 <span class="text-[var(--dash-text-secondary)]">or</span>
-                <a href="https://github.com/gitaarik/sjs-desktop/releases/latest" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline font-mono">.AppImage</a>
+                <a
+                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-[var(--dash-primary)] hover:underline font-mono"
+                >.AppImage</a>
               </div>
             </div>
-            <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">A compatible browser will be downloaded automatically on first launch.</p>
+            <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+              A compatible browser will be downloaded automatically on first
+              launch.
+            </p>
 
             <!-- Manual install toggle -->
             <button
               type="button"
-              onclick={() => { showManualInstall = !showManualInstall; }}
+              onclick={() => {
+                showManualInstall = !showManualInstall;
+              }}
               class="mt-2 flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
             >
-              <FontAwesomeIcon icon={showManualInstall ? faChevronUp : faChevronDown} class="w-2.5 h-2.5" />
+              <FontAwesomeIcon
+                icon={showManualInstall ? faChevronUp : faChevronDown}
+                class="w-2.5 h-2.5"
+              />
               <span>Manual install from source</span>
             </button>
 
             {#if showManualInstall}
-              <div class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2">
-                <p>Requires <a href="https://nodejs.org/" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Node.js 20+</a> and <a href="https://www.rust-lang.org/tools/install" target="_blank" rel="noopener" class="text-[var(--dash-primary)] hover:underline">Rust</a>. Clone the repo and build:</p>
-                <div class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5">
-                  <div>git clone https://github.com/gitaarik/sjs-desktop.git</div>
+              <div
+                class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2"
+              >
+                <p>
+                  Requires <a
+                    href="https://nodejs.org/"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[var(--dash-primary)] hover:underline"
+                  >Node.js 20+</a> and <a
+                    href="https://www.rust-lang.org/tools/install"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[var(--dash-primary)] hover:underline"
+                  >Rust</a>. Clone the repo and build:
+                </p>
+                <div
+                  class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5"
+                >
+                  <div>
+                    git clone https://github.com/gitaarik/sjs-desktop.git
+                  </div>
                   <div>cd sjs-desktop</div>
                   <div>npm install && npm run ui:install</div>
                   <div>npm run tauri:build</div>
                 </div>
-                <p>The installer will be in <code class="bg-[var(--dash-card)] px-1 rounded">src-tauri/target/release/bundle/</code>.</p>
+                <p>
+                  The installer will be in <code
+                    class="bg-[var(--dash-card)] px-1 rounded"
+                  >src-tauri/target/release/bundle/</code>.
+                </p>
               </div>
             {/if}
 
             <!-- Source code link -->
             <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
-              <a href="https://github.com/gitaarik/sjs-desktop" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors">
+              <a
+                href="https://github.com/gitaarik/sjs-desktop"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+              >
                 <FontAwesomeIcon icon={faGithub} class="w-3 h-3" />
                 <span>View on GitHub</span>
               </a>
             </p>
           {:else}
             <!-- Docker instructions -->
-            <p>Run the tunnel client as a Docker container on a NAS (TrueNAS, Synology, Unraid) or any server with Docker.</p>
+            <p>
+              Run the tunnel client as a Docker container on a NAS (TrueNAS,
+              Synology, Unraid) or any server with Docker.
+            </p>
 
             <div class="mt-3 space-y-3">
               <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">Docker Compose (recommended)</p>
-                <p class="text-xs text-[var(--dash-text-secondary)] mb-2">Create a <code class="bg-[var(--dash-bg)] px-1 rounded">docker-compose.yml</code> file:</p>
-                <div class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto">
-                  <pre class="whitespace-pre">services:
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                  Docker Compose (recommended)
+                </p>
+                <p class="text-xs text-[var(--dash-text-secondary)] mb-2">
+                  Create a <code class="bg-[var(--dash-bg)] px-1 rounded"
+                  >docker-compose.yml</code> file:
+                </p>
+                <div
+                  class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
+                >
+                  <pre
+                    class="whitespace-pre"
+                  >services:
   sjs-tunnel:
     image: gitaarik036/sjs-tunnel-client:latest
     restart: unless-stopped
@@ -465,13 +578,22 @@
 volumes:
   chrome_data:</pre>
                 </div>
-                <p class="text-xs text-[var(--dash-text-secondary)] mt-2">Then run: <code class="bg-[var(--dash-bg)] px-1 rounded">docker compose up -d</code></p>
+                <p class="text-xs text-[var(--dash-text-secondary)] mt-2">
+                  Then run: <code class="bg-[var(--dash-bg)] px-1 rounded"
+                  >docker compose up -d</code>
+                </p>
               </div>
 
               <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">Docker Run</p>
-                <div class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto">
-                  <pre class="whitespace-pre">docker run -d \
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                  Docker Run
+                </p>
+                <div
+                  class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
+                >
+                  <pre
+                    class="whitespace-pre"
+                  >docker run -d \
   --name sjs-tunnel \
   --restart unless-stopped \
   --shm-size 512m \
@@ -483,16 +605,23 @@ volumes:
               </div>
 
               <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">TrueNAS Scale</p>
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                  TrueNAS Scale
+                </p>
                 <p class="text-xs text-[var(--dash-text-secondary)]">
-                  Use <strong>Custom App</strong> with image <code class="bg-[var(--dash-bg)] px-1 rounded">gitaarik036/sjs-tunnel-client:latest</code>.
-                  Add environment variables <code class="bg-[var(--dash-bg)] px-1 rounded">SJS_SERVER_URL</code> and <code class="bg-[var(--dash-bg)] px-1 rounded">SJS_API_TOKEN</code>.
-                  Set shared memory to 512 MB.
+                  Use <strong>Custom App</strong> with image <code
+                    class="bg-[var(--dash-bg)] px-1 rounded"
+                  >gitaarik036/sjs-tunnel-client:latest</code>. Add environment
+                  variables <code class="bg-[var(--dash-bg)] px-1 rounded"
+                  >SJS_SERVER_URL</code> and <code
+                    class="bg-[var(--dash-bg)] px-1 rounded"
+                  >SJS_API_TOKEN</code>. Set shared memory to 512 MB.
                 </p>
               </div>
 
               <p class="text-xs text-[var(--dash-text-secondary)]">
-                You can view and control the browser directly from the dashboard during import — no extra ports needed.
+                You can view and control the browser directly from the dashboard
+                during import — no extra ports needed.
               </p>
             </div>
           {/if}
@@ -501,32 +630,57 @@ volumes:
 
       <!-- Step 2: Create device key -->
       <li class="flex gap-3">
-        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">2</span>
+        <span
+          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+        >2</span>
         <div>
           <p class="text-[var(--dash-text)]">Create a device key below</p>
-          <p>Each device needs its own key. The key name identifies the device.</p>
+          <p>
+            Each device needs its own key. The key name identifies the device.
+          </p>
         </div>
       </li>
 
       <!-- Step 3: Connect -->
       <li class="flex gap-3">
-        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">3</span>
+        <span
+          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+        >3</span>
         <div>
           <p class="text-[var(--dash-text)]">Connect the device</p>
           {#if installTab === "desktop"}
-            <p>In the desktop app, select the <strong>{typeof window !== 'undefined' && (window.location.host.startsWith('app.') ? 'Production' : window.location.host.startsWith('preview.') ? 'Preview' : 'Dev')}</strong> server and enter your device key.</p>
+            <p>
+              In the desktop app, select the <strong>{
+                typeof window !== "undefined" &&
+                (window.location.host.startsWith("app.")
+                  ? "Production"
+                  : window.location.host.startsWith("preview.")
+                  ? "Preview"
+                  : "Dev")
+              }</strong> server and enter your device key.
+            </p>
           {:else}
-            <p>Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs">your-api-key-here</code> in the config with your device key and start the container.</p>
+            <p>
+              Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs"
+              >your-api-key-here</code> in the config with your device key and
+              start the container.
+            </p>
           {/if}
         </div>
       </li>
 
       <!-- Step 4: Start importing -->
       <li class="flex gap-3">
-        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold">4</span>
+        <span
+          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+        >4</span>
         <div>
           <p class="text-[var(--dash-text)]">Start importing</p>
-          <p>Once connected (shown above), start an import from the Import Tasks page. Select "My device" as the browser and choose which device to use.</p>
+          <p>
+            Once connected (shown above), start an import from the Import Tasks
+            page. Select "My device" as the browser and choose which device to
+            use.
+          </p>
         </div>
       </li>
     </ol>
@@ -534,12 +688,18 @@ volumes:
 
   <!-- Newly Created Key Banner -->
   {#if newlyCreatedKey}
-    <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
+    <div
+      class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4"
+    >
       <div class="flex items-center justify-between">
-        <p class="font-medium text-[var(--dash-success)]">Device key created. You can view and copy it from the list below.</p>
+        <p class="font-medium text-[var(--dash-success)]">
+          Device key created. You can view and copy it from the list below.
+        </p>
         <button
           type="button"
-          onclick={() => { newlyCreatedKey = null; }}
+          onclick={() => {
+            newlyCreatedKey = null;
+          }}
           class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] ml-4 flex-shrink-0"
         >
           <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
@@ -550,22 +710,31 @@ volumes:
 
   <!-- Error Message -->
   {#if errorMessage}
-    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+    <div
+      class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
+    >
       <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
     </div>
   {/if}
 
   <!-- Device Keys -->
   <Card>
-    <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
+    <div
+      class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]"
+    >
       <div class="flex items-center gap-2">
-        <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
+        <FontAwesomeIcon
+          icon={faKey}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
         <h2 class="font-medium text-[var(--dash-text)]">Device Keys</h2>
       </div>
       {#if !showAddForm}
         <button
           type="button"
-          onclick={() => { showAddForm = true; }}
+          onclick={() => {
+            showAddForm = true;
+          }}
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
@@ -578,7 +747,10 @@ volumes:
       <div class="p-4 border-b border-[var(--dash-border)] bg-[var(--dash-bg)]">
         <div class="flex items-end gap-3">
           <div class="flex-1">
-            <label for="key-name" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            <label
+              for="key-name"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            >
               Key Name
             </label>
             <input
@@ -587,7 +759,9 @@ volumes:
               bind:value={newKeyName}
               placeholder="e.g., My Laptop, NAS"
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
-              onkeydown={(e) => { if (e.key === "Enter") createApiKey(); }}
+              onkeydown={(e) => {
+                if (e.key === "Enter") createApiKey();
+              }}
             />
           </div>
           <button
@@ -604,7 +778,10 @@ volumes:
           </button>
           <button
             type="button"
-            onclick={() => { showAddForm = false; newKeyName = ""; }}
+            onclick={() => {
+              showAddForm = false;
+              newKeyName = "";
+            }}
             class="px-3 py-2 border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
           >
             Cancel
@@ -625,7 +802,16 @@ volumes:
           <div class="p-4">
             <!-- Name row -->
             <div class="flex items-center gap-3">
-              <div class={`w-2 h-2 rounded-full flex-shrink-0 ${key.revoked ? 'bg-[var(--dash-text-muted)]' : deviceStatus ? 'bg-[var(--dash-success)]' : 'bg-[var(--dash-text-muted)]'}`}></div>
+              <div
+                class={`w-2 h-2 rounded-full flex-shrink-0 ${
+                  key.revoked
+                    ? "bg-[var(--dash-text-muted)]"
+                    : deviceStatus
+                    ? "bg-[var(--dash-success)]"
+                    : "bg-[var(--dash-text-muted)]"
+                }`}
+              >
+              </div>
               <div class="flex-1 min-w-0">
                 {#if editingKeyId === key.id}
                   <div class="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -633,7 +819,10 @@ volumes:
                       type="text"
                       bind:value={editKeyName}
                       class="flex-1 min-w-0 px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:border-[var(--dash-primary)]"
-                      onkeydown={(e) => { if (e.key === "Enter") renameApiKey(key.id); if (e.key === "Escape") editingKeyId = null; }}
+                      onkeydown={(e) => {
+                        if (e.key === "Enter") renameApiKey(key.id);
+                        if (e.key === "Escape") editingKeyId = null;
+                      }}
                     />
                     <div class="flex items-center gap-2 shrink-0">
                       <button
@@ -645,7 +834,9 @@ volumes:
                       </button>
                       <button
                         type="button"
-                        onclick={() => { editingKeyId = null; }}
+                        onclick={() => {
+                          editingKeyId = null;
+                        }}
                         class="px-2 py-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-sm transition-colors"
                       >
                         Cancel
@@ -653,21 +844,31 @@ volumes:
                     </div>
                   </div>
                 {:else}
-                  <div class="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-                    <p class="font-medium text-[var(--dash-text)] truncate">{key.name}</p>
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2"
+                  >
+                    <p class="font-medium text-[var(--dash-text)] truncate">
+                      {key.name}
+                    </p>
                     {#if key.revoked}
-                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] w-fit">
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] w-fit"
+                      >
                         Revoked
                       </span>
                     {:else if deviceStatus}
-                      <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] w-fit">
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] w-fit"
+                      >
                         Connected
                       </span>
                     {/if}
                   </div>
                   <p class="text-xs text-[var(--dash-text-muted)]">
                     {#if deviceStatus}
-                      v{deviceStatus.clientVersion} &middot; connected {formatRelativeTime(deviceStatus.connectedAt)}
+                      v{deviceStatus.clientVersion} &middot; connected {
+                        formatRelativeTime(deviceStatus.connectedAt)
+                      }
                     {:else}
                       Created {formatDate(key.date_created)}
                       {#if key.last_used}
@@ -683,11 +884,16 @@ volumes:
                 {#if key.key_plain && !key.revoked}
                   <button
                     type="button"
-                    onclick={() => { visibleKeyId = visibleKeyId === key.id ? null : key.id; }}
+                    onclick={() => {
+                      visibleKeyId = visibleKeyId === key.id ? null : key.id;
+                    }}
                     class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                     title={visibleKeyId === key.id ? "Hide key" : "Show key"}
                   >
-                    <FontAwesomeIcon icon={visibleKeyId === key.id ? faEyeSlash : faEye} class="w-4 h-4" />
+                    <FontAwesomeIcon
+                      icon={visibleKeyId === key.id ? faEyeSlash : faEye}
+                      class="w-4 h-4"
+                    />
                   </button>
                   <span class="p-2">
                     <CopyButton text={key.key_plain} />
@@ -702,19 +908,33 @@ volumes:
                     class="p-2 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
                     title="More actions"
                   >
-                    <FontAwesomeIcon icon={faEllipsisVertical} class="w-4 h-4" />
+                    <FontAwesomeIcon
+                      icon={faEllipsisVertical}
+                      class="w-4 h-4"
+                    />
                   </button>
                   {#if menuOpenKeyId === key.id}
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
                       class="fixed inset-0 z-10"
-                      onclick={() => { menuOpenKeyId = null; }}
+                      onclick={() => {
+                        menuOpenKeyId = null;
+                      }}
                       onkeydown={(e) => e.key === "Escape" && (menuOpenKeyId = null)}
-                    ></div>
-                    <div class={`absolute right-0 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[170px] ${menuDropUp ? 'bottom-full mb-1' : 'top-full mt-1'}`}>
+                    >
+                    </div>
+                    <div
+                      class={`absolute right-0 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[170px] ${
+                        menuDropUp ? "bottom-full mb-1" : "top-full mt-1"
+                      }`}
+                    >
                       <button
                         type="button"
-                        onclick={() => { editingKeyId = key.id; editKeyName = key.name; menuOpenKeyId = null; }}
+                        onclick={() => {
+                          editingKeyId = key.id;
+                          editKeyName = key.name;
+                          menuOpenKeyId = null;
+                        }}
                         class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
                       >
                         <FontAwesomeIcon icon={faPencil} class="w-3.5 h-3.5" />
@@ -723,7 +943,10 @@ volumes:
                       {#if key.revoked}
                         <button
                           type="button"
-                          onclick={() => { activateApiKey(key.id); menuOpenKeyId = null; }}
+                          onclick={() => {
+                            activateApiKey(key.id);
+                            menuOpenKeyId = null;
+                          }}
                           class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-success)]"
                         >
                           <FontAwesomeIcon icon={faUndo} class="w-3.5 h-3.5" />
@@ -731,7 +954,10 @@ volumes:
                         </button>
                         <button
                           type="button"
-                          onclick={() => { menuOpenKeyId = null; deleteApiKey(key.id); }}
+                          onclick={() => {
+                            menuOpenKeyId = null;
+                            deleteApiKey(key.id);
+                          }}
                           class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-error)]"
                         >
                           <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
@@ -740,15 +966,24 @@ volumes:
                       {:else}
                         <button
                           type="button"
-                          onclick={() => { menuOpenKeyId = null; openShareModal(key.id); }}
+                          onclick={() => {
+                            menuOpenKeyId = null;
+                            openShareModal(key.id);
+                          }}
                           class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
                         >
-                          <FontAwesomeIcon icon={faShareAlt} class="w-3.5 h-3.5" />
+                          <FontAwesomeIcon
+                            icon={faShareAlt}
+                            class="w-3.5 h-3.5"
+                          />
                           Share
                         </button>
                         <button
                           type="button"
-                          onclick={() => { menuOpenKeyId = null; revokeApiKey(key.id); }}
+                          onclick={() => {
+                            menuOpenKeyId = null;
+                            revokeApiKey(key.id);
+                          }}
                           class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-error)]"
                         >
                           <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
@@ -763,7 +998,9 @@ volumes:
 
             {#if visibleKeyId === key.id && key.key_plain}
               <div class="mt-2 ml-5">
-                <code class="text-xs bg-[var(--dash-bg)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono select-all text-[var(--dash-text-secondary)]">
+                <code
+                  class="text-xs bg-[var(--dash-bg)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono select-all text-[var(--dash-text-secondary)]"
+                >
                   {key.key_plain}
                 </code>
               </div>
@@ -773,20 +1010,72 @@ volumes:
       </div>
     {/if}
   </Card>
+
+  <!-- Devices Shared With You -->
+  {#if sharedDevices.length > 0}
+    <Card>
+      <div
+        class="flex items-center gap-2 p-4 border-b border-[var(--dash-border)]"
+      >
+        <FontAwesomeIcon
+          icon={faShareAlt}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2 class="font-medium text-[var(--dash-text)]">Shared with You</h2>
+      </div>
+      <div class="divide-y divide-[var(--dash-border)]">
+        {#each sharedDevices as share (share.id)}
+          {@const ownerLabel = share.api_key.owner?.name || share.api_key.owner?.email ||
+          "Unknown"}
+          <div class="p-4 flex items-center gap-3">
+            <FontAwesomeIcon
+              icon={faDesktop}
+              class="w-4 h-4 text-[var(--dash-text-muted)] flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-[var(--dash-text)] truncate">
+                {share.api_key.name}
+              </p>
+              <p class="text-xs text-[var(--dash-text-muted)]">
+                Shared by {ownerLabel}
+                {#if share.date_created}
+                  &middot; {formatDate(share.date_created)}
+                {/if}
+              </p>
+            </div>
+          </div>
+        {/each}
+      </div>
+      <div
+        class="px-4 py-3 border-t border-[var(--dash-border)] text-xs text-[var(--dash-text-secondary)]"
+      >
+        Select these devices on the Import Tasks page to import jobs through
+        them.
+      </div>
+    </Card>
+  {/if}
 </div>
 
 <!-- Share Device Modal -->
 {#if sharingKeyId !== null}
   {@const sharingKey = apiKeys.find((k) => k.id === sharingKeyId)}
-  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] w-full max-w-md shadow-xl">
-      <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
+  <div
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+  >
+    <div
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] w-full max-w-md shadow-xl"
+    >
+      <div
+        class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]"
+      >
         <h3 class="font-medium text-[var(--dash-text)]">
           Share "{sharingKey?.name}"
         </h3>
         <button
           type="button"
-          onclick={() => { sharingKeyId = null; }}
+          onclick={() => {
+            sharingKeyId = null;
+          }}
           class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
         >
           <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
@@ -801,22 +1090,35 @@ volumes:
         {:else if sharingContacts.length === 0}
           <div class="text-center py-6">
             <p class="text-sm text-[var(--dash-text-secondary)]">
-              No contacts yet. <a href="/contacts" class="text-[var(--dash-primary)] hover:underline">Add contacts</a> to share devices.
+              No contacts yet. <a
+                href="/contacts"
+                class="text-[var(--dash-primary)] hover:underline"
+              >Add contacts</a> to share devices.
             </p>
           </div>
         {:else}
           <!-- Currently shared with -->
           {#if sharingExisting.length > 0}
             <div class="mb-4">
-              <p class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Shared with</p>
+              <p
+                class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
+              >
+                Shared with
+              </p>
               <div class="space-y-2">
                 {#each sharingExisting as share (share.id)}
-                  <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20">
+                  <div
+                    class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20"
+                  >
                     <div class="flex items-center gap-2">
-                      <div class="w-6 h-6 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-primary)]">
+                      <div
+                        class="w-6 h-6 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-primary)]"
+                      >
                         {(share.user.name || share.user.email)[0].toUpperCase()}
                       </div>
-                      <span class="text-sm text-[var(--dash-text)]">{share.user.name || share.user.email}</span>
+                      <span class="text-sm text-[var(--dash-text)]">{
+                        share.user.name || share.user.email
+                      }</span>
                     </div>
                     <button
                       type="button"
@@ -836,7 +1138,11 @@ volumes:
           {@const unsharedContacts = sharingContacts.filter((c) => !isSharedWith(c.id))}
           {#if unsharedContacts.length > 0}
             <div>
-              <p class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Your contacts</p>
+              <p
+                class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
+              >
+                Your contacts
+              </p>
               <div class="space-y-1">
                 {#each unsharedContacts as contact (contact.id)}
                   <button
@@ -844,16 +1150,22 @@ volumes:
                     onclick={() => shareWithContact(contact.id)}
                     class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-left"
                   >
-                    <div class="w-6 h-6 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-text-muted)]">
+                    <div
+                      class="w-6 h-6 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-text-muted)]"
+                    >
                       {(contact.name || contact.email)[0].toUpperCase()}
                     </div>
-                    <span class="text-sm text-[var(--dash-text)]">{contact.name || contact.email}</span>
+                    <span class="text-sm text-[var(--dash-text)]">{
+                      contact.name || contact.email
+                    }</span>
                   </button>
                 {/each}
               </div>
             </div>
           {:else if sharingExisting.length > 0}
-            <p class="text-sm text-[var(--dash-text-secondary)] text-center py-2">
+            <p
+              class="text-sm text-[var(--dash-text-secondary)] text-center py-2"
+            >
               Shared with all your contacts.
             </p>
           {/if}
