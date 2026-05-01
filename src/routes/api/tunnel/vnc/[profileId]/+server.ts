@@ -7,7 +7,7 @@ import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/ut
  *
  * Returns a WebSocket URL that noVNC can connect to for interactive browser control.
  */
-export const POST: RequestHandler = async ({ locals, params }) => {
+export const POST: RequestHandler = async ({ locals, params, url }) => {
   const user = requireAuth(locals);
   const profileId = parseIntParam(params.profileId, "profileId");
   await requireProfileAccess(profileId, user.id);
@@ -15,8 +15,12 @@ export const POST: RequestHandler = async ({ locals, params }) => {
   const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
   const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
 
+  // Optional apiKeyId pins VNC to a specific device.
+  const apiKeyId = url.searchParams.get("apiKeyId");
+  const upstreamPath = `/vnc-token/${profileId}${apiKeyId ? `?apiKeyId=${encodeURIComponent(apiKeyId)}` : ""}`;
+
   try {
-    const res = await fetch(`http://${tunnelHost}:${tunnelPort}/vnc-token/${profileId}`, {
+    const res = await fetch(`http://${tunnelHost}:${tunnelPort}${upstreamPath}`, {
       method: "POST",
       signal: AbortSignal.timeout(5000),
     });

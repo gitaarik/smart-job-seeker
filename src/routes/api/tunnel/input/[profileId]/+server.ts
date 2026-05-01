@@ -8,7 +8,7 @@ import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/ut
  * Accepts rawMouseEvent, rawScrollEvent, and rawKeyEvent payloads
  * and forwards them to the desktop app via the tunnel server.
  */
-export const POST: RequestHandler = async ({ locals, params, request }) => {
+export const POST: RequestHandler = async ({ locals, params, request, url }) => {
   const user = requireAuth(locals);
   const profileId = parseIntParam(params.profileId, "profileId");
   await requireProfileAccess(profileId, user.id);
@@ -16,10 +16,14 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
   const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
   const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
 
+  // Optional apiKeyId pins input events to the search-task device.
+  const apiKeyId = url.searchParams.get("apiKeyId");
+  const upstreamPath = `/input/${profileId}${apiKeyId ? `?apiKeyId=${encodeURIComponent(apiKeyId)}` : ""}`;
+
   try {
     const body = await request.json();
 
-    const res = await fetch(`http://${tunnelHost}:${tunnelPort}/input/${profileId}`, {
+    const res = await fetch(`http://${tunnelHost}:${tunnelPort}${upstreamPath}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

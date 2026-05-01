@@ -162,6 +162,9 @@
   let typeTextValue = $state("");
   let isTypingText = $state(false);
   let typeTextMessage = $state<string | null>(null);
+  // Which type-text-area button is currently in flight, so the spinner only
+  // shows on the button the user actually clicked.
+  let typeTextAction = $state<"send" | "type" | "submit" | "clear" | null>(null);
 
   // Intervention controls overlay (auto-opens when run blocks; user can dismiss)
   let showInterventionControls = $state(false);
@@ -394,7 +397,13 @@
     vncConnecting = true;
 
     try {
-      const res = await fetch(`/api/tunnel/vnc/${data.profileId}`, { method: "POST" });
+      // Pin VNC to the device configured on the search task — otherwise with
+      // multiple devices connected the dashboard can show a different one
+      // than the scraper is driving.
+      const apiKeyParam = searchTask.tunnel_api_key
+        ? `?apiKeyId=${searchTask.tunnel_api_key}`
+        : "";
+      const res = await fetch(`/api/tunnel/vnc/${data.profileId}${apiKeyParam}`, { method: "POST" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: "Failed to start VNC" }));
         vncError = err.message || err.error || "Failed to start VNC";
@@ -436,7 +445,10 @@
 
   async function fetchScreenshot() {
     try {
-      const res = await fetch(`/api/tunnel/screencast/${data.profileId}`);
+      const apiKeyParam = searchTask.tunnel_api_key
+        ? `?apiKeyId=${searchTask.tunnel_api_key}`
+        : "";
+      const res = await fetch(`/api/tunnel/screencast/${data.profileId}${apiKeyParam}`);
       if (res.ok && res.status !== 204) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -507,7 +519,10 @@
   const MOUSE_BUTTON_MAP = ["left", "middle", "right"] as const;
 
   function sendInput(body: Record<string, unknown>) {
-    fetch(`/api/tunnel/input/${data.profileId}`, {
+    const apiKeyParam = searchTask.tunnel_api_key
+      ? `?apiKeyId=${searchTask.tunnel_api_key}`
+      : "";
+    fetch(`/api/tunnel/input/${data.profileId}${apiKeyParam}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -1219,6 +1234,7 @@
     if (!currentRunId || !typeTextValue.trim()) return;
 
     isTypingText = true;
+    typeTextAction = submit ? "send" : "type";
     typeTextMessage = null;
 
     try {
@@ -1251,12 +1267,14 @@
       console.error(err);
     } finally {
       isTypingText = false;
+      typeTextAction = null;
     }
   }
 
   async function submitBrowserForm() {
     if (!currentRunId) return;
     isTypingText = true;
+    typeTextAction = "submit";
     typeTextMessage = null;
     try {
       const res = await fetch(
@@ -1278,12 +1296,14 @@
       typeTextMessage = "Failed to submit";
     } finally {
       isTypingText = false;
+      typeTextAction = null;
     }
   }
 
   async function clearBrowserInput() {
     if (!currentRunId) return;
     isTypingText = true;
+    typeTextAction = "clear";
     typeTextMessage = null;
     try {
       const res = await fetch(
@@ -1305,6 +1325,7 @@
       typeTextMessage = "Failed to clear";
     } finally {
       isTypingText = false;
+      typeTextAction = null;
     }
   }
 
@@ -2708,7 +2729,7 @@
                   class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   title="Type text and submit the form"
                 >
-                  {#if isTypingText}
+                  {#if typeTextAction === "send"}
                     <Spinner size="w-3 h-3" />
                   {:else}
                     Send
@@ -2722,7 +2743,11 @@
                   class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Type text without submitting"
                 >
-                  Type only
+                  {#if typeTextAction === "type"}
+                    <Spinner size="w-3 h-3" />
+                  {:else}
+                    Type only
+                  {/if}
                 </button>
                 <button
                   onclick={() => submitBrowserForm()}
@@ -2730,7 +2755,11 @@
                   class="px-3 py-1.5 text-sm bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Click the submit button in the browser"
                 >
-                  Submit
+                  {#if typeTextAction === "submit"}
+                    <Spinner size="w-3 h-3" />
+                  {:else}
+                    Submit
+                  {/if}
                 </button>
                 <button
                   onclick={() => clearBrowserInput()}
@@ -2738,7 +2767,11 @@
                   class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Clear the input field in the browser"
                 >
-                  Clear
+                  {#if typeTextAction === "clear"}
+                    <Spinner size="w-3 h-3" />
+                  {:else}
+                    Clear
+                  {/if}
                 </button>
                 {#if typeTextMessage}
                   <span class="text-xs text-[var(--dash-text-muted)]">{

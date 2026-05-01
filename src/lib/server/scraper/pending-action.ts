@@ -19,17 +19,21 @@ export interface PendingActionRequest {
   submit?: boolean;
 }
 
+export interface FocusedFieldInfo {
+  tag: string;
+  id: string | null;
+  name: string | null;
+  type: string | null;
+  value?: string | null;
+}
+
 export interface PendingActionResult {
   success: boolean;
   message: string;
   page?: { url: string };
-  focused?: {
-    tag: string;
-    id: string | null;
-    name: string | null;
-    type: string | null;
-    value?: string | null;
-  } | null;
+  focused?: FocusedFieldInfo | null;
+  /** Same shape as `focused`, captured ~500ms later to detect SPAs that clear the field. */
+  focusedAfter?: FocusedFieldInfo | null;
 }
 
 interface StoredAction extends PendingActionRequest {
