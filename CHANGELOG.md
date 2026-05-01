@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.11] - 2026-05-01
+
+1 commit since v0.5.10.
+
+### Changed
+- Increased request body size limit to 10M for deployed environments
+
 ## [0.5.10] - 2026-05-01
 
 7 commits since v0.5.9.
