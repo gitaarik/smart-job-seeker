@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.12] - 2026-05-01
+
+3 commits since v0.5.11.
+
+### Added
+- Show devices shared with you on the /jobs/import/devices page
+
+### Fixed
+- Fixed preview environment credentials encryption
+
 ## [0.5.11] - 2026-05-01
 
 1 commit since v0.5.10.
