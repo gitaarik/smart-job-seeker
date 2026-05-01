@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.10] - 2026-05-01
+
+7 commits since v0.5.9.
+
+### Changed
+- Tunnel operations now support device pinning for screencast, VNC, and keyboard input
+- Improved tunnel UI with better browser-view integration for search-task operations
+- Input operations (type/clear/submit) now use OS-level keystrokes for better reliability
+- Text input and URL navigation now route through the scraper for consistent behavior
+- Worker now properly handles dashboard pending actions during intervention
+
 ## [0.5.9] - 2026-04-29
 
 3 commits since v0.5.8.
