@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.14] - 2026-05-02
+
+21 commits since v0.5.13.
+
+### Added
+- Credential sharing feature: users can share individual credentials with other accounts via a share modal with visual badges to indicate shared credentials
+- Credential-shares service with backend schema, API endpoints, and validation rules
+- Unit tests for credential-shares service
+- Backend support for platform_profile_id in search_tasks
+
+### Changed
+- Centralized preferred-device rule for tunnel status
+- Hardened share-cascade error handling for credential shares
+
+### Fixed
+- Restricted credential-share listing to owner (access control)
+- Fixed "My device" button not highlighting when selected
+- Fixed device-share notification links to point to /jobs/import/devices
+
 ## [0.5.13] - 2026-05-02
 
 13 commits since v0.5.12.
