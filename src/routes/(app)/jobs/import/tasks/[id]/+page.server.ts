@@ -150,13 +150,26 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     layoutData.selectedProfile.id,
   );
 
-  // Load API keys for device selection (tunnel mode) — own + shared
+  // Load API keys for device selection (tunnel mode) — own + shared.
+  // owner_user_id is null for own devices and the credential-owner's user id
+  // for shared devices, so the picker can match a shared credential to a
+  // compatible device.
+  interface DeviceOption {
+    apiKeyId: number;
+    apiKeyName: string;
+    shared: boolean;
+    owner_user_id: string | null;
+  }
   const allApiKeys = await listApiKeys(layoutData.selectedProfile.id);
-  const apiKeyDevices = allApiKeys
+  const apiKeyDevices: DeviceOption[] = allApiKeys
     .filter((k) => !k.revoked)
-    .map((k) => ({ apiKeyId: k.id, apiKeyName: k.name, shared: false }));
+    .map((k) => ({
+      apiKeyId: k.id,
+      apiKeyName: k.name,
+      shared: false,
+      owner_user_id: null,
+    }));
 
-  // Add devices shared with this user
   if (user) {
     const sharedDevices = await listSharedWithMe(user.id);
     for (const share of sharedDevices) {
@@ -166,6 +179,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
         apiKeyId: share.api_key.id,
         apiKeyName: `${share.api_key.name} (${ownerName})`,
         shared: true,
+        owner_user_id: share.api_key.owner?.id ?? null,
       });
     }
   }

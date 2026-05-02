@@ -52,7 +52,13 @@
     searchTask?: any;
     searchTaskId?: number;
     profileId?: number;
-    platformCredentials?: Array<{ id: number; username: string | null }>;
+    platformCredentials?: Array<{
+      id: number;
+      username: string | null;
+      shared?: boolean;
+      owner_user_id?: string | null;
+      owner_label?: string | null;
+    }>;
     canEditPlatformUrls?: boolean;
     browserCountryCode?: string;
     defaultCountryCode?: string;
@@ -69,9 +75,12 @@
       isShared: boolean;
       ownerLabel: string | null;
     } | null;
-    devices?: Array<
-      { apiKeyId: number; apiKeyName: string; connected: boolean }
-    >;
+    devices?: Array<{
+      apiKeyId: number;
+      apiKeyName: string;
+      connected: boolean;
+      owner_user_id?: string | null;
+    }>;
     verificationEmailAddress?: string | null;
     userTimezone?: string;
     timeFormat?: TimeFormat;
@@ -398,11 +407,17 @@
 
   // ── Edit-mode save functions ──
   async function patchSearchTask(body: Record<string, unknown>) {
-    await fetch(`/api/import-tasks/${searchTaskId}`, {
+    const res = await fetch(`/api/import-tasks/${searchTaskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(
+        data.message || data.error || `Save failed (${res.status})`,
+      );
+    }
   }
 
   async function saveSearchUrl() {
@@ -609,33 +624,85 @@
     browserTimezone = savedBrowserTimezone;
   }
 
-  async function saveCredential() {
+  let credentialSaveError = $state<string | null>(null);
+
+  async function saveLoginAndCredential() {
     isSavingCredential = true;
+    isSavingLoginMode = true;
+    credentialSaveError = null;
     try {
-      const credProfileId = editSelectedCredentialId === "none"
-        ? null
-        : parseInt(editSelectedCredentialId);
-      await patchSearchTask({ platform_profile_id: credProfileId });
-      searchTask.platform_profile_id = credProfileId;
-      editSavedCredentialId = editSelectedCredentialId;
+      const body: Record<string, unknown> = {};
+      if (loginModeDirty) body.login_mode = editLoginMode;
+      let cascadedDeviceId: number | null | undefined = undefined;
+      if (credentialDirty) {
+        const credProfileId = editSelectedCredentialId === "none"
+          ? null
+          : parseInt(editSelectedCredentialId);
+        body.platform_profile_id = credProfileId;
+
+        // If picking a credential shared by another user, the task's device
+        // must be one owned by that credential's owner. Auto-pick a
+        // compatible shared device when the current one doesn't match.
+        if (credProfileId !== null) {
+          const cred = editPlatformCredentials.find(
+            (c) => c.id === credProfileId,
+          );
+          const credOwner = cred?.shared ? cred.owner_user_id : null;
+          if (credOwner) {
+            const currentDevice = devices.find((d) =>
+              d.apiKeyId === tunnelApiKey
+            );
+            const matches = currentDevice?.owner_user_id === credOwner;
+            if (!matches) {
+              const compatible = devices.find((d) =>
+                d.owner_user_id === credOwner
+              );
+              if (!compatible) {
+                throw new Error(
+                  `${
+                    cred?.owner_label ?? "The owner"
+                  } hasn't shared a device with you for this credential — ask them to share one.`,
+                );
+              }
+              cascadedDeviceId = compatible.apiKeyId;
+              body.tunnel_api_key = compatible.apiKeyId;
+            }
+          }
+        }
+      }
+      await patchSearchTask(body);
+      if (loginModeDirty) {
+        searchTask.login_mode = editLoginMode;
+        editSavedLoginMode = editLoginMode;
+      }
+      if (credentialDirty) {
+        searchTask.platform_profile_id = body.platform_profile_id as
+          | number
+          | null;
+        editSavedCredentialId = editSelectedCredentialId;
+      }
+      if (cascadedDeviceId !== undefined) {
+        tunnelApiKey = cascadedDeviceId;
+        savedTunnelApiKey = cascadedDeviceId;
+        searchTask.tunnel_api_key = cascadedDeviceId;
+      }
     } catch (err) {
-      console.error("Failed to save credential:", err);
+      credentialSaveError = err instanceof Error
+        ? err.message
+        : "Failed to save";
     } finally {
       isSavingCredential = false;
+      isSavingLoginMode = false;
     }
   }
 
+  // Wrappers kept for callers (oncredentialadded auto-save) that target only
+  // one field — they reuse the combined save.
+  async function saveCredential() {
+    await saveLoginAndCredential();
+  }
   async function saveLoginMode() {
-    isSavingLoginMode = true;
-    try {
-      await patchSearchTask({ login_mode: editLoginMode });
-      searchTask.login_mode = editLoginMode;
-      editSavedLoginMode = editLoginMode;
-    } catch (err) {
-      console.error("Failed to save login mode:", err);
-    } finally {
-      isSavingLoginMode = false;
-    }
+    await saveLoginAndCredential();
   }
 
   // Re-sync state when searchTask changes from outside (navigation)
@@ -1325,26 +1392,28 @@
               }}
             />
 
-            {#if loginModeDirty}
+            {#if loginModeDirty || credentialDirty}
               <div class="mt-3">
                 {@render saveCancel(
                   true,
-                  isSavingLoginMode,
-                  saveLoginMode,
-                  () => (editLoginMode = editSavedLoginMode),
+                  isSavingLoginMode || isSavingCredential,
+                  saveLoginAndCredential,
+                  () => {
+                    editLoginMode = editSavedLoginMode;
+                    editSelectedCredentialId = editSavedCredentialId;
+                    credentialSaveError = null;
+                  },
                 )}
               </div>
             {/if}
 
-            {#if credentialDirty}
-              <div class="mt-3">
-                {@render saveCancel(
-                  true,
-                  isSavingCredential,
-                  saveCredential,
-                  () => (editSelectedCredentialId = editSavedCredentialId),
-                )}
-              </div>
+            {#if credentialSaveError}
+              <p
+                class="mt-2 text-xs text-[var(--dash-error)]"
+                role="alert"
+              >
+                {credentialSaveError}
+              </p>
             {/if}
           {/if}
 
