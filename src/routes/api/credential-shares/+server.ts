@@ -1,5 +1,8 @@
 import { error, json } from "@sveltejs/kit";
+import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
+import { db } from "$lib/server/db";
+import { platform_profiles } from "$lib/server/db/schema";
 import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 import {
   listCredentialShares,
@@ -24,6 +27,16 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     url.searchParams.get("platformProfileId") ?? "",
     "platformProfileId",
   );
+  // Only the credential owner may see who it's shared with — share recipients
+  // shouldn't be able to enumerate the rest of the owner's contacts.
+  const cred = await db.query.platform_profiles.findFirst({
+    where: eq(platform_profiles.id, platformProfileId),
+    columns: { id: true },
+    with: { profile: { columns: { user_id: true } } },
+  });
+  if (!cred || cred.profile.user_id !== user.id) {
+    throw error(403, "Not authorized");
+  }
   const shares = await listCredentialShares(platformProfileId);
   return json({ shares });
 };
