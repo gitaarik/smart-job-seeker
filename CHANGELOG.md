@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.17] - 2026-05-02
+
+1 commit since v0.5.16.
+
+### Fixed
+- Verification emails now correctly match to runs using the same credential
+
 ## [0.5.16] - 2026-05-02
 
 1 commit since v0.5.15.
