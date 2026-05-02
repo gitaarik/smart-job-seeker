@@ -3,7 +3,7 @@
  */
 
 import { db } from "$lib/server/db";
-import { eq, and, inArray, desc } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { api_keys, device_shares, users } from "$lib/server/db/schema";
 import { areContacts } from "$lib/server/contacts";
 import { createNotification } from "$lib/server/notifications";
@@ -29,16 +29,25 @@ export async function shareDevice(
 
   // Verify they are contacts
   if (!(await areContacts(ownerId, sharedWithUserId))) {
-    return { success: false, error: "You can only share devices with your contacts" };
+    return {
+      success: false,
+      error: "You can only share devices with your contacts",
+    };
   }
 
   // Check if already shared
   const existing = await db.query.device_shares.findFirst({
-    where: and(eq(device_shares.api_key_id, apiKeyId), eq(device_shares.shared_with, sharedWithUserId)),
+    where: and(
+      eq(device_shares.api_key_id, apiKeyId),
+      eq(device_shares.shared_with, sharedWithUserId),
+    ),
   });
 
   if (existing) {
-    return { success: false, error: "Device is already shared with this contact" };
+    return {
+      success: false,
+      error: "Device is already shared with this contact",
+    };
   }
 
   await db.insert(device_shares).values({
@@ -56,7 +65,7 @@ export async function shareDevice(
     userId: sharedWithUserId,
     type: "device_share",
     title: `${ownerName} shared a device with you`,
-    link: "/contacts",
+    link: "/jobs/import/devices",
   }).catch(() => {});
 
   return { success: true };
@@ -82,7 +91,10 @@ export async function unshareDevice(
   }
 
   const result = await db.delete(device_shares).where(
-    and(eq(device_shares.api_key_id, apiKeyId), eq(device_shares.shared_with, sharedWithUserId)),
+    and(
+      eq(device_shares.api_key_id, apiKeyId),
+      eq(device_shares.shared_with, sharedWithUserId),
+    ),
   );
 
   return (result.rowCount ?? 0) > 0;
@@ -133,12 +145,14 @@ export async function listSharedWithMe(userId: string) {
   });
 
   // Resolve owner names from user_ids
-  const ownerIds = [...new Set(shares.map((s) => s.api_key.profile.user_id).filter(Boolean))] as string[];
+  const ownerIds = [
+    ...new Set(shares.map((s) => s.api_key.profile.user_id).filter(Boolean)),
+  ] as string[];
   const owners = ownerIds.length > 0
     ? await db.query.users.findMany({
-        where: inArray(users.id, ownerIds),
-        columns: { id: true, name: true, email: true },
-      })
+      where: inArray(users.id, ownerIds),
+      columns: { id: true, name: true, email: true },
+    })
     : [];
   const ownerMap = new Map(owners.map((o) => [o.id, o]));
 
@@ -160,7 +174,10 @@ export async function listSharedWithMe(userId: string) {
 /**
  * Check if a user has access to a device (either owns it or it's shared with them)
  */
-export async function hasDeviceAccess(apiKeyId: number, userId: string): Promise<boolean> {
+export async function hasDeviceAccess(
+  apiKeyId: number,
+  userId: string,
+): Promise<boolean> {
   // Check ownership
   const owned = await db.query.api_keys.findFirst({
     where: and(eq(api_keys.id, apiKeyId), eq(api_keys.revoked, false)),
@@ -174,7 +191,10 @@ export async function hasDeviceAccess(apiKeyId: number, userId: string): Promise
 
   // Check shared access
   const shared = await db.query.device_shares.findFirst({
-    where: and(eq(device_shares.api_key_id, apiKeyId), eq(device_shares.shared_with, userId)),
+    where: and(
+      eq(device_shares.api_key_id, apiKeyId),
+      eq(device_shares.shared_with, userId),
+    ),
     columns: { id: true },
   });
 
