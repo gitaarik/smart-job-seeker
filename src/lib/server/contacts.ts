@@ -222,6 +222,12 @@ export async function declineContact(
  * Remove a contact (either user can remove). Cascades to any device or
  * credential shares between the two users in either direction — those are
  * meaningless once the contact relationship is gone.
+ *
+ * Order matters: cascade runs first, while the contact relationship still
+ * exists, then the contact row is deleted. If the cascade fails the contact
+ * stays and the caller can retry — better than leaving orphaned shares
+ * behind that would still be honored by `hasCredentialAccess` /
+ * `hasDeviceAccess`.
  */
 export async function removeContact(
   contactId: number,
@@ -236,21 +242,19 @@ export async function removeContact(
   });
   if (!contact) return false;
 
+  const { revokeAllSharesBetweenContacts } = await import(
+    "$lib/server/credential-shares"
+  );
+  await revokeAllSharesBetweenContacts(
+    contact.requester_id,
+    contact.recipient_id,
+  );
+
   const result = await db.delete(contacts).where(and(
     eq(contacts.id, contactId),
     or(eq(contacts.requester_id, userId), eq(contacts.recipient_id, userId)),
   ));
-  const removed = (result.rowCount ?? 0) > 0;
-  if (removed) {
-    const { revokeAllSharesBetweenContacts } = await import(
-      "$lib/server/credential-shares"
-    );
-    await revokeAllSharesBetweenContacts(
-      contact.requester_id,
-      contact.recipient_id,
-    ).catch(() => {});
-  }
-  return removed;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**

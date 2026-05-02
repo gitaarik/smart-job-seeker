@@ -101,10 +101,9 @@ export async function unshareDevice(
   if ((result.rowCount ?? 0) > 0) {
     // Drop any credentials this owner had shared with the contact if no
     // other devices of theirs remain shared — credentials are unusable
-    // without a device of the owner to run on.
-    await revokeOrphanedCredentialShares(ownerId, sharedWithUserId).catch(
-      () => {},
-    );
+    // without a device of the owner to run on. Errors propagate so the
+    // caller sees the failure rather than silently leaving orphaned shares.
+    await revokeOrphanedCredentialShares(ownerId, sharedWithUserId);
   }
 
   return (result.rowCount ?? 0) > 0;

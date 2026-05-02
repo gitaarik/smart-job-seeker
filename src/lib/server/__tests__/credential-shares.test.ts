@@ -332,6 +332,22 @@ describe("revokeOrphanedCredentialShares", () => {
   });
 });
 
+// ── Cascade error handling ─────────────────────────────────────────────────
+describe("revokeOrphanedCredentialShares — error propagation", () => {
+  it("propagates errors so the caller can retry", async () => {
+    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
+    mockApiKeysFindMany.mockResolvedValueOnce([{ id: 1 }]);
+    mockDeviceSharesFindFirst.mockResolvedValueOnce(null);
+    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
+    mockPlatformProfilesFindMany.mockResolvedValueOnce([{ id: CRED_ID }]);
+    mockDeleteWhere.mockRejectedValueOnce(new Error("DB down"));
+
+    await expect(
+      revokeOrphanedCredentialShares(OWNER, CONTACT),
+    ).rejects.toThrow("DB down");
+  });
+});
+
 // ── revokeAllSharesBetweenContacts ─────────────────────────────────────────
 describe("revokeAllSharesBetweenContacts", () => {
   it("attempts to delete shares in both directions", async () => {
