@@ -7,8 +7,14 @@
 
 import { randomBytes } from "crypto";
 import { db } from "$lib/server/db";
-import { eq, and, desc } from "drizzle-orm";
-import { verification_email_addresses, inbound_emails, search_task_runs, search_tasks } from "$lib/server/db/schema";
+import { and, desc, eq, or } from "drizzle-orm";
+import {
+  inbound_emails,
+  platform_profiles,
+  search_task_runs,
+  search_tasks,
+  verification_email_addresses,
+} from "$lib/server/db/schema";
 import { parseVerificationEmail } from "./verification-parser";
 
 const VERIFY_DOMAIN = "smartjobseeker.com";
@@ -16,7 +22,9 @@ const VERIFY_DOMAIN = "smartjobseeker.com";
 /**
  * Get or create the verification email address for a profile.
  */
-export async function getOrCreateVerificationAddress(profileId: number): Promise<{
+export async function getOrCreateVerificationAddress(
+  profileId: number,
+): Promise<{
   id: number;
   fullAddress: string;
   emailToken: string;
@@ -57,7 +65,9 @@ export async function getOrCreateVerificationAddress(profileId: number): Promise
 /**
  * Regenerate a verification email address token (e.g., if compromised).
  */
-export async function regenerateVerificationAddress(profileId: number): Promise<{
+export async function regenerateVerificationAddress(
+  profileId: number,
+): Promise<{
   fullAddress: string;
   emailToken: string;
 }> {
@@ -122,7 +132,9 @@ export async function processInboundEmail(params: {
       body_html: bodyHtml,
       status: "dropped",
     });
-    console.log(`[verification-relay] Unknown token ${recipientToken} from ${fromAddress}`);
+    console.log(
+      `[verification-relay] Unknown token ${recipientToken} from ${fromAddress}`,
+    );
     return { success: false, message: "Unknown verification email token" };
   }
 
@@ -137,27 +149,55 @@ export async function processInboundEmail(params: {
       body_html: bodyHtml,
       status: "dropped",
     });
-    console.log(`[verification-relay] Disabled address for profile ${verifyAddr.profile_id} from ${fromAddress}`);
-    return { success: false, message: "Verification email address is disabled" };
+    console.log(
+      `[verification-relay] Disabled address for profile ${verifyAddr.profile_id} from ${fromAddress}`,
+    );
+    return {
+      success: false,
+      message: "Verification email address is disabled",
+    };
   }
 
   const profileId = verifyAddr.profile_id;
 
   // Update last_used_at
-  await db.update(verification_email_addresses).set({ last_used_at: new Date() })
+  await db.update(verification_email_addresses).set({
+    last_used_at: new Date(),
+  })
     .where(eq(verification_email_addresses.id, verifyAddr.id));
 
-  // 2. Find an active blocked run for this profile
+  // 2. Find an active blocked run for this profile.
+  //
+  // The run can be either:
+  //   (a) on a task this profile owns (the normal case), OR
+  //   (b) a contact's task that uses one of THIS profile's credentials via
+  //       credential sharing — the credential owner forwards the verification
+  //       email from their account, so the relay must match by the credential's
+  //       profile_id, not the run's profile_id.
+  //
+  // Security: we only match (b) when the task references a platform_profile
+  // belonging to the verifying profile. The contact never sees the verify
+  // address or the email — only the scraper, server-side.
   const blockedRunResults = await db
     .select({
       id: search_task_runs.id,
       started_at: search_task_runs.started_at,
     })
     .from(search_task_runs)
-    .innerJoin(search_tasks, eq(search_task_runs.search_task_id, search_tasks.id))
+    .innerJoin(
+      search_tasks,
+      eq(search_task_runs.search_task_id, search_tasks.id),
+    )
+    .leftJoin(
+      platform_profiles,
+      eq(platform_profiles.id, search_tasks.platform_profile_id),
+    )
     .where(and(
       eq(search_task_runs.status, "blocked"),
-      eq(search_tasks.profile_id, profileId),
+      or(
+        eq(search_tasks.profile_id, profileId),
+        eq(platform_profiles.profile_id, profileId),
+      ),
     ))
     .orderBy(desc(search_task_runs.started_at))
     .limit(1);
@@ -184,8 +224,12 @@ export async function processInboundEmail(params: {
 
   console.log(
     `[verification-relay] Email received for profile ${profileId}` +
-    ` from ${fromAddress}: code=${parsed?.code || "none"}, link=${parsed?.link ? "yes" : "none"}` +
-    ` (confidence: ${parsed?.confidence || "none"}, run: ${blockedRun?.id || "none"})`,
+      ` from ${fromAddress}: code=${parsed?.code || "none"}, link=${
+        parsed?.link ? "yes" : "none"
+      }` +
+      ` (confidence: ${parsed?.confidence || "none"}, run: ${
+        blockedRun?.id || "none"
+      })`,
   );
 
   // 5. If we found a blocked run AND extracted verification data, inject it
@@ -201,7 +245,10 @@ export async function processInboundEmail(params: {
     }).where(eq(search_task_runs.id, blockedRun.id));
 
     // Mark email as applied
-    await db.update(inbound_emails).set({ status: "applied", applied_at: new Date() })
+    await db.update(inbound_emails).set({
+      status: "applied",
+      applied_at: new Date(),
+    })
       .where(eq(inbound_emails.id, emailRecord.id));
 
     return {
