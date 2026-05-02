@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.13] - 2026-05-02
+
+13 commits since v0.5.12.
+
+**Added**
+- `trigger-run` CLI command for queueing scrapes without authentication
+
+**Changed**
+- Improved scraper robustness with better click recovery and page state handling
+- Optimized page recovery by remapping titles instead of full reload
+- Enhanced click handler with button parameters and improved strategy dispatch
+- Refactored to use Playwright exclusively for middle-click operations
+- Rebased production environment to use preview encryption keypair
+
+**Fixed**
+- Fixed platform detection for country-code subdomains
+- Fixed crash on page 2 with improved recovery handling
+- Fixed navigation preference in search results
+
 ## [0.5.12] - 2026-05-01
 
 3 commits since v0.5.11.
