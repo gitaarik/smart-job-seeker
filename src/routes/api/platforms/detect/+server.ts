@@ -1,8 +1,12 @@
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, or, ilike, isNotNull } from "drizzle-orm";
-import { profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
+import { and, eq, ilike, isNotNull, or } from "drizzle-orm";
+import {
+  job_platforms,
+  platform_profiles,
+  profiles,
+} from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
@@ -49,11 +53,20 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     throw error(400, "Invalid URL");
   }
 
-  // Try to find existing platform by URL/domain
+  // Build domain candidates from most specific to least, dropping leading
+  // subdomain labels. For "nl.indeed.com" this yields
+  // ["nl.indeed.com", "indeed.com"], so country-code subdomains still match a
+  // platform registered with the bare domain. We stop before the bare TLD to
+  // avoid matching every .nl or .com platform.
+  const labels = domain.split(".");
+  const domainCandidates: string[] = [];
+  for (let i = 0; i < Math.max(labels.length - 1, 1); i++) {
+    domainCandidates.push(labels.slice(i).join("."));
+  }
+
   const existingPlatform = await db.query.job_platforms.findFirst({
     where: or(
-      ilike(job_platforms.url, `%${domain}%`),
-      ilike(job_platforms.key, `%${domain.split(".")[0]}%`),
+      ...domainCandidates.map((d) => ilike(job_platforms.url, `%${d}%`)),
     ),
   });
 
@@ -101,7 +114,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
     try {
       const metadataResponse = await fetch(
-        `${url.origin}/api/platforms/fetch-metadata?url=${encodeURIComponent(baseUrl)}`,
+        `${url.origin}/api/platforms/fetch-metadata?url=${
+          encodeURIComponent(baseUrl)
+        }`,
         {
           headers: {
             Cookie: url.searchParams.get("cookie") || "",
