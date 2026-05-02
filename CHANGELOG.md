@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.16] - 2026-05-02
+
+1 commit since v0.5.15.
+
+### Fixed
+
+- Scraper now includes platform_profile_id when loading search tasks
+
 ## [0.5.15] - 2026-05-02
 
 2 commits since v0.5.14.
