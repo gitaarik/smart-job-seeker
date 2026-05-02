@@ -7,6 +7,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { api_keys, device_shares, users } from "$lib/server/db/schema";
 import { areContacts } from "$lib/server/contacts";
 import { createNotification } from "$lib/server/notifications";
+import { revokeOrphanedCredentialShares } from "$lib/server/credential-shares";
 
 /**
  * Share a device with a user (must be an accepted contact)
@@ -96,6 +97,15 @@ export async function unshareDevice(
       eq(device_shares.shared_with, sharedWithUserId),
     ),
   );
+
+  if ((result.rowCount ?? 0) > 0) {
+    // Drop any credentials this owner had shared with the contact if no
+    // other devices of theirs remain shared — credentials are unusable
+    // without a device of the owner to run on.
+    await revokeOrphanedCredentialShares(ownerId, sharedWithUserId).catch(
+      () => {},
+    );
+  }
 
   return (result.rowCount ?? 0) > 0;
 }

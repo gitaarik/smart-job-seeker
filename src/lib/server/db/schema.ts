@@ -2350,6 +2350,27 @@ export const contacts = pgTable("contacts", {
 		}).onDelete("cascade"),
 ]);
 
+export const credential_shares = pgTable("credential_shares", {
+	id: serial().primaryKey().notNull(),
+	platform_profile_id: integer().notNull(),
+	shared_with: text().notNull(),
+	date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	uniqueIndex("credential_shares_pp_user_unique").using("btree", table.platform_profile_id.asc().nullsLast().op("int4_ops"), table.shared_with.asc().nullsLast().op("text_ops")),
+	index("idx_credential_shares_pp").using("btree", table.platform_profile_id.asc().nullsLast().op("int4_ops")),
+	index("idx_credential_shares_shared_with").using("btree", table.shared_with.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.shared_with],
+			foreignColumns: [users.id],
+			name: "credential_shares_shared_with_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.platform_profile_id],
+			foreignColumns: [platform_profiles.id],
+			name: "credential_shares_platform_profile_id_fkey"
+		}).onDelete("cascade"),
+]);
+
 export const device_shares = pgTable("device_shares", {
 	id: serial().primaryKey().notNull(),
 	api_key_id: integer().notNull(),

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { ai_prompts, applications, application_activity_log, applications_files, files, profiles, collected_data, config, education, highlights, match_config, ai_chats, job_matches, jobs, job_resources, search_tasks, search_task_runs, os_contributions, job_platforms, platform_profiles, languages, search_task_run_items, project_stories, profile_exports, references, scraper_logs, salary_expectations, profile_versions, side_projects, side_project_technologies, work_experiences, work_experience_achievements, users, sessions, work_experience_projects, work_experience_technologies, tech_skill_categories, work_experience_project_technologies, tech_skills, tech_skill_types, accounts, cheat_sheets, profile_version_extensions, side_project_achievements, api_keys, ai_chat_templates, search_tasks_job_sites, scraper_agent_sessions, scraper_agent_iterations, job_statuses, application_letters, application_questions, application_status_log, letter_versions, job_match_history, job_importers, user_feedback, user_feedback_files, billing_customers, subscriptions, credit_purchases, usage_counters, verification_email_addresses, credit_balances, credit_transactions, certificates, inbound_emails, contacts, device_shares, feedback_replies, user_feedback_subscribers } from "./schema";
+import { ai_prompts, applications, application_activity_log, applications_files, files, profiles, collected_data, config, education, highlights, match_config, ai_chats, job_matches, jobs, job_resources, search_tasks, search_task_runs, os_contributions, job_platforms, platform_profiles, languages, search_task_run_items, project_stories, profile_exports, references, scraper_logs, salary_expectations, profile_versions, side_projects, side_project_technologies, work_experiences, work_experience_achievements, users, sessions, work_experience_projects, work_experience_technologies, tech_skill_categories, work_experience_project_technologies, tech_skills, tech_skill_types, accounts, cheat_sheets, profile_version_extensions, side_project_achievements, api_keys, ai_chat_templates, search_tasks_job_sites, scraper_agent_sessions, scraper_agent_iterations, job_statuses, application_letters, application_questions, application_status_log, letter_versions, job_match_history, job_importers, user_feedback, user_feedback_files, billing_customers, subscriptions, credit_purchases, usage_counters, verification_email_addresses, credit_balances, credit_transactions, certificates, inbound_emails, contacts, credential_shares, device_shares, feedback_replies, user_feedback_subscribers } from "./schema";
 
 
 export const ai_promptsRelations = relations(ai_prompts, ({one}) => ({
@@ -275,6 +275,19 @@ export const platform_profilesRelations = relations(platform_profiles, ({one, ma
 		references: [profiles.id]
 	}),
 	search_tasks: many(search_tasks),
+	credential_shares: many(credential_shares),
+}));
+
+
+export const credential_sharesRelations = relations(credential_shares, ({one}) => ({
+	user: one(users, {
+		fields: [credential_shares.shared_with],
+		references: [users.id]
+	}),
+	platform_profile: one(platform_profiles, {
+		fields: [credential_shares.platform_profile_id],
+		references: [platform_profiles.id]
+	}),
 }));
 
 

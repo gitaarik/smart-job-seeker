@@ -1,11 +1,20 @@
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { search_tasks, platform_profiles, users } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { searchTaskUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
+import {
+  api_keys,
+  platform_profiles,
+  search_tasks,
+  users,
+} from "$lib/server/db/schema";
+import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
+import {
+  parseBody,
+  searchTaskUpdateSchema,
+} from "$lib/server/validation/api-schemas";
 import { hasDeviceAccess } from "$lib/server/device-shares";
+import { hasCredentialAccess } from "$lib/server/credential-shares";
 import { encryptCredential } from "$lib/server/auth/crypto";
 
 /**
@@ -14,18 +23,24 @@ import { encryptCredential } from "$lib/server/auth/crypto";
  * in the given timezone (today if still upcoming, otherwise tomorrow).
  */
 function calculateNextScheduledRun(
-  _intervalHours: number, preferredHour: number, timezone: string,
+  _intervalHours: number,
+  preferredHour: number,
+  timezone: string,
 ): Date {
   const now = new Date();
 
   // Get current date parts in the user's timezone
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
   });
   const parts = formatter.formatToParts(now);
-  const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
+  const get = (type: string) =>
+    parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
 
   const tzYear = get("year");
   const tzMonth = get("month");
@@ -34,11 +49,22 @@ function calculateNextScheduledRun(
 
   // Build "today at preferred hour" in the user's timezone using a temp date trick:
   // Create an ISO-like string and resolve via the timezone offset
-  const buildDateInTz = (year: number, month: number, day: number, hour: number): Date => {
+  const buildDateInTz = (
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+  ): Date => {
     // Use Intl to find the UTC offset for this specific date/time in the timezone
     const probe = new Date(Date.UTC(year, month - 1, day, hour));
-    const utcStr = probe.toLocaleString("en-US", { timeZone: "UTC", hour12: false });
-    const tzStr = probe.toLocaleString("en-US", { timeZone: timezone, hour12: false });
+    const utcStr = probe.toLocaleString("en-US", {
+      timeZone: "UTC",
+      hour12: false,
+    });
+    const tzStr = probe.toLocaleString("en-US", {
+      timeZone: timezone,
+      hour12: false,
+    });
     const utcDate = new Date(utcStr);
     const tzDate = new Date(tzStr);
     const offsetMs = utcDate.getTime() - tzDate.getTime();
@@ -50,7 +76,12 @@ function calculateNextScheduledRun(
   // If preferred hour already passed today, schedule for tomorrow
   if (nextRun.getTime() <= now.getTime()) {
     const tomorrow = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay + 1));
-    nextRun = buildDateInTz(tomorrow.getUTCFullYear(), tomorrow.getUTCMonth() + 1, tomorrow.getUTCDate(), preferredHour);
+    nextRun = buildDateInTz(
+      tomorrow.getUTCFullYear(),
+      tomorrow.getUTCMonth() + 1,
+      tomorrow.getUTCDate(),
+      preferredHour,
+    );
   }
 
   return nextRun;
@@ -80,18 +111,42 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(searchTaskUpdateSchema, await request.json());
 
-  const data: { note?: string | null; max_jobs?: number | null; skip_existing?: boolean; stop_after_duplicates?: number | null; skip_first?: number | null; platform_profile_id?: number | null; search_url?: string | null; search_term?: string | null; browser_provider?: string | null; login_mode?: string; keep_minimized?: boolean; schedule_interval_hours?: number | null; schedule_preferred_hour?: number; next_scheduled_run?: Date | null; tunnel_api_key?: number | null } = {};
+  const data: {
+    note?: string | null;
+    max_jobs?: number | null;
+    skip_existing?: boolean;
+    stop_after_duplicates?: number | null;
+    skip_first?: number | null;
+    platform_profile_id?: number | null;
+    search_url?: string | null;
+    search_term?: string | null;
+    browser_provider?: string | null;
+    login_mode?: string;
+    keep_minimized?: boolean;
+    schedule_interval_hours?: number | null;
+    schedule_preferred_hour?: number;
+    next_scheduled_run?: Date | null;
+    tunnel_api_key?: number | null;
+  } = {};
 
   if (body.note !== undefined) data.note = body.note || null;
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
-  if (body.search_term !== undefined) data.search_term = body.search_term?.trim() || null;
+  if (body.search_term !== undefined) {
+    data.search_term = body.search_term?.trim() || null;
+  }
   if (body.max_jobs !== undefined) data.max_jobs = body.max_jobs;
   if (body.skip_existing !== undefined) data.skip_existing = body.skip_existing;
-  if (body.stop_after_duplicates !== undefined) data.stop_after_duplicates = body.stop_after_duplicates;
+  if (body.stop_after_duplicates !== undefined) {
+    data.stop_after_duplicates = body.stop_after_duplicates;
+  }
   if (body.skip_first !== undefined) data.skip_first = body.skip_first;
   if (body.login_mode !== undefined) data.login_mode = body.login_mode;
-  if (body.browser_provider !== undefined) data.browser_provider = body.browser_provider;
-  if (body.keep_minimized !== undefined) data.keep_minimized = body.keep_minimized;
+  if (body.browser_provider !== undefined) {
+    data.browser_provider = body.browser_provider;
+  }
+  if (body.keep_minimized !== undefined) {
+    data.keep_minimized = body.keep_minimized;
+  }
   if (body.tunnel_api_key !== undefined) {
     if (body.tunnel_api_key !== null) {
       const canAccess = await hasDeviceAccess(body.tunnel_api_key, user.id);
@@ -111,17 +166,23 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       data.next_scheduled_run = null;
     } else {
       // Calculate next run based on preferred hour in user's timezone
-      const preferredHour = body.schedule_preferred_hour ?? searchTask.schedule_preferred_hour ?? 9;
+      const preferredHour = body.schedule_preferred_hour ??
+        searchTask.schedule_preferred_hour ?? 9;
       const userRecord = await db.query.users.findFirst({
         where: eq(users.id, user.id),
         columns: { timezone: true },
       });
       const tz = userRecord?.timezone || "UTC";
       data.next_scheduled_run = calculateNextScheduledRun(
-        body.schedule_interval_hours, preferredHour, tz,
+        body.schedule_interval_hours,
+        preferredHour,
+        tz,
       );
     }
-  } else if (body.schedule_preferred_hour !== undefined && searchTask.schedule_interval_hours) {
+  } else if (
+    body.schedule_preferred_hour !== undefined &&
+    searchTask.schedule_interval_hours
+  ) {
     // Only preferred hour changed, recalculate next run
     const userRecord = await db.query.users.findFirst({
       where: eq(users.id, user.id),
@@ -129,7 +190,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     });
     const tz = userRecord?.timezone || "UTC";
     data.next_scheduled_run = calculateNextScheduledRun(
-      searchTask.schedule_interval_hours, body.schedule_preferred_hour, tz,
+      searchTask.schedule_interval_hours,
+      body.schedule_preferred_hour,
+      tz,
     );
   }
 
@@ -144,24 +207,66 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       date_created: new Date(),
     }).returning();
     data.platform_profile_id = newCred.id;
-  }
-  // Or select existing credential / clear credential
+  } // Or select existing credential / clear credential
   else if (body.platform_profile_id !== undefined) {
     if (body.platform_profile_id === null) {
       data.platform_profile_id = null;
     } else {
-      // Verify the credential belongs to this user and platform
+      // Either the user owns the credential, or it's been shared with them.
+      // In both cases, the credential's platform must match the task's.
       const cred = await db.query.platform_profiles.findFirst({
-        where: (t, { and, eq }) => and(
-          eq(t.id, body.platform_profile_id!),
-          eq(t.profile_id, searchTask.profile_id),
-          ...(searchTask.platform_id ? [eq(t.platform_id, searchTask.platform_id)] : []),
-        ),
+        where: eq(platform_profiles.id, body.platform_profile_id),
+        columns: { id: true, platform_id: true, profile_id: true },
       });
-      if (!cred) {
-        throw error(404, "Credential not found");
+      if (!cred) throw error(404, "Credential not found");
+      if (
+        searchTask.platform_id && cred.platform_id !== searchTask.platform_id
+      ) {
+        throw error(400, "Credential is for a different platform");
+      }
+      const canAccess = await hasCredentialAccess(cred.id, user.id);
+      if (!canAccess) {
+        throw error(403, "You don't have access to this credential");
       }
       data.platform_profile_id = body.platform_profile_id;
+    }
+  }
+
+  // Enforce credential/device coupling: a credential shared with the user can
+  // only run on devices owned by that credential's owner. Compute the final
+  // (post-update) state of both fields and validate.
+  const finalCredId = data.platform_profile_id !== undefined
+    ? data.platform_profile_id
+    : searchTask.platform_profile_id ?? null;
+  const finalDeviceId = data.tunnel_api_key !== undefined
+    ? data.tunnel_api_key
+    : searchTask.tunnel_api_key ?? null;
+  if (finalCredId !== null) {
+    const cred = await db.query.platform_profiles.findFirst({
+      where: eq(platform_profiles.id, finalCredId),
+      columns: { id: true },
+      with: { profile: { columns: { user_id: true } } },
+    });
+    const credOwner = cred?.profile.user_id ?? null;
+    if (credOwner && credOwner !== user.id) {
+      // Shared credential — device must be owned by the credential owner.
+      if (finalDeviceId === null) {
+        throw error(
+          400,
+          "Shared credentials require a device owned by the credential owner",
+        );
+      }
+      const key = await db.query.api_keys.findFirst({
+        where: eq(api_keys.id, finalDeviceId),
+        columns: { id: true },
+        with: { profile: { columns: { user_id: true } } },
+      });
+      if (key?.profile.user_id !== credOwner) {
+        throw error(
+          400,
+          "This credential can only be used with the owner's devices",
+        );
+      }
     }
   }
 

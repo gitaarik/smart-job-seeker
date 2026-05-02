@@ -3,7 +3,7 @@
  */
 
 import { db } from "$lib/server/db";
-import { eq, and, or, inArray, desc } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { contacts, users } from "$lib/server/db/schema";
 import { createNotification } from "$lib/server/notifications";
 
@@ -38,7 +38,9 @@ export async function listContacts(userId: string): Promise<ContactWithUser[]> {
         date_created: true,
       },
       with: {
-        user_recipient_id: { columns: { id: true, name: true, email: true, image: true } },
+        user_recipient_id: {
+          columns: { id: true, name: true, email: true, image: true },
+        },
       },
       orderBy: desc(contacts.date_created),
     }),
@@ -53,7 +55,9 @@ export async function listContacts(userId: string): Promise<ContactWithUser[]> {
         date_created: true,
       },
       with: {
-        user_requester_id: { columns: { id: true, name: true, email: true, image: true } },
+        user_requester_id: {
+          columns: { id: true, name: true, email: true, image: true },
+        },
       },
       orderBy: desc(contacts.date_created),
     }),
@@ -109,8 +113,14 @@ export async function sendContactRequest(
   // Check if contact already exists (in either direction)
   const existing = await db.query.contacts.findFirst({
     where: or(
-      and(eq(contacts.requester_id, requesterId), eq(contacts.recipient_id, recipient.id)),
-      and(eq(contacts.requester_id, recipient.id), eq(contacts.recipient_id, requesterId)),
+      and(
+        eq(contacts.requester_id, requesterId),
+        eq(contacts.recipient_id, recipient.id),
+      ),
+      and(
+        eq(contacts.requester_id, recipient.id),
+        eq(contacts.recipient_id, requesterId),
+      ),
     ),
   });
 
@@ -175,7 +185,10 @@ export async function sendContactRequest(
 /**
  * Accept a contact request (only the recipient can accept)
  */
-export async function acceptContact(contactId: number, userId: string): Promise<boolean> {
+export async function acceptContact(
+  contactId: number,
+  userId: string,
+): Promise<boolean> {
   const result = await db.update(contacts).set({
     status: "accepted",
     date_updated: new Date(),
@@ -190,7 +203,10 @@ export async function acceptContact(contactId: number, userId: string): Promise<
 /**
  * Decline a contact request (only the recipient can decline)
  */
-export async function declineContact(contactId: number, userId: string): Promise<boolean> {
+export async function declineContact(
+  contactId: number,
+  userId: string,
+): Promise<boolean> {
   const result = await db.update(contacts).set({
     status: "declined",
     date_updated: new Date(),
@@ -203,20 +219,47 @@ export async function declineContact(contactId: number, userId: string): Promise
 }
 
 /**
- * Remove a contact (either user can remove)
+ * Remove a contact (either user can remove). Cascades to any device or
+ * credential shares between the two users in either direction — those are
+ * meaningless once the contact relationship is gone.
  */
-export async function removeContact(contactId: number, userId: string): Promise<boolean> {
+export async function removeContact(
+  contactId: number,
+  userId: string,
+): Promise<boolean> {
+  const contact = await db.query.contacts.findFirst({
+    where: and(
+      eq(contacts.id, contactId),
+      or(eq(contacts.requester_id, userId), eq(contacts.recipient_id, userId)),
+    ),
+    columns: { requester_id: true, recipient_id: true },
+  });
+  if (!contact) return false;
+
   const result = await db.delete(contacts).where(and(
     eq(contacts.id, contactId),
     or(eq(contacts.requester_id, userId), eq(contacts.recipient_id, userId)),
   ));
-  return (result.rowCount ?? 0) > 0;
+  const removed = (result.rowCount ?? 0) > 0;
+  if (removed) {
+    const { revokeAllSharesBetweenContacts } = await import(
+      "$lib/server/credential-shares"
+    );
+    await revokeAllSharesBetweenContacts(
+      contact.requester_id,
+      contact.recipient_id,
+    ).catch(() => {});
+  }
+  return removed;
 }
 
 /**
  * Check if two users are accepted contacts
  */
-export async function areContacts(userA: string, userB: string): Promise<boolean> {
+export async function areContacts(
+  userA: string,
+  userB: string,
+): Promise<boolean> {
   const contact = await db.query.contacts.findFirst({
     where: and(
       eq(contacts.status, "accepted"),
