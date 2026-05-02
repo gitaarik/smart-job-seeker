@@ -8,8 +8,8 @@
  * Run: npm run test:e2e
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
-import { request, expectPage, signIn, clearSession, BASE_URL } from "./helpers";
+import { beforeAll, describe, expect, it } from "vitest";
+import { BASE_URL, clearSession, expectPage, request, signIn } from "./helpers";
 
 beforeAll(async () => {
   // Verify the dev server is reachable before running any tests
@@ -23,7 +23,7 @@ beforeAll(async () => {
   } catch (error) {
     throw new Error(
       `Dev server not reachable at ${BASE_URL}. ` +
-      `Make sure the Docker dev stack is running (npm start from cloud/).`,
+        `Make sure the Docker dev stack is running (npm start from cloud/).`,
     );
   }
 });
@@ -125,8 +125,8 @@ describe("API endpoints", () => {
     expect([200, 400]).toContain(res.status);
   });
 
-  it("GET /api/tunnel returns data", async () => {
-    const res = await request("/api/tunnel?profileId=12");
+  it("GET /api/tunnel/status returns data", async () => {
+    const res = await request("/api/tunnel/status?profileId=12");
     expect([200, 400]).toContain(res.status);
   });
 

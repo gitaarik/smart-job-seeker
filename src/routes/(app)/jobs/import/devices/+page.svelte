@@ -90,11 +90,15 @@
     lastHeartbeat: string;
     clientVersion: string;
   }
+  interface PreferredDevice extends DeviceStatus {
+    isShared: boolean;
+    ownerLabel: string | null;
+  }
   let connectedDevices = $state<DeviceStatus[]>([]);
+  let sharedDeviceStatuses = $state<Map<number, DeviceStatus>>(new Map());
+  let preferredDevice = $state<PreferredDevice | null>(null);
   let tunnelStatus = $state<string>("checking");
   let statusPollInterval: ReturnType<typeof setInterval> | null = null;
-
-  let tunnelConnected = $derived(connectedDevices.length > 0);
 
   // Derive tunnel URL from current host
   let tunnelUrl = $derived(
@@ -107,9 +111,13 @@
     return connectedDevices.find((d) => d.apiKeyId === apiKeyId);
   }
 
-  async function pollTunnelStatus() {
+  function getSharedDeviceStatus(apiKeyId: number): DeviceStatus | undefined {
+    return sharedDeviceStatuses.get(apiKeyId);
+  }
+
+  async function pollOwnedTunnelStatus() {
     try {
-      const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
+      const res = await fetch(`/api/tunnel/status?profileId=${data.profileId}`);
       const status = await res.json();
       connectedDevices = status.devices || [];
       tunnelStatus = status.connected ? "connected" : "disconnected";
@@ -117,6 +125,56 @@
       tunnelStatus = "unavailable";
       connectedDevices = [];
     }
+  }
+
+  // Shared devices each belong to a different owner profile, so poll them per-key.
+  async function pollSharedDeviceStatuses() {
+    if (sharedDevices.length === 0) {
+      if (sharedDeviceStatuses.size > 0) sharedDeviceStatuses = new Map();
+      return;
+    }
+    const results = await Promise.all(
+      sharedDevices.map(async (s) => {
+        try {
+          const res = await fetch(
+            `/api/tunnel/status?apiKeyId=${s.api_key.id}`,
+          );
+          if (!res.ok) return [s.api_key.id, undefined] as const;
+          const body = await res.json();
+          return [
+            s.api_key.id,
+            (body.devices || [])[0] as DeviceStatus | undefined,
+          ] as const;
+        } catch {
+          return [s.api_key.id, undefined] as const;
+        }
+      }),
+    );
+    const next = new Map<number, DeviceStatus>();
+    for (const [id, dev] of results) {
+      if (dev) next.set(id, dev);
+    }
+    sharedDeviceStatuses = next;
+  }
+
+  async function pollPreferredDevice() {
+    try {
+      const res = await fetch(
+        `/api/tunnel/status/preferred?profileId=${data.profileId}`,
+      );
+      const result = await res.json();
+      preferredDevice = result.device ?? null;
+    } catch {
+      preferredDevice = null;
+    }
+  }
+
+  async function pollTunnelStatus() {
+    await Promise.all([
+      pollOwnedTunnelStatus(),
+      pollSharedDeviceStatuses(),
+      pollPreferredDevice(),
+    ]);
   }
 
   onMount(() => {
@@ -345,31 +403,28 @@
         <FontAwesomeIcon
           icon={faDesktop}
           class={`w-4 h-4 ${
-            tunnelConnected ? "text-green-500" : "text-[var(--dash-text-muted)]"
+            preferredDevice ? "text-green-500" : "text-[var(--dash-text-muted)]"
           }`}
         />
         <div>
           <p class="font-medium text-[var(--dash-text)]">
             {#if tunnelStatus === "checking"}
               Checking connection...
-            {:else if connectedDevices.length > 1}
-              {connectedDevices.length} Devices Connected
-            {:else if connectedDevices.length === 1}
-              {connectedDevices[0].apiKeyName} Connected
+            {:else if preferredDevice}
+              {preferredDevice.apiKeyName} Connected
             {:else}
               No Device Connected
             {/if}
           </p>
-          {#if connectedDevices.length === 1}
+          {#if preferredDevice}
             <p class="text-sm text-[var(--dash-text-muted)]">
-              v{connectedDevices[0].clientVersion}
+              v{preferredDevice.clientVersion}
               &middot; connected {
-                formatRelativeTime(connectedDevices[0].connectedAt)
+                formatRelativeTime(preferredDevice.connectedAt)
               }
-            </p>
-          {:else if connectedDevices.length > 1}
-            <p class="text-sm text-[var(--dash-text-muted)]">
-              {connectedDevices.map((d) => d.apiKeyName).join(", ")}
+              {#if preferredDevice.isShared && preferredDevice.ownerLabel}
+                &middot; shared by {preferredDevice.ownerLabel}
+              {/if}
             </p>
           {:else if tunnelStatus !== "checking"}
             <p class="text-sm text-[var(--dash-text-muted)]">
@@ -1027,19 +1082,39 @@ volumes:
         {#each sharedDevices as share (share.id)}
           {@const ownerLabel = share.api_key.owner?.name || share.api_key.owner?.email ||
           "Unknown"}
+          {@const sharedStatus = getSharedDeviceStatus(share.api_key.id)}
           <div class="p-4 flex items-center gap-3">
-            <FontAwesomeIcon
-              icon={faDesktop}
-              class="w-4 h-4 text-[var(--dash-text-muted)] flex-shrink-0"
-            />
+            <div
+              class={`w-2 h-2 rounded-full flex-shrink-0 ${
+                sharedStatus ? "bg-[var(--dash-success)]" : "bg-[var(--dash-text-muted)]"
+              }`}
+            >
+            </div>
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-[var(--dash-text)] truncate">
-                {share.api_key.name}
-              </p>
+              <div
+                class="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2"
+              >
+                <p class="font-medium text-[var(--dash-text)] truncate">
+                  {share.api_key.name}
+                </p>
+                {#if sharedStatus}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] w-fit"
+                  >
+                    Connected
+                  </span>
+                {/if}
+              </div>
               <p class="text-xs text-[var(--dash-text-muted)]">
-                Shared by {ownerLabel}
-                {#if share.date_created}
-                  &middot; {formatDate(share.date_created)}
+                {#if sharedStatus}
+                  v{sharedStatus.clientVersion} &middot; connected {
+                    formatRelativeTime(sharedStatus.connectedAt)
+                  } &middot; shared by {ownerLabel}
+                {:else}
+                  Shared by {ownerLabel}
+                  {#if share.date_created}
+                    &middot; {formatDate(share.date_created)}
+                  {/if}
                 {/if}
               </p>
             </div>

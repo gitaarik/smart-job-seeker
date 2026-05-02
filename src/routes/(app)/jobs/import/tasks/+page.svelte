@@ -12,8 +12,8 @@
     faExclamationTriangle,
     faPlus,
     faSearch,
-    faTimes,
     faSortAmountDown,
+    faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import { getSearchTaskStatusIcon } from "$lib/search-task-status";
   import { searchTaskDisplayName } from "$lib/format";
@@ -76,9 +76,20 @@
     }
   });
 
-  // Desktop scraper connection status
-  let desktopConnected = $state<boolean | null>(null); // null = checking
-  let connectedDeviceNames = $state<string[]>([]);
+  // Desktop scraper connection status — the device that would be used by default.
+  // Prefers user's own connected devices, then connected devices shared with them.
+  interface PreferredDevice {
+    apiKeyId: number;
+    apiKeyName: string;
+    connectedAt: string;
+    lastHeartbeat: string;
+    clientVersion: string;
+    isShared: boolean;
+    ownerLabel: string | null;
+  }
+  let preferredDevice = $state<PreferredDevice | null>(null);
+  let desktopStatusChecked = $state(false);
+  let desktopConnected = $derived(preferredDevice !== null);
 
   let anyTaskUsesDesktop = $derived(
     searchTasks.some((s) => s.browser_provider === "tunnel"),
@@ -86,13 +97,15 @@
 
   async function checkDesktopStatus() {
     try {
-      const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
+      const res = await fetch(
+        `/api/tunnel/status/preferred?profileId=${data.profileId}`,
+      );
       const result = await res.json();
-      desktopConnected = result.connected === true;
-      connectedDeviceNames = (result.devices ?? []).map((d: { apiKeyName: string }) => d.apiKeyName);
+      preferredDevice = result.device ?? null;
     } catch {
-      desktopConnected = false;
-      connectedDeviceNames = [];
+      preferredDevice = null;
+    } finally {
+      desktopStatusChecked = true;
     }
   }
 
@@ -132,8 +145,13 @@
   // Debounce timer
   let urlDebounce: ReturnType<typeof setTimeout> | null = null;
 
-  const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
-  const tf = $derived(($page.data as { timeFormat: import('$lib/format-date').TimeFormat }).timeFormat);
+  const tz = $derived(
+    ($page.data as { userTimezone: string | null }).userTimezone || undefined,
+  );
+  const tf = $derived(
+    ($page.data as { timeFormat: import("$lib/format-date").TimeFormat })
+      .timeFormat,
+  );
 
   function formatDate(date: Date | string | null): string {
     return fmtDateTime(date, tf, { timezone: tz || null, fallback: "Never" });
@@ -173,7 +191,12 @@
     const diffDays = Math.floor(diffMs / 86400000);
     if (diffDays === 1) return "Tomorrow";
     if (diffDays < 7) return `In ${diffDays} days`;
-    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: tz });
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      timeZone: tz,
+    });
   }
 
   async function detectPlatformFromUrl(searchUrl: string) {
@@ -286,24 +309,37 @@
 <div class="space-y-4">
   {#if !showAddForm && searchTasks.length > 0}
     <div class="flex items-center gap-4 flex-wrap">
-      {#if desktopConnected !== null && (anyTaskUsesDesktop || desktopConnected)}
+      {#if desktopStatusChecked && (anyTaskUsesDesktop || desktopConnected)}
         <div
           class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]"
         >
           <span
             class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : 'bg-[var(--dash-text-muted)]'}"
           ></span>
-          <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-          {#if desktopConnected}
-            {connectedDeviceNames.join(", ")}
+          <FontAwesomeIcon
+            icon={faDesktop}
+            class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"
+          />
+          {#if preferredDevice}
+            {preferredDevice.apiKeyName}
+            {#if preferredDevice.isShared && preferredDevice.ownerLabel}
+              <span class="text-[var(--dash-text-muted)]">
+                (shared by {preferredDevice.ownerLabel})
+              </span>
+            {/if}
           {:else}
-            No device connected — <a href="/jobs/import/devices" class="underline hover:text-[var(--dash-primary)]">Setup guide</a>
+            No device connected — <a
+              href="/jobs/import/devices"
+              class="underline hover:text-[var(--dash-primary)]"
+            >Setup guide</a>
           {/if}
         </div>
       {/if}
 
       {#if searchTasks.length > 1}
-        <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
+        <div
+          class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]"
+        >
           <FontAwesomeIcon icon={faSortAmountDown} class="w-3 h-3" />
           {#each [
             { value: "added", label: "Date added" },
@@ -313,9 +349,11 @@
             <button
               type="button"
               onclick={() => setSortBy(opt.value as SortOption)}
-              class="px-2 py-0.5 rounded-full transition-colors {sortBy === opt.value
+              class="
+                px-2 py-0.5 rounded-full transition-colors {sortBy === opt.value
                 ? 'bg-[var(--dash-primary)] text-white'
-                : 'bg-[var(--dash-bg)] hover:bg-[var(--dash-border)]'}"
+                : 'bg-[var(--dash-bg)] hover:bg-[var(--dash-border)]'}
+              "
             >
               {opt.label}
             </button>
@@ -371,7 +409,8 @@
           {detectingPlatform}
           {existingCredentials}
           onsearchurlinput={handleSearchUrlInput}
-          timeFormat={($page.data as { timeFormat: import('$lib/format-date').TimeFormat }).timeFormat}
+          timeFormat={($page.data as { timeFormat: import("$lib/format-date").TimeFormat })
+          .timeFormat}
         />
 
         <!-- Optional note -->
@@ -379,7 +418,8 @@
           <h3
             class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
           >
-            Note <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
+            Note <span class="font-normal text-[var(--dash-text-muted)]"
+            >(optional)</span>
           </h3>
           <input
             type="text"
@@ -452,7 +492,8 @@
                 >
                   {search.job_platform?.name || "Search task"}
                   {#if search.note}
-                    <span class="text-[var(--dash-text-secondary)] font-normal">—</span>
+                    <span class="text-[var(--dash-text-secondary)] font-normal"
+                    >—</span>
                     <span
                       class="text-[var(--dash-text-secondary)] text-sm font-normal"
                     >{search.note}</span>
@@ -460,8 +501,12 @@
                 </h3>
                 {#if search.browser_provider === "tunnel"}
                   <span
-                    class={desktopConnected ? 'text-green-500' : desktopConnected === false ? 'text-red-400' : 'text-[var(--dash-text-muted)]'}
-                    title={desktopConnected ? connectedDeviceNames.join(", ") : "No device connected"}
+                    class={desktopConnected
+                    ? "text-green-500"
+                    : desktopStatusChecked
+                    ? "text-red-400"
+                    : "text-[var(--dash-text-muted)]"}
+                    title={preferredDevice ? preferredDevice.apiKeyName : "No device connected"}
                   >
                     <FontAwesomeIcon icon={faDesktop} class="w-3.5 h-3.5" />
                   </span>
@@ -520,10 +565,15 @@
                     class="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 whitespace-nowrap"
                     title="Scheduled auto-run at {h12}:00 {ampm}"
                   >
-                    {days >= 14 ? `Every ${days / 7} weeks`
-                      : days >= 7 ? "Weekly"
-                      : days > 1 ? `Every ${days} days`
-                      : "Daily"} at {h12} {ampm}
+                    {
+                      days >= 14
+                      ? `Every ${days / 7} weeks`
+                      : days >= 7
+                      ? "Weekly"
+                      : days > 1
+                      ? `Every ${days} days`
+                      : "Daily"
+                    } at {h12} {ampm}
                   </span>
                 {/if}
               </div>
@@ -531,17 +581,25 @@
               <!-- Status info -->
               <div class="mt-2 text-xs space-y-1.5">
                 {#if search.status === "queued"}
-                  <div class="text-[var(--dash-text-muted)]">{
-                    search.status_message || "Waiting in queue..."
-                  }</div>
+                  <div class="text-[var(--dash-text-muted)]">
+                    {search.status_message || "Waiting in queue..."}
+                  </div>
                 {:else if search.status === "running"}
-                  <div class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
-                    <Spinner size={statusIcon.iconSize} color="var(--dash-primary)" />
+                  <div
+                    class="flex items-center gap-1 text-[var(--dash-text-secondary)]"
+                  >
+                    <Spinner
+                      size={statusIcon.iconSize}
+                      color="var(--dash-primary)"
+                    />
                     <span>{search.status_message || "Running..."}</span>
                   </div>
                 {:else if search.status === "stopping"}
                   <div class="flex items-center gap-1">
-                    <Spinner size={statusIcon.iconSize} color="var(--dash-error)" />
+                    <Spinner
+                      size={statusIcon.iconSize}
+                      color="var(--dash-error)"
+                    />
                     <span class="text-orange-600">Stopping...</span>
                   </div>
                 {:else if search.status === "blocked"}
@@ -550,7 +608,9 @@
                       icon={statusIcon.icon}
                       class="{statusIcon.iconSize} {statusIcon.colorClass}"
                     />
-                    <span class="text-[var(--dash-warning)]">{search.status_message}</span>
+                    <span class="text-[var(--dash-warning)]">{
+                      search.status_message
+                    }</span>
                   </div>
                 {:else if search.status === "error"}
                   <div class="flex items-center gap-1">
@@ -558,17 +618,24 @@
                       icon={statusIcon.icon}
                       class="{statusIcon.iconSize} {statusIcon.colorClass}"
                     />
-                    <span class="text-[var(--dash-error)]">{search.status_message}</span>
+                    <span class="text-[var(--dash-error)]">{
+                      search.status_message
+                    }</span>
                   </div>
                 {:else if search.status === "partial"}
-                  <div class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
+                  <div
+                    class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]"
+                  >
                     <FontAwesomeIcon
                       icon={statusIcon.icon}
                       class="{statusIcon.iconSize} {statusIcon.colorClass}"
                     />
-                    <span class="font-medium text-[var(--dash-text-secondary)]">Last run</span>
+                    <span class="font-medium text-[var(--dash-text-secondary)]"
+                    >Last run</span>
                     <span>{formatRelativeTime(search.last_run)}</span>
-                    <span class="text-[var(--dash-text-muted)]">— {search.status_message}</span>
+                    <span class="text-[var(--dash-text-muted)]">— {
+                        search.status_message
+                      }</span>
                   </div>
                 {:else if search.status === "cancelled"}
                   <div class="flex items-center gap-1">
@@ -576,16 +643,25 @@
                       icon={statusIcon.icon}
                       class="{statusIcon.iconSize} {statusIcon.colorClass}"
                     />
-                    <span class="text-[var(--dash-text-muted)]">{search.status_message || "Cancelled"}</span>
+                    <span class="text-[var(--dash-text-muted)]">{
+                      search.status_message || "Cancelled"
+                    }</span>
                   </div>
                 {:else if search.last_run}
-                  <div class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
+                  <div
+                    class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]"
+                  >
                     <FontAwesomeIcon
                       icon={statusIcon.icon}
                       class="{statusIcon.iconSize} {statusIcon.colorClass}"
                     />
-                    <span class="font-medium text-[var(--dash-text-secondary)]">Last run</span>
-                    <span>{formatRelativeTime(search.last_run)}{#if search.last_run_jobs_found}{" "}({search.last_run_jobs_found} jobs){/if}</span>
+                    <span class="font-medium text-[var(--dash-text-secondary)]"
+                    >Last run</span>
+                    <span>{
+                        formatRelativeTime(search.last_run)
+                      }{#if search.last_run_jobs_found}{" "}({
+                          search.last_run_jobs_found
+                        } jobs){/if}</span>
                   </div>
                 {:else}
                   <div class="text-[var(--dash-text-muted)]">Never run</div>
@@ -593,9 +669,15 @@
 
                 {#if search.schedule_interval_hours && search.next_scheduled_run}
                   {@const nextRun = new Date(search.next_scheduled_run)}
-                  <div class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
-                    <FontAwesomeIcon icon={faCalendar} class="w-3 h-3 text-[var(--dash-text-muted)]" />
-                    <span class="font-medium text-[var(--dash-text-secondary)]">Next run</span>
+                  <div
+                    class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]"
+                  >
+                    <FontAwesomeIcon
+                      icon={faCalendar}
+                      class="w-3 h-3 text-[var(--dash-text-muted)]"
+                    />
+                    <span class="font-medium text-[var(--dash-text-secondary)]"
+                    >Next run</span>
                     <span>{formatFutureRelativeTime(nextRun)}</span>
                   </div>
                 {/if}

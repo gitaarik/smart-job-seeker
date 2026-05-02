@@ -8,7 +8,12 @@
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
-  import { formatJobType, formatWorkLocation, formatSalaryRange, searchTaskDisplayName } from "$lib/format";
+  import {
+    formatJobType,
+    formatSalaryRange,
+    formatWorkLocation,
+    searchTaskDisplayName,
+  } from "$lib/format";
   import { page } from "$app/stores";
   import { formatDateTime, formatTime as fmtTime } from "$lib/format-date";
   import type { TimeFormat } from "$lib/format-date";
@@ -16,10 +21,11 @@
     faArrowLeft,
     faBuilding,
     faCalendar,
+    faCamera,
     faCheck,
-    faClock,
     faChevronDown,
     faChevronRight,
+    faClock,
     faCloud,
     faCog,
     faCopy,
@@ -36,7 +42,6 @@
     faMapMarkerAlt,
     faMoneyBillWave,
     faPencil,
-    faCamera,
     faPlay,
     faPlus,
     faStop,
@@ -119,28 +124,67 @@
   }
 
   // Desktop scraper connection status
-  let desktopConnected = $state<boolean | null>(null);
+  // - preferredDevice drives the banner and the start-scrape gate (the device
+  //   that would be used by default; own first, then shared).
+  // - connectedDeviceIds powers the per-device "connected" markers in the
+  //   device picker, covering both own and shared devices.
+  interface PreferredDevice {
+    apiKeyId: number;
+    apiKeyName: string;
+    connectedAt: string;
+    lastHeartbeat: string;
+    clientVersion: string;
+    isShared: boolean;
+    ownerLabel: string | null;
+  }
+  let preferredDevice = $state<PreferredDevice | null>(null);
   let connectedDeviceIds = $state<number[]>([]);
-  let connectedDeviceNames = $state<string[]>([]);
+  let desktopStatusChecked = $state(false);
+  let desktopConnected = $derived(preferredDevice !== null);
 
   async function checkDesktopStatus() {
+    const sharedKeyIds = data.apiKeyDevices
+      .filter((d) => d.shared)
+      .map((d) => d.apiKeyId);
     try {
-      const res = await fetch(`/api/tunnel?profileId=${data.profileId}`);
-      const result = await res.json();
-      desktopConnected = result.connected === true;
-      const devices = result.devices ?? [];
-      connectedDeviceIds = devices.map((d: { apiKeyId: number }) => d.apiKeyId);
-      connectedDeviceNames = devices.map((d: { apiKeyName: string }) => d.apiKeyName);
+      const [preferredRes, profileRes, sharedResults] = await Promise.all([
+        fetch(`/api/tunnel/status/preferred?profileId=${data.profileId}`),
+        fetch(`/api/tunnel/status?profileId=${data.profileId}`),
+        Promise.all(
+          sharedKeyIds.map(async (apiKeyId) => {
+            try {
+              const res = await fetch(
+                `/api/tunnel/status?apiKeyId=${apiKeyId}`,
+              );
+              if (!res.ok) return null;
+              const body = await res.json();
+              return (body.devices ?? []).length > 0 ? apiKeyId : null;
+            } catch {
+              return null;
+            }
+          }),
+        ),
+      ]);
+      preferredDevice = (await preferredRes.json()).device ?? null;
+      const profileStatus = await profileRes.json();
+      const ownIds: number[] = (profileStatus.devices ?? []).map(
+        (d: { apiKeyId: number }) => d.apiKeyId,
+      );
+      connectedDeviceIds = [
+        ...ownIds,
+        ...sharedResults.filter((id): id is number => id !== null),
+      ];
     } catch {
-      desktopConnected = false;
+      preferredDevice = null;
       connectedDeviceIds = [];
-      connectedDeviceNames = [];
+    } finally {
+      desktopStatusChecked = true;
     }
   }
 
   // Merge API key devices with live connection status
   let devices = $derived(
-    data.apiKeyDevices.map(d => ({
+    data.apiKeyDevices.map((d) => ({
       ...d,
       connected: connectedDeviceIds.includes(d.apiKeyId),
     })),
@@ -164,7 +208,9 @@
   let typeTextMessage = $state<string | null>(null);
   // Which type-text-area button is currently in flight, so the spinner only
   // shows on the button the user actually clicked.
-  let typeTextAction = $state<"send" | "type" | "submit" | "clear" | null>(null);
+  let typeTextAction = $state<"send" | "type" | "submit" | "clear" | null>(
+    null,
+  );
 
   // Intervention controls overlay (auto-opens when run blocks; user can dismiss)
   let showInterventionControls = $state(false);
@@ -280,7 +326,11 @@
       featuredRunId = runs[0].id; // most recent run (runs are sorted by date desc)
     }
   });
-  let featuredRun = $derived(featuredRunId !== null ? (runs.find((r) => r.id === featuredRunId) ?? null) : null);
+  let featuredRun = $derived(
+    featuredRunId !== null
+      ? (runs.find((r) => r.id === featuredRunId) ?? null)
+      : null,
+  );
   let historyRuns = $derived(runs.filter((r) => r.id !== featuredRunId));
   let logLevelFilter = $state<"debug" | "info" | "warn" | "error">("info");
 
@@ -403,9 +453,14 @@
       const apiKeyParam = searchTask.tunnel_api_key
         ? `?apiKeyId=${searchTask.tunnel_api_key}`
         : "";
-      const res = await fetch(`/api/tunnel/vnc/${data.profileId}${apiKeyParam}`, { method: "POST" });
+      const res = await fetch(
+        `/api/tunnel/vnc/${data.profileId}${apiKeyParam}`,
+        { method: "POST" },
+      );
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Failed to start VNC" }));
+        const err = await res.json().catch(() => ({
+          message: "Failed to start VNC",
+        }));
         vncError = err.message || err.error || "Failed to start VNC";
         return;
       }
@@ -414,7 +469,10 @@
       const host = window.location.host;
       const encrypt = window.location.protocol === "https:" ? 1 : 0;
       const wsPath = `tunnel/vnc/${profileId}?token=${token}`;
-      vncUrl = `/vnc/vnc.html?autoconnect=true&resize=scale&password=secret&host=${host}&path=${encodeURIComponent(wsPath)}&encrypt=${encrypt}`;
+      vncUrl =
+        `/vnc/vnc.html?autoconnect=true&resize=scale&password=secret&host=${host}&path=${
+          encodeURIComponent(wsPath)
+        }&encrypt=${encrypt}`;
       vncEnabled = true;
     } catch {
       vncError = "Failed to connect to VNC";
@@ -448,7 +506,9 @@
       const apiKeyParam = searchTask.tunnel_api_key
         ? `?apiKeyId=${searchTask.tunnel_api_key}`
         : "";
-      const res = await fetch(`/api/tunnel/screencast/${data.profileId}${apiKeyParam}`);
+      const res = await fetch(
+        `/api/tunnel/screencast/${data.profileId}${apiKeyParam}`,
+      );
       if (res.ok && res.status !== 204) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -504,7 +564,10 @@
     const relX = (e.clientX - rect.left - offsetX) / renderW;
     const relY = (e.clientY - rect.top - offsetY) / renderH;
     if (relX < 0 || relX > 1 || relY < 0 || relY > 1) return null;
-    return { x: Math.round(relX * img.naturalWidth), y: Math.round(relY * img.naturalHeight) };
+    return {
+      x: Math.round(relX * img.naturalWidth),
+      y: Math.round(relY * img.naturalHeight),
+    };
   }
 
   function getModifiers(e: MouseEvent | KeyboardEvent): number {
@@ -634,11 +697,16 @@
     if (screenshotSrc) URL.revokeObjectURL(screenshotSrc);
   });
 
-  const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
+  const tz = $derived(
+    ($page.data as { userTimezone: string | null }).userTimezone || undefined,
+  );
   const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
 
   function formatDate(date: Date | string | null): string {
-    return formatDateTime(date, tf, { timezone: tz || null, fallback: "Never" });
+    return formatDateTime(date, tf, {
+      timezone: tz || null,
+      fallback: "Never",
+    });
   }
 
   function formatRelativeTime(date: Date | string | null): string {
@@ -740,8 +808,12 @@
         if (existing.length === 0) {
           runLogs[runId] = data.logs;
         } else {
-          const existingIds = new Set(existing.map((l: { id: number }) => l.id));
-          const newLogs = data.logs.filter((l: { id: number }) => !existingIds.has(l.id));
+          const existingIds = new Set(
+            existing.map((l: { id: number }) => l.id),
+          );
+          const newLogs = data.logs.filter((l: { id: number }) =>
+            !existingIds.has(l.id)
+          );
           if (newLogs.length > 0) {
             runLogs[runId] = [...existing, ...newLogs];
           }
@@ -838,7 +910,11 @@
     return text.substring(0, maxLength) + "...";
   }
 
-  function getItemStatusBg(status: string, wasCreated?: boolean | null, skipExisting?: boolean): string {
+  function getItemStatusBg(
+    status: string,
+    wasCreated?: boolean | null,
+    skipExisting?: boolean,
+  ): string {
     if (status === "completed" && wasCreated === true) {
       return "bg-[var(--dash-success-light)]";
     }
@@ -958,8 +1034,12 @@
           const data = await response.json();
           if (data.logs.length > 0) {
             // Deduplicate by log id to prevent Svelte keyed each errors
-            const existingIds = new Set(existingLogs.map((l: { id: number }) => l.id));
-            const newLogs = data.logs.filter((l: { id: number }) => !existingIds.has(l.id));
+            const existingIds = new Set(
+              existingLogs.map((l: { id: number }) => l.id),
+            );
+            const newLogs = data.logs.filter((l: { id: number }) =>
+              !existingIds.has(l.id)
+            );
             if (newLogs.length > 0) {
               runLogs[runId] = [...existingLogs, ...newLogs];
               scrollLogToBottom(runId);
@@ -1067,7 +1147,9 @@
         await loadRuns();
 
         // Stop polling when scrape is complete (keep polling during "stopping")
-        if (!["running", "blocked", "queued", "stopping"].includes(result.status)) {
+        if (
+          !["running", "blocked", "queued", "stopping"].includes(result.status)
+        ) {
           stopPolling();
           showBrowser = false;
           liveUrl = null;
@@ -1114,7 +1196,9 @@
         return;
       }
 
-      if (result.status === "removed_from_queue" || result.status === "cancelled") {
+      if (
+        result.status === "removed_from_queue" || result.status === "cancelled"
+      ) {
         // Immediate cancellation (was queued, not yet running)
         searchTask.status = "idle";
         searchTask.status_message = "Cancelled by user";
@@ -1147,13 +1231,20 @@
   $effect(() => {
     if (searchTask.status === "stopping") {
       if (!stoppingAt) stoppingAt = Date.now();
-      forceStopTimeout = setTimeout(() => { showForceStop = true; }, 10_000);
+      forceStopTimeout = setTimeout(() => {
+        showForceStop = true;
+      }, 10_000);
     } else {
       stoppingAt = null;
       showForceStop = false;
-      if (forceStopTimeout) { clearTimeout(forceStopTimeout); forceStopTimeout = null; }
+      if (forceStopTimeout) {
+        clearTimeout(forceStopTimeout);
+        forceStopTimeout = null;
+      }
     }
-    return () => { if (forceStopTimeout) clearTimeout(forceStopTimeout); };
+    return () => {
+      if (forceStopTimeout) clearTimeout(forceStopTimeout);
+    };
   });
 
   async function forceStop() {
@@ -1254,9 +1345,7 @@
         return;
       }
 
-      typeTextMessage = submit
-        ? "Typed and submitted"
-        : "Typed successfully";
+      typeTextMessage = submit ? "Typed and submitted" : "Typed successfully";
       typeTextValue = "";
       // Clear success message after a moment
       setTimeout(() => {
@@ -1291,7 +1380,9 @@
         return;
       }
       typeTextMessage = "Submitted";
-      setTimeout(() => { typeTextMessage = null; }, 2000);
+      setTimeout(() => {
+        typeTextMessage = null;
+      }, 2000);
     } catch {
       typeTextMessage = "Failed to submit";
     } finally {
@@ -1320,7 +1411,9 @@
         return;
       }
       typeTextMessage = "Cleared";
-      setTimeout(() => { typeTextMessage = null; }, 2000);
+      setTimeout(() => {
+        typeTextMessage = null;
+      }, 2000);
     } catch {
       typeTextMessage = "Failed to clear";
     } finally {
@@ -1403,7 +1496,8 @@
         clearInterval(desktopPollInterval);
         desktopPollInterval = null;
       }
-      desktopConnected = null;
+      preferredDevice = null;
+      desktopStatusChecked = false;
     }
     return () => {
       if (desktopPollInterval) {
@@ -1436,7 +1530,9 @@
 </script>
 
 {#snippet runDetails(run: Run, standalone: boolean = false)}
-  <div class="{standalone ? 'border border-[var(--dash-border)] rounded-lg overflow-hidden' : 'border-t border-[var(--dash-border)]'} bg-[var(--dash-bg)]">
+  <div
+    class="{standalone ? 'border border-[var(--dash-border)] rounded-lg overflow-hidden' : 'border-t border-[var(--dash-border)]'} bg-[var(--dash-bg)]"
+  >
     <!-- Tab buttons -->
     <div class="flex border-b border-[var(--dash-border)]">
       <button
@@ -1454,9 +1550,8 @@
         Jobs
         {#if runItems[run.id]?.stats}
           <span class="ml-1 text-xs text-[var(--dash-text-muted)]">
-            ({runItems[run.id].stats.new} new / {
-              runItems[run.id].stats.total
-            } total)
+            ({runItems[run.id].stats.new} new / {runItems[run.id].stats.total}
+            total)
           </span>
         {/if}
       </button>
@@ -1476,319 +1571,433 @@
       </button>
     </div>
 
-      <!-- Jobs view -->
-      {#if !runTabView[run.id] || runTabView[run.id] === "jobs"}
-        <div class="flex items-center justify-between px-4 py-2">
-          <div class="flex items-center gap-3">
-            {#if runItems[run.id]?.stats}
-              {@const stats = runItems[run.id].stats}
-              <div class="flex gap-3 text-xs">
-                <span class="text-[var(--dash-text-muted)]">{stats.total} total</span>
-                {#if stats.new > 0}
-                  <span class="text-[var(--dash-success)]">{stats.new} new</span>
-                {/if}
-                {#if stats.existing > 0}
-                  <span class="text-[var(--dash-text-secondary)]">{stats.existing} existing</span>
-                {/if}
-                {#if stats.processing > 0}
-                  <span class="text-[var(--dash-primary)]">{stats.processing} processing</span>
-                {/if}
-                {#if stats.pending > 0}
-                  <span class="text-[var(--dash-text-muted)]">{stats.pending} pending</span>
-                {/if}
-                {#if stats.skipped > 0}
-                  <span class="text-[var(--dash-warning)]">{stats.skipped} skipped</span>
-                {/if}
-                {#if stats.error > 0}
-                  <span class="text-[var(--dash-error)]">{stats.error} errors</span>
-                {/if}
-              </div>
-            {/if}
-          </div>
-        </div>
-
-        <div
-          data-jobs-container={run.id}
-          class="border-t border-[var(--dash-border)] max-h-80 overflow-y-auto"
-        >
-          {#if !runItems[run.id]?.items || runItems[run.id].items.length === 0}
-            <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
-              {#if loadingItems[run.id]}
-                Loading jobs...
-              {:else if run.finished_at}
-                No jobs imported
-              {:else}
-                No jobs discovered yet
+    <!-- Jobs view -->
+    {#if !runTabView[run.id] || runTabView[run.id] === "jobs"}
+      <div class="flex items-center justify-between px-4 py-2">
+        <div class="flex items-center gap-3">
+          {#if runItems[run.id]?.stats}
+            {@const stats = runItems[run.id].stats}
+            <div class="flex gap-3 text-xs">
+              <span class="text-[var(--dash-text-muted)]">{stats.total}
+                total</span>
+              {#if stats.new > 0}
+                <span class="text-[var(--dash-success)]">{stats.new} new</span>
+              {/if}
+              {#if stats.existing > 0}
+                <span class="text-[var(--dash-text-secondary)]">{stats.existing}
+                  existing</span>
+              {/if}
+              {#if stats.processing > 0}
+                <span class="text-[var(--dash-primary)]">{stats.processing}
+                  processing</span>
+              {/if}
+              {#if stats.pending > 0}
+                <span class="text-[var(--dash-text-muted)]">{stats.pending}
+                  pending</span>
+              {/if}
+              {#if stats.skipped > 0}
+                <span class="text-[var(--dash-warning)]">{stats.skipped}
+                  skipped</span>
+              {/if}
+              {#if stats.error > 0}
+                <span class="text-[var(--dash-error)]">{stats.error}
+                  errors</span>
               {/if}
             </div>
-          {:else}
-            <div class="divide-y divide-[var(--dash-border)]">
-              {#each runItems[run.id].items as item (item.id)}
-                <div
-                  data-item-status={item.status}
-                  class={`${getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)} ${expandedItemId === item.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}`}
-                >
-                  <!-- Item header (clickable for completed items with job details) -->
-                  <button
-                    type="button"
-                    onclick={() =>
-                      item.job &&
-                      toggleItemExpanded(item.id)}
-                    class={`w-full relative flex gap-2 pl-2 pr-3 py-2 text-left transition-all ${
-                      item.job
-                        ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
-                        : "cursor-default"
-                    }`}
-                    disabled={!item.job}
-                  >
-                    <!-- Left: position number -->
-                    <span class="text-xs text-[var(--dash-text-muted)] shrink-0 w-4 text-center pt-0.5">
-                      {item.position}
-                    </span>
+          {/if}
+        </div>
+      </div>
 
-                    <!-- Content: title, details, and pill -->
-                    <div class="flex-1 min-w-0">
-                      <!-- Title row with chevron -->
-                      <div class="flex items-start gap-2">
-                        <div class="flex-1 min-w-0">
-                          {#if item.job_id && item.status === "completed"}
-                            <span class="text-sm font-medium text-[var(--dash-primary)]">
-                              {item.job?.title || item.title || "Untitled"}
-                            </span>
-                          {:else}
-                            <span class="text-sm font-medium text-[var(--dash-text)]">
-                              {item.title || "Untitled"}
-                            </span>
-                          {/if}
-                        </div>
-                        {#if item.job}
-                          <span class="shrink-0 inline-block transition-transform duration-200 {expandedItemId === item.id ? 'rotate-90' : ''} text-[var(--dash-text-muted)] mt-0.5">
-                            <FontAwesomeIcon icon={faChevronRight} class="w-3 h-3" />
+      <div
+        data-jobs-container={run.id}
+        class="border-t border-[var(--dash-border)] max-h-80 overflow-y-auto"
+      >
+        {#if !runItems[run.id]?.items || runItems[run.id].items.length === 0}
+          <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+            {#if loadingItems[run.id]}
+              Loading jobs...
+            {:else if run.finished_at}
+              No jobs imported
+            {:else}
+              No jobs discovered yet
+            {/if}
+          </div>
+        {:else}
+          <div class="divide-y divide-[var(--dash-border)]">
+            {#each runItems[run.id].items as item (item.id)}
+              <div
+                data-item-status={item.status}
+                class={`${
+                  getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)
+                } ${
+                  expandedItemId === item.id ? "border-l-2 border-l-[var(--dash-primary)]" : ""
+                }`}
+              >
+                <!-- Item header (clickable for completed items with job details) -->
+                <button
+                  type="button"
+                  onclick={() =>
+                  item.job &&
+                  toggleItemExpanded(item.id)}
+                  class={`w-full relative flex gap-2 pl-2 pr-3 py-2 text-left transition-all ${
+                    item.job
+                      ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+                      : "cursor-default"
+                  }`}
+                  disabled={!item.job}
+                >
+                  <!-- Left: position number -->
+                  <span
+                    class="text-xs text-[var(--dash-text-muted)] shrink-0 w-4 text-center pt-0.5"
+                  >
+                    {item.position}
+                  </span>
+
+                  <!-- Content: title, details, and pill -->
+                  <div class="flex-1 min-w-0">
+                    <!-- Title row with chevron -->
+                    <div class="flex items-start gap-2">
+                      <div class="flex-1 min-w-0">
+                        {#if item.job_id && item.status === "completed"}
+                          <span
+                            class="text-sm font-medium text-[var(--dash-primary)]"
+                          >
+                            {item.job?.title || item.title || "Untitled"}
+                          </span>
+                        {:else}
+                          <span
+                            class="text-sm font-medium text-[var(--dash-text)]"
+                          >
+                            {item.title || "Untitled"}
                           </span>
                         {/if}
                       </div>
-                      <!-- Details left, pill right — flex-wrap so pill stays bottom-right -->
-                      <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 mt-1">
-                        {#if (item.job?.company || item.company || item.job?.office_location || item.location)}
-                          <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]">
-                            {#if item.job?.company || item.company}
-                              <span class="flex items-center gap-1">
-                                <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
-                                {item.job?.company || item.company}
-                              </span>
-                            {/if}
-                            {#if item.job?.office_location || item.location}
-                              <span class="flex items-center gap-1">
-                                <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
-                                {item.job?.office_location || item.location}
-                              </span>
-                            {/if}
-                          </div>
-                        {/if}
-                        <span class="ml-auto text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
-                          item.status === 'completed' && item.was_created === true
-                            ? 'bg-[var(--dash-success)] text-white'
-                            : item.status === 'completed' && item.was_created === false && run.settings?.skip_existing
-                            ? 'bg-slate-500 text-white'
-                            : item.status === 'completed'
-                            ? 'bg-[var(--dash-success)]/70 text-white'
-                            : item.status === 'processing'
-                            ? 'bg-[var(--dash-primary-light)] text-[var(--dash-primary)]'
-                            : item.status === 'skipped'
-                            ? 'bg-amber-600 text-white'
-                            : item.status === 'error'
-                            ? 'bg-red-600 text-white'
-                            : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'
-                        }">
-                          {#if item.status === "completed" && item.was_created === false && run.settings?.skip_existing}
-                            <FontAwesomeIcon icon={faForward} class="w-2.5 h-2.5 shrink-0" />
-                            duplicate
-                          {:else if item.status === "completed"}
-                            <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5 shrink-0" />
-                            {item.was_created === true ? 'new' : item.was_created === false ? 'updated' : ''}
-                          {:else if item.status === "processing"}
-                            <FontAwesomeIcon icon={faSync} class="w-2.5 h-2.5 shrink-0 animate-spin" />
-                          {:else if item.status === "skipped"}
-                            <FontAwesomeIcon icon={faForward} class="w-2.5 h-2.5 shrink-0" />
-                            {item.status_message || 'skipped'}
-                          {:else if item.status === "error"}
-                            <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5 shrink-0" />
-                            {item.status_message || 'error'}
-                          {:else}
-                            <FontAwesomeIcon icon={faClock} class="w-2.5 h-2.5 shrink-0" />
-                          {/if}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-
-                  <!-- Expanded job details -->
-                  {#if expandedItemId === item.id && item.job}
-                    {@const job = item.job}
-                    {@const workLocs = Array.isArray(job.work_location) ? job.work_location : []}
-                    {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
-                    {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
-                    {@const salaryText = formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-                    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)}">
-                      <!-- Category pills -->
-                      {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                          {#each workLocs as loc}
-                            <CategoryPill category="work_location" value={loc} />
-                          {/each}
-                          {#each jobTyps as type}
-                            <CategoryPill category="job_type" value={type} />
-                          {/each}
-                          {#each expLvls as level}
-                            <CategoryPill category="experience_level" value={level} />
-                          {/each}
-                        </div>
-                      {/if}
-
-                      <!-- Salary and date -->
-                      {#if salaryText || job.date_posted || job.date_created}
-                        <div class="flex items-center gap-3 text-xs sm:text-sm flex-wrap">
-                          {#if salaryText}
-                            <span class="flex items-center gap-1 text-[var(--dash-success)]">
-                              <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
-                              {salaryText}
-                            </span>
-                          {/if}
-                          {#if job.date_posted || job.date_created}
-                            <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
-                              <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                              {formatDate(job.date_posted || job.date_created)}
-                            </span>
-                          {/if}
-                        </div>
-                      {/if}
-
-                      <!-- Skills -->
-                      {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
-                        <div>
-                          <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Required Skills</p>
-                          <div class="flex flex-wrap gap-1">
-                            {#each job.skills_required.slice(0, 12) as skill}
-                              <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">{skill}</span>
-                            {/each}
-                            {#if job.skills_required.length > 12}
-                              <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">+{job.skills_required.length - 12} more</span>
-                            {/if}
-                          </div>
-                        </div>
-                      {/if}
-
-                      {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
-                        <div>
-                          <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">Preferred Skills</p>
-                          <div class="flex flex-wrap gap-1">
-                            {#each job.skills_preferred.slice(0, 12) as skill}
-                              <span class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded">{skill}</span>
-                            {/each}
-                            {#if job.skills_preferred.length > 12}
-                              <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">+{job.skills_preferred.length - 12} more</span>
-                            {/if}
-                          </div>
-                        </div>
-                      {/if}
-
-                      <!-- Description Preview -->
-                      {#if job.job_description}
-                        <div>
-                          <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Description</p>
-                          <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{truncateText(job.job_description, 300)}</p>
-                        </div>
-                      {/if}
-
-                      <!-- Footer with links -->
-                      <div class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]">
-                        <a
-                          href="/jobs/{job.id}"
-                          class="text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+                      {#if item.job}
+                        <span
+                          class="shrink-0 inline-block transition-transform duration-200 {expandedItemId === item.id ? 'rotate-90' : ''} text-[var(--dash-text-muted)] mt-0.5"
                         >
-                          <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
-                          View details
-                        </a>
-                        {#if job.source_url}
-                          <a
-                            href={job.source_url}
-                            target="_blank"
-                            rel="noopener"
-                            class="hover:text-[var(--dash-primary)] flex items-center gap-1"
+                          <FontAwesomeIcon
+                            icon={faChevronRight}
+                            class="w-3 h-3"
+                          />
+                        </span>
+                      {/if}
+                    </div>
+                    <!-- Details left, pill right — flex-wrap so pill stays bottom-right -->
+                    <div
+                      class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 mt-1"
+                    >
+                      {#if item.job?.company || item.company || item.job?.office_location || item.location}
+                        <div
+                          class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]"
+                        >
+                          {#if item.job?.company || item.company}
+                            <span class="flex items-center gap-1">
+                              <FontAwesomeIcon
+                                icon={faBuilding}
+                                class="w-3 h-3"
+                              />
+                              {item.job?.company || item.company}
+                            </span>
+                          {/if}
+                          {#if item.job?.office_location || item.location}
+                            <span class="flex items-center gap-1">
+                              <FontAwesomeIcon
+                                icon={faMapMarkerAlt}
+                                class="w-3 h-3"
+                              />
+                              {item.job?.office_location || item.location}
+                            </span>
+                          {/if}
+                        </div>
+                      {/if}
+                      <span
+                        class="
+                          ml-auto text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
+                          item.status === 'completed' && item.was_created === true
+                          ? 'bg-[var(--dash-success)] text-white'
+                          : item.status === 'completed' && item.was_created === false && run.settings?.skip_existing
+                          ? 'bg-slate-500 text-white'
+                          : item.status === 'completed'
+                          ? 'bg-[var(--dash-success)]/70 text-white'
+                          : item.status === 'processing'
+                          ? 'bg-[var(--dash-primary-light)] text-[var(--dash-primary)]'
+                          : item.status === 'skipped'
+                          ? 'bg-amber-600 text-white'
+                          : item.status === 'error'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'
+                          }
+                        "
+                      >
+                        {#if item.status === "completed" && item.was_created === false &&
+  run.settings?.skip_existing}
+                          <FontAwesomeIcon
+                            icon={faForward}
+                            class="w-2.5 h-2.5 shrink-0"
+                          />
+                          duplicate
+                        {:else if item.status === "completed"}
+                          <FontAwesomeIcon
+                            icon={faCheck}
+                            class="w-2.5 h-2.5 shrink-0"
+                          />
+                          {
+                            item.was_created === true ? "new" : item.was_created === false ? "updated" : ""
+                          }
+                        {:else if item.status === "processing"}
+                          <FontAwesomeIcon
+                            icon={faSync}
+                            class="w-2.5 h-2.5 shrink-0 animate-spin"
+                          />
+                        {:else if item.status === "skipped"}
+                          <FontAwesomeIcon
+                            icon={faForward}
+                            class="w-2.5 h-2.5 shrink-0"
+                          />
+                          {item.status_message || "skipped"}
+                        {:else if item.status === "error"}
+                          <FontAwesomeIcon
+                            icon={faTimes}
+                            class="w-2.5 h-2.5 shrink-0"
+                          />
+                          {item.status_message || "error"}
+                        {:else}
+                          <FontAwesomeIcon
+                            icon={faClock}
+                            class="w-2.5 h-2.5 shrink-0"
+                          />
+                        {/if}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Expanded job details -->
+                {#if expandedItemId === item.id && item.job}
+                  {@const job = item.job}
+                  {@const workLocs = Array.isArray(job.work_location) ? job.work_location : []}
+                  {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
+                  {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
+                  {@const salaryText = formatSalary(
+                    job.salary_min,
+                    job.salary_max,
+                    job.salary_currency,
+                    job.salary_period,
+                  )}
+                  <div
+                    class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)}"
+                  >
+                    <!-- Category pills -->
+                    {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        {#each workLocs as loc}
+                          <CategoryPill category="work_location" value={loc} />
+                        {/each}
+                        {#each jobTyps as type}
+                          <CategoryPill category="job_type" value={type} />
+                        {/each}
+                        {#each expLvls as level}
+                          <CategoryPill
+                            category="experience_level"
+                            value={level}
+                          />
+                        {/each}
+                      </div>
+                    {/if}
+
+                    <!-- Salary and date -->
+                    {#if salaryText || job.date_posted || job.date_created}
+                      <div
+                        class="flex items-center gap-3 text-xs sm:text-sm flex-wrap"
+                      >
+                        {#if salaryText}
+                          <span
+                            class="flex items-center gap-1 text-[var(--dash-success)]"
                           >
-                            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
-                            Source
-                          </a>
+                            <FontAwesomeIcon
+                              icon={faMoneyBillWave}
+                              class="w-3 h-3"
+                            />
+                            {salaryText}
+                          </span>
+                        {/if}
+                        {#if job.date_posted || job.date_created}
+                          <span
+                            class="flex items-center gap-1 text-[var(--dash-text-muted)]"
+                          >
+                            <FontAwesomeIcon
+                              icon={faCalendar}
+                              class="w-3 h-3"
+                            />
+                            {formatDate(job.date_posted || job.date_created)}
+                          </span>
                         {/if}
                       </div>
-                    </div>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {:else if runTabView[run.id] === "logs"}
-        <!-- Logs view -->
-        <div class="flex items-center justify-between px-4 py-2">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-[var(--dash-text)]">Logs</span>
-            <select
-              bind:value={logLevelFilter}
-              onchange={() => {
-                runLogs[run.id] = [];
-                loadRunLogs(run.id);
-              }}
-              class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
-            >
-              <option value="debug">Debug</option>
-              <option value="info">Info</option>
-              <option value="warn">Warn</option>
-              <option value="error">Error</option>
-            </select>
-          </div>
-          {#if loadingLogs[run.id]}
-            <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-          {/if}
-        </div>
+                    {/if}
 
-        <div
-          bind:this={logContainerRefs[run.id]}
-          onscroll={(e) => handleLogScroll(run.id, e)}
-          class="border-t border-[var(--dash-border)] max-h-64 overflow-y-auto"
-        >
-          {#if !runLogs[run.id] || runLogs[run.id].length === 0}
-            <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
-              {#if loadingLogs[run.id]}
-                Loading logs...
-              {:else}
-                No logs available
-              {/if}
-            </div>
-          {:else}
-            <div class="p-2 space-y-0.5 font-mono text-xs">
-              {#each runLogs[run.id] as log (log.id)}
-                <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
-                  <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                    {fmtTime(log.timestamp, tf, { timezone: tz || null })}
-                  </span>
-                  <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
-                    {log.level}
-                  </span>
-                  <span class="text-[var(--dash-text)] break-all">
-                    {log.message}
-                  </span>
-                </div>
-              {/each}
-            </div>
-          {/if}
+                    <!-- Skills -->
+                    {#if job.skills_required && Array.isArray(job.skills_required) &&
+  job.skills_required.length > 0}
+                      <div>
+                        <p
+                          class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
+                        >
+                          Required Skills
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                          {#each job.skills_required.slice(0, 12) as skill}
+                            <span
+                              class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded"
+                            >{skill}</span>
+                          {/each}
+                          {#if job.skills_required.length > 12}
+                            <span
+                              class="px-2 py-1 text-xs text-[var(--dash-text-muted)]"
+                            >+{job.skills_required.length - 12} more</span>
+                          {/if}
+                        </div>
+                      </div>
+                    {/if}
+
+                    {#if job.skills_preferred && Array.isArray(job.skills_preferred) &&
+  job.skills_preferred.length > 0}
+                      <div>
+                        <p
+                          class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
+                        >
+                          Preferred Skills
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                          {#each job.skills_preferred.slice(0, 12) as skill}
+                            <span
+                              class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded"
+                            >{skill}</span>
+                          {/each}
+                          {#if job.skills_preferred.length > 12}
+                            <span
+                              class="px-2 py-1 text-xs text-[var(--dash-text-muted)]"
+                            >+{job.skills_preferred.length - 12} more</span>
+                          {/if}
+                        </div>
+                      </div>
+                    {/if}
+
+                    <!-- Description Preview -->
+                    {#if job.job_description}
+                      <div>
+                        <p
+                          class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
+                        >
+                          Description
+                        </p>
+                        <p
+                          class="text-sm text-[var(--dash-text)] whitespace-pre-wrap"
+                        >
+                          {truncateText(job.job_description, 300)}
+                        </p>
+                      </div>
+                    {/if}
+
+                    <!-- Footer with links -->
+                    <div
+                      class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]"
+                    >
+                      <a
+                        href="/jobs/{job.id}"
+                        class="text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+                      >
+                        <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
+                        View details
+                      </a>
+                      {#if job.source_url}
+                        <a
+                          href={job.source_url}
+                          target="_blank"
+                          rel="noopener"
+                          class="hover:text-[var(--dash-primary)] flex items-center gap-1"
+                        >
+                          <FontAwesomeIcon
+                            icon={faExternalLinkAlt}
+                            class="w-3 h-3"
+                          />
+                          Source
+                        </a>
+                      {/if}
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {:else if runTabView[run.id] === "logs"}
+      <!-- Logs view -->
+      <div class="flex items-center justify-between px-4 py-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-[var(--dash-text)]">Logs</span>
+          <select
+            bind:value={logLevelFilter}
+            onchange={() => {
+              runLogs[run.id] = [];
+              loadRunLogs(run.id);
+            }}
+            class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+          >
+            <option value="debug">Debug</option>
+            <option value="info">Info</option>
+            <option value="warn">Warn</option>
+            <option value="error">Error</option>
+          </select>
         </div>
-      {/if}
+        {#if loadingLogs[run.id]}
+          <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+        {/if}
+      </div>
+
+      <div
+        bind:this={logContainerRefs[run.id]}
+        onscroll={(e) => handleLogScroll(run.id, e)}
+        class="border-t border-[var(--dash-border)] max-h-64 overflow-y-auto"
+      >
+        {#if !runLogs[run.id] || runLogs[run.id].length === 0}
+          <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+            {#if loadingLogs[run.id]}
+              Loading logs...
+            {:else}
+              No logs available
+            {/if}
+          </div>
+        {:else}
+          <div class="p-2 space-y-0.5 font-mono text-xs">
+            {#each runLogs[run.id] as log (log.id)}
+              <div
+                class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
+              >
+                <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
+                  {fmtTime(log.timestamp, tf, { timezone: tz || null })}
+                </span>
+                <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
+                  {log.level}
+                </span>
+                <span class="text-[var(--dash-text)] break-all">
+                  {log.message}
+                </span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 {/snippet}
 
 <svelte:head>
-  <title>{searchTaskDisplayName(searchTask.job_platform?.name, searchTask.note)} - Import Tasks - Smart Job Seeker</title>
+  <title>
+    {searchTaskDisplayName(searchTask.job_platform?.name, searchTask.note)} -
+    Import Tasks - Smart Job Seeker
+  </title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -1801,16 +2010,26 @@
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
       <span class="text-sm">All Import Tasks</span>
     </a>
-    <span class="text-lg text-[var(--dash-text-muted)] hidden sm:inline">·</span>
-    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
+    <span class="text-lg text-[var(--dash-text-muted)] hidden sm:inline"
+    >·</span>
+    <div
+      class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0"
+    >
       <div class="flex items-center gap-3 shrink-0">
         {#if searchTask.job_platform}
-          <PlatformLogo platformUrl={searchTask.job_platform.url} size="w-5 h-5" />
-          <span class="text-lg font-medium text-[var(--dash-text)]">{searchTask.job_platform.name}</span>
+          <PlatformLogo
+            platformUrl={searchTask.job_platform.url}
+            size="w-5 h-5"
+          />
+          <span class="text-lg font-medium text-[var(--dash-text)]">{
+            searchTask.job_platform.name
+          }</span>
         {/if}
         {#if !isEditingNote && !searchTask.note}
           <button
-            onclick={() => { isEditingNote = true; }}
+            onclick={() => {
+              isEditingNote = true;
+            }}
             class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
             title="Add note"
           >
@@ -1819,7 +2038,8 @@
         {/if}
       </div>
       {#if isEditingNote}
-        <span class="text-lg text-[var(--dash-text-secondary)] hidden sm:inline">—</span>
+        <span class="text-lg text-[var(--dash-text-secondary)] hidden sm:inline"
+        >—</span>
         <div class="flex items-center gap-2 flex-1 min-w-0">
           <input
             type="text"
@@ -1851,10 +2071,16 @@
         </div>
       {:else if searchTask.note}
         <div class="flex items-center gap-2 min-w-0">
-          <span class="text-lg text-[var(--dash-text-secondary)] hidden sm:inline">—</span>
-          <span class="text-lg text-[var(--dash-text-secondary)] truncate">{searchTask.note}</span>
+          <span
+            class="text-lg text-[var(--dash-text-secondary)] hidden sm:inline"
+          >—</span>
+          <span class="text-lg text-[var(--dash-text-secondary)] truncate">{
+            searchTask.note
+          }</span>
           <button
-            onclick={() => { isEditingNote = true; }}
+            onclick={() => {
+              isEditingNote = true;
+            }}
             class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
             title="Edit note"
           >
@@ -1877,314 +2103,371 @@
       {/if}
 
       <div class="flex items-center gap-3 min-w-0">
-          {#if searchTask.status === "queued"}
-            <div
-              class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0"
-            >
-              <FontAwesomeIcon icon={faClock} class="w-5 h-5 text-blue-500" />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">Queued</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                Waiting in queue to start...
-              </p>
-            </div>
-          {:else if searchTask.status === "running"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
-            >
-              <Spinner size="w-5 h-5" color="var(--dash-primary)" />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">
-                {searchTask.status_message || "Running..."}
-              </p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                Scraping jobs from {
-                  searchTask.job_platform?.name || "platform"
-                }
-              </p>
-            </div>
-          {:else if searchTask.status === "blocked"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faExclamationTriangle}
-                class="w-5 h-5 text-[var(--dash-warning)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-warning)]">
-                {searchTask.status_message}
-              </p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                {#if isMagicLink}
-                  Paste the login URL from your email below, then click Continue
-                {:else}
-                  Complete the action in the browser view, then click Continue
-                {/if}
-              </p>
-              {#if isVerification && verificationEmailAddress}
-                <div class="mt-2 flex items-center gap-2 p-2 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]">
-                  <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-primary)] shrink-0" />
-                  <span class="text-xs text-[var(--dash-text-secondary)]">
-                    Or forward the verification email to:
-                  </span>
-                  <code class="text-xs font-mono text-[var(--dash-primary)] select-all break-all">{verificationEmailAddress}</code>
-                  <button
-                    onclick={copyVerificationEmail}
-                    class="shrink-0 p-1 transition-colors {copiedVerifyEmail ? 'text-green-600' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]'}"
-                    title="Copy email address"
-                  >
-                    <FontAwesomeIcon icon={copiedVerifyEmail ? faCheck : faCopy} class="w-3 h-3" />
-                  </button>
-                  {#if copiedVerifyEmail}
-                    <span class="text-xs text-green-600">Copied!</span>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          {:else if searchTask.status === "stopping"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
-            >
-              <Spinner size="w-5 h-5" color="var(--dash-error)" />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">Stopping...</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                Waiting for the scraper to finish current action
-              </p>
-              {#if showForceStop}
-                <button
-                  onclick={forceStop}
-                  class="mt-1 text-sm text-[var(--dash-error)] hover:underline"
-                >
-                  Force stop
-                </button>
-              {/if}
-            </div>
-          {:else if searchTask.status === "success"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faCheck}
-                class="w-5 h-5 text-[var(--dash-success)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">Completed</p>
-              <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
-                {formatRelativeTime(searchTask.last_run)}{#if searchTask.last_run_jobs_found} &nbsp;•&nbsp; {searchTask.last_run_jobs_found} jobs found{/if}
-              </p>
-              <p class="text-xs text-[var(--dash-text-muted)]">{formatDate(searchTask.last_run)}</p>
-            </div>
-          {:else if searchTask.status === "partial"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faExclamationTriangle}
-                class="w-5 h-5 text-[var(--dash-warning)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">
-                Completed with issues
-              </p>
-              <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
-                {formatRelativeTime(searchTask.last_run)} &nbsp;•&nbsp; {searchTask.status_message}
-              </p>
-              <p class="text-xs text-[var(--dash-text-muted)]">{formatDate(searchTask.last_run)}</p>
-            </div>
-          {:else if searchTask.status === "error"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faTimes}
-                class="w-5 h-5 text-[var(--dash-error)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-error)]">Failed</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                {searchTask.status_message}
-              </p>
-            </div>
-          {:else if searchTask.status === "cancelled"}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faTimes}
-                class="w-5 h-5 text-[var(--dash-error)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                {
-                  searchTask.status_message ||
-                    "Cancelled by user"
-                }
-              </p>
-            </div>
-          {:else if searchTask.last_run}
-            <!-- Idle but has run before -->
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)] shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faCog}
-                class="w-5 h-5 text-[var(--dash-text-muted)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">Idle</p>
-              <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
-                Last run: {formatRelativeTime(searchTask.last_run)}{#if searchTask.last_run_jobs_found} &nbsp;•&nbsp; {searchTask.last_run_jobs_found} jobs found{/if}
-              </p>
-              <p class="text-xs text-[var(--dash-text-muted)]">{formatDate(searchTask.last_run)}</p>
-            </div>
-          {:else}
-            <div
-              class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)] shrink-0"
-            >
-              <FontAwesomeIcon
-                icon={faCog}
-                class="w-5 h-5 text-[var(--dash-text-muted)]"
-              />
-            </div>
-            <div class="min-w-0">
-              <p class="font-medium text-[var(--dash-text)]">Never run</p>
-              <p class="text-sm text-[var(--dash-text-secondary)]">
-                Click "Start" to begin importing jobs
-              </p>
-            </div>
-          {/if}
-        </div>
-
-        {#if searchTask.schedule_interval_hours}
-          {@const intervalDays = searchTask.schedule_interval_hours / 24}
-          {@const freqLabel = intervalDays >= 14 ? `every ${intervalDays / 7} weeks`
-            : intervalDays >= 7 ? "every week"
-            : intervalDays > 1 ? `every ${intervalDays} days`
-            : "every day"}
-          {@const prefHour = searchTask.schedule_preferred_hour ?? 9}
-          {@const ampm = prefHour < 12 ? "AM" : "PM"}
-          {@const h12 = prefHour === 0 ? 12 : prefHour > 12 ? prefHour - 12 : prefHour}
-          <div class="mt-4 space-y-1.5">
-            <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide">Schedule</h3>
-            <div class="text-xs text-[var(--dash-text-secondary)] space-y-1">
-              <div class="flex items-center gap-2">
-                <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                <span>Auto-runs {freqLabel} at {h12}:00 {ampm}{data.userTimezone ? ` (${data.userTimezone.split("/").pop()?.replace(/_/g, " ")})` : ""}</span>
-              </div>
-              {#if searchTask.next_scheduled_run}
-                {@const nextRun = new Date(searchTask.next_scheduled_run)}
-                {@const diffMs = nextRun.getTime() - Date.now()}
-                <div class="flex items-center gap-2 ml-5">
-                  <span>
-                    Next run {#if diffMs <= 0}due now{:else}{@const diffMins = Math.floor(diffMs / 60000)}{@const diffHours = Math.floor(diffMs / 3600000)}{@const diffDays = Math.floor(diffMs / 86400000)}{diffDays >= 1 ? `in ${diffDays}d ${diffHours % 24}h` : diffHours > 0 ? `in ${diffHours}h ${diffMins % 60}m` : `in ${diffMins}m`}{/if}
-                  </span>
-                  <span class="text-[var(--dash-text-muted)]">{formatDate(searchTask.next_scheduled_run)}</span>
-                </div>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-        {#if isTunnelMode && desktopConnected !== null}
+        {#if searchTask.status === "queued"}
           <div
-            class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}"
+            class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0"
           >
-            <span
-              class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"
-            ></span>
-            <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-            {#if desktopConnected}
-              {connectedDeviceNames.join(", ")}
-            {:else}
-              No device connected — <a href="/jobs/import/devices" class="underline hover:text-amber-700">Setup guide</a>
-            {/if}
+            <FontAwesomeIcon icon={faClock} class="w-5 h-5 text-blue-500" />
           </div>
-        {/if}
-
-        <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
-          {#if searchTask.status === "blocked"}
-            <button
-              onclick={() => sendFeedback("continue")}
-              disabled={isSendingFeedback || feedbackSent}
-              class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {#if isSendingFeedback || feedbackSent}
-                <Spinner size="w-4 h-4" />
-              {:else}
-                <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-              {/if}
-              <span>{feedbackSent ? "Resuming..." : "Continue"}</span>
-            </button>
-            <button
-              onclick={() => sendFeedback("skip")}
-              disabled={isSendingFeedback || feedbackSent}
-              class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-bg)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Skip current action and move to next"
-            >
-              <FontAwesomeIcon icon={faForward} class="w-4 h-4" />
-              <span>Skip</span>
-            </button>
-          {/if}
-
-          {#if isRunning || isBlocked || isQueued || isStoppingStatus}
-            <button
-              onclick={stopScrape}
-              disabled={isStopping || isStoppingStatus}
-              class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {#if isStopping || isStoppingStatus}
-                <Spinner size="w-4 h-4" />
-                <span>Stopping...</span>
-              {:else}
-                <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
-                <span>Stop</span>
-              {/if}
-            </button>
-          {:else}
-            <button
-              onclick={startScrape}
-              disabled={isStarting || !searchTask.search_url ||
-                !searchTask.platform_id}
-              class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {#if isStarting}
-                <Spinner size="w-4 h-4" />
-                <span>{hasOtherRunning ? "Enqueuing..." : "Starting..."}</span>
-              {:else}
-                <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
-                <span>{hasOtherRunning ? "Enqueue" : "Start"}</span>
-              {/if}
-            </button>
-          {/if}
-
-          <button
-            onclick={() => (showBrowser = !showBrowser)}
-            class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors"
-            title="{showBrowser ? 'Hide' : 'Show'} browser view"
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">Queued</p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Waiting in queue to start...
+            </p>
+          </div>
+        {:else if searchTask.status === "running"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center shrink-0"
+          >
+            <Spinner size="w-5 h-5" color="var(--dash-primary)" />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">
+              {searchTask.status_message || "Running..."}
+            </p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Scraping jobs from {searchTask.job_platform?.name || "platform"}
+            </p>
+          </div>
+        {:else if searchTask.status === "blocked"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
           >
             <FontAwesomeIcon
-              icon={showBrowser ? faEyeSlash : faEye}
-              class="w-4 h-4"
+              icon={faExclamationTriangle}
+              class="w-5 h-5 text-[var(--dash-warning)]"
             />
-            <span class="text-sm">Browser View</span>
-          </button>
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-warning)]">
+              {searchTask.status_message}
+            </p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              {#if isMagicLink}
+                Paste the login URL from your email below, then click Continue
+              {:else}
+                Complete the action in the browser view, then click Continue
+              {/if}
+            </p>
+            {#if isVerification && verificationEmailAddress}
+              <div
+                class="mt-2 flex items-center gap-2 p-2 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]"
+              >
+                <FontAwesomeIcon
+                  icon={faEnvelope}
+                  class="w-3.5 h-3.5 text-[var(--dash-primary)] shrink-0"
+                />
+                <span class="text-xs text-[var(--dash-text-secondary)]">
+                  Or forward the verification email to:
+                </span>
+                <code
+                  class="text-xs font-mono text-[var(--dash-primary)] select-all break-all"
+                >{verificationEmailAddress}</code>
+                <button
+                  onclick={copyVerificationEmail}
+                  class="shrink-0 p-1 transition-colors {copiedVerifyEmail ? 'text-green-600' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]'}"
+                  title="Copy email address"
+                >
+                  <FontAwesomeIcon
+                    icon={copiedVerifyEmail ? faCheck : faCopy}
+                    class="w-3 h-3"
+                  />
+                </button>
+                {#if copiedVerifyEmail}
+                  <span class="text-xs text-green-600">Copied!</span>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {:else if searchTask.status === "stopping"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
+          >
+            <Spinner size="w-5 h-5" color="var(--dash-error)" />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">Stopping...</p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Waiting for the scraper to finish current action
+            </p>
+            {#if showForceStop}
+              <button
+                onclick={forceStop}
+                class="mt-1 text-sm text-[var(--dash-error)] hover:underline"
+              >
+                Force stop
+              </button>
+            {/if}
+          </div>
+        {:else if searchTask.status === "success"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center shrink-0"
+          >
+            <FontAwesomeIcon
+              icon={faCheck}
+              class="w-5 h-5 text-[var(--dash-success)]"
+            />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">Completed</p>
+            <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+              {
+                formatRelativeTime(searchTask.last_run)
+              }{#if searchTask.last_run_jobs_found}
+                &nbsp;•&nbsp; {searchTask.last_run_jobs_found} jobs found{/if}
+            </p>
+            <p class="text-xs text-[var(--dash-text-muted)]">
+              {formatDate(searchTask.last_run)}
+            </p>
+          </div>
+        {:else if searchTask.status === "partial"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
+          >
+            <FontAwesomeIcon
+              icon={faExclamationTriangle}
+              class="w-5 h-5 text-[var(--dash-warning)]"
+            />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">
+              Completed with issues
+            </p>
+            <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+              {formatRelativeTime(searchTask.last_run)} &nbsp;•&nbsp; {
+                searchTask.status_message
+              }
+            </p>
+            <p class="text-xs text-[var(--dash-text-muted)]">
+              {formatDate(searchTask.last_run)}
+            </p>
+          </div>
+        {:else if searchTask.status === "error"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
+          >
+            <FontAwesomeIcon
+              icon={faTimes}
+              class="w-5 h-5 text-[var(--dash-error)]"
+            />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-error)]">Failed</p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              {searchTask.status_message}
+            </p>
+          </div>
+        {:else if searchTask.status === "cancelled"}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center shrink-0"
+          >
+            <FontAwesomeIcon
+              icon={faTimes}
+              class="w-5 h-5 text-[var(--dash-error)]"
+            />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              {
+                searchTask.status_message ||
+                "Cancelled by user"
+              }
+            </p>
+          </div>
+        {:else if searchTask.last_run}
+          <!-- Idle but has run before -->
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)] shrink-0"
+          >
+            <FontAwesomeIcon
+              icon={faCog}
+              class="w-5 h-5 text-[var(--dash-text-muted)]"
+            />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">Idle</p>
+            <p class="text-sm text-[var(--dash-text-secondary)] mt-1">
+              Last run: {
+                formatRelativeTime(searchTask.last_run)
+              }{#if searchTask.last_run_jobs_found}
+                &nbsp;•&nbsp; {searchTask.last_run_jobs_found} jobs found{/if}
+            </p>
+            <p class="text-xs text-[var(--dash-text-muted)]">
+              {formatDate(searchTask.last_run)}
+            </p>
+          </div>
+        {:else}
+          <div
+            class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)] shrink-0"
+          >
+            <FontAwesomeIcon
+              icon={faCog}
+              class="w-5 h-5 text-[var(--dash-text-muted)]"
+            />
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-[var(--dash-text)]">Never run</p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Click "Start" to begin importing jobs
+            </p>
+          </div>
+        {/if}
+      </div>
+
+      {#if searchTask.schedule_interval_hours}
+        {@const intervalDays = searchTask.schedule_interval_hours / 24}
+        {@const freqLabel = intervalDays >= 14
+        ? `every ${intervalDays / 7} weeks`
+        : intervalDays >= 7
+        ? "every week"
+        : intervalDays > 1
+        ? `every ${intervalDays} days`
+        : "every day"}
+        {@const prefHour = searchTask.schedule_preferred_hour ?? 9}
+        {@const ampm = prefHour < 12 ? "AM" : "PM"}
+        {@const h12 = prefHour === 0 ? 12 : prefHour > 12 ? prefHour - 12 : prefHour}
+        <div class="mt-4 space-y-1.5">
+          <h3
+            class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide"
+          >
+            Schedule
+          </h3>
+          <div class="text-xs text-[var(--dash-text-secondary)] space-y-1">
+            <div class="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+              <span>Auto-runs {freqLabel} at {h12}:00 {ampm}{
+                  data.userTimezone
+                  ? ` (${data.userTimezone.split("/").pop()?.replace(/_/g, " ")})`
+                  : ""
+                }</span>
+            </div>
+            {#if searchTask.next_scheduled_run}
+              {@const nextRun = new Date(searchTask.next_scheduled_run)}
+              {@const diffMs = nextRun.getTime() - Date.now()}
+              <div class="flex items-center gap-2 ml-5">
+                <span>
+                  Next run {#if diffMs <= 0}due
+                    now{:else}{@const diffMins = Math.floor(diffMs / 60000)}{@const diffHours = Math.floor(diffMs / 3600000)}{@const diffDays = Math.floor(diffMs / 86400000)}{
+                      diffDays >= 1
+                      ? `in ${diffDays}d ${diffHours % 24}h`
+                      : diffHours > 0
+                      ? `in ${diffHours}h ${diffMins % 60}m`
+                      : `in ${diffMins}m`
+                    }{/if}
+                </span>
+                <span class="text-[var(--dash-text-muted)]">{
+                  formatDate(searchTask.next_scheduled_run)
+                }</span>
+              </div>
+            {/if}
+          </div>
         </div>
+      {/if}
+
+      {#if isTunnelMode && desktopStatusChecked}
+        <div
+          class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}"
+        >
+          <span
+            class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"
+          ></span>
+          <FontAwesomeIcon
+            icon={faDesktop}
+            class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"
+          />
+          {#if preferredDevice}
+            {preferredDevice.apiKeyName}
+            {#if preferredDevice.isShared && preferredDevice.ownerLabel}
+              <span class="text-[var(--dash-text-muted)]">
+                (shared by {preferredDevice.ownerLabel})
+              </span>
+            {/if}
+          {:else}
+            No device connected — <a
+              href="/jobs/import/devices"
+              class="underline hover:text-amber-700"
+            >Setup guide</a>
+          {/if}
+        </div>
+      {/if}
+
+      <div
+        class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2"
+      >
+        {#if searchTask.status === "blocked"}
+          <button
+            onclick={() => sendFeedback("continue")}
+            disabled={isSendingFeedback || feedbackSent}
+            class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if isSendingFeedback || feedbackSent}
+              <Spinner size="w-4 h-4" />
+            {:else}
+              <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+            {/if}
+            <span>{feedbackSent ? "Resuming..." : "Continue"}</span>
+          </button>
+          <button
+            onclick={() => sendFeedback("skip")}
+            disabled={isSendingFeedback || feedbackSent}
+            class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-bg)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Skip current action and move to next"
+          >
+            <FontAwesomeIcon icon={faForward} class="w-4 h-4" />
+            <span>Skip</span>
+          </button>
+        {/if}
+
+        {#if isRunning || isBlocked || isQueued || isStoppingStatus}
+          <button
+            onclick={stopScrape}
+            disabled={isStopping || isStoppingStatus}
+            class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if isStopping || isStoppingStatus}
+              <Spinner size="w-4 h-4" />
+              <span>Stopping...</span>
+            {:else}
+              <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
+              <span>Stop</span>
+            {/if}
+          </button>
+        {:else}
+          <button
+            onclick={startScrape}
+            disabled={isStarting || !searchTask.search_url ||
+            !searchTask.platform_id}
+            class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if isStarting}
+              <Spinner size="w-4 h-4" />
+              <span>{hasOtherRunning ? "Enqueuing..." : "Starting..."}</span>
+            {:else}
+              <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
+              <span>{hasOtherRunning ? "Enqueue" : "Start"}</span>
+            {/if}
+          </button>
+        {/if}
+
+        <button
+          onclick={() => (showBrowser = !showBrowser)}
+          class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors"
+          title="{showBrowser ? 'Hide' : 'Show'} browser view"
+        >
+          <FontAwesomeIcon
+            icon={showBrowser ? faEyeSlash : faEye}
+            class="w-4 h-4"
+          />
+          <span class="text-sm">Browser View</span>
+        </button>
+      </div>
 
       <!-- Active run details (jobs/logs) shown inline in status card -->
       {#if featuredRun}
-        <div class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
+        <div
+          class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]"
+        >
           <span>Run</span>
           <span class="font-mono">#{featuredRun.id}</span>
           <button
@@ -2236,7 +2519,8 @@
         browserFingerprint={data.browserFingerprint}
         browserFingerprintDefaults={data.browserFingerprintDefaults}
         uiPreferences={data.uiPreferences as Record<string, unknown>}
-        {desktopConnected}
+        desktopConnected={desktopStatusChecked ? desktopConnected : null}
+        {preferredDevice}
         {devices}
         verificationEmailAddress={data.verificationEmailAddress}
         userTimezone={tz || ""}
@@ -2279,7 +2563,11 @@
               icon={isCloudMode ? faCloud : faDesktop}
               class="w-4 h-4 text-[var(--dash-text-secondary)]"
             />
-            <h2 class="font-medium text-[var(--dash-text)] text-sm sm:text-base hidden sm:block">Browser View</h2>
+            <h2
+              class="font-medium text-[var(--dash-text)] text-sm sm:text-base hidden sm:block"
+            >
+              Browser View
+            </h2>
             {#if isCloudMode}
               <span
                 class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
@@ -2291,13 +2579,15 @@
               <span
                 class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded"
               >
-                {connectedDeviceNames.join(", ") || "Desktop"}
+                {preferredDevice?.apiKeyName ?? "Desktop"}
               </span>
             {/if}
           </div>
           <div class="flex items-center gap-2">
             {#if isTunnelMode}
-              <div class="flex rounded overflow-hidden border border-[var(--dash-border)]">
+              <div
+                class="flex rounded overflow-hidden border border-[var(--dash-border)]"
+              >
                 <button
                   onclick={() => setViewMode("screenshot")}
                   class="px-2 py-1 text-xs flex items-center gap-1 transition-colors {browserViewMode === 'screenshot' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
@@ -2313,13 +2603,17 @@
                   title="Interactive VNC mode"
                 >
                   <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-                  <span class="hidden sm:inline">{vncConnecting ? "Connecting..." : "Interactive"}</span>
+                  <span class="hidden sm:inline">{
+                    vncConnecting ? "Connecting..." : "Interactive"
+                  }</span>
                 </button>
               </div>
               {#if browserViewMode === "screenshot"}
                 <!-- Inline (desktop) -->
                 <button
-                  onclick={() => { interactiveMode = !interactiveMode; }}
+                  onclick={() => {
+                    interactiveMode = !interactiveMode;
+                  }}
                   class="hidden sm:inline-flex p-1 transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
                   title="{interactiveMode ? 'Disable' : 'Enable'} interactive mode"
                 >
@@ -2366,7 +2660,9 @@
             {#if (isTunnelMode && browserViewMode === "screenshot") || (isCloudMode && liveUrl)}
               <div class="relative sm:hidden">
                 <button
-                  onclick={() => { headerMenuOpen = !headerMenuOpen; }}
+                  onclick={() => {
+                    headerMenuOpen = !headerMenuOpen;
+                  }}
                   class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   aria-label="More actions"
                 >
@@ -2378,19 +2674,33 @@
                     type="button"
                     class="fixed inset-0 z-30 cursor-default"
                     aria-label="Close menu"
-                    onclick={() => { headerMenuOpen = false; }}
-                  ></button>
-                  <div class="absolute right-0 top-full mt-1 z-40 min-w-[180px] py-1 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg">
+                    onclick={() => {
+                      headerMenuOpen = false;
+                    }}
+                  >
+                  </button>
+                  <div
+                    class="absolute right-0 top-full mt-1 z-40 min-w-[180px] py-1 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg"
+                  >
                     {#if isTunnelMode && browserViewMode === "screenshot"}
                       <button
-                        onclick={() => { interactiveMode = !interactiveMode; headerMenuOpen = false; }}
+                        onclick={() => {
+                          interactiveMode = !interactiveMode;
+                          headerMenuOpen = false;
+                        }}
                         class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text)]'}"
                       >
-                        <FontAwesomeIcon icon={faHandPointer} class="w-3.5 h-3.5" />
+                        <FontAwesomeIcon
+                          icon={faHandPointer}
+                          class="w-3.5 h-3.5"
+                        />
                         {interactiveMode ? "Disable" : "Enable"} interactive
                       </button>
                       <button
-                        onclick={() => { fetchScreenshot(); headerMenuOpen = false; }}
+                        onclick={() => {
+                          fetchScreenshot();
+                          headerMenuOpen = false;
+                        }}
                         class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
                       >
                         <FontAwesomeIcon icon={faSync} class="w-3.5 h-3.5" />
@@ -2402,10 +2712,15 @@
                         href={liveUrl}
                         target="_blank"
                         rel="noopener"
-                        onclick={() => { headerMenuOpen = false; }}
+                        onclick={() => {
+                          headerMenuOpen = false;
+                        }}
                         class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
                       >
-                        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3.5 h-3.5" />
+                        <FontAwesomeIcon
+                          icon={faExternalLinkAlt}
+                          class="w-3.5 h-3.5"
+                        />
                         Open in new tab
                       </a>
                     {/if}
@@ -2430,15 +2745,24 @@
           <div
             class="shrink-0 flex items-center justify-between gap-2 px-3 py-2 bg-[var(--dash-warning-light)] border-b border-[var(--dash-warning)]/30 text-sm"
           >
-            <div class="flex items-center gap-2 text-[var(--dash-warning)] font-medium min-w-0">
-              <FontAwesomeIcon icon={faExclamationTriangle} class="w-4 h-4 shrink-0" />
+            <div
+              class="flex items-center gap-2 text-[var(--dash-warning)] font-medium min-w-0"
+            >
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                class="w-4 h-4 shrink-0"
+              />
               <span class="truncate">Action needed</span>
             </div>
             <button
-              onclick={() => { showInterventionControls = !showInterventionControls; }}
-              class="px-3 py-1 text-xs rounded transition-colors shrink-0 {showInterventionControls
+              onclick={() => {
+                showInterventionControls = !showInterventionControls;
+              }}
+              class="
+                px-3 py-1 text-xs rounded transition-colors shrink-0 {showInterventionControls
                 ? 'bg-[var(--dash-warning)] text-white'
-                : 'bg-[var(--dash-card)] text-[var(--dash-warning)] border border-[var(--dash-warning)]/40 hover:bg-[var(--dash-warning)] hover:text-white'}"
+                : 'bg-[var(--dash-card)] text-[var(--dash-warning)] border border-[var(--dash-warning)]/40 hover:bg-[var(--dash-warning)] hover:text-white'}
+              "
             >
               {showInterventionControls ? "Hide controls" : "Show controls"}
             </button>
@@ -2457,7 +2781,11 @@
               class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
             >
               <div class="text-center">
-                <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
+                <Spinner
+                  size="w-6 h-6"
+                  color="var(--dash-text-muted)"
+                  class="mb-2"
+                />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Starting cloud browser...
                 </p>
@@ -2476,7 +2804,9 @@
                 onwheel={handleInteractiveWheel}
                 onkeydown={handleInteractiveKeyDown}
                 onkeyup={handleInteractiveKeyUp}
-                oncontextmenu={(e) => { if (interactiveMode) e.preventDefault(); }}
+                oncontextmenu={(e) => {
+                  if (interactiveMode) e.preventDefault();
+                }}
               >
                 <img
                   bind:this={screenshotImgEl}
@@ -2487,18 +2817,35 @@
                 />
               </div>
             {:else if screenshotLoading}
-              <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+              <div
+                class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
+              >
                 <div class="text-center">
-                  <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
-                  <p class="text-sm text-[var(--dash-text-muted)]">Loading screenshot...</p>
+                  <Spinner
+                    size="w-6 h-6"
+                    color="var(--dash-text-muted)"
+                    class="mb-2"
+                  />
+                  <p class="text-sm text-[var(--dash-text-muted)]">
+                    Loading screenshot...
+                  </p>
                 </div>
               </div>
             {:else}
-              <div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
+              <div
+                class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
+              >
                 <div class="text-center">
-                  <FontAwesomeIcon icon={faCamera} class="w-6 h-6 text-[var(--dash-text-muted)] mb-2" />
-                  <p class="text-sm text-[var(--dash-text-muted)]">No screenshot available</p>
-                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">Make sure a device is connected</p>
+                  <FontAwesomeIcon
+                    icon={faCamera}
+                    class="w-6 h-6 text-[var(--dash-text-muted)] mb-2"
+                  />
+                  <p class="text-sm text-[var(--dash-text-muted)]">
+                    No screenshot available
+                  </p>
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                    Make sure a device is connected
+                  </p>
                 </div>
               </div>
             {/if}
@@ -2513,7 +2860,11 @@
               class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
             >
               <div class="text-center">
-                <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
+                <Spinner
+                  size="w-6 h-6"
+                  color="var(--dash-text-muted)"
+                  class="mb-2"
+                />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Connecting to browser...
                 </p>
@@ -2556,17 +2907,25 @@
               class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]"
             >
               <div class="text-center">
-                <Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
+                <Spinner
+                  size="w-6 h-6"
+                  color="var(--dash-text-muted)"
+                  class="mb-2"
+                />
                 <p class="text-sm text-[var(--dash-text-muted)]">
                   Starting cloud browser...
                 </p>
               </div>
             </div>
           {/if}
-        <!-- Logs overlay (on top of browser view, semi-transparent) -->
-        {#if showBrowserLogs}
-          <div class="absolute inset-0 z-10 flex flex-col bg-black/80 backdrop-blur-sm">
-              <div class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)] border-b border-[var(--dash-border)] shrink-0">
+          <!-- Logs overlay (on top of browser view, semi-transparent) -->
+          {#if showBrowserLogs}
+            <div
+              class="absolute inset-0 z-10 flex flex-col bg-black/80 backdrop-blur-sm"
+            >
+              <div
+                class="flex items-center justify-between px-3 py-1.5 bg-[var(--dash-bg)] border-b border-[var(--dash-border)] shrink-0"
+              >
                 <div class="flex items-center gap-2">
                   <select
                     bind:value={logLevelFilter}
@@ -2592,8 +2951,11 @@
                 bind:this={browserLogRef}
                 class="overflow-y-auto flex-1"
               >
-                {#if !featuredRunId || !runLogs[featuredRunId] || runLogs[featuredRunId].length === 0}
-                  <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+                {#if !featuredRunId || !runLogs[featuredRunId] ||
+  runLogs[featuredRunId].length === 0}
+                  <div
+                    class="p-4 text-sm text-[var(--dash-text-muted)] text-center"
+                  >
                     {#if featuredRunId && loadingLogs[featuredRunId]}
                       Loading logs...
                     {:else}
@@ -2603,11 +2965,17 @@
                 {:else}
                   <div class="p-2 space-y-0.5 font-mono text-xs">
                     {#each runLogs[featuredRunId] as log (log.id)}
-                      <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
-                        <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
+                      <div
+                        class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
+                      >
+                        <span
+                          class="text-[var(--dash-text-muted)] whitespace-nowrap"
+                        >
                           {fmtTime(log.timestamp, tf, { timezone: tz || null })}
                         </span>
-                        <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
+                        <span
+                          class={`uppercase w-12 ${getLogLevelColor(log.level)}`}
+                        >
                           {log.level}
                         </span>
                         <span class="text-[var(--dash-text)] break-all">
@@ -2618,170 +2986,189 @@
                   </div>
                 {/if}
               </div>
-          </div>
-        {/if}
-        <!-- Intervention controls overlay (full overlay, dismissable so user can see browser view) -->
-        {#if isBlocked && showInterventionControls}
-          <div
-            class="absolute inset-0 z-20 p-3 bg-[var(--dash-card)]/95 backdrop-blur-sm border border-[var(--dash-warning)]/30 space-y-2 overflow-y-auto"
-          >
-            <!-- Intervention message + action buttons -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div class="text-sm text-[var(--dash-text-secondary)]">
-                {#if isMagicLink}
-                  <p>Paste the login link from your email below and click Navigate,
-                  then click Continue.</p>
-                {:else}
-                  <p>Complete the required action (login, CAPTCHA, or verification)
-                  in the browser above, then click Continue.</p>
-                {/if}
-                {#if isVerification && verificationEmailAddress}
-                  <p class="mt-1 flex items-center gap-1.5 text-xs flex-wrap">
-                    <FontAwesomeIcon icon={faEnvelope} class="w-3 h-3 text-[var(--dash-primary)]" />
-                    <span>Auto-verify: forward the email to</span>
-                    <code class="font-mono text-[var(--dash-primary)] select-all">{verificationEmailAddress}</code>
-                    <button onclick={copyVerificationEmail} class="transition-colors {copiedVerifyEmail ? 'text-green-600' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]'}" title="Copy">
-                      <FontAwesomeIcon icon={copiedVerifyEmail ? faCheck : faCopy} class="w-2.5 h-2.5" />
-                    </button>
-                    {#if copiedVerifyEmail}
-                      <span class="text-green-600">Copied!</span>
-                    {/if}
-                  </p>
-                {/if}
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button
-                  onclick={() => sendFeedback("continue")}
-                  disabled={isSendingFeedback || feedbackSent}
-                  class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                >
-                  {#if isSendingFeedback || feedbackSent}
-                    <Spinner size="w-3 h-3" />
-                  {:else}
-                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                  {/if}
-                  <span>{feedbackSent ? "Resuming..." : "Continue"}</span>
-                </button>
-                <button
-                  onclick={() => sendFeedback("skip")}
-                  disabled={isSendingFeedback || feedbackSent}
-                  class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                  title="Skip current action"
-                >
-                  <FontAwesomeIcon icon={faForward} class="w-3 h-3" />
-                  <span>Skip</span>
-                </button>
-              </div>
             </div>
-            <!-- Navigate URL (for magic link login) -->
+          {/if}
+          <!-- Intervention controls overlay (full overlay, dismissable so user can see browser view) -->
+          {#if isBlocked && showInterventionControls}
             <div
-              class="flex items-center gap-2 pt-2 border-t border-[var(--dash-border)]"
+              class="absolute inset-0 z-20 p-3 bg-[var(--dash-card)]/95 backdrop-blur-sm border border-[var(--dash-warning)]/30 space-y-2 overflow-y-auto"
             >
-              <input
-                type="url"
-                bind:value={navigateUrlValue}
-                placeholder="Paste login URL from email"
-                disabled={isNavigating}
-                onkeydown={(e) => {
-                  if (e.key === "Enter") sendNavigateUrl();
-                }}
-                class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50 {isMagicLink ? 'ring-1 ring-[var(--dash-warning)]' : ''}"
-              />
-              <button
-                onclick={() => sendNavigateUrl()}
-                disabled={isNavigating || !navigateUrlValue.trim()}
-                class="px-3 py-1.5 text-sm {isMagicLink ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)]'} rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Open URL in the scraper browser"
+              <!-- Intervention message + action buttons -->
+              <div
+                class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
               >
-                {#if isNavigating}
-                  <Spinner size="w-3 h-3" />
-                {:else}
-                  Navigate
-                {/if}
-              </button>
-              {#if navigateUrlMessage}
-                <span class="text-xs text-[var(--dash-text-muted)]">{
-                  navigateUrlMessage
-                }</span>
-              {/if}
-            </div>
-            <!-- Type text into browser (2FA codes, or any focused field — username, password, etc.) -->
-            <div
-              class="flex flex-col gap-2 pt-2 border-t border-[var(--dash-border)]"
-            >
-              <p class="text-xs text-[var(--dash-text-muted)]">
-                Sends to the focused field in the browser. For username/password, click the field in the browser view first.
-              </p>
-              <div class="flex items-center gap-2">
+                <div class="text-sm text-[var(--dash-text-secondary)]">
+                  {#if isMagicLink}
+                    <p>
+                      Paste the login link from your email below and click
+                      Navigate, then click Continue.
+                    </p>
+                  {:else}
+                    <p>
+                      Complete the required action (login, CAPTCHA, or
+                      verification) in the browser above, then click Continue.
+                    </p>
+                  {/if}
+                  {#if isVerification && verificationEmailAddress}
+                    <p class="mt-1 flex items-center gap-1.5 text-xs flex-wrap">
+                      <FontAwesomeIcon
+                        icon={faEnvelope}
+                        class="w-3 h-3 text-[var(--dash-primary)]"
+                      />
+                      <span>Auto-verify: forward the email to</span>
+                      <code
+                        class="font-mono text-[var(--dash-primary)] select-all"
+                      >{verificationEmailAddress}</code>
+                      <button
+                        onclick={copyVerificationEmail}
+                        class="transition-colors {copiedVerifyEmail ? 'text-green-600' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]'}"
+                        title="Copy"
+                      >
+                        <FontAwesomeIcon
+                          icon={copiedVerifyEmail ? faCheck : faCopy}
+                          class="w-2.5 h-2.5"
+                        />
+                      </button>
+                      {#if copiedVerifyEmail}
+                        <span class="text-green-600">Copied!</span>
+                      {/if}
+                    </p>
+                  {/if}
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button
+                    onclick={() => sendFeedback("continue")}
+                    disabled={isSendingFeedback || feedbackSent}
+                    class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {#if isSendingFeedback || feedbackSent}
+                      <Spinner size="w-3 h-3" />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    <span>{feedbackSent ? "Resuming..." : "Continue"}</span>
+                  </button>
+                  <button
+                    onclick={() => sendFeedback("skip")}
+                    disabled={isSendingFeedback || feedbackSent}
+                    class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    title="Skip current action"
+                  >
+                    <FontAwesomeIcon icon={faForward} class="w-3 h-3" />
+                    <span>Skip</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Navigate URL (for magic link login) -->
+              <div
+                class="flex items-center gap-2 pt-2 border-t border-[var(--dash-border)]"
+              >
                 <input
-                  type="text"
-                  bind:value={typeTextValue}
-                  placeholder="Text to send (2FA code, username, password, …)"
-                  disabled={isTypingText}
+                  type="url"
+                  bind:value={navigateUrlValue}
+                  placeholder="Paste login URL from email"
+                  disabled={isNavigating}
                   onkeydown={(e) => {
-                    if (e.key === "Enter") sendTypeText(true);
+                    if (e.key === "Enter") sendNavigateUrl();
                   }}
-                  class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+                  class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50 {isMagicLink ? 'ring-1 ring-[var(--dash-warning)]' : ''}"
                 />
                 <button
-                  onclick={() => sendTypeText(true)}
-                  disabled={isTypingText || !typeTextValue.trim()}
-                  class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                  title="Type text and submit the form"
+                  onclick={() => sendNavigateUrl()}
+                  disabled={isNavigating || !navigateUrlValue.trim()}
+                  class="px-3 py-1.5 text-sm {isMagicLink ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)]'} rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Open URL in the scraper browser"
                 >
-                  {#if typeTextAction === "send"}
+                  {#if isNavigating}
                     <Spinner size="w-3 h-3" />
                   {:else}
-                    Send
+                    Navigate
                   {/if}
                 </button>
-              </div>
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  onclick={() => sendTypeText(false)}
-                  disabled={isTypingText || !typeTextValue.trim()}
-                  class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Type text without submitting"
-                >
-                  {#if typeTextAction === "type"}
-                    <Spinner size="w-3 h-3" />
-                  {:else}
-                    Type only
-                  {/if}
-                </button>
-                <button
-                  onclick={() => submitBrowserForm()}
-                  disabled={isTypingText}
-                  class="px-3 py-1.5 text-sm bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Click the submit button in the browser"
-                >
-                  {#if typeTextAction === "submit"}
-                    <Spinner size="w-3 h-3" />
-                  {:else}
-                    Submit
-                  {/if}
-                </button>
-                <button
-                  onclick={() => clearBrowserInput()}
-                  disabled={isTypingText}
-                  class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Clear the input field in the browser"
-                >
-                  {#if typeTextAction === "clear"}
-                    <Spinner size="w-3 h-3" />
-                  {:else}
-                    Clear
-                  {/if}
-                </button>
-                {#if typeTextMessage}
+                {#if navigateUrlMessage}
                   <span class="text-xs text-[var(--dash-text-muted)]">{
-                    typeTextMessage
+                    navigateUrlMessage
                   }</span>
                 {/if}
               </div>
+              <!-- Type text into browser (2FA codes, or any focused field — username, password, etc.) -->
+              <div
+                class="flex flex-col gap-2 pt-2 border-t border-[var(--dash-border)]"
+              >
+                <p class="text-xs text-[var(--dash-text-muted)]">
+                  Sends to the focused field in the browser. For
+                  username/password, click the field in the browser view first.
+                </p>
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    bind:value={typeTextValue}
+                    placeholder="Text to send (2FA code, username, password, …)"
+                    disabled={isTypingText}
+                    onkeydown={(e) => {
+                      if (e.key === "Enter") sendTypeText(true);
+                    }}
+                    class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+                  />
+                  <button
+                    onclick={() => sendTypeText(true)}
+                    disabled={isTypingText || !typeTextValue.trim()}
+                    class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    title="Type text and submit the form"
+                  >
+                    {#if typeTextAction === "send"}
+                      <Spinner size="w-3 h-3" />
+                    {:else}
+                      Send
+                    {/if}
+                  </button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    onclick={() => sendTypeText(false)}
+                    disabled={isTypingText || !typeTextValue.trim()}
+                    class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Type text without submitting"
+                  >
+                    {#if typeTextAction === "type"}
+                      <Spinner size="w-3 h-3" />
+                    {:else}
+                      Type only
+                    {/if}
+                  </button>
+                  <button
+                    onclick={() => submitBrowserForm()}
+                    disabled={isTypingText}
+                    class="px-3 py-1.5 text-sm bg-[var(--dash-success)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Click the submit button in the browser"
+                  >
+                    {#if typeTextAction === "submit"}
+                      <Spinner size="w-3 h-3" />
+                    {:else}
+                      Submit
+                    {/if}
+                  </button>
+                  <button
+                    onclick={() => clearBrowserInput()}
+                    disabled={isTypingText}
+                    class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Clear the input field in the browser"
+                  >
+                    {#if typeTextAction === "clear"}
+                      <Spinner size="w-3 h-3" />
+                    {:else}
+                      Clear
+                    {/if}
+                  </button>
+                  {#if typeTextMessage}
+                    <span class="text-xs text-[var(--dash-text-muted)]">{
+                      typeTextMessage
+                    }</span>
+                  {/if}
+                </div>
+              </div>
             </div>
-          </div>
-        {/if}
+          {/if}
         </div>
       </Card>
     </div>
@@ -2806,7 +3193,9 @@
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
         {#each historyRuns as run (run.id)}
-          <div class="bg-[var(--dash-card)] {expandedRunId === run.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}">
+          <div
+            class="bg-[var(--dash-card)] {expandedRunId === run.id ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}"
+          >
             <!-- Run header (clickable) -->
             <button
               onclick={() => toggleRunExpanded(run.id)}
@@ -2851,24 +3240,28 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span
-                    class={`font-medium capitalize ${
-                      getRunStatusColor(run.status)
-                    }`}
+                    class={`font-medium capitalize ${getRunStatusColor(run.status)}`}
                   >
                     {run.status}
                   </span>
                   {#if run.jobs_found !== null}
                     <span class="text-sm text-[var(--dash-text-secondary)]">
-                      • {run.jobs_found} new {run.jobs_found === 1 ? 'job' : 'jobs'}
+                      • {run.jobs_found} new {
+                        run.jobs_found === 1 ? "job" : "jobs"
+                      }
                     </span>
                   {/if}
                   {#if run.error_message && run.status !== "success"}
-                    <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                    <span
+                      class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                    >
                       {run.error_message}
                     </span>
                   {/if}
                 </div>
-                <div class="flex items-center gap-1 text-sm text-[var(--dash-text-muted)]">
+                <div
+                  class="flex items-center gap-1 text-sm text-[var(--dash-text-muted)]"
+                >
                   {formatRelativeTime(run.started_at)}
                   <span class="text-[var(--dash-text-muted)]">•</span>
                   <span class="capitalize">{run.triggered_by}</span>
@@ -2882,7 +3275,7 @@
                       copyRunId(run.id);
                     }}
                     onkeydown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.stopPropagation();
                         e.preventDefault();
                         copyRunId(run.id);
@@ -2903,28 +3296,43 @@
                 {#if run.settings}
                   <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
                     {#if run.settings.max_jobs}
-                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                      <span
+                        class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                      >
                         max: {run.settings.max_jobs}
                       </span>
                     {/if}
                     {#if run.settings.skip_first}
-                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                      <span
+                        class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                      >
                         skip first: {run.settings.skip_first}
                       </span>
                     {/if}
                     {#if run.settings.skip_existing}
-                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+                      <span
+                        class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                      >
                         skip duplicates
                       </span>
                     {/if}
                     {#if run.settings.stop_after_duplicates}
-                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
-                        stop after: {run.settings.stop_after_duplicates} duplicates
+                      <span
+                        class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                      >
+                        stop after: {run.settings.stop_after_duplicates}
+                        duplicates
                       </span>
                     {/if}
                     {#if run.settings.browser_provider}
-                      <span class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
-                        {run.settings.browser_provider === 'hosted' ? 'cloud' : run.settings.browser_provider}
+                      <span
+                        class="inline-flex items-center px-1.5 py-0 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                      >
+                        {
+                          run.settings.browser_provider === "hosted"
+                          ? "cloud"
+                          : run.settings.browser_provider
+                        }
                       </span>
                     {/if}
                   </div>

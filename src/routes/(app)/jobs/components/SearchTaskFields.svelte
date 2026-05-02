@@ -7,7 +7,6 @@
     faChevronRight,
     faClock,
     faCopy,
-    faPenToSquare,
     faDesktop,
     faEnvelope,
     faExternalLinkAlt,
@@ -15,6 +14,7 @@
     faEyeSlash,
     faGlobe,
     faKey,
+    faPenToSquare,
   } from "@fortawesome/free-solid-svg-icons";
   import CountrySelect from "./CountrySelect.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -63,7 +63,15 @@
     browserFingerprintDefaults?: { language: string; timezone: string };
     uiPreferences?: Record<string, unknown>;
     desktopConnected?: boolean | null;
-    devices?: Array<{ apiKeyId: number; apiKeyName: string; connected: boolean }>;
+    preferredDevice?: {
+      apiKeyId: number;
+      apiKeyName: string;
+      isShared: boolean;
+      ownerLabel: string | null;
+    } | null;
+    devices?: Array<
+      { apiKeyId: number; apiKeyName: string; connected: boolean }
+    >;
     verificationEmailAddress?: string | null;
     userTimezone?: string;
     timeFormat?: TimeFormat;
@@ -95,6 +103,7 @@
     browserFingerprintDefaults = { language: "", timezone: "" },
     uiPreferences = {},
     desktopConnected = null,
+    preferredDevice = null,
     devices = [],
     verificationEmailAddress = null,
     userTimezone = "",
@@ -189,7 +198,13 @@
         schedule: loadSectionOpen("schedule"),
         browser: loadSectionOpen("browser"),
       }
-      : { search: true, auth: true, options: true, schedule: true, browser: true },
+      : {
+        search: true,
+        auth: true,
+        options: true,
+        schedule: true,
+        browser: true,
+      },
   );
 
   // Parse helpers
@@ -277,7 +292,9 @@
 
   // Tunnel device selection (edit)
   let tunnelApiKey = $state<number | null>(searchTask?.tunnel_api_key ?? null);
-  let savedTunnelApiKey = $state<number | null>(searchTask?.tunnel_api_key ?? null);
+  let savedTunnelApiKey = $state<number | null>(
+    searchTask?.tunnel_api_key ?? null,
+  );
   let tunnelApiKeyDirty = $derived(
     isEdit && tunnelApiKey !== savedTunnelApiKey,
   );
@@ -294,16 +311,24 @@
   let isSavingKeepMinimized = $state(false);
 
   // Schedule (edit)
-  let scheduleEnabled = $state<boolean>(searchTask?.schedule_interval_hours != null);
+  let scheduleEnabled = $state<boolean>(
+    searchTask?.schedule_interval_hours != null,
+  );
   let scheduleIntervalInput = $state<string>(
     searchTask?.schedule_interval_hours?.toString() ?? "24",
   );
-  let schedulePreferredHour = $state<number>(searchTask?.schedule_preferred_hour ?? 9);
-  let savedScheduleEnabled = $state<boolean>(searchTask?.schedule_interval_hours != null);
+  let schedulePreferredHour = $state<number>(
+    searchTask?.schedule_preferred_hour ?? 9,
+  );
+  let savedScheduleEnabled = $state<boolean>(
+    searchTask?.schedule_interval_hours != null,
+  );
   let savedScheduleInterval = $state<string>(
     searchTask?.schedule_interval_hours?.toString() ?? "24",
   );
-  let savedSchedulePreferredHour = $state<number>(searchTask?.schedule_preferred_hour ?? 9);
+  let savedSchedulePreferredHour = $state<number>(
+    searchTask?.schedule_preferred_hour ?? 9,
+  );
   let isSavingSchedule = $state(false);
   let scheduleDirty = $derived(
     isEdit && (
@@ -521,7 +546,9 @@
   async function saveSchedule() {
     isSavingSchedule = true;
     try {
-      const intervalVal = scheduleEnabled ? parseInt(scheduleIntervalInput) : null;
+      const intervalVal = scheduleEnabled
+        ? parseInt(scheduleIntervalInput)
+        : null;
       await patchSearchTask({
         schedule_interval_hours: intervalVal,
         schedule_preferred_hour: schedulePreferredHour,
@@ -642,7 +669,8 @@
     keepMinimized = newData.searchTask.keep_minimized ?? true;
     savedKeepMinimized = newData.searchTask.keep_minimized ?? true;
     scheduleEnabled = newData.searchTask.schedule_interval_hours != null;
-    scheduleIntervalInput = newData.searchTask.schedule_interval_hours?.toString() ?? "24";
+    scheduleIntervalInput =
+      newData.searchTask.schedule_interval_hours?.toString() ?? "24";
     schedulePreferredHour = newData.searchTask.schedule_preferred_hour ?? 9;
     savedScheduleEnabled = scheduleEnabled;
     savedScheduleInterval = scheduleIntervalInput;
@@ -700,14 +728,16 @@
       skipFirstEnabled = searchTask.skip_first != null;
       skipFirstInput = searchTask.skip_first?.toString() ?? "";
       stopAfterDuplicatesEnabled = searchTask.stop_after_duplicates != null;
-      stopAfterDuplicatesInput = searchTask.stop_after_duplicates?.toString() ?? "";
+      stopAfterDuplicatesInput = searchTask.stop_after_duplicates?.toString() ??
+        "";
       skipExisting = searchTask.skip_existing ?? false;
       browserProvider = searchTask.browser_provider ?? null;
       savedBrowserProvider = searchTask.browser_provider ?? null;
       keepMinimized = searchTask.keep_minimized ?? true;
       savedKeepMinimized = searchTask.keep_minimized ?? true;
       scheduleEnabled = searchTask.schedule_interval_hours != null;
-      scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ?? "24";
+      scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ??
+        "24";
       schedulePreferredHour = searchTask.schedule_preferred_hour ?? 9;
       savedScheduleEnabled = scheduleEnabled;
       savedScheduleInterval = scheduleIntervalInput;
@@ -814,7 +844,10 @@
                 />
                 {#if detectingPlatform}
                   <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Spinner size="w-4 h-4" color="var(--dash-text-secondary)" />
+                    <Spinner
+                      size="w-4 h-4"
+                      color="var(--dash-text-secondary)"
+                    />
                   </div>
                 {/if}
               </div>
@@ -898,12 +931,12 @@
               </div>
               {#if searchUrlDirty}
                 <div class="mt-2">
-                  {@render             saveCancel(
-              true,
-              isSavingSearchUrl,
-              saveSearchUrl,
-              () => (searchUrlInput = searchTask?.search_url ?? ""),
-            )}
+                  {@render saveCancel(
+                    true,
+                    isSavingSearchUrl,
+                    saveSearchUrl,
+                    () => (searchUrlInput = searchTask?.search_url ?? ""),
+                  )}
                 </div>
               {/if}
             </div>
@@ -966,13 +999,13 @@
                 </p>
                 {#if searchTermDirty}
                   <div class="mt-2">
-                    {@render             saveCancel(
-              true,
-              isSavingSearchTerm,
-              saveSearchTerm,
-              () => (searchTermInput = searchTask?.search_term ??
-                ""),
-            )}
+                    {@render saveCancel(
+                      true,
+                      isSavingSearchTerm,
+                      saveSearchTerm,
+                      () => (searchTermInput = searchTask?.search_term ??
+                        ""),
+                    )}
                   </div>
                 {/if}
               </div>
@@ -1049,13 +1082,12 @@
                 </div>
                 {#if loginUrlDirty}
                   <div class="mt-2">
-                    {@render             saveCancel(
-              true,
-              isSavingLoginUrl,
-              saveLoginUrl,
-              () => (loginUrlInput =
-                searchTask?.job_platform?.login_page_url ?? ""),
-            )}
+                    {@render saveCancel(
+                      true,
+                      isSavingLoginUrl,
+                      saveLoginUrl,
+                      () => (loginUrlInput = searchTask?.job_platform?.login_page_url ?? ""),
+                    )}
                   </div>
                 {/if}
               {:else if searchTask?.job_platform?.login_page_url}
@@ -1079,171 +1111,200 @@
 
           <!-- Credentials -->
           {#if isAdd}
-          <!-- Login Mode (add mode) -->
-          <div class="border-t border-[var(--dash-border)] pt-3">
-            <h3
-              class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
-            >
-              Login Mode
-            </h3>
-
-            <div class="flex rounded-md border border-[var(--dash-border)] overflow-hidden">
-              <button
-                type="button"
-                onclick={() => { addLoginMode = "auto"; if (selectedCredentialId === "none") selectedCredentialId = existingCredentials.length > 0 ? String(existingCredentials[0].id) : "new"; showNewCredentials = selectedCredentialId === "new"; }}
-                class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-                  addLoginMode === "auto"
-                    ? "bg-[var(--dash-primary)] text-white"
-                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                }`}
-              >
-                Auto-login
-              </button>
-              <button
-                type="button"
-                onclick={() => { addLoginMode = "manual"; selectedCredentialId = "none"; showNewCredentials = false; }}
-                class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-                  addLoginMode === "manual"
-                    ? "bg-[var(--dash-primary)] text-white"
-                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                }`}
-              >
-                Manual login
-              </button>
-              <button
-                type="button"
-                onclick={() => { addLoginMode = "none"; selectedCredentialId = "none"; showNewCredentials = false; }}
-                class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-                  addLoginMode === "none"
-                    ? "bg-[var(--dash-primary)] text-white"
-                    : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-                }`}
-              >
-                No login
-              </button>
-            </div>
-            <input type="hidden" name="login_mode" value={addLoginMode} />
-            <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
-              {#if addLoginMode === "auto"}
-                The scraper will fill in credentials and log in automatically.
-              {:else if addLoginMode === "manual"}
-                The scraper will navigate to the login page and wait for you to log in.
-              {:else}
-                The scraper will go directly to the search page without logging in.
-              {/if}
-            </p>
-          </div>
-
-          <!-- Credentials (only for auto-login) -->
-          {#if addLoginMode === "auto"}
-            <div>
+            <!-- Login Mode (add mode) -->
+            <div class="border-t border-[var(--dash-border)] pt-3">
               <h3
                 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
               >
-                Login Credentials
+                Login Mode
               </h3>
 
-              <select
-                name="credential_id"
-                value={selectedCredentialId}
-                onchange={(e) =>
+              <div
+                class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onclick={() => {
+                    addLoginMode = "auto";
+                    if (selectedCredentialId === "none") {
+                      selectedCredentialId = existingCredentials.length > 0
+                        ? String(existingCredentials[0].id)
+                        : "new";
+                    }
+                    showNewCredentials = selectedCredentialId === "new";
+                  }}
+                  class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                    addLoginMode === "auto"
+                      ? "bg-[var(--dash-primary)] text-white"
+                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                  }`}
+                >
+                  Auto-login
+                </button>
+                <button
+                  type="button"
+                  onclick={() => {
+                    addLoginMode = "manual";
+                    selectedCredentialId = "none";
+                    showNewCredentials = false;
+                  }}
+                  class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                    addLoginMode === "manual"
+                      ? "bg-[var(--dash-primary)] text-white"
+                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                  }`}
+                >
+                  Manual login
+                </button>
+                <button
+                  type="button"
+                  onclick={() => {
+                    addLoginMode = "none";
+                    selectedCredentialId = "none";
+                    showNewCredentials = false;
+                  }}
+                  class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                    addLoginMode === "none"
+                      ? "bg-[var(--dash-primary)] text-white"
+                      : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+                  }`}
+                >
+                  No login
+                </button>
+              </div>
+              <input type="hidden" name="login_mode" value={addLoginMode} />
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
+                {#if addLoginMode === "auto"}
+                  The scraper will fill in credentials and log in automatically.
+                {:else if addLoginMode === "manual"}
+                  The scraper will navigate to the login page and wait for you
+                  to log in.
+                {:else}
+                  The scraper will go directly to the search page without
+                  logging in.
+                {/if}
+              </p>
+            </div>
+
+            <!-- Credentials (only for auto-login) -->
+            {#if addLoginMode === "auto"}
+              <div>
+                <h3
+                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2"
+                >
+                  Login Credentials
+                </h3>
+
+                <select
+                  name="credential_id"
+                  value={selectedCredentialId}
+                  onchange={(e) =>
                   handleCredentialSelection(
                     (e.target as HTMLSelectElement).value,
                   )}
-                class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-              >
-                {#each existingCredentials as cred}
-                  <option value={String(cred.id)}>{cred.username}</option>
-                {/each}
-                <option value="new">+ Add new credentials</option>
-              </select>
-
-              {#if showNewCredentials}
-                <div
-                  class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3"
+                  class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
                 >
-                  <div>
-                    <label
-                      for="add-cred-username"
-                      class="block text-sm text-[var(--dash-text)] mb-1"
-                    >
-                      Username / Email
-                    </label>
-                    <input
-                      type="text"
-                      id="add-cred-username"
-                      name="new_credential_username"
-                      bind:value={newCredUsername}
-                      placeholder="your@email.com"
-                      class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="add-cred-password"
-                      class="block text-sm text-[var(--dash-text)] mb-1"
-                    >
-                      Password
-                    </label>
-                    <div class="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        id="add-cred-password"
-                        name="new_credential_password"
-                        bind:value={newCredPassword}
-                        placeholder="Enter password"
-                        class="w-full px-2 py-1 pr-8 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                      />
-                      <button
-                        type="button"
-                        onclick={() => (showPassword = !showPassword)}
-                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-                      >
-                        <FontAwesomeIcon
-                          icon={showPassword ? faEyeSlash : faEye}
-                          class="w-4 h-4"
-                        />
-                      </button>
-                    </div>
-                  </div>
-                  <!-- Advanced: security answer -->
-                  <button
-                    type="button"
-                    onclick={() => (showAdvancedAuth = !showAdvancedAuth)}
-                    class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+                  {#each existingCredentials as cred}
+                    <option value={String(cred.id)}>{cred.username}</option>
+                  {/each}
+                  <option value="new">+ Add new credentials</option>
+                </select>
+
+                {#if showNewCredentials}
+                  <div
+                    class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3"
                   >
-                    {#if showAdvancedAuth}
-                      <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-                    {:else}
-                      <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
-                    {/if}
-                    Advanced
-                  </button>
-                  {#if showAdvancedAuth}
                     <div>
                       <label
-                        for="add-cred-security-answer"
-                        class="block text-xs text-[var(--dash-text-secondary)] mb-1"
+                        for="add-cred-username"
+                        class="block text-sm text-[var(--dash-text)] mb-1"
                       >
-                        Security Question Answer <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
+                        Username / Email
                       </label>
                       <input
                         type="text"
-                        id="add-cred-security-answer"
-                        name="new_credential_security_answer"
-                        bind:value={newCredSecurityAnswer}
-                        placeholder="e.g., your mother's maiden name"
+                        id="add-cred-username"
+                        name="new_credential_username"
+                        bind:value={newCredUsername}
+                        placeholder="your@email.com"
                         class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                       />
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                        Auto-filled when a site asks a security question after login.
-                      </p>
                     </div>
-                  {/if}
-                </div>
-              {/if}
-            </div>
-          {/if}
+                    <div>
+                      <label
+                        for="add-cred-password"
+                        class="block text-sm text-[var(--dash-text)] mb-1"
+                      >
+                        Password
+                      </label>
+                      <div class="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          id="add-cred-password"
+                          name="new_credential_password"
+                          bind:value={newCredPassword}
+                          placeholder="Enter password"
+                          class="w-full px-2 py-1 pr-8 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                        />
+                        <button
+                          type="button"
+                          onclick={() => (showPassword = !showPassword)}
+                          class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+                        >
+                          <FontAwesomeIcon
+                            icon={showPassword ? faEyeSlash : faEye}
+                            class="w-4 h-4"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Advanced: security answer -->
+                    <button
+                      type="button"
+                      onclick={() => (showAdvancedAuth = !showAdvancedAuth)}
+                      class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+                    >
+                      {#if showAdvancedAuth}
+                        <FontAwesomeIcon
+                          icon={faChevronDown}
+                          class="w-2.5 h-2.5"
+                        />
+                      {:else}
+                        <FontAwesomeIcon
+                          icon={faChevronRight}
+                          class="w-2.5 h-2.5"
+                        />
+                      {/if}
+                      Advanced
+                    </button>
+                    {#if showAdvancedAuth}
+                      <div>
+                        <label
+                          for="add-cred-security-answer"
+                          class="block text-xs text-[var(--dash-text-secondary)] mb-1"
+                        >
+                          Security Question Answer <span
+                            class="font-normal text-[var(--dash-text-muted)]"
+                          >(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="add-cred-security-answer"
+                          name="new_credential_security_answer"
+                          bind:value={newCredSecurityAnswer}
+                          placeholder="e.g., your mother's maiden name"
+                          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                        />
+                        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                          Auto-filled when a site asks a security question after
+                          login.
+                        </p>
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
           {:else}
             <CredentialSelector
               bind:credentials={editPlatformCredentials}
@@ -1277,12 +1338,12 @@
 
             {#if credentialDirty}
               <div class="mt-3">
-                {@render           saveCancel(
-            true,
-            isSavingCredential,
-            saveCredential,
-            () => (editSelectedCredentialId = editSavedCredentialId),
-          )}
+                {@render saveCancel(
+                  true,
+                  isSavingCredential,
+                  saveCredential,
+                  () => (editSelectedCredentialId = editSavedCredentialId),
+                )}
               </div>
             {/if}
           {/if}
@@ -1291,11 +1352,17 @@
           {#if verificationEmailAddress}
             <div class="pt-3 border-t border-[var(--dash-border)]">
               <div class="flex items-center gap-2 mb-1.5">
-                <FontAwesomeIcon icon={faEnvelope} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-                <span class="text-sm text-[var(--dash-text-secondary)]">Email verification relay</span>
+                <FontAwesomeIcon
+                  icon={faEnvelope}
+                  class="w-3.5 h-3.5 text-[var(--dash-text-muted)]"
+                />
+                <span class="text-sm text-[var(--dash-text-secondary)]"
+                >Email verification relay</span>
               </div>
               <div class="flex items-center gap-2">
-                <code class="flex-1 px-2 py-1.5 text-xs font-mono bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded select-all text-[var(--dash-text)] truncate">{verificationEmailAddress}</code>
+                <code
+                  class="flex-1 px-2 py-1.5 text-xs font-mono bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded select-all text-[var(--dash-text)] truncate"
+                >{verificationEmailAddress}</code>
                 <button
                   type="button"
                   onclick={copyVerificationEmail}
@@ -1303,21 +1370,24 @@
                   title="Copy to clipboard"
                 >
                   {#if copiedVerifyEmail}
-                    <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5 text-[var(--dash-success)]" />
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      class="w-3.5 h-3.5 text-[var(--dash-success)]"
+                    />
                   {:else}
                     <FontAwesomeIcon icon={faCopy} class="w-3.5 h-3.5" />
                   {/if}
                 </button>
               </div>
               <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
-                Forward verification emails from job sites to this address for auto-login.
+                Forward verification emails from job sites to this address for
+                auto-login.
               </p>
             </div>
           {/if}
         {/if}
       </div>
     {/if}
-
   </div>
 
   <!-- Right column: Scraping Options & Browser Control -->
@@ -1347,10 +1417,8 @@
               checked={isAdd ? addMaxJobsEnabled : maxJobsEnabled}
               onchange={(e) => {
                 if (isAdd) {
-                  addMaxJobsEnabled =
-                    (e.target as HTMLInputElement).checked;
-                } else {maxJobsEnabled =
-                    (e.target as HTMLInputElement).checked;}
+                  addMaxJobsEnabled = (e.target as HTMLInputElement).checked;
+                } else maxJobsEnabled = (e.target as HTMLInputElement).checked;
               }}
               class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
             />
@@ -1378,15 +1446,15 @@
               disabled={!maxJobsEnabled}
               class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
-            {@render           saveCancel(
-            maxJobsDirty,
-            isSavingMaxJobs,
-            saveMaxJobs,
-            () => {
-              maxJobsInput = searchTask?.max_jobs?.toString() ?? "";
-              maxJobsEnabled = searchTask?.max_jobs != null;
-            },
-          )}
+            {@render saveCancel(
+              maxJobsDirty,
+              isSavingMaxJobs,
+              saveMaxJobs,
+              () => {
+                maxJobsInput = searchTask?.max_jobs?.toString() ?? "";
+                maxJobsEnabled = searchTask?.max_jobs != null;
+              },
+            )}
           {/if}
         </div>
 
@@ -1434,12 +1502,12 @@
               value={addSkipExisting ? "true" : "false"}
             />
           {:else}
-            {@render           saveCancel(
-            skipExistingDirty,
-            isSavingSkipExisting,
-            saveSkipExisting,
-            () => (skipExisting = searchTask?.skip_existing ?? false),
-          )}
+            {@render saveCancel(
+              skipExistingDirty,
+              isSavingSkipExisting,
+              saveSkipExisting,
+              () => (skipExisting = searchTask?.skip_existing ?? false),
+            )}
           {/if}
         </div>
 
@@ -1448,15 +1516,11 @@
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={isAdd
-                ? addStopAfterDuplicatesEnabled
-                : stopAfterDuplicatesEnabled}
+              checked={isAdd ? addStopAfterDuplicatesEnabled : stopAfterDuplicatesEnabled}
               onchange={(e) => {
                 if (isAdd) {
-                  addStopAfterDuplicatesEnabled =
-                    (e.target as HTMLInputElement).checked;
-                } else {stopAfterDuplicatesEnabled =
-                    (e.target as HTMLInputElement).checked;}
+                  addStopAfterDuplicatesEnabled = (e.target as HTMLInputElement).checked;
+                } else stopAfterDuplicatesEnabled = (e.target as HTMLInputElement).checked;
               }}
               class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
             />
@@ -1487,22 +1551,19 @@
           {/if}
           <span
             class="text-sm text-[var(--dash-text-secondary)]"
-            class:opacity-40={isAdd
-              ? !addStopAfterDuplicatesEnabled
-              : !stopAfterDuplicatesEnabled}
+            class:opacity-40={isAdd ? !addStopAfterDuplicatesEnabled : !stopAfterDuplicatesEnabled}
           >duplicates in a row</span>
           {#if isEdit}
-            {@render           saveCancel(
-            stopAfterDuplicatesDirty,
-            isSavingStopAfterDuplicates,
-            saveStopAfterDuplicates,
-            () => {
-              stopAfterDuplicatesInput =
-                searchTask?.stop_after_duplicates?.toString() ?? "";
-              stopAfterDuplicatesEnabled =
-                searchTask?.stop_after_duplicates != null;
-            },
-          )}
+            {@render saveCancel(
+              stopAfterDuplicatesDirty,
+              isSavingStopAfterDuplicates,
+              saveStopAfterDuplicates,
+              () => {
+                stopAfterDuplicatesInput = searchTask?.stop_after_duplicates?.toString() ??
+                  "";
+                stopAfterDuplicatesEnabled = searchTask?.stop_after_duplicates != null;
+              },
+            )}
           {/if}
         </div>
 
@@ -1514,10 +1575,8 @@
               checked={isAdd ? addSkipFirstEnabled : skipFirstEnabled}
               onchange={(e) => {
                 if (isAdd) {
-                  addSkipFirstEnabled =
-                    (e.target as HTMLInputElement).checked;
-                } else {skipFirstEnabled =
-                    (e.target as HTMLInputElement).checked;}
+                  addSkipFirstEnabled = (e.target as HTMLInputElement).checked;
+                } else skipFirstEnabled = (e.target as HTMLInputElement).checked;
               }}
               class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
             />
@@ -1551,19 +1610,18 @@
             class:opacity-40={isAdd ? !addSkipFirstEnabled : !skipFirstEnabled}
           >jobs</span>
           {#if isEdit}
-            {@render           saveCancel(
-            skipFirstDirty,
-            isSavingSkipFirst,
-            saveSkipFirst,
-            () => {
-              skipFirstInput = searchTask?.skip_first?.toString() ??
-                "";
-              skipFirstEnabled = searchTask?.skip_first != null;
-            },
-          )}
+            {@render saveCancel(
+              skipFirstDirty,
+              isSavingSkipFirst,
+              saveSkipFirst,
+              () => {
+                skipFirstInput = searchTask?.skip_first?.toString() ??
+                  "";
+                skipFirstEnabled = searchTask?.skip_first != null;
+              },
+            )}
           {/if}
         </div>
-
       </div>
     {/if}
 
@@ -1598,7 +1656,9 @@
           {#if addScheduleInterval}
             <div class="space-y-2 pl-6">
               <div class="flex items-center gap-2">
-                <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Frequency</span>
+                <span
+                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+                >Frequency</span>
                 <select
                   name="schedule_interval_hours"
                   bind:value={addScheduleInterval}
@@ -1624,7 +1684,9 @@
           {#if scheduleEnabled}
             <div class="space-y-3 pl-6">
               <div class="flex items-center gap-2">
-                <span class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Frequency</span>
+                <span
+                  class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap"
+                >Frequency</span>
                 <select
                   bind:value={scheduleIntervalInput}
                   class="px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
@@ -1635,7 +1697,9 @@
                 </select>
               </div>
               <div>
-                <span class="block text-sm text-[var(--dash-text-secondary)] mb-1">Preferred time</span>
+                <span
+                  class="block text-sm text-[var(--dash-text-secondary)] mb-1"
+                >Preferred time</span>
                 <div class="flex items-center gap-2">
                   <select
                     bind:value={schedulePreferredHour}
@@ -1646,7 +1710,9 @@
                     {/each}
                   </select>
                   {#if userTimezone}
-                    <span class="text-xs text-[var(--dash-text-muted)]">{userTimezone.split("/").pop()?.replace(/_/g, " ")}</span>
+                    <span class="text-xs text-[var(--dash-text-muted)]">{
+                      userTimezone.split("/").pop()?.replace(/_/g, " ")
+                    }</span>
                     <a
                       href="/settings#timezone"
                       class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
@@ -1655,7 +1721,10 @@
                       <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
                     </a>
                   {:else}
-                    <a href="/settings#timezone" class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]">Set timezone</a>
+                    <a
+                      href="/settings#timezone"
+                      class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]"
+                    >Set timezone</a>
                   {/if}
                 </div>
               </div>
@@ -1742,11 +1811,24 @@
                 : 'bg-[var(--dash-text-muted)]'}
               "
             ></span>
-            <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-            {#if desktopConnected}
-              {devices.filter(d => d.connected).map(d => d.apiKeyName).join(", ") || "Device connected"}
+            <FontAwesomeIcon
+              icon={faDesktop}
+              class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"
+            />
+            {#if preferredDevice}
+              {preferredDevice.apiKeyName}
+              {#if preferredDevice.isShared && preferredDevice.ownerLabel}
+                <span class="text-[var(--dash-text-muted)]">
+                  (shared by {preferredDevice.ownerLabel})
+                </span>
+              {/if}
+            {:else if desktopConnected}
+              Device connected
             {:else}
-              No device connected — <a href="/jobs/import/devices" class="underline hover:text-amber-700">Setup guide</a>
+              No device connected — <a
+                href="/jobs/import/devices"
+                class="underline hover:text-amber-700"
+              >Setup guide</a>
             {/if}
           </div>
         {/if}
@@ -1801,8 +1883,7 @@
                   </button>
                   <button
                     type="button"
-                    onclick={() => (editBrowserCountryCode =
-                      savedBrowserCountryCode)}
+                    onclick={() => (editBrowserCountryCode = savedBrowserCountryCode)}
                     class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                   >
                     Cancel
@@ -1817,9 +1898,7 @@
               The country the scraper will appear to browse from. Set this to
               match your actual location to avoid your account being flagged for
               logging in from unusual locations.{
-                isEdit
-                  ? " If empty, your profile's country is used."
-                  : ""
+                isEdit ? " If empty, your profile's country is used." : ""
               }
             </p>
 
@@ -1898,15 +1977,15 @@
 
                   {#if browserFingerprintDirty}
                     <div class="flex items-center gap-2 pt-1">
-                      {@render               saveCancel(
-                true,
-                isSavingBrowserFingerprint,
-                saveBrowserFingerprint,
-                resetBrowserFingerprint,
-              )}
+                      {@render saveCancel(
+                        true,
+                        isSavingBrowserFingerprint,
+                        saveBrowserFingerprint,
+                        resetBrowserFingerprint,
+                      )}
                     </div>
                   {/if}
-                  {#if             isSavingBrowserFingerprint && !browserFingerprintDirty}
+                  {#if isSavingBrowserFingerprint && !browserFingerprintDirty}
                     <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
                   {/if}
                 </div>
@@ -1925,10 +2004,8 @@
                   checked={isAdd ? addKeepMinimized : keepMinimized}
                   onchange={(e) => {
                     if (isAdd) {
-                      addKeepMinimized =
-                        (e.target as HTMLInputElement).checked;
-                    } else {keepMinimized =
-                        (e.target as HTMLInputElement).checked;}
+                      addKeepMinimized = (e.target as HTMLInputElement).checked;
+                    } else keepMinimized = (e.target as HTMLInputElement).checked;
                   }}
                   class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
                 />
@@ -1942,12 +2019,12 @@
                   value={addKeepMinimized ? "true" : "false"}
                 />
               {:else}
-                {@render             saveCancel(
-              keepMinimizedDirty,
-              isSavingKeepMinimized,
-              saveKeepMinimized,
-              () => (keepMinimized = savedKeepMinimized),
-            )}
+                {@render saveCancel(
+                  keepMinimizedDirty,
+                  isSavingKeepMinimized,
+                  saveKeepMinimized,
+                  () => (keepMinimized = savedKeepMinimized),
+                )}
               {/if}
             </div>
             <p class="text-xs text-[var(--dash-text-muted)] mt-2">
