@@ -51,7 +51,7 @@
         type="button"
         {disabled}
         onclick={() => select("tunnel")}
-        class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors disabled:opacity-60 {value === 'local' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+        class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors disabled:opacity-60 {value === 'tunnel' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
       >
         <FontAwesomeIcon icon={faHouseSignal} class="w-3 h-3" />
         My device
@@ -99,8 +99,8 @@
 
   <p class="text-xs text-[var(--dash-text-muted)] mt-2">
     {#if value === "tunnel"}
-      Uses your own device's browser via the tunnel (residential IP).
-      Less likely to be detected, but requires a connected device.
+      Uses your own device's browser via the tunnel (residential IP). Less
+      likely to be detected, but requires a connected device.
     {:else if value === "hosted"}
       Uses a cloud-hosted anti-detect browser (datacenter IP). Fast and
       reliable, but may trigger bot detection on some platforms.
