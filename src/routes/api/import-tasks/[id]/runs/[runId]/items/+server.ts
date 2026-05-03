@@ -69,10 +69,18 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           salary_period: true,
           job_types: true,
           work_location: true,
+          experience_levels: true,
           skills_required: true,
           skills_preferred: true,
           job_description: true,
           source_url: true,
+          date_posted: true,
+          date_created: true,
+        },
+        with: {
+          job_platform: {
+            columns: { id: true, name: true, url: true },
+          },
         },
       },
     },

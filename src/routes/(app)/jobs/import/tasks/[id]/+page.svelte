@@ -13,6 +13,7 @@
     formatSalaryRange,
     formatWorkLocation,
     searchTaskDisplayName,
+    timeAgo,
   } from "$lib/format";
   import { page } from "$app/stores";
   import { formatDateTime, formatTime as fmtTime } from "$lib/format-date";
@@ -37,6 +38,7 @@
     faEye,
     faEyeSlash,
     faForward,
+    faGlobe,
     faHandPointer,
     faHistory,
     faMapMarkerAlt,
@@ -1626,6 +1628,17 @@
         {:else}
           <div class="divide-y divide-[var(--dash-border)]">
             {#each runItems[run.id].items as item (item.id)}
+              {@const jobData = item.job}
+              {@const workLocs = Array.isArray(jobData?.work_location) ? jobData.work_location : []}
+              {@const jobTyps = Array.isArray(jobData?.job_types) ? jobData.job_types : []}
+              {@const expLvls = Array.isArray(jobData?.experience_levels) ? jobData.experience_levels : []}
+              {@const salaryText = jobData ? formatSalary(
+                jobData.salary_min,
+                jobData.salary_max,
+                jobData.salary_currency,
+                jobData.salary_period,
+              ) : ""}
+              {@const datePosted = jobData?.date_posted || jobData?.date_created}
               <div
                 data-item-status={item.status}
                 class={`${
@@ -1688,30 +1701,79 @@
                     <div
                       class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 mt-1"
                     >
-                      {#if item.job?.company || item.company || item.job?.office_location || item.location}
-                        <div
-                          class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]"
-                        >
-                          {#if item.job?.company || item.company}
-                            <span class="flex items-center gap-1">
-                              <FontAwesomeIcon
-                                icon={faBuilding}
-                                class="w-3 h-3"
-                              />
-                              {item.job?.company || item.company}
-                            </span>
-                          {/if}
-                          {#if item.job?.office_location || item.location}
-                            <span class="flex items-center gap-1">
-                              <FontAwesomeIcon
-                                icon={faMapMarkerAlt}
-                                class="w-3 h-3"
-                              />
-                              {item.job?.office_location || item.location}
-                            </span>
-                          {/if}
-                        </div>
-                      {/if}
+                      <div
+                        class="flex flex-col gap-0.5 min-w-0 flex-1"
+                      >
+                        {#if jobData?.company || item.company || jobData?.office_location || item.location || jobData?.job_platform}
+                          <div
+                            class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]"
+                          >
+                            {#if jobData?.company || item.company}
+                              <span class="flex items-center gap-1">
+                                <FontAwesomeIcon
+                                  icon={faBuilding}
+                                  class="w-3 h-3"
+                                />
+                                {jobData?.company || item.company}
+                              </span>
+                            {/if}
+                            {#if jobData?.office_location || item.location}
+                              <span class="flex items-center gap-1">
+                                <FontAwesomeIcon
+                                  icon={faMapMarkerAlt}
+                                  class="w-3 h-3"
+                                />
+                                {jobData?.office_location || item.location}
+                              </span>
+                            {/if}
+                            {#if jobData?.job_platform}
+                              <span class="flex items-center gap-1">
+                                <FontAwesomeIcon
+                                  icon={faGlobe}
+                                  class="w-3 h-3 text-[var(--dash-text-muted)]"
+                                />
+                                {jobData.job_platform.name}
+                              </span>
+                            {/if}
+                          </div>
+                        {/if}
+                        {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
+                          <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                            {#each workLocs as loc}
+                              <CategoryPill category="work_location" value={loc} />
+                            {/each}
+                            {#each jobTyps as type}
+                              <CategoryPill category="job_type" value={type} />
+                            {/each}
+                            {#each expLvls as level}
+                              <CategoryPill category="experience_level" value={level} />
+                            {/each}
+                          </div>
+                        {/if}
+                        {#if salaryText || datePosted}
+                          <div class="flex items-center gap-3 text-xs flex-wrap mt-0.5">
+                            {#if salaryText}
+                              <span class="flex items-center gap-1 text-[var(--dash-success)]">
+                                <FontAwesomeIcon
+                                  icon={faMoneyBillWave}
+                                  class="w-3 h-3"
+                                />
+                                {salaryText}
+                              </span>
+                            {/if}
+                            {#if datePosted}
+                              <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
+                                <FontAwesomeIcon
+                                  icon={faCalendar}
+                                  class="w-3 h-3"
+                                />
+                                {timeAgo(datePosted)}
+                                <span class="opacity-50">{formatDate(datePosted)}</span>
+                              </span>
+                            {/if}
+                          </div>
+                        {/if}
+                      </div>
                       <span
                         class="
                           ml-auto text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
@@ -1794,66 +1856,9 @@
                 <!-- Expanded job details -->
                 {#if expandedItemId === item.id && item.job}
                   {@const job = item.job}
-                  {@const workLocs = Array.isArray(job.work_location) ? job.work_location : []}
-                  {@const jobTyps = Array.isArray(job.job_types) ? job.job_types : []}
-                  {@const expLvls = Array.isArray(job.experience_levels) ? job.experience_levels : []}
-                  {@const salaryText = formatSalary(
-                    job.salary_min,
-                    job.salary_max,
-                    job.salary_currency,
-                    job.salary_period,
-                  )}
                   <div
                     class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)}"
                   >
-                    <!-- Category pills -->
-                    {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
-                      <div class="flex items-center gap-1.5 flex-wrap">
-                        {#each workLocs as loc}
-                          <CategoryPill category="work_location" value={loc} />
-                        {/each}
-                        {#each jobTyps as type}
-                          <CategoryPill category="job_type" value={type} />
-                        {/each}
-                        {#each expLvls as level}
-                          <CategoryPill
-                            category="experience_level"
-                            value={level}
-                          />
-                        {/each}
-                      </div>
-                    {/if}
-
-                    <!-- Salary and date -->
-                    {#if salaryText || job.date_posted || job.date_created}
-                      <div
-                        class="flex items-center gap-3 text-xs sm:text-sm flex-wrap"
-                      >
-                        {#if salaryText}
-                          <span
-                            class="flex items-center gap-1 text-[var(--dash-success)]"
-                          >
-                            <FontAwesomeIcon
-                              icon={faMoneyBillWave}
-                              class="w-3 h-3"
-                            />
-                            {salaryText}
-                          </span>
-                        {/if}
-                        {#if job.date_posted || job.date_created}
-                          <span
-                            class="flex items-center gap-1 text-[var(--dash-text-muted)]"
-                          >
-                            <FontAwesomeIcon
-                              icon={faCalendar}
-                              class="w-3 h-3"
-                            />
-                            {formatDate(job.date_posted || job.date_created)}
-                          </span>
-                        {/if}
-                      </div>
-                    {/if}
-
                     <!-- Skills -->
                     {#if job.skills_required && Array.isArray(job.skills_required) &&
   job.skills_required.length > 0}
