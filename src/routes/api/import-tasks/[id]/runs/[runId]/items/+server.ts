@@ -5,12 +5,12 @@
  * Returns the list of jobs discovered during a scraper run with their processing status.
  */
 
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, asc } from "drizzle-orm";
-import { search_task_runs, search_task_run_items } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { and, asc, eq } from "drizzle-orm";
+import { search_task_run_items, search_task_runs } from "$lib/server/db/schema";
+import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
@@ -48,6 +48,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       title: true,
       company: true,
       location: true,
+      source_url: true,
       status: true,
       status_message: true,
       job_id: true,
@@ -87,7 +88,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   );
 
   const newCount = items.filter((i) => i.was_created === true).length;
-  const existingCount = items.filter((i) => i.was_created === false && i.status === "completed").length;
+  const existingCount =
+    items.filter((i) => i.was_created === false && i.status === "completed")
+      .length;
 
   return json({
     items,

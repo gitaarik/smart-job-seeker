@@ -274,6 +274,7 @@
     title: string | null;
     company: string | null;
     location: string | null;
+    source_url: string | null;
     status: string;
     status_message: string | null;
     job_id: number | null;
@@ -1772,6 +1773,23 @@
                     </div>
                   </div>
                 </button>
+
+                <!-- Source link for items without a job row (skipped/error)
+                     so the user can still inspect what the scraper saw. -->
+                {#if !item.job && item.source_url}
+                  <a
+                    href={item.source_url}
+                    target="_blank"
+                    rel="noopener"
+                    class="block pl-8 pr-3 pb-2 -mt-1 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] truncate"
+                  >
+                    <FontAwesomeIcon
+                      icon={faExternalLinkAlt}
+                      class="w-3 h-3 mr-1"
+                    />
+                    {item.source_url}
+                  </a>
+                {/if}
 
                 <!-- Expanded job details -->
                 {#if expandedItemId === item.id && item.job}
