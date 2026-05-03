@@ -1,0 +1,1 @@
+ALTER TABLE "search_task_run_items" ADD COLUMN "source_url" varchar(2048);
