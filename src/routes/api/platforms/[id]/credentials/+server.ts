@@ -55,10 +55,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
   const platformId = parseIntParam(params.id, "platform");
 
-  const { profileId, username, password, security_answer } = parseBody(
-    platformCredentialsSchema,
-    await request.json(),
-  );
+  const { profileId, credentialId, username, password, security_answer } =
+    parseBody(platformCredentialsSchema, await request.json());
 
   // Verify user owns this profile
   const profile = await db.query.profiles.findFirst({
@@ -84,37 +82,51 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
     throw error(404, "Platform not found");
   }
 
-  // Upsert credentials
-  const existing = await db.query.platform_profiles.findFirst({
-    where: and(
-      eq(platform_profiles.profile_id, profile.id),
-      eq(platform_profiles.platform_id, platformId),
-    ),
-  });
+  // Editing an existing credential requires its id; without one we always
+  // create a new row so a user can have multiple credentials per platform.
+  const existing = credentialId !== undefined
+    ? await db.query.platform_profiles.findFirst({
+      where: and(
+        eq(platform_profiles.id, credentialId),
+        eq(platform_profiles.profile_id, profile.id),
+        eq(platform_profiles.platform_id, platformId),
+      ),
+    })
+    : null;
 
-  if (existing) {
-    // Update existing
-    await db.update(platform_profiles).set({
-      username: username || null,
-      password: encryptCredential(password || null),
-      security_answer: encryptCredential(security_answer || null),
-      login_error: null, // Clear any previous error
-      date_updated: new Date(),
-    }).where(eq(platform_profiles.id, existing.id));
-  } else {
-    // Create new
-    await db.insert(platform_profiles).values({
-      profile_id: profile.id,
-      platform_id: platformId,
-      username: username || null,
-      password: encryptCredential(password || null),
-      security_answer: encryptCredential(security_answer || null),
-      status: "active",
-      date_created: new Date(),
-    });
+  if (credentialId !== undefined && !existing) {
+    throw error(404, "Credential not found");
   }
 
-  return json({ success: true });
+  if (existing) {
+    // Update existing — only touch fields the caller explicitly sent so
+    // partial edits (e.g. just security_answer) don't wipe other fields.
+    const update: Partial<typeof platform_profiles.$inferInsert> = {
+      login_error: null, // Clear any previous error
+      date_updated: new Date(),
+    };
+    if (username !== undefined) update.username = username || null;
+    if (password !== undefined) update.password = encryptCredential(password || null);
+    if (security_answer !== undefined) {
+      update.security_answer = encryptCredential(security_answer || null);
+    }
+    await db.update(platform_profiles).set(update).where(
+      eq(platform_profiles.id, existing.id),
+    );
+    return json({ success: true, id: existing.id });
+  }
+
+  const [created] = await db.insert(platform_profiles).values({
+    profile_id: profile.id,
+    platform_id: platformId,
+    username: username || null,
+    password: encryptCredential(password || null),
+    security_answer: encryptCredential(security_answer || null),
+    status: "active",
+    date_created: new Date(),
+  }).returning({ id: platform_profiles.id });
+
+  return json({ success: true, id: created.id });
 };
 
 /**

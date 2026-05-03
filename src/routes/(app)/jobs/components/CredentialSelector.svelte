@@ -7,6 +7,7 @@
     faEye,
     faEyeSlash,
     faKey,
+    faPen,
     faPlus,
     faShareAlt,
     faTimes,
@@ -77,10 +78,14 @@
   let showAdvanced = $state(false);
   let isDeletingId = $state<number | null>(null);
 
-  // Security answer editing for existing credentials
-  let editingSecurityAnswerId = $state<number | null>(null);
+  // Inline edit for an existing credential (password + security answer).
+  // Password isn't returned from the server, so it stays blank unless the
+  // user is changing it.
+  let editingCredId = $state<number | null>(null);
+  let editPassword = $state("");
   let editSecurityAnswer = $state("");
-  let isSavingSecurityAnswer = $state(false);
+  let editShowPassword = $state(false);
+  let isSavingEdit = $state(false);
 
   // Share-config modal state
   let sharingCredentialId = $state<number | null>(null);
@@ -193,7 +198,7 @@
         },
       );
       if (response.ok) {
-        // Re-fetch credentials list for this platform
+        const { id: newId } = await response.json();
         const listRes = await fetch(
           `/api/platforms/${platformId}/credentials?profileId=${profileId}`,
         );
@@ -201,10 +206,8 @@
           const data = await listRes.json();
           if (Array.isArray(data)) {
             credentials = data;
-            // Select the newly added one (last in list)
             const newCred = data.find(
-              (c: { username: string | null }) =>
-                c.username === newUsername.trim(),
+              (c: { id: number }) => c.id === newId,
             );
             if (newCred) {
               selectedId = String(newCred.id);
@@ -256,47 +259,66 @@
     }
   }
 
-  function startEditSecurityAnswer(credId: number) {
+  function startEditCredential(credId: number) {
     const cred = credentials.find((c) => c.id === credId);
-    editingSecurityAnswerId = credId;
+    editingCredId = credId;
+    editPassword = "";
     editSecurityAnswer = cred?.security_answer || "";
+    editShowPassword = false;
   }
 
-  async function saveSecurityAnswer() {
-    if (editingSecurityAnswerId === null) return;
-    isSavingSecurityAnswer = true;
+  function cancelEditCredential() {
+    editingCredId = null;
+    editPassword = "";
+    editSecurityAnswer = "";
+    editShowPassword = false;
+  }
+
+  async function saveCredentialEdits() {
+    if (editingCredId === null) return;
+    const cred = credentials.find((c) => c.id === editingCredId);
+    if (!cred) return;
+
+    const body: Record<string, unknown> = {
+      profileId,
+      credentialId: cred.id,
+      username: cred.username || "",
+    };
+    const passwordChanged = editPassword.length > 0;
+    const answerChanged = editSecurityAnswer !== (cred.security_answer || "");
+    if (passwordChanged) body.password = editPassword;
+    if (answerChanged) body.security_answer = editSecurityAnswer || undefined;
+    if (!passwordChanged && !answerChanged) {
+      cancelEditCredential();
+      return;
+    }
+
+    isSavingEdit = true;
     try {
-      const cred = credentials.find((c) => c.id === editingSecurityAnswerId);
       const response = await fetch(
         `/api/platforms/${platformId}/credentials`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            profileId,
-            username: cred?.username || "",
-            security_answer: editSecurityAnswer || undefined,
-          }),
+          body: JSON.stringify(body),
         },
       );
       if (response.ok) {
-        // Update local state
-        const idx = credentials.findIndex((c) =>
-          c.id === editingSecurityAnswerId
-        );
-        if (idx >= 0) {
-          credentials[idx] = {
-            ...credentials[idx],
-            security_answer: editSecurityAnswer || null,
-          };
+        if (answerChanged) {
+          const idx = credentials.findIndex((c) => c.id === editingCredId);
+          if (idx >= 0) {
+            credentials[idx] = {
+              ...credentials[idx],
+              security_answer: editSecurityAnswer || null,
+            };
+          }
         }
-        editingSecurityAnswerId = null;
-        editSecurityAnswer = "";
+        cancelEditCredential();
       }
     } catch (err) {
-      console.error("Failed to save security answer:", err);
+      console.error("Failed to save credential:", err);
     } finally {
-      isSavingSecurityAnswer = false;
+      isSavingEdit = false;
     }
   }
 </script>
@@ -391,107 +413,122 @@
       {#each credentials as cred}
         <div
           class="
-            flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedId === String(cred.id)
+            rounded-md transition-colors {selectedId === String(cred.id)
             ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
             : 'bg-[var(--dash-bg)] border border-transparent hover:border-[var(--dash-border)]'}
           "
         >
-          <button
-            type="button"
-            {disabled}
-            onclick={() => select(String(cred.id))}
-            class="flex-1 text-left flex items-center gap-2.5 text-[var(--dash-text)] disabled:opacity-60"
-          >
-            <span
-              class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedId === String(cred.id) ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
+          <div class="flex items-center gap-2.5 px-3 py-2 text-sm">
+            <button
+              type="button"
+              {disabled}
+              onclick={() => select(String(cred.id))}
+              class="flex-1 text-left flex items-center gap-2.5 text-[var(--dash-text)] disabled:opacity-60"
             >
-              {#if selectedId === String(cred.id)}
-                <span
-                  class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
-                ></span>
-              {/if}
-            </span>
-            <span>{cred.username || "No username"}</span>
-            {#if savedId === String(cred.id)}
               <span
-                class="text-xs text-[var(--dash-text-muted)] font-medium"
-              >Current</span>
-            {/if}
-            {#if cred.shared}
-              <span
-                class="text-xs px-1.5 py-0.5 rounded-full bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]"
-                title="Shared by {cred.owner_label ?? 'a contact'}"
+                class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedId === String(cred.id) ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}"
               >
-                shared by {cred.owner_label ?? "a contact"}
+                {#if selectedId === String(cred.id)}
+                  <span
+                    class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                  ></span>
+                {/if}
               </span>
-            {/if}
-          </button>
-          {#if !disabled && !cred.shared}
-            <button
-              type="button"
-              onclick={() => openShareModal(cred.id)}
-              class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
-              title="Share with a contact"
-            >
-              <FontAwesomeIcon icon={faShareAlt} class="w-3 h-3" />
-            </button>
-            <button
-              type="button"
-              onclick={() => deleteCredential(cred.id)}
-              disabled={isDeletingId === cred.id}
-              class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-              title="Delete credential"
-            >
-              {#if isDeletingId === cred.id}
-                <Spinner size="w-3 h-3" />
-              {:else}
-                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              <span>{cred.username || "No username"}</span>
+              {#if savedId === String(cred.id)}
+                <span
+                  class="text-xs text-[var(--dash-text-muted)] font-medium"
+                >Current</span>
+              {/if}
+              {#if cred.shared}
+                <span
+                  class="text-xs px-1.5 py-0.5 rounded-full bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]"
+                  title="Shared by {cred.owner_label ?? 'a contact'}"
+                >
+                  shared by {cred.owner_label ?? "a contact"}
+                </span>
               {/if}
             </button>
-          {/if}
-        </div>
-      {/each}
-    </div>
-
-    <!-- Advanced: security answer for selected credential -->
-    {#if credentials.length > 0 && !disabled}
-      {@const selectedCred = credentials.find((c) => String(c.id) === selectedId)}
-      {#if selectedCred && !selectedCred.shared}
-        <div class="mt-2">
-          <button
-            type="button"
-            onclick={() => {
-              if (editingSecurityAnswerId === selectedCred.id) {
-                editingSecurityAnswerId = null;
-              } else {
-                startEditSecurityAnswer(selectedCred.id);
-              }
-            }}
-            class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-          >
-            {#if editingSecurityAnswerId === selectedCred.id}
-              <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-            {:else}
-              <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
+            {#if !disabled && !cred.shared}
+              <button
+                type="button"
+                onclick={() => {
+                  if (editingCredId === cred.id) {
+                    cancelEditCredential();
+                  } else {
+                    startEditCredential(cred.id);
+                  }
+                }}
+                class="p-1 transition-colors {editingCredId === cred.id ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]'}"
+                title="Edit credential"
+              >
+                <FontAwesomeIcon icon={faPen} class="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onclick={() => openShareModal(cred.id)}
+                class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                title="Share with a contact"
+              >
+                <FontAwesomeIcon icon={faShareAlt} class="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onclick={() => deleteCredential(cred.id)}
+                disabled={isDeletingId === cred.id}
+                class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
+                title="Delete credential"
+              >
+                {#if isDeletingId === cred.id}
+                  <Spinner size="w-3 h-3" />
+                {:else}
+                  <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                {/if}
+              </button>
             {/if}
-            Advanced
-            {#if selectedCred.security_answer}
-              <span class="text-[var(--dash-success)]">*</span>
-            {/if}
-          </button>
+          </div>
 
-          {#if editingSecurityAnswerId === selectedCred.id}
-            <div class="mt-2 space-y-2">
+          {#if editingCredId === cred.id && !cred.shared}
+            <div
+              class="px-3 pb-3 pt-1 space-y-2 border-t border-[var(--dash-border)]/50"
+            >
               <div>
                 <label
-                  for="edit-security-answer"
+                  for="edit-password-{cred.id}"
+                  class="block text-xs text-[var(--dash-text-secondary)] mb-1"
+                >
+                  Password
+                </label>
+                <div class="relative">
+                  <input
+                    type={editShowPassword ? "text" : "password"}
+                    id="edit-password-{cred.id}"
+                    bind:value={editPassword}
+                    placeholder="Leave blank to keep current password"
+                    class="w-full px-2 py-1 pr-8 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                  />
+                  <button
+                    type="button"
+                    onclick={() => (editShowPassword = !editShowPassword)}
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+                  >
+                    <FontAwesomeIcon
+                      icon={editShowPassword ? faEyeSlash : faEye}
+                      class="w-3.5 h-3.5"
+                    />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label
+                  for="edit-security-answer-{cred.id}"
                   class="block text-xs text-[var(--dash-text-secondary)] mb-1"
                 >
                   Security Question Answer
                 </label>
                 <input
                   type="text"
-                  id="edit-security-answer"
+                  id="edit-security-answer-{cred.id}"
                   bind:value={editSecurityAnswer}
                   placeholder="e.g., your mother's maiden name"
                   class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
@@ -500,38 +537,35 @@
                   Auto-filled when a site asks a security question after login.
                 </p>
               </div>
-              {#if editSecurityAnswer !== (selectedCred.security_answer || "")}
-                <div class="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onclick={() => {
-                      editingSecurityAnswerId = null;
-                      editSecurityAnswer = "";
-                    }}
-                    class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onclick={saveSecurityAnswer}
-                    disabled={isSavingSecurityAnswer}
-                    class="px-2 py-1 text-xs bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingSecurityAnswer}
-                      <Spinner size="w-3 h-3" />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                </div>
-              {/if}
+              <div class="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onclick={cancelEditCredential}
+                  class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onclick={saveCredentialEdits}
+                  disabled={isSavingEdit ||
+                    (editPassword.length === 0 &&
+                      editSecurityAnswer === (cred.security_answer || ""))}
+                  class="px-2 py-1 text-xs bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingEdit}
+                    <Spinner size="w-3 h-3" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+              </div>
             </div>
           {/if}
         </div>
-      {/if}
-    {/if}
+      {/each}
+    </div>
 
     {#if credentials.length === 0 && !showAddForm}
       <p class="mt-2 text-xs text-[var(--dash-text-muted)]">

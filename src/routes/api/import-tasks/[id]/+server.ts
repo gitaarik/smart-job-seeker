@@ -270,8 +270,10 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     }
   }
 
-  await db.update(search_tasks).set(data)
-    .where(eq(search_tasks.id, searchTaskId));
+  if (Object.keys(data).length > 0) {
+    await db.update(search_tasks).set(data)
+      .where(eq(search_tasks.id, searchTaskId));
+  }
 
   return json({ ok: true });
 };

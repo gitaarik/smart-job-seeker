@@ -407,7 +407,7 @@
   // Credentials (edit)
   let editPlatformCredentials = $state(initialPlatformCredentials);
   let canEditPlatformUrls = $state(initialCanEditPlatformUrls);
-  const editInitialCredId = searchTask?.platform_id_profile_id?.toString() ??
+  const editInitialCredId = searchTask?.platform_profile_id?.toString() ??
     "none";
   let editSavedCredentialId = $state<string>(editInitialCredId);
   let editSelectedCredentialId = $state<string>(editInitialCredId);

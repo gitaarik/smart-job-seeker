@@ -124,6 +124,7 @@ export const platformCreateSchema = z.object({
 
 export const platformCredentialsSchema = z.object({
   profileId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]),
+  credentialId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
   username: optionalTrimmedString(),
   password: optionalTrimmedString(1000),
   security_answer: optionalTrimmedString(500),
