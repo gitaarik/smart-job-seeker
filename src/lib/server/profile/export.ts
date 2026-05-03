@@ -102,7 +102,7 @@ const PROFILE_SCHEMA_MAPPING = {
           },
         },
       },
-      education: {
+      educations: {
         fields: [
           "institution",
           "location",
@@ -291,7 +291,7 @@ async function fetchProfileData(profileId: number) {
         },
         orderBy: (t: any, { asc }: any) => asc(t.sort),
       },
-      education: {
+      educations: {
         columns: {
           institution: true,
           location: true,
