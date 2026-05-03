@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.20] - 2026-05-03
+
+1 commit since v0.5.19.
+
+### Fixed
+- Fixed 0011 journal migration to properly handle timestamps above 0010
+
 ## [0.5.19] - 2026-05-03
 
 3 commits since v0.5.18.
