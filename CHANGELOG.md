@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.19] - 2026-05-03
+
+3 commits since v0.5.18.
+
+### Changed
+- Dashboard now restricts top matches to those scoring 70 or higher
+
 ## [0.5.18] - 2026-05-03
 
 13 commits since v0.5.17.
