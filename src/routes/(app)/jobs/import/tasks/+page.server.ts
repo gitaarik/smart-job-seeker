@@ -1,11 +1,19 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, or, like, desc } from "drizzle-orm";
-import { search_tasks, profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
+import { and, desc, eq, like, or } from "drizzle-orm";
+import {
+  api_keys,
+  job_platforms,
+  platform_profiles,
+  profiles,
+  search_tasks,
+} from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import { encryptCredential } from "$lib/server/auth/crypto";
 import { hasCredentialAccess } from "$lib/server/credential-shares";
+import { listApiKeys } from "$lib/server/auth/api-key";
+import { hasDeviceAccess, listSharedWithMe } from "$lib/server/device-shares";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -16,6 +24,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const profileId = layoutData.selectedProfile.id;
+  const user = layoutData.user;
 
   const [searchTasksList, profile] = await Promise.all([
     db.query.search_tasks.findMany({
@@ -29,7 +38,11 @@ export const load: PageServerLoad = async ({ parent }) => {
     (async () => {
       const p = await db.query.profiles.findFirst({
         where: eq(profiles.id, profileId),
-        columns: { ui_preferences: true, browser_country_code: true, country_code: true },
+        columns: {
+          ui_preferences: true,
+          browser_country_code: true,
+          country_code: true,
+        },
       });
       if (!p) throw new Error("Record not found");
       return p;
@@ -38,6 +51,40 @@ export const load: PageServerLoad = async ({ parent }) => {
   const searchTasks = searchTasksList;
 
   const uiPrefs = (profile.ui_preferences as Record<string, unknown>) ?? {};
+
+  // Devices for the new-task browser-control picker: own keys + devices a
+  // contact has shared with this user. Mirrors the edit page so the add form
+  // shows shared devices too. owner_user_id is null for own devices and the
+  // device-owner's user id for shared devices, used to enforce the
+  // credential/device-owner coupling at create time.
+  interface DeviceOption {
+    apiKeyId: number;
+    apiKeyName: string;
+    shared: boolean;
+    owner_user_id: string | null;
+  }
+  const allApiKeys = await listApiKeys(profileId);
+  const apiKeyDevices: DeviceOption[] = allApiKeys
+    .filter((k) => !k.revoked)
+    .map((k) => ({
+      apiKeyId: k.id,
+      apiKeyName: k.name,
+      shared: false,
+      owner_user_id: null,
+    }));
+  if (user) {
+    const sharedDevices = await listSharedWithMe(user.id);
+    for (const share of sharedDevices) {
+      const ownerName = share.api_key.owner?.name ||
+        share.api_key.owner?.email || "Unknown";
+      apiKeyDevices.push({
+        apiKeyId: share.api_key.id,
+        apiKeyName: `${share.api_key.name} (${ownerName})`,
+        shared: true,
+        owner_user_id: share.api_key.owner?.id ?? null,
+      });
+    }
+  }
 
   return {
     searchTasks,
@@ -49,6 +96,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     defaultMaxJobs: config.defaultMaxJobs,
     browserCountryCode: profile.browser_country_code ?? "",
     defaultCountryCode: profile.country_code ?? "",
+    apiKeyDevices,
   };
 };
 
@@ -64,7 +112,9 @@ async function getOrCreatePlatform(
   // If we have an existing platform ID and it's not new, update login_page_url if provided
   if (platformId && !isNew) {
     if (loginPageUrl !== null) {
-      await db.update(job_platforms).set({ login_page_url: loginPageUrl || null }).where(eq(job_platforms.id, parseInt(platformId)));
+      await db.update(job_platforms).set({
+        login_page_url: loginPageUrl || null,
+      }).where(eq(job_platforms.id, parseInt(platformId)));
     }
     return parseInt(platformId);
   }
@@ -178,7 +228,9 @@ export const actions: Actions = {
     const credentialId = formData.get("credential_id") as string;
     const newCredUsername = formData.get("new_credential_username") as string;
     const newCredPassword = formData.get("new_credential_password") as string;
-    const newCredSecurityAnswer = formData.get("new_credential_security_answer") as string;
+    const newCredSecurityAnswer = formData.get(
+      "new_credential_security_answer",
+    ) as string;
 
     if (!search_url || search_url.trim().length === 0) {
       return fail(400, { error: "Search URL is required" });
@@ -212,6 +264,7 @@ export const actions: Actions = {
 
     // Scraping options
     const browserProvider = formData.get("browser_provider") as string;
+    const tunnelApiKeyRaw = formData.get("tunnel_api_key") as string;
     const maxJobsRaw = formData.get("max_jobs") as string;
     const skipFirstRaw = formData.get("skip_first") as string;
     const stopAfterDuplicatesRaw = formData.get(
@@ -228,10 +281,44 @@ export const actions: Actions = {
     const skipExisting = skipExistingRaw === "true";
     const keepMinimized = keepMinimizedRaw === "false" ? false : true;
 
+    // Resolve and validate tunnel device picked at create time. The user can
+    // pick one of their own devices or one a contact has shared with them.
+    // When paired with a shared credential the device must be owned by that
+    // credential's owner — same coupling rule the PATCH endpoint enforces.
+    // Silently drop on mismatch; the user can re-pick on the detail page.
+    let resolvedTunnelApiKey: number | null = null;
+    const apiKeyId = tunnelApiKeyRaw ? parseInt(tunnelApiKeyRaw) : NaN;
+    if (!isNaN(apiKeyId) && (await hasDeviceAccess(apiKeyId, user.id))) {
+      let credOwner: string | null = null;
+      if (resolvedCredentialId !== null) {
+        const cred = await db.query.platform_profiles.findFirst({
+          where: eq(platform_profiles.id, resolvedCredentialId),
+          columns: { id: true },
+          with: { profile: { columns: { user_id: true } } },
+        });
+        credOwner = cred?.profile.user_id ?? null;
+      }
+      const credIsShared = credOwner !== null && credOwner !== user.id;
+      if (!credIsShared) {
+        resolvedTunnelApiKey = apiKeyId;
+      } else {
+        const key = await db.query.api_keys.findFirst({
+          where: eq(api_keys.id, apiKeyId),
+          columns: { id: true },
+          with: { profile: { columns: { user_id: true } } },
+        });
+        if (key?.profile.user_id === credOwner) {
+          resolvedTunnelApiKey = apiKeyId;
+        }
+      }
+    }
+
     // Browser location
     const browserCountryCode = formData.get("browser_country_code") as string;
     if (browserCountryCode) {
-      await db.update(profiles).set({ browser_country_code: browserCountryCode.trim().toUpperCase() || null }).where(eq(profiles.id, profileId));
+      await db.update(profiles).set({
+        browser_country_code: browserCountryCode.trim().toUpperCase() || null,
+      }).where(eq(profiles.id, profileId));
     }
 
     // Schedule
@@ -244,11 +331,14 @@ export const actions: Actions = {
       search_term: search_term?.trim() || null,
       platform_id: resolvedPlatformId,
       platform_profile_id: resolvedCredentialId,
-      login_mode: ["auto", "manual", "none"].includes(loginMode) ? loginMode : "auto",
+      login_mode: ["auto", "manual", "none"].includes(loginMode)
+        ? loginMode
+        : "auto",
       is_active,
       profile_id: profileId,
       status: "idle",
       browser_provider: browserProvider || config.defaultBrowserProvider,
+      tunnel_api_key: resolvedTunnelApiKey,
       max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
       skip_first: isNaN(skipFirst as number) ? null : skipFirst,
       stop_after_duplicates: isNaN(stopAfterDuplicates as number)
@@ -256,7 +346,10 @@ export const actions: Actions = {
         : stopAfterDuplicates,
       skip_existing: skipExisting,
       keep_minimized: keepMinimized,
-      schedule_interval_hours: scheduleIntervalHours && !isNaN(scheduleIntervalHours) ? scheduleIntervalHours : null,
+      schedule_interval_hours:
+        scheduleIntervalHours && !isNaN(scheduleIntervalHours)
+          ? scheduleIntervalHours
+          : null,
       next_scheduled_run: scheduleIntervalHours && !isNaN(scheduleIntervalHours)
         ? new Date(Date.now() + scheduleIntervalHours * 3600_000)
         : null,
@@ -295,14 +388,19 @@ export const actions: Actions = {
     const credentialId = formData.get("credential_id") as string;
     const newCredUsername = formData.get("new_credential_username") as string;
     const newCredPassword = formData.get("new_credential_password") as string;
-    const newCredSecurityAnswer = formData.get("new_credential_security_answer") as string;
+    const newCredSecurityAnswer = formData.get(
+      "new_credential_security_answer",
+    ) as string;
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid search ID" });
     }
 
     const existing = await db.query.search_tasks.findFirst({
-      where: and(eq(search_tasks.id, id), eq(search_tasks.profile_id, profileId)),
+      where: and(
+        eq(search_tasks.id, id),
+        eq(search_tasks.profile_id, profileId),
+      ),
     });
 
     if (!existing) {
@@ -364,7 +462,10 @@ export const actions: Actions = {
     }
 
     const existing = await db.query.search_tasks.findFirst({
-      where: and(eq(search_tasks.id, id), eq(search_tasks.profile_id, profileId)),
+      where: and(
+        eq(search_tasks.id, id),
+        eq(search_tasks.profile_id, profileId),
+      ),
     });
 
     if (!existing) {

@@ -88,22 +88,59 @@
     ownerLabel: string | null;
   }
   let preferredDevice = $state<PreferredDevice | null>(null);
+  let connectedDeviceIds = $state<number[]>([]);
   let desktopStatusChecked = $state(false);
   let desktopConnected = $derived(preferredDevice !== null);
+
+  // Merge the loaded api-key devices with live tunnel-status data so the
+  // add-form's device picker can show per-device "(offline)" markers like
+  // the edit page does.
+  let devicesWithStatus = $derived(
+    data.apiKeyDevices.map((d) => ({
+      ...d,
+      connected: connectedDeviceIds.includes(d.apiKeyId),
+    })),
+  );
 
   let anyTaskUsesDesktop = $derived(
     searchTasks.some((s) => s.browser_provider === "tunnel"),
   );
 
   async function checkDesktopStatus() {
+    const sharedKeyIds = data.apiKeyDevices
+      .filter((d) => d.shared)
+      .map((d) => d.apiKeyId);
     try {
-      const res = await fetch(
-        `/api/tunnel/status/preferred?profileId=${data.profileId}`,
+      const [preferredRes, profileRes, sharedResults] = await Promise.all([
+        fetch(`/api/tunnel/status/preferred?profileId=${data.profileId}`),
+        fetch(`/api/tunnel/status?profileId=${data.profileId}`),
+        Promise.all(
+          sharedKeyIds.map(async (apiKeyId) => {
+            try {
+              const res = await fetch(
+                `/api/tunnel/status?apiKeyId=${apiKeyId}`,
+              );
+              if (!res.ok) return null;
+              const body = await res.json();
+              return (body.devices ?? []).length > 0 ? apiKeyId : null;
+            } catch {
+              return null;
+            }
+          }),
+        ),
+      ]);
+      preferredDevice = (await preferredRes.json()).device ?? null;
+      const profileStatus = await profileRes.json();
+      const ownIds: number[] = (profileStatus.devices ?? []).map(
+        (d: { apiKeyId: number }) => d.apiKeyId,
       );
-      const result = await res.json();
-      preferredDevice = result.device ?? null;
+      connectedDeviceIds = [
+        ...ownIds,
+        ...sharedResults.filter((id): id is number => id !== null),
+      ];
     } catch {
       preferredDevice = null;
+      connectedDeviceIds = [];
     } finally {
       desktopStatusChecked = true;
     }
@@ -404,7 +441,7 @@
           mode="add"
           localBrowserAllowed={data.localBrowserAllowed}
           serverBrowserProvider={data.serverBrowserProvider}
-          defaultBrowserProvider={data.defaultBrowserProvider}
+          defaultBrowserProvider="tunnel"
           defaultMaxJobs={data.defaultMaxJobs}
           browserCountryCode={data.browserCountryCode}
           defaultCountryCode={data.defaultCountryCode}
@@ -414,6 +451,16 @@
           {detectedPlatform}
           {detectingPlatform}
           {existingCredentials}
+          devices={devicesWithStatus}
+          desktopConnected={desktopStatusChecked ? desktopConnected : null}
+          preferredDevice={preferredDevice
+          ? {
+            apiKeyId: preferredDevice.apiKeyId,
+            apiKeyName: preferredDevice.apiKeyName,
+            isShared: preferredDevice.isShared,
+            ownerLabel: preferredDevice.ownerLabel,
+          }
+          : null}
           onsearchurlinput={handleSearchUrlInput}
           timeFormat={($page.data as { timeFormat: import("$lib/format-date").TimeFormat })
           .timeFormat}

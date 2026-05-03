@@ -181,6 +181,7 @@
   let addBrowserProvider = $state<string | null>(
     defaultBrowserProvider || null,
   );
+  let addTunnelApiKey = $state<number | null>(null);
 
   // ── Add-mode browser country ──
   let addBrowserCountryCode = $state(initialBrowserCountryCode);
@@ -1304,9 +1305,9 @@
                 >
                   {#each existingCredentials as cred}
                     <option value={String(cred.id)}>
-                      {cred.username}{cred.shared
-                      ? ` (shared by ${cred.owner_label ?? "a contact"})`
-                      : ""}
+                      {cred.username}{
+                        cred.shared ? ` (shared by ${cred.owner_label ?? "a contact"})` : ""
+                      }
                     </option>
                   {/each}
                   <option value="new">+ Add new credentials</option>
@@ -1865,6 +1866,7 @@
         {#if isAdd}
           <BrowserProviderToggle
             bind:value={addBrowserProvider}
+            bind:tunnelApiKey={addTunnelApiKey}
             {localBrowserAllowed}
             {devices}
           />
@@ -1872,6 +1874,13 @@
             type="hidden"
             name="browser_provider"
             value={addBrowserProvider ?? ""}
+          />
+          <input
+            type="hidden"
+            name="tunnel_api_key"
+            value={addBrowserProvider === "tunnel" && addTunnelApiKey != null
+            ? String(addTunnelApiKey)
+            : ""}
           />
         {:else}
           <BrowserProviderToggle
@@ -1896,8 +1905,8 @@
           {/if}
         {/if}
 
-        <!-- Desktop connection status (edit only) -->
-        {#if isEdit && isTunnelMode && desktopConnected !== null}
+        <!-- Desktop connection status -->
+        {#if isTunnelMode && desktopConnected !== null}
           <div
             class="
               flex items-center gap-2 text-xs {isTunnelMode &&
