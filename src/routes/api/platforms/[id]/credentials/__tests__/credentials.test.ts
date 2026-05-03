@@ -16,8 +16,9 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-// Mock Drizzle insert chain
-const mockInsertValues = vi.fn().mockResolvedValue({});
+// Mock Drizzle insert chain — new credentials are returned via `.returning()`.
+const mockInsertReturning = vi.fn().mockResolvedValue([{ id: 99 }]);
+const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
 const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
 
 // Mock Drizzle delete chain
@@ -94,8 +95,15 @@ function createDeleteEvent(params: Record<string, string>, user?: any) {
 describe("PUT /api/platforms/[id]/credentials", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // mockClear retains the mockResolvedValueOnce queue across tests; reset
+    // the query mocks explicitly so an unconsumed value from a previous
+    // test doesn't leak into the next.
+    mockProfilesFindFirst.mockReset();
+    mockPlatformsFindFirst.mockReset();
+    mockPlatformProfilesFindFirst.mockReset();
+    mockPlatformProfilesFindMany.mockReset();
     mockUpdateWhere.mockResolvedValue({});
-    mockInsertValues.mockResolvedValue({});
+    mockInsertReturning.mockResolvedValue([{ id: 99 }]);
   });
 
   it("rejects unauthenticated", async () => {
@@ -141,12 +149,17 @@ describe("PUT /api/platforms/[id]/credentials", () => {
     mockPlatformsFindFirst.mockResolvedValueOnce({ id: 5 });
     mockPlatformProfilesFindFirst.mockResolvedValueOnce({ id: 10 });
 
+    // Update path requires an explicit credentialId; without it the
+    // endpoint always inserts so users can keep multiple credentials per
+    // platform.
     const response = await PUT(createPutEvent({
-      profileId: 1, username: "new@test.com", password: "newpass",
+      profileId: 1,
+      credentialId: 10,
+      username: "new@test.com",
+      password: "newpass",
     }));
     const data = await response.json();
     expect(data.success).toBe(true);
-    // Verify update was called
     expect(mockUpdateFn).toHaveBeenCalled();
     expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -154,11 +167,27 @@ describe("PUT /api/platforms/[id]/credentials", () => {
       }),
     );
   });
+
+  it("returns 404 when updating an unknown credentialId", async () => {
+    mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
+    mockPlatformsFindFirst.mockResolvedValueOnce({ id: 5 });
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce(null);
+
+    await expect(PUT(createPutEvent({
+      profileId: 1,
+      credentialId: 999,
+      password: "x",
+    }))).rejects.toMatchObject({ status: 404 });
+  });
 });
 
 describe("DELETE /api/platforms/[id]/credentials", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockProfilesFindFirst.mockReset();
+    mockPlatformsFindFirst.mockReset();
+    mockPlatformProfilesFindFirst.mockReset();
+    mockPlatformProfilesFindMany.mockReset();
     mockDeleteWhere.mockResolvedValue({});
     mockUpdateWhere.mockResolvedValue({});
   });
