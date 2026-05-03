@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.18] - 2026-05-03
+
+13 commits since v0.5.17.
+
+### Added
+- Full job details on imported job rows
+- Tunnel device picker in new-task form
+- Contact-shared credentials in new-task form
+- Source URLs on skipped/error import items
+- Scraper captures detail-page URLs for skipped/error run items
+
+### Changed
+- Improved handling of slow multi-step logins with post-username polling
+
+### Fixed
+- Profile export: corrected education relation naming
+- Pagination button search scoping in containers
+
 ## [0.5.17] - 2026-05-02
 
 1 commit since v0.5.16.
