@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.21] - 2026-05-03
+
+5 commits since v0.5.20.
+
+### Added
+- Credential password editing
+
+### Fixed
+- Multi-credential support and related test failures
+- Tunnel mode focus handling with xdotool for proper OS focus routing
+
+### Changed
+- Device-connection widget styling with green status icon and Connected pill indicator
+
 ## [0.5.20] - 2026-05-03
 
 1 commit since v0.5.19.
