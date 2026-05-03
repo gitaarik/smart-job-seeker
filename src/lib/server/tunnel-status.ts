@@ -7,7 +7,7 @@
  * the user starts a scrape.
  */
 
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "$lib/server/db";
 import { api_keys, device_shares, users } from "$lib/server/db/schema";
 
@@ -139,4 +139,65 @@ export async function getPreferredDevice(
   }
 
   return { ...pick.device, isShared: true, ownerLabel };
+}
+
+/**
+ * Status of a specific device by api_key id, regardless of whether it is
+ * the user's preferred default. Used by the search-task UI to show the
+ * device that will actually be used (the task's configured `tunnel_api_key`),
+ * not the user's first-connected fallback.
+ *
+ * Returns null if the device isn't connected, isn't owned/shared by the
+ * user, or doesn't belong to the given profile.
+ */
+export async function getDeviceById(
+  userId: string,
+  profileId: number,
+  apiKeyId: number,
+): Promise<PreferredDevice | null> {
+  const apiKey = await db.query.api_keys.findFirst({
+    where: eq(api_keys.id, apiKeyId),
+    columns: { id: true, profile_id: true },
+    with: {
+      profile: { columns: { user_id: true } },
+    },
+  });
+  if (!apiKey) return null;
+
+  const ownerUserId = apiKey.profile.user_id ?? null;
+  const ownedByUser = ownerUserId === userId;
+
+  // For own devices, scope to the requested profile (a user with multiple
+  // profiles shouldn't see another profile's devices on this task page).
+  // For shared devices, the device belongs to a different profile by
+  // definition; we trust the share grant.
+  if (ownedByUser && apiKey.profile_id !== profileId) return null;
+  if (!ownedByUser) {
+    const share = await db.query.device_shares.findFirst({
+      where: and(
+        eq(device_shares.shared_with, userId),
+        eq(device_shares.api_key_id, apiKeyId),
+      ),
+      columns: { id: true },
+    });
+    if (!share) return null;
+  }
+
+  const status = await fetchProfileTunnelStatus(apiKey.profile_id);
+  const device = status.devices.find((d) => d.apiKeyId === apiKeyId);
+  if (!device) return null;
+
+  if (ownedByUser) {
+    return { ...device, isShared: false, ownerLabel: null };
+  }
+
+  let ownerLabel: string | null = null;
+  if (ownerUserId) {
+    const owner = await db.query.users.findFirst({
+      where: eq(users.id, ownerUserId),
+      columns: { name: true, email: true },
+    });
+    ownerLabel = owner?.name || owner?.email || null;
+  }
+  return { ...device, isShared: true, ownerLabel };
 }

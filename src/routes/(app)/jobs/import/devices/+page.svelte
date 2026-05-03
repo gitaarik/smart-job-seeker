@@ -400,18 +400,20 @@
   <Card padding="md">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <FontAwesomeIcon
-          icon={faDesktop}
-          class={`w-4 h-4 ${
-            preferredDevice ? "text-green-500" : "text-[var(--dash-text-muted)]"
-          }`}
-        />
+        <span class={preferredDevice ? "text-green-500" : "text-[var(--dash-text-muted)]"}>
+          <FontAwesomeIcon icon={faDesktop} class="w-4 h-4" />
+        </span>
         <div>
-          <p class="font-medium text-[var(--dash-text)]">
+          <p class="font-medium text-[var(--dash-text)] flex items-center gap-2 flex-wrap">
             {#if tunnelStatus === "checking"}
               Checking connection...
             {:else if preferredDevice}
-              {preferredDevice.apiKeyName} Connected
+              <span>{preferredDevice.apiKeyName}</span>
+              <span
+                class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] w-fit"
+              >
+                Connected
+              </span>
             {:else}
               No Device Connected
             {/if}

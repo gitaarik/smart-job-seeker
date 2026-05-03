@@ -5,14 +5,22 @@ import {
   requireAuth,
   requireProfileAccess,
 } from "$lib/server/utils/api-helpers";
-import { getPreferredDevice } from "$lib/server/tunnel-status";
+import {
+  getDeviceById,
+  getPreferredDevice,
+} from "$lib/server/tunnel-status";
 
 /**
- * GET /api/tunnel/status/preferred?profileId=123 — the single device that
- * would be used by default when scraping. Prefers the user's own connected
- * devices on the given profile, then falls back to connected devices that
- * have been shared with them. Returns `{ device: null }` when nothing is
- * connected.
+ * GET /api/tunnel/status/preferred?profileId=123[&apiKeyId=456] — the
+ * device that would be used when scraping.
+ *
+ *   - Without `apiKeyId`: the user's auto-pick — own connected devices on
+ *     the profile first, then shared connected devices.
+ *   - With `apiKeyId`: that specific device's status, so the search-task
+ *     UI can display the device the task is actually configured to use
+ *     (`search_tasks.tunnel_api_key`) instead of the auto-pick.
+ *
+ * Returns `{ device: null }` when nothing matches/is connected.
  */
 export const GET: RequestHandler = async ({ locals, url }) => {
   const user = requireAuth(locals);
@@ -24,6 +32,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const profileId = parseIntParam(profileIdStr, "profile");
   await requireProfileAccess(profileId, user.id);
 
-  const device = await getPreferredDevice(user.id, profileId);
+  const apiKeyIdStr = url.searchParams.get("apiKeyId");
+  const device = apiKeyIdStr
+    ? await getDeviceById(
+      user.id,
+      profileId,
+      parseIntParam(apiKeyIdStr, "apiKey"),
+    )
+    : await getPreferredDevice(user.id, profileId);
   return json({ device });
 };

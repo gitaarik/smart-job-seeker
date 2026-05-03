@@ -149,8 +149,14 @@
       .filter((d) => d.shared)
       .map((d) => d.apiKeyId);
     try {
+      // When the task has a configured device, ask the API about *that*
+      // device's status so the widgets reflect what will actually run —
+      // not the user's auto-pick fallback.
+      const preferredUrl = searchTask.tunnel_api_key
+        ? `/api/tunnel/status/preferred?profileId=${data.profileId}&apiKeyId=${searchTask.tunnel_api_key}`
+        : `/api/tunnel/status/preferred?profileId=${data.profileId}`;
       const [preferredRes, profileRes, sharedResults] = await Promise.all([
-        fetch(`/api/tunnel/status/preferred?profileId=${data.profileId}`),
+        fetch(preferredUrl),
         fetch(`/api/tunnel/status?profileId=${data.profileId}`),
         Promise.all(
           sharedKeyIds.map(async (apiKeyId) => {
@@ -1489,11 +1495,16 @@
     });
   });
 
-  // Reactively start/stop desktop connection polling when tunnel mode changes
+  // Reactively start/stop desktop connection polling when tunnel mode changes.
+  // Also re-runs when the task's configured device changes so the widgets
+  // refresh immediately on device switch instead of waiting for the next poll.
   $effect(() => {
+    void searchTask.tunnel_api_key;
     if (isTunnelMode) {
       checkDesktopStatus();
-      desktopPollInterval = setInterval(checkDesktopStatus, 15000);
+      if (!desktopPollInterval) {
+        desktopPollInterval = setInterval(checkDesktopStatus, 15000);
+      }
     } else {
       if (desktopPollInterval) {
         clearInterval(desktopPollInterval);
