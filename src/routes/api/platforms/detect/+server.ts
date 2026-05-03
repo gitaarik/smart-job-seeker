@@ -8,6 +8,7 @@ import {
   profiles,
 } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import { listSharedCredentialsWithMe } from "$lib/server/credential-shares";
 
 /**
  * GET /api/platforms/detect?url=...&profileId=...
@@ -82,6 +83,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     id: number;
     username: string | null;
     status: string;
+    shared: boolean;
+    owner_user_id: string | null;
+    owner_label: string | null;
   }> = [];
 
   if (existingPlatform) {
@@ -93,8 +97,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       isNew: false,
     };
 
-    // Get existing credentials for this platform and profile
-    const platformProfiles = await db.query.platform_profiles.findMany({
+    // Own credentials for this platform and profile
+    const ownCreds = await db.query.platform_profiles.findMany({
       where: and(
         eq(platform_profiles.platform_id, existingPlatform.id),
         eq(platform_profiles.profile_id, profile.id),
@@ -106,8 +110,31 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         status: true,
       },
     });
+    credentials = ownCreds.map((c) => ({
+      ...c,
+      shared: false,
+      owner_user_id: null,
+      owner_label: null,
+    }));
 
-    credentials = platformProfiles;
+    // Credentials shared with this user for the same platform. The service
+    // already scopes by `shared_with = user.id`, so we only need to filter by
+    // platform here. Passwords + security answers stay server-side.
+    const sharedCreds = await listSharedCredentialsWithMe(user.id);
+    for (const s of sharedCreds) {
+      if (s.platform_profile.platform_id !== existingPlatform.id) continue;
+      if (!s.platform_profile.username) continue;
+      const ownerLabel = s.platform_profile.owner?.name ||
+        s.platform_profile.owner?.email || "a contact";
+      credentials.push({
+        id: s.platform_profile.id,
+        username: s.platform_profile.username,
+        status: s.platform_profile.status ?? "active",
+        shared: true,
+        owner_user_id: s.platform_profile.owner_user_id,
+        owner_label: ownerLabel,
+      });
+    }
   } else {
     // New platform - try to fetch metadata
     let suggestedName = domain;

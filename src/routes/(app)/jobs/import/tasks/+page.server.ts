@@ -5,6 +5,7 @@ import { eq, and, or, like, desc } from "drizzle-orm";
 import { search_tasks, profiles, job_platforms, platform_profiles } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import { encryptCredential } from "$lib/server/auth/crypto";
+import { hasCredentialAccess } from "$lib/server/credential-shares";
 import { getSelectedProfileId } from "../../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -104,19 +105,31 @@ async function getOrCreatePlatform(
 async function getOrCreateCredentials(
   profileId: number,
   platformId: number,
+  userId: string,
   credentialId: string | null,
   newUsername: string | null,
   newPassword: string | null,
   newSecurityAnswer: string | null = null,
 ): Promise<number | null> {
-  // If using existing credentials
+  // Existing credential — accept either one the user owns or one shared with
+  // them. Always require the credential to be for this platform; reject
+  // anything the user can't access (silent drop = task saves with no
+  // credential, same as picking "none").
   if (credentialId && credentialId !== "none" && credentialId !== "new") {
+    const credIdNum = parseInt(credentialId);
+    if (isNaN(credIdNum)) return null;
+
     const existing = await db.query.platform_profiles.findFirst({
-      where: and(eq(platform_profiles.id, parseInt(credentialId)), eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, platformId)),
+      where: and(
+        eq(platform_profiles.id, credIdNum),
+        eq(platform_profiles.platform_id, platformId),
+      ),
+      columns: { id: true },
     });
-    if (existing) {
-      return existing.id;
-    }
+    if (!existing) return null;
+
+    if (!(await hasCredentialAccess(existing.id, userId))) return null;
+    return existing.id;
   }
 
   // If adding new credentials
@@ -186,6 +199,7 @@ export const actions: Actions = {
       resolvedCredentialId = await getOrCreateCredentials(
         profileId,
         resolvedPlatformId,
+        user.id,
         credentialId,
         newCredUsername,
         newCredPassword,
@@ -310,6 +324,7 @@ export const actions: Actions = {
       resolvedCredentialId = await getOrCreateCredentials(
         profileId,
         resolvedPlatformId,
+        user.id,
         credentialId,
         newCredUsername,
         newCredPassword,

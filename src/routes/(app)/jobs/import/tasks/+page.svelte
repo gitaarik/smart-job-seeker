@@ -133,12 +133,18 @@
   >(null);
   let detectingPlatform = $state(false);
 
-  // Credentials state for new entry
+  // Credentials state for new entry — includes both the user's own
+  // credentials and any shared with them by contacts for the detected
+  // platform. Passwords/security answers stay server-side; only IDs and
+  // usernames cross the wire so the user can pick a credential to use.
   let existingCredentials = $state<
     Array<{
       id: number;
       username: string | null;
       status: string;
+      shared?: boolean;
+      owner_user_id?: string | null;
+      owner_label?: string | null;
     }>
   >([]);
 

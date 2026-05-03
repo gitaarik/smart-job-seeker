@@ -46,6 +46,9 @@
       id: number;
       username: string | null;
       status: string;
+      shared?: boolean;
+      owner_user_id?: string | null;
+      owner_label?: string | null;
     }>;
     onsearchurlinput?: (e: Event) => void;
     // Edit mode props
@@ -141,10 +144,38 @@
   let showPassword = $state(false);
   let showAdvancedAuth = $state(false);
 
+  // True only when the user explicitly picked "+ Add new credentials" — used
+  // by the auto-select effect below so it can distinguish a real user choice
+  // from the effect itself defaulting to "new" before detection runs.
+  let userPickedNew = $state(false);
+
   function handleCredentialSelection(value: string) {
     selectedCredentialId = value;
     showNewCredentials = value === "new";
+    userPickedNew = value === "new";
   }
+
+  // Keep the credential selection in sync with platform detection. When
+  // detection delivers credentials (own or shared), pick the first one so the
+  // dropdown always shows a meaningful selection — matching what the
+  // Auto-login tab does on click. Only override "new" when the user didn't
+  // pick it explicitly.
+  $effect(() => {
+    if (!isAdd) return;
+    if (addLoginMode !== "auto") return;
+    if (userPickedNew) return;
+    const matches = existingCredentials.some(
+      (c) => String(c.id) === selectedCredentialId,
+    );
+    if (matches) return;
+    if (existingCredentials.length > 0) {
+      selectedCredentialId = String(existingCredentials[0].id);
+      showNewCredentials = false;
+    } else {
+      selectedCredentialId = "new";
+      showNewCredentials = true;
+    }
+  });
 
   // ── Add-mode browser provider ──
   let addBrowserProvider = $state<string | null>(
@@ -1272,7 +1303,11 @@
                   class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
                 >
                   {#each existingCredentials as cred}
-                    <option value={String(cred.id)}>{cred.username}</option>
+                    <option value={String(cred.id)}>
+                      {cred.username}{cred.shared
+                      ? ` (shared by ${cred.owner_label ?? "a contact"})`
+                      : ""}
+                    </option>
                   {/each}
                   <option value="new">+ Add new credentials</option>
                 </select>
@@ -1871,15 +1906,6 @@
               : 'text-[var(--dash-text-secondary)]'}
             "
           >
-            <span
-              class="
-                w-2 h-2 rounded-full {desktopConnected
-                ? 'bg-green-500'
-                : isTunnelMode
-                ? 'bg-amber-500'
-                : 'bg-[var(--dash-text-muted)]'}
-              "
-            ></span>
             <FontAwesomeIcon
               icon={faDesktop}
               class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"

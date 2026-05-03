@@ -2369,9 +2369,6 @@
         <div
           class="flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected ? 'text-amber-600' : 'text-[var(--dash-text-secondary)]'}"
         >
-          <span
-            class="w-2 h-2 rounded-full {desktopConnected ? 'bg-green-500' : isTunnelMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]'}"
-          ></span>
           <FontAwesomeIcon
             icon={faDesktop}
             class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"
