@@ -6,8 +6,7 @@
  * so this module can be imported from both SvelteKit and the worker.
  */
 
-import RedisModule from "ioredis";
-const Redis = RedisModule as unknown as typeof RedisModule.default;
+import Redis from "ioredis";
 type RedisClient = InstanceType<typeof Redis>;
 
 let redisClient: RedisClient | null = null;

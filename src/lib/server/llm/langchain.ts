@@ -491,10 +491,12 @@ async function generateWithLangChain(
             "Just output the extracted data as JSON." + fieldHint;
         }
 
-        // Invoke with JSON mode enabled to ensure valid JSON output
+        // Invoke with JSON mode enabled to ensure valid JSON output.
+        // `response_format` is an OpenAI-compatible passthrough that LangChain
+        // forwards to providers (Groq, OpenAI) but isn't in its base option type.
         const result = await chatModel.invoke(langChainMessages, {
           response_format: { type: "json_object" },
-        });
+        } as Parameters<typeof chatModel.invoke>[1]);
         const responseContent = typeof result.content === "string"
           ? result.content
           : String(result.content);

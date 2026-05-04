@@ -18,6 +18,12 @@ type GetEnvOptions = { allowEmpty: true };
  * // Optional without default - allowed to be empty
  * getEnv("OPTIONAL_VAR", { allowEmpty: true })
  */
+// Overloads narrow the return type by call shape. Without these, every
+// caller saw `string | undefined` even when a default was provided, forcing
+// non-null assertions or runtime guards everywhere.
+export function getEnv(envVar: string): string;
+export function getEnv(envVar: string, defaultValue: string): string;
+export function getEnv(envVar: string, options: GetEnvOptions): string | undefined;
 export function getEnv(
   envVar: string,
   defaultOrOptions?: string | GetEnvOptions,

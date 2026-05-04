@@ -11,6 +11,7 @@ import {
   jsonb,
   numeric,
   pgEnum,
+  type PgTableExtraConfigValue,
   pgSequence,
   pgTable,
   serial,
@@ -1911,7 +1912,7 @@ export const profile_versions = pgTable("profile_versions", {
   profile_id: integer().notNull(),
   toggles: json(),
   preview_links: text(),
-}, (table) => [
+}, (table): PgTableExtraConfigValue[] => [
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
