@@ -1,6 +1,17 @@
 import * as chrono from "chrono-node";
 
 /**
+ * Coerce a date-ish value to YYYY-MM-DD for Drizzle `date()` columns
+ * (which use string mode). Returns null for null/undefined/invalid input.
+ */
+export function toDateString(value: string | Date | null | undefined): string | null {
+  if (value == null) return null;
+  const d = typeof value === "string" ? new Date(value) : value;
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().split("T")[0];
+}
+
+/**
  * Parse relative date strings into actual Date objects
  * Handles expressions like "3 days ago", "a month ago", "posted yesterday", "submitted two weeks ago"
  * Uses Chrono library for natural language date parsing

@@ -15,6 +15,7 @@ import {
   applications, application_letters, application_questions,
 } from "$lib/server/db/schema";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
+import { toDateString } from "$lib/tools/date-utils";
 import type {
   ExportData,
   ExportedProfileData,
@@ -306,8 +307,8 @@ async function importProfileEntities(
       area: e.area || null,
       study_type: e.study_type || null,
       graduation_year: e.graduation_year ?? null,
-      start_date: e.start_date ? new Date(e.start_date) : null,
-      end_date: e.end_date ? new Date(e.end_date) : null,
+      start_date: toDateString(e.start_date),
+      end_date: toDateString(e.end_date),
       summary: e.summary || null,
       tags: toJsonValue(e.tags),
       // logo_path will be set via media import
@@ -350,7 +351,7 @@ async function importProfileEntities(
       sort: cert.sort ?? null,
       name: cert.name || "",
       issuer: cert.issuer || null,
-      date: cert.date ? new Date(cert.date) : null,
+      date: toDateString(cert.date),
       url: cert.url || null,
       date_created: new Date(),
     });
@@ -397,8 +398,8 @@ async function importProfileEntities(
       summary: w.summary || "",
       status: w.status || "draft",
       sort: w.sort ?? null,
-      start_date: w.start_date ? new Date(w.start_date) : null,
-      end_date: w.end_date ? new Date(w.end_date) : null,
+      start_date: toDateString(w.start_date),
+      end_date: toDateString(w.end_date),
       website: w.website || null,
       tags: toJsonValue(w.tags),
       // logo_path will be set via media import
@@ -436,8 +437,8 @@ async function importProfileEntities(
         sort: proj.sort ?? null,
         name: proj.name || null,
         url: proj.url || null,
-        start_date: proj.start_date ? new Date(proj.start_date) : null,
-        end_date: proj.end_date ? new Date(proj.end_date) : null,
+        start_date: toDateString(proj.start_date),
+        end_date: toDateString(proj.end_date),
         description: proj.description || null,
         outcome: proj.outcome || null,
       }).returning();
@@ -459,8 +460,8 @@ async function importProfileEntities(
       status: sp.status || "draft",
       sort: sp.sort ?? null,
       name: sp.name || null,
-      start_date: sp.start_date ? new Date(sp.start_date) : null,
-      end_date: sp.end_date ? new Date(sp.end_date) : null,
+      start_date: toDateString(sp.start_date),
+      end_date: toDateString(sp.end_date),
       url: sp.url || null,
       stars: sp.stars ?? null,
       summary: sp.summary || null,

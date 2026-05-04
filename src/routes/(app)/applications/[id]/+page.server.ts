@@ -46,7 +46,7 @@ export const actions: Actions = {
       status,
       status_step: step,
       status_action: action,
-      status_action_date: actionDate ? new Date(actionDate) : null,
+      status_action_date: actionDate || null,
       date_updated: now,
     };
 
@@ -93,7 +93,7 @@ export const actions: Actions = {
         await db.update(application_status_log).set({
           step,
           action,
-          action_date: actionDate ? new Date(actionDate) : null,
+          action_date: actionDate || null,
           description: description || null,
           date_created: now,
         }).where(eq(application_status_log.id, initialEntry.id));
@@ -109,7 +109,7 @@ export const actions: Actions = {
         to_status: status,
         step,
         action,
-        action_date: actionDate ? new Date(actionDate) : null,
+        action_date: actionDate || null,
         description: description || null,
       });
     }
@@ -235,12 +235,10 @@ export const actions: Actions = {
 
     await db.update(applications).set({
       cv_sent_through: cv_sent_through || null,
-      application_sent_date: application_sent_date
-        ? new Date(application_sent_date)
-        : null,
-      application_seen_date: application_seen_date
-        ? new Date(application_seen_date)
-        : null,
+      // HTML date inputs already yield YYYY-MM-DD; the columns are
+      // Drizzle `date()` (string mode), so pass the form value through.
+      application_sent_date: application_sent_date || null,
+      application_seen_date: application_seen_date || null,
       date_updated: new Date(),
     }).where(eq(applications.id, appId));
 

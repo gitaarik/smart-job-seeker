@@ -23,10 +23,15 @@ import type {
   WorkExperience,
 } from "./types";
 
-function parseDate(value: string | undefined | null): Date | null {
+/**
+ * Resume importer dates come as ISO-ish strings; destination columns are
+ * Drizzle `date()` (string mode), so coerce to YYYY-MM-DD or null.
+ */
+function parseDate(value: string | undefined | null): string | null {
   if (!value) return null;
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().split("T")[0];
 }
 
 /**

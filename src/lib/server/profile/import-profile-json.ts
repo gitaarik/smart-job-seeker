@@ -11,6 +11,7 @@ import {
 } from "$lib/server/db/schema";
 import type { ExportedProfile } from "./export-profile-json";
 import { generateVersionPdfs } from "./generate-version-pdfs";
+import { toDateString } from "$lib/tools/date-utils";
 
 interface ImportOptions {
   overwriteProfileId?: number;
@@ -236,7 +237,7 @@ export async function importProfileFromJson(
 
   // Education
   for (const e of p.education ?? []) {
-    await dbDirect.insert(education).values({ profile_id: profileId, status: e.status || "draft", sort: e.sort ?? null, institution: e.institution || null, location: e.location || null, url: e.url || null, area: e.area || null, study_type: e.study_type || null, graduation_year: e.graduation_year ?? null, start_date: e.start_date ? new Date(e.start_date) : null, end_date: e.end_date ? new Date(e.end_date) : null, summary: e.summary || null, tags: e.tags ?? null });
+    await dbDirect.insert(education).values({ profile_id: profileId, status: e.status || "draft", sort: e.sort ?? null, institution: e.institution || null, location: e.location || null, url: e.url || null, area: e.area || null, study_type: e.study_type || null, graduation_year: e.graduation_year ?? null, start_date: toDateString(e.start_date), end_date: toDateString(e.end_date), summary: e.summary || null, tags: e.tags ?? null });
   }
 
   // Languages
@@ -251,7 +252,7 @@ export async function importProfileFromJson(
 
   // Certificates
   for (const cert of p.certificates ?? []) {
-    await dbDirect.insert(certificates).values({ profile: profileId, status: cert.status || "draft", sort: cert.sort ?? null, name: cert.name || "", issuer: cert.issuer || null, date: cert.date ? new Date(cert.date) : null, url: cert.url || null, date_created: new Date() });
+    await dbDirect.insert(certificates).values({ profile: profileId, status: cert.status || "draft", sort: cert.sort ?? null, name: cert.name || "", issuer: cert.issuer || null, date: toDateString(cert.date), url: cert.url || null, date_created: new Date() });
   }
 
   // Project stories
@@ -283,7 +284,7 @@ export async function importProfileFromJson(
 
   // Work experiences + children
   for (const w of p.work_experiences ?? []) {
-    const [createdWork] = await dbDirect.insert(work_experiences).values({ profile_id: profileId, name: w.name || "", location: w.location || "", description: "", position: w.position || "", summary: w.summary || "", status: w.status || "draft", sort: w.sort ?? null, start_date: w.start_date ? new Date(w.start_date) : null, end_date: w.end_date ? new Date(w.end_date) : null, website: w.website || null, tags: w.tags ?? null }).returning();
+    const [createdWork] = await dbDirect.insert(work_experiences).values({ profile_id: profileId, name: w.name || "", location: w.location || "", description: "", position: w.position || "", summary: w.summary || "", status: w.status || "draft", sort: w.sort ?? null, start_date: toDateString(w.start_date), end_date: toDateString(w.end_date), website: w.website || null, tags: w.tags ?? null }).returning();
 
     for (const a of w.achievements ?? []) {
       await dbDirect.insert(work_experience_achievements).values({ work_experience_id: createdWork.id, status: a.status || "draft", sort: a.sort ?? null, description: a.description || a.title || null, fa_icon: a.fa_icon || null, tags: a.tags ?? null });
@@ -294,7 +295,7 @@ export async function importProfileFromJson(
     }
 
     for (const proj of w.projects ?? []) {
-      const [createdProj] = await dbDirect.insert(work_experience_projects).values({ work_experience_id: createdWork.id, status: proj.status || "draft", sort: proj.sort ?? null, name: proj.name || null, url: proj.url || null, start_date: proj.start_date ? new Date(proj.start_date) : null, end_date: proj.end_date ? new Date(proj.end_date) : null, description: proj.description || null, outcome: proj.outcome || null }).returning();
+      const [createdProj] = await dbDirect.insert(work_experience_projects).values({ work_experience_id: createdWork.id, status: proj.status || "draft", sort: proj.sort ?? null, name: proj.name || null, url: proj.url || null, start_date: toDateString(proj.start_date), end_date: toDateString(proj.end_date), description: proj.description || null, outcome: proj.outcome || null }).returning();
 
       for (const pt of proj.work_experience_project_technologies ?? []) {
         await dbDirect.insert(work_experience_project_technologies).values({ work_experience_project_id: createdProj.id, sort: pt.sort ?? null, name: pt.name || null });
@@ -304,7 +305,7 @@ export async function importProfileFromJson(
 
   // Side projects + children
   for (const sp of p.side_projects ?? []) {
-    const [createdSp] = await dbDirect.insert(side_projects).values({ profile_id: profileId, status: sp.status || "draft", sort: sp.sort ?? null, name: sp.name || null, start_date: sp.start_date ? new Date(sp.start_date) : null, end_date: sp.end_date ? new Date(sp.end_date) : null, url: sp.url || null, stars: sp.stars ?? null, summary: sp.summary || null, url_label: sp.url_label || null, tags: sp.tags ?? null }).returning();
+    const [createdSp] = await dbDirect.insert(side_projects).values({ profile_id: profileId, status: sp.status || "draft", sort: sp.sort ?? null, name: sp.name || null, start_date: toDateString(sp.start_date), end_date: toDateString(sp.end_date), url: sp.url || null, stars: sp.stars ?? null, summary: sp.summary || null, url_label: sp.url_label || null, tags: sp.tags ?? null }).returning();
 
     for (const a of sp.achievements ?? []) {
       await dbDirect.insert(side_project_achievements).values({ side_project_id: createdSp.id, description: a.description || null, sort: a.sort ?? null });

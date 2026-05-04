@@ -122,10 +122,15 @@ const basicsFieldMap: Record<string, string> = {
   coreStack: "core_stack",
 };
 
-function parseDate(value: string | null | undefined): Date | null {
+/**
+ * Resume-diff dates come as ISO-ish strings; the destination columns are
+ * Drizzle `date()` (string mode), so coerce to YYYY-MM-DD or null.
+ */
+function parseDate(value: string | null | undefined): string | null {
   if (!value) return null;
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().split("T")[0];
 }
 
 async function getMaxSort(table: any, whereCol: any, whereVal: any): Promise<number> {

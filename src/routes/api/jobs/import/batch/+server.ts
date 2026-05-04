@@ -21,6 +21,7 @@ import {
   type JobImportResponse,
   safeValidateBatchJobImport,
 } from "$lib/server/job/validation";
+import { toDateString } from "$lib/tools/date-utils";
 
 /**
  * Import a single job and return the result
@@ -117,7 +118,7 @@ async function importSingleJob(
         ? [jobData.experienceLevel]
         : null,
       skills_required: jobData.skills,
-      date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
+      date_posted: toDateString(jobData.postedAt),
       job_platform_id: jobData.platformId,
       status: "hiring",
       date_created: new Date(),

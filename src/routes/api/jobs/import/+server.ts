@@ -19,6 +19,7 @@ import {
   type JobImportResponse,
   safeValidateJobImport,
 } from "$lib/server/job/validation";
+import { toDateString } from "$lib/tools/date-utils";
 
 /**
  * Import a single job
@@ -159,7 +160,7 @@ export const POST: RequestHandler = async (event) => {
         ? [jobData.experienceLevel]
         : null,
       skills_required: jobData.skills,
-      date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
+      date_posted: toDateString(jobData.postedAt),
       job_platform_id: jobData.platformId,
       status: "hiring",
       date_created: new Date(),

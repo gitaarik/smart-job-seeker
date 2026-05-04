@@ -46,7 +46,9 @@ export const actions: Actions = {
     await db.insert(certificates).values({
       name: name.trim(),
       issuer: issuer?.trim() || null,
-      date: date ? new Date(date) : null,
+      // certificates.date is Drizzle date() (string mode); HTML date input
+      // already yields YYYY-MM-DD.
+      date: date || null,
       url: url?.trim() || null,
       profile: profileId,
       sort: (lastItem?.sort ?? -1) + 1,
@@ -82,7 +84,9 @@ export const actions: Actions = {
     await db.update(certificates).set({
       name: name.trim(),
       issuer: issuer?.trim() || null,
-      date: date ? new Date(date) : null,
+      // certificates.date is a Drizzle date() column (string mode) — pass
+      // the form value through; HTML date inputs already yield YYYY-MM-DD.
+      date: date || null,
       url: url?.trim() || null,
       date_updated: new Date(),
     }).where(eq(certificates.id, id));
