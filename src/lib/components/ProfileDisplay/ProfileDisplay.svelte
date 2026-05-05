@@ -44,15 +44,15 @@
       // The relevant columns are `date()`, so the wire type is string.
       start_date: string | null;
       end_date?: string | null;
-      graduation_year?: string | null;
+      graduation_year?: number | null;
       tags?: string[] | unknown;
     }>;
     languages: Array<{
-      name: string;
-      language_code: string;
-      proficiency: string;
+      name: string | null;
+      language_code: string | null;
+      proficiency: string | null;
     }>;
-    nationality?: string;
+    nationality?: string | null;
     certificates: Array<{
       name: string;
       issuer: string | null;
@@ -60,12 +60,12 @@
       url: string | null;
     }>;
     references: Array<{
-      author: string;
-      text: string;
+      author: string | null;
+      text: string | null;
     }>;
     tech_skill_categories: Array<{
-      name: string;
-      tech_skills: Array<{ name: string }>;
+      name: string | null;
+      tech_skills: Array<{ name: string | null }>;
     }>;
     side_projects: Array<{
       name: string | null;
@@ -77,15 +77,15 @@
       summary: string | null;
       tags: string[] | unknown;
     }>;
-    highlights: Array<{
-      title: string;
-      description: string;
-      tags?: string[];
-    }>;
+    // `highlights` rows are loaded for the dashboard but the resume/CV
+    // template doesn't render them. Type as unknown[] so we accept whatever
+    // shape Drizzle returns without requiring this stale title/description
+    // contract.
+    highlights: unknown[];
     profile_versions: Array<{
       id: number;
-      slug: string;
-      toggles: string[];
+      slug: string | null;
+      toggles: string[] | unknown;
       // Drizzle relation rows from `profile_version_extensions` keyed on
       // extender_id. Each junction row has the extended_id (the parent
       // version this version extends).
@@ -194,8 +194,8 @@
   let toggles: string[] = [];
 
   versionObjs.forEach((versionObj: VersionObj | undefined) => {
-    if (versionObj?.toggles?.length) {
-      versionObj.toggles.forEach((toggle: string) => {
+    if (Array.isArray(versionObj?.toggles) && versionObj.toggles.length) {
+      (versionObj.toggles as string[]).forEach((toggle: string) => {
         toggles.push(toggle);
       });
     }
@@ -364,7 +364,7 @@
               <span class="text-xs">
                 {
                   skillGroup.tech_skills.map(
-                    (s: { name: string }) => s.name,
+                    (s: { name: string | null }) => s.name ?? "",
                   ).join(" | ")
                 }
               </span>
@@ -471,8 +471,10 @@
       {#each profile.languages as language, index (index)}
         <div>
           {language.name}: {
-            language.proficiency.substr(0, 1).toUpperCase() +
-              language.proficiency.substr(1)
+            language.proficiency
+              ? language.proficiency.substr(0, 1).toUpperCase() +
+                language.proficiency.substr(1)
+              : ""
           }
         </div>
       {/each}

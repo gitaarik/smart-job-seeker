@@ -97,7 +97,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     Promise.all([
       getMatchCounts(profileId, matchCommunityJobs),
       queryRaw<
-        [{ strong80: bigint; strong70: bigint; saved: bigint; new_unreviewed: bigint }]
+        { strong80: bigint; strong70: bigint; saved: bigint; new_unreviewed: bigint }
       >(sql`
         SELECT
           COUNT(*) FILTER (WHERE jm.score >= 80 AND COALESCE(js.status, 'new') != 'rejected') as strong80,

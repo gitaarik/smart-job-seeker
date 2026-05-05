@@ -70,7 +70,8 @@ export async function uploadFile(
     filename_download: options.filename,
     title: options.title || options.filename,
     type: mimeType,
-    filesize: BigInt(options.buffer.length),
+    // schema is bigint({ mode: "number" }), so pass the raw byte count.
+    filesize: options.buffer.length,
   });
 
   return {

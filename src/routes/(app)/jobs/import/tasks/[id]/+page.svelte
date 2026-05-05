@@ -2572,7 +2572,7 @@
       onkeydown={(e) => {
         if (e.key === "Escape") {
           showBrowser = false;
-          if (vncEnabled) toggleVnc();
+          if (vncEnabled) stopVnc();
         }
       }}
     >
@@ -2581,7 +2581,7 @@
         class="absolute inset-0 bg-black/60 hidden sm:block"
         onclick={() => {
           showBrowser = false;
-          if (vncEnabled) toggleVnc();
+          if (vncEnabled) stopVnc();
         }}
         role="presentation"
       >

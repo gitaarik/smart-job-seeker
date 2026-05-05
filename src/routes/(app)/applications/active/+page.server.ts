@@ -74,7 +74,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     filteredApplications = filteredApplications.filter((app) =>
       app.job?.title?.toLowerCase().includes(q) ||
       app.job?.company?.toLowerCase().includes(q) ||
-      app.application_note?.toLowerCase().includes(q)
+      app.application_notes?.toLowerCase().includes(q)
     );
   }
 
@@ -123,7 +123,8 @@ export const actions: Actions = {
       status_action: "Send application",
       date_created: now,
       date_updated: now,
-      application_seen_date: now,
+      // application_seen_date is a Drizzle date() column (string mode).
+      application_seen_date: now.toISOString().split("T")[0],
     }).returning();
 
     await db.insert(application_status_log).values({

@@ -59,9 +59,7 @@ async function importSingleJob(
           ? [jobData.experienceLevel]
           : undefined,
         skills_required: jobData.skills,
-        date_posted: jobData.postedAt
-          ? new Date(jobData.postedAt)
-          : undefined,
+        date_posted: toDateString(jobData.postedAt),
         job_platform_id: jobData.platformId,
         date_updated: new Date(),
       }).where(eq(jobs.id, existing.id));

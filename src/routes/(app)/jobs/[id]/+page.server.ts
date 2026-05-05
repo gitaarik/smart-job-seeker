@@ -365,7 +365,8 @@ export const actions: Actions = {
       status_action: "Send application",
       date_created: now,
       date_updated: now,
-      application_seen_date: now,
+      // application_seen_date is a Drizzle date() column (string mode).
+      application_seen_date: now.toISOString().split("T")[0],
     }).returning();
 
     // Create initial status log entry
