@@ -64,6 +64,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
           stop_after_duplicates: true,
           skip_first: true,
           tunnel_api_key: true,
+          stripped_html: true,
         },
         with: {
           profile: {
