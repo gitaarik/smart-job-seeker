@@ -71,7 +71,7 @@ export async function getMatchCounts(
     not_recommended: number;
     ineligible: number;
     unmatched: number;
-  }[]>(sql`
+  }>(sql`
     SELECT
       COUNT(DISTINCT j.id)::int AS total,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.score > 0)::int AS matched,
@@ -119,7 +119,7 @@ export async function getEligibleUnmatchedCount(
     profileSkills,
   );
 
-  const result = await queryRaw<{ cnt: number }[]>(sql`
+  const result = await queryRaw<{ cnt: number }>(sql`
     SELECT COUNT(*)::int as cnt
     ${from}
     LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
@@ -140,7 +140,7 @@ export async function getCommunityJobCountsByWindow(
   profileId: number,
   windows: (number | null)[],
 ): Promise<Map<number | null, number>> {
-  const result = await queryRaw<{ days: number | null; cnt: number }[]>(sql`
+  const result = await queryRaw<{ days: number | null; cnt: number }>(sql`
     SELECT
       w.days,
       COUNT(DISTINCT j.id)::int AS cnt

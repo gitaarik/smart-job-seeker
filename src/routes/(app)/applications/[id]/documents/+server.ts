@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
 
   const buffer = await getFile(fileId);
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": fileMeta?.type || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${fileMeta?.filename_download || "file"}"`,

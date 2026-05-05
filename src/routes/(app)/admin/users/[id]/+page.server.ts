@@ -236,7 +236,7 @@ export const actions: Actions = {
 
     const profileIds = userProfiles.map((p) => p.id);
 
-    const result = await queryRaw<{ cnt: bigint }[]>(sql`
+    const result = await queryRaw<{ cnt: bigint }>(sql`
       WITH deleted AS (
         DELETE FROM job_matches
         WHERE profile_id IN (${sqlJoin(profileIds)})

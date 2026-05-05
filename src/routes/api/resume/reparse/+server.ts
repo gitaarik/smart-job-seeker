@@ -66,7 +66,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const mimeType = FORMAT_TO_MIME[log.file_format || ""] || "application/octet-stream";
   const fileName = log.file_name || "import-file";
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": mimeType,
       "Content-Disposition": `attachment; filename="${fileName}"`,

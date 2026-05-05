@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ params }) => {
     const ext = extname(fullPath).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",

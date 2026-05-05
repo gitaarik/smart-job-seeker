@@ -72,24 +72,24 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
     [taggedWorkExperiences, taggedEducation, taggedSideProjects, taggedSkills, taggedAchievements] =
       await Promise.all([
-        queryRaw<TaggedRow[]>(sql`
+        queryRaw<TaggedRow>(sql`
           SELECT id, COALESCE(position, name) as name FROM work_experiences
           WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
           ORDER BY name ASC`),
-        queryRaw<TaggedRow[]>(sql`
+        queryRaw<TaggedRow>(sql`
           SELECT id, COALESCE(institution, area) as name FROM education
           WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
           ORDER BY name ASC`),
-        queryRaw<TaggedRow[]>(sql`
+        queryRaw<TaggedRow>(sql`
           SELECT id, name FROM side_projects
           WHERE profile_id = ${profileId} AND tags::jsonb @> ${tagJson}::jsonb
           ORDER BY name ASC`),
-        queryRaw<TaggedRow[]>(sql`
+        queryRaw<TaggedRow>(sql`
           SELECT ts.id, ts.name FROM tech_skills ts
           JOIN tech_skill_categories tsc ON ts.category_id = tsc.id
           WHERE tsc.profile_id = ${profileId} AND ts.tags::jsonb @> ${tagJson}::jsonb
           ORDER BY ts.name ASC`),
-        queryRaw<TaggedAchievementRow[]>(sql`
+        queryRaw<TaggedAchievementRow>(sql`
           SELECT wea.id, wea.description as name, wea.work_experience_id FROM work_experience_achievements wea
           JOIN work_experiences we ON wea.work_experience_id = we.id
           WHERE we.profile_id = ${profileId} AND wea.tags::jsonb @> ${tagJson}::jsonb

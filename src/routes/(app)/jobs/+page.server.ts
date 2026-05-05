@@ -159,7 +159,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     });
     const { from, where } = buildVisibilityScope(profileId, matchConfig?.match_community_jobs ?? false);
 
-    const jobRows = await queryRaw<{ id: number; cnt: bigint }[]>(sql`
+    const jobRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
       SELECT j.id, COUNT(*) OVER() as cnt
       ${from}
       LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
@@ -213,7 +213,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     }
 
     // Get filtered+paginated match IDs and count in one query
-    const matchRows = await queryRaw<{ id: number; cnt: bigint }[]>(sql`
+    const matchRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
       SELECT jm.id, COUNT(*) OVER() as cnt
       FROM job_matches jm
       JOIN jobs j ON j.id = jm.job_id
@@ -286,7 +286,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     // "all" - Query from jobs table directly
 
     // Get filtered+paginated job IDs and count
-    const jobRows = await queryRaw<{ id: number; cnt: bigint }[]>(sql`
+    const jobRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
       SELECT j.id, COUNT(*) OVER() as cnt
       FROM jobs j
       WHERE ${searchFilter}
@@ -470,7 +470,7 @@ async function countMatchingJobs(
     }
   }
 
-  const result = await queryRaw<{ cnt: bigint }[]>(sql`
+  const result = await queryRaw<{ cnt: bigint }>(sql`
     SELECT COUNT(*) as cnt
     FROM job_matches jm
     JOIN jobs j ON j.id = jm.job_id

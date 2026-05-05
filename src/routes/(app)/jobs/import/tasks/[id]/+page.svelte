@@ -765,7 +765,9 @@
         return faTimes;
       case "running":
       case "queued":
-        return null;
+        // Spinner template branch renders <Spinner> instead of this icon —
+        // returning faCog as a placeholder keeps the type as IconDefinition.
+        return faCog;
       default:
         return faCog;
     }

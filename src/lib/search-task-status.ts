@@ -13,7 +13,13 @@ interface SearchTaskStatusInput {
 }
 
 interface SearchTaskStatusResult {
-  icon: IconDefinition | null;
+  /**
+   * The icon to render. For spinner statuses (running/queued/stopping) the
+   * caller renders `<Spinner>` instead, but we still return a real icon
+   * here so the type stays `IconDefinition` (FontAwesome's `IconProp`
+   * doesn't accept null) and consumer markup stays simple.
+   */
+  icon: IconDefinition;
   colorClass: string;
   iconSize: string;
   spinner: boolean;
@@ -24,7 +30,7 @@ export function getSearchTaskStatusIcon(
 ): SearchTaskStatusResult {
   if (task.status === "running" || task.status === "queued") {
     return {
-      icon: null,
+      icon: faCircle, // unused — spinner template branch renders <Spinner>
       colorClass: "text-blue-500",
       iconSize: "w-3 h-3",
       spinner: true,
@@ -32,7 +38,7 @@ export function getSearchTaskStatusIcon(
   }
   if (task.status === "stopping") {
     return {
-      icon: null,
+      icon: faCircle, // unused — spinner template branch renders <Spinner>
       colorClass: "text-orange-500",
       iconSize: "w-3 h-3",
       spinner: true,

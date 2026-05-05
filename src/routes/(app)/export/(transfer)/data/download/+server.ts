@@ -51,7 +51,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
       contentType = "application/octet-stream";
   }
 
-  return new Response(fileBuffer, {
+  return new Response(new Uint8Array(fileBuffer), {
     headers: {
       "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${filename}"`,

@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ params }) => {
     throw error(404);
   }
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": file.type || "application/octet-stream",
       "Cache-Control": "public, max-age=31536000, immutable",

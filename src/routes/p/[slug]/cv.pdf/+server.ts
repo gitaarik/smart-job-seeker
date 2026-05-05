@@ -111,7 +111,7 @@ export const GET: RequestHandler = async (
     ? `${slug}-cv-${effectiveVersion}.pdf`
     : `${slug}-cv.pdf`;
 
-  return new Response(exportWithFile.buffer, {
+  return new Response(new Uint8Array(exportWithFile.buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${filename}"`,
