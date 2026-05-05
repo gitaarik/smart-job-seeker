@@ -48,13 +48,7 @@
     contractor: { icon: faBuilding, color: "text-purple-500", activeColor: "text-purple-200" },
   };
 
-  interface CreditBalance {
-    plan: string;
-    used: number;
-    allowance: number;
-    extra: number;
-    available: number;
-  }
+  import type { CreditBalance } from "$lib/server/billing/credits";
 
   let { creditBalance }: { creditBalance?: CreditBalance } = $props();
 

@@ -86,10 +86,22 @@ export async function addExtraCredits(
   // No-op: no credit tracking in OSS
 }
 
+/** Row shape of a credit-transaction record (matches `credit_transactions` schema). */
+export interface CreditTransaction {
+  id: number;
+  user_id: string;
+  amount: number;
+  balance_after: number | null;
+  operation: string;
+  description: string | null;
+  metadata: unknown;
+  created_at: Date;
+}
+
 /** Get recent credit transactions — always empty in OSS. */
 export async function getRecentTransactions(
   _userId: string,
   _limit = 20,
-) {
+): Promise<CreditTransaction[]> {
   return [];
 }

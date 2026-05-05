@@ -20,8 +20,10 @@
       name: string | null;
       location: string | null;
       position: string | null;
-      start_date: Date | null;
-      end_date?: Date | null;
+      // Drizzle `date()` columns return strings; `timestamp()` returns Date.
+      // The relevant columns are `date()`, so the wire type is string.
+      start_date: string | null;
+      end_date?: string | null;
       note?: string | null;
       work_experience_achievements?: Array<{
         description: string | null;
@@ -29,14 +31,17 @@
       }>;
       tags: string[];
     }>;
-    education: Array<{
+    // Drizzle relation is `educations` (plural); singular was a stale name.
+    educations: Array<{
       area: string | null;
       study_type: string | null;
       institution: string | null;
       location: string | null;
       summary: string | null;
-      start_date: Date | null;
-      end_date?: Date | null;
+      // Drizzle `date()` columns return strings; `timestamp()` returns Date.
+      // The relevant columns are `date()`, so the wire type is string.
+      start_date: string | null;
+      end_date?: string | null;
       graduation_year?: string | null;
       tags?: string[];
     }>;
@@ -49,7 +54,7 @@
     certificates: Array<{
       name: string;
       issuer: string | null;
-      date: Date | null;
+      date: string | null;
       url: string | null;
     }>;
     references: Array<{
@@ -61,14 +66,14 @@
       tech_skills: Array<{ name: string }>;
     }>;
     side_projects: Array<{
-      name: string;
-      url: string;
-      url_label: string;
-      stars: string;
-      start_date: Date;
-      end_date?: Date;
-      summary: string;
-      tags: string[];
+      name: string | null;
+      url: string | null;
+      url_label: string | null;
+      stars: number | null;
+      start_date: string | null;
+      end_date?: string | null;
+      summary: string | null;
+      tags: string[] | unknown;
     }>;
     highlights: Array<{
       title: string;
@@ -105,10 +110,12 @@
   const versionFromUrl: string = page.url.searchParams.get("version") || "";
   let versionObj = versionId ? getVersion(versionId) : getVersion(versionFromUrl);
 
-  function getAllVersionObjs(versionObj) {
+  type VersionObj = Profile["profile_versions"][number];
+
+  function getAllVersionObjs(versionObj: VersionObj | undefined) {
     const versionObjs = [versionObj];
 
-    const addVersionObjs = (versionObj) => {
+    const addVersionObjs = (versionObj: VersionObj | undefined) => {
       if (
         versionObj &&
         versionObj
@@ -176,9 +183,9 @@
 
   let toggles: string[] = [];
 
-  versionObjs.forEach((versionObj) => {
+  versionObjs.forEach((versionObj: VersionObj | undefined) => {
     if (versionObj?.toggles?.length) {
-      versionObj.toggles.forEach((toggle) => {
+      versionObj.toggles.forEach((toggle: string) => {
         toggles.push(toggle);
       });
     }
