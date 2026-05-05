@@ -4,7 +4,7 @@
  */
 
 import * as cheerio from "cheerio";
-import type { AnyNode } from "domhandler";
+import type { Element } from "domhandler";
 
 /**
  * Options for HTML stripping
@@ -47,8 +47,8 @@ export function stripHtmlForLlm(
   );
 
   // Remove nav elements except those with pagination-related classes or aria-labels
-  $("nav").each(function () {
-    const el = $(this);
+  $("nav").each((_, elem) => {
+    const el = $(elem);
     const className = el.attr("class")?.toLowerCase() || "";
     const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
     const isPagination = className.includes("pagination") ||
@@ -63,8 +63,8 @@ export function stripHtmlForLlm(
   $("footer").remove();
 
   // Remove role=navigation elements except pagination
-  $("[role='navigation']").each(function () {
-    const el = $(this);
+  $("[role='navigation']").each((_, elem) => {
+    const el = $(elem);
     const className = el.attr("class")?.toLowerCase() || "";
     const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
     const isPagination = className.includes("pagination") ||
@@ -157,7 +157,7 @@ export function stripHtmlForLlm(
 
   const maxAttrLength = 75; // Truncate long URLs (75 chars is enough for domain+path)
 
-  $("*").each((_: number, elem: AnyNode) => {
+  $("*").each((_, elem) => {
     const element = $(elem);
     const attrs = element.attr();
 
@@ -199,7 +199,7 @@ export function stripHtmlForLlm(
     changesMade = false;
     flattenIterations++;
 
-    $("div, span").each((_: number, elem: AnyNode) => {
+    $("div, span").each((_, elem) => {
       const element = $(elem);
       const attrs = element.attr();
       const hasAttrs = attrs && Object.keys(attrs).length > 0;
@@ -259,7 +259,7 @@ export function stripHtmlForLlm(
     changed = false;
     iterations++;
 
-    $("*").each((_: number, elem: AnyNode) => {
+    $("*").each((_, elem) => {
       const element = $(elem);
       const tagName = (elem as any).tagName?.toLowerCase();
 
