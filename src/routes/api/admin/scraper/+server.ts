@@ -136,7 +136,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
     statusMismatches,
   ] = await Promise.all([
     // Completed runs that still have pending/processing items
-    queryRaw<{ count: bigint }[]>(sql`
+    queryRaw<{ count: bigint }>(sql`
       SELECT COUNT(DISTINCT ri.run_id) as count
       FROM search_task_run_items ri
       JOIN search_task_runs r ON r.id = ri.run_id
@@ -151,7 +151,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
       ),
     ),
     // Search tasks where status says running/queued but latest run is finished
-    queryRaw<{ count: bigint }[]>(sql`
+    queryRaw<{ count: bigint }>(sql`
       SELECT COUNT(*) as count
       FROM search_tasks st
       WHERE st.status IN ('running', 'queued', 'blocked', 'stopping')
@@ -223,7 +223,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   if (action === "fix-orphaned-items") {
     // Get run IDs with orphaned items via raw SQL since this involves a join condition
-    const orphanedRunIds = await queryRaw<{ run_id: number }[]>(sql`
+    const orphanedRunIds = await queryRaw<{ run_id: number }>(sql`
       SELECT DISTINCT ri.run_id
       FROM search_task_run_items ri
       JOIN search_task_runs r ON r.id = ri.run_id
@@ -273,7 +273,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   if (action === "fix-status-mismatches") {
-    const stuckTasksList = await queryRaw<{ id: number }[]>(sql`
+    const stuckTasksList = await queryRaw<{ id: number }>(sql`
       SELECT st.id
       FROM search_tasks st
       WHERE st.status IN ('running', 'queued', 'blocked', 'stopping')

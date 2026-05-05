@@ -269,11 +269,13 @@
     salary_currency: string | null;
     salary_period: string | null;
     job_types: string[] | null;
+    experience_levels: string[] | null;
     work_location: string[] | null;
     skills_required: string[] | null;
     skills_preferred: string[] | null;
     job_description: string | null;
     source_url: string | null;
+    job_platform: { name: string } | null;
   }
 
   interface RunItem {

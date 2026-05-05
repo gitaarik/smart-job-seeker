@@ -29,7 +29,9 @@
         description: string | null;
         tags: string[] | unknown;
       }>;
-      tags: string[];
+      // Drizzle `json()` columns surface as `unknown` until validated; the
+      // template uses filterOnTags() which accepts both shapes.
+      tags: string[] | unknown;
     }>;
     // Drizzle relation is `educations` (plural); singular was a stale name.
     educations: Array<{
@@ -43,7 +45,7 @@
       start_date: string | null;
       end_date?: string | null;
       graduation_year?: string | null;
-      tags?: string[];
+      tags?: string[] | unknown;
     }>;
     languages: Array<{
       name: string;
@@ -84,8 +86,14 @@
       id: number;
       slug: string;
       toggles: string[];
-      profile_version_extensions_extender_id:
-        number[];
+      // Drizzle relation rows from `profile_version_extensions` keyed on
+      // extender_id. Each junction row has the extended_id (the parent
+      // version this version extends).
+      profile_version_extensions_extender_id: Array<{
+        id: number;
+        extended_id: number | null;
+        extender_id: number | null;
+      }>;
     }>;
   }
 
@@ -125,9 +133,8 @@
           const junctionObj of versionObj
             .profile_version_extensions_extender_id
         ) {
-          const extObj = getVersion(
-            junctionObj.extended_id,
-          );
+          if (junctionObj.extended_id == null) continue;
+          const extObj = getVersion(junctionObj.extended_id);
           versionObjs.push(extObj);
           addVersionObjs(extObj);
         }
@@ -151,20 +158,23 @@
   ) as string[];
 
   function filterOnTags<
-    T extends { tags?: string[] | null } & Record<string, any>,
+    // Drizzle `json()` columns surface as `unknown`; we narrow at the call
+    // site below before treating it as a string array.
+    T extends { tags?: string[] | unknown } & Record<string, any>,
   >(objList: T[]): T[] {
     return objList.filter((obj) => {
-      if ("tags" in obj && obj.tags && obj.tags.length) {
+      if ("tags" in obj && Array.isArray(obj.tags) && obj.tags.length) {
+        const tagsArr = obj.tags as string[];
         if (
-          !obj.tags.includes(type || "resume") &&
-          obj.tags.includes(type === "resume" ? "cv" : "resume")
+          !tagsArr.includes(type || "resume") &&
+          tagsArr.includes(type === "resume" ? "cv" : "resume")
         ) {
           // If the opposite of `type` is in `obj.tags`, but `type` itself not
           // For example, when `type` is "cv" and `obj.tags` contains "resume"
           // but not "cv", then this obj should be hidden.
           return false;
         } else {
-          const tags = obj.tags.filter((item) =>
+          const tags = tagsArr.filter((item: string) =>
             !(["resume", "cv"].includes(item))
           );
           if (!(tags.length && versionSlugs.length)) return true;

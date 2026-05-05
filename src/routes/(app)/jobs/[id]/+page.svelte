@@ -605,17 +605,9 @@
               <dt class="text-[var(--dash-text-secondary)]">Job ID</dt>
               <dd class="text-[var(--dash-text)]">{job.id}</dd>
             </div>
-            {#if job.source_id}
-              <div class="flex justify-between">
-                <dt class="text-[var(--dash-text-secondary)]">Source ID</dt>
-                <dd
-                  class="text-[var(--dash-text)] truncate max-w-32"
-                  title={job.source_id}
-                >
-                  {job.source_id}
-                </dd>
-              </div>
-            {/if}
+            <!-- The jobs table has no source_id column; previous "Source ID"
+                 row referenced a field that doesn't exist in the schema. -->
+
             <div class="flex justify-between">
               <dt class="text-[var(--dash-text-secondary)]">Added</dt>
               <dd class="text-[var(--dash-text)]">
