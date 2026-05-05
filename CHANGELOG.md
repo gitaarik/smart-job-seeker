@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.25] - 2026-05-05
+
+1 commit since v0.5.24.
+
+### Added
+- Debug run API now exposes `stripped_html` field for search tasks
+
 ## [0.5.24] - 2026-05-05
 
 2 commits since v0.5.23.
