@@ -224,8 +224,8 @@ If semantic markers are not present for a field, extract from context as usual.
 
 Extract the following fields:
 - title: Job title (null if not found)
-- job_description: PLAIN TEXT ONLY - Extract the text content from the job description. NO HTML TAGS. Use double newlines (\\n\\n) to separate paragraphs. Convert bullet points to lines starting with "- ". Extract only the readable text, not the HTML markup.
-- company_description: PLAIN TEXT ONLY - Extract the text content about the company. NO HTML TAGS. Use double newlines (\\n\\n) to separate paragraphs.
+- job_description: PLAIN TEXT ONLY - Extract the text content from the job description. NO HTML TAGS. Use double newlines (\\n\\n) to separate paragraphs. Convert bullet points to lines starting with "- ". Extract only the readable text, not the HTML markup. **MAXIMUM ~4000 characters.** If the source is longer, keep the most important parts (responsibilities, requirements, context) and condense or omit boilerplate (legal disclaimers, EEO statements, repeated company blurbs) so the result stays within the limit.
+- company_description: PLAIN TEXT ONLY - Extract the text content about the company. NO HTML TAGS. Use double newlines (\\n\\n) to separate paragraphs. **MAXIMUM ~1500 characters.** Condense if longer; do not return the entire about-us page verbatim.
 - company: Name of the HIRING COMPANY (the organization offering the position, e.g., "Google", "Microsoft", "Acme Corp"). This is the company you would actually work for. (null if not found)
 - job_poster: Name of the RECRUITER, RECRUITMENT AGENCY, or PERSON who posted the job (e.g., "Tech Recruiters Inc", "John Smith"). This is NOT the hiring company. Only extract if there is a distinct recruiter/agency separate from the company. (null if not found or if same as company)
 - date_posted: When the MAIN job (not similar/related jobs) was posted

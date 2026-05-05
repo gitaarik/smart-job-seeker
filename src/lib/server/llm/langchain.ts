@@ -74,6 +74,35 @@ export class LLMRateLimitError extends LLMError {
 }
 
 /**
+ * Thrown when the model fails to produce valid structured output
+ * (e.g. Groq's json_validate_failed / "max completion tokens reached").
+ * Per-request, content-driven — NOT fatal at the scraper level.
+ */
+export class LLMOutputValidationError extends LLMError {
+  constructor(message: string, provider: string, model: string) {
+    super(message, provider, model);
+    this.name = "LLMOutputValidationError";
+  }
+}
+
+/**
+ * Substrings that identify per-request structured-output failures.
+ * Exposed so non-LLM layers (e.g. scraper fatal-error classifier) can
+ * recognise these even when the typed error is lost across a try/catch
+ * that re-wraps it as a plain Error.
+ */
+export const LLM_OUTPUT_VALIDATION_PATTERNS = [
+  "json_validate_failed",
+  "max completion tokens reached",
+  "failed to generate json",
+] as const;
+
+export function isLLMOutputValidationMessage(message: string): boolean {
+  const lower = message.toLowerCase();
+  return LLM_OUTPUT_VALIDATION_PATTERNS.some((p) => lower.includes(p));
+}
+
+/**
  * Parse API errors and throw appropriate LLM error types
  */
 function handleLLMError(
@@ -203,6 +232,13 @@ function handleLLMError(
         apiErrorDetails ? "\n" + apiErrorDetails : ""
       }\n\nOriginal error: ${originalMessage}`;
     throw new LLMRateLimitError(enhancedMessage, provider, model, retryAfter);
+  }
+
+  // Per-request structured-output failures (e.g. Groq json_validate_failed
+  // when the model exhausts max_completion_tokens before closing the JSON).
+  // These are content-driven and must not be treated as fatal by callers.
+  if (isLLMOutputValidationMessage(originalMessage)) {
+    throw new LLMOutputValidationError(originalMessage, provider, model);
   }
 
   // Re-throw original error if not recognized
