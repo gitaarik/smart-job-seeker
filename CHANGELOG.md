@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.24] - 2026-05-05
+
+2 commits since v0.5.23.
+
+### Fixed
+- LLM output-validation failures in scraper are now treated as non-fatal, improving resilience when processing task data with Groq and other LLM providers
+
 ## [0.5.23] - 2026-05-05
 
 7 commits since v0.5.22.
