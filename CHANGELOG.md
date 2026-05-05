@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.23] - 2026-05-05
+
+7 commits since v0.5.22.
+
+### Fixed
+- Drizzle `date()` columns no longer wrapped in `new Date()` — fixes silent type/data mismatches in profile forms (education, side projects, work experience), application tracking, and job-import endpoints
+- ProfileDisplay now handles nullable strings and `unknown` jsonb values from Drizzle without crashing
+- Various queryRaw call sites returning correct array types
+- Schema circular-ref between profiles ↔ profile_versions resolved via explicit `PgTableExtraConfigValue[]` annotation
+
+### Internal
+- svelte-check error count: 603 → 51 errors (multi-pass cleanup across types, queryRaw, schema/template alignment, Buffer/Icon/Sidebar imports)
+- `getEnv()` now uses TS overloads to narrow return type by call shape
+- ioredis import simplified (dropped obsolete CommonJS-ESM compat shim)
+
 ## [0.5.22] - 2026-05-03
 
 1 commit since v0.5.21.
