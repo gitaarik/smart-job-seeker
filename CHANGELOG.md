@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.26] - 2026-05-06
+
+3 commits since v0.5.25.
+
+### Fixed
+- Tunnel IPC no longer corrupts envelope types during response routing
+- Login error handling now properly surfaces automation failures
+
+### Changed
+- Tunnel now uses coordinate-based clicking for improved site compatibility
+- Terms of Service classifier has been refined for better accuracy
+
 ## [0.5.25] - 2026-05-05
 
 1 commit since v0.5.24.
