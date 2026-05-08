@@ -598,8 +598,10 @@
           {:else}
             <!-- Docker instructions -->
             <p>
-              Run the tunnel client as a Docker container on a NAS (TrueNAS,
-              Synology, Unraid) or any server with Docker.
+              Run sjs-browser as a Docker container on a NAS (TrueNAS,
+              Synology, Unraid) or any server with Docker. The container
+              auto-updates the SJS code on its own — no Watchtower or
+              platform-level auto-update needed.
             </p>
 
             <div class="mt-3 space-y-3">
@@ -673,6 +675,28 @@ volumes:
                   >SJS_SERVER_URL</code> and <code
                     class="bg-[var(--dash-bg)] px-1 rounded"
                   >SJS_API_TOKEN</code>. Set shared memory to 512 MB.
+                </p>
+              </div>
+
+              <div>
+                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                  Updates
+                </p>
+                <p class="text-xs text-[var(--dash-text-secondary)]">
+                  On every container restart and every six hours, sjs-browser
+                  fetches the latest signed release tarball from <a
+                    href="https://github.com/gitaarik/sjs-browser/releases"
+                    target="_blank"
+                    rel="noopener"
+                    class="underline">GitHub</a> and verifies its signature
+                  against a public key baked into the image. To pin a specific
+                  version: set <code class="bg-[var(--dash-bg)] px-1 rounded"
+                  >SJS_BROWSER_CHANNEL=v0.5.27</code>. To opt out entirely:
+                  set it to <code class="bg-[var(--dash-bg)] px-1 rounded"
+                  >disabled</code>. Pull a new image (<code
+                    class="bg-[var(--dash-bg)] px-1 rounded"
+                  >docker compose pull</code>) every few months for Chrome and
+                  base-OS bumps.
                 </p>
               </div>
 
