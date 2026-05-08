@@ -70,3 +70,21 @@ export async function addMatchJob(
   const result = await job.waitUntilFinished(getMatchQueueEvents(), timeoutMs);
   return result;
 }
+
+/**
+ * Fire-and-forget enqueue. Use when the caller (e.g. the import path) just
+ * wants to schedule a match without blocking the request on the LLM call.
+ * Swallows enqueue errors so a Redis hiccup doesn't break the import — the
+ * background matcher loop will pick the job up on its next cycle.
+ */
+export async function enqueueMatchJob(data: MatchJobData): Promise<void> {
+  const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
+  try {
+    await getMatchQueue().add("match", data, { jobId });
+  } catch (err) {
+    console.warn(
+      `[match-queue] enqueue failed for profile=${data.profileId} job=${data.jobId}:`,
+      err,
+    );
+  }
+}

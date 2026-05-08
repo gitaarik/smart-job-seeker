@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import { jobs, job_importers } from "$lib/server/db/schema";
 import { normalizeJobUrl } from "$lib/server/job/normalize-url";
 import { getProfileIdFromApiKey, findExistingJob } from "$lib/server/job/import-utils";
+import { triggerMatchForImport } from "$lib/server/job/match-trigger";
 import { getErrorMessage } from "$lib/server/utils/errors";
 import {
   type BatchJobImportResponse,
@@ -71,6 +72,7 @@ async function importSingleJob(
       if (!existingImporter) {
         await db.insert(job_importers).values({ job: existing.id, profile: profileId });
       }
+      await triggerMatchForImport(profileId, existing.id);
 
       return {
         success: true,
@@ -87,6 +89,7 @@ async function importSingleJob(
     if (!existingImporter) {
       await db.insert(job_importers).values({ job: existing.id, profile: profileId });
     }
+    await triggerMatchForImport(profileId, existing.id);
 
     return {
       success: true,
@@ -124,6 +127,7 @@ async function importSingleJob(
     }).returning();
 
     await db.insert(job_importers).values({ job: newJob.id, profile: profileId });
+    await triggerMatchForImport(profileId, newJob.id);
 
     return {
       success: true,

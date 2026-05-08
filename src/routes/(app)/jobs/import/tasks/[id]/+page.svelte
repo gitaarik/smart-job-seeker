@@ -7,6 +7,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
+  import ScoreBadge from "../../../components/ScoreBadge.svelte";
   import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
   import {
     formatJobType,
@@ -290,6 +291,7 @@
     job_id: number | null;
     was_created: boolean | null;
     job: JobDetails | null;
+    match: { score: number; recommendation: string | null } | null;
   }
 
   interface RunItemsData {
@@ -1681,6 +1683,17 @@
                   >
                     {item.position}
                   </span>
+
+                  <!-- Score badge: only for items that produced a real job row -->
+                  {#if item.job_id && item.status === "completed"}
+                    <div class="shrink-0 self-center">
+                      <ScoreBadge
+                        score={item.match?.score ?? null}
+                        matched={!!item.match?.recommendation}
+                        size="sm"
+                      />
+                    </div>
+                  {/if}
 
                   <!-- Content: title, details, and pill -->
                   <div class="flex-1 min-w-0">
