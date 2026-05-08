@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.30] - 2026-05-08
+
+1 commit since v0.5.29.
+
+### Fixed
+
+- Scraper now automatically selects a shared device when a task has no pinned device assigned
+
 ## [0.5.29] - 2026-05-08
 
 3 commits since v0.5.28.
