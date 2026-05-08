@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.28] - 2026-05-08
+
+4 commits since v0.5.27.
+
+### Added
+- Bootstrap auto-update feature for sjs-browser with automatic watchdog monitoring
+- Devices UI now mentions bootstrap auto-update capability
+
+### Changed
+- Build-version environment variables renamed
+- Minisign installation now uses upstream binaries instead of package manager
+
 ## [0.5.27] - 2026-05-08
 
 7 commits since v0.5.26.
