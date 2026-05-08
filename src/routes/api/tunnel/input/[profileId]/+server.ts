@@ -1,12 +1,17 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
+import { resolveTunnelDevice } from "$lib/server/sjs-browser-status";
 
 /**
  * POST /api/tunnel/input/:profileId — Forward raw input events to tunnel client.
  *
  * Accepts rawMouseEvent, rawScrollEvent, and rawKeyEvent payloads
  * and forwards them to the desktop app via the tunnel server.
+ *
+ * Resolves shared devices like /api/tunnel/vnc — input events go to the
+ * actual device owner's profile_id when the auto-pick lands on a shared
+ * device.
  */
 export const POST: RequestHandler = async ({ locals, params, request, url }) => {
   const user = requireAuth(locals);
@@ -16,9 +21,12 @@ export const POST: RequestHandler = async ({ locals, params, request, url }) => 
   const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
   const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
 
-  // Optional apiKeyId pins input events to the search-task device.
-  const apiKeyId = url.searchParams.get("apiKeyId");
-  const upstreamPath = `/input/${profileId}${apiKeyId ? `?apiKeyId=${encodeURIComponent(apiKeyId)}` : ""}`;
+  const resolved = await resolveTunnelDevice(
+    user.id,
+    profileId,
+    url.searchParams.get("apiKeyId"),
+  );
+  const upstreamPath = `/input/${resolved.profileId}${resolved.apiKeyId ? `?apiKeyId=${resolved.apiKeyId}` : ""}`;
 
   try {
     const body = await request.json();

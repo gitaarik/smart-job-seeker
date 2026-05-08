@@ -150,6 +150,59 @@ export async function getPreferredDevice(
  * Returns null if the device isn't connected, isn't owned/shared by the
  * user, or doesn't belong to the given profile.
  */
+/**
+ * Resolve the upstream `(profileId, apiKeyId)` pair for a tunnel-relay
+ * request (VNC, screencast, input) that came in addressed to a request
+ * `profileId`.
+ *
+ * The dashboard sends the *task's* profile_id (which is the user's profile);
+ * but when the task uses a shared device, the actual tunnel registry entry
+ * lives on the *device owner's* profile. Without resolving, the upstream
+ * 404s with "No active tunnel".
+ *
+ *   1. If the caller passed an explicit `apiKeyId`, validate access to it
+ *      and return that device's owner profile_id + apiKeyId.
+ *   2. Otherwise auto-pick the same way the Devices page does (own
+ *      connected first, then shared connected).
+ *   3. If neither resolves to a connected device, return the original
+ *      profileId with no apiKeyId — the upstream will 404, which is the
+ *      same behaviour as before this helper existed.
+ */
+export async function resolveTunnelDevice(
+  userId: string,
+  profileId: number,
+  apiKeyIdRaw: string | null,
+): Promise<{ profileId: number; apiKeyId?: number }> {
+  if (apiKeyIdRaw) {
+    const apiKeyId = Number.parseInt(apiKeyIdRaw, 10);
+    if (!Number.isFinite(apiKeyId)) {
+      return { profileId };
+    }
+    const device = await getDeviceById(userId, profileId, apiKeyId);
+    if (!device) return { profileId };
+    const apiKey = await db.query.api_keys.findFirst({
+      where: eq(api_keys.id, apiKeyId),
+      columns: { profile_id: true },
+    });
+    return {
+      profileId: apiKey?.profile_id ?? profileId,
+      apiKeyId,
+    };
+  }
+
+  const preferred = await getPreferredDevice(userId, profileId);
+  if (!preferred) return { profileId };
+
+  const apiKey = await db.query.api_keys.findFirst({
+    where: eq(api_keys.id, preferred.apiKeyId),
+    columns: { profile_id: true },
+  });
+  return {
+    profileId: apiKey?.profile_id ?? profileId,
+    apiKeyId: preferred.apiKeyId,
+  };
+}
+
 export async function getDeviceById(
   userId: string,
   profileId: number,

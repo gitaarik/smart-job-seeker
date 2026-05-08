@@ -1,5 +1,6 @@
 import type { RequestHandler } from "./$types";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
+import { resolveTunnelDevice } from "$lib/server/sjs-browser-status";
 
 const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
 const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
@@ -9,16 +10,22 @@ const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
  *
  * Takes a CDP screenshot of the current browser page via the tunnel.
  * The frontend polls this endpoint to update the browser view.
+ *
+ * Resolves shared devices like /api/tunnel/vnc — the request profile_id
+ * gets remapped to the device owner's profile_id when the auto-pick lands
+ * on a shared device.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
   const user = requireAuth(locals);
   const profileId = parseIntParam(params.profileId, "profile");
   await requireProfileAccess(profileId, user.id);
 
-  // Optional apiKeyId pins the screenshot to a specific device — required when
-  // multiple devices are connected for the same profile.
-  const apiKeyId = url.searchParams.get("apiKeyId");
-  const upstreamPath = `/screencast/${profileId}/frame${apiKeyId ? `?apiKeyId=${encodeURIComponent(apiKeyId)}` : ""}`;
+  const resolved = await resolveTunnelDevice(
+    user.id,
+    profileId,
+    url.searchParams.get("apiKeyId"),
+  );
+  const upstreamPath = `/screencast/${resolved.profileId}/frame${resolved.apiKeyId ? `?apiKeyId=${resolved.apiKeyId}` : ""}`;
 
   try {
     const upstream = await fetch(

@@ -1,11 +1,17 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
+import { resolveTunnelDevice } from "$lib/server/sjs-browser-status";
 
 /**
  * POST /api/tunnel/vnc/:profileId — Generate a short-lived VNC access token.
  *
  * Returns a WebSocket URL that noVNC can connect to for interactive browser control.
+ *
+ * Resolves shared devices: when the requested profile_id has no connected
+ * device but a shared device is available, the upstream call is rewritten
+ * to use the device owner's profile_id, and the resolved profile_id is
+ * returned to the client so the WebSocket path matches the registry entry.
  */
 export const POST: RequestHandler = async ({ locals, params, url }) => {
   const user = requireAuth(locals);
@@ -15,9 +21,12 @@ export const POST: RequestHandler = async ({ locals, params, url }) => {
   const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
   const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
 
-  // Optional apiKeyId pins VNC to a specific device.
-  const apiKeyId = url.searchParams.get("apiKeyId");
-  const upstreamPath = `/vnc-token/${profileId}${apiKeyId ? `?apiKeyId=${encodeURIComponent(apiKeyId)}` : ""}`;
+  const resolved = await resolveTunnelDevice(
+    user.id,
+    profileId,
+    url.searchParams.get("apiKeyId"),
+  );
+  const upstreamPath = `/vnc-token/${resolved.profileId}${resolved.apiKeyId ? `?apiKeyId=${resolved.apiKeyId}` : ""}`;
 
   try {
     const res = await fetch(`http://${sjsBrowserHost}:${sjsBrowserPort}${upstreamPath}`, {
@@ -31,7 +40,7 @@ export const POST: RequestHandler = async ({ locals, params, url }) => {
     }
 
     const { token } = await res.json();
-    return json({ token, profileId });
+    return json({ token, profileId: resolved.profileId });
   } catch (err) {
     if (err && typeof err === "object" && "status" in err) throw err;
     throw error(502, "Tunnel server unavailable");
