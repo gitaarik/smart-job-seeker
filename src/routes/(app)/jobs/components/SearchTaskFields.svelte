@@ -181,7 +181,7 @@
   let addBrowserProvider = $state<string | null>(
     defaultBrowserProvider || null,
   );
-  let addTunnelApiKey = $state<number | null>(null);
+  let addSjsBrowserApiKey = $state<number | null>(null);
 
   // ── Add-mode browser country ──
   let addBrowserCountryCode = $state(initialBrowserCountryCode);
@@ -332,14 +332,14 @@
   let isSavingBrowserProvider = $state(false);
 
   // Tunnel device selection (edit)
-  let tunnelApiKey = $state<number | null>(searchTask?.tunnel_api_key ?? null);
-  let savedTunnelApiKey = $state<number | null>(
-    searchTask?.tunnel_api_key ?? null,
+  let sjsBrowserApiKey = $state<number | null>(searchTask?.sjsbrowser_api_key ?? null);
+  let savedSjsBrowserApiKey = $state<number | null>(
+    searchTask?.sjsbrowser_api_key ?? null,
   );
-  let tunnelApiKeyDirty = $derived(
-    isEdit && tunnelApiKey !== savedTunnelApiKey,
+  let sjsBrowserApiKeyDirty = $derived(
+    isEdit && sjsBrowserApiKey !== savedSjsBrowserApiKey,
   );
-  let isSavingTunnelApiKey = $state(false);
+  let isSavingSjsBrowserApiKey = $state(false);
 
   // Keep minimized (edit)
   let keepMinimized = $state<boolean>(searchTask?.keep_minimized ?? true);
@@ -564,16 +564,16 @@
     }
   }
 
-  async function saveTunnelApiKey() {
-    isSavingTunnelApiKey = true;
+  async function saveSjsBrowserApiKey() {
+    isSavingSjsBrowserApiKey = true;
     try {
-      await patchSearchTask({ tunnel_api_key: tunnelApiKey });
-      savedTunnelApiKey = tunnelApiKey;
-      searchTask.tunnel_api_key = tunnelApiKey;
+      await patchSearchTask({ sjsbrowser_api_key: sjsBrowserApiKey });
+      savedSjsBrowserApiKey = sjsBrowserApiKey;
+      searchTask.sjsbrowser_api_key = sjsBrowserApiKey;
     } catch (err) {
       console.error("Failed to save tunnel device:", err);
     } finally {
-      isSavingTunnelApiKey = false;
+      isSavingSjsBrowserApiKey = false;
     }
   }
 
@@ -682,7 +682,7 @@
           const credOwner = cred?.shared ? cred.owner_user_id : null;
           if (credOwner) {
             const currentDevice = devices.find((d) =>
-              d.apiKeyId === tunnelApiKey
+              d.apiKeyId === sjsBrowserApiKey
             );
             const matches = currentDevice?.owner_user_id === credOwner;
             if (!matches) {
@@ -697,7 +697,7 @@
                 );
               }
               cascadedDeviceId = compatible.apiKeyId;
-              body.tunnel_api_key = compatible.apiKeyId;
+              body.sjsbrowser_api_key = compatible.apiKeyId;
             }
           }
         }
@@ -714,9 +714,9 @@
         editSavedCredentialId = editSelectedCredentialId;
       }
       if (cascadedDeviceId !== undefined) {
-        tunnelApiKey = cascadedDeviceId;
-        savedTunnelApiKey = cascadedDeviceId;
-        searchTask.tunnel_api_key = cascadedDeviceId;
+        sjsBrowserApiKey = cascadedDeviceId;
+        savedSjsBrowserApiKey = cascadedDeviceId;
+        searchTask.sjsbrowser_api_key = cascadedDeviceId;
       }
     } catch (err) {
       credentialSaveError = err instanceof Error
@@ -1866,7 +1866,7 @@
         {#if isAdd}
           <BrowserProviderToggle
             bind:value={addBrowserProvider}
-            bind:tunnelApiKey={addTunnelApiKey}
+            bind:sjsBrowserApiKey={addSjsBrowserApiKey}
             {localBrowserAllowed}
             {devices}
           />
@@ -1877,29 +1877,29 @@
           />
           <input
             type="hidden"
-            name="tunnel_api_key"
-            value={addBrowserProvider === "tunnel" && addTunnelApiKey != null
-            ? String(addTunnelApiKey)
+            name="sjsbrowser_api_key"
+            value={addBrowserProvider === "tunnel" && addSjsBrowserApiKey != null
+            ? String(addSjsBrowserApiKey)
             : ""}
           />
         {:else}
           <BrowserProviderToggle
             bind:value={browserProvider}
-            bind:tunnelApiKey
+            bind:sjsBrowserApiKey
             {localBrowserAllowed}
             {devices}
           />
-          {#if browserProviderDirty || tunnelApiKeyDirty}
+          {#if browserProviderDirty || sjsBrowserApiKeyDirty}
             {@render saveCancel(
               true,
-              isSavingBrowserProvider || isSavingTunnelApiKey,
+              isSavingBrowserProvider || isSavingSjsBrowserApiKey,
               async () => {
                 if (browserProviderDirty) await saveBrowserProvider();
-                if (tunnelApiKeyDirty) await saveTunnelApiKey();
+                if (sjsBrowserApiKeyDirty) await saveSjsBrowserApiKey();
               },
               () => {
                 browserProvider = savedBrowserProvider;
-                tunnelApiKey = savedTunnelApiKey;
+                sjsBrowserApiKey = savedSjsBrowserApiKey;
               },
             )}
           {/if}

@@ -8,7 +8,7 @@ import {
 import {
   getDeviceById,
   getPreferredDevice,
-} from "$lib/server/tunnel-status";
+} from "$lib/server/sjs-browser-status";
 
 /**
  * GET /api/tunnel/status/preferred?profileId=123[&apiKeyId=456] — the
@@ -18,7 +18,7 @@ import {
  *     the profile first, then shared connected devices.
  *   - With `apiKeyId`: that specific device's status, so the search-task
  *     UI can display the device the task is actually configured to use
- *     (`search_tasks.tunnel_api_key`) instead of the auto-pick.
+ *     (`search_tasks.sjsbrowser_api_key`) instead of the auto-pick.
  *
  * Returns `{ device: null }` when nothing matches/is connected.
  */

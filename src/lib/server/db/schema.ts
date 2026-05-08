@@ -2478,7 +2478,7 @@ export const search_tasks = pgTable("search_tasks", {
     withTimezone: true,
     mode: "date",
   }),
-  tunnel_api_key: integer(),
+  sjsbrowser_api_key: integer(),
   login_mode: varchar({ length: 10 }).default("auto").notNull(),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
@@ -2501,9 +2501,9 @@ export const search_tasks = pgTable("search_tasks", {
     name: "search_tasks_platform_profile_id_fkey",
   }),
   foreignKey({
-    columns: [table.tunnel_api_key],
+    columns: [table.sjsbrowser_api_key],
     foreignColumns: [api_keys.id],
-    name: "search_tasks_tunnel_api_key_fkey",
+    name: "search_tasks_sjsbrowser_api_key_fkey",
   }).onDelete("set null"),
 ]);
 

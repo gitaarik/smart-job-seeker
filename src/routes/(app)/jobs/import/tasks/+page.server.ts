@@ -264,7 +264,7 @@ export const actions: Actions = {
 
     // Scraping options
     const browserProvider = formData.get("browser_provider") as string;
-    const tunnelApiKeyRaw = formData.get("tunnel_api_key") as string;
+    const sjsBrowserApiKeyRaw = formData.get("sjsbrowser_api_key") as string;
     const maxJobsRaw = formData.get("max_jobs") as string;
     const skipFirstRaw = formData.get("skip_first") as string;
     const stopAfterDuplicatesRaw = formData.get(
@@ -286,8 +286,8 @@ export const actions: Actions = {
     // When paired with a shared credential the device must be owned by that
     // credential's owner — same coupling rule the PATCH endpoint enforces.
     // Silently drop on mismatch; the user can re-pick on the detail page.
-    let resolvedTunnelApiKey: number | null = null;
-    const apiKeyId = tunnelApiKeyRaw ? parseInt(tunnelApiKeyRaw) : NaN;
+    let resolvedSjsBrowserApiKey: number | null = null;
+    const apiKeyId = sjsBrowserApiKeyRaw ? parseInt(sjsBrowserApiKeyRaw) : NaN;
     if (!isNaN(apiKeyId) && (await hasDeviceAccess(apiKeyId, user.id))) {
       let credOwner: string | null = null;
       if (resolvedCredentialId !== null) {
@@ -300,7 +300,7 @@ export const actions: Actions = {
       }
       const credIsShared = credOwner !== null && credOwner !== user.id;
       if (!credIsShared) {
-        resolvedTunnelApiKey = apiKeyId;
+        resolvedSjsBrowserApiKey = apiKeyId;
       } else {
         const key = await db.query.api_keys.findFirst({
           where: eq(api_keys.id, apiKeyId),
@@ -308,7 +308,7 @@ export const actions: Actions = {
           with: { profile: { columns: { user_id: true } } },
         });
         if (key?.profile.user_id === credOwner) {
-          resolvedTunnelApiKey = apiKeyId;
+          resolvedSjsBrowserApiKey = apiKeyId;
         }
       }
     }
@@ -338,7 +338,7 @@ export const actions: Actions = {
       profile_id: profileId,
       status: "idle",
       browser_provider: browserProvider || config.defaultBrowserProvider,
-      tunnel_api_key: resolvedTunnelApiKey,
+      sjsbrowser_api_key: resolvedSjsBrowserApiKey,
       max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
       skip_first: isNaN(skipFirst as number) ? null : skipFirst,
       stop_after_duplicates: isNaN(stopAfterDuplicates as number)

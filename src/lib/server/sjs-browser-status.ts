@@ -13,7 +13,7 @@ import { api_keys, device_shares, users } from "$lib/server/db/schema";
 
 const TUNNEL_REQUEST_TIMEOUT_MS = 2000;
 
-export interface TunnelDevice {
+export interface SjsBrowserDevice {
   apiKeyId: number;
   apiKeyName: string;
   connectedAt: string;
@@ -21,26 +21,26 @@ export interface TunnelDevice {
   clientVersion: string;
 }
 
-export interface TunnelStatus {
+export interface SjsBrowserStatus {
   connected: boolean;
-  devices: TunnelDevice[];
+  devices: SjsBrowserDevice[];
   status?: string;
 }
 
-export interface PreferredDevice extends TunnelDevice {
+export interface PreferredDevice extends SjsBrowserDevice {
   isShared: boolean;
   /** Owner display name when shared; null when owned by the requesting user */
   ownerLabel: string | null;
 }
 
-export async function fetchProfileTunnelStatus(
+export async function fetchProfileSjsBrowserStatus(
   profileId: number,
-): Promise<TunnelStatus> {
+): Promise<SjsBrowserStatus> {
   try {
-    const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
-    const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
+    const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
+    const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
     const res = await fetch(
-      `http://${tunnelHost}:${tunnelPort}/status/${profileId}`,
+      `http://${sjsBrowserHost}:${sjsBrowserPort}/status/${profileId}`,
       { signal: AbortSignal.timeout(TUNNEL_REQUEST_TIMEOUT_MS) },
     );
     if (res.ok) return await res.json();
@@ -65,7 +65,7 @@ export async function getPreferredDevice(
   userId: string,
   profileId: number,
 ): Promise<PreferredDevice | null> {
-  const ownStatus = await fetchProfileTunnelStatus(profileId);
+  const ownStatus = await fetchProfileSjsBrowserStatus(profileId);
   if (ownStatus.devices.length > 0) {
     const ownedKeys = await db.query.api_keys.findMany({
       where: inArray(
@@ -105,13 +105,13 @@ export async function getPreferredDevice(
   const profileIds = [...new Set(shares.map((s) => s.api_key.profile_id))];
   const statuses = await Promise.all(
     profileIds.map(
-      async (pid) => [pid, await fetchProfileTunnelStatus(pid)] as const,
+      async (pid) => [pid, await fetchProfileSjsBrowserStatus(pid)] as const,
     ),
   );
   const statusByProfile = new Map(statuses);
 
   const candidates: Array<
-    { device: TunnelDevice; ownerUserId: string | null; sortKey: number }
+    { device: SjsBrowserDevice; ownerUserId: string | null; sortKey: number }
   > = [];
   for (const share of shares) {
     const status = statusByProfile.get(share.api_key.profile_id);
@@ -144,7 +144,7 @@ export async function getPreferredDevice(
 /**
  * Status of a specific device by api_key id, regardless of whether it is
  * the user's preferred default. Used by the search-task UI to show the
- * device that will actually be used (the task's configured `tunnel_api_key`),
+ * device that will actually be used (the task's configured `sjsbrowser_api_key`),
  * not the user's first-connected fallback.
  *
  * Returns null if the device isn't connected, isn't owned/shared by the
@@ -183,7 +183,7 @@ export async function getDeviceById(
     if (!share) return null;
   }
 
-  const status = await fetchProfileTunnelStatus(apiKey.profile_id);
+  const status = await fetchProfileSjsBrowserStatus(apiKey.profile_id);
   const device = status.devices.find((d) => d.apiKeyId === apiKeyId);
   if (!device) return null;
 

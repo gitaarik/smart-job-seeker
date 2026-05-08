@@ -14,7 +14,7 @@
 
   interface Props {
     value: string | null;
-    tunnelApiKey?: number | null;
+    sjsBrowserApiKey?: number | null;
     devices?: Device[];
     localBrowserAllowed?: boolean;
     disabled?: boolean;
@@ -23,7 +23,7 @@
 
   let {
     value = $bindable(),
-    tunnelApiKey = $bindable(null),
+    sjsBrowserApiKey = $bindable(null),
     devices = [],
     localBrowserAllowed = false,
     disabled = false,
@@ -38,7 +38,7 @@
 
   function selectDevice(e: Event) {
     const select = e.target as HTMLSelectElement;
-    tunnelApiKey = select.value ? parseInt(select.value, 10) : null;
+    sjsBrowserApiKey = select.value ? parseInt(select.value, 10) : null;
   }
 </script>
 
@@ -83,7 +83,7 @@
     <div class="mt-2">
       <select
         {disabled}
-        value={tunnelApiKey ?? ""}
+        value={sjsBrowserApiKey ?? ""}
         onchange={selectDevice}
         class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
       >

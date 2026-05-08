@@ -13,8 +13,8 @@ export const POST: RequestHandler = async ({ locals, params, request, url }) => 
   const profileId = parseIntParam(params.profileId, "profileId");
   await requireProfileAccess(profileId, user.id);
 
-  const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
-  const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
+  const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
+  const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
 
   // Optional apiKeyId pins input events to the search-task device.
   const apiKeyId = url.searchParams.get("apiKeyId");
@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ locals, params, request, url }) => 
   try {
     const body = await request.json();
 
-    const res = await fetch(`http://${tunnelHost}:${tunnelPort}${upstreamPath}`, {
+    const res = await fetch(`http://${sjsBrowserHost}:${sjsBrowserPort}${upstreamPath}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

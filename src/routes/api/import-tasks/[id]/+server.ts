@@ -126,7 +126,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     schedule_interval_hours?: number | null;
     schedule_preferred_hour?: number;
     next_scheduled_run?: Date | null;
-    tunnel_api_key?: number | null;
+    sjsbrowser_api_key?: number | null;
   } = {};
 
   if (body.note !== undefined) data.note = body.note || null;
@@ -147,14 +147,14 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (body.keep_minimized !== undefined) {
     data.keep_minimized = body.keep_minimized;
   }
-  if (body.tunnel_api_key !== undefined) {
-    if (body.tunnel_api_key !== null) {
-      const canAccess = await hasDeviceAccess(body.tunnel_api_key, user.id);
+  if (body.sjsbrowser_api_key !== undefined) {
+    if (body.sjsbrowser_api_key !== null) {
+      const canAccess = await hasDeviceAccess(body.sjsbrowser_api_key, user.id);
       if (!canAccess) {
         throw error(403, "You don't have access to this device");
       }
     }
-    data.tunnel_api_key = body.tunnel_api_key;
+    data.sjsbrowser_api_key = body.sjsbrowser_api_key;
   }
   if (body.schedule_preferred_hour !== undefined) {
     data.schedule_preferred_hour = body.schedule_preferred_hour;
@@ -238,9 +238,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   const finalCredId = data.platform_profile_id !== undefined
     ? data.platform_profile_id
     : searchTask.platform_profile_id ?? null;
-  const finalDeviceId = data.tunnel_api_key !== undefined
-    ? data.tunnel_api_key
-    : searchTask.tunnel_api_key ?? null;
+  const finalDeviceId = data.sjsbrowser_api_key !== undefined
+    ? data.sjsbrowser_api_key
+    : searchTask.sjsbrowser_api_key ?? null;
   if (finalCredId !== null) {
     const cred = await db.query.platform_profiles.findFirst({
       where: eq(platform_profiles.id, finalCredId),

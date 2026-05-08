@@ -1,8 +1,8 @@
 import type { RequestHandler } from "./$types";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
 
-const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
-const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
+const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
+const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
 
 /**
  * GET /api/tunnel/screencast/:profileId — on-demand screenshot
@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   try {
     const upstream = await fetch(
-      `http://${tunnelHost}:${tunnelPort}${upstreamPath}`,
+      `http://${sjsBrowserHost}:${sjsBrowserPort}${upstreamPath}`,
       { signal: AbortSignal.timeout(10000) },
     );
 

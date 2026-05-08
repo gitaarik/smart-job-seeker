@@ -153,8 +153,8 @@
       // When the task has a configured device, ask the API about *that*
       // device's status so the widgets reflect what will actually run —
       // not the user's auto-pick fallback.
-      const preferredUrl = searchTask.tunnel_api_key
-        ? `/api/tunnel/status/preferred?profileId=${data.profileId}&apiKeyId=${searchTask.tunnel_api_key}`
+      const preferredUrl = searchTask.sjsbrowser_api_key
+        ? `/api/tunnel/status/preferred?profileId=${data.profileId}&apiKeyId=${searchTask.sjsbrowser_api_key}`
         : `/api/tunnel/status/preferred?profileId=${data.profileId}`;
       const [preferredRes, profileRes, sharedResults] = await Promise.all([
         fetch(preferredUrl),
@@ -463,8 +463,8 @@
       // Pin VNC to the device configured on the search task — otherwise with
       // multiple devices connected the dashboard can show a different one
       // than the scraper is driving.
-      const apiKeyParam = searchTask.tunnel_api_key
-        ? `?apiKeyId=${searchTask.tunnel_api_key}`
+      const apiKeyParam = searchTask.sjsbrowser_api_key
+        ? `?apiKeyId=${searchTask.sjsbrowser_api_key}`
         : "";
       const res = await fetch(
         `/api/tunnel/vnc/${data.profileId}${apiKeyParam}`,
@@ -516,8 +516,8 @@
 
   async function fetchScreenshot() {
     try {
-      const apiKeyParam = searchTask.tunnel_api_key
-        ? `?apiKeyId=${searchTask.tunnel_api_key}`
+      const apiKeyParam = searchTask.sjsbrowser_api_key
+        ? `?apiKeyId=${searchTask.sjsbrowser_api_key}`
         : "";
       const res = await fetch(
         `/api/tunnel/screencast/${data.profileId}${apiKeyParam}`,
@@ -595,8 +595,8 @@
   const MOUSE_BUTTON_MAP = ["left", "middle", "right"] as const;
 
   function sendInput(body: Record<string, unknown>) {
-    const apiKeyParam = searchTask.tunnel_api_key
-      ? `?apiKeyId=${searchTask.tunnel_api_key}`
+    const apiKeyParam = searchTask.sjsbrowser_api_key
+      ? `?apiKeyId=${searchTask.sjsbrowser_api_key}`
       : "";
     fetch(`/api/tunnel/input/${data.profileId}${apiKeyParam}`, {
       method: "POST",
@@ -1505,7 +1505,7 @@
   // Also re-runs when the task's configured device changes so the widgets
   // refresh immediately on device switch instead of waiting for the next poll.
   $effect(() => {
-    void searchTask.tunnel_api_key;
+    void searchTask.sjsbrowser_api_key;
     if (isTunnelMode) {
       checkDesktopStatus();
       if (!desktopPollInterval) {

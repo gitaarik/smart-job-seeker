@@ -97,11 +97,11 @@
   let connectedDevices = $state<DeviceStatus[]>([]);
   let sharedDeviceStatuses = $state<Map<number, DeviceStatus>>(new Map());
   let preferredDevice = $state<PreferredDevice | null>(null);
-  let tunnelStatus = $state<string>("checking");
+  let sjsBrowserStatus = $state<string>("checking");
   let statusPollInterval: ReturnType<typeof setInterval> | null = null;
 
   // Derive tunnel URL from current host
-  let tunnelUrl = $derived(
+  let sjsBrowserUrl = $derived(
     typeof window !== "undefined"
       ? `wss://${window.location.host}/tunnel`
       : "wss://app.smartjobseeker.com/tunnel",
@@ -115,14 +115,14 @@
     return sharedDeviceStatuses.get(apiKeyId);
   }
 
-  async function pollOwnedTunnelStatus() {
+  async function pollOwnedSjsBrowserStatus() {
     try {
       const res = await fetch(`/api/tunnel/status?profileId=${data.profileId}`);
       const status = await res.json();
       connectedDevices = status.devices || [];
-      tunnelStatus = status.connected ? "connected" : "disconnected";
+      sjsBrowserStatus = status.connected ? "connected" : "disconnected";
     } catch {
-      tunnelStatus = "unavailable";
+      sjsBrowserStatus = "unavailable";
       connectedDevices = [];
     }
   }
@@ -169,17 +169,17 @@
     }
   }
 
-  async function pollTunnelStatus() {
+  async function pollSjsBrowserStatus() {
     await Promise.all([
-      pollOwnedTunnelStatus(),
+      pollOwnedSjsBrowserStatus(),
       pollSharedDeviceStatuses(),
       pollPreferredDevice(),
     ]);
   }
 
   onMount(() => {
-    pollTunnelStatus();
-    statusPollInterval = setInterval(pollTunnelStatus, 5000);
+    pollSjsBrowserStatus();
+    statusPollInterval = setInterval(pollSjsBrowserStatus, 5000);
   });
 
   onDestroy(() => {
@@ -405,7 +405,7 @@
         </span>
         <div>
           <p class="font-medium text-[var(--dash-text)] flex items-center gap-2 flex-wrap">
-            {#if tunnelStatus === "checking"}
+            {#if sjsBrowserStatus === "checking"}
               Checking connection...
             {:else if preferredDevice}
               <span>{preferredDevice.apiKeyName}</span>
@@ -428,14 +428,14 @@
                 &middot; shared by {preferredDevice.ownerLabel}
               {/if}
             </p>
-          {:else if tunnelStatus !== "checking"}
+          {:else if sjsBrowserStatus !== "checking"}
             <p class="text-sm text-[var(--dash-text-muted)]">
               Follow the setup steps below to connect
             </p>
           {/if}
         </div>
       </div>
-      {#if tunnelStatus === "checking"}
+      {#if sjsBrowserStatus === "checking"}
         <Spinner size="w-4 h-4" color="var(--dash-text-muted)" />
       {/if}
     </div>
@@ -617,14 +617,14 @@
                   <pre
                     class="whitespace-pre"
                   >services:
-  sjs-tunnel:
-    image: gitaarik036/sjs-tunnel-client:latest
+  sjs-browser:
+    image: gitaarik036/sjs-browser:latest
     restart: unless-stopped
     shm_size: "512m"
     volumes:
       - chrome_data:/data
     environment:
-      SJS_SERVER_URL: "{tunnelUrl}"
+      SJS_SERVER_URL: "{sjsBrowserUrl}"
       SJS_API_TOKEN: "your-api-key-here"
     deploy:
       resources:
@@ -651,13 +651,13 @@ volumes:
                   <pre
                     class="whitespace-pre"
                   >docker run -d \
-  --name sjs-tunnel \
+  --name sjs-browser \
   --restart unless-stopped \
   --shm-size 512m \
   -v sjs_chrome_data:/data \
-  -e SJS_SERVER_URL="{tunnelUrl}" \
+  -e SJS_SERVER_URL="{sjsBrowserUrl}" \
   -e SJS_API_TOKEN="your-api-key-here" \
-  gitaarik036/sjs-tunnel-client:latest</pre>
+  gitaarik036/sjs-browser:latest</pre>
                 </div>
               </div>
 
@@ -668,7 +668,7 @@ volumes:
                 <p class="text-xs text-[var(--dash-text-secondary)]">
                   Use <strong>Custom App</strong> with image <code
                     class="bg-[var(--dash-bg)] px-1 rounded"
-                  >gitaarik036/sjs-tunnel-client:latest</code>. Add environment
+                  >gitaarik036/sjs-browser:latest</code>. Add environment
                   variables <code class="bg-[var(--dash-bg)] px-1 rounded"
                   >SJS_SERVER_URL</code> and <code
                     class="bg-[var(--dash-bg)] px-1 rounded"

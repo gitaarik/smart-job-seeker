@@ -12,15 +12,15 @@ export const POST: RequestHandler = async ({ locals, params, url }) => {
   const profileId = parseIntParam(params.profileId, "profileId");
   await requireProfileAccess(profileId, user.id);
 
-  const tunnelHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
-  const tunnelPort = process.env.SJS_TUNNEL_PORT || "9333";
+  const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
+  const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
 
   // Optional apiKeyId pins VNC to a specific device.
   const apiKeyId = url.searchParams.get("apiKeyId");
   const upstreamPath = `/vnc-token/${profileId}${apiKeyId ? `?apiKeyId=${encodeURIComponent(apiKeyId)}` : ""}`;
 
   try {
-    const res = await fetch(`http://${tunnelHost}:${tunnelPort}${upstreamPath}`, {
+    const res = await fetch(`http://${sjsBrowserHost}:${sjsBrowserPort}${upstreamPath}`, {
       method: "POST",
       signal: AbortSignal.timeout(5000),
     });

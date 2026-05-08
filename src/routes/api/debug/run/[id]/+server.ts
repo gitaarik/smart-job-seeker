@@ -63,7 +63,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
           skip_existing: true,
           stop_after_duplicates: true,
           skip_first: true,
-          tunnel_api_key: true,
+          sjsbrowser_api_key: true,
           stripped_html: true,
         },
         with: {

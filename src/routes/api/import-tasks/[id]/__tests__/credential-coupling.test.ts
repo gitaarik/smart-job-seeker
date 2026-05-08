@@ -4,7 +4,7 @@
  *
  * The invariant:
  *   - The user must own the credential, OR have it shared with them.
- *   - If the credential is shared, the task's tunnel_api_key must be a
+ *   - If the credential is shared, the task's sjsbrowser_api_key must be a
  *     device owned by the credential's owner. (Cookies, IP, fingerprint
  *     are tied together — running shared creds on a stranger's device
  *     would defeat the point.)
@@ -102,7 +102,7 @@ const TASK_OWNED_BY_CONTACT = {
   profile_id: 100,
   platform_id: 5,
   platform_profile_id: null,
-  tunnel_api_key: null,
+  sjsbrowser_api_key: null,
   schedule_interval_hours: null,
   schedule_preferred_hour: 9,
   profile: { user_id: CONTACT },
@@ -173,7 +173,7 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
 
     await expect(
       PATCH(
-        createPatchEvent({ platform_profile_id: 7, tunnel_api_key: 99 }),
+        createPatchEvent({ platform_profile_id: 7, sjsbrowser_api_key: 99 }),
       ),
     ).rejects.toMatchObject({ status: 400 });
 
@@ -195,14 +195,14 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
     });
 
     const res = await PATCH(
-      createPatchEvent({ platform_profile_id: 7, tunnel_api_key: 42 }),
+      createPatchEvent({ platform_profile_id: 7, sjsbrowser_api_key: 42 }),
     );
 
     expect(res.status).toBe(200);
     expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
         platform_profile_id: 7,
-        tunnel_api_key: 42,
+        sjsbrowser_api_key: 42,
       }),
     );
   });
@@ -237,7 +237,7 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
 
   it("validates coupling against the post-update state when only the device changes", async () => {
     // Task already has a shared credential; the user is now patching only
-    // tunnel_api_key. The validation should re-check the (existing cred,
+    // sjsbrowser_api_key. The validation should re-check the (existing cred,
     // new device) pairing.
     mockSearchTasksFindFirst.mockResolvedValueOnce({
       ...TASK_OWNED_BY_CONTACT,
@@ -254,7 +254,7 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
     });
 
     await expect(
-      PATCH(createPatchEvent({ tunnel_api_key: 99 })),
+      PATCH(createPatchEvent({ sjsbrowser_api_key: 99 })),
     ).rejects.toMatchObject({ status: 400 });
     expect(mockUpdateSet).not.toHaveBeenCalled();
   });

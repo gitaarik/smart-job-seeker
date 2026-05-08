@@ -9,7 +9,7 @@ import {
 import { hasDeviceAccess } from "$lib/server/device-shares";
 import { db } from "$lib/server/db";
 import { api_keys } from "$lib/server/db/schema";
-import { fetchProfileTunnelStatus } from "$lib/server/tunnel-status";
+import { fetchProfileSjsBrowserStatus } from "$lib/server/sjs-browser-status";
 
 /**
  * GET /api/tunnel/status?profileId=123 — status for all devices on a profile (owner only).
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     if (!apiKey) {
       return json({ connected: false, devices: [], status: "not_found" });
     }
-    const status = await fetchProfileTunnelStatus(apiKey.profile_id);
+    const status = await fetchProfileSjsBrowserStatus(apiKey.profile_id);
     const devices = status.devices.filter((d) => d.apiKeyId === apiKeyId);
     return json({ connected: devices.length > 0, devices });
   }
@@ -44,5 +44,5 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
   const profileId = parseIntParam(profileIdStr, "profile");
   await requireProfileAccess(profileId, user.id);
-  return json(await fetchProfileTunnelStatus(profileId));
+  return json(await fetchProfileSjsBrowserStatus(profileId));
 };

@@ -249,7 +249,7 @@ export const search_tasksRelations = relations(search_tasks, ({one, many}) => ({
 		references: [platform_profiles.id]
 	}),
 	api_key: one(api_keys, {
-		fields: [search_tasks.tunnel_api_key],
+		fields: [search_tasks.sjsbrowser_api_key],
 		references: [api_keys.id]
 	}),
 	search_tasks_job_sites: many(search_tasks_job_sites),

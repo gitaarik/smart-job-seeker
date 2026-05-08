@@ -173,7 +173,7 @@ export const searchTaskUpdateSchema = z.object({
   ]).optional(),
   login_mode: z.enum(["auto", "manual", "none"]).optional(),
   browser_provider: z.enum(["hosted", "tunnel"]).optional().nullable(),
-  tunnel_api_key: z.union([
+  sjsbrowser_api_key: z.union([
     z.null(),
     z.number().int(),
   ]).optional(),
