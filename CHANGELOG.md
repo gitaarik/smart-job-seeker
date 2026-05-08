@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.29] - 2026-05-08
+
+3 commits since v0.5.28.
+
+### Changed
+
+- Improved humanType task detection with polling and retry mechanism for better accuracy
+- Enhanced database migration error handling during deployments with drizzle-orm migrator
+
 ## [0.5.28] - 2026-05-08
 
 4 commits since v0.5.27.
