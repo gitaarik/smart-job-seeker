@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.27] - 2026-05-08
+
+7 commits since v0.5.26.
+
+### Added
+- Cryptographic signing for sjs-browser releases
+
+### Changed
+- Match scores now trigger immediately upon import, appearing within seconds
+- Rebranded release artifacts from tunnel-client to sjs-browser
+
 ## [0.5.26] - 2026-05-06
 
 3 commits since v0.5.25.
