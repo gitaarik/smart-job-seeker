@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.32] - 2026-05-09
+
+3 commits since v0.5.31.
+
+### Added
+- Display matched skills in job import view
+- Identify logged-in users in analytics
+
 ## [0.5.31] - 2026-05-08
 
 1 commit since v0.5.30.
