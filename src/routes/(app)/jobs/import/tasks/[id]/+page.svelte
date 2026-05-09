@@ -8,6 +8,7 @@
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import ScoreBadge from "../../../components/ScoreBadge.svelte";
+  import SkillPill from "../../../components/SkillPill.svelte";
   import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
   import {
     formatJobType,
@@ -17,7 +18,7 @@
     timeAgo,
   } from "$lib/format";
   import { page } from "$app/stores";
-  import { formatDateTime, formatTime as fmtTime } from "$lib/format-date";
+  import { formatDateTime, formatMonthDay, formatTime as fmtTime } from "$lib/format-date";
   import type { TimeFormat } from "$lib/format-date";
   import {
     faArrowLeft,
@@ -57,6 +58,21 @@
   let { data }: { data: PageData } = $props();
 
   let searchTask = $state(data.searchTask);
+  const profileSkillLevels = $derived(data.profileSkillLevels);
+
+  /**
+   * Strong = matched + user is proficient/expert; weak = matched + user is
+   * beginner/intermediate; null = not matched. Mirrors the job-detail page so
+   * SkillPill renders the same tiers in both places.
+   */
+  function getSkillMatchStrength(
+    skill: string,
+    matchedSet: Set<string>,
+  ): "strong" | "weak" | null {
+    if (!matchedSet.has(skill)) return null;
+    const level = profileSkillLevels[skill.toLowerCase()];
+    return level === "weak" ? "weak" : "strong";
+  }
 
   // Header editing state (note)
   let isEditingNote = $state(false);
@@ -291,7 +307,11 @@
     job_id: number | null;
     was_created: boolean | null;
     job: JobDetails | null;
-    match: { score: number; recommendation: string | null } | null;
+    match: {
+      score: number;
+      recommendation: string | null;
+      matched_skills?: string[] | null;
+    } | null;
   }
 
   interface RunItemsData {
@@ -930,14 +950,16 @@
     wasCreated?: boolean | null,
     skipExisting?: boolean,
   ): string {
+    // Lower opacity than the matched-skill pill (which uses full
+    // dash-success-light) so the pill keeps contrast against the row.
     if (status === "completed" && wasCreated === true) {
-      return "bg-[var(--dash-success-light)]";
+      return "bg-[var(--dash-success-light)]/40";
     }
     if (status === "completed" && wasCreated === false && skipExisting) {
       return "bg-slate-500/10";
     }
     if (status === "completed") {
-      return "bg-[var(--dash-success-light)]";
+      return "bg-[var(--dash-success-light)]/40";
     }
     switch (status) {
       case "processing":
@@ -1684,9 +1706,11 @@
                     {item.position}
                   </span>
 
-                  <!-- Score badge: only for items that produced a real job row -->
+                  <!-- Score badge (desktop): on the left, between # and title.
+                       On mobile we render it on the right of the row instead
+                       so the title gets full width — same pattern as JobCard. -->
                   {#if item.job_id && item.status === "completed"}
-                    <div class="shrink-0 self-center">
+                    <div class="shrink-0 self-center hidden md:flex">
                       <ScoreBadge
                         score={item.match?.score ?? null}
                         matched={!!item.match?.recommendation}
@@ -1779,14 +1803,14 @@
                           </div>
                         {/if}
                         {#if salaryText || datePosted}
-                          <div class="flex items-center gap-3 text-xs flex-wrap mt-0.5">
+                          <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap mt-1.5 sm:mt-2">
                             {#if salaryText}
                               <span class="flex items-center gap-1 text-[var(--dash-success)]">
                                 <FontAwesomeIcon
                                   icon={faMoneyBillWave}
                                   class="w-3 h-3"
                                 />
-                                {salaryText}
+                                <span class="truncate max-w-[140px] sm:max-w-none">{salaryText}</span>
                               </span>
                             {/if}
                             {#if datePosted}
@@ -1796,15 +1820,29 @@
                                   class="w-3 h-3"
                                 />
                                 {timeAgo(datePosted)}
-                                <span class="opacity-50">{formatDate(datePosted)}</span>
+                                <span class="opacity-50">{formatMonthDay(datePosted, { fallback: "" })}</span>
                               </span>
                             {/if}
                           </div>
                         {/if}
                       </div>
+                      <!-- Right column: mobile score above status pill,
+                           desktop just the pill (score lives on the left).
+                           Stacked so they share the right edge with the
+                           chevron above (in the title row). -->
+                      <div class="flex flex-col items-end gap-2 ml-auto shrink-0">
+                        {#if item.job_id && item.status === "completed"}
+                          <div class="md:hidden">
+                            <ScoreBadge
+                              score={item.match?.score ?? null}
+                              matched={!!item.match?.recommendation}
+                              size="sm"
+                            />
+                          </div>
+                        {/if}
                       <span
                         class="
-                          ml-auto text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
+                          text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
                           item.status === 'completed' && item.was_created === true
                           ? 'bg-[var(--dash-success)] text-white'
                           : item.status === 'completed' && item.was_created === false && run.settings?.skip_existing
@@ -1860,6 +1898,7 @@
                           />
                         {/if}
                       </span>
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -1884,6 +1923,11 @@
                 <!-- Expanded job details -->
                 {#if expandedItemId === item.id && item.job}
                   {@const job = item.job}
+                  {@const matchedSkillsSet = new Set(
+                    Array.isArray(item.match?.matched_skills)
+                      ? item.match.matched_skills
+                      : [],
+                  )}
                   <div
                     class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)}"
                   >
@@ -1898,9 +1942,12 @@
                         </p>
                         <div class="flex flex-wrap gap-1">
                           {#each job.skills_required.slice(0, 12) as skill}
-                            <span
-                              class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded"
-                            >{skill}</span>
+                            <SkillPill
+                              {skill}
+                              strength={getSkillMatchStrength(skill, matchedSkillsSet)}
+                              variant="required"
+                              size="sm"
+                            />
                           {/each}
                           {#if job.skills_required.length > 12}
                             <span
@@ -1921,9 +1968,12 @@
                         </p>
                         <div class="flex flex-wrap gap-1">
                           {#each job.skills_preferred.slice(0, 12) as skill}
-                            <span
-                              class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded"
-                            >{skill}</span>
+                            <SkillPill
+                              {skill}
+                              strength={getSkillMatchStrength(skill, matchedSkillsSet)}
+                              variant="preferred"
+                              size="sm"
+                            />
                           {/each}
                           {#if job.skills_preferred.length > 12}
                             <span

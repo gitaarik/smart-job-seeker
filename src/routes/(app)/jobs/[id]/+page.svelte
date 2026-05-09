@@ -24,6 +24,7 @@
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
+  import SkillPill from "../components/SkillPill.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
   import Card from "../../components/Card.svelte";
@@ -349,28 +350,7 @@
               </p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_required as skill}
-                  {@const strength = getSkillMatchStrength(skill)}
-                  {#if strength === "strong"}
-                    <span
-                      class="px-3 py-1 text-sm bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded-lg flex items-center gap-1"
-                    >
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {skill}
-                    </span>
-                  {:else if strength === "weak"}
-                    <span
-                      class="px-3 py-1 text-sm bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg flex items-center gap-1"
-                    >
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {skill}
-                    </span>
-                  {:else}
-                    <span
-                      class="px-3 py-1 text-sm bg-[var(--dash-bg)] text-[var(--dash-text)] rounded-lg"
-                    >
-                      {skill}
-                    </span>
-                  {/if}
+                  <SkillPill {skill} strength={getSkillMatchStrength(skill)} variant="required" size="md" />
                 {/each}
               </div>
             </div>
@@ -385,28 +365,7 @@
               </p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_preferred as skill}
-                  {@const strength = getSkillMatchStrength(skill)}
-                  {#if strength === "strong"}
-                    <span
-                      class="px-3 py-1 text-sm bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded-lg flex items-center gap-1"
-                    >
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {skill}
-                    </span>
-                  {:else if strength === "weak"}
-                    <span
-                      class="px-3 py-1 text-sm bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg flex items-center gap-1"
-                    >
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                      {skill}
-                    </span>
-                  {:else}
-                    <span
-                      class="px-3 py-1 text-sm bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded-lg"
-                    >
-                      {skill}
-                    </span>
-                  {/if}
+                  <SkillPill {skill} strength={getSkillMatchStrength(skill)} variant="preferred" size="md" />
                 {/each}
               </div>
             </div>

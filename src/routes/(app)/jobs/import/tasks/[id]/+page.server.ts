@@ -15,6 +15,7 @@ import { listApiKeys } from "$lib/server/auth/api-key";
 import { decryptCredential } from "$lib/server/auth/crypto";
 import { listSharedWithMe } from "$lib/server/device-shares";
 import { listSharedCredentialsWithMe } from "$lib/server/credential-shares";
+import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -184,9 +185,17 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     }
   }
 
+  // Skill proficiency map for the task's profile so the expanded
+  // job-detail panel can highlight matched skills with strong/weak
+  // colour tiers, the same way the job search page does.
+  const profileSkillLevels = await getProfileSkillLevels(
+    layoutData.selectedProfile.id,
+  );
+
   return {
     searchTask,
     platformCredentials,
+    profileSkillLevels,
     profileId: layoutData.selectedProfile.id,
     isStaff,
     canEditPlatformUrls,

@@ -94,6 +94,23 @@ export function formatDateLong(
 }
 
 /**
+ * "Jan 5" — month + day, no year, no weekday. Used in dense lists where
+ * the year is usually obvious from the relative-time hint next to it.
+ */
+export function formatMonthDay(
+  date: Date | string | null,
+  opts?: FormatOpts,
+): string {
+  const d = toDate(date);
+  if (!d) return opts?.fallback ?? "N/A";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: opts?.timezone || undefined,
+  });
+}
+
+/**
  * "Mon, Jan 5"
  */
 export function formatDateShort(

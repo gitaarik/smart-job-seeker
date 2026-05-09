@@ -32,6 +32,7 @@
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
+  import SkillPill from "./components/SkillPill.svelte";
   import ConfirmModal from "../profile/components/ConfirmModal.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -835,28 +836,7 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}
-                    {@const strength = getSkillMatchStrength(job.id, skill)}
-                    {#if strength === "strong"}
-                      <span
-                        class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1"
-                      >
-                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
-                        {skill}
-                      </span>
-                    {:else if strength === "weak"}
-                      <span
-                        class="px-2 py-1 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded flex items-center gap-1"
-                      >
-                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
-                        {skill}
-                      </span>
-                    {:else}
-                      <span
-                        class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded"
-                      >
-                        {skill}
-                      </span>
-                    {/if}
+                    <SkillPill {skill} strength={getSkillMatchStrength(job.id, skill)} variant="required" size="sm" />
                   {/each}
                   {#if job.skills_required.length > 10}
                     <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
@@ -876,28 +856,7 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_preferred.slice(0, 10) as skill}
-                    {@const strength = getSkillMatchStrength(job.id, skill)}
-                    {#if strength === "strong"}
-                      <span
-                        class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1"
-                      >
-                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
-                        {skill}
-                      </span>
-                    {:else if strength === "weak"}
-                      <span
-                        class="px-2 py-1 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded flex items-center gap-1"
-                      >
-                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
-                        {skill}
-                      </span>
-                    {:else}
-                      <span
-                        class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded"
-                      >
-                        {skill}
-                      </span>
-                    {/if}
+                    <SkillPill {skill} strength={getSkillMatchStrength(job.id, skill)} variant="preferred" size="sm" />
                   {/each}
                   {#if job.skills_preferred.length > 10}
                     <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">

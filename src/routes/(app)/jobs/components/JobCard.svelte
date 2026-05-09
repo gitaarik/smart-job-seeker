@@ -17,8 +17,9 @@
   import type { Snippet } from "svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import ScoreBadge from "./ScoreBadge.svelte";
+  import SkillPill from "./SkillPill.svelte";
   import { formatSalaryRange, timeAgo } from "$lib/format";
-  import { formatDate as fmtDate } from "$lib/format-date";
+  import { formatDate as fmtDate, formatMonthDay } from "$lib/format-date";
 
   interface Job {
     id: number;
@@ -231,7 +232,7 @@
                 <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
                   <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
                   {timeAgo(job.date_posted || job.date_created)}
-                  <span class="opacity-50">{formatDate(job.date_posted || job.date_created)}</span>
+                  <span class="opacity-50">{formatMonthDay(job.date_posted || job.date_created, { fallback: "" })}</span>
                 </span>
               {/if}
             </div>
@@ -266,22 +267,7 @@
             </p>
             <div class="flex flex-wrap gap-1">
               {#each skillsRequired.slice(0, 15) as skill}
-                {@const strength = getSkillMatchStrength(skill)}
-                {#if strength === "strong"}
-                  <span class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1">
-                    <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
-                    {skill}
-                  </span>
-                {:else if strength === "weak"}
-                  <span class="px-2 py-1 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded flex items-center gap-1">
-                    <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
-                    {skill}
-                  </span>
-                {:else}
-                  <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
-                    {skill}
-                  </span>
-                {/if}
+                <SkillPill {skill} strength={getSkillMatchStrength(skill)} variant="required" size="sm" />
               {/each}
               {#if skillsRequired.length > 15}
                 <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
