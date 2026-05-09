@@ -6,6 +6,7 @@
   import "./(app)/dashboard.css";
   import { onMount } from "svelte";
   import { initializeTheme } from "$lib/stores/theme.svelte";
+  import { identify } from "$lib/tools/analytics";
   import type { LayoutData } from "./$types";
 
   let { children, data }: { children: any; data: LayoutData } = $props();
@@ -26,6 +27,11 @@
       script.defer = true;
       script.src = `${data.umamiUrl}/script.js`;
       script.dataset.websiteId = data.umamiWebsiteId;
+      script.onload = () => {
+        if (data.user) {
+          identify({ id: data.user.id });
+        }
+      };
       document.head.appendChild(script);
     }
   });
