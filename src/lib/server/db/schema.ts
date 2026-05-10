@@ -1673,6 +1673,26 @@ export const job_platforms = pgTable("job_platforms", {
   unique("job_platforms_key_unique").on(table.key),
 ]);
 
+// Audit log of platform edits made via the admin UI. One row per changed
+// field per save — lets us trace e.g. "this template changed two weeks ago
+// and scrapes started failing yesterday" without bolting full row-level
+// auditing onto every table.
+export const job_platform_changes = pgTable("job_platform_changes", {
+  id: serial().primaryKey().notNull(),
+  platform_id: integer().notNull(),
+  field: varchar({ length: 64 }).notNull(),
+  old_value: text(),
+  new_value: text(),
+  changed_at: timestamp({ withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  changed_by_user_id: text(),
+}, (table) => [
+  foreignKey({
+    columns: [table.platform_id],
+    foreignColumns: [job_platforms.id],
+    name: "job_platform_changes_platform_id_fk",
+  }).onDelete("cascade"),
+]);
+
 export const search_task_run_items = pgTable("search_task_run_items", {
   id: serial().primaryKey().notNull(),
   run_id: integer().notNull(),
