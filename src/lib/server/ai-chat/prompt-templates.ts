@@ -915,7 +915,7 @@ In your feedback:
 
 ## Applicant profile
 
-\${profile_summary}
+\${data}
 
 ## Available platforms
 

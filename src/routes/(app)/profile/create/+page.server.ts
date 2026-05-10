@@ -15,6 +15,7 @@ import {
   validateJsonResume,
 } from "$lib/server/resume";
 import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
+import { exportProfile } from "$lib/server/profile/export";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -225,6 +226,11 @@ export const actions: Actions = {
       profile_id: profile.id,
       date_created: new Date(),
     });
+
+    // Populate collected_data so AI features (suggestions, cover letters, …)
+    // see the profile fields immediately. Without this they'd get `{}` until
+    // the lazy backfill in createAndGenerateAiChat fires on first use.
+    await exportProfile(profile.id);
 
     redirect(303, `/home?profile=${profile.id}&created=true`);
   },

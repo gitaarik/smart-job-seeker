@@ -14,6 +14,7 @@ import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
 import { promptTemplates } from "./prompt-templates.js";
 import { tokensToCost } from "$lib/server/billing/credits";
 import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
+import { exportProfile } from "$lib/server/profile/export";
 
 /**
  * Interpolate variables in a prompt string
@@ -201,11 +202,22 @@ export async function createAndGenerateAiChat(
       };
     }
 
-    // Step 2: Fetch collected_data for the profile
-    const collectedDataRecord = await db.query.collected_data.findFirst({
+    // Step 2: Fetch collected_data for the profile. Manually-created profiles
+    // don't have a record until something explicitly calls exportProfile, so
+    // backfill on first use here — better than every AI feature getting `{}`
+    // and silently hallucinating.
+    let collectedDataRecord = await db.query.collected_data.findFirst({
       where: eq(collected_data.profile_id, profileId),
       columns: { schema: true, data: true },
     });
+
+    if (!collectedDataRecord) {
+      await exportProfile(profileId);
+      collectedDataRecord = await db.query.collected_data.findFirst({
+        where: eq(collected_data.profile_id, profileId),
+        columns: { schema: true, data: true },
+      });
+    }
 
     // Step 3: Parse schema and data from JSON strings to objects
     // These will be stored as raw JSON in context, but stringified for interpolation
