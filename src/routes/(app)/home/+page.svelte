@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import { track } from "$lib/tools/analytics";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowRight,
@@ -22,6 +24,14 @@
   let { data }: { data: PageData } = $props();
 
   let showCreatedBanner = $state($page.url.searchParams.get("created") === "true");
+
+  // Track profile-creation as an activation event. onMount keeps this client-
+  // side only — the banner state is the trigger.
+  onMount(() => {
+    if (showCreatedBanner) {
+      track("profile_created");
+    }
+  });
 
   const completeness = $derived(data.profileCompleteness);
   const matchConfig = $derived(data.matchConfig);

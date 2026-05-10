@@ -22,6 +22,7 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
+  import { track } from "$lib/tools/analytics";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
   import SkillPill from "../components/SkillPill.svelte";
@@ -277,7 +278,11 @@
             action={isSaved ? "?/unsaveJob" : "?/saveJob"}
             use:enhance={() => {
               isSaving = true;
-              return async ({ update }) => {
+              const wasSaved = isSaved;
+              return async ({ result, update }) => {
+                if (result.type === "success" && !wasSaved) {
+                  track("job_saved");
+                }
                 await update();
                 isSaving = false;
               };
@@ -315,7 +320,12 @@
               <form
                 method="POST"
                 action="?/startApplication"
-                use:enhance
+                use:enhance={() => async ({ result, update }) => {
+                  if (result.type === "redirect" || result.type === "success") {
+                    track("application_created");
+                  }
+                  await update();
+                }}
               >
                 <button
                   type="submit"

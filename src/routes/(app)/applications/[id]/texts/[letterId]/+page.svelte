@@ -17,6 +17,7 @@
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import { marked } from "marked";
+  import { track } from "$lib/tools/analytics";
   import Card from "../../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import SimpleEditor from "$lib/components/SimpleEditor.svelte";
@@ -330,6 +331,11 @@
       if (!result.success) {
         aiError = result.message || "Generation failed";
         return;
+      }
+      // Activation funnel: only count fresh "generate" runs, not advice/review
+      // which are refinements on existing content.
+      if (mode === "generate") {
+        track("ai_letter_generated");
       }
       await invalidateAll();
 

@@ -25,6 +25,7 @@
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
   import SearchTaskFields from "../../components/SearchTaskFields.svelte";
+  import { track } from "$lib/tools/analytics";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -370,6 +371,8 @@
         return;
       }
       if (result.type === "success") {
+        track("search_task_created");
+        track("suggestion_accepted");
         suggestion.accepted = true;
         suggestion.submitting = false;
         // Refresh page data so the new task appears in the list below.
@@ -403,6 +406,7 @@
       update: () => Promise<void>;
     }) => {
       if (result.type === "success" && result.data?.taskId) {
+        track("search_task_created");
         resetAddForm();
         goto(`/jobs/import/tasks/${result.data.taskId}`);
       }
