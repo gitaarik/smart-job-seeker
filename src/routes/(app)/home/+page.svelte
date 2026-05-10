@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { replaceState } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowRight,
@@ -24,19 +22,6 @@
   let { data }: { data: PageData } = $props();
 
   let showCreatedBanner = $state($page.url.searchParams.get("created") === "true");
-
-  // Clear the `?created=true` param so a refresh doesn't re-show the banner.
-  // Deferred via setTimeout because the SvelteKit router isn't initialized
-  // when onMount fires on a direct page load — replaceState would otherwise
-  // throw "Cannot call replaceState(...) before router is initialized".
-  onMount(() => {
-    if (!showCreatedBanner) return;
-    setTimeout(() => {
-      const url = new URL($page.url);
-      url.searchParams.delete("created");
-      replaceState(url, {});
-    }, 0);
-  });
 
   const completeness = $derived(data.profileCompleteness);
   const matchConfig = $derived(data.matchConfig);
