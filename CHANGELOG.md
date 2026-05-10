@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.33] - 2026-05-10
+
+18 commits since v0.5.32.
+
+### Added
+- Job Platforms admin section with platform list, edit pages, and complete audit history
+- Job Platforms navigation entry in the Admin sidebar
+- 7 new vetted platforms expanded in the suggestion pool and curated collection
+- "Preview results" link on each suggestion card for immediate job search feedback
+- Activation-funnel event tracking and platform usage analytics to Umami
+- Platform signal collection (Phase 1) recorded on task import completion
+- Profile-aware AI suggestions tailored to first import tasks
+- "Try a sample search" feature with Cloud as the default platform option
+- Enhanced stealth mode — re-evaluate tracking on frame navigation events
+
+### Changed
+- Job platform suggestion list now uses database-driven configuration for easier curation
+- Admin job-platforms list displays clickable platform names for direct editing
+- AI chat automatically backfills and populates collected_data on first use and during profile creation
+- Expanded AGENTS.md documentation for collected_data flow in AI features
+
+### Fixed
+- SSR rendering and stale-state warnings on /home?created=true redirects
+- First-impression UX issues from preview audit
+- Release script robustness for interrupted releases and registry cleanup
+
 ## [0.5.32] - 2026-05-09
 
 3 commits since v0.5.31.
