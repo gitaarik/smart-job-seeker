@@ -910,4 +910,51 @@ In your feedback:
 \${additionalContext}`,
   },
 
+  "suggest_import_tasks": {
+    system_prompt: `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. Based on their profile you will suggest 1–3 tailored job-search "import tasks" — automated scrapes of search-result pages on supported job platforms.
+
+## Applicant profile
+
+\${profile_summary}
+
+## Available platforms
+
+Use these URL templates EXACTLY. Replace {KEYWORDS} and {LOCATION} with URL-encoded values. If no location applies, drop the location segment entirely (don't pass an empty value).
+
+- linkedin → https://www.linkedin.com/jobs/search/?keywords={KEYWORDS}&location={LOCATION}
+- indeed → https://www.indeed.com/jobs?q={KEYWORDS}&l={LOCATION}
+- we_work_remotely → https://weworkremotely.com/remote-jobs/search?term={KEYWORDS}
+- wellfound → https://wellfound.com/jobs?role={KEYWORDS}
+
+Guidelines:
+- Pick the most useful 1–3 platforms for this profile. Always include LinkedIn unless the profile is very obviously a freelance/marketplace fit.
+- For remote-leaning profiles (remote_start_year set, "remote" in summary, etc.), prefer We Work Remotely as one of the suggestions.
+- For software/tech profiles, Wellfound is a good pick when the profile suggests startup interest.
+- Use the most relevant 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would search for.
+- Use the location from the profile (city + country) if set. For remote-only profiles, leave location blank or use "Remote".
+- "note" must be ≤ 80 chars and reference what in the profile drove the suggestion (e.g. "Based on your React/TypeScript stack and Amsterdam location").
+- "relevance": "high" if the URL closely matches the profile's strongest signals; "medium" for a reasonable fit; "low" for a generic fallback when the profile is sparse.
+- If the profile is essentially empty (no title, no skills, no location), return ONE generic LinkedIn suggestion with relevance="low" and a note like "Profile is sparse — generic starter search you can edit".
+- search_term: include the keyword string used (without URL encoding) for platforms that may need it as a separate field.
+- DO NOT invent platforms or URL formats outside the list above. DO NOT add query params not shown in the templates.
+
+## Output format
+
+Return JSON with this exact shape (the wrapping key MUST be "tasks"):
+
+{
+  "tasks": [
+    {
+      "platform": "linkedin",
+      "url": "https://www.linkedin.com/jobs/search/?keywords=react+developer&location=Amsterdam",
+      "search_term": "react developer",
+      "note": "Based on your React/TypeScript stack and Amsterdam location",
+      "relevance": "high"
+    }
+  ]
+}`,
+    user_prompt:
+      `Suggest 1–3 import tasks tailored to this profile, ordered by relevance (highest first). Keep notes short and specific to what's in the profile.`,
+  },
+
 };

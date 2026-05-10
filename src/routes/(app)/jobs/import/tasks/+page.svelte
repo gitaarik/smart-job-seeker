@@ -1,15 +1,17 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { onMount } from "svelte";
   import {
     faCalendar,
+    faCheck,
     faClock,
     faDesktop,
     faExclamationTriangle,
+    faMagicWandSparkles,
     faPlus,
     faSearch,
     faSortAmountDown,
@@ -302,14 +304,94 @@
     existingCredentials = [];
   }
 
-  // Pre-fill the form with a working LinkedIn search so a fresh user can run
-  // their first task in two clicks. They can still edit anything before saving.
-  function startSampleSearch() {
-    const sampleUrl =
-      "https://www.linkedin.com/jobs/search/?keywords=software+engineer";
-    newSearchUrl = sampleUrl;
-    showAddForm = true;
-    detectPlatformFromUrl(sampleUrl);
+  // ── Profile-tailored task suggestions ──
+  type Suggestion = {
+    platform: string;
+    url: string;
+    search_term: string | null;
+    note: string;
+    relevance: "high" | "medium" | "low";
+    /** Local-only flag used to mark a card as accepted so we can show feedback
+     * before fading it out. */
+    accepted?: boolean;
+    /** Local-only flag used while the create POST is in flight. */
+    submitting?: boolean;
+  };
+  let suggestions = $state<Suggestion[] | null>(null);
+  let loadingSuggestions = $state(false);
+  let suggestionsError = $state<string | null>(null);
+
+  async function getSuggestions() {
+    loadingSuggestions = true;
+    suggestionsError = null;
+    try {
+      const res = await fetch("/api/jobs/import/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        suggestionsError =
+          body.message || "Couldn't generate suggestions. Try again or start blank.";
+        return;
+      }
+      suggestions = body.tasks;
+    } catch (err) {
+      suggestionsError = err instanceof Error
+        ? err.message
+        : "Network error fetching suggestions";
+    } finally {
+      loadingSuggestions = false;
+    }
+  }
+
+  async function acceptSuggestion(suggestion: Suggestion) {
+    if (suggestion.submitting || suggestion.accepted) return;
+    suggestion.submitting = true;
+
+    const formData = new FormData();
+    formData.append("search_url", suggestion.url);
+    if (suggestion.search_term) {
+      formData.append("search_term", suggestion.search_term);
+    }
+    formData.append("browser_provider", "hosted");
+    formData.append("login_mode", "none");
+    formData.append("note", suggestion.note);
+
+    try {
+      const res = await fetch("?/create", { method: "POST", body: formData });
+      const result = await res.json();
+      // SvelteKit form-action responses are wrapped in an envelope: type +
+      // data (or location for redirects).
+      if (result.type === "redirect" && typeof result.location === "string") {
+        await goto(result.location);
+        return;
+      }
+      if (result.type === "success") {
+        suggestion.accepted = true;
+        suggestion.submitting = false;
+        // Refresh page data so the new task appears in the list below.
+        await invalidateAll();
+        return;
+      }
+      suggestionsError = (result.data && result.data.error) ||
+        "Couldn't add this suggestion. You can edit it and try again, or start blank.";
+      suggestion.submitting = false;
+    } catch (err) {
+      suggestionsError = err instanceof Error ? err.message : "Network error";
+      suggestion.submitting = false;
+    }
+  }
+
+  function dismissSuggestion(suggestion: Suggestion) {
+    if (!suggestions) return;
+    suggestions = suggestions.filter((s) => s !== suggestion);
+  }
+
+  function clearSuggestions() {
+    suggestions = null;
+    suggestionsError = null;
   }
 
   function handleAddSubmit() {
@@ -514,14 +596,180 @@
   {/if}
 
   <!-- Job Searches List -->
-  {#if searchTasks.length === 0 && !showAddForm}
-    <EmptyState
-      icon={faSearch}
-      title="No search tasks yet"
-      description="Get started with a sample LinkedIn search — you can edit the URL or any other field before saving. Works on LinkedIn, Indeed, and most other job platforms."
-      actionLabel="Try a sample search"
-      onAction={startSampleSearch}
-    />
+  <!-- AI-suggested searches based on profile -->
+  {#if !showAddForm && suggestions && suggestions.length > 0}
+    <div class="space-y-3 mb-4">
+      <div class="flex items-center justify-between">
+        <h3
+          class="font-medium text-[var(--dash-text)] flex items-center gap-2"
+        >
+          <FontAwesomeIcon
+            icon={faMagicWandSparkles}
+            class="w-4 h-4 text-[var(--dash-primary)]"
+          />
+          Suggested searches based on your profile
+        </h3>
+        <button
+          type="button"
+          onclick={clearSuggestions}
+          class="text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+        >
+          Dismiss all
+        </button>
+      </div>
+
+      {#each suggestions as suggestion (suggestion.url)}
+        <div
+          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {suggestion.accepted
+            ? 'opacity-60'
+            : ''}"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--dash-bg)] text-[var(--dash-text)] capitalize"
+                >
+                  {suggestion.platform.replace(/_/g, " ")}
+                </span>
+                {#if suggestion.relevance === "high"}
+                  <span
+                    class="text-xs text-green-600 dark:text-green-400 font-medium"
+                  >Strong match</span>
+                {:else if suggestion.relevance === "medium"}
+                  <span
+                    class="text-xs text-amber-600 dark:text-amber-400 font-medium"
+                  >Decent match</span>
+                {:else}
+                  <span
+                    class="text-xs text-[var(--dash-text-muted)]"
+                  >Generic</span>
+                {/if}
+              </div>
+              <p
+                class="text-sm text-[var(--dash-text-secondary)] mt-1"
+              >{suggestion.note}</p>
+            </div>
+          </div>
+
+          <div>
+            <label
+              class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+              for="suggestion-url-{suggestion.url}"
+            >Search URL</label>
+            <input
+              id="suggestion-url-{suggestion.url}"
+              type="url"
+              bind:value={suggestion.url}
+              disabled={suggestion.accepted || suggestion.submitting}
+              class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] disabled:opacity-60"
+            />
+          </div>
+
+          {#if suggestion.search_term !== null}
+            <div>
+              <label
+                class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                for="suggestion-term-{suggestion.url}"
+              >Search term</label>
+              <input
+                id="suggestion-term-{suggestion.url}"
+                type="text"
+                bind:value={suggestion.search_term}
+                disabled={suggestion.accepted || suggestion.submitting}
+                class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] disabled:opacity-60"
+              />
+            </div>
+          {/if}
+
+          <div class="flex justify-end gap-2">
+            {#if suggestion.accepted}
+              <span
+                class="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-green-600 dark:text-green-400"
+              >
+                <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                Added
+              </span>
+            {:else}
+              <button
+                type="button"
+                onclick={() => dismissSuggestion(suggestion)}
+                disabled={suggestion.submitting}
+                class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)] disabled:opacity-50"
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                onclick={() => acceptSuggestion(suggestion)}
+                disabled={suggestion.submitting || !suggestion.url}
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
+              >
+                {#if suggestion.submitting}
+                  <Spinner size="w-3 h-3" />
+                  Adding...
+                {:else}
+                  <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                  Add this task
+                {/if}
+              </button>
+            {/if}
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
+  {#if searchTasks.length === 0 && !showAddForm && (!suggestions || suggestions.length === 0)}
+    <div
+      class="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg"
+    >
+      <div
+        class="w-16 h-16 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mb-4"
+      >
+        <FontAwesomeIcon
+          icon={faSearch}
+          class="w-8 h-8 text-[var(--dash-text-muted)]"
+        />
+      </div>
+      <h3
+        class="text-lg font-medium text-[var(--dash-text)] mb-2"
+      >No search tasks yet</h3>
+      <p
+        class="text-[var(--dash-text-secondary)] text-center max-w-sm mb-6"
+      >Let AI suggest searches tailored to your profile, or start with a blank form.</p>
+
+      {#if suggestionsError}
+        <p
+          class="text-xs text-red-600 dark:text-red-400 mb-3 text-center max-w-sm"
+        >{suggestionsError}</p>
+      {/if}
+
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button
+          type="button"
+          onclick={getSuggestions}
+          disabled={loadingSuggestions}
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] disabled:opacity-60 transition-colors"
+        >
+          {#if loadingSuggestions}
+            <Spinner size="w-4 h-4" />
+            Analyzing your profile…
+          {:else}
+            <FontAwesomeIcon icon={faMagicWandSparkles} class="w-4 h-4" />
+            Suggest searches for me
+          {/if}
+        </button>
+        <button
+          type="button"
+          onclick={() => (showAddForm = true)}
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-[var(--dash-border)] text-[var(--dash-text)] rounded-lg hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
+          Add custom search
+        </button>
+      </div>
+    </div>
   {:else if !showAddForm}
     <div class="space-y-3">
       {#each sortedSearchTasks as search (search.id)}

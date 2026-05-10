@@ -316,6 +316,30 @@ export const reviewLetterSchema = z.object({
 });
 
 /**
+ * Schema for suggest_import_tasks prompt
+ * Returns 1-3 tailored job-search task suggestions based on the user's profile.
+ */
+export const suggestImportTasksSchema = z.object({
+  tasks: z.array(z.object({
+    platform: z.string().describe(
+      "Platform key from the available list (e.g. 'linkedin', 'indeed', 'we_work_remotely', 'wellfound').",
+    ),
+    url: z.string().url().describe(
+      "Complete, ready-to-use search URL on the chosen platform with keywords and location filled in. Must use the URL template provided for that platform.",
+    ),
+    search_term: z.string().nullable().describe(
+      "Keyword string used in the URL, in plain (un-URL-encoded) form. Null if the platform's search is purely URL-driven.",
+    ),
+    note: z.string().describe(
+      "One short sentence (≤80 chars) explaining why this matches the user's profile.",
+    ),
+    relevance: z.enum(["high", "medium", "low"]).describe(
+      "How well this suggestion matches the profile.",
+    ),
+  })).min(1).max(3),
+});
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  */
@@ -333,6 +357,7 @@ export const aiPromptSchemas = {
   followup_letter: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,
   review_cheat_sheet: reviewLetterSchema,
+  suggest_import_tasks: suggestImportTasksSchema,
 } as const;
 
 /**
