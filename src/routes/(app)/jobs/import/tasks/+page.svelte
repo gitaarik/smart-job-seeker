@@ -302,6 +302,16 @@
     existingCredentials = [];
   }
 
+  // Pre-fill the form with a working LinkedIn search so a fresh user can run
+  // their first task in two clicks. They can still edit anything before saving.
+  function startSampleSearch() {
+    const sampleUrl =
+      "https://www.linkedin.com/jobs/search/?keywords=software+engineer";
+    newSearchUrl = sampleUrl;
+    showAddForm = true;
+    detectPlatformFromUrl(sampleUrl);
+  }
+
   function handleAddSubmit() {
     return async ({
       result,
@@ -441,7 +451,7 @@
           mode="add"
           localBrowserAllowed={data.localBrowserAllowed}
           serverBrowserProvider={data.serverBrowserProvider}
-          defaultBrowserProvider="tunnel"
+          defaultBrowserProvider="hosted"
           defaultMaxJobs={data.defaultMaxJobs}
           browserCountryCode={data.browserCountryCode}
           defaultCountryCode={data.defaultCountryCode}
@@ -508,9 +518,9 @@
     <EmptyState
       icon={faSearch}
       title="No search tasks yet"
-      description="Create search tasks to automatically find matching jobs from LinkedIn, Indeed, and other platforms."
-      actionLabel="Add First Search"
-      onAction={() => (showAddForm = true)}
+      description="Get started with a sample LinkedIn search — you can edit the URL or any other field before saving. Works on LinkedIn, Indeed, and most other job platforms."
+      actionLabel="Try a sample search"
+      onAction={startSampleSearch}
     />
   {:else if !showAddForm}
     <div class="space-y-3">
