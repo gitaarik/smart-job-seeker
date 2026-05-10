@@ -91,33 +91,73 @@ function fillTemplate(
   keywords: string | null,
   location: string | null,
 ): string {
-  // Substitute {KEYWORDS} / {LOCATION} with URL-encoded values. If the
-  // value is null/empty and the placeholder is in a query-string segment,
-  // remove the whole `?param=` or `&param=` chunk so we don't send an
-  // empty param the platform might 400 on.
-  let url = template;
+  // Strategy: split on the first `?` so path-position placeholders are
+  // substituted in the raw template string (URL constructor would
+  // percent-encode `{KEYWORDS}` to `%7BKEYWORDS%7D` and break naive
+  // path-substitution). Then assemble a valid URL with the substituted
+  // path + the query string, parse via URL to walk searchParams cleanly,
+  // and drop any query param whose value remained a bare placeholder.
   const replacements: Array<[string, string | null]> = [
     ["{KEYWORDS}", keywords],
     ["{LOCATION}", location],
   ];
+
+  const queryStart = template.indexOf("?");
+  const rawPath = queryStart >= 0 ? template.slice(0, queryStart) : template;
+  const rawQuery = queryStart >= 0 ? template.slice(queryStart) : "";
+
+  let substitutedPath = rawPath;
   for (const [placeholder, raw] of replacements) {
-    if (!url.includes(placeholder)) continue;
-    if (raw && raw.trim().length > 0) {
-      url = url.replaceAll(placeholder, encodeURIComponent(raw.trim()));
-    } else {
-      // Strip "&param=PLACEHOLDER" or "?param=PLACEHOLDER" so empty values
-      // don't survive in the URL. Falls back to removing just the
-      // placeholder if no leading "?param=" / "&param=" exists.
-      const stripPattern = new RegExp(
-        `([?&])[a-zA-Z_]+=${placeholder.replace(/[{}]/g, "\\$&")}`,
-        "g",
+    substitutedPath = substitutedPath.replaceAll(
+      placeholder,
+      raw && raw.trim() ? encodeURIComponent(raw.trim()) : "",
+    );
+  }
+
+  const reassembled = substitutedPath + rawQuery;
+
+  // Some presets might not be full absolute URLs (relative path or just a
+  // path segment). All seeded presets are absolute, but defensively fall
+  // back to a straight string substitution on the original template if
+  // the URL parser refuses the reassembled form.
+  let parsed: URL;
+  try {
+    parsed = new URL(reassembled);
+  } catch {
+    let url = template;
+    for (const [placeholder, raw] of replacements) {
+      url = url.replaceAll(
+        placeholder,
+        raw && raw.trim() ? encodeURIComponent(raw.trim()) : "",
       );
-      url = url.replace(stripPattern, (match, sep) => sep === "?" ? "?" : "");
-      url = url.replaceAll(placeholder, "");
-      url = url.replace(/\?&/, "?").replace(/\?$/, "").replace(/&$/, "");
+    }
+    return url;
+  }
+
+  // Walk query params: substitute placeholder-only values, drop params
+  // whose value remained an unfilled placeholder.
+  const keysToDelete: string[] = [];
+  for (const [key, value] of parsed.searchParams.entries()) {
+    let replaced = value;
+    let wasOnlyPlaceholder = false;
+    for (const [placeholder, raw] of replacements) {
+      if (replaced !== placeholder) continue;
+      if (raw && raw.trim()) {
+        // searchParams.set URL-encodes the value.
+        replaced = raw.trim();
+      } else {
+        wasOnlyPlaceholder = true;
+      }
+    }
+    if (wasOnlyPlaceholder) {
+      keysToDelete.push(key);
+    } else if (replaced !== value) {
+      parsed.searchParams.set(key, replaced);
     }
   }
-  return url;
+  for (const key of keysToDelete) parsed.searchParams.delete(key);
+
+  return parsed.toString();
 }
 
 export const POST: RequestHandler = async ({ cookies, locals }) => {
@@ -206,9 +246,26 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     note: string;
     relevance: "high" | "medium" | "low";
   }> = [];
+  const droppedPresetIds: number[] = [];
   for (const task of validated.data.tasks) {
-    if (!validPresetIds.has(task.preset_id)) continue;
+    if (!validPresetIds.has(task.preset_id)) {
+      droppedPresetIds.push(task.preset_id);
+      continue;
+    }
     const preset = presets.find((p) => p.id === task.preset_id)!;
+
+    // Reject suggestions where a *path*-position placeholder is required
+    // but null — substituting empty into the path would produce 404 URLs
+    // like wellfound.com/role/ . Query-string-position empties are
+    // handled gracefully by fillTemplate (it strips the param).
+    const pathBlankRequired =
+      (preset.url_template.match(/\/[^?]*\{KEYWORDS\}/) && !task.keywords) ||
+      (preset.url_template.match(/\/[^?]*\{LOCATION\}/) && !task.location);
+    if (pathBlankRequired) {
+      droppedPresetIds.push(task.preset_id);
+      continue;
+    }
+
     tasks.push({
       preset_id: preset.id,
       platform: preset.platform_key,
@@ -220,6 +277,16 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
       note: task.note,
       relevance: task.relevance,
     });
+  }
+  if (droppedPresetIds.length > 0) {
+    // Log instead of failing — observability for I3 (LLM hallucination
+    // rate or path-position misuse). The user still sees the kept tasks.
+    console.warn(
+      `[suggest_import_tasks] Dropped ${droppedPresetIds.length} task(s) ` +
+        `referencing invalid or unfillable preset_ids: ` +
+        `[${droppedPresetIds.join(", ")}]. ` +
+        `Valid IDs offered: [${[...validPresetIds].join(", ")}].`,
+    );
   }
 
   if (tasks.length === 0) {

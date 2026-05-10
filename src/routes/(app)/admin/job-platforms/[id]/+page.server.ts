@@ -36,6 +36,8 @@ export const load: PageServerLoad = async ({ params }) => {
   return { platform, presets, history };
 };
 
+/** Lenient nullable-int parser for priority fields. Accepts negatives and
+ *  zero — caller should clamp/range-check if those are wrong for its use. */
 function parsePriority(raw: FormDataEntryValue | null): number | null {
   if (raw === null) return null;
   const trimmed = String(raw).trim();
@@ -43,6 +45,32 @@ function parsePriority(raw: FormDataEntryValue | null): number | null {
   const n = parseInt(trimmed, 10);
   if (isNaN(n)) return null;
   return n;
+}
+
+/** Strict positive-int parser for ID fields. Rejects "13abc", negatives,
+ *  decimals, scientific notation. Returns null on any non-strict-int input. */
+function parseStrictId(raw: FormDataEntryValue | null): number | null {
+  if (raw === null) return null;
+  const trimmed = String(raw).trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const n = parseInt(trimmed, 10);
+  if (!Number.isInteger(n) || n < 1) return null;
+  return n;
+}
+
+/** Validates a search-URL template: must be http/https, parseable. */
+function validateUrlTemplate(template: string): string | null {
+  if (!/^https?:\/\//i.test(template)) {
+    return "URL template must start with http:// or https://";
+  }
+  try {
+    new URL(
+      template.replaceAll("{KEYWORDS}", "x").replaceAll("{LOCATION}", "y"),
+    );
+  } catch {
+    return "URL template is not a valid URL";
+  }
+  return null;
 }
 
 function parseString(raw: FormDataEntryValue | null): string {
@@ -101,6 +129,11 @@ export const actions: Actions = {
 
     if (!label) return fail(400, { error: "Label is required" });
     if (!url_template) return fail(400, { error: "URL template is required" });
+    const urlErr = validateUrlTemplate(url_template);
+    if (urlErr) return fail(400, { error: urlErr });
+    if (suggestion_priority !== null && suggestion_priority < 1) {
+      return fail(400, { error: "suggestion_priority must be >= 1 or blank" });
+    }
 
     try {
       const [created] = await db.insert(job_platform_search_presets).values({
@@ -127,18 +160,23 @@ export const actions: Actions = {
     if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
 
     const formData = await request.formData();
-    const presetId = parsePriority(formData.get("preset_id"));
+    const presetId = parseStrictId(formData.get("preset_id"));
     const label = parseNullableString(formData.get("label"));
     const url_template = parseNullableString(formData.get("url_template"));
     const applicable_hint = parseNullableString(formData.get("applicable_hint"));
     const suggestion_priority = parsePriority(formData.get("suggestion_priority"));
 
-    if (presetId == null) return fail(400, { error: "preset_id required" });
+    if (presetId == null) return fail(400, { error: "Valid preset_id required" });
     if (!label) return fail(400, { error: "Label is required" });
     if (!url_template) return fail(400, { error: "URL template is required" });
+    const urlErr = validateUrlTemplate(url_template);
+    if (urlErr) return fail(400, { error: urlErr });
+    if (suggestion_priority !== null && suggestion_priority < 1) {
+      return fail(400, { error: "suggestion_priority must be >= 1 or blank" });
+    }
 
     try {
-      await db.update(job_platform_search_presets).set({
+      const updated = await db.update(job_platform_search_presets).set({
         label,
         url_template,
         applicable_hint,
@@ -147,7 +185,10 @@ export const actions: Actions = {
       }).where(and(
         eq(job_platform_search_presets.id, presetId),
         eq(job_platform_search_presets.platform_id, platformId),
-      ));
+      )).returning({ id: job_platform_search_presets.id });
+      if (updated.length === 0) {
+        return fail(404, { error: "Preset not found on this platform" });
+      }
       return { success: true, presetId };
     } catch (err) {
       return fail(500, {
@@ -156,7 +197,7 @@ export const actions: Actions = {
     }
   },
 
-  /** Delete a preset. Cascades won't affect tasks (FK is ON DELETE SET NULL). */
+  /** Delete a preset. FK is ON DELETE SET NULL so existing tasks survive. */
   deletePreset: async ({ params, request, locals }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });
@@ -165,14 +206,17 @@ export const actions: Actions = {
     if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
 
     const formData = await request.formData();
-    const presetId = parsePriority(formData.get("preset_id"));
-    if (presetId == null) return fail(400, { error: "preset_id required" });
+    const presetId = parseStrictId(formData.get("preset_id"));
+    if (presetId == null) return fail(400, { error: "Valid preset_id required" });
 
     try {
-      await db.delete(job_platform_search_presets).where(and(
+      const deleted = await db.delete(job_platform_search_presets).where(and(
         eq(job_platform_search_presets.id, presetId),
         eq(job_platform_search_presets.platform_id, platformId),
-      ));
+      )).returning({ id: job_platform_search_presets.id });
+      if (deleted.length === 0) {
+        return fail(404, { error: "Preset not found on this platform" });
+      }
       return { success: true, deletedPresetId: presetId };
     } catch (err) {
       return fail(500, {

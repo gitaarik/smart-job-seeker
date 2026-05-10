@@ -497,10 +497,24 @@
                 method="POST"
                 action="?/testPreset"
                 class="mt-2 p-3 bg-[var(--dash-bg)] rounded border border-[var(--dash-border)] space-y-2"
-                use:enhance={() => async ({ result, update }) => {
-                  await update();
-                  if (form && "testResult" in form && form.testResult) {
-                    lastTestResult = { presetId: preset.id, ...form.testResult };
+                use:enhance={() => async ({ result }) => {
+                  // Read straight from `result.data` rather than the `form`
+                  // prop — the prop is the previous-action's data until
+                  // SvelteKit re-renders, and we don't want to wait for
+                  // that (or risk reading stale state).
+                  if (
+                    result.type === "success" &&
+                    result.data &&
+                    "testResult" in result.data &&
+                    result.data.testResult
+                  ) {
+                    lastTestResult = {
+                      presetId: preset.id,
+                      ...(result.data.testResult as Omit<
+                        NonNullable<typeof lastTestResult>,
+                        "presetId"
+                      >),
+                    };
                   }
                 }}
               >

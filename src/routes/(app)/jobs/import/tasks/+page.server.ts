@@ -234,9 +234,15 @@ export const actions: Actions = {
 
     // Optional preset_id when the task was created from an AI suggestion —
     // lets us attribute scrape signals back to the preset that produced it.
-    const presetIdRaw = formData.get("preset_id") as string | null;
-    const presetId = presetIdRaw && presetIdRaw.trim().length > 0
-      ? parseInt(presetIdRaw, 10)
+    // Strict integer parse: parseInt is too lenient ("13abc" → 13, negatives
+    // pass) and a bogus value here would create a task whose preset signals
+    // never accrue. Reject silently (null = "no preset attribution").
+    const presetIdRaw = formData.get("preset_id");
+    const presetIdStr = typeof presetIdRaw === "string"
+      ? presetIdRaw.trim()
+      : "";
+    const presetId = /^\d+$/.test(presetIdStr)
+      ? parseInt(presetIdStr, 10)
       : null;
 
     if (!search_url || search_url.trim().length === 0) {
@@ -338,7 +344,8 @@ export const actions: Actions = {
       search_term: search_term?.trim() || null,
       platform_id: resolvedPlatformId,
       platform_profile_id: resolvedCredentialId,
-      preset_id: presetId != null && Number.isFinite(presetId) ? presetId : null,
+      // presetId was already validated as a strict positive int above.
+      preset_id: presetId,
       login_mode: ["auto", "manual", "none"].includes(loginMode)
         ? loginMode
         : "auto",

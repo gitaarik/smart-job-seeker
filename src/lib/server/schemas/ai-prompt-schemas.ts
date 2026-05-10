@@ -319,7 +319,7 @@ export const reviewLetterSchema = z.object({
  * Schema for suggest_import_tasks prompt
  * Returns 1-3 tailored job-search task suggestions based on the user's profile.
  *
- * The LLM picks a preset_id from the platforms_list it was given, then
+ * The LLM picks a preset_id from the presets_list it was given, then
  * provides keywords/location *as plain values* if the preset's template has
  * {KEYWORDS}/{LOCATION} placeholders. The server URL-encodes and
  * substitutes — never the LLM, so hallucinated URLs are impossible.
@@ -327,7 +327,7 @@ export const reviewLetterSchema = z.object({
 export const suggestImportTasksSchema = z.object({
   tasks: z.array(z.object({
     preset_id: z.number().int().describe(
-      "ID of the search preset to use. MUST be one of the preset IDs from the platforms_list provided in the system prompt.",
+      "ID of the search preset to use. MUST be one of the preset IDs from the presets_list provided in the system prompt.",
     ),
     keywords: z.string().nullable().describe(
       "Plain (NOT URL-encoded) keyword string to substitute into the preset's {KEYWORDS} placeholder. Null if the chosen preset has no {KEYWORDS} placeholder.",

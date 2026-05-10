@@ -2569,6 +2569,12 @@ export const search_tasks = pgTable("search_tasks", {
     "btree",
     table.platform_profile_id.asc().nullsLast().op("int4_ops"),
   ),
+  // Partial index on preset_id so ON DELETE SET NULL doesn't seq-scan
+  // when an admin deletes a preset; most tasks have null preset_id
+  // (custom URLs) so the partial form is much smaller than a full index.
+  index("idx_search_tasks_preset_id")
+    .on(table.preset_id)
+    .where(sql`${table.preset_id} IS NOT NULL`),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
