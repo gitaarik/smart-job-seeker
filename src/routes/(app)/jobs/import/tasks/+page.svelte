@@ -6,6 +6,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { onMount } from "svelte";
   import {
+    faArrowUpRightFromSquare,
     faCalendar,
     faCheck,
     faClock,
@@ -653,10 +654,26 @@
           </div>
 
           <div>
-            <label
-              class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              for="suggestion-url-{suggestion.url}"
-            >Search URL</label>
+            <div class="flex items-center justify-between mb-1">
+              <label
+                class="block text-xs font-medium text-[var(--dash-text-secondary)]"
+                for="suggestion-url-{suggestion.url}"
+              >Search URL</label>
+              {#if suggestion.url}
+                <a
+                  href={suggestion.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-xs text-[var(--dash-primary)] hover:underline"
+                >
+                  Preview results
+                  <FontAwesomeIcon
+                    icon={faArrowUpRightFromSquare}
+                    class="w-3 h-3"
+                  />
+                </a>
+              {/if}
+            </div>
             <input
               id="suggestion-url-{suggestion.url}"
               type="url"
