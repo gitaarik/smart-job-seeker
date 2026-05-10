@@ -1,9 +1,42 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { dbDirect as db } from "$lib/server/db";
+import { and, asc, isNotNull } from "drizzle-orm";
+import { job_platforms } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../(app)/profile/utils";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
 import { suggestImportTasksSchema } from "$lib/server/schemas/ai-prompt-schemas";
+
+/**
+ * Build the markdown bullet-list of suggestable platforms that gets injected
+ * into the suggest_import_tasks prompt as ${platforms_list}. Each entry has a
+ * key the LLM uses verbatim, a URL template with {KEYWORDS} / {LOCATION}
+ * placeholders, and an optional "when to pick" hint.
+ */
+async function buildPlatformsList(): Promise<string> {
+  const rows = await db.query.job_platforms.findMany({
+    where: and(
+      isNotNull(job_platforms.suggestion_priority),
+      isNotNull(job_platforms.search_url_template),
+    ),
+    orderBy: asc(job_platforms.suggestion_priority),
+    columns: {
+      key: true,
+      search_url_template: true,
+      suggestion_hint: true,
+    },
+  });
+  if (rows.length === 0) {
+    // Defensive fallback if the suggestion metadata is wiped or never seeded —
+    // gives the LLM at least one option so the feature degrades gracefully.
+    return "- linkedin → https://www.linkedin.com/jobs/search/?keywords={KEYWORDS}&location={LOCATION}\n  When to pick: universal default";
+  }
+  return rows.map((p) => {
+    const hint = p.suggestion_hint ? `\n  When to pick: ${p.suggestion_hint}` : "";
+    return `- ${p.key} → ${p.search_url_template}${hint}`;
+  }).join("\n");
+}
 
 export const POST: RequestHandler = async ({ cookies, locals }) => {
   const user = requireAuth(locals);
@@ -16,14 +49,14 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
+  const platformsList = await buildPlatformsList();
+
   const result = await createAndGenerateAiChat(
     profileId,
     "suggest_import_tasks",
-    {},
+    { platforms_list: platformsList },
     undefined,
     {
-      // Restrict the profile slice we hand to the LLM — only the fields useful
-      // for picking platforms and keywords. Other AI features include more.
       profileDataFields: [
         "title",
         "headline",

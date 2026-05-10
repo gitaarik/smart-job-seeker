@@ -1658,6 +1658,17 @@ export const job_platforms = pgTable("job_platforms", {
   type: varchar({ length: 255 }),
   key: varchar({ length: 255 }).notNull(),
   login_page_url: varchar({ length: 255 }),
+  // Search URL template with {KEYWORDS} and {LOCATION} placeholders. Null
+  // means the platform doesn't expose search via URL params (e.g. login-
+  // gated marketplaces) — suggest_import_tasks won't propose URL-flow
+  // tasks for those.
+  search_url_template: text(),
+  // suggest_import_tasks sort order: 1 = top, null = not in the suggestable
+  // pool. Curated manually so we can tune which platforms get surfaced first.
+  suggestion_priority: integer(),
+  // Short hint passed to the LLM as part of the platforms list, telling it
+  // when to pick this platform (e.g. "remote-leaning profiles", "tech/startup").
+  suggestion_hint: text(),
 }, (table) => [
   unique("job_platforms_key_unique").on(table.key),
 ]);

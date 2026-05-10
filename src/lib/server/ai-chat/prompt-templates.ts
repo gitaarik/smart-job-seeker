@@ -921,15 +921,10 @@ In your feedback:
 
 Use these URL templates EXACTLY. Replace {KEYWORDS} and {LOCATION} with URL-encoded values. If no location applies, drop the location segment entirely (don't pass an empty value).
 
-- linkedin → https://www.linkedin.com/jobs/search/?keywords={KEYWORDS}&location={LOCATION}
-- indeed → https://www.indeed.com/jobs?q={KEYWORDS}&l={LOCATION}
-- we_work_remotely → https://weworkremotely.com/remote-jobs/search?term={KEYWORDS}
-- wellfound → https://wellfound.com/jobs?role={KEYWORDS}
+\${platforms_list}
 
 Guidelines:
-- Pick the most useful 1–3 platforms for this profile. Always include LinkedIn unless the profile is very obviously a freelance/marketplace fit.
-- For remote-leaning profiles (remote_start_year set, "remote" in summary, etc.), prefer We Work Remotely as one of the suggestions.
-- For software/tech profiles, Wellfound is a good pick when the profile suggests startup interest.
+- Pick the most useful 1–3 platforms for this profile, weighing the per-platform "When to pick" hints above against the profile signals.
 - Use the most relevant 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would search for.
 - Use the location from the profile (city + country) if set. For remote-only profiles, leave location blank or use "Remote".
 - "note" must be ≤ 80 chars and reference what in the profile drove the suggestion (e.g. "Based on your React/TypeScript stack and Amsterdam location").
