@@ -55,13 +55,17 @@
             <td class="px-3 py-2 text-[var(--dash-text-secondary)] tabular-nums">
               {platform.suggestion_priority ?? "—"}
             </td>
-            <td class="px-3 py-2 font-medium text-[var(--dash-text)]">
-              {platform.name}
+            <td class="px-3 py-2 font-medium">
+              <a
+                href="/admin/job-platforms/{platform.id}"
+                class="text-[var(--dash-primary)] hover:underline"
+              >{platform.name}</a>
               <a
                 href={platform.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] ml-1"
+                title="Open base URL"
               >
                 <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
               </a>
