@@ -1669,6 +1669,15 @@ export const job_platforms = pgTable("job_platforms", {
   // Short hint passed to the LLM as part of the platforms list, telling it
   // when to pick this platform (e.g. "remote-leaning profiles", "tech/startup").
   suggestion_hint: text(),
+  // Phase 1 usage signals — incremented when a search_task_run on this
+  // platform reaches a terminal state. See planning/JOB-PLATFORM-SIGNALS.md
+  // for the full multi-phase plan. Phase 1 only collects raw counts; the
+  // suggest endpoint still uses suggestion_priority for ordering. Phase 3
+  // shifts to score-driven selection.
+  success_count: integer().default(0).notNull(),
+  failure_count: integer().default(0).notNull(),
+  last_success_at: timestamp({ withTimezone: true, mode: "date" }),
+  last_failure_at: timestamp({ withTimezone: true, mode: "date" }),
 }, (table) => [
   unique("job_platforms_key_unique").on(table.key),
 ]);

@@ -16,6 +16,10 @@ export const load: PageServerLoad = async () => {
       search_url_template: job_platforms.search_url_template,
       suggestion_priority: job_platforms.suggestion_priority,
       suggestion_hint: job_platforms.suggestion_hint,
+      success_count: job_platforms.success_count,
+      failure_count: job_platforms.failure_count,
+      last_success_at: job_platforms.last_success_at,
+      last_failure_at: job_platforms.last_failure_at,
       date_created: job_platforms.date_created,
       date_updated: job_platforms.date_updated,
       change_count: sql<number>`(

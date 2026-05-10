@@ -120,6 +120,13 @@
       "when": 1778459400000,
       "tag": "0016_extend_suggest_pool",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1778440846822,
+      "tag": "0017_heavy_thundra",
+      "breakpoints": true
     }
   ]
 }

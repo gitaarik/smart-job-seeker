@@ -43,6 +43,7 @@
           <th class="text-left px-3 py-2">Status</th>
           <th class="text-left px-3 py-2">Suggestable</th>
           <th class="text-left px-3 py-2">Template</th>
+          <th class="text-left px-3 py-2">Signals</th>
           <th class="text-left px-3 py-2">Edits</th>
           <th class="text-right px-3 py-2"></th>
         </tr>
@@ -98,6 +99,15 @@
               title={platform.search_url_template ?? ""}
             >
               {platform.search_url_template ?? "—"}
+            </td>
+            <td class="px-3 py-2 tabular-nums text-xs whitespace-nowrap">
+              {#if platform.success_count + platform.failure_count > 0}
+                <span class="text-green-600 dark:text-green-400" title="Successful runs">{platform.success_count}</span>
+                <span class="text-[var(--dash-text-muted)] mx-0.5">/</span>
+                <span class="text-red-600 dark:text-red-400" title="Failed runs">{platform.failure_count}</span>
+              {:else}
+                <span class="text-[var(--dash-text-muted)]">—</span>
+              {/if}
             </td>
             <td
               class="px-3 py-2 text-[var(--dash-text-secondary)] tabular-nums"

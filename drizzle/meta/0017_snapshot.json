@@ -1,6 +1,6 @@
 {
-  "id": "b60c07e5-1528-44e1-b5cd-3f42508e2eb0",
-  "prevId": "4c38e8ed-35d4-4e64-821b-f1051b426280",
+  "id": "37fc5ca2-ec40-4706-9a44-673d0aa15a2a",
+  "prevId": "e5b4c2dc-5f92-4870-98be-da38162e817c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -6680,6 +6680,32 @@
         "suggestion_hint": {
           "name": "suggestion_hint",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "success_count": {
+          "name": "success_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "failure_count": {
+          "name": "failure_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_success_at": {
+          "name": "last_success_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_failure_at": {
+          "name": "last_failure_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         }

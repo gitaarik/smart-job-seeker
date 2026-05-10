@@ -4,6 +4,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
+    faChartLine,
     faCheck,
     faExternalLinkAlt,
     faFlask,
@@ -33,6 +34,16 @@
   // For the test action: separate keyword + location inputs.
   let testKeywords = $state("engineer");
   let testLocation = $state("");
+
+  // Phase 1 signal stats derived from the loaded platform.
+  let totalRuns = $derived(
+    data.platform.success_count + data.platform.failure_count,
+  );
+  let successRate = $derived(
+    totalRuns > 0
+      ? Math.round((data.platform.success_count / totalRuns) * 100)
+      : null,
+  );
 
   function formatTimestamp(ts: Date | string | null): string {
     if (!ts) return "";
@@ -386,6 +397,59 @@
       </div>
     {/if}
   </form>
+
+  <!-- Usage signals (Phase 1) -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+    <div class="flex items-center gap-2 mb-3">
+      <FontAwesomeIcon
+        icon={faChartLine}
+        class="w-4 h-4 text-[var(--dash-text-secondary)]"
+      />
+      <h3 class="text-sm font-medium text-[var(--dash-text)]">Usage signals</h3>
+      <span
+        class="text-xs text-[var(--dash-text-muted)]"
+      >Phase 1 — collection only</span>
+    </div>
+    {#if totalRuns === 0}
+      <p
+        class="text-sm text-[var(--dash-text-muted)]"
+      >No runs recorded for this platform yet.</p>
+    {:else}
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div>
+          <div class="text-[var(--dash-text-muted)]">Successful runs</div>
+          <div class="text-base font-medium text-green-600 dark:text-green-400 tabular-nums">{data.platform.success_count}</div>
+          {#if data.platform.last_success_at}
+            <div class="text-[var(--dash-text-muted)] mt-0.5">last {formatTimestamp(data.platform.last_success_at)}</div>
+          {/if}
+        </div>
+        <div>
+          <div class="text-[var(--dash-text-muted)]">Failed runs</div>
+          <div class="text-base font-medium text-red-600 dark:text-red-400 tabular-nums">{data.platform.failure_count}</div>
+          {#if data.platform.last_failure_at}
+            <div class="text-[var(--dash-text-muted)] mt-0.5">last {formatTimestamp(data.platform.last_failure_at)}</div>
+          {/if}
+        </div>
+        <div>
+          <div class="text-[var(--dash-text-muted)]">Total runs</div>
+          <div class="text-base font-medium text-[var(--dash-text)] tabular-nums">{totalRuns}</div>
+        </div>
+        <div>
+          <div class="text-[var(--dash-text-muted)]">Success rate</div>
+          <div
+            class="text-base font-medium tabular-nums {successRate != null && successRate >= 70
+              ? 'text-green-600 dark:text-green-400'
+              : successRate != null && successRate >= 40
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-red-600 dark:text-red-400'}"
+          >{successRate}%</div>
+        </div>
+      </div>
+      <p
+        class="text-xs text-[var(--dash-text-muted)] mt-3"
+      >Phase 1 just collects raw counts; the suggest endpoint still uses suggestion_priority for ordering. See <code>planning/JOB-PLATFORM-SIGNALS.md</code> in the meta-repo for the full plan.</p>
+    {/if}
+  </div>
 
   <!-- Change history -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
