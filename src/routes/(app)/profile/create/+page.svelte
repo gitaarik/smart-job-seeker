@@ -69,7 +69,9 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title={showReview ? "Review Your Profile" : "Create Your Profile"}
+    title={showReview && reviewSource !== "manual"
+      ? "Review Your Profile"
+      : "Create Your Profile"}
     icon={faUser}
   />
 

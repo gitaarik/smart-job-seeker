@@ -82,7 +82,7 @@
           Profile created successfully!
         </p>
         <p class="text-sm text-green-700 dark:text-green-300 mt-1">
-          Your profile has been set up with all its data. You can review and edit it on the
+          You can review and add more details on the
           <a href="/profile/edit" class="underline font-medium hover:text-green-900 dark:hover:text-green-100">profile data page</a>.
         </p>
       </div>

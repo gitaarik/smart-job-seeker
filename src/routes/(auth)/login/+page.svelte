@@ -113,5 +113,9 @@
         </button>
       </div>
     </form>
+
+    <p class="text-center text-sm text-[var(--dash-text-muted)]">
+      Smart Job Seeker is currently in invite-only beta.
+    </p>
   </div>
 </div>

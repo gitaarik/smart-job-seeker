@@ -53,6 +53,7 @@
   let { creditBalance }: { creditBalance?: CreditBalance } = $props();
 
   let planIcon = $derived(planIcons[creditBalance?.plan ?? 'explorer'] ?? planIcons.explorer);
+  let planLabel = $derived((creditBalance?.plan ?? 'Free').replace(/^./, (c) => c.toUpperCase()));
 
   interface MenuItem {
     label: string;
@@ -486,7 +487,7 @@
         "
       >
         <FontAwesomeIcon icon={planIcon.icon} class="w-4 h-4 {$page.url.pathname.startsWith('/billing') ? planIcon.activeColor : planIcon.color}" />
-        <span class="font-medium capitalize">{creditBalance?.plan ?? 'Free'} Plan</span>
+        <span class="font-medium">{planLabel} Plan</span>
       </a>
       {#if creditBalance}
         {@const total = creditBalance.allowance + creditBalance.extra}
