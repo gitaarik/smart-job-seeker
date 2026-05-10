@@ -46,6 +46,16 @@ Edit `src/lib/server/db/schema.ts` directly, then push changes:
 npx drizzle-kit push
 ```
 
+## AI features and `collected_data`
+
+Every AI prompt (in `src/lib/server/ai-chat/prompt-templates.ts`) is interpolated with `${data}` and `${schema}`, which come from the `collected_data` table. That row is built by `exportProfile()` in `src/lib/server/profile/export.ts` from the profile + tech_skills + work_experiences + languages tables.
+
+What this means in practice:
+
+- **Don't trust `${data}` blindly.** `collected_data` is populated on profile create and lazy-backfilled in `createAndGenerateAiChat` (so empty rows can never silently produce `{}` and make the LLM hallucinate), but it's **not auto-refreshed on every profile edit**. If a user adds a skill and immediately runs an AI feature, they may get a stale snapshot.
+- **If staleness would be wrong** for your feature, call `await exportProfile(profileId)` explicitly before the AI call.
+- **New AI prompts** should use `${data}` (filtered via `profileDataFields` in `createAndGenerateAiChat` if you only need a subset). Don't reinvent the profile-summary logic per endpoint — that's how the suggest-import-tasks endpoint had a workaround for two commits before this was fixed at the root.
+
 ## Code Quality
 
 - Keep try/catch blocks minimal
