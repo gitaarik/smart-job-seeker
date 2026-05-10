@@ -2,9 +2,7 @@
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCheck,
     faExternalLinkAlt,
-    faMinus,
     faPenToSquare,
   } from "@fortawesome/free-solid-svg-icons";
 
@@ -26,9 +24,10 @@
   </div>
 
   <p class="text-sm text-[var(--dash-text-secondary)]">
-    Platforms with a <code>suggestion_priority</code> and <code>search_url_template</code>
-    show up in the AI suggestion flow at <code>/jobs/import/tasks</code>. Edit a row to
-    change templates, priority, or hint, or to mark a broken platform as out of the pool.
+    Platforms with a <code>suggestion_priority</code> and at least one
+    suggestable preset show up in the AI suggestion flow at
+    <code>/jobs/import/tasks</code>. Click a platform name to edit it,
+    manage presets, see signals, and review change history.
   </p>
 
   <div class="overflow-x-auto bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]">
@@ -41,8 +40,7 @@
           <th class="text-left px-3 py-2">Name</th>
           <th class="text-left px-3 py-2">Key</th>
           <th class="text-left px-3 py-2">Status</th>
-          <th class="text-left px-3 py-2">Suggestable</th>
-          <th class="text-left px-3 py-2">Template</th>
+          <th class="text-left px-3 py-2">Presets</th>
           <th class="text-left px-3 py-2">Signals</th>
           <th class="text-left px-3 py-2">Edits</th>
           <th class="text-right px-3 py-2"></th>
@@ -50,8 +48,6 @@
       </thead>
       <tbody>
         {#each data.platforms as platform (platform.id)}
-          {@const inPool = platform.suggestion_priority !== null
-            && platform.search_url_template !== null}
           <tr class="border-t border-[var(--dash-border)]">
             <td class="px-3 py-2 text-[var(--dash-text-secondary)] tabular-nums">
               {platform.suggestion_priority ?? "—"}
@@ -81,24 +77,15 @@
                   : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}"
               >{platform.status}</span>
             </td>
-            <td class="px-3 py-2">
-              {#if inPool}
-                <FontAwesomeIcon
-                  icon={faCheck}
-                  class="w-3 h-3 text-green-600 dark:text-green-400"
-                />
-              {:else}
-                <FontAwesomeIcon
-                  icon={faMinus}
-                  class="w-3 h-3 text-[var(--dash-text-muted)]"
-                />
-              {/if}
-            </td>
             <td
-              class="px-3 py-2 max-w-md truncate font-mono text-xs text-[var(--dash-text-secondary)]"
-              title={platform.search_url_template ?? ""}
+              class="px-3 py-2 tabular-nums text-xs whitespace-nowrap"
             >
-              {platform.search_url_template ?? "—"}
+              {#if platform.preset_count === 0}
+                <span class="text-[var(--dash-text-muted)]">none</span>
+              {:else}
+                <span class="text-[var(--dash-text)]">{platform.suggestable_preset_count}</span>
+                <span class="text-[var(--dash-text-muted)]">/ {platform.preset_count}</span>
+              {/if}
             </td>
             <td class="px-3 py-2 tabular-nums text-xs whitespace-nowrap">
               {#if platform.success_count + platform.failure_count > 0}

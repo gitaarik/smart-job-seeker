@@ -917,21 +917,21 @@ In your feedback:
 
 \${data}
 
-## Available platforms
+## Available search presets
 
-Use these URL templates EXACTLY. Replace {KEYWORDS} and {LOCATION} with URL-encoded values. If no location applies, drop the location segment entirely (don't pass an empty value).
+Each platform has one or more curated "presets" — pre-validated URLs (sometimes with {KEYWORDS} and/or {LOCATION} placeholders) that the server will fill in based on the values you provide. You MUST pick a preset by its preset_id from the list below; you do NOT construct URLs.
 
-\${platforms_list}
+\${presets_list}
 
 Guidelines:
-- Pick the most useful 1–3 platforms for this profile, weighing the per-platform "When to pick" hints above against the profile signals.
-- Use the most relevant 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would search for.
-- Use the location from the profile (city + country) if set. For remote-only profiles, leave location blank or use "Remote".
+- Pick 1–3 presets that best match the profile, drawing on the per-preset "When to pick" hints.
+- For variety, prefer presets from different platforms unless a single platform has the only strong fits.
+- Provide "keywords" only if the chosen preset's template contains {KEYWORDS}. Provide the plain (un-URL-encoded) keyword string — the server URL-encodes. Choose 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would actually search for.
+- Provide "location" only if the chosen preset's template contains {LOCATION} AND the profile has a relevant city/country. For remote-only profiles, set location to null even if the preset accepts it.
 - "note" must be ≤ 80 chars and reference what in the profile drove the suggestion (e.g. "Based on your React/TypeScript stack and Amsterdam location").
-- "relevance": "high" if the URL closely matches the profile's strongest signals; "medium" for a reasonable fit; "low" for a generic fallback when the profile is sparse.
-- If the profile is essentially empty (no title, no skills, no location), return ONE generic LinkedIn suggestion with relevance="low" and a note like "Profile is sparse — generic starter search you can edit".
-- search_term: include the keyword string used (without URL encoding) for platforms that may need it as a separate field.
-- DO NOT invent platforms or URL formats outside the list above. DO NOT add query params not shown in the templates.
+- "relevance": "high" if the preset closely matches the profile's strongest signals; "medium" for a reasonable fit; "low" for a generic fallback when the profile is sparse.
+- If the profile is essentially empty (no title, no skills, no location), return ONE preset (LinkedIn Generic search if available) with relevance="low" and a note like "Profile is sparse — generic starter search you can edit".
+- DO NOT invent preset IDs. Every preset_id in your response MUST appear in the list above.
 
 ## Output format
 
@@ -940,11 +940,18 @@ Return JSON with this exact shape (the wrapping key MUST be "tasks"):
 {
   "tasks": [
     {
-      "platform": "linkedin",
-      "url": "https://www.linkedin.com/jobs/search/?keywords=react+developer&location=Amsterdam",
-      "search_term": "react developer",
+      "preset_id": 7,
+      "keywords": "react developer",
+      "location": "Amsterdam, Netherlands",
       "note": "Based on your React/TypeScript stack and Amsterdam location",
       "relevance": "high"
+    },
+    {
+      "preset_id": 12,
+      "keywords": null,
+      "location": null,
+      "note": "Backend Python work fits this Wellfound role page",
+      "relevance": "medium"
     }
   ]
 }`,

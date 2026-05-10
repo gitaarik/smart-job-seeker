@@ -10,7 +10,9 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { job_platform_changes, job_platforms } from "$lib/server/db/schema";
 
-/** Subset of job_platforms columns that the admin UI is allowed to edit. */
+/** Subset of job_platforms columns that the admin UI is allowed to edit.
+ *  search_url_template is deprecated in favor of job_platform_search_presets,
+ *  so it's not in the editable set even though the column still exists. */
 export type EditablePlatformFields = {
   status?: string;
   name?: string;
@@ -18,7 +20,6 @@ export type EditablePlatformFields = {
   type?: string | null;
   key?: string;
   login_page_url?: string | null;
-  search_url_template?: string | null;
   suggestion_priority?: number | null;
   suggestion_hint?: string | null;
 };
@@ -30,7 +31,6 @@ const EDITABLE_FIELDS = [
   "type",
   "key",
   "login_page_url",
-  "search_url_template",
   "suggestion_priority",
   "suggestion_hint",
 ] as const satisfies ReadonlyArray<keyof EditablePlatformFields>;

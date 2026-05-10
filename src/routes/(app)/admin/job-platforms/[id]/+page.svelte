@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
+  import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
@@ -9,33 +10,62 @@
     faExternalLinkAlt,
     faFlask,
     faHistory,
+    faPlus,
+    faPenToSquare,
+    faTrash,
     faTriangleExclamation,
+    faXmark,
   } from "@fortawesome/free-solid-svg-icons";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
+  // Bound form values for the platform-level fields.
   let saving = $state(false);
-  let testing = $state(false);
-
-  // Bound form values, initialized from the loaded platform. Edits stay local
-  // until the user clicks Save.
   let name = $state(data.platform.name);
   let key = $state(data.platform.key);
   let url = $state(data.platform.url);
   let type = $state(data.platform.type ?? "");
   let status = $state(data.platform.status);
   let loginPageUrl = $state(data.platform.login_page_url ?? "");
-  let searchUrlTemplate = $state(data.platform.search_url_template ?? "");
   let suggestionPriority = $state(
     data.platform.suggestion_priority?.toString() ?? "",
   );
   let suggestionHint = $state(data.platform.suggestion_hint ?? "");
 
-  // For the test action: separate keyword + location inputs.
+  // Preset editing state — track which preset is being edited inline.
+  let editingPresetId = $state<number | null>(null);
+  let testingPresetId = $state<number | null>(null);
+  let lastTestResult = $state<
+    | {
+      presetId: number;
+      testUrl: string;
+      status: number;
+      contentLength: number;
+      lookedLikeJobs: boolean;
+      networkError: string | null;
+      bodyPreview: string;
+    }
+    | null
+  >(null);
+
+  // Inline-edit working copies (only for the preset currently being edited).
+  let editLabel = $state("");
+  let editUrlTemplate = $state("");
+  let editHint = $state("");
+  let editPriority = $state("");
+
+  // Add-preset state.
+  let addingPreset = $state(false);
+  let newLabel = $state("");
+  let newUrlTemplate = $state("");
+  let newHint = $state("");
+  let newPriority = $state("");
+
+  // Test-keywords / test-location used by all preset test buttons.
   let testKeywords = $state("engineer");
   let testLocation = $state("");
 
-  // Phase 1 signal stats derived from the loaded platform.
+  // Phase 1 platform-level signal stats.
   let totalRuns = $derived(
     data.platform.success_count + data.platform.failure_count,
   );
@@ -44,6 +74,31 @@
       ? Math.round((data.platform.success_count / totalRuns) * 100)
       : null,
   );
+
+  function startEditing(p: typeof data.presets[number]) {
+    editingPresetId = p.id;
+    editLabel = p.label;
+    editUrlTemplate = p.url_template;
+    editHint = p.applicable_hint ?? "";
+    editPriority = p.suggestion_priority?.toString() ?? "";
+    lastTestResult = null;
+  }
+
+  function cancelEditing() {
+    editingPresetId = null;
+    editLabel = "";
+    editUrlTemplate = "";
+    editHint = "";
+    editPriority = "";
+  }
+
+  function resetAddForm() {
+    addingPreset = false;
+    newLabel = "";
+    newUrlTemplate = "";
+    newHint = "";
+    newPriority = "";
+  }
 
   function formatTimestamp(ts: Date | string | null): string {
     if (!ts) return "";
@@ -97,6 +152,7 @@
     </div>
   {/if}
 
+  <!-- Platform-level fields -->
   <form
     method="POST"
     action="?/save"
@@ -109,6 +165,8 @@
       };
     }}
   >
+    <h3 class="text-sm font-medium text-[var(--dash-text)]">Platform details</h3>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label
@@ -205,70 +263,34 @@
           class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
         />
       </div>
-    </div>
-
-    <hr class="border-[var(--dash-border)]" />
-
-    <div class="space-y-4">
-      <h3
-        class="text-sm font-medium text-[var(--dash-text)]"
-      >Suggestion settings</h3>
-      <p class="text-xs text-[var(--dash-text-secondary)]">
-        Both <code>search_url_template</code> and <code>suggestion_priority</code>
-        must be set for the platform to surface in the AI suggestion flow.
-        Leave priority blank to keep the platform out of the pool without
-        deleting it.
-      </p>
-
       <div>
         <label
           class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="field-template"
-        >Search URL template</label>
+          for="field-priority"
+        >Platform suggestion priority</label>
         <input
-          id="field-template"
-          name="search_url_template"
-          type="text"
-          bind:value={searchUrlTemplate}
-          placeholder="https://example.com/jobs?q=&#123;KEYWORDS&#125;&l=&#123;LOCATION&#125;"
-          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono"
+          id="field-priority"
+          name="suggestion_priority"
+          type="number"
+          bind:value={suggestionPriority}
+          placeholder="1 = top, blank = not in pool"
+          min="1"
+          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
         />
-        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-          Use <code>{`{KEYWORDS}`}</code> and <code>{`{LOCATION}`}</code> as
-          placeholders. The endpoint URL-encodes both before substitution.
-        </p>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label
-            class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-            for="field-priority"
-          >Suggestion priority</label>
-          <input
-            id="field-priority"
-            name="suggestion_priority"
-            type="number"
-            bind:value={suggestionPriority}
-            placeholder="1 = top, blank = not in pool"
-            min="1"
-            class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-          />
-        </div>
-        <div>
-          <label
-            class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-            for="field-hint"
-          >Suggestion hint</label>
-          <input
-            id="field-hint"
-            name="suggestion_hint"
-            type="text"
-            bind:value={suggestionHint}
-            placeholder="When should the LLM pick this platform?"
-            class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-          />
-        </div>
+      <div>
+        <label
+          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+          for="field-hint"
+        >Platform suggestion hint</label>
+        <input
+          id="field-hint"
+          name="suggestion_hint"
+          type="text"
+          bind:value={suggestionHint}
+          placeholder="When should the LLM consider this platform?"
+          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        />
       </div>
     </div>
 
@@ -277,138 +299,258 @@
         type="submit"
         disabled={saving}
         class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-60"
-      >{saving ? "Saving…" : "Save changes"}</button>
+      >{saving ? "Saving…" : "Save platform"}</button>
     </div>
   </form>
 
-  <!-- Test template -->
-  <form
-    method="POST"
-    action="?/testTemplate"
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-4"
-    use:enhance={() => {
-      testing = true;
-      return async ({ update }) => {
-        await update();
-        testing = false;
-      };
-    }}
-  >
-    <div class="flex items-center gap-2">
-      <FontAwesomeIcon icon={faFlask} class="w-4 h-4 text-[var(--dash-primary)]" />
-      <h3 class="text-sm font-medium text-[var(--dash-text)]">Test template</h3>
-    </div>
-    <p class="text-xs text-[var(--dash-text-secondary)]">
-      Substitutes the keywords + location below into the template above (your
-      unsaved edits are used) and fetches the URL once. Many job sites block
-      direct fetches with a 403 — that's expected and not necessarily a
-      template problem. Use the result as a quick sanity check.
-    </p>
-    <input type="hidden" name="search_url_template" value={searchUrlTemplate} />
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+  <!-- Search presets -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-4">
+    <div class="flex items-center justify-between">
       <div>
-        <label
-          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="test-keywords"
-        >Test keywords</label>
-        <input
-          id="test-keywords"
-          name="test_keywords"
-          type="text"
-          bind:value={testKeywords}
-          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        />
+        <h3 class="text-sm font-medium text-[var(--dash-text)]">Search presets</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+          One row per ready-to-use URL on this platform. Templates may use
+          <code>&#123;KEYWORDS&#125;</code> and <code>&#123;LOCATION&#125;</code>
+          placeholders — the server URL-encodes and substitutes values from the
+          LLM. Literal URLs (no placeholders) are used as-is.
+        </p>
       </div>
-      <div>
-        <label
-          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="test-location"
-        >Test location</label>
-        <input
-          id="test-location"
-          name="test_location"
-          type="text"
-          bind:value={testLocation}
-          placeholder="(optional)"
-          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        />
-      </div>
-    </div>
-    <div class="flex justify-end">
-      <button
-        type="submit"
-        disabled={testing || !searchUrlTemplate}
-        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)] disabled:opacity-50"
-      >{testing ? "Testing…" : "Run test fetch"}</button>
+      {#if !addingPreset}
+        <button
+          type="button"
+          onclick={() => (addingPreset = true)}
+          class="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)]"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add preset
+        </button>
+      {/if}
     </div>
 
-    {#if form && "testResult" in form && form.testResult}
-      {@const r = form.testResult}
-      <div
-        class="bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded p-3 space-y-2 text-xs"
+    {#if addingPreset}
+      <form
+        method="POST"
+        action="?/addPreset"
+        class="border border-[var(--dash-primary)] rounded p-3 space-y-3 bg-[var(--dash-bg)]"
+        use:enhance={() => async ({ result, update }) => {
+          if (result.type === "success") {
+            resetAddForm();
+            await invalidateAll();
+          } else {
+            await update();
+          }
+        }}
       >
-        <div class="flex items-center justify-between">
-          <span
-            class="font-mono text-[var(--dash-text-secondary)] break-all flex-1 mr-3"
-          >{r.testUrl}</span>
-          <a
-            href={r.testUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-[var(--dash-primary)] hover:underline whitespace-nowrap"
-          >Open in browser</a>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-label">Label *</label>
+            <input id="add-label" name="label" type="text" bind:value={newLabel} required class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-priority">Priority (within platform)</label>
+            <input id="add-priority" name="suggestion_priority" type="number" bind:value={newPriority} min="1" placeholder="blank = not in pool" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+          </div>
         </div>
-        {#if r.networkError}
-          <div class="text-red-600 dark:text-red-400">
-            Network error: {r.networkError}
-          </div>
-        {:else}
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <div class="text-[var(--dash-text-muted)]">HTTP status</div>
-              <div
-                class="text-[var(--dash-text)] {r.status >= 200 && r.status < 300
-                  ? 'text-green-600 dark:text-green-400'
-                  : r.status >= 400
-                    ? 'text-red-600 dark:text-red-400'
-                    : ''}"
-              >{r.status}</div>
-            </div>
-            <div>
-              <div class="text-[var(--dash-text-muted)]">Response size</div>
-              <div class="text-[var(--dash-text)]">{r.contentLength} bytes</div>
-            </div>
-            <div>
-              <div class="text-[var(--dash-text-muted)]">Looks like jobs?</div>
-              <div
-                class={r.lookedLikeJobs
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-amber-600 dark:text-amber-400"}
-              >{r.lookedLikeJobs ? "Yes" : "Inconclusive"}</div>
-            </div>
-          </div>
-          <details class="text-[var(--dash-text-secondary)]">
-            <summary class="cursor-pointer">Body preview (first 500 bytes)</summary>
-            <pre
-              class="mt-2 p-2 bg-[var(--dash-card)] rounded text-xs overflow-x-auto whitespace-pre-wrap"
-            >{r.bodyPreview}</pre>
-          </details>
-        {/if}
-      </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-url">URL template *</label>
+          <input id="add-url" name="url_template" type="text" bind:value={newUrlTemplate} required placeholder="https://example.com/jobs?q=&#123;KEYWORDS&#125;&l=&#123;LOCATION&#125;" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)] font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-hint">When to pick</label>
+          <input id="add-hint" name="applicable_hint" type="text" bind:value={newHint} placeholder="Hint shown to the LLM about when to pick this preset" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick={resetAddForm} class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)]">Add preset</button>
+        </div>
+      </form>
     {/if}
-  </form>
 
-  <!-- Usage signals (Phase 1) -->
+    {#if data.presets.length === 0 && !addingPreset}
+      <p class="text-sm text-[var(--dash-text-muted)]">
+        No search presets configured yet. Add one above to make this platform
+        suggestable.
+      </p>
+    {/if}
+
+    <div class="space-y-2">
+      {#each data.presets as preset (preset.id)}
+        {@const presetTotal = preset.success_count + preset.failure_count}
+        {@const presetSuccessRate = presetTotal > 0
+          ? Math.round((preset.success_count / presetTotal) * 100)
+          : null}
+        <div
+          class="border border-[var(--dash-border)] rounded p-3 space-y-2 {editingPresetId === preset.id
+            ? 'bg-[var(--dash-bg)]'
+            : ''}"
+        >
+          {#if editingPresetId === preset.id}
+            <!-- Inline edit form -->
+            <form
+              method="POST"
+              action="?/updatePreset"
+              class="space-y-3"
+              use:enhance={() => async ({ result, update }) => {
+                if (result.type === "success") {
+                  cancelEditing();
+                  await invalidateAll();
+                } else {
+                  await update();
+                }
+              }}
+            >
+              <input type="hidden" name="preset_id" value={preset.id} />
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-label-{preset.id}">Label</label>
+                  <input id="edit-label-{preset.id}" name="label" type="text" bind:value={editLabel} required class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-priority-{preset.id}">Priority</label>
+                  <input id="edit-priority-{preset.id}" name="suggestion_priority" type="number" bind:value={editPriority} min="1" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-url-{preset.id}">URL template</label>
+                <input id="edit-url-{preset.id}" name="url_template" type="text" bind:value={editUrlTemplate} required class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)] font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-hint-{preset.id}">When to pick</label>
+                <input id="edit-hint-{preset.id}" name="applicable_hint" type="text" bind:value={editHint} class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" onclick={cancelEditing} class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">Cancel</button>
+                <button type="submit" class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)]">Save preset</button>
+              </div>
+            </form>
+          {:else}
+            <!-- Read-only row -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-medium text-[var(--dash-text)]">{preset.label}</span>
+                  {#if preset.suggestion_priority !== null}
+                    <span class="text-xs text-[var(--dash-text-muted)]">priority {preset.suggestion_priority}</span>
+                  {:else}
+                    <span class="text-xs text-[var(--dash-text-muted)]">(not in suggest pool)</span>
+                  {/if}
+                </div>
+                <div class="text-xs font-mono text-[var(--dash-text-secondary)] mt-1 break-all">
+                  {preset.url_template}
+                </div>
+                {#if preset.applicable_hint}
+                  <div class="text-xs text-[var(--dash-text-secondary)] mt-1">{preset.applicable_hint}</div>
+                {/if}
+                <div class="flex items-center gap-3 text-xs mt-2">
+                  <span class="text-[var(--dash-text-muted)]">Signals:</span>
+                  {#if presetTotal === 0}
+                    <span class="text-[var(--dash-text-muted)]">no runs yet</span>
+                  {:else}
+                    <span class="text-green-600 dark:text-green-400">{preset.success_count} ok</span>
+                    <span class="text-red-600 dark:text-red-400">{preset.failure_count} fail</span>
+                    {#if presetSuccessRate != null}
+                      <span class="text-[var(--dash-text)]">({presetSuccessRate}%)</span>
+                    {/if}
+                  {/if}
+                </div>
+              </div>
+              <div class="flex items-start gap-1 flex-shrink-0">
+                <button type="button" onclick={() => startEditing(preset)} class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] rounded hover:bg-[var(--dash-bg)]" title="Edit">
+                  <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (testingPresetId = testingPresetId === preset.id ? null : preset.id)}
+                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] rounded hover:bg-[var(--dash-bg)]"
+                  title="Test"
+                >
+                  <FontAwesomeIcon icon={faFlask} class="w-3 h-3" />
+                </button>
+                <form
+                  method="POST"
+                  action="?/deletePreset"
+                  use:enhance={() => async ({ result, update }) => {
+                    if (result.type === "success") {
+                      await invalidateAll();
+                    } else {
+                      await update();
+                    }
+                  }}
+                >
+                  <input type="hidden" name="preset_id" value={preset.id} />
+                  <button
+                    type="submit"
+                    onclick={(e) => {
+                      if (!confirm(`Delete preset "${preset.label}"? This can't be undone.`)) e.preventDefault();
+                    }}
+                    class="p-1.5 text-[var(--dash-text-secondary)] hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-[var(--dash-bg)]"
+                    title="Delete"
+                  >
+                    <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {#if testingPresetId === preset.id}
+              <form
+                method="POST"
+                action="?/testPreset"
+                class="mt-2 p-3 bg-[var(--dash-bg)] rounded border border-[var(--dash-border)] space-y-2"
+                use:enhance={() => async ({ result, update }) => {
+                  await update();
+                  if (form && "testResult" in form && form.testResult) {
+                    lastTestResult = { presetId: preset.id, ...form.testResult };
+                  }
+                }}
+              >
+                <input type="hidden" name="url_template" value={preset.url_template} />
+                <div class="grid grid-cols-2 gap-2">
+                  <input name="test_keywords" type="text" bind:value={testKeywords} placeholder="keywords" class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+                  <input name="test_location" type="text" bind:value={testLocation} placeholder="location (optional)" class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
+                </div>
+                <div class="flex items-center justify-between">
+                  <p class="text-xs text-[var(--dash-text-muted)]">
+                    Many sites 403 anti-bot fetches — that's expected and doesn't mean broken.
+                  </p>
+                  <button type="submit" class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-card)]">Run test</button>
+                </div>
+                {#if lastTestResult && lastTestResult.presetId === preset.id}
+                  <div class="text-xs space-y-1 pt-2 border-t border-[var(--dash-border)]">
+                    <div class="flex justify-between gap-2">
+                      <span class="font-mono break-all flex-1 text-[var(--dash-text-secondary)]">{lastTestResult.testUrl}</span>
+                      <a href={lastTestResult.testUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--dash-primary)] hover:underline whitespace-nowrap">Open</a>
+                    </div>
+                    {#if lastTestResult.networkError}
+                      <div class="text-red-600 dark:text-red-400">Network error: {lastTestResult.networkError}</div>
+                    {:else}
+                      <div class="flex gap-4">
+                        <span>HTTP <span class={lastTestResult.status >= 200 && lastTestResult.status < 300 ? 'text-green-600 dark:text-green-400' : lastTestResult.status >= 400 ? 'text-red-600 dark:text-red-400' : ''}>{lastTestResult.status}</span></span>
+                        <span class="text-[var(--dash-text-secondary)]">{lastTestResult.contentLength} bytes</span>
+                        <span class={lastTestResult.lookedLikeJobs ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}>{lastTestResult.lookedLikeJobs ? "Looks like jobs" : "Inconclusive"}</span>
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+              </form>
+            {/if}
+          {/if}
+        </div>
+      {/each}
+    </div>
+  </div>
+
+  <!-- Platform-level usage signals -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
     <div class="flex items-center gap-2 mb-3">
       <FontAwesomeIcon
         icon={faChartLine}
         class="w-4 h-4 text-[var(--dash-text-secondary)]"
       />
-      <h3 class="text-sm font-medium text-[var(--dash-text)]">Usage signals</h3>
+      <h3 class="text-sm font-medium text-[var(--dash-text)]">Platform-level signals</h3>
       <span
         class="text-xs text-[var(--dash-text-muted)]"
-      >Phase 1 — collection only</span>
+      >aggregate across all presets</span>
     </div>
     {#if totalRuns === 0}
       <p
@@ -445,9 +587,6 @@
           >{successRate}%</div>
         </div>
       </div>
-      <p
-        class="text-xs text-[var(--dash-text-muted)] mt-3"
-      >Phase 1 just collects raw counts; the suggest endpoint still uses suggestion_priority for ordering. See <code>planning/JOB-PLATFORM-SIGNALS.md</code> in the meta-repo for the full plan.</p>
     {/if}
   </div>
 
@@ -468,7 +607,7 @@
     {#if data.history.length === 0}
       <p
         class="text-sm text-[var(--dash-text-muted)]"
-      >No edits recorded for this platform yet.</p>
+      >No platform-level edits recorded yet. (Preset CRUD is not audited in v1.)</p>
     {:else}
       <div class="space-y-2 text-xs">
         {#each data.history as entry (entry.id)}

@@ -1,8 +1,12 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { desc, eq } from "drizzle-orm";
-import { job_platform_changes, job_platforms } from "$lib/server/db/schema";
+import { and, asc, desc, eq } from "drizzle-orm";
+import {
+  job_platform_changes,
+  job_platform_search_presets,
+  job_platforms,
+} from "$lib/server/db/schema";
 import { updatePlatformWithAudit } from "$lib/server/job-platforms/admin";
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -14,13 +18,22 @@ export const load: PageServerLoad = async ({ params }) => {
   });
   if (!platform) error(404, "Platform not found");
 
-  const history = await db.query.job_platform_changes.findMany({
-    where: eq(job_platform_changes.platform_id, platformId),
-    orderBy: desc(job_platform_changes.changed_at),
-    limit: 50,
-  });
+  const [presets, history] = await Promise.all([
+    db.query.job_platform_search_presets.findMany({
+      where: eq(job_platform_search_presets.platform_id, platformId),
+      orderBy: [
+        asc(job_platform_search_presets.suggestion_priority),
+        asc(job_platform_search_presets.id),
+      ],
+    }),
+    db.query.job_platform_changes.findMany({
+      where: eq(job_platform_changes.platform_id, platformId),
+      orderBy: desc(job_platform_changes.changed_at),
+      limit: 50,
+    }),
+  ]);
 
-  return { platform, history };
+  return { platform, presets, history };
 };
 
 function parsePriority(raw: FormDataEntryValue | null): number | null {
@@ -43,6 +56,7 @@ function parseNullableString(raw: FormDataEntryValue | null): string | null {
 }
 
 export const actions: Actions = {
+  /** Save platform-level fields (name, status, suggestion_priority, etc.) */
   save: async ({ params, request, locals }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });
@@ -60,7 +74,6 @@ export const actions: Actions = {
         type: parseNullableString(formData.get("type")),
         status: parseString(formData.get("status")),
         login_page_url: parseNullableString(formData.get("login_page_url")),
-        search_url_template: parseNullableString(formData.get("search_url_template")),
         suggestion_priority: parsePriority(formData.get("suggestion_priority")),
         suggestion_hint: parseNullableString(formData.get("suggestion_hint")),
       });
@@ -72,22 +85,112 @@ export const actions: Actions = {
     }
   },
 
-  /**
-   * Fetches the platform's search_url_template with a generic test keyword and
-   * returns enough info to spot obviously-broken templates: HTTP status,
-   * response length, and whether the body has any hint of job listings. Many
-   * job sites block direct fetches (anti-bot) so a 403 is informational, not
-   * a guaranteed failure — surface it as a yellow flag in the UI rather than
-   * a hard fail.
-   */
-  testTemplate: async ({ params, request }) => {
+  /** Create a new search preset for this platform. */
+  addPreset: async ({ params, request, locals }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
     const platformId = parseInt(params.id ?? "", 10);
     if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
 
     const formData = await request.formData();
-    // Accept the live (un-saved) template value from the form so admins can
-    // try a tweak before saving.
-    const template = parseNullableString(formData.get("search_url_template"));
+    const label = parseNullableString(formData.get("label"));
+    const url_template = parseNullableString(formData.get("url_template"));
+    const applicable_hint = parseNullableString(formData.get("applicable_hint"));
+    const suggestion_priority = parsePriority(formData.get("suggestion_priority"));
+
+    if (!label) return fail(400, { error: "Label is required" });
+    if (!url_template) return fail(400, { error: "URL template is required" });
+
+    try {
+      const [created] = await db.insert(job_platform_search_presets).values({
+        platform_id: platformId,
+        label,
+        url_template,
+        applicable_hint,
+        suggestion_priority,
+      }).returning();
+      return { success: true, presetId: created.id };
+    } catch (err) {
+      return fail(500, {
+        error: err instanceof Error ? err.message : "Add preset failed",
+      });
+    }
+  },
+
+  /** Update an existing preset. */
+  updatePreset: async ({ params, request, locals }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const platformId = parseInt(params.id ?? "", 10);
+    if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
+
+    const formData = await request.formData();
+    const presetId = parsePriority(formData.get("preset_id"));
+    const label = parseNullableString(formData.get("label"));
+    const url_template = parseNullableString(formData.get("url_template"));
+    const applicable_hint = parseNullableString(formData.get("applicable_hint"));
+    const suggestion_priority = parsePriority(formData.get("suggestion_priority"));
+
+    if (presetId == null) return fail(400, { error: "preset_id required" });
+    if (!label) return fail(400, { error: "Label is required" });
+    if (!url_template) return fail(400, { error: "URL template is required" });
+
+    try {
+      await db.update(job_platform_search_presets).set({
+        label,
+        url_template,
+        applicable_hint,
+        suggestion_priority,
+        date_updated: new Date(),
+      }).where(and(
+        eq(job_platform_search_presets.id, presetId),
+        eq(job_platform_search_presets.platform_id, platformId),
+      ));
+      return { success: true, presetId };
+    } catch (err) {
+      return fail(500, {
+        error: err instanceof Error ? err.message : "Update preset failed",
+      });
+    }
+  },
+
+  /** Delete a preset. Cascades won't affect tasks (FK is ON DELETE SET NULL). */
+  deletePreset: async ({ params, request, locals }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const platformId = parseInt(params.id ?? "", 10);
+    if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
+
+    const formData = await request.formData();
+    const presetId = parsePriority(formData.get("preset_id"));
+    if (presetId == null) return fail(400, { error: "preset_id required" });
+
+    try {
+      await db.delete(job_platform_search_presets).where(and(
+        eq(job_platform_search_presets.id, presetId),
+        eq(job_platform_search_presets.platform_id, platformId),
+      ));
+      return { success: true, deletedPresetId: presetId };
+    } catch (err) {
+      return fail(500, {
+        error: err instanceof Error ? err.message : "Delete preset failed",
+      });
+    }
+  },
+
+  /**
+   * Fetches a preset's URL with sample keywords/location and returns enough
+   * info to spot obviously-broken templates: HTTP status, response length,
+   * and whether the body has any hint of job listings. Many job sites block
+   * direct fetches (anti-bot) so a 403 is informational, not a guaranteed
+   * failure — surface it as a yellow flag in the UI rather than a hard fail.
+   */
+  testPreset: async ({ request }) => {
+    const formData = await request.formData();
+    const template = parseNullableString(formData.get("url_template"));
     const keywords = parseString(formData.get("test_keywords")).trim() || "engineer";
     const location = parseString(formData.get("test_location")).trim();
 
@@ -120,8 +223,6 @@ export const actions: Actions = {
       const text = await resp.text();
       contentLength = text.length;
       bodyPreview = text.slice(0, 500);
-      // Crude heuristic. Anti-bot pages usually lack these tokens; populated
-      // result pages usually have several. Not authoritative.
       const matches = text.match(/\b(job|position|career|opening|hiring)\b/gi);
       lookedLikeJobs = (matches?.length ?? 0) >= 3;
     } catch (err) {

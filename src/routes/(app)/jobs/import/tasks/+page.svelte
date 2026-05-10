@@ -308,9 +308,13 @@
 
   // ── Profile-tailored task suggestions ──
   type Suggestion = {
+    preset_id: number;
     platform: string;
+    platform_name: string;
+    preset_label: string;
     url: string;
-    search_term: string | null;
+    keywords: string | null;
+    location: string | null;
     note: string;
     relevance: "high" | "medium" | "low";
     /** Local-only flag used to mark a card as accepted so we can show feedback
@@ -354,8 +358,8 @@
 
     const formData = new FormData();
     formData.append("search_url", suggestion.url);
-    if (suggestion.search_term) {
-      formData.append("search_term", suggestion.search_term);
+    if (suggestion.keywords) {
+      formData.append("search_term", suggestion.keywords);
     }
     formData.append("browser_provider", "hosted");
     formData.append("login_mode", "none");
@@ -364,6 +368,9 @@
     // the existing job_platforms row by URL — without this, the new task
     // ends up with platform_id=NULL and no platform metadata in the UI.
     formData.append("platform_url", suggestion.url);
+    // Attribute the task to the preset it came from so per-preset signals
+    // accumulate correctly when the scrape runs.
+    formData.append("preset_id", String(suggestion.preset_id));
     // Match the defaults that SearchTaskFields fills in for the regular form
     // path so suggestion-derived tasks behave the same on first run.
     formData.append("max_jobs", String(data.defaultMaxJobs ?? 25));
@@ -643,10 +650,12 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span
-                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--dash-bg)] text-[var(--dash-text)] capitalize"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--dash-bg)] text-[var(--dash-text)]"
                 >
-                  {suggestion.platform.replace(/_/g, " ")}
+                  {suggestion.platform_name}
                 </span>
+                <span class="text-xs text-[var(--dash-text-muted)]"
+                >· {suggestion.preset_label}</span>
                 {#if suggestion.relevance === "high"}
                   <span
                     class="text-xs text-green-600 dark:text-green-400 font-medium"
@@ -697,7 +706,7 @@
             />
           </div>
 
-          {#if suggestion.search_term !== null}
+          {#if suggestion.keywords !== null}
             <div>
               <label
                 class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
@@ -706,7 +715,7 @@
               <input
                 id="suggestion-term-{suggestion.url}"
                 type="text"
-                bind:value={suggestion.search_term}
+                bind:value={suggestion.keywords}
                 disabled={suggestion.accepted || suggestion.submitting}
                 class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] disabled:opacity-60"
               />

@@ -232,6 +232,13 @@ export const actions: Actions = {
       "new_credential_security_answer",
     ) as string;
 
+    // Optional preset_id when the task was created from an AI suggestion —
+    // lets us attribute scrape signals back to the preset that produced it.
+    const presetIdRaw = formData.get("preset_id") as string | null;
+    const presetId = presetIdRaw && presetIdRaw.trim().length > 0
+      ? parseInt(presetIdRaw, 10)
+      : null;
+
     if (!search_url || search_url.trim().length === 0) {
       return fail(400, { error: "Search URL is required" });
     }
@@ -331,6 +338,7 @@ export const actions: Actions = {
       search_term: search_term?.trim() || null,
       platform_id: resolvedPlatformId,
       platform_profile_id: resolvedCredentialId,
+      preset_id: presetId != null && Number.isFinite(presetId) ? presetId : null,
       login_mode: ["auto", "manual", "none"].includes(loginMode)
         ? loginMode
         : "auto",

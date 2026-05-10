@@ -1682,6 +1682,45 @@ export const job_platforms = pgTable("job_platforms", {
   unique("job_platforms_key_unique").on(table.key),
 ]);
 
+// Per-platform "search presets" — canonical, ready-to-use URLs (or URL
+// templates with {KEYWORDS}/{LOCATION} placeholders) that the AI suggest
+// endpoint picks from. Replaces the single search_url_template column on
+// job_platforms, which couldn't handle platforms with multiple URL formats
+// (LinkedIn's remote-filter, last-24h, etc.) or path-slug platforms
+// (Wellfound's /role/{slug}) cleanly.
+//
+// Each preset is either:
+//  - a template with {KEYWORDS} and/or {LOCATION} placeholders (server
+//    substitutes URL-encoded values from the LLM response), or
+//  - a literal URL with no placeholders (used as-is — landing-only flows
+//    like X-Team's /jobs/ listings, or fixed path slugs like Wellfound's
+//    /role/python-developer).
+//
+// Signals migrate to per-preset granularity: which preset succeeded /
+// failed is more informative than which platform did. The platform-level
+// signal columns on job_platforms remain for aggregate dashboards.
+export const job_platform_search_presets = pgTable("job_platform_search_presets", {
+  id: serial().primaryKey().notNull(),
+  platform_id: integer().notNull(),
+  label: varchar({ length: 128 }).notNull(),
+  url_template: text().notNull(),
+  applicable_hint: text(),
+  // suggestion ordering within a platform; null = not in suggest pool.
+  suggestion_priority: integer(),
+  success_count: integer().default(0).notNull(),
+  failure_count: integer().default(0).notNull(),
+  last_success_at: timestamp({ withTimezone: true, mode: "date" }),
+  last_failure_at: timestamp({ withTimezone: true, mode: "date" }),
+  date_created: timestamp({ withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  date_updated: timestamp({ withTimezone: true, mode: "date" }),
+}, (table) => [
+  foreignKey({
+    columns: [table.platform_id],
+    foreignColumns: [job_platforms.id],
+    name: "job_platform_search_presets_platform_id_fk",
+  }).onDelete("cascade"),
+]);
+
 // Audit log of platform edits made via the admin UI. One row per changed
 // field per save — lets us trace e.g. "this template changed two weeks ago
 // and scrapes started failing yesterday" without bolting full row-level
@@ -2520,6 +2559,11 @@ export const search_tasks = pgTable("search_tasks", {
   }),
   sjsbrowser_api_key: integer(),
   login_mode: varchar({ length: 10 }).default("auto").notNull(),
+  // When the task was created from an AI-suggested preset, link back to the
+  // preset row so we can attribute success/failure signals to the preset
+  // (not just the platform). Null means "custom URL not derived from a
+  // preset" — the platform-level signal is the only attribution we have.
+  preset_id: integer(),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
     "btree",
@@ -2534,6 +2578,11 @@ export const search_tasks = pgTable("search_tasks", {
     columns: [table.platform_id],
     foreignColumns: [job_platforms.id],
     name: "search_tasks_platform_foreign",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.preset_id],
+    foreignColumns: [job_platform_search_presets.id],
+    name: "search_tasks_preset_id_fk",
   }).onDelete("set null"),
   foreignKey({
     columns: [table.platform_profile_id],

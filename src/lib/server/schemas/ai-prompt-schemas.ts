@@ -318,23 +318,28 @@ export const reviewLetterSchema = z.object({
 /**
  * Schema for suggest_import_tasks prompt
  * Returns 1-3 tailored job-search task suggestions based on the user's profile.
+ *
+ * The LLM picks a preset_id from the platforms_list it was given, then
+ * provides keywords/location *as plain values* if the preset's template has
+ * {KEYWORDS}/{LOCATION} placeholders. The server URL-encodes and
+ * substitutes — never the LLM, so hallucinated URLs are impossible.
  */
 export const suggestImportTasksSchema = z.object({
   tasks: z.array(z.object({
-    platform: z.string().describe(
-      "Platform key from the available list (e.g. 'linkedin', 'indeed', 'we_work_remotely', 'wellfound').",
+    preset_id: z.number().int().describe(
+      "ID of the search preset to use. MUST be one of the preset IDs from the platforms_list provided in the system prompt.",
     ),
-    url: z.string().url().describe(
-      "Complete, ready-to-use search URL on the chosen platform with keywords and location filled in. Must use the URL template provided for that platform.",
+    keywords: z.string().nullable().describe(
+      "Plain (NOT URL-encoded) keyword string to substitute into the preset's {KEYWORDS} placeholder. Null if the chosen preset has no {KEYWORDS} placeholder.",
     ),
-    search_term: z.string().nullable().describe(
-      "Keyword string used in the URL, in plain (un-URL-encoded) form. Null if the platform's search is purely URL-driven.",
+    location: z.string().nullable().describe(
+      "Plain (NOT URL-encoded) location string to substitute into the preset's {LOCATION} placeholder. Null if the preset has no {LOCATION} placeholder or the profile has no relevant location.",
     ),
     note: z.string().describe(
-      "One short sentence (≤80 chars) explaining why this matches the user's profile.",
+      "One short sentence (≤80 chars) explaining why this preset matches the user's profile.",
     ),
     relevance: z.enum(["high", "medium", "low"]).describe(
-      "How well this suggestion matches the profile.",
+      "How well this preset matches the profile.",
     ),
   })).min(1).max(3),
 });

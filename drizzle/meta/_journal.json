@@ -127,6 +127,20 @@
       "when": 1778440846822,
       "tag": "0017_heavy_thundra",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1778449395577,
+      "tag": "0018_fine_boomerang",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1778449766449,
+      "tag": "0019_whole_cable",
+      "breakpoints": true
     }
   ]
 }
