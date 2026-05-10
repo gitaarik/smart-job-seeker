@@ -185,6 +185,11 @@
           icon: faSearch,
         },
         {
+          label: "Job Platforms",
+          href: "/admin/job-platforms",
+          icon: faBriefcase,
+        },
+        {
           label: "Matcher",
           href: "/admin/matcher",
           icon: faChartBar,
