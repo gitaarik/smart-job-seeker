@@ -360,6 +360,16 @@
     formData.append("browser_provider", "hosted");
     formData.append("login_mode", "none");
     formData.append("note", suggestion.note);
+    // Hand the server the platform domain so getOrCreatePlatform can look up
+    // the existing job_platforms row by URL — without this, the new task
+    // ends up with platform_id=NULL and no platform metadata in the UI.
+    formData.append("platform_url", suggestion.url);
+    // Match the defaults that SearchTaskFields fills in for the regular form
+    // path so suggestion-derived tasks behave the same on first run.
+    formData.append("max_jobs", String(data.defaultMaxJobs ?? 25));
+    formData.append("stop_after_duplicates", "5");
+    formData.append("skip_existing", "true");
+    formData.append("keep_minimized", "true");
 
     try {
       const res = await fetch("?/create", { method: "POST", body: formData });
