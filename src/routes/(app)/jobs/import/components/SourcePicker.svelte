@@ -11,6 +11,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowUpRightFromSquare,
+    faChevronDown,
+    faChevronRight,
     faPenToSquare,
   } from "@fortawesome/free-solid-svg-icons";
   import {
@@ -73,6 +75,12 @@
     keywordsFooter,
     locationFooter,
   }: Props = $props();
+
+  // In custom-within-platform mode the keyword field is rarely needed (the
+  // user typically embeds keywords in the URL itself), so it lives behind
+  // an Advanced toggle. Auto-expand when the task already has a value so
+  // existing search_term metadata isn't accidentally hidden.
+  let showCustomKeywords = $state(!!keywords.trim());
 
   // Group presets by platform once. The server orders by platform priority
   // then preset priority then id, so insertion order is the desired display
@@ -242,42 +250,39 @@
     {@render urlFooter?.()}
   </div>
   {#if selectedPlatform}
-    <div>
-      <label
-        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-        for="picker-custom-keywords"
-      >Keywords <span
-          class="font-normal text-[var(--dash-text-muted)]"
-        >(optional)</span></label>
-      <input
-        id="picker-custom-keywords"
-        type="text"
-        bind:value={keywords}
-        placeholder="e.g. react developer"
-        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+    <button
+      type="button"
+      onclick={() => (showCustomKeywords = !showCustomKeywords)}
+      class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+    >
+      <FontAwesomeIcon
+        icon={showCustomKeywords ? faChevronDown : faChevronRight}
+        class="w-2.5 h-2.5"
       />
-      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-        Stored as metadata. Some scrapers also type this into the site's
-        search field when the URL doesn't include it.
-      </p>
-      {@render keywordsFooter?.()}
-    </div>
-    <div>
-      <label
-        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-        for="picker-custom-location"
-      >Location <span
-          class="font-normal text-[var(--dash-text-muted)]"
-        >(optional)</span></label>
-      <input
-        id="picker-custom-location"
-        type="text"
-        bind:value={location}
-        placeholder="e.g. Berlin, Germany"
-        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-      />
-      {@render locationFooter?.()}
-    </div>
+      Advanced
+    </button>
+    {#if showCustomKeywords}
+      <div>
+        <label
+          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+          for="picker-custom-keywords"
+        >Keywords <span
+            class="font-normal text-[var(--dash-text-muted)]"
+          >(optional)</span></label>
+        <input
+          id="picker-custom-keywords"
+          type="text"
+          bind:value={keywords}
+          placeholder="e.g. react developer"
+          class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        />
+        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+          Only used when the site doesn't support keywords in the URL — the
+          scraper will type this into the site's search field.
+        </p>
+        {@render keywordsFooter?.()}
+      </div>
+    {/if}
   {/if}
 {:else}
   {#if placeholders.hasKeywords}
