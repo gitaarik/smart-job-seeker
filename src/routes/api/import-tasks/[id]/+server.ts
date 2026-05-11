@@ -120,6 +120,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     platform_profile_id?: number | null;
     search_url?: string | null;
     search_term?: string | null;
+    search_location?: string | null;
+    preset_id?: number | null;
+    platform_id?: number | null;
     browser_provider?: string | null;
     login_mode?: string;
     keep_minimized?: boolean;
@@ -133,6 +136,15 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
   if (body.search_term !== undefined) {
     data.search_term = body.search_term?.trim() || null;
+  }
+  if (body.search_location !== undefined) {
+    data.search_location = body.search_location?.trim() || null;
+  }
+  if (body.preset_id !== undefined) {
+    data.preset_id = body.preset_id;
+  }
+  if (body.platform_id !== undefined) {
+    data.platform_id = body.platform_id;
   }
   if (body.max_jobs !== undefined) data.max_jobs = body.max_jobs;
   if (body.skip_existing !== undefined) data.skip_existing = body.skip_existing;

@@ -2564,6 +2564,13 @@ export const search_tasks = pgTable("search_tasks", {
   // (not just the platform). Null means "custom URL not derived from a
   // preset" — the platform-level signal is the only attribution we have.
   preset_id: integer(),
+  // Plain (un-URL-encoded) location string the user picked when creating
+  // the task from a preset whose template has a {LOCATION} placeholder.
+  // Persisted separately so the edit form can show it as a structured
+  // field instead of having to parse it back out of search_url. Null for
+  // older tasks created before this column existed; the edit form falls
+  // back to the URL when re-rendering.
+  search_location: text(),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
     "btree",

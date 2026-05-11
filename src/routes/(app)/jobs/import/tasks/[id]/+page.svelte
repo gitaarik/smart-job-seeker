@@ -10,6 +10,7 @@
   import ScoreBadge from "../../../components/ScoreBadge.svelte";
   import SkillPill from "../../../components/SkillPill.svelte";
   import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
+  import SourceEditor from "../../components/SourceEditor.svelte";
   import {
     formatJobType,
     formatSalaryRange,
@@ -2600,6 +2601,32 @@
     </div>
   </Card>
 
+  <!-- Search source: preset picker that owns search_url + search_term -->
+  <Card padding="lg">
+    {#key data.searchTask.id}
+      <SourceEditor
+        taskId={searchTask.id}
+        presets={data.presets}
+        initial={{
+          preset_id: searchTask.preset_id ?? null,
+          platform_id: searchTask.platform_id ?? null,
+          search_url: searchTask.search_url ?? null,
+          search_term: searchTask.search_term ?? null,
+          search_location: searchTask.search_location ?? null,
+        }}
+        onSaved={(saved) => {
+          searchTask.preset_id = saved.preset_id;
+          if (saved.platform_id !== null) {
+            searchTask.platform_id = saved.platform_id;
+          }
+          searchTask.search_url = saved.search_url;
+          searchTask.search_term = saved.search_term;
+          searchTask.search_location = saved.search_location;
+        }}
+      />
+    {/key}
+  </Card>
+
   <!-- Scrape Configuration -->
   <Card padding="lg">
     {#key data.searchTask.id}
@@ -2623,6 +2650,7 @@
         verificationEmailAddress={data.verificationEmailAddress}
         userTimezone={tz || ""}
         timeFormat={tf}
+        hideSourceFields={true}
       />
     {/key}
   </Card>

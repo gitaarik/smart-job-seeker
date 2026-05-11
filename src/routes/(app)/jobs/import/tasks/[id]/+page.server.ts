@@ -1,8 +1,10 @@
 import type { PageServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import {
+  job_platform_search_presets,
+  job_platforms,
   platform_profiles,
   profiles,
   search_tasks,
@@ -192,6 +194,36 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     layoutData.selectedProfile.id,
   );
 
+  // All suggestable presets across all in-pool platforms, for the
+  // SourceEditor's platform/preset picker.
+  const presetRows = await db
+    .select({
+      preset_id: job_platform_search_presets.id,
+      preset_label: job_platform_search_presets.label,
+      preset_priority: job_platform_search_presets.suggestion_priority,
+      url_template: job_platform_search_presets.url_template,
+      applicable_hint: job_platform_search_presets.applicable_hint,
+      platform_id: job_platforms.id,
+      platform_key: job_platforms.key,
+      platform_name: job_platforms.name,
+      platform_url: job_platforms.url,
+      platform_priority: job_platforms.suggestion_priority,
+    })
+    .from(job_platform_search_presets)
+    .innerJoin(
+      job_platforms,
+      eq(job_platform_search_presets.platform_id, job_platforms.id),
+    )
+    .where(and(
+      isNotNull(job_platforms.suggestion_priority),
+      isNotNull(job_platform_search_presets.suggestion_priority),
+    ))
+    .orderBy(
+      asc(job_platforms.suggestion_priority),
+      asc(job_platform_search_presets.suggestion_priority),
+      asc(job_platform_search_presets.id),
+    );
+
   return {
     searchTask,
     platformCredentials,
@@ -220,5 +252,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     >,
     verificationEmailAddress: verificationAddress.fullAddress,
     apiKeyDevices,
+    presets: presetRows,
   };
 };

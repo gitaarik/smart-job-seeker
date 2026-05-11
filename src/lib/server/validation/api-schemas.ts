@@ -149,6 +149,9 @@ export const searchTaskUpdateSchema = z.object({
   note: trimmedString().max(500).optional().nullable(),
   search_url: httpUrl("search_url").optional().nullable(),
   search_term: z.string().max(500).optional().nullable(),
+  search_location: z.string().max(500).optional().nullable(),
+  preset_id: z.union([z.null(), z.number().int()]).optional(),
+  platform_id: z.union([z.null(), z.number().int()]).optional(),
   max_jobs: z.union([
     z.null(),
     z.number().int().positive("max_jobs must be a positive integer"),

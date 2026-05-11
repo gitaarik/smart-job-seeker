@@ -247,6 +247,7 @@ export const actions: Actions = {
     const note = formData.get("note") as string;
     const search_url = formData.get("search_url") as string;
     const search_term = formData.get("search_term") as string;
+    const search_location = formData.get("search_location") as string;
     const is_active = formData.get("is_active") !== "false";
 
     // Platform data
@@ -374,6 +375,7 @@ export const actions: Actions = {
       note: note?.trim() || null,
       search_url: search_url.trim(),
       search_term: search_term?.trim() || null,
+      search_location: search_location?.trim() || null,
       platform_id: resolvedPlatformId,
       platform_profile_id: resolvedCredentialId,
       // presetId was already validated as a strict positive int above.

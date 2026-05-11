@@ -87,6 +87,10 @@
     verificationEmailAddress?: string | null;
     userTimezone?: string;
     timeFormat?: TimeFormat;
+    /** When true, hide the Search URL + Search Term inputs. The parent
+     *  page is rendering a SourceEditor that owns those fields, so we
+     *  don't show them here to avoid duplication. */
+    hideSourceFields?: boolean;
   }
 
   let {
@@ -120,6 +124,7 @@
     verificationEmailAddress = null,
     userTimezone = "",
     timeFormat = "12h",
+    hideSourceFields = false,
   }: Props = $props();
 
   const isAdd = mode === "add";
@@ -917,13 +922,14 @@
   <!-- Left column: Search & Credentials -->
   <div class="space-y-4">
     {#if isAdd || searchTask?.platform_id}
-      {#if isEdit}
-        {@render sectionToggle("search", "Search")}
-      {/if}
+      {#if !hideSourceFields}
+        {#if isEdit}
+          {@render sectionToggle("search", "Search")}
+        {/if}
 
-      {#if isAdd || sectionOpen.search}
-        <div class="space-y-3">
-          <!-- Search URL -->
+        {#if isAdd || sectionOpen.search}
+          <div class="space-y-3">
+            <!-- Search URL -->
           {#if isAdd}
             <div>
               <h3
@@ -1111,6 +1117,7 @@
             {/if}
           {/if}
         </div>
+        {/if}
       {/if}
 
       <!-- Authentication -->
