@@ -121,7 +121,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     search_url?: string | null;
     search_term?: string | null;
     search_location?: string | null;
-    search_filters?: Record<string, string>;
+    search_filters?: Record<string, string | string[]>;
     preset_id?: number | null;
     platform_id?: number | null;
     browser_provider?: string | null;

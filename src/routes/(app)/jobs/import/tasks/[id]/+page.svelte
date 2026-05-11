@@ -2613,8 +2613,10 @@
           search_url: searchTask.search_url ?? null,
           search_term: searchTask.search_term ?? null,
           search_location: searchTask.search_location ?? null,
-          search_filters: (searchTask.search_filters as Record<string, string>)
-            ?? {},
+          search_filters: (searchTask.search_filters as Record<
+            string,
+            string | string[]
+          >) ?? {},
         }}
         onSaved={(saved) => {
           searchTask.preset_id = saved.preset_id;

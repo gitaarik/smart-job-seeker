@@ -30,7 +30,7 @@
   let location = $state("");
   let customUrl = $state("");
   let resolvedUrl = $state("");
-  let filters = $state<Record<string, string>>({});
+  let filters = $state<Record<string, string | string[]>>({});
   let note = $state("");
   let submitting = $state(false);
 

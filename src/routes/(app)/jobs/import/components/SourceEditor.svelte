@@ -30,7 +30,7 @@
       search_url: string | null;
       search_term: string | null;
       search_location: string | null;
-      search_filters: Record<string, string>;
+      search_filters: Record<string, string | string[]>;
     };
     /** Called after a successful save with the values that were persisted.
      *  Lets the parent sync its local `searchTask` $state copy so the next
@@ -41,7 +41,7 @@
       search_url: string;
       search_term: string | null;
       search_location: string | null;
-      search_filters: Record<string, string>;
+      search_filters: Record<string, string | string[]>;
     }) => void;
   }
 
@@ -72,7 +72,9 @@
   let location = $state(initial.search_location ?? "");
   let customUrl = $state(initial.search_url ?? "");
   let resolvedUrl = $state(initial.search_url ?? "");
-  let filters = $state<Record<string, string>>({ ...initial.search_filters });
+  let filters = $state<Record<string, string | string[]>>({
+    ...initial.search_filters,
+  });
   let urlEditing = $state(false);
 
   // Per-field save state — separate so spinners and errors stay scoped.
@@ -127,7 +129,7 @@
       search_url: string;
       search_term: string | null;
       search_location: string | null;
-      search_filters: Record<string, string>;
+      search_filters: Record<string, string | string[]>;
     },
   ): Promise<boolean> {
     savingField = field;

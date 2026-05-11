@@ -1,3 +1,8 @@
+import type {
+  PresetFilterConfig,
+  SearchFilterValue,
+} from "./search-filters";
+
 /**
  * Substitute {KEYWORDS} and {LOCATION} placeholders in a search URL template,
  * then append any filter URL-fragments declared by the preset.
@@ -18,17 +23,19 @@
  *  - Non-URL templates (relative paths etc.): falls back to a straight
  *    string substitution. Filter fragments are skipped in this fallback.
  *
- * Filters: each entry in `filters` is { filter_name: value_key }. The
- * preset's `params[filter_name][value_key]` lookup yields a URL fragment
- * like "sortBy=DD" which is appended as additional query params. Lookups
- * that miss (e.g. user picked "any") contribute nothing.
+ * Filters: each entry in `filters` is { filter_name: value_key | value_keys[] }.
+ * The preset's `params[filter_name]` declares whether it's single or multi
+ * select; for single, the value_key maps to a full "key=value" URL fragment;
+ * for multi, each value_key maps to a raw value that gets joined into a
+ * single "param=v1,v2,..." fragment. Lookups that miss (e.g. user picked
+ * "any") contribute nothing.
  */
 export function fillSearchTemplate(
   template: string,
   keywords: string | null,
   location: string | null,
-  filters: Record<string, string> = {},
-  params: Record<string, Record<string, string>> = {},
+  filters: Record<string, SearchFilterValue> = {},
+  params: Record<string, PresetFilterConfig> = {},
 ): string {
   const replacements: Array<[string, string | null]> = [
     ["{KEYWORDS}", keywords],
@@ -83,17 +90,30 @@ export function fillSearchTemplate(
   }
   for (const key of keysToDelete) parsed.searchParams.delete(key);
 
-  // Append filter fragments. Each fragment is a `key=value` string (or
-  // multi-key like `a=1&b=2`) that we merge into the URL's query string.
-  // A filter selection only contributes if the preset declares a mapping
-  // for that (filter_name, value_key) pair — otherwise it's silently
-  // dropped (e.g. user picked "any" or a value the site doesn't support).
-  for (const [filterName, valueKey] of Object.entries(filters)) {
-    const fragment = params[filterName]?.[valueKey];
-    if (!fragment) continue;
-    const fragmentParams = new URLSearchParams(fragment);
-    for (const [k, v] of fragmentParams) {
-      parsed.searchParams.append(k, v);
+  // Append filter fragments. A filter selection contributes only if the
+  // preset declares a config for that filter name. Misses (user picked
+  // "any", value the site doesn't support, etc.) are silently dropped.
+  for (const [filterName, selection] of Object.entries(filters)) {
+    const config = params[filterName];
+    if (!config) continue;
+    if (config.multi) {
+      const chosen = Array.isArray(selection) ? selection : [selection];
+      const values = chosen
+        .map((key) => config.options[key])
+        .filter((v): v is string => typeof v === "string" && v.length > 0);
+      if (values.length === 0) continue;
+      parsed.searchParams.append(config.param, values.join(config.sep));
+    } else {
+      // Single-select: the selection is a value_key (or the first of an
+      // array if the user accidentally passed one) mapping to a full
+      // "key=value" fragment.
+      const key = Array.isArray(selection) ? selection[0] : selection;
+      const fragment = key ? config.options[key] : undefined;
+      if (!fragment) continue;
+      const fragmentParams = new URLSearchParams(fragment);
+      for (const [k, v] of fragmentParams) {
+        parsed.searchParams.append(k, v);
+      }
     }
   }
 

@@ -21,6 +21,22 @@ export type SearchFilterName =
   | "work_location"
   | "job_type";
 
+/** Per-filter configuration carried on `job_platform_search_presets.params`. */
+export type PresetFilterConfig =
+  | { multi: false; options: Record<string, string> }
+  | {
+    multi: true;
+    /** Query-param name (e.g. "f_WT" for LinkedIn work location). */
+    param: string;
+    /** Separator joining the chosen values (e.g. "," for LinkedIn). */
+    sep: string;
+    /** value_key → raw value emitted into the joined URL fragment. */
+    options: Record<string, string>;
+  };
+
+/** User selections stored on `search_tasks.search_filters`. */
+export type SearchFilterValue = string | string[];
+
 export interface SearchFilterDefinition {
   label: string;
   /** Insertion order matters: the FIRST entry is the default (no fragment). */

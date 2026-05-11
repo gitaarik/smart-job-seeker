@@ -22,7 +22,9 @@
     SEARCH_FILTER_DEFINITIONS,
     SEARCH_FILTER_NAMES,
     defaultValueKey,
+    type PresetFilterConfig,
     type SearchFilterName,
+    type SearchFilterValue,
   } from "$lib/job-platforms/search-filters";
 
   export type SourcePreset = {
@@ -30,8 +32,8 @@
     preset_label: string;
     url_template: string;
     applicable_hint: string | null;
-    /** Per-preset filter mapping: { filter_name: { value_key: url_fragment } } */
-    params: Record<string, Record<string, string>>;
+    /** Per-preset filter configuration. See PresetFilterConfig. */
+    params: Record<string, PresetFilterConfig>;
     platform_id: number;
     platform_key: string;
     platform_name: string;
@@ -56,9 +58,10 @@
     /** Output (read-only): resolved URL after substitution. */
     resolvedUrl: string;
     /** Bidirectional. Filter selections keyed by canonical filter name
-     *  (sort_by, time_posted, work_location, job_type). Value is the
-     *  user's chosen value_key — only non-default values are kept. */
-    filters: Record<string, string>;
+     *  (sort_by, time_posted, work_location, job_type). For single-select
+     *  filters the value is a single value_key; for multi-select filters
+     *  it's an array. Only non-default selections are kept. */
+    filters: Record<string, SearchFilterValue>;
     /** Bidirectional. Whether the custom-URL field is in editable
      *  (textarea) mode vs. wrapped read-only display mode. The parent owns
      *  this so it can collapse the field back to read-only after the
@@ -167,16 +170,41 @@
     }
   });
 
-  // Filters this preset declares any URL fragments for, in canonical order.
+  // Filters this preset declares any options for, in canonical order.
   // Falls back to [] when no preset is selected (custom URL: filters don't
   // apply because there's no template to weave them into).
   let availableFilters = $derived.by<SearchFilterName[]>(() => {
     if (!selectedPreset) return [];
     return SEARCH_FILTER_NAMES.filter((name) => {
-      const mapping = selectedPreset.params?.[name];
-      return mapping && Object.keys(mapping).length > 0;
+      const config = selectedPreset.params?.[name];
+      return !!config && Object.keys(config.options).length > 0;
     });
   });
+
+  function toggleMulti(filterName: string, valueKey: string) {
+    const current = filters[filterName];
+    // Normalise legacy single-string saves to a one-element array.
+    const arr = Array.isArray(current)
+      ? current
+      : typeof current === "string" && current
+      ? [current]
+      : [];
+    const next = arr.includes(valueKey)
+      ? arr.filter((v) => v !== valueKey)
+      : [...arr, valueKey];
+    if (next.length === 0) {
+      const { [filterName]: _, ...rest } = filters;
+      filters = rest;
+    } else {
+      filters = { ...filters, [filterName]: next };
+    }
+  }
+
+  function isMultiChecked(filterName: string, valueKey: string): boolean {
+    const sel = filters[filterName];
+    if (Array.isArray(sel)) return sel.includes(valueKey);
+    return typeof sel === "string" && sel === valueKey;
+  }
 </script>
 
 <!-- Platform / preset pickers -->
@@ -339,33 +367,58 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {#each availableFilters as filterName (filterName)}
         {@const def = SEARCH_FILTER_DEFINITIONS[filterName]}
-        {@const supported = selectedPreset!.params[filterName] ?? {}}
+        {@const config = selectedPreset!.params[filterName]}
         {@const defaultKey = defaultValueKey(filterName)}
         <div>
           <label
             class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
             for="picker-filter-{filterName}"
           >{def.label}</label>
-          <select
-            id="picker-filter-{filterName}"
-            value={filters[filterName] ?? defaultKey}
-            onchange={(e) => {
-              const v = (e.currentTarget as HTMLSelectElement).value;
-              if (v === defaultKey) {
-                const { [filterName]: _, ...rest } = filters;
-                filters = rest;
-              } else {
-                filters = { ...filters, [filterName]: v };
-              }
-            }}
-            class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-          >
-            {#each Object.entries(def.values) as [valueKey, valueLabel] (valueKey)}
-              {#if valueKey === defaultKey || valueKey in supported}
-                <option value={valueKey}>{valueLabel}</option>
-              {/if}
-            {/each}
-          </select>
+          {#if config.multi}
+            <div
+              id="picker-filter-{filterName}"
+              class="flex flex-wrap gap-x-3 gap-y-1 px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)]"
+            >
+              {#each Object.entries(def.values) as [valueKey, valueLabel] (valueKey)}
+                {#if valueKey !== defaultKey && valueKey in config.options}
+                  <label
+                    class="inline-flex items-center gap-1.5 text-[var(--dash-text)] cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isMultiChecked(filterName, valueKey)}
+                      onchange={() => toggleMulti(filterName, valueKey)}
+                      class="accent-[var(--dash-primary)]"
+                    />
+                    {valueLabel}
+                  </label>
+                {/if}
+              {/each}
+            </div>
+          {:else}
+            <select
+              id="picker-filter-{filterName}"
+              value={typeof filters[filterName] === "string"
+                ? filters[filterName]
+                : defaultKey}
+              onchange={(e) => {
+                const v = (e.currentTarget as HTMLSelectElement).value;
+                if (v === defaultKey) {
+                  const { [filterName]: _, ...rest } = filters;
+                  filters = rest;
+                } else {
+                  filters = { ...filters, [filterName]: v };
+                }
+              }}
+              class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+            >
+              {#each Object.entries(def.values) as [valueKey, valueLabel] (valueKey)}
+                {#if valueKey === defaultKey || valueKey in config.options}
+                  <option value={valueKey}>{valueLabel}</option>
+                {/if}
+              {/each}
+            </select>
+          {/if}
         </div>
       {/each}
     </div>

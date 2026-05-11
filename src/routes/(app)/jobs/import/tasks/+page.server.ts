@@ -250,15 +250,20 @@ export const actions: Actions = {
     const search_term = formData.get("search_term") as string;
     const search_location = formData.get("search_location") as string;
     const search_filters_raw = formData.get("search_filters") as string;
-    let search_filters: Record<string, string> = {};
+    let search_filters: Record<string, string | string[]> = {};
     if (search_filters_raw) {
       try {
         const parsed = JSON.parse(search_filters_raw);
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
           search_filters = Object.fromEntries(
-            Object.entries(parsed).filter(
-              ([k, v]) => typeof k === "string" && typeof v === "string",
-            ) as [string, string][],
+            Object.entries(parsed).filter(([k, v]) => {
+              if (typeof k !== "string") return false;
+              if (typeof v === "string") return true;
+              if (Array.isArray(v)) {
+                return v.every((x) => typeof x === "string");
+              }
+              return false;
+            }) as [string, string | string[]][],
           );
         }
       } catch {
