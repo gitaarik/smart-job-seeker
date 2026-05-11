@@ -1,5 +1,6 @@
 /**
- * Substitute {KEYWORDS} and {LOCATION} placeholders in a search URL template.
+ * Substitute {KEYWORDS} and {LOCATION} placeholders in a search URL template,
+ * then append any filter URL-fragments declared by the preset.
  *
  * Shared between the suggest endpoint (server-side substitution from the
  * LLM's preset_id + keywords + location response) and the add-task form's
@@ -15,12 +16,19 @@
  *    upstream platform).
  *  - Literal URLs with no placeholders: returned unchanged.
  *  - Non-URL templates (relative paths etc.): falls back to a straight
- *    string substitution.
+ *    string substitution. Filter fragments are skipped in this fallback.
+ *
+ * Filters: each entry in `filters` is { filter_name: value_key }. The
+ * preset's `params[filter_name][value_key]` lookup yields a URL fragment
+ * like "sortBy=DD" which is appended as additional query params. Lookups
+ * that miss (e.g. user picked "any") contribute nothing.
  */
 export function fillSearchTemplate(
   template: string,
   keywords: string | null,
   location: string | null,
+  filters: Record<string, string> = {},
+  params: Record<string, Record<string, string>> = {},
 ): string {
   const replacements: Array<[string, string | null]> = [
     ["{KEYWORDS}", keywords],
@@ -74,6 +82,20 @@ export function fillSearchTemplate(
     }
   }
   for (const key of keysToDelete) parsed.searchParams.delete(key);
+
+  // Append filter fragments. Each fragment is a `key=value` string (or
+  // multi-key like `a=1&b=2`) that we merge into the URL's query string.
+  // A filter selection only contributes if the preset declares a mapping
+  // for that (filter_name, value_key) pair — otherwise it's silently
+  // dropped (e.g. user picked "any" or a value the site doesn't support).
+  for (const [filterName, valueKey] of Object.entries(filters)) {
+    const fragment = params[filterName]?.[valueKey];
+    if (!fragment) continue;
+    const fragmentParams = new URLSearchParams(fragment);
+    for (const [k, v] of fragmentParams) {
+      parsed.searchParams.append(k, v);
+    }
+  }
 
   return parsed.toString();
 }

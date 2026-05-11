@@ -30,6 +30,7 @@
   let location = $state("");
   let customUrl = $state("");
   let resolvedUrl = $state("");
+  let filters = $state<Record<string, string>>({});
   let note = $state("");
   let submitting = $state(false);
 
@@ -85,6 +86,7 @@
     bind:location
     bind:customUrl
     bind:resolvedUrl
+    bind:filters
   />
 
   <!-- Optional note -->
@@ -127,6 +129,9 @@
     <input type="hidden" name="search_location" value={location.trim()} />
   {:else if !selectedPreset && customPlatform && location.trim()}
     <input type="hidden" name="search_location" value={location.trim()} />
+  {/if}
+  {#if Object.keys(filters).length > 0}
+    <input type="hidden" name="search_filters" value={JSON.stringify(filters)} />
   {/if}
   <input type="hidden" name="note" value={note} />
   <input type="hidden" name="browser_provider" value="hosted" />

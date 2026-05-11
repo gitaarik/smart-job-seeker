@@ -1705,6 +1705,13 @@ export const job_platform_search_presets = pgTable("job_platform_search_presets"
   label: varchar({ length: 128 }).notNull(),
   url_template: text().notNull(),
   applicable_hint: text(),
+  // Per-preset filter mapping. Shape:
+  //   { <filter_name>: { <value_key>: <url-fragment> } }
+  // e.g. { sort_by: { newest: "sortBy=DD" }, time_posted: { "24h": "f_TPR=r86400" } }
+  // Filter names are drawn from a small canonical taxonomy (sort_by,
+  // time_posted, work_location, job_type) so the picker UI can label them
+  // consistently across platforms. Empty object = no filters for this preset.
+  params: jsonb().$type<Record<string, Record<string, string>>>().default({}).notNull(),
   // suggestion ordering within a platform; null = not in suggest pool.
   suggestion_priority: integer(),
   success_count: integer().default(0).notNull(),
@@ -2571,6 +2578,13 @@ export const search_tasks = pgTable("search_tasks", {
   // older tasks created before this column existed; the edit form falls
   // back to the URL when re-rendering.
   search_location: text(),
+  // User-selected filter values for this task. Shape: { <filter_name>:
+  // <value_key> }, e.g. { sort_by: "newest", time_posted: "24h" }. The
+  // preset's params jsonb maps each (filter_name, value_key) to a URL
+  // fragment that gets appended to the resolved search_url. Stored as
+  // structured state so the edit form can re-render filter dropdowns
+  // without re-parsing the URL.
+  search_filters: jsonb().$type<Record<string, string>>().default({}).notNull(),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
     "btree",

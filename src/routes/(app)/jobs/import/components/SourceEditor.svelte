@@ -30,6 +30,7 @@
       search_url: string | null;
       search_term: string | null;
       search_location: string | null;
+      search_filters: Record<string, string>;
     };
     /** Called after a successful save with the values that were persisted.
      *  Lets the parent sync its local `searchTask` $state copy so the next
@@ -40,6 +41,7 @@
       search_url: string;
       search_term: string | null;
       search_location: string | null;
+      search_filters: Record<string, string>;
     }) => void;
   }
 
@@ -70,6 +72,7 @@
   let location = $state(initial.search_location ?? "");
   let customUrl = $state(initial.search_url ?? "");
   let resolvedUrl = $state(initial.search_url ?? "");
+  let filters = $state<Record<string, string>>({ ...initial.search_filters });
   let urlEditing = $state(false);
 
   // Per-field save state — separate so spinners and errors stay scoped.
@@ -124,6 +127,7 @@
       search_url: string;
       search_term: string | null;
       search_location: string | null;
+      search_filters: Record<string, string>;
     },
   ): Promise<boolean> {
     savingField = field;
@@ -161,6 +165,7 @@
         search_url: url,
         search_term: keywords.trim() || null,
         search_location: location.trim() || null,
+        search_filters: { ...filters },
       },
     );
     if (ok) urlEditing = false;
@@ -184,6 +189,7 @@
       search_url: resolvedUrl,
       search_term: newKw,
       search_location: location.trim() || null,
+      search_filters: { ...filters },
     });
   }
   function cancelKeywords() {
@@ -202,6 +208,7 @@
       search_url: resolvedUrl,
       search_term: keywords.trim() || null,
       search_location: newLoc,
+      search_filters: { ...filters },
     });
   }
   function cancelLocation() {
@@ -209,22 +216,28 @@
     saveError = null;
   }
 
-  // Immediate commit when the user changes the platform or preset dropdown.
-  // Mirrors how other dropdowns elsewhere in the form (login_mode, schedule
-  // interval, etc.) auto-save on change. We detect "the dropdowns differ from
-  // the last saved state" by comparing against `initial` — after a save the
-  // parent updates its local searchTask, so initial reflects the new DB row
-  // on the next render and the effect short-circuits.
+  // Immediate commit when the user changes any non-text input (platform,
+  // preset, or filter dropdown). Mirrors how other dropdowns elsewhere in
+  // the form (login_mode, schedule interval, etc.) auto-save on change.
+  // We detect "current state differs from last saved" by comparing against
+  // `initial` — after a save the parent updates its local searchTask, so
+  // initial reflects the new DB row on the next render and the effect
+  // short-circuits.
   $effect(() => {
     const cpid = selectedPreset?.preset_id ?? null;
     const cplat = currentPlatformId;
     const initPid = initial.preset_id ?? null;
     const initPlat = initial.platform_id ?? null;
-    if (cpid === initPid && cplat === initPlat) return;
+    const initFilters = initial.search_filters ?? {};
+    const filtersChanged = JSON.stringify(filters) !==
+      JSON.stringify(initFilters);
+    if (cpid === initPid && cplat === initPlat && !filtersChanged) return;
     if (savingField !== null) return;
-    // URL adapts to the new template + the user's current keywords/location.
-    // search_term/search_location adapt to whether the new preset still has
-    // those placeholders (clears them if the new preset is fixed-URL).
+    // URL adapts to the new template + the user's current keywords/location
+    // + the current filter selections (already applied to resolvedUrl by
+    // SourcePicker). search_term/search_location adapt to whether the new
+    // preset still has those placeholders (clears them if the new preset
+    // is fixed-URL).
     const newKw = selectedPreset
       ? selectedPreset.url_template.includes("{KEYWORDS}")
         ? (keywords.trim() || null)
@@ -235,6 +248,7 @@
         ? (location.trim() || null)
         : null
       : location.trim() || null;
+    const newFilters = { ...filters };
     void patch(
       "dropdown",
       {
@@ -243,6 +257,7 @@
         search_url: resolvedUrl,
         search_term: newKw,
         search_location: newLoc,
+        search_filters: newFilters,
       },
       {
         preset_id: cpid,
@@ -250,6 +265,7 @@
         search_url: resolvedUrl,
         search_term: newKw,
         search_location: newLoc,
+        search_filters: newFilters,
       },
     );
   });
@@ -277,6 +293,7 @@
     bind:location
     bind:customUrl
     bind:resolvedUrl
+    bind:filters
     bind:urlEditing
   >
     {#snippet urlFooter()}

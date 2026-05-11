@@ -203,6 +203,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       preset_priority: job_platform_search_presets.suggestion_priority,
       url_template: job_platform_search_presets.url_template,
       applicable_hint: job_platform_search_presets.applicable_hint,
+      params: job_platform_search_presets.params,
       platform_id: job_platforms.id,
       platform_key: job_platforms.key,
       platform_name: job_platforms.name,

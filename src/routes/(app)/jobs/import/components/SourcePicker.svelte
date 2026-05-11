@@ -18,12 +18,20 @@
     fillSearchTemplate,
     templatePlaceholders,
   } from "$lib/job-platforms/url-template";
+  import {
+    SEARCH_FILTER_DEFINITIONS,
+    SEARCH_FILTER_NAMES,
+    defaultValueKey,
+    type SearchFilterName,
+  } from "$lib/job-platforms/search-filters";
 
   export type SourcePreset = {
     preset_id: number;
     preset_label: string;
     url_template: string;
     applicable_hint: string | null;
+    /** Per-preset filter mapping: { filter_name: { value_key: url_fragment } } */
+    params: Record<string, Record<string, string>>;
     platform_id: number;
     platform_key: string;
     platform_name: string;
@@ -47,6 +55,10 @@
     customUrl: string;
     /** Output (read-only): resolved URL after substitution. */
     resolvedUrl: string;
+    /** Bidirectional. Filter selections keyed by canonical filter name
+     *  (sort_by, time_posted, work_location, job_type). Value is the
+     *  user's chosen value_key — only non-default values are kept. */
+    filters: Record<string, string>;
     /** Bidirectional. Whether the custom-URL field is in editable
      *  (textarea) mode vs. wrapped read-only display mode. The parent owns
      *  this so it can collapse the field back to read-only after the
@@ -69,6 +81,7 @@
     location = $bindable(""),
     customUrl = $bindable(""),
     resolvedUrl = $bindable(""),
+    filters = $bindable({}),
     urlEditing = $bindable(false),
     urlFooter,
     keywordsFooter,
@@ -144,12 +157,25 @@
         selectedPreset.url_template,
         placeholders.hasKeywords ? keywords : null,
         placeholders.hasLocation ? location : null,
+        filters,
+        selectedPreset.params,
       );
     } else {
       // Strip any whitespace (including newlines users may paste into the
       // textarea) — URLs must not contain whitespace.
       resolvedUrl = customUrl.replace(/\s+/g, "");
     }
+  });
+
+  // Filters this preset declares any URL fragments for, in canonical order.
+  // Falls back to [] when no preset is selected (custom URL: filters don't
+  // apply because there's no template to weave them into).
+  let availableFilters = $derived.by<SearchFilterName[]>(() => {
+    if (!selectedPreset) return [];
+    return SEARCH_FILTER_NAMES.filter((name) => {
+      const mapping = selectedPreset.params?.[name];
+      return mapping && Object.keys(mapping).length > 0;
+    });
   });
 </script>
 
@@ -309,9 +335,44 @@
       {@render locationFooter?.()}
     </div>
   {/if}
-  {#if !placeholders.hasKeywords && !placeholders.hasLocation}
+  {#if availableFilters.length > 0}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {#each availableFilters as filterName (filterName)}
+        {@const def = SEARCH_FILTER_DEFINITIONS[filterName]}
+        {@const supported = selectedPreset!.params[filterName] ?? {}}
+        {@const defaultKey = defaultValueKey(filterName)}
+        <div>
+          <label
+            class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+            for="picker-filter-{filterName}"
+          >{def.label}</label>
+          <select
+            id="picker-filter-{filterName}"
+            value={filters[filterName] ?? defaultKey}
+            onchange={(e) => {
+              const v = (e.currentTarget as HTMLSelectElement).value;
+              if (v === defaultKey) {
+                const { [filterName]: _, ...rest } = filters;
+                filters = rest;
+              } else {
+                filters = { ...filters, [filterName]: v };
+              }
+            }}
+            class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+          >
+            {#each Object.entries(def.values) as [valueKey, valueLabel] (valueKey)}
+              {#if valueKey === defaultKey || valueKey in supported}
+                <option value={valueKey}>{valueLabel}</option>
+              {/if}
+            {/each}
+          </select>
+        </div>
+      {/each}
+    </div>
+  {/if}
+  {#if !placeholders.hasKeywords && !placeholders.hasLocation && availableFilters.length === 0}
     <p class="text-xs text-[var(--dash-text-secondary)]">
-      This preset uses a fixed URL — no keyword or location filter to
+      This preset uses a fixed URL — no keyword, location, or filter to
       configure. The task will scrape the linked page as-is.
     </p>
   {/if}

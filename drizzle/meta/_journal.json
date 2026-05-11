@@ -155,6 +155,13 @@
       "when": 1778477184696,
       "tag": "0021_smart_morgan_stark",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1778502381156,
+      "tag": "0022_breezy_zarek",
+      "breakpoints": true
     }
   ]
 }

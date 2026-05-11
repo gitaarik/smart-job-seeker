@@ -96,6 +96,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       preset_priority: job_platform_search_presets.suggestion_priority,
       url_template: job_platform_search_presets.url_template,
       applicable_hint: job_platform_search_presets.applicable_hint,
+      params: job_platform_search_presets.params,
       platform_id: job_platforms.id,
       platform_key: job_platforms.key,
       platform_name: job_platforms.name,
@@ -248,6 +249,23 @@ export const actions: Actions = {
     const search_url = formData.get("search_url") as string;
     const search_term = formData.get("search_term") as string;
     const search_location = formData.get("search_location") as string;
+    const search_filters_raw = formData.get("search_filters") as string;
+    let search_filters: Record<string, string> = {};
+    if (search_filters_raw) {
+      try {
+        const parsed = JSON.parse(search_filters_raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          search_filters = Object.fromEntries(
+            Object.entries(parsed).filter(
+              ([k, v]) => typeof k === "string" && typeof v === "string",
+            ) as [string, string][],
+          );
+        }
+      } catch {
+        // Malformed filter JSON — silently drop. The form always sends
+        // valid JSON; bad input here means a client bug or tampering.
+      }
+    }
     const is_active = formData.get("is_active") !== "false";
 
     // Platform data
@@ -376,6 +394,7 @@ export const actions: Actions = {
       search_url: search_url.trim(),
       search_term: search_term?.trim() || null,
       search_location: search_location?.trim() || null,
+      search_filters,
       platform_id: resolvedPlatformId,
       platform_profile_id: resolvedCredentialId,
       // presetId was already validated as a strict positive int above.
