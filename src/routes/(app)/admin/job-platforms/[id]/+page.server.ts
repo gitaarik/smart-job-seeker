@@ -7,11 +7,14 @@ import {
   job_platform_search_presets,
   job_platforms,
   platform_discovery_runs,
+  platform_profiles,
 } from "$lib/server/db/schema";
 import { updatePlatformWithAudit } from "$lib/server/job-platforms/admin";
-import { encryptCredential } from "$lib/server/auth/crypto";
+import { listApiKeys } from "$lib/server/auth/api-key";
+import { listSharedWithMe } from "$lib/server/device-shares";
+import { listSharedCredentialsWithMe } from "$lib/server/credential-shares";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   const platformId = parseInt(params.id, 10);
   if (isNaN(platformId)) error(400, "Invalid platform id");
 
@@ -20,12 +23,8 @@ export const load: PageServerLoad = async ({ params }) => {
   });
   if (!platform) error(404, "Platform not found");
 
-  // Never ship the encrypted password to the client. Expose only "is it set".
-  const { discovery_password, ...platformPublic } = platform;
-  const platformForClient = {
-    ...platformPublic,
-    discovery_password_set: !!discovery_password,
-  };
+  const user = locals.user;
+  if (!user) error(401, "Not authenticated");
 
   const [presets, history, discoveryRuns] = await Promise.all([
     db.query.job_platform_search_presets.findMany({
@@ -47,11 +46,87 @@ export const load: PageServerLoad = async ({ params }) => {
     }),
   ]);
 
+  // Credentials & devices available to this admin user for this platform's
+  // discovery dropdowns. Reuses the same access rules as the regular job
+  // search task page: own profile credentials + ones shared with the user.
+  interface CredOption {
+    id: number;
+    username: string | null;
+    shared: boolean;
+    owner_label: string | null;
+  }
+  const profilesOwned = await db.query.profiles.findMany({
+    where: (p, { eq: eqOp }) => eqOp(p.user_id, user.id),
+    columns: { id: true },
+  });
+  const ownedProfileIds = profilesOwned.map((p) => p.id);
+  let credentials: CredOption[] = [];
+  if (ownedProfileIds.length > 0) {
+    const raw = await db.query.platform_profiles.findMany({
+      where: (pp, { eq: eqOp, and: andOp, inArray }) =>
+        andOp(
+          eqOp(pp.platform_id, platformId),
+          inArray(pp.profile_id, ownedProfileIds),
+        ),
+      columns: { id: true, username: true },
+      orderBy: asc(platform_profiles.id),
+    });
+    credentials = raw.map((c) => ({
+      id: c.id,
+      username: c.username,
+      shared: false,
+      owner_label: null,
+    }));
+  }
+  const sharedCreds = await listSharedCredentialsWithMe(user.id);
+  for (const s of sharedCreds) {
+    if (s.platform_profile.platform_id !== platformId) continue;
+    const ownerLabel = s.platform_profile.owner?.name ||
+      s.platform_profile.owner?.email || "a contact";
+    credentials.push({
+      id: s.platform_profile.id,
+      username: s.platform_profile.username,
+      shared: true,
+      owner_label: ownerLabel,
+    });
+  }
+
+  interface DeviceOption {
+    apiKeyId: number;
+    apiKeyName: string;
+    shared: boolean;
+  }
+  const devices: DeviceOption[] = [];
+  for (const p of profilesOwned) {
+    const keys = await listApiKeys(p.id);
+    for (const k of keys) {
+      if (!k.revoked) {
+        devices.push({
+          apiKeyId: k.id,
+          apiKeyName: k.name,
+          shared: false,
+        });
+      }
+    }
+  }
+  const sharedDevices = await listSharedWithMe(user.id);
+  for (const share of sharedDevices) {
+    const ownerName = share.api_key.owner?.name ||
+      share.api_key.owner?.email || "Unknown";
+    devices.push({
+      apiKeyId: share.api_key.id,
+      apiKeyName: `${share.api_key.name} (${ownerName})`,
+      shared: true,
+    });
+  }
+
   return {
-    platform: platformForClient,
+    platform,
     presets,
     history,
     discoveryRuns,
+    credentials,
+    devices,
   };
 };
 
@@ -128,47 +203,6 @@ export const actions: Actions = {
     } catch (err) {
       return fail(500, {
         error: err instanceof Error ? err.message : "Save failed",
-      });
-    }
-  },
-
-  /** Save the per-platform discovery credentials. Bypasses the audit log
-   *  on purpose — passwords (even encrypted) shouldn't end up in
-   *  job_platform_changes. */
-  saveCredentials: async ({ params, request, locals }) => {
-    const user = locals.user;
-    if (!user) return fail(401, { error: "Not authenticated" });
-    const platformId = parseInt(params.id ?? "", 10);
-    if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
-
-    const formData = await request.formData();
-    const username = parseNullableString(formData.get("discovery_username"));
-    const passwordInput = parseNullableString(
-      formData.get("discovery_password"),
-    );
-    const clear = formData.get("clear") === "true";
-
-    const setClause: Record<string, unknown> = {};
-    if (clear) {
-      setClause.discovery_username = null;
-      setClause.discovery_password = null;
-    } else {
-      setClause.discovery_username = username;
-      // Empty password input = keep existing (admin only typed a new
-      // username). Non-empty = re-encrypt + replace.
-      if (passwordInput) {
-        setClause.discovery_password = encryptCredential(passwordInput);
-      }
-    }
-
-    try {
-      await db.update(job_platforms).set(setClause).where(
-        eq(job_platforms.id, platformId),
-      );
-      return { success: true };
-    } catch (err) {
-      return fail(500, {
-        error: err instanceof Error ? err.message : "Save credentials failed",
       });
     }
   },

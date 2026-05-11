@@ -183,6 +183,13 @@
       "when": 1778530073899,
       "tag": "0025_talented_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1778532538748,
+      "tag": "0026_sturdy_warbound",
+      "breakpoints": true
     }
   ]
 }

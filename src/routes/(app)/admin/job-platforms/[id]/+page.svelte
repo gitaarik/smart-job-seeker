@@ -54,16 +54,14 @@
   let editHint = $state("");
   let editPriority = $state("");
 
-  // Discovery credentials state.
-  let credsSaving = $state(false);
-  let credsSavedFlash = $state(false);
-  let discoveryUsername = $state(data.platform.discovery_username ?? "");
-  let discoveryPassword = $state("");
-  let editingPassword = $state(!data.platform.discovery_password_set);
-
   // Discovery run state.
   let startingDiscovery = $state(false);
   let discoveryError = $state<string | null>(null);
+  let selectedCredentialId = $state<string>(
+    data.credentials[0] ? String(data.credentials[0].id) : "",
+  );
+  let selectedDeviceId = $state<string>("");
+
   async function startDiscovery() {
     startingDiscovery = true;
     discoveryError = null;
@@ -71,7 +69,15 @@
       const res = await fetch("/api/admin/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform_id: data.platform.id }),
+        body: JSON.stringify({
+          platform_id: data.platform.id,
+          platform_profile_id: selectedCredentialId
+            ? Number(selectedCredentialId)
+            : null,
+          sjsbrowser_api_key_id: selectedDeviceId
+            ? Number(selectedDeviceId)
+            : null,
+        }),
       });
       if (!res.ok) {
         discoveryError = (await res.text()) || `HTTP ${res.status}`;
@@ -343,130 +349,63 @@
     </div>
   </form>
 
-  <!-- Discovery credentials -->
-  <form
-    id="discovery-credentials"
-    method="POST"
-    action="?/saveCredentials"
-    use:enhance={() => {
-      credsSaving = true;
-      return async ({ result }) => {
-        credsSaving = false;
-        if (result.type === "success") {
-          credsSavedFlash = true;
-          discoveryPassword = "";
-          editingPassword = false;
-          setTimeout(() => (credsSavedFlash = false), 1500);
-          await invalidateAll();
-        }
-      };
-    }}
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3"
-  >
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-sm font-medium text-[var(--dash-text)]">
-          Discovery credentials
-        </h3>
-        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          Used by the platform-discovery scraper to log in before crawling.
-          One pair per platform — set only if the site gates its job listings
-          behind login. Password is stored AES-256-GCM encrypted and never
-          shipped back to the browser.
-        </p>
-      </div>
-      {#if credsSavedFlash}
-        <span class="text-xs text-green-600 dark:text-green-400 inline-flex items-center gap-1">
-          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          Saved
-        </span>
-      {/if}
+  <!-- Discovery runs -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
+    <div>
+      <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
+      <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+        Run the discovery scraper against this platform's front page to
+        auto-detect the login page + search URL template. Pick one of your
+        credentials (or a credential shared with you) so the scraper can
+        log in first — most job sites gate their listings behind login.
+        Optional device routes the session through your desktop tunnel
+        instead of GoLogin.
+      </p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <label
           class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="discovery-username"
-        >Username / email</label>
-        <input
-          id="discovery-username"
-          name="discovery_username"
-          type="text"
-          bind:value={discoveryUsername}
-          autocomplete="off"
-          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        />
+          for="discovery-credential"
+        >Credential</label>
+        <select
+          id="discovery-credential"
+          bind:value={selectedCredentialId}
+          class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        >
+          <option value="">(no login — try anonymous)</option>
+          {#each data.credentials as c (c.id)}
+            <option value={String(c.id)}>
+              {c.username ?? "(no username)"}{c.shared ? ` (shared from ${c.owner_label})` : ""}
+            </option>
+          {/each}
+        </select>
+        {#if data.credentials.length === 0}
+          <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+            No credentials for this platform — add one on your profile first.
+          </p>
+        {/if}
       </div>
       <div>
         <label
           class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="discovery-password"
-        >Password</label>
-        {#if !editingPassword}
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-[var(--dash-text-muted)] flex-1">
-              ✓ set (encrypted)
-            </span>
-            <button
-              type="button"
-              onclick={() => (editingPassword = true)}
-              class="text-xs text-[var(--dash-primary)] hover:underline"
-            >Change</button>
-          </div>
-        {:else}
-          <input
-            id="discovery-password"
-            name="discovery_password"
-            type="password"
-            bind:value={discoveryPassword}
-            autocomplete="new-password"
-            placeholder={data.platform.discovery_password_set
-              ? "(leave empty to keep current)"
-              : ""}
-            class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-          />
-        {/if}
+          for="discovery-device"
+        >Device</label>
+        <select
+          id="discovery-device"
+          bind:value={selectedDeviceId}
+          class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        >
+          <option value="">(default browser provider)</option>
+          {#each data.devices as d (d.apiKeyId)}
+            <option value={String(d.apiKeyId)}>{d.apiKeyName}</option>
+          {/each}
+        </select>
       </div>
     </div>
 
-    <div class="flex justify-between items-center pt-1">
-      {#if data.platform.discovery_password_set || data.platform.discovery_username}
-        <button
-          type="submit"
-          formaction="?/saveCredentials"
-          onclick={(e) => {
-            if (!confirm("Clear stored discovery credentials?")) {
-              e.preventDefault();
-            }
-          }}
-          name="clear"
-          value="true"
-          class="text-xs text-red-600 dark:text-red-400 hover:underline"
-        >Clear credentials</button>
-      {:else}
-        <span></span>
-      {/if}
-      <button
-        type="submit"
-        disabled={credsSaving}
-        class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-60"
-      >{credsSaving ? "Saving…" : "Save credentials"}</button>
-    </div>
-  </form>
-
-  <!-- Discovery runs -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
-        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          Run the discovery scraper against this platform's front page to
-          auto-detect the login page + search URL template. Findings land
-          on the run-detail page for review before applying back to this
-          platform.
-        </p>
-      </div>
+    <div class="flex justify-end">
       <button
         type="button"
         onclick={startDiscovery}
@@ -474,6 +413,7 @@
         class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-60"
       >{startingDiscovery ? "Queuing…" : "Start discovery"}</button>
     </div>
+
     {#if discoveryError}
       <p class="text-xs text-red-600 dark:text-red-400">{discoveryError}</p>
     {/if}

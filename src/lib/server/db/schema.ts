@@ -1678,11 +1678,6 @@ export const job_platforms = pgTable("job_platforms", {
   failure_count: integer().default(0).notNull(),
   last_success_at: timestamp({ withTimezone: true, mode: "date" }),
   last_failure_at: timestamp({ withTimezone: true, mode: "date" }),
-  // Admin-owned credentials used by the platform-discovery scraper to log
-  // in before crawling. One pair per platform. discovery_password is
-  // encrypted (AES-256-GCM via encryptCredential); username is plaintext.
-  discovery_username: text(),
-  discovery_password: text(),
 }, (table) => [
   unique("job_platforms_key_unique").on(table.key),
 ]);
@@ -1982,6 +1977,14 @@ export const platform_discovery_runs = pgTable("platform_discovery_runs", {
   error_message: text(),
   /** User-id of the admin who triggered the run. */
   triggered_by_user_id: text(),
+  /** Credential to use for login, drawn from platform_profiles. Optional —
+   *  if null, discovery proceeds without login (and gated sites may fail
+   *  to expose their jobs link). */
+  platform_profile_id: integer(),
+  /** Device (api_keys row) the discovery should run on. Optional — if
+   *  null, the worker uses the default browser provider. Setting this
+   *  routes the session through the tunnel to the user's local browser. */
+  sjsbrowser_api_key_id: integer(),
   bullmq_job_id: varchar({ length: 100 }),
   live_url: varchar({ length: 500 }),
   /** Draft output from the worker. Shape:
