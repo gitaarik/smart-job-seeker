@@ -10,6 +10,7 @@ import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../(app)/profile/utils";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
 import { suggestImportTasksSchema } from "$lib/server/schemas/ai-prompt-schemas";
+import { fillSearchTemplate } from "$lib/job-platforms/url-template";
 
 type PresetRow = {
   id: number;
@@ -86,79 +87,9 @@ function renderPresetsForPrompt(rows: PresetRow[]): string {
   return lines.join("\n").trimEnd();
 }
 
-function fillTemplate(
-  template: string,
-  keywords: string | null,
-  location: string | null,
-): string {
-  // Strategy: split on the first `?` so path-position placeholders are
-  // substituted in the raw template string (URL constructor would
-  // percent-encode `{KEYWORDS}` to `%7BKEYWORDS%7D` and break naive
-  // path-substitution). Then assemble a valid URL with the substituted
-  // path + the query string, parse via URL to walk searchParams cleanly,
-  // and drop any query param whose value remained a bare placeholder.
-  const replacements: Array<[string, string | null]> = [
-    ["{KEYWORDS}", keywords],
-    ["{LOCATION}", location],
-  ];
-
-  const queryStart = template.indexOf("?");
-  const rawPath = queryStart >= 0 ? template.slice(0, queryStart) : template;
-  const rawQuery = queryStart >= 0 ? template.slice(queryStart) : "";
-
-  let substitutedPath = rawPath;
-  for (const [placeholder, raw] of replacements) {
-    substitutedPath = substitutedPath.replaceAll(
-      placeholder,
-      raw && raw.trim() ? encodeURIComponent(raw.trim()) : "",
-    );
-  }
-
-  const reassembled = substitutedPath + rawQuery;
-
-  // Some presets might not be full absolute URLs (relative path or just a
-  // path segment). All seeded presets are absolute, but defensively fall
-  // back to a straight string substitution on the original template if
-  // the URL parser refuses the reassembled form.
-  let parsed: URL;
-  try {
-    parsed = new URL(reassembled);
-  } catch {
-    let url = template;
-    for (const [placeholder, raw] of replacements) {
-      url = url.replaceAll(
-        placeholder,
-        raw && raw.trim() ? encodeURIComponent(raw.trim()) : "",
-      );
-    }
-    return url;
-  }
-
-  // Walk query params: substitute placeholder-only values, drop params
-  // whose value remained an unfilled placeholder.
-  const keysToDelete: string[] = [];
-  for (const [key, value] of parsed.searchParams.entries()) {
-    let replaced = value;
-    let wasOnlyPlaceholder = false;
-    for (const [placeholder, raw] of replacements) {
-      if (replaced !== placeholder) continue;
-      if (raw && raw.trim()) {
-        // searchParams.set URL-encodes the value.
-        replaced = raw.trim();
-      } else {
-        wasOnlyPlaceholder = true;
-      }
-    }
-    if (wasOnlyPlaceholder) {
-      keysToDelete.push(key);
-    } else if (replaced !== value) {
-      parsed.searchParams.set(key, replaced);
-    }
-  }
-  for (const key of keysToDelete) parsed.searchParams.delete(key);
-
-  return parsed.toString();
-}
+// fillSearchTemplate now lives in $lib/job-platforms/url-template so the
+// client-side add-task form can use the same substitution logic for its
+// live URL preview.
 
 export const POST: RequestHandler = async ({ cookies, locals }) => {
   const user = requireAuth(locals);
@@ -271,7 +202,7 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
       platform: preset.platform_key,
       platform_name: preset.platform_name,
       preset_label: preset.label,
-      url: fillTemplate(preset.url_template, task.keywords, task.location),
+      url: fillSearchTemplate(preset.url_template, task.keywords, task.location),
       keywords: task.keywords,
       location: task.location,
       note: task.note,

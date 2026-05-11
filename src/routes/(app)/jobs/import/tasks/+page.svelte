@@ -24,7 +24,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
-  import SearchTaskFields from "../../components/SearchTaskFields.svelte";
+  import SimplifiedAddTaskForm from "../components/SimplifiedAddTaskForm.svelte";
   import { track } from "$lib/tools/analytics";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -541,80 +541,11 @@
 
   <!-- Add Form -->
   {#if showAddForm}
-    <form
-      method="POST"
-      action="?/create"
-      use:enhance={handleAddSubmit}
-      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
-    >
-      <h3 class="font-medium text-[var(--dash-text)] mb-4">
-        Add Import Task
-      </h3>
-      <div class="space-y-4">
-        <SearchTaskFields
-          mode="add"
-          localBrowserAllowed={data.localBrowserAllowed}
-          serverBrowserProvider={data.serverBrowserProvider}
-          defaultBrowserProvider="hosted"
-          defaultMaxJobs={data.defaultMaxJobs}
-          browserCountryCode={data.browserCountryCode}
-          defaultCountryCode={data.defaultCountryCode}
-          bind:searchUrl={newSearchUrl}
-          bind:searchTerm={newSearchTerm}
-          bind:loginPageUrl={newLoginPageUrl}
-          {detectedPlatform}
-          {detectingPlatform}
-          {existingCredentials}
-          devices={devicesWithStatus}
-          desktopConnected={desktopStatusChecked ? desktopConnected : null}
-          preferredDevice={preferredDevice
-          ? {
-            apiKeyId: preferredDevice.apiKeyId,
-            apiKeyName: preferredDevice.apiKeyName,
-            isShared: preferredDevice.isShared,
-            ownerLabel: preferredDevice.ownerLabel,
-          }
-          : null}
-          onsearchurlinput={handleSearchUrlInput}
-          timeFormat={($page.data as { timeFormat: import("$lib/format-date").TimeFormat })
-          .timeFormat}
-        />
-
-        <!-- Optional note -->
-        <div>
-          <h3
-            class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          >
-            Note <span class="font-normal text-[var(--dash-text-muted)]"
-            >(optional)</span>
-          </h3>
-          <input
-            type="text"
-            id="new-note"
-            name="note"
-            bind:value={newNote}
-            placeholder="e.g., Remote only, senior roles"
-            class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-          />
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 mt-4">
-        <button
-          type="button"
-          onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-        >
-          Add Task
-        </button>
-      </div>
-    </form>
+    <SimplifiedAddTaskForm
+      presets={data.presets}
+      defaultMaxJobs={data.defaultMaxJobs}
+      onCancel={resetAddForm}
+    />
   {/if}
 
   <!-- Job Searches List -->
