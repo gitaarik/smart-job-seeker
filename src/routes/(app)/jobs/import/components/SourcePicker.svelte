@@ -8,7 +8,11 @@
    * state and exposes the resolved values via $bindable props.
    */
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faArrowUpRightFromSquare,
+    faCheck,
+    faPenToSquare,
+  } from "@fortawesome/free-solid-svg-icons";
   import {
     fillSearchTemplate,
     templatePlaceholders,
@@ -53,6 +57,12 @@
     customUrl = $bindable(""),
     resolvedUrl = $bindable(""),
   }: Props = $props();
+
+  // Custom-URL field starts in read-only mode when there's already a value
+  // (typical edit-form case — keeps long, gnarly URLs from dominating the UI)
+  // and in edit mode when empty (add-form case, so users can paste straight
+  // away).
+  let urlEditing = $state(!customUrl.trim());
 
   // Group presets by platform once. The server orders by platform priority
   // then preset priority then id, so insertion order is the desired display
@@ -120,7 +130,9 @@
         placeholders.hasLocation ? location : null,
       );
     } else {
-      resolvedUrl = customUrl.trim();
+      // Strip any whitespace (including newlines users may paste into the
+      // textarea) — URLs must not contain whitespace.
+      resolvedUrl = customUrl.replace(/\s+/g, "");
     }
   });
 </script>
@@ -173,20 +185,49 @@
 <!-- Conditional fields -->
 {#if selectedPreset === null}
   <div>
-    <label
-      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-      for="picker-custom-url"
-    >Search URL *</label>
-    <input
-      id="picker-custom-url"
-      type="url"
-      bind:value={customUrl}
-      required
-      placeholder={selectedPlatform
-        ? `${selectedPlatform.items[0]?.platform_url ?? "https://example.com"}…`
-        : "https://example.com/jobs?q=react+developer"}
-      class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono"
-    />
+    <div class="flex items-center justify-between mb-1">
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)]"
+        for="picker-custom-url"
+      >Search URL *</label>
+      {#if !urlEditing}
+        <button
+          type="button"
+          onclick={() => (urlEditing = true)}
+          class="inline-flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
+          Edit
+        </button>
+      {:else if customUrl.trim()}
+        <button
+          type="button"
+          onclick={() => (urlEditing = false)}
+          class="inline-flex items-center gap-1 text-xs text-[var(--dash-primary)] hover:underline"
+        >
+          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+          Done
+        </button>
+      {/if}
+    </div>
+    {#if urlEditing}
+      <textarea
+        id="picker-custom-url"
+        bind:value={customUrl}
+        required
+        rows={3}
+        placeholder={selectedPlatform
+          ? `${selectedPlatform.items[0]?.platform_url ?? "https://example.com"}…`
+          : "https://example.com/jobs?q=react+developer"}
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono resize-y break-all"
+      ></textarea>
+    {:else}
+      <div
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] font-mono break-all max-h-24 overflow-y-auto"
+      >
+        {customUrl}
+      </div>
+    {/if}
     <p class="text-xs text-[var(--dash-text-muted)] mt-1">
       {#if selectedPlatform}
         Paste any search-result URL from {selectedPlatform.name}. Use this for
