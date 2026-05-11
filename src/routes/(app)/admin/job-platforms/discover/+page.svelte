@@ -1,23 +1,29 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto } from "$app/navigation";
 
   let { data }: { data: PageData } = $props();
 
-  let targetUrl = $state("");
+  let selectedPlatformId = $state<string>(
+    data.platforms[0] ? String(data.platforms[0].id) : "",
+  );
   let submitting = $state(false);
   let formError = $state<string | null>(null);
 
+  let selectedPlatform = $derived(
+    data.platforms.find((p) => String(p.id) === selectedPlatformId) ?? null,
+  );
+
   async function startDiscovery(e: SubmitEvent) {
     e.preventDefault();
-    if (!targetUrl.trim()) return;
+    if (!selectedPlatformId) return;
     submitting = true;
     formError = null;
     try {
       const res = await fetch("/api/admin/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target_url: targetUrl.trim() }),
+        body: JSON.stringify({ platform_id: Number(selectedPlatformId) }),
       });
       if (!res.ok) {
         formError = (await res.text()) || `HTTP ${res.status}`;
@@ -42,9 +48,10 @@
   <header class="space-y-1">
     <h1 class="text-2xl font-semibold text-[var(--dash-text)]">Platform discovery</h1>
     <p class="text-sm text-[var(--dash-text-muted)]">
-      Point the discovery scraper at a job-platform's front page. It will navigate, identify
-      the login and search entries, run a probe search, and produce a draft URL template for
-      review before promoting to a real platform.
+      Pick a platform you've already added (with name + base URL). The discovery scraper
+      navigates the platform's front page, identifies the login + search entries, runs a
+      probe search, and produces a draft URL template for you to review before saving it
+      onto the platform.
     </p>
   </header>
 
@@ -52,24 +59,37 @@
     onsubmit={startDiscovery}
     class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3"
   >
-    <label class="block text-xs font-medium text-[var(--dash-text-secondary)]" for="target">
-      Platform front-page URL
+    <label class="block text-xs font-medium text-[var(--dash-text-secondary)]" for="platform">
+      Platform
     </label>
-    <input
-      id="target"
-      type="url"
-      bind:value={targetUrl}
-      placeholder="https://www.linkedin.com"
-      required
-      class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono"
-    />
+    <select
+      id="platform"
+      bind:value={selectedPlatformId}
+      class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+    >
+      {#each data.platforms as p (p.id)}
+        <option value={String(p.id)}>{p.name} — {p.url}</option>
+      {/each}
+    </select>
+    {#if selectedPlatform}
+      <p class="text-xs text-[var(--dash-text-muted)]">
+        Target URL:
+        <span class="font-mono">{selectedPlatform.url ?? "(missing)"}</span>
+      </p>
+    {/if}
+    {#if data.platforms.length === 0}
+      <p class="text-xs text-amber-600 dark:text-amber-400">
+        No platforms yet —
+        <a href="/admin/job-platforms" class="underline">add one first</a>.
+      </p>
+    {/if}
     {#if formError}
       <p class="text-xs text-red-600 dark:text-red-400">{formError}</p>
     {/if}
     <div class="flex justify-end">
       <button
         type="submit"
-        disabled={submitting || !targetUrl.trim()}
+        disabled={submitting || !selectedPlatformId || data.platforms.length === 0}
         class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
       >{submitting ? "Queuing…" : "Start discovery"}</button>
     </div>
@@ -83,17 +103,22 @@
       <p class="text-sm text-[var(--dash-text-muted)]">No runs yet.</p>
     {:else}
       <div class="border border-[var(--dash-border)] rounded-lg overflow-hidden">
-        {#each data.runs as run (run.id)}
+        {#each data.runs as { run, platform_name } (run.id)}
           <a
             href={`/admin/job-platforms/discover/${run.id}`}
             class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--dash-border)] last:border-b-0 hover:bg-[var(--dash-bg)] transition-colors"
           >
             <div class="min-w-0 flex-1">
-              <div class="text-sm font-mono text-[var(--dash-text)] truncate">{run.target_url}</div>
+              <div class="text-sm font-medium text-[var(--dash-text)] truncate">
+                {platform_name ?? "(deleted platform)"}
+              </div>
+              <div class="text-xs text-[var(--dash-text-muted)] font-mono truncate">
+                {run.target_url}
+              </div>
               <div class="text-xs text-[var(--dash-text-muted)]">
                 {new Date(run.started_at).toLocaleString()}
-                {#if run.applied_platform_id}
-                  · applied to platform #{run.applied_platform_id}
+                {#if run.applied_at}
+                  · applied
                 {/if}
               </div>
             </div>

@@ -2,13 +2,17 @@
  * Admin-only platform discovery API.
  *
  * GET  /api/admin/discover           — list recent runs
- * POST /api/admin/discover           — create + enqueue a new run
+ * POST /api/admin/discover           — create + enqueue a new run on an
+ *                                       existing job_platforms row
  */
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { desc, eq } from "drizzle-orm";
-import { platform_discovery_runs } from "$lib/server/db/schema";
+import {
+  job_platforms,
+  platform_discovery_runs,
+} from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { addDiscoveryJob } from "$lib/server/queue/discovery-queue";
 
@@ -32,22 +36,30 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 export const POST: RequestHandler = async ({ locals, request }) => {
   const user = requireAdmin(locals);
-  const body = (await request.json()) as { target_url?: string };
-  const target = body.target_url?.trim();
-  if (!target) {
-    throw error(400, "target_url is required");
+  const body = (await request.json()) as { platform_id?: number };
+  const platformId = Number(body.platform_id);
+  if (!Number.isInteger(platformId) || platformId <= 0) {
+    throw error(400, "platform_id is required");
   }
+
+  const platform = await db.query.job_platforms.findFirst({
+    where: eq(job_platforms.id, platformId),
+    columns: { id: true, url: true, name: true },
+  });
+  if (!platform) throw error(404, "Platform not found");
+  if (!platform.url) throw error(400, "Platform has no base URL");
   let parsed: URL;
   try {
-    parsed = new URL(target);
+    parsed = new URL(platform.url);
   } catch {
-    throw error(400, "target_url must be a valid URL");
+    throw error(400, "Platform URL is not a valid URL");
   }
   if (!["http:", "https:"].includes(parsed.protocol)) {
-    throw error(400, "target_url must be http(s)");
+    throw error(400, "Platform URL must be http(s)");
   }
 
   const [run] = await db.insert(platform_discovery_runs).values({
+    platform_id: platform.id,
     target_url: parsed.toString(),
     status: "queued",
     triggered_by_user_id: user.id,

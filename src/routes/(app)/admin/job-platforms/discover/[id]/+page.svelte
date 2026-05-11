@@ -10,11 +10,7 @@
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let showBrowser = $state(false);
 
-  // Findings draft (editable on success). Reads `data.run` (not the $state
-  // `run`) to capture the initial value without tripping the
-  // state_referenced_locally lint.
-  let draftName = $state(data.run.findings?.platform_name ?? "");
-  let draftKey = $state(data.run.findings?.platform_key ?? "");
+  // Apply form (editable on success)
   let draftLogin = $state(data.run.findings?.login_page_url ?? "");
   let draftTemplate = $state(data.run.findings?.search_url_template ?? "");
   let draftHint = $state(data.run.findings?.applicable_hint ?? "");
@@ -28,19 +24,12 @@
 
   async function poll() {
     const sinceId = logs.length > 0 ? logs[logs.length - 1].id : 0;
-    const res = await fetch(
-      `/api/admin/discover/${run.id}?since=${sinceId}`,
-    );
+    const res = await fetch(`/api/admin/discover/${run.id}?since=${sinceId}`);
     if (!res.ok) return;
     const fresh = await res.json();
     run = fresh.run;
-    if (fresh.logs.length > 0) {
-      logs = [...logs, ...fresh.logs];
-    }
-    // Sync draft fields once findings arrive (only if user hasn't typed yet)
+    if (fresh.logs.length > 0) logs = [...logs, ...fresh.logs];
     if (run.status === "success") {
-      if (!draftName) draftName = run.findings?.platform_name ?? "";
-      if (!draftKey) draftKey = run.findings?.platform_key ?? "";
       if (!draftLogin) draftLogin = run.findings?.login_page_url ?? "";
       if (!draftTemplate) draftTemplate = run.findings?.search_url_template ?? "";
       if (!draftHint) draftHint = run.findings?.applicable_hint ?? "";
@@ -52,9 +41,7 @@
   }
 
   onMount(() => {
-    if (!isTerminal(run.status)) {
-      pollTimer = setInterval(poll, 2000);
-    }
+    if (!isTerminal(run.status)) pollTimer = setInterval(poll, 2000);
   });
   onDestroy(() => {
     if (pollTimer) clearInterval(pollTimer);
@@ -68,8 +55,6 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          platform_name: draftName,
-          platform_key: draftKey,
           login_page_url: draftLogin || null,
           search_url_template: draftTemplate || null,
           applicable_hint: draftHint || null,
@@ -108,9 +93,14 @@
       class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]"
     >← All discovery runs</a>
     <div class="flex items-center justify-between gap-3">
-      <h1 class="text-xl font-semibold text-[var(--dash-text)] font-mono truncate">
-        {run.target_url}
-      </h1>
+      <div class="min-w-0">
+        <h1 class="text-xl font-semibold text-[var(--dash-text)] truncate">
+          {data.platform?.name ?? "(deleted platform)"}
+        </h1>
+        <p class="text-xs text-[var(--dash-text-muted)] font-mono truncate">
+          {run.target_url}
+        </p>
+      </div>
       <span class="text-sm font-medium {statusColor(run.status)}">{run.status}</span>
     </div>
     {#if run.error_message}
@@ -148,50 +138,32 @@
     </div>
   </section>
 
-  <!-- Findings review (only on success) -->
   {#if run.status === "success"}
     <section class="space-y-3">
       <h2 class="text-xs font-medium text-[var(--dash-text-muted)] uppercase tracking-wide">
-        Findings
+        Apply to {data.platform?.name ?? "platform"}
       </h2>
       <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
         <div>
-          <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="fname">
-            Platform name
-          </label>
-          <input
-            id="fname"
-            type="text"
-            bind:value={draftName}
-            class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-          />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="fkey">
-            Platform key
-          </label>
-          <input
-            id="fkey"
-            type="text"
-            bind:value={draftKey}
-            class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono"
-          />
-        </div>
-        <div>
           <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="flogin">
             Login page URL
+            {#if data.platform?.login_page_url}
+              <span class="font-normal text-[var(--dash-text-muted)]">
+                (current: <span class="font-mono">{data.platform.login_page_url}</span>)
+              </span>
+            {/if}
           </label>
           <input
             id="flogin"
             type="text"
             bind:value={draftLogin}
-            placeholder="(none)"
+            placeholder="(leave empty to keep current)"
             class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono"
           />
         </div>
         <div>
           <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="ftpl">
-            Search URL template
+            Search URL template (Generic search preset)
           </label>
           <textarea
             id="ftpl"
@@ -227,23 +199,27 @@
         {/if}
         {#if applyResult}
           <p class="text-xs text-green-600 dark:text-green-400">
-            Applied — created platform #{applyResult.platform_id}
+            Applied to platform #{applyResult.platform_id}
             {#if applyResult.preset_id}
-              and preset #{applyResult.preset_id}
+              — preset #{applyResult.preset_id} written
             {/if}
+            ·
+            <a href={`/admin/job-platforms/${applyResult.platform_id}`} class="underline">
+              Open platform
+            </a>
           </p>
-        {:else if !run.applied_platform_id}
+        {:else if !run.applied_at}
           <div class="flex justify-end">
             <button
               type="button"
               onclick={applyFindings}
-              disabled={applying || !draftName || !draftKey}
+              disabled={applying}
               class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
-            >{applying ? "Applying…" : "Apply as platform"}</button>
+            >{applying ? "Applying…" : "Apply"}</button>
           </div>
         {:else}
           <p class="text-xs text-[var(--dash-text-muted)]">
-            Already applied to platform #{run.applied_platform_id}.
+            Already applied {new Date(run.applied_at).toLocaleString()}.
           </p>
         {/if}
       </div>
@@ -251,7 +227,6 @@
   {/if}
 </div>
 
-<!-- Browser view popup -->
 {#if showBrowser && run.live_url}
   <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4"

@@ -1954,15 +1954,20 @@ export const references = pgTable("references", {
 ]);
 
 /**
- * Admin-triggered platform-discovery runs. The worker navigates to a job
- * platform's front page, LLM-analyses the DOM to identify the login link
- * and search entry, submits a probe search, and records a draft template.
- * Admin reviews `findings` and clicks "Apply" to materialise into a real
- * job_platforms + job_platform_search_presets row.
+ * Admin-triggered platform-discovery runs. The admin first creates a
+ * job_platforms row with name + base URL; this run then navigates that
+ * URL, LLM-analyses the DOM to identify the login link and search
+ * entry, submits a probe search, and records a draft template. Applying
+ * the findings updates the platform's login_page_url and creates a
+ * Generic-search preset on it.
  */
 export const platform_discovery_runs = pgTable("platform_discovery_runs", {
   id: serial().primaryKey().notNull(),
-  /** Front-page URL we're discovering (e.g. https://www.linkedin.com). */
+  /** Platform this run augments. Discovery always operates on an existing
+   *  job_platforms row — admin first creates the platform with name + base
+   *  URL, then triggers discovery to fill in login_page_url + a preset. */
+  platform_id: integer().notNull(),
+  /** Snapshot of the platform's URL at the moment the run was queued. */
   target_url: text().notNull(),
   /** queued | running | success | error | cancelled */
   status: varchar({ length: 50 }).notNull().default("queued"),
@@ -1986,9 +1991,18 @@ export const platform_discovery_runs = pgTable("platform_discovery_runs", {
     applicable_hint?: string | null;
     notes?: string[];
   }>().default({}).notNull(),
-  /** Set when the admin promotes the findings to a real job_platforms row. */
+  /** Set when the admin applies the findings (timestamp acts as boolean). */
+  applied_at: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
+  /** Legacy column from the original create-on-apply design — kept for now
+   *  so old rows still resolve. Mirrors platform_id post-migration. */
   applied_platform_id: integer(),
-});
+}, (table) => [
+  foreignKey({
+    columns: [table.platform_id],
+    foreignColumns: [job_platforms.id],
+    name: "platform_discovery_runs_platform_id_fkey",
+  }).onDelete("cascade"),
+]);
 
 /**
  * Worker-emitted log lines for a platform-discovery run. Parallels

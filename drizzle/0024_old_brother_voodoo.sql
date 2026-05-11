@@ -1,0 +1,3 @@
+ALTER TABLE "platform_discovery_runs" ADD COLUMN "platform_id" integer NOT NULL;--> statement-breakpoint
+ALTER TABLE "platform_discovery_runs" ADD COLUMN "applied_at" timestamp (6) with time zone;--> statement-breakpoint
+ALTER TABLE "platform_discovery_runs" ADD CONSTRAINT "platform_discovery_runs_platform_id_fkey" FOREIGN KEY ("platform_id") REFERENCES "public"."job_platforms"("id") ON DELETE cascade ON UPDATE no action;

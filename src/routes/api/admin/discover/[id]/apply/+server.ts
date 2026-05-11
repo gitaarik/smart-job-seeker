@@ -1,18 +1,18 @@
 /**
  * POST /api/admin/discover/[id]/apply
  *
- * Promotes a finished discovery run's findings into a real job_platforms
- * row + a draft Generic-search preset. Admin can override individual
- * fields in the request body — the run's findings are the defaults.
+ * Promotes a finished discovery run's findings onto the existing
+ * job_platforms row that triggered it: updates login_page_url and creates
+ * (or updates) the Generic-search preset. Admin can override any field via
+ * the request body — run.findings are the defaults.
  *
- * Body (all optional, default to run.findings):
- *   { platform_name, platform_key, platform_url, login_page_url,
- *     search_url_template, applicable_hint }
+ * Body (all optional):
+ *   { login_page_url, search_url_template, applicable_hint }
  */
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   job_platform_search_presets,
   job_platforms,
@@ -40,69 +40,72 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
   if (run.status !== "success") {
     throw error(400, "Run did not complete successfully");
   }
-  if (run.applied_platform_id) {
+  if (run.applied_at) {
     throw error(400, "Run already applied");
+  }
+  if (!run.platform_id) {
+    throw error(400, "Run has no associated platform (legacy)");
   }
 
   const body = (await request.json().catch(() => ({}))) as {
-    platform_name?: string;
-    platform_key?: string;
-    platform_url?: string;
     login_page_url?: string | null;
     search_url_template?: string | null;
     applicable_hint?: string | null;
   };
 
   const findings = run.findings ?? {};
-  const platformName = body.platform_name?.trim() ||
-    findings.platform_name?.trim();
-  let platformKey = body.platform_key?.trim() || findings.platform_key?.trim();
-  const platformUrl = body.platform_url?.trim() || run.target_url;
   const loginPageUrl = body.login_page_url ?? findings.login_page_url ?? null;
   const searchUrlTemplate = body.search_url_template ??
     findings.search_url_template ?? null;
   const applicableHint = body.applicable_hint ?? findings.applicable_hint ??
     null;
 
-  if (!platformName) throw error(400, "platform_name is required");
-  if (!platformKey) throw error(400, "platform_key is required");
-
-  // Ensure key uniqueness — append a suffix if a row with that key exists.
-  let existing = await db.query.job_platforms.findFirst({
-    where: eq(job_platforms.key, platformKey),
+  const platform = await db.query.job_platforms.findFirst({
+    where: eq(job_platforms.id, run.platform_id),
     columns: { id: true },
   });
-  if (existing) {
-    platformKey = `${platformKey}-${Date.now().toString(36)}`;
-    existing = undefined;
+  if (!platform) throw error(404, "Platform no longer exists");
+
+  // Update login URL on the existing platform.
+  if (loginPageUrl !== null) {
+    await db.update(job_platforms)
+      .set({ login_page_url: loginPageUrl })
+      .where(eq(job_platforms.id, platform.id));
   }
 
-  const [platform] = await db.insert(job_platforms).values({
-    name: platformName,
-    url: platformUrl,
-    key: platformKey,
-    login_page_url: loginPageUrl,
-    status: "draft",
-    date_created: new Date(),
-  }).returning();
-
+  // Upsert the Generic-search preset for this platform.
   let presetId: number | null = null;
   if (searchUrlTemplate) {
-    const [preset] = await db.insert(job_platform_search_presets).values({
-      platform_id: platform.id,
-      label: "Generic search",
-      url_template: searchUrlTemplate,
-      applicable_hint: applicableHint,
-      // Discovery-created presets stay out of the suggestion pool until an
-      // admin promotes them; populate suggestion_priority manually later.
-      suggestion_priority: null,
-      params: {},
-    }).returning();
-    presetId = preset.id;
+    const existing = await db.query.job_platform_search_presets.findFirst({
+      where: and(
+        eq(job_platform_search_presets.platform_id, platform.id),
+        eq(job_platform_search_presets.label, "Generic search"),
+      ),
+      columns: { id: true },
+    });
+    if (existing) {
+      await db.update(job_platform_search_presets).set({
+        url_template: searchUrlTemplate,
+        applicable_hint: applicableHint,
+        date_updated: new Date(),
+      }).where(eq(job_platform_search_presets.id, existing.id));
+      presetId = existing.id;
+    } else {
+      const [preset] = await db.insert(job_platform_search_presets).values({
+        platform_id: platform.id,
+        label: "Generic search",
+        url_template: searchUrlTemplate,
+        applicable_hint: applicableHint,
+        // Stays out of the suggestion pool until an admin sets a priority.
+        suggestion_priority: null,
+        params: {},
+      }).returning();
+      presetId = preset.id;
+    }
   }
 
   await db.update(platform_discovery_runs)
-    .set({ applied_platform_id: platform.id })
+    .set({ applied_at: new Date(), applied_platform_id: platform.id })
     .where(eq(platform_discovery_runs.id, id));
 
   return json({ platform_id: platform.id, preset_id: presetId });

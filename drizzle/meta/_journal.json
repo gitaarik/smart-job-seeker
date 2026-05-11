@@ -169,6 +169,13 @@
       "when": 1778511718312,
       "tag": "0023_moaning_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1778513265834,
+      "tag": "0024_old_brother_voodoo",
+      "breakpoints": true
     }
   ]
 }
