@@ -1953,6 +1953,67 @@ export const references = pgTable("references", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * Admin-triggered platform-discovery runs. The worker navigates to a job
+ * platform's front page, LLM-analyses the DOM to identify the login link
+ * and search entry, submits a probe search, and records a draft template.
+ * Admin reviews `findings` and clicks "Apply" to materialise into a real
+ * job_platforms + job_platform_search_presets row.
+ */
+export const platform_discovery_runs = pgTable("platform_discovery_runs", {
+  id: serial().primaryKey().notNull(),
+  /** Front-page URL we're discovering (e.g. https://www.linkedin.com). */
+  target_url: text().notNull(),
+  /** queued | running | success | error | cancelled */
+  status: varchar({ length: 50 }).notNull().default("queued"),
+  started_at: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+  finished_at: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
+  error_message: text(),
+  /** User-id of the admin who triggered the run. */
+  triggered_by_user_id: text(),
+  bullmq_job_id: varchar({ length: 100 }),
+  live_url: varchar({ length: 500 }),
+  /** Draft output from the worker. Shape:
+   *   { platform_name, platform_key, login_page_url, search_page_url,
+   *     search_url_template, applicable_hint, notes[] } */
+  findings: jsonb().$type<{
+    platform_name?: string;
+    platform_key?: string;
+    login_page_url?: string | null;
+    search_page_url?: string | null;
+    search_url_template?: string | null;
+    applicable_hint?: string | null;
+    notes?: string[];
+  }>().default({}).notNull(),
+  /** Set when the admin promotes the findings to a real job_platforms row. */
+  applied_platform_id: integer(),
+});
+
+/**
+ * Worker-emitted log lines for a platform-discovery run. Parallels
+ * scraper_logs (which is keyed to search_task_runs).
+ */
+export const platform_discovery_logs = pgTable("platform_discovery_logs", {
+  id: serial().primaryKey().notNull(),
+  discovery_run_id: integer().notNull(),
+  level: varchar({ length: 10 }).notNull(),
+  message: text().notNull(),
+  timestamp: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  index("platform_discovery_logs_run_id_timestamp_idx").using(
+    "btree",
+    table.discovery_run_id.asc().nullsLast().op("int4_ops"),
+    table.timestamp.asc().nullsLast(),
+  ),
+  foreignKey({
+    columns: [table.discovery_run_id],
+    foreignColumns: [platform_discovery_runs.id],
+    name: "platform_discovery_logs_run_id_fkey",
+  }).onDelete("cascade"),
+]);
+
 export const scraper_logs = pgTable("scraper_logs", {
   id: serial().primaryKey().notNull(),
   run_id: integer().notNull(),
