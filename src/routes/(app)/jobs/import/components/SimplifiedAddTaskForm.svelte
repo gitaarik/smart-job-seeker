@@ -41,16 +41,60 @@
 
   let { presets, defaultMaxJobs, onCancel }: Props = $props();
 
-  // Selection state. Selection value is either "custom" or a preset id (as
-  // string for the native select). Stored as a string and parsed where
-  // needed.
-  let selectionValue = $state<string>(
-    presets.length > 0 ? String(presets[0].preset_id) : "custom",
+  // Group presets by platform once. Each platform's presets keep the order
+  // they came in (already sorted by priority on the server).
+  let platforms = $derived.by(() => {
+    const groups = new Map<string, { key: string; name: string; items: Preset[] }>();
+    for (const p of presets) {
+      const existing = groups.get(p.platform_key);
+      if (existing) {
+        existing.items.push(p);
+      } else {
+        groups.set(p.platform_key, {
+          key: p.platform_key,
+          name: p.platform_name,
+          items: [p],
+        });
+      }
+    }
+    return Array.from(groups.values());
+  });
+
+  // Two-step picker:
+  //   platformValue: the chosen platform key, or "custom" for the
+  //   any-URL escape hatch.
+  //   presetId:     the chosen preset within that platform. Auto-set when
+  //   the platform has only one preset; user-driven when multiple.
+  let platformValue = $state<string>(
+    presets.length > 0 ? presets[0].platform_key : "custom",
+  );
+  let presetId = $state<number | null>(
+    presets.length > 0 ? presets[0].preset_id : null,
+  );
+
+  // When the platform changes, default to its highest-priority preset.
+  // This effect runs whenever platformValue changes (including the
+  // initial value, which is fine — it'll just re-set presetId to the
+  // same already-correct value).
+  $effect(() => {
+    if (platformValue === "custom") {
+      presetId = null;
+      return;
+    }
+    const platform = platforms.find((p) => p.key === platformValue);
+    if (!platform) return;
+    const currentlyValid = platform.items.some((i) => i.preset_id === presetId);
+    if (!currentlyValid) {
+      presetId = platform.items[0].preset_id;
+    }
+  });
+
+  let selectedPlatform = $derived(
+    platforms.find((p) => p.key === platformValue) ?? null,
   );
   let selectedPreset = $derived.by<Preset | null>(() => {
-    if (selectionValue === "custom") return null;
-    const id = parseInt(selectionValue, 10);
-    return presets.find((p) => p.preset_id === id) ?? null;
+    if (platformValue === "custom" || presetId === null) return null;
+    return presets.find((p) => p.preset_id === presetId) ?? null;
   });
   let placeholders = $derived(
     selectedPreset
@@ -63,23 +107,6 @@
   let customUrl = $state("");
   let note = $state("");
   let submitting = $state(false);
-
-  // Group presets by platform for the optgroups in the native select.
-  let groupedPresets = $derived.by(() => {
-    const groups = new Map<string, { platformName: string; items: Preset[] }>();
-    for (const p of presets) {
-      const existing = groups.get(p.platform_key);
-      if (existing) {
-        existing.items.push(p);
-      } else {
-        groups.set(p.platform_key, {
-          platformName: p.platform_name,
-          items: [p],
-        });
-      }
-    }
-    return Array.from(groups.values());
-  });
 
   // Live URL preview — what the scraper will receive after substitution.
   let previewUrl = $derived.by(() => {
@@ -126,33 +153,49 @@
 >
   <h3 class="font-medium text-[var(--dash-text)]">Add Import Task</h3>
 
-  <!-- Preset / Custom URL picker -->
-  <div>
-    <label
-      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-      for="add-search-type"
-    >Search type</label>
-    <select
-      id="add-search-type"
-      bind:value={selectionValue}
-      class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-    >
-      {#each groupedPresets as group (group.platformName)}
-        <optgroup label={group.platformName}>
-          {#each group.items as preset (preset.preset_id)}
-            <option value={String(preset.preset_id)}
-            >{preset.platform_name} — {preset.preset_label}</option>
+  <!-- Two-step picker: platform first, then preset (if the platform has >1) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div>
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+        for="add-platform"
+      >Platform</label>
+      <select
+        id="add-platform"
+        bind:value={platformValue}
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+      >
+        {#each platforms as platform (platform.key)}
+          <option value={platform.key}>{platform.name}</option>
+        {/each}
+        <option value="custom">Custom URL (any platform)</option>
+      </select>
+    </div>
+
+    {#if selectedPlatform && selectedPlatform.items.length > 1}
+      <div>
+        <label
+          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+          for="add-preset"
+        >Search type</label>
+        <select
+          id="add-preset"
+          bind:value={presetId}
+          class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+        >
+          {#each selectedPlatform.items as preset (preset.preset_id)}
+            <option value={preset.preset_id}>{preset.preset_label}</option>
           {/each}
-        </optgroup>
-      {/each}
-      <option value="custom">Custom URL (any platform)</option>
-    </select>
-    {#if selectedPreset?.applicable_hint}
-      <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-        {selectedPreset.applicable_hint}
-      </p>
+        </select>
+      </div>
     {/if}
   </div>
+
+  {#if selectedPreset?.applicable_hint}
+    <p class="text-xs text-[var(--dash-text-secondary)] -mt-2">
+      {selectedPreset.applicable_hint}
+    </p>
+  {/if}
 
   <!-- Conditional fields based on selection -->
   {#if selectedPreset === null}
