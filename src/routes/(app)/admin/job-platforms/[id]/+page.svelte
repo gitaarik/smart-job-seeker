@@ -61,6 +61,39 @@
   let discoveryPassword = $state("");
   let editingPassword = $state(!data.platform.discovery_password_set);
 
+  // Discovery run state.
+  let startingDiscovery = $state(false);
+  let discoveryError = $state<string | null>(null);
+  async function startDiscovery() {
+    startingDiscovery = true;
+    discoveryError = null;
+    try {
+      const res = await fetch("/api/admin/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform_id: data.platform.id }),
+      });
+      if (!res.ok) {
+        discoveryError = (await res.text()) || `HTTP ${res.status}`;
+        return;
+      }
+      const json = await res.json();
+      window.location.href = `/admin/job-platforms/discover/${json.run.id}`;
+    } finally {
+      startingDiscovery = false;
+    }
+  }
+
+  function discoveryStatusColor(s: string) {
+    if (s === "success") return "text-green-600 dark:text-green-400";
+    if (s === "error") return "text-red-600 dark:text-red-400";
+    if (s === "running" || s === "queued" || s === "cancelling") {
+      return "text-blue-600 dark:text-blue-400";
+    }
+    if (s === "cancelled") return "text-[var(--dash-text-muted)]";
+    return "text-[var(--dash-text-muted)]";
+  }
+
   // Add-preset state.
   let addingPreset = $state(false);
   let newLabel = $state("");
@@ -421,6 +454,54 @@
       >{credsSaving ? "Saving…" : "Save credentials"}</button>
     </div>
   </form>
+
+  <!-- Discovery runs -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+          Run the discovery scraper against this platform's front page to
+          auto-detect the login page + search URL template. Findings land
+          on the run-detail page for review before applying back to this
+          platform.
+        </p>
+      </div>
+      <button
+        type="button"
+        onclick={startDiscovery}
+        disabled={startingDiscovery}
+        class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-60"
+      >{startingDiscovery ? "Queuing…" : "Start discovery"}</button>
+    </div>
+    {#if discoveryError}
+      <p class="text-xs text-red-600 dark:text-red-400">{discoveryError}</p>
+    {/if}
+
+    {#if data.discoveryRuns.length === 0}
+      <p class="text-xs text-[var(--dash-text-muted)]">No discovery runs yet.</p>
+    {:else}
+      <div class="border border-[var(--dash-border)] rounded overflow-hidden">
+        {#each data.discoveryRuns as run (run.id)}
+          <a
+            href={`/admin/job-platforms/discover/${run.id}`}
+            class="flex items-center justify-between gap-3 px-3 py-2 border-b border-[var(--dash-border)] last:border-b-0 hover:bg-[var(--dash-bg)] transition-colors text-xs"
+          >
+            <div class="min-w-0 flex-1">
+              <span class="font-mono text-[var(--dash-text)]">Run #{run.id}</span>
+              <span class="text-[var(--dash-text-muted)] ml-2">
+                {new Date(run.started_at).toLocaleString()}
+              </span>
+              {#if run.applied_at}
+                <span class="text-green-600 dark:text-green-400 ml-2">· applied</span>
+              {/if}
+            </div>
+            <span class="font-medium {discoveryStatusColor(run.status)}">{run.status}</span>
+          </a>
+        {/each}
+      </div>
+    {/if}
+  </div>
 
   <!-- Search presets -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-4">

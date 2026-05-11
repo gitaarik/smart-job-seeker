@@ -6,6 +6,7 @@ import {
   job_platform_changes,
   job_platform_search_presets,
   job_platforms,
+  platform_discovery_runs,
 } from "$lib/server/db/schema";
 import { updatePlatformWithAudit } from "$lib/server/job-platforms/admin";
 import { encryptCredential } from "$lib/server/auth/crypto";
@@ -26,7 +27,7 @@ export const load: PageServerLoad = async ({ params }) => {
     discovery_password_set: !!discovery_password,
   };
 
-  const [presets, history] = await Promise.all([
+  const [presets, history, discoveryRuns] = await Promise.all([
     db.query.job_platform_search_presets.findMany({
       where: eq(job_platform_search_presets.platform_id, platformId),
       orderBy: [
@@ -39,9 +40,19 @@ export const load: PageServerLoad = async ({ params }) => {
       orderBy: desc(job_platform_changes.changed_at),
       limit: 50,
     }),
+    db.query.platform_discovery_runs.findMany({
+      where: eq(platform_discovery_runs.platform_id, platformId),
+      orderBy: desc(platform_discovery_runs.started_at),
+      limit: 10,
+    }),
   ]);
 
-  return { platform: platformForClient, presets, history };
+  return {
+    platform: platformForClient,
+    presets,
+    history,
+    discoveryRuns,
+  };
 };
 
 /** Lenient nullable-int parser for priority fields. Accepts negatives and

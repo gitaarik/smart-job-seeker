@@ -1,104 +1,31 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import { goto } from "$app/navigation";
 
   let { data }: { data: PageData } = $props();
-
-  let selectedPlatformId = $state<string>(
-    data.platforms[0] ? String(data.platforms[0].id) : "",
-  );
-  let submitting = $state(false);
-  let formError = $state<string | null>(null);
-
-  let selectedPlatform = $derived(
-    data.platforms.find((p) => String(p.id) === selectedPlatformId) ?? null,
-  );
-
-  async function startDiscovery(e: SubmitEvent) {
-    e.preventDefault();
-    if (!selectedPlatformId) return;
-    submitting = true;
-    formError = null;
-    try {
-      const res = await fetch("/api/admin/discover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform_id: Number(selectedPlatformId) }),
-      });
-      if (!res.ok) {
-        formError = (await res.text()) || `HTTP ${res.status}`;
-        return;
-      }
-      const json = await res.json();
-      await goto(`/admin/job-platforms/discover/${json.run.id}`);
-    } finally {
-      submitting = false;
-    }
-  }
 
   function statusColor(s: string) {
     if (s === "success") return "text-green-600 dark:text-green-400";
     if (s === "error") return "text-red-600 dark:text-red-400";
-    if (s === "running" || s === "queued") return "text-blue-600 dark:text-blue-400";
+    if (s === "running" || s === "queued" || s === "cancelling") {
+      return "text-blue-600 dark:text-blue-400";
+    }
+    if (s === "cancelled") return "text-[var(--dash-text-muted)]";
     return "text-[var(--dash-text-muted)]";
   }
 </script>
 
 <div class="max-w-4xl mx-auto p-6 space-y-6">
   <header class="space-y-1">
-    <h1 class="text-2xl font-semibold text-[var(--dash-text)]">Platform discovery</h1>
+    <h1 class="text-2xl font-semibold text-[var(--dash-text)]">All discovery runs</h1>
     <p class="text-sm text-[var(--dash-text-muted)]">
-      Pick a platform you've already added (with name + base URL). The discovery scraper
-      navigates the platform's front page, identifies the login + search entries, runs a
-      probe search, and produces a draft URL template for you to review before saving it
-      onto the platform.
+      Recent platform-discovery activity across all platforms. To start a
+      new run, open the platform on
+      <a href="/admin/job-platforms" class="underline">Job Platforms</a>
+      and click "Start discovery".
     </p>
   </header>
 
-  <form
-    onsubmit={startDiscovery}
-    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3"
-  >
-    <label class="block text-xs font-medium text-[var(--dash-text-secondary)]" for="platform">
-      Platform
-    </label>
-    <select
-      id="platform"
-      bind:value={selectedPlatformId}
-      class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-    >
-      {#each data.platforms as p (p.id)}
-        <option value={String(p.id)}>{p.name} — {p.url}</option>
-      {/each}
-    </select>
-    {#if selectedPlatform}
-      <p class="text-xs text-[var(--dash-text-muted)]">
-        Target URL:
-        <span class="font-mono">{selectedPlatform.url ?? "(missing)"}</span>
-      </p>
-    {/if}
-    {#if data.platforms.length === 0}
-      <p class="text-xs text-amber-600 dark:text-amber-400">
-        No platforms yet —
-        <a href="/admin/job-platforms" class="underline">add one first</a>.
-      </p>
-    {/if}
-    {#if formError}
-      <p class="text-xs text-red-600 dark:text-red-400">{formError}</p>
-    {/if}
-    <div class="flex justify-end">
-      <button
-        type="submit"
-        disabled={submitting || !selectedPlatformId || data.platforms.length === 0}
-        class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
-      >{submitting ? "Queuing…" : "Start discovery"}</button>
-    </div>
-  </form>
-
   <section class="space-y-2">
-    <h2 class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide">
-      Recent runs
-    </h2>
     {#if data.runs.length === 0}
       <p class="text-sm text-[var(--dash-text-muted)]">No runs yet.</p>
     {:else}
@@ -116,7 +43,7 @@
                 {run.target_url}
               </div>
               <div class="text-xs text-[var(--dash-text-muted)]">
-                {new Date(run.started_at).toLocaleString()}
+                Run #{run.id} · {new Date(run.started_at).toLocaleString()}
                 {#if run.applied_at}
                   · applied
                 {/if}
