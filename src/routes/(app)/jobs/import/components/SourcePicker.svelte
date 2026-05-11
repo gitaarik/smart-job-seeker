@@ -7,6 +7,7 @@
    * The parent owns save semantics — this component only manages the picker
    * state and exposes the resolved values via $bindable props.
    */
+  import type { Snippet } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowUpRightFromSquare,
@@ -50,6 +51,13 @@
      *  this so it can collapse the field back to read-only after the
      *  form-level save/cancel commits or reverts the underlying value. */
     urlEditing?: boolean;
+    /** Per-field footer snippets. The edit-page parent (SourceEditor) uses
+     *  these to render Save/Cancel buttons under each field, matching the
+     *  per-field patch-on-blur pattern used elsewhere in the form. The add
+     *  form omits them since it submits the whole form at once. */
+    urlFooter?: Snippet;
+    keywordsFooter?: Snippet;
+    locationFooter?: Snippet;
   }
 
   let {
@@ -61,6 +69,9 @@
     customUrl = $bindable(""),
     resolvedUrl = $bindable(""),
     urlEditing = $bindable(false),
+    urlFooter,
+    keywordsFooter,
+    locationFooter,
   }: Props = $props();
 
   // Group presets by platform once. The server orders by platform priority
@@ -228,6 +239,7 @@
         auto-detected from the domain.
       {/if}
     </p>
+    {@render urlFooter?.()}
   </div>
   {#if selectedPlatform}
     <div>
@@ -248,6 +260,7 @@
         Stored as metadata. Some scrapers also type this into the site's
         search field when the URL doesn't include it.
       </p>
+      {@render keywordsFooter?.()}
     </div>
     <div>
       <label
@@ -263,6 +276,7 @@
         placeholder="e.g. Berlin, Germany"
         class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
       />
+      {@render locationFooter?.()}
     </div>
   {/if}
 {:else}
@@ -280,6 +294,7 @@
         placeholder="e.g. react developer"
         class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
       />
+      {@render keywordsFooter?.()}
     </div>
   {/if}
   {#if placeholders.hasLocation}
@@ -297,6 +312,7 @@
         placeholder="e.g. Berlin, Germany"
         class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
       />
+      {@render locationFooter?.()}
     </div>
   {/if}
   {#if !placeholders.hasKeywords && !placeholders.hasLocation}

@@ -1,14 +1,19 @@
 <script lang="ts">
   /**
-   * Source-editing block for the task detail page. Replaces the old
-   * URL/search-term inputs at the top of SearchTaskFields with the same
-   * preset picker used in the add form. URL is read-only (computed from
-   * preset + keywords/location) unless the user picks "Custom URL", in
-   * which case the URL field becomes editable.
+   * Source-editing block for the task detail page. Wraps the same preset
+   * picker as the add form, but with per-field Cancel/Save buttons matching
+   * the patch-on-blur pattern used elsewhere in the form:
    *
-   * Saves via the existing PATCH /api/import-tasks/[id] endpoint, sending
-   * preset_id + platform_id + search_url + search_term + search_location
-   * together so the four stay in sync.
+   *   - URL field (custom mode only): edits search_url
+   *   - Keywords field: edits search_term, plus search_url when in preset
+   *     mode (URL is template-derived).
+   *   - Location field: edits search_location, plus search_url when in
+   *     preset mode.
+   *
+   * Platform/preset dropdowns commit immediately on change, like the other
+   * dropdowns in SearchTaskFields. They send the full URL-configuration
+   * bundle (preset_id, platform_id, search_url, and the keywords/location
+   * adapted to the new template's placeholders).
    */
   import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
@@ -28,7 +33,7 @@
     };
     /** Called after a successful save with the values that were persisted.
      *  Lets the parent sync its local `searchTask` $state copy so the next
-     *  render passes a fresh `initial` and isDirty resets to false. */
+     *  render passes a fresh `initial` and per-field dirty resets to false. */
     onSaved?: (saved: {
       preset_id: number | null;
       platform_id: number | null;
@@ -67,9 +72,11 @@
   let resolvedUrl = $state(initial.search_url ?? "");
   let urlEditing = $state(false);
 
-  let saving = $state(false);
+  // Per-field save state — separate so spinners and errors stay scoped.
+  let savingField = $state<"url" | "keywords" | "location" | "dropdown" | null>(
+    null,
+  );
   let saveError = $state<string | null>(null);
-  let lastSaveOk = $state(false);
 
   let selectedPreset = $derived.by<SourcePreset | null>(() => {
     if (platformValue === "custom" || presetId === null) return null;
@@ -85,100 +92,167 @@
       ?? null;
   });
 
-  // Dirty detection: any of the inputs differs from the original task.
-  let isDirty = $derived.by(() => {
-    const cpid = selectedPreset?.preset_id ?? null;
-    if (cpid !== (initial.preset_id ?? null)) return true;
-    if (currentPlatformId !== (initial.platform_id ?? null)) return true;
-    if (resolvedUrl !== (initial.search_url ?? "")) return true;
-    // search_term is only relevant for presets with {KEYWORDS} or for
-    // custom URLs (where it gets persisted separately on the task).
-    const normalizedKw = keywords.trim() || null;
-    if (normalizedKw !== (initial.search_term ?? null)) return true;
-    const normalizedLoc = location.trim() || null;
-    if (normalizedLoc !== (initial.search_location ?? null)) return true;
-    return false;
+  // Per-field dirty detection. Each field compares only its own value against
+  // the initial task state — independent from the others.
+  let urlDirty = $derived.by(() => {
+    if (selectedPreset) return false; // URL not user-editable in preset mode
+    return customUrl !== (initial.search_url ?? "");
+  });
+  let keywordsDirty = $derived.by(() => {
+    const cur = keywords.trim() || null;
+    return cur !== (initial.search_term ?? null);
+  });
+  let locationDirty = $derived.by(() => {
+    const cur = location.trim() || null;
+    return cur !== (initial.search_location ?? null);
   });
 
-  let canSave = $derived.by(() => {
-    if (!isDirty || saving) return false;
-    if (selectedPreset) {
-      if (selectedPreset.url_template.includes("{KEYWORDS}") && !keywords.trim()) return false;
-    } else if (!customUrl.trim()) {
-      return false;
-    }
-    return resolvedUrl.length > 0;
-  });
+  let canSaveUrl = $derived(urlDirty && !!customUrl.trim() && savingField === null);
+  let canSaveKeywords = $derived(keywordsDirty && savingField === null);
+  let canSaveLocation = $derived(locationDirty && savingField === null);
 
-  function reset() {
-    platformValue = initialPreset
-      ? initialPreset.platform_key
-      : initialPlatformFromId
-      ? initialPlatformFromId.platform_key
-      : "custom";
-    presetId = initialPreset ? initialPreset.preset_id : null;
-    keywords = initial.search_term ?? "";
-    location = initial.search_location ?? "";
-    customUrl = initial.search_url ?? "";
-    resolvedUrl = initial.search_url ?? "";
-    urlEditing = false;
+  /**
+   * Shared PATCH helper. Sends a partial body, then notifies the parent so it
+   * can keep its local searchTask snapshot in sync with the new DB state.
+   */
+  async function patch(
+    field: "url" | "keywords" | "location" | "dropdown",
+    body: Record<string, unknown>,
+    saved: {
+      preset_id: number | null;
+      platform_id: number | null;
+      search_url: string;
+      search_term: string | null;
+      search_location: string | null;
+    },
+  ): Promise<boolean> {
+    savingField = field;
     saveError = null;
-  }
-
-  async function save() {
-    if (!canSave) return;
-    saving = true;
-    saveError = null;
-    lastSaveOk = false;
     try {
-      const body: Record<string, unknown> = {
-        search_url: resolvedUrl,
-      };
-      if (selectedPreset) {
-        body.preset_id = selectedPreset.preset_id;
-        body.platform_id = selectedPreset.platform_id;
-        body.search_term = selectedPreset.url_template.includes("{KEYWORDS}")
-          ? (keywords.trim() || null)
-          : null;
-        body.search_location =
-          selectedPreset.url_template.includes("{LOCATION}")
-            ? (location.trim() || null)
-            : null;
-      } else {
-        // Custom URL — either top-level (no platform) or on a specific
-        // platform. Keep platform attribution in the latter case so the
-        // scraper still picks the right adapter; drop preset_id either way.
-        body.preset_id = null;
-        body.platform_id = currentPlatformId;
-        body.search_term = keywords.trim() || null;
-        body.search_location = location.trim() || null;
-      }
       const res = await fetch(`/api/import-tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const text = await res.text();
-        saveError = text || `HTTP ${res.status}`;
-        return;
+        saveError = (await res.text()) || `HTTP ${res.status}`;
+        return false;
       }
-      lastSaveOk = true;
-      urlEditing = false;
-      onSaved?.({
-        preset_id: (body.preset_id as number | null) ?? null,
-        platform_id: (body.platform_id as number | null) ?? null,
-        search_url: resolvedUrl,
-        search_term: (body.search_term as string | null) ?? null,
-        search_location: (body.search_location as string | null) ?? null,
-      });
+      onSaved?.(saved);
       await invalidateAll();
+      return true;
     } catch (err) {
       saveError = err instanceof Error ? err.message : "Network error";
+      return false;
     } finally {
-      saving = false;
+      savingField = null;
     }
   }
+
+  async function saveUrl() {
+    if (!canSaveUrl) return;
+    const url = resolvedUrl;
+    const ok = await patch(
+      "url",
+      { search_url: url },
+      {
+        preset_id: presetId,
+        platform_id: currentPlatformId,
+        search_url: url,
+        search_term: keywords.trim() || null,
+        search_location: location.trim() || null,
+      },
+    );
+    if (ok) urlEditing = false;
+  }
+  function cancelUrl() {
+    customUrl = initial.search_url ?? "";
+    urlEditing = false;
+    saveError = null;
+  }
+
+  async function saveKeywords() {
+    if (!canSaveKeywords) return;
+    const newKw = keywords.trim() || null;
+    // In preset mode, search_url is template-derived and must move with the
+    // keyword change to stay consistent.
+    const body: Record<string, unknown> = { search_term: newKw };
+    if (selectedPreset) body.search_url = resolvedUrl;
+    await patch("keywords", body, {
+      preset_id: presetId,
+      platform_id: currentPlatformId,
+      search_url: resolvedUrl,
+      search_term: newKw,
+      search_location: location.trim() || null,
+    });
+  }
+  function cancelKeywords() {
+    keywords = initial.search_term ?? "";
+    saveError = null;
+  }
+
+  async function saveLocation() {
+    if (!canSaveLocation) return;
+    const newLoc = location.trim() || null;
+    const body: Record<string, unknown> = { search_location: newLoc };
+    if (selectedPreset) body.search_url = resolvedUrl;
+    await patch("location", body, {
+      preset_id: presetId,
+      platform_id: currentPlatformId,
+      search_url: resolvedUrl,
+      search_term: keywords.trim() || null,
+      search_location: newLoc,
+    });
+  }
+  function cancelLocation() {
+    location = initial.search_location ?? "";
+    saveError = null;
+  }
+
+  // Immediate commit when the user changes the platform or preset dropdown.
+  // Mirrors how other dropdowns elsewhere in the form (login_mode, schedule
+  // interval, etc.) auto-save on change. We detect "the dropdowns differ from
+  // the last saved state" by comparing against `initial` — after a save the
+  // parent updates its local searchTask, so initial reflects the new DB row
+  // on the next render and the effect short-circuits.
+  $effect(() => {
+    const cpid = selectedPreset?.preset_id ?? null;
+    const cplat = currentPlatformId;
+    const initPid = initial.preset_id ?? null;
+    const initPlat = initial.platform_id ?? null;
+    if (cpid === initPid && cplat === initPlat) return;
+    if (savingField !== null) return;
+    // URL adapts to the new template + the user's current keywords/location.
+    // search_term/search_location adapt to whether the new preset still has
+    // those placeholders (clears them if the new preset is fixed-URL).
+    const newKw = selectedPreset
+      ? selectedPreset.url_template.includes("{KEYWORDS}")
+        ? (keywords.trim() || null)
+        : null
+      : keywords.trim() || null;
+    const newLoc = selectedPreset
+      ? selectedPreset.url_template.includes("{LOCATION}")
+        ? (location.trim() || null)
+        : null
+      : location.trim() || null;
+    void patch(
+      "dropdown",
+      {
+        preset_id: cpid,
+        platform_id: cplat,
+        search_url: resolvedUrl,
+        search_term: newKw,
+        search_location: newLoc,
+      },
+      {
+        preset_id: cpid,
+        platform_id: cplat,
+        search_url: resolvedUrl,
+        search_term: newKw,
+        search_location: newLoc,
+      },
+    );
+  });
 </script>
 
 <div class="space-y-3">
@@ -187,10 +261,10 @@
       <FontAwesomeIcon icon={faMagicWandSparkles} class="w-3.5 h-3.5 text-[var(--dash-primary)]" />
       Search source
     </h3>
-    {#if lastSaveOk && !isDirty}
-      <span class="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-        Saved
+    {#if savingField === "dropdown"}
+      <span class="inline-flex items-center gap-1 text-xs text-[var(--dash-text-secondary)]">
+        <Spinner size="w-3 h-3" />
+        Saving…
       </span>
     {/if}
   </div>
@@ -204,7 +278,35 @@
     bind:customUrl
     bind:resolvedUrl
     bind:urlEditing
-  />
+  >
+    {#snippet urlFooter()}
+      {@render fieldButtons(
+        urlDirty,
+        canSaveUrl,
+        savingField === "url",
+        saveUrl,
+        cancelUrl,
+      )}
+    {/snippet}
+    {#snippet keywordsFooter()}
+      {@render fieldButtons(
+        keywordsDirty,
+        canSaveKeywords,
+        savingField === "keywords",
+        saveKeywords,
+        cancelKeywords,
+      )}
+    {/snippet}
+    {#snippet locationFooter()}
+      {@render fieldButtons(
+        locationDirty,
+        canSaveLocation,
+        savingField === "location",
+        saveLocation,
+        cancelLocation,
+      )}
+    {/snippet}
+  </SourcePicker>
 
   {#if saveError}
     <p class="text-xs text-red-600 dark:text-red-400 inline-flex items-center gap-1.5">
@@ -212,29 +314,38 @@
       {saveError}
     </p>
   {/if}
+</div>
 
-  {#if isDirty}
-    <div class="flex justify-end gap-2">
+{#snippet fieldButtons(
+  dirty: boolean,
+  canSave: boolean,
+  isSaving: boolean,
+  onSave: () => void,
+  onCancel: () => void,
+)}
+  {#if dirty}
+    <div class="flex items-center gap-2 mt-2">
       <button
         type="button"
-        onclick={reset}
-        disabled={saving}
-        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)] disabled:opacity-50"
-      >Cancel</button>
-      <button
-        type="button"
-        onclick={save}
+        onclick={onSave}
         disabled={!canSave}
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
+        class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 inline-flex items-center gap-1"
       >
-        {#if saving}
+        {#if isSaving}
           <Spinner size="w-3 h-3" />
-          Saving…
         {:else}
           <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          Save changes
         {/if}
+        Save
+      </button>
+      <button
+        type="button"
+        onclick={onCancel}
+        disabled={isSaving}
+        class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+      >
+        Cancel
       </button>
     </div>
   {/if}
-</div>
+{/snippet}
