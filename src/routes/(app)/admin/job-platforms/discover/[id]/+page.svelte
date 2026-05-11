@@ -2,8 +2,22 @@
   import type { PageData } from "./$types";
   import { onMount, onDestroy } from "svelte";
   import { invalidateAll } from "$app/navigation";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faCheck, faCopy } from "@fortawesome/free-solid-svg-icons";
 
   let { data }: { data: PageData } = $props();
+  let copied = $state(false);
+
+  async function copyId() {
+    try {
+      await navigator.clipboard.writeText(String(data.run.id));
+      copied = true;
+      setTimeout(() => (copied = false), 1500);
+    } catch {
+      // Clipboard API rejected (insecure context, permissions, etc.) —
+      // silently no-op; admin can still read the id from the URL bar.
+    }
+  }
 
   let run = $state(data.run);
   let logs = $state(data.logs);
@@ -100,6 +114,24 @@
         <p class="text-xs text-[var(--dash-text-muted)] font-mono truncate">
           {run.target_url}
         </p>
+        <div class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] mt-1">
+          <span>Run</span>
+          <span class="font-mono">#{run.id}</span>
+          <button
+            type="button"
+            onclick={copyId}
+            class="p-0.5 cursor-pointer hover:text-[var(--dash-primary)] transition-colors"
+            aria-label="Copy run ID"
+          >
+            <FontAwesomeIcon
+              icon={copied ? faCheck : faCopy}
+              class="w-3 h-3 {copied ? 'text-green-600' : ''}"
+            />
+          </button>
+          {#if copied}
+            <span class="text-green-600">Copied!</span>
+          {/if}
+        </div>
       </div>
       <span class="text-sm font-medium {statusColor(run.status)}">{run.status}</span>
     </div>
