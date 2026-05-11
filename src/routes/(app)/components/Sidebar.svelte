@@ -190,6 +190,11 @@
           icon: faBriefcase,
         },
         {
+          label: "Platform Discovery",
+          href: "/admin/job-platforms/discover",
+          icon: faBinoculars,
+        },
+        {
           label: "Matcher",
           href: "/admin/matcher",
           icon: faChartBar,
