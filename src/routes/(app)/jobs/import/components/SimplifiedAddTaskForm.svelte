@@ -38,6 +38,14 @@
     return presets.find((p) => p.preset_id === presetId) ?? null;
   });
 
+  // When the user picked a platform but switched to "Custom URL on X", we
+  // still know the platform — surface any preset of that platform so the
+  // hidden fields can carry platform_id/url/name through to the server.
+  let customPlatform = $derived.by<SourcePreset | null>(() => {
+    if (selectedPreset || platformValue === "custom") return null;
+    return presets.find((p) => p.platform_key === platformValue) ?? null;
+  });
+
   let canSubmit = $derived.by(() => {
     if (submitting) return false;
     if (selectedPreset) {
@@ -103,13 +111,21 @@
     <input type="hidden" name="platform_id" value={selectedPreset.platform_id} />
     <input type="hidden" name="platform_url" value={selectedPreset.platform_url} />
     <input type="hidden" name="platform_name" value={selectedPreset.platform_name} />
+  {:else if customPlatform}
+    <input type="hidden" name="platform_id" value={customPlatform.platform_id} />
+    <input type="hidden" name="platform_url" value={customPlatform.platform_url} />
+    <input type="hidden" name="platform_name" value={customPlatform.platform_name} />
   {:else}
     <input type="hidden" name="platform_url" value={customUrl.trim()} />
   {/if}
   {#if selectedPreset && selectedPreset.url_template.includes("{KEYWORDS}") && keywords.trim()}
     <input type="hidden" name="search_term" value={keywords.trim()} />
+  {:else if !selectedPreset && customPlatform && keywords.trim()}
+    <input type="hidden" name="search_term" value={keywords.trim()} />
   {/if}
   {#if selectedPreset && selectedPreset.url_template.includes("{LOCATION}") && location.trim()}
+    <input type="hidden" name="search_location" value={location.trim()} />
+  {:else if !selectedPreset && customPlatform && location.trim()}
     <input type="hidden" name="search_location" value={location.trim()} />
   {/if}
   <input type="hidden" name="note" value={note} />

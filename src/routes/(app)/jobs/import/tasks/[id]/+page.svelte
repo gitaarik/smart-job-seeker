@@ -2616,9 +2616,7 @@
         }}
         onSaved={(saved) => {
           searchTask.preset_id = saved.preset_id;
-          if (saved.platform_id !== null) {
-            searchTask.platform_id = saved.platform_id;
-          }
+          searchTask.platform_id = saved.platform_id;
           searchTask.search_url = saved.search_url;
           searchTask.search_term = saved.search_term;
           searchTask.search_location = saved.search_location;

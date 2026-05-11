@@ -40,15 +40,23 @@
 
   let { taskId, presets, initial, onSaved }: Props = $props();
 
-  // Compute the initial picker state from the task. If the task has a
-  // preset_id and that preset is in our list, use its platform_key.
-  // Otherwise fall back to custom URL mode.
+  // Compute the initial picker state from the task. Three cases:
+  //   1. preset_id set → use its platform_key + preset_id.
+  //   2. preset_id null but platform_id set → custom URL on a known platform.
+  //   3. both null → top-level custom URL.
   const initialPreset = initial.preset_id != null
     ? presets.find((p) => p.preset_id === initial.preset_id)
     : null;
+  const initialPlatformFromId = initial.platform_id != null
+    ? presets.find((p) => p.platform_id === initial.platform_id)
+    : null;
 
   let platformValue = $state<string>(
-    initialPreset ? initialPreset.platform_key : "custom",
+    initialPreset
+      ? initialPreset.platform_key
+      : initialPlatformFromId
+      ? initialPlatformFromId.platform_key
+      : "custom",
   );
   let presetId = $state<number | null>(
     initialPreset ? initialPreset.preset_id : null,
@@ -67,11 +75,19 @@
     return presets.find((p) => p.preset_id === presetId) ?? null;
   });
 
+  // Platform for the current picker state. Falls back to any preset of the
+  // selected platform when in custom-within-platform mode.
+  let currentPlatformId = $derived.by<number | null>(() => {
+    if (selectedPreset) return selectedPreset.platform_id;
+    if (platformValue === "custom") return null;
+    return presets.find((p) => p.platform_key === platformValue)?.platform_id
+      ?? null;
+  });
+
   // Dirty detection: any of the inputs differs from the original task.
   let isDirty = $derived.by(() => {
-    const currentPresetId = selectedPreset?.preset_id ?? null;
-    if (currentPresetId !== (initial.preset_id ?? null)) return true;
-    const currentPlatformId = selectedPreset?.platform_id ?? null;
+    const cpid = selectedPreset?.preset_id ?? null;
+    if (cpid !== (initial.preset_id ?? null)) return true;
     if (currentPlatformId !== (initial.platform_id ?? null)) return true;
     if (resolvedUrl !== (initial.search_url ?? "")) return true;
     // search_term is only relevant for presets with {KEYWORDS} or for
@@ -94,7 +110,11 @@
   });
 
   function reset() {
-    platformValue = initialPreset ? initialPreset.platform_key : "custom";
+    platformValue = initialPreset
+      ? initialPreset.platform_key
+      : initialPlatformFromId
+      ? initialPlatformFromId.platform_key
+      : "custom";
     presetId = initialPreset ? initialPreset.preset_id : null;
     keywords = initial.search_term ?? "";
     location = initial.search_location ?? "";
@@ -123,10 +143,11 @@
             ? (location.trim() || null)
             : null;
       } else {
-        // Custom URL: drop preset attribution but keep keywords/location
-        // as user-editable metadata (they may want to manually mirror what
-        // the URL contains, useful for future re-templating).
+        // Custom URL — either top-level (no platform) or on a specific
+        // platform. Keep platform attribution in the latter case so the
+        // scraper still picks the right adapter; drop preset_id either way.
         body.preset_id = null;
+        body.platform_id = currentPlatformId;
         body.search_term = keywords.trim() || null;
         body.search_location = location.trim() || null;
       }

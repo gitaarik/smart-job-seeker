@@ -29,13 +29,16 @@
     presets: SourcePreset[];
     /** Bidirectional. "custom" or a platform key from the presets list. */
     platformValue: string;
-    /** Bidirectional. Preset id, or null when platform is "custom". */
+    /** Bidirectional. Preset id, or null when in custom-URL mode (either
+     *  top-level — platformValue === "custom" — or within a platform). */
     presetId: number | null;
-    /** Bidirectional. Keywords value (used when chosen preset has {KEYWORDS}). */
+    /** Bidirectional. Keywords value (used when chosen preset has {KEYWORDS}
+     *  and as metadata in custom-within-platform mode). */
     keywords: string;
-    /** Bidirectional. Location value (used when chosen preset has {LOCATION}). */
+    /** Bidirectional. Location value (used when chosen preset has {LOCATION}
+     *  and as metadata in custom-within-platform mode). */
     location: string;
-    /** Bidirectional. Custom URL value (used in custom mode). */
+    /** Bidirectional. Custom URL value (used whenever presetId is null). */
     customUrl: string;
     /** Output (read-only): resolved URL after substitution. */
     resolvedUrl: string;
@@ -75,7 +78,9 @@
   });
 
   // When platform changes, auto-select that platform's top-priority preset
-  // if the current presetId isn't in the new platform's set.
+  // if the current presetId isn't in the new platform's set. A null presetId
+  // is treated as a user-chosen "Custom URL" intent and preserved across
+  // platform switches.
   $effect(() => {
     if (platformValue === "custom") {
       presetId = null;
@@ -83,6 +88,7 @@
     }
     const platform = platforms.find((p) => p.key === platformValue);
     if (!platform) return;
+    if (presetId === null) return;
     const currentlyValid = platform.items.some(
       (i) => i.preset_id === presetId,
     );
@@ -138,7 +144,7 @@
     </select>
   </div>
 
-  {#if selectedPlatform && selectedPlatform.items.length > 1}
+  {#if selectedPlatform}
     <div>
       <label
         class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
@@ -152,6 +158,7 @@
         {#each selectedPlatform.items as preset (preset.preset_id)}
           <option value={preset.preset_id}>{preset.preset_label}</option>
         {/each}
+        <option value={null}>Custom URL on {selectedPlatform.name}</option>
       </select>
     </div>
   {/if}
@@ -175,14 +182,58 @@
       type="url"
       bind:value={customUrl}
       required
-      placeholder="https://example.com/jobs?q=react+developer"
+      placeholder={selectedPlatform
+        ? `${selectedPlatform.items[0]?.platform_url ?? "https://example.com"}…`
+        : "https://example.com/jobs?q=react+developer"}
       class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] font-mono"
     />
     <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-      Paste a search-result URL from any job site. The platform will be
-      auto-detected from the domain.
+      {#if selectedPlatform}
+        Paste any search-result URL from {selectedPlatform.name}. Use this for
+        URLs with filters (location, salary, date, etc.) that the presets
+        above don't cover.
+      {:else}
+        Paste a search-result URL from any job site. The platform will be
+        auto-detected from the domain.
+      {/if}
     </p>
   </div>
+  {#if selectedPlatform}
+    <div>
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+        for="picker-custom-keywords"
+      >Keywords <span
+          class="font-normal text-[var(--dash-text-muted)]"
+        >(optional)</span></label>
+      <input
+        id="picker-custom-keywords"
+        type="text"
+        bind:value={keywords}
+        placeholder="e.g. react developer"
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+      />
+      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+        Stored as metadata. Some scrapers also type this into the site's
+        search field when the URL doesn't include it.
+      </p>
+    </div>
+    <div>
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+        for="picker-custom-location"
+      >Location <span
+          class="font-normal text-[var(--dash-text-muted)]"
+        >(optional)</span></label>
+      <input
+        id="picker-custom-location"
+        type="text"
+        bind:value={location}
+        placeholder="e.g. Berlin, Germany"
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+      />
+    </div>
+  {/if}
 {:else}
   {#if placeholders.hasKeywords}
     <div>
