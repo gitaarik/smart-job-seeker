@@ -10,7 +10,6 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowUpRightFromSquare,
-    faCheck,
     faPenToSquare,
   } from "@fortawesome/free-solid-svg-icons";
   import {
@@ -46,6 +45,11 @@
     customUrl: string;
     /** Output (read-only): resolved URL after substitution. */
     resolvedUrl: string;
+    /** Bidirectional. Whether the custom-URL field is in editable
+     *  (textarea) mode vs. wrapped read-only display mode. The parent owns
+     *  this so it can collapse the field back to read-only after the
+     *  form-level save/cancel commits or reverts the underlying value. */
+    urlEditing?: boolean;
   }
 
   let {
@@ -56,13 +60,8 @@
     location = $bindable(""),
     customUrl = $bindable(""),
     resolvedUrl = $bindable(""),
+    urlEditing = $bindable(false),
   }: Props = $props();
-
-  // Custom-URL field starts in read-only mode when there's already a value
-  // (typical edit-form case — keeps long, gnarly URLs from dominating the UI)
-  // and in edit mode when empty (add-form case, so users can paste straight
-  // away).
-  let urlEditing = $state(!customUrl.trim());
 
   // Group presets by platform once. The server orders by platform priority
   // then preset priority then id, so insertion order is the desired display
@@ -190,7 +189,7 @@
         class="block text-xs font-medium text-[var(--dash-text-secondary)]"
         for="picker-custom-url"
       >Search URL *</label>
-      {#if !urlEditing}
+      {#if !urlEditing && customUrl.trim()}
         <button
           type="button"
           onclick={() => (urlEditing = true)}
@@ -199,18 +198,9 @@
           <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
           Edit
         </button>
-      {:else if customUrl.trim()}
-        <button
-          type="button"
-          onclick={() => (urlEditing = false)}
-          class="inline-flex items-center gap-1 text-xs text-[var(--dash-primary)] hover:underline"
-        >
-          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          Done
-        </button>
       {/if}
     </div>
-    {#if urlEditing}
+    {#if urlEditing || !customUrl.trim()}
       <textarea
         id="picker-custom-url"
         bind:value={customUrl}

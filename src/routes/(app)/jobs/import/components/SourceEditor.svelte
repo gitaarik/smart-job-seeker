@@ -65,6 +65,7 @@
   let location = $state(initial.search_location ?? "");
   let customUrl = $state(initial.search_url ?? "");
   let resolvedUrl = $state(initial.search_url ?? "");
+  let urlEditing = $state(false);
 
   let saving = $state(false);
   let saveError = $state<string | null>(null);
@@ -120,6 +121,7 @@
     location = initial.search_location ?? "";
     customUrl = initial.search_url ?? "";
     resolvedUrl = initial.search_url ?? "";
+    urlEditing = false;
     saveError = null;
   }
 
@@ -162,6 +164,7 @@
         return;
       }
       lastSaveOk = true;
+      urlEditing = false;
       onSaved?.({
         preset_id: (body.preset_id as number | null) ?? null,
         platform_id: (body.platform_id as number | null) ?? null,
@@ -200,6 +203,7 @@
     bind:location
     bind:customUrl
     bind:resolvedUrl
+    bind:urlEditing
   />
 
   {#if saveError}
