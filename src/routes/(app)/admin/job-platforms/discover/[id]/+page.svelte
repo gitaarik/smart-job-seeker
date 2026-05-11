@@ -7,6 +7,8 @@
 
   let { data }: { data: PageData } = $props();
   let copied = $state(false);
+  let cancelling = $state(false);
+  let cancelError = $state<string | null>(null);
 
   async function copyId() {
     try {
@@ -34,6 +36,23 @@
 
   function isTerminal(status: string) {
     return ["success", "error", "cancelled"].includes(status);
+  }
+
+  async function cancelRun() {
+    if (!confirm("Cancel this discovery run?")) return;
+    cancelling = true;
+    cancelError = null;
+    try {
+      const res = await fetch(`/api/admin/discover/${run.id}/cancel`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        cancelError = (await res.text()) || `HTTP ${res.status}`;
+      }
+      await poll();
+    } finally {
+      cancelling = false;
+    }
   }
 
   async function poll() {
@@ -140,15 +159,37 @@
     {/if}
   </header>
 
-  {#if run.live_url}
-    <div class="flex gap-2">
+  <div class="flex flex-wrap gap-2 items-center">
+    {#if run.live_url}
       <button
         type="button"
         onclick={() => (showBrowser = true)}
         class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded hover:bg-[var(--dash-bg)]"
       >Open browser view</button>
-    </div>
-  {/if}
+    {/if}
+    {#if data.platform}
+      <a
+        href={`/admin/job-platforms/${data.platform.id}#discovery-credentials`}
+        class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded hover:bg-[var(--dash-bg)]"
+      >Configure credentials</a>
+    {/if}
+    {#if !isTerminal(run.status) && run.status !== "cancelling"}
+      <button
+        type="button"
+        onclick={cancelRun}
+        disabled={cancelling}
+        class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
+      >{cancelling ? "Cancelling…" : "Cancel run"}</button>
+    {/if}
+    {#if run.status === "cancelling"}
+      <span class="text-xs text-amber-600 dark:text-amber-400">
+        Cancellation requested — waiting for worker to abort…
+      </span>
+    {/if}
+    {#if cancelError}
+      <span class="text-xs text-red-600 dark:text-red-400">{cancelError}</span>
+    {/if}
+  </div>
 
   <!-- Logs -->
   <section class="space-y-2">

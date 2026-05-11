@@ -312,6 +312,7 @@
 
   <!-- Discovery credentials -->
   <form
+    id="discovery-credentials"
     method="POST"
     action="?/saveCredentials"
     use:enhance={() => {
