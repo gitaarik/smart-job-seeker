@@ -8,6 +8,7 @@ import {
   job_platforms,
 } from "$lib/server/db/schema";
 import { updatePlatformWithAudit } from "$lib/server/job-platforms/admin";
+import { encryptCredential } from "$lib/server/auth/crypto";
 
 export const load: PageServerLoad = async ({ params }) => {
   const platformId = parseInt(params.id, 10);
@@ -17,6 +18,13 @@ export const load: PageServerLoad = async ({ params }) => {
     where: eq(job_platforms.id, platformId),
   });
   if (!platform) error(404, "Platform not found");
+
+  // Never ship the encrypted password to the client. Expose only "is it set".
+  const { discovery_password, ...platformPublic } = platform;
+  const platformForClient = {
+    ...platformPublic,
+    discovery_password_set: !!discovery_password,
+  };
 
   const [presets, history] = await Promise.all([
     db.query.job_platform_search_presets.findMany({
@@ -33,7 +41,7 @@ export const load: PageServerLoad = async ({ params }) => {
     }),
   ]);
 
-  return { platform, presets, history };
+  return { platform: platformForClient, presets, history };
 };
 
 /** Lenient nullable-int parser for priority fields. Accepts negatives and
@@ -109,6 +117,47 @@ export const actions: Actions = {
     } catch (err) {
       return fail(500, {
         error: err instanceof Error ? err.message : "Save failed",
+      });
+    }
+  },
+
+  /** Save the per-platform discovery credentials. Bypasses the audit log
+   *  on purpose — passwords (even encrypted) shouldn't end up in
+   *  job_platform_changes. */
+  saveCredentials: async ({ params, request, locals }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+    const platformId = parseInt(params.id ?? "", 10);
+    if (isNaN(platformId)) return fail(400, { error: "Invalid platform id" });
+
+    const formData = await request.formData();
+    const username = parseNullableString(formData.get("discovery_username"));
+    const passwordInput = parseNullableString(
+      formData.get("discovery_password"),
+    );
+    const clear = formData.get("clear") === "true";
+
+    const setClause: Record<string, unknown> = {};
+    if (clear) {
+      setClause.discovery_username = null;
+      setClause.discovery_password = null;
+    } else {
+      setClause.discovery_username = username;
+      // Empty password input = keep existing (admin only typed a new
+      // username). Non-empty = re-encrypt + replace.
+      if (passwordInput) {
+        setClause.discovery_password = encryptCredential(passwordInput);
+      }
+    }
+
+    try {
+      await db.update(job_platforms).set(setClause).where(
+        eq(job_platforms.id, platformId),
+      );
+      return { success: true };
+    } catch (err) {
+      return fail(500, {
+        error: err instanceof Error ? err.message : "Save credentials failed",
       });
     }
   },

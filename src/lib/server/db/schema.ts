@@ -1678,6 +1678,11 @@ export const job_platforms = pgTable("job_platforms", {
   failure_count: integer().default(0).notNull(),
   last_success_at: timestamp({ withTimezone: true, mode: "date" }),
   last_failure_at: timestamp({ withTimezone: true, mode: "date" }),
+  // Admin-owned credentials used by the platform-discovery scraper to log
+  // in before crawling. One pair per platform. discovery_password is
+  // encrypted (AES-256-GCM via encryptCredential); username is plaintext.
+  discovery_username: text(),
+  discovery_password: text(),
 }, (table) => [
   unique("job_platforms_key_unique").on(table.key),
 ]);

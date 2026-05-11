@@ -176,6 +176,13 @@
       "when": 1778513265834,
       "tag": "0024_old_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1778530073899,
+      "tag": "0025_talented_diamondback",
+      "breakpoints": true
     }
   ]
 }
