@@ -54,50 +54,38 @@
   let editHint = $state("");
   let editPriority = $state("");
 
-  // Discovery run state.
-  let startingDiscovery = $state(false);
-  let discoveryError = $state<string | null>(null);
-  let selectedCredentialId = $state<string>(
-    data.credentials[0] ? String(data.credentials[0].id) : "",
-  );
-  let selectedDeviceId = $state<string>("");
-
-  async function startDiscovery() {
-    startingDiscovery = true;
-    discoveryError = null;
-    try {
-      const res = await fetch("/api/admin/discover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          platform_id: data.platform.id,
-          platform_profile_id: selectedCredentialId
-            ? Number(selectedCredentialId)
-            : null,
-          sjsbrowser_api_key_id: selectedDeviceId
-            ? Number(selectedDeviceId)
-            : null,
-        }),
-      });
-      if (!res.ok) {
-        discoveryError = (await res.text()) || `HTTP ${res.status}`;
-        return;
-      }
-      const json = await res.json();
-      window.location.href = `/admin/job-platforms/discover/${json.run.id}`;
-    } finally {
-      startingDiscovery = false;
-    }
-  }
-
   function discoveryStatusColor(s: string) {
     if (s === "success") return "text-green-600 dark:text-green-400";
     if (s === "error") return "text-red-600 dark:text-red-400";
     if (s === "running" || s === "queued" || s === "cancelling") {
       return "text-blue-600 dark:text-blue-400";
     }
+    if (s === "draft") return "text-amber-600 dark:text-amber-400";
     if (s === "cancelled") return "text-[var(--dash-text-muted)]";
     return "text-[var(--dash-text-muted)]";
+  }
+
+  let creatingDraft = $state(false);
+  let createDraftError = $state<string | null>(null);
+
+  async function createDraftRun() {
+    creatingDraft = true;
+    createDraftError = null;
+    try {
+      const res = await fetch("/api/admin/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform_id: data.platform.id }),
+      });
+      if (!res.ok) {
+        createDraftError = (await res.text()) || `HTTP ${res.status}`;
+        return;
+      }
+      const json = await res.json();
+      window.location.href = `/admin/job-platforms/discover/${json.run.id}`;
+    } finally {
+      creatingDraft = false;
+    }
   }
 
   // Add-preset state.
@@ -351,71 +339,31 @@
 
   <!-- Discovery runs -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
-    <div>
-      <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
-      <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-        Run the discovery scraper against this platform's front page to
-        auto-detect the login page + search URL template. Pick one of your
-        credentials (or a credential shared with you) so the scraper can
-        log in first — most job sites gate their listings behind login.
-        Optional device routes the session through your desktop tunnel
-        instead of GoLogin.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="flex items-start justify-between gap-3">
       <div>
-        <label
-          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="discovery-credential"
-        >Credential</label>
-        <select
-          id="discovery-credential"
-          bind:value={selectedCredentialId}
-          class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        >
-          <option value="">(no login — try anonymous)</option>
-          {#each data.credentials as c (c.id)}
-            <option value={String(c.id)}>
-              {c.username ?? "(no username)"}{c.shared ? ` (shared from ${c.owner_label})` : ""}
-            </option>
-          {/each}
-        </select>
-        {#if data.credentials.length === 0}
-          <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-            No credentials for this platform — add one on your profile first.
+        <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
+        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+          Run the discovery scraper to auto-detect this platform's search URL
+          template + filter parameters. Discovery logs in first (so it can
+          reach gated listings), then probes the search form and filter
+          widgets. Pick a credential and optional device on the next page.
+        </p>
+        {#if !data.platform.login_page_url}
+          <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            Set a login page URL above before starting discovery.
           </p>
         {/if}
       </div>
-      <div>
-        <label
-          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="discovery-device"
-        >Device</label>
-        <select
-          id="discovery-device"
-          bind:value={selectedDeviceId}
-          class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        >
-          <option value="">(default browser provider)</option>
-          {#each data.devices as d (d.apiKeyId)}
-            <option value={String(d.apiKeyId)}>{d.apiKeyName}</option>
-          {/each}
-        </select>
-      </div>
-    </div>
-
-    <div class="flex justify-end">
       <button
         type="button"
-        onclick={startDiscovery}
-        disabled={startingDiscovery}
-        class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-60"
-      >{startingDiscovery ? "Queuing…" : "Start discovery"}</button>
+        onclick={createDraftRun}
+        disabled={!data.platform.login_page_url || creatingDraft}
+        class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] whitespace-nowrap shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+      >{creatingDraft ? "Creating…" : "New discovery"}</button>
     </div>
 
-    {#if discoveryError}
-      <p class="text-xs text-red-600 dark:text-red-400">{discoveryError}</p>
+    {#if createDraftError}
+      <p class="text-xs text-red-600 dark:text-red-400">{createDraftError}</p>
     {/if}
 
     {#if data.discoveryRuns.length === 0}

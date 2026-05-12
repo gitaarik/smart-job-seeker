@@ -2,12 +2,13 @@
  * POST /api/admin/discover/[id]/apply
  *
  * Promotes a finished discovery run's findings onto the existing
- * job_platforms row that triggered it: updates login_page_url and creates
- * (or updates) the Generic-search preset. Admin can override any field via
- * the request body — run.findings are the defaults.
+ * job_platforms row that triggered it: creates (or updates) the Generic-
+ * search preset with the discovered URL template + filter params. Admin
+ * can override any field via the request body — run.findings are the
+ * defaults.
  *
  * Body (all optional):
- *   { login_page_url, search_url_template, applicable_hint }
+ *   { search_url_template, applicable_hint, params }
  */
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
@@ -19,6 +20,7 @@ import {
   platform_discovery_runs,
 } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import type { PresetFilterConfig } from "$lib/job-platforms/search-filters";
 
 function requireAdmin(locals: App.Locals) {
   const user = requireAuth(locals);
@@ -48,30 +50,24 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
   }
 
   const body = (await request.json().catch(() => ({}))) as {
-    login_page_url?: string | null;
     search_url_template?: string | null;
     applicable_hint?: string | null;
+    params?: Record<string, PresetFilterConfig> | null;
   };
 
   const findings = run.findings ?? {};
-  const loginPageUrl = body.login_page_url ?? findings.login_page_url ?? null;
   const searchUrlTemplate = body.search_url_template ??
     findings.search_url_template ?? null;
   const applicableHint = body.applicable_hint ?? findings.applicable_hint ??
     null;
+  const filterParams: Record<string, PresetFilterConfig> = body.params ??
+    findings.params ?? {};
 
   const platform = await db.query.job_platforms.findFirst({
     where: eq(job_platforms.id, run.platform_id),
     columns: { id: true },
   });
   if (!platform) throw error(404, "Platform no longer exists");
-
-  // Update login URL on the existing platform.
-  if (loginPageUrl !== null) {
-    await db.update(job_platforms)
-      .set({ login_page_url: loginPageUrl })
-      .where(eq(job_platforms.id, platform.id));
-  }
 
   // Upsert the Generic-search preset for this platform.
   let presetId: number | null = null;
@@ -87,6 +83,7 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
       await db.update(job_platform_search_presets).set({
         url_template: searchUrlTemplate,
         applicable_hint: applicableHint,
+        params: filterParams,
         date_updated: new Date(),
       }).where(eq(job_platform_search_presets.id, existing.id));
       presetId = existing.id;
@@ -98,7 +95,7 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
         applicable_hint: applicableHint,
         // Stays out of the suggestion pool until an admin sets a priority.
         suggestion_priority: null,
-        params: {},
+        params: filterParams,
       }).returning();
       presetId = preset.id;
     }

@@ -9,6 +9,7 @@
     if (s === "running" || s === "queued" || s === "cancelling") {
       return "text-blue-600 dark:text-blue-400";
     }
+    if (s === "draft") return "text-amber-600 dark:text-amber-400";
     if (s === "cancelled") return "text-[var(--dash-text-muted)]";
     return "text-[var(--dash-text-muted)]";
   }
@@ -21,7 +22,7 @@
       Recent platform-discovery activity across all platforms. To start a
       new run, open the platform on
       <a href="/admin/job-platforms" class="underline">Job Platforms</a>
-      and click "Start discovery".
+      and click "New discovery".
     </p>
   </header>
 

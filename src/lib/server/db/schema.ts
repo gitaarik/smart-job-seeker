@@ -1221,15 +1221,26 @@ export const platform_discovery_runs = pgTable("platform_discovery_runs", {
   bullmq_job_id: varchar({ length: 100 }),
   live_url: varchar({ length: 500 }),
   /** Draft output from the worker. Shape:
-   *   { platform_name, platform_key, login_page_url, search_page_url,
-   *     search_url_template, applicable_hint, notes[] } */
+   *   { platform_name, platform_key, search_page_url, search_url_template,
+   *     applicable_hint, params, notes[] }
+   *  `params` matches `job_platform_search_presets.params` so apply can write
+   *  it straight onto the preset. */
   findings: jsonb().$type<{
     platform_name?: string;
     platform_key?: string;
-    login_page_url?: string | null;
     search_page_url?: string | null;
     search_url_template?: string | null;
     applicable_hint?: string | null;
+    params?: Record<
+      string,
+      | { multi: false; options: Record<string, string> }
+      | {
+        multi: true;
+        param: string;
+        sep: string;
+        options: Record<string, string>;
+      }
+    >;
     notes?: string[];
   }>().default({}).notNull(),
   /** Set when the admin applies the findings (timestamp acts as boolean). */

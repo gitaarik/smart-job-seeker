@@ -44,6 +44,11 @@
     profileId: number;
     platformName?: string | null;
     disabled?: boolean;
+    /** When true, the login-mode toggle is hidden and the credential list is
+     *  always rendered (caller is responsible for pinning loginMode to
+     *  "auto"). Used by flows where login is mandatory — e.g. admin
+     *  discovery, which can't proceed without logging in. */
+    hideLoginMode?: boolean;
     onselect?: (credentialId: string) => void;
     onloginmodechange?: (mode: string) => void;
     oncredentialadded?: (
@@ -60,6 +65,7 @@
     profileId,
     platformName = null,
     disabled = false,
+    hideLoginMode = false,
     onselect,
     onloginmodechange,
     oncredentialadded,
@@ -351,61 +357,63 @@
     </div>
   </div>
 
-  <!-- Login Mode Toggle -->
-  <div class="mb-3">
-    <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">
-      Login Mode
-    </h3>
-    <div
-      class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
-    >
-      <button
-        type="button"
-        {disabled}
-        onclick={() => setLoginMode("auto")}
-        class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-          loginMode === "auto"
-            ? "bg-[var(--dash-primary)] text-white"
-            : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-        } disabled:opacity-60`}
+  {#if !hideLoginMode}
+    <!-- Login Mode Toggle -->
+    <div class="mb-3">
+      <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">
+        Login Mode
+      </h3>
+      <div
+        class="flex rounded-md border border-[var(--dash-border)] overflow-hidden"
       >
-        Auto-login
-      </button>
-      <button
-        type="button"
-        {disabled}
-        onclick={() => setLoginMode("manual")}
-        class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-          loginMode === "manual"
-            ? "bg-[var(--dash-primary)] text-white"
-            : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-        } disabled:opacity-60`}
-      >
-        Manual login
-      </button>
-      <button
-        type="button"
-        {disabled}
-        onclick={() => setLoginMode("none")}
-        class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-          loginMode === "none"
-            ? "bg-[var(--dash-primary)] text-white"
-            : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
-        } disabled:opacity-60`}
-      >
-        No login
-      </button>
+        <button
+          type="button"
+          {disabled}
+          onclick={() => setLoginMode("auto")}
+          class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+            loginMode === "auto"
+              ? "bg-[var(--dash-primary)] text-white"
+              : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+          } disabled:opacity-60`}
+        >
+          Auto-login
+        </button>
+        <button
+          type="button"
+          {disabled}
+          onclick={() => setLoginMode("manual")}
+          class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+            loginMode === "manual"
+              ? "bg-[var(--dash-primary)] text-white"
+              : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+          } disabled:opacity-60`}
+        >
+          Manual login
+        </button>
+        <button
+          type="button"
+          {disabled}
+          onclick={() => setLoginMode("none")}
+          class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+            loginMode === "none"
+              ? "bg-[var(--dash-primary)] text-white"
+              : "bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]"
+          } disabled:opacity-60`}
+        >
+          No login
+        </button>
+      </div>
+      <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
+        {#if loginMode === "auto"}
+          The scraper will fill in credentials and log in automatically.
+        {:else if loginMode === "manual"}
+          The scraper will navigate to the login page and wait for you to log in.
+        {:else}
+          The scraper will go directly to the search page without logging in.
+        {/if}
+      </p>
     </div>
-    <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
-      {#if loginMode === "auto"}
-        The scraper will fill in credentials and log in automatically.
-      {:else if loginMode === "manual"}
-        The scraper will navigate to the login page and wait for you to log in.
-      {:else}
-        The scraper will go directly to the search page without logging in.
-      {/if}
-    </p>
-  </div>
+  {/if}
 
   <!-- Credential list (only for auto-login) -->
   {#if loginMode === "auto"}

@@ -7,12 +7,8 @@ import {
   job_platform_search_presets,
   job_platforms,
   platform_discovery_runs,
-  platform_profiles,
 } from "$lib/server/db/schema";
 import { updatePlatformWithAudit } from "$lib/server/job-platforms/admin";
-import { listApiKeys } from "$lib/server/auth/api-key";
-import { listSharedWithMe } from "$lib/server/device-shares";
-import { listSharedCredentialsWithMe } from "$lib/server/credential-shares";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const platformId = parseInt(params.id, 10);
@@ -46,87 +42,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }),
   ]);
 
-  // Credentials & devices available to this admin user for this platform's
-  // discovery dropdowns. Reuses the same access rules as the regular job
-  // search task page: own profile credentials + ones shared with the user.
-  interface CredOption {
-    id: number;
-    username: string | null;
-    shared: boolean;
-    owner_label: string | null;
-  }
-  const profilesOwned = await db.query.profiles.findMany({
-    where: (p, { eq: eqOp }) => eqOp(p.user_id, user.id),
-    columns: { id: true },
-  });
-  const ownedProfileIds = profilesOwned.map((p) => p.id);
-  let credentials: CredOption[] = [];
-  if (ownedProfileIds.length > 0) {
-    const raw = await db.query.platform_profiles.findMany({
-      where: (pp, { eq: eqOp, and: andOp, inArray }) =>
-        andOp(
-          eqOp(pp.platform_id, platformId),
-          inArray(pp.profile_id, ownedProfileIds),
-        ),
-      columns: { id: true, username: true },
-      orderBy: asc(platform_profiles.id),
-    });
-    credentials = raw.map((c) => ({
-      id: c.id,
-      username: c.username,
-      shared: false,
-      owner_label: null,
-    }));
-  }
-  const sharedCreds = await listSharedCredentialsWithMe(user.id);
-  for (const s of sharedCreds) {
-    if (s.platform_profile.platform_id !== platformId) continue;
-    const ownerLabel = s.platform_profile.owner?.name ||
-      s.platform_profile.owner?.email || "a contact";
-    credentials.push({
-      id: s.platform_profile.id,
-      username: s.platform_profile.username,
-      shared: true,
-      owner_label: ownerLabel,
-    });
-  }
-
-  interface DeviceOption {
-    apiKeyId: number;
-    apiKeyName: string;
-    shared: boolean;
-  }
-  const devices: DeviceOption[] = [];
-  for (const p of profilesOwned) {
-    const keys = await listApiKeys(p.id);
-    for (const k of keys) {
-      if (!k.revoked) {
-        devices.push({
-          apiKeyId: k.id,
-          apiKeyName: k.name,
-          shared: false,
-        });
-      }
-    }
-  }
-  const sharedDevices = await listSharedWithMe(user.id);
-  for (const share of sharedDevices) {
-    const ownerName = share.api_key.owner?.name ||
-      share.api_key.owner?.email || "Unknown";
-    devices.push({
-      apiKeyId: share.api_key.id,
-      apiKeyName: `${share.api_key.name} (${ownerName})`,
-      shared: true,
-    });
-  }
-
   return {
     platform,
     presets,
     history,
     discoveryRuns,
-    credentials,
-    devices,
   };
 };
 
