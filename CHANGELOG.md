@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.34] - 2026-05-12
+
+50 commits since v0.5.33.
+
+### Added
+- Platform Discovery: Admin feature to discover and configure platforms before running jobs, with login and cancellation support
+- Preset-driven job picker: Two-step flow (select platform → pick preset) replaces manual URL entry; includes custom URL option for any platform
+- Multi-select and structured filters in picker: Filter by sort_by, time_posted, work_location, job_type with multi-select support on matching platforms
+- Reusable Collapsible component for advanced filters with improved UX
+
+### Changed
+- Discovery start flow moved to platform edit page
+- Job picker URL workflow: read-only display with edit toggle, per-field Save/Cancel buttons
+- Per-platform search presets now use curated multi-URL pools instead of single template
+- Add-task form simplified with two-step platform/preset picker
+- Admin menu now includes link to Platform Discovery
+
+### Fixed
+- Zod dual-package issue in worker discovery
+- Under-configured suggestion-accept tasks
+- Platform discovery run cancellation flow
+- Configure-credentials link visibility in discovery UI
+
+### Removed
+- Legacy Directus tables from schema
+
 ## [0.5.33] - 2026-05-10
 
 18 commits since v0.5.32.
