@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.36] - 2026-05-12
+
+2 commits since v0.5.35.
+
+### Fixed
+- Make database migration 0027 (Directus) idempotent to ensure safe re-application
+
 ## [0.5.35] - 2026-05-12
 
 2 commits since v0.5.34.
