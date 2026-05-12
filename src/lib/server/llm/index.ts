@@ -30,6 +30,12 @@ export {
 
 export { llmCache } from "./cache.js";
 
+// Re-export zod so worker code in `cloud/` shares the same module identity
+// as langchain.ts when building structured-output schemas. Importing zod
+// directly from `cloud/` would resolve to a different node_modules tree,
+// producing "Two different types with this name exist" errors.
+export { z } from "zod";
+
 /**
  * Check if an error is a fatal LLM error that should stop processing.
  * Fatal errors: quota exceeded, authentication failure, rate limiting.
