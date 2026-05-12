@@ -5,7 +5,7 @@ import { profile_versions } from "$lib/server/db/schema";
 import { validateToken } from "../auth/token-validation";
 
 export interface AccessControlOptions {
-  profile: profiles;
+  profile: Profiles;
   token?: string | null;
   userId?: string | null;
   clientIp?: string;

@@ -82,9 +82,9 @@
   }
 
   function userName(chat: (typeof data.chats)[0]): string {
-    const p = chat.profiles;
+    const p = chat.profile;
     if (p?.name) return p.name;
-    return `Profile #${chat.profile}`;
+    return `Profile #${chat.profile_id}`;
   }
 </script>
 

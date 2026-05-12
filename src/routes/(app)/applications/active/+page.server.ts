@@ -74,7 +74,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     filteredApplications = filteredApplications.filter((app) =>
       app.job?.title?.toLowerCase().includes(q) ||
       app.job?.company?.toLowerCase().includes(q) ||
-      app.application_notes?.toLowerCase().includes(q)
+      app.application_notes?.some((n) => n.text.toLowerCase().includes(q))
     );
   }
 

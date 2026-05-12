@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { type SQL, eq, and, gt, inArray, count } from "drizzle-orm";
-import { dbDirect as db, sqlJoin, queryRaw } from "$lib/server/db";
+import { dbDirect as db, sql, sqlJoin, queryRaw } from "$lib/server/db";
 import { users as usersTable, profiles, verifications, subscriptions, sessions, accounts } from "$lib/server/db/schema";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";

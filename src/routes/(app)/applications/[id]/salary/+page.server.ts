@@ -60,7 +60,7 @@ export const actions: Actions = {
     }
 
     await db.update(applications).set({
-      salary_expectation: amount,
+      salary_expectation: String(amount),
       salary_currency,
       salary_period,
       date_updated: new Date(),

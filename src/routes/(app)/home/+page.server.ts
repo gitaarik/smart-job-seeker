@@ -111,7 +111,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     ]),
 
     // Top 5 matches by score (>= 70, excluding rejected via job_statuses)
-    queryRaw<{ id: number }[]>(sql`
+    queryRaw<{ id: number }>(sql`
       SELECT jm.id
       FROM job_matches jm
       LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
