@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.35] - 2026-05-12
+
+2 commits since v0.5.34.
+
+### Fixed
+- Fixed six pre-existing Drizzle-flavored type errors
+
 ## [0.5.34] - 2026-05-12
 
 50 commits since v0.5.33.
