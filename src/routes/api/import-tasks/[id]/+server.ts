@@ -130,6 +130,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     schedule_preferred_hour?: number;
     next_scheduled_run?: Date | null;
     sjsbrowser_api_key?: number | null;
+    debug_screenshots?: boolean;
   } = {};
 
   if (body.note !== undefined) data.note = body.note || null;
@@ -170,6 +171,18 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   }
   if (body.schedule_preferred_hour !== undefined) {
     data.schedule_preferred_hour = body.schedule_preferred_hour;
+  }
+  if (body.debug_screenshots !== undefined) {
+    // Staff/admin gate: capturing screenshots after every browser action is
+    // useful for debugging the scraper, but the capture path runs on shared
+    // worker infrastructure and the resulting files surface in the
+    // dashboard log view. Keep it behind a staff toggle for now.
+    const isStaff = (user as { is_staff?: boolean }).is_staff ||
+      (user as { is_admin?: boolean }).is_admin || false;
+    if (!isStaff) {
+      throw error(403, "debug_screenshots is a staff-only setting");
+    }
+    data.debug_screenshots = body.debug_screenshots;
   }
 
   if (body.schedule_interval_hours !== undefined) {

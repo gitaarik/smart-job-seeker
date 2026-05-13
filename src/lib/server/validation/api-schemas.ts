@@ -191,6 +191,9 @@ export const searchTaskUpdateSchema = z.object({
     }),
   ]).optional(),
   schedule_preferred_hour: z.number().int().min(0).max(23).optional(),
+  // Staff-only flag. The PATCH handler rejects this field for non-staff
+  // callers so a hand-crafted request can't enable it.
+  debug_screenshots: z.boolean().optional(),
 });
 
 // Platform update

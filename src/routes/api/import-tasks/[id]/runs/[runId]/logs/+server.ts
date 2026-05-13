@@ -76,6 +76,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
       level: true,
       message: true,
       timestamp: true,
+      screenshot_path: true,
     },
   });
 

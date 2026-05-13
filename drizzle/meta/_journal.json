@@ -204,6 +204,20 @@
       "when": 1778599224192,
       "tag": "0028_add_discovery_debug_table",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1778889600000,
+      "tag": "0029_rename_platform_discovery_to_search_form_probe",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1778889600001,
+      "tag": "0030_debug_screenshots",
+      "breakpoints": true
     }
   ]
 }

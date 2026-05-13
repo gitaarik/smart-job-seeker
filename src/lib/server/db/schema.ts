@@ -1263,6 +1263,11 @@ export const scraper_logs = pgTable("scraper_logs", {
   message: text().notNull(),
   timestamp: timestamp({ precision: 6, withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
+  // Filename of a debug screenshot captured at the moment this log row was
+  // written. Only populated when the owning search_task had
+  // debug_screenshots enabled at run time. File lives under
+  // /data/scraper-screenshots/<task_id>/<run_id>/<this>.
+  screenshot_path: varchar({ length: 255 }),
 }, (table) => [
   index("scraper_logs_run_id_timestamp_idx").using(
     "btree",
@@ -1785,6 +1790,10 @@ export const search_tasks = pgTable("search_tasks", {
   // (e.g. { work_location: ["remote", "hybrid"] }). Consumed at scrape time
   // by the search-form configure step.
   search_filters: jsonb().$type<Record<string, string | string[]>>().default({}).notNull(),
+  // Staff-only debugging toggle. When true the scraper snapshots the page
+  // after each human-action primitive (click/type/scroll) and stores the
+  // path on the resulting scraper_logs row. Off by default.
+  debug_screenshots: boolean().default(false).notNull(),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
     "btree",

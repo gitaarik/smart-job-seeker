@@ -126,6 +126,26 @@
     }).catch(() => {});
   }
 
+  // Staff-only: per-action debug screenshots. PATCH endpoint enforces the
+  // staff gate server-side too, so a non-staff user with a hand-crafted
+  // request still can't enable this.
+  let debugScreenshotsSaving = $state(false);
+  async function toggleDebugScreenshots(next: boolean) {
+    debugScreenshotsSaving = true;
+    try {
+      const res = await fetch(`/api/import-tasks/${searchTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ debug_screenshots: next }),
+      });
+      if (res.ok) {
+        (searchTask as Record<string, unknown>).debug_screenshots = next;
+      }
+    } finally {
+      debugScreenshotsSaving = false;
+    }
+  }
+
   // Delete task
   let isDeleting = $state(false);
   let showDeleteConfirm = $state(false);
@@ -276,6 +296,8 @@
     level: string;
     message: string;
     timestamp: string;
+    /** Filename of a debug screenshot attached to this log row. */
+    screenshot_path?: string | null;
   }
 
   interface JobDetails {
@@ -2091,7 +2113,7 @@
           <div class="p-2 space-y-0.5 font-mono text-xs">
             {#each runLogs[run.id] as log (log.id)}
               <div
-                class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
+                class="flex items-start gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
               >
                 <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
                   {fmtTime(log.timestamp, tf, { timezone: tz || null })}
@@ -2099,9 +2121,25 @@
                 <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                   {log.level}
                 </span>
-                <span class="text-[var(--dash-text)] break-all">
+                <span class="text-[var(--dash-text)] break-all flex-1 min-w-0">
                   {log.message}
                 </span>
+                {#if log.screenshot_path}
+                  <a
+                    href="/api/import-tasks/{searchTask.id}/runs/{run.id}/screenshots/{log.screenshot_path}"
+                    target="_blank"
+                    rel="noopener"
+                    class="flex-shrink-0"
+                    title="Open debug screenshot"
+                  >
+                    <img
+                      src="/api/import-tasks/{searchTask.id}/runs/{run.id}/screenshots/{log.screenshot_path}"
+                      alt="screenshot"
+                      class="h-12 w-auto border border-[var(--dash-border)] rounded"
+                      loading="lazy"
+                    />
+                  </a>
+                {/if}
               </div>
             {/each}
           </div>
@@ -3124,7 +3162,7 @@
                   <div class="p-2 space-y-0.5 font-mono text-xs">
                     {#each runLogs[featuredRunId] as log (log.id)}
                       <div
-                        class="flex gap-2 py-0.5 px-1 hover:bg-white/10 rounded"
+                        class="flex items-start gap-2 py-0.5 px-1 hover:bg-white/10 rounded"
                       >
                         <span class="text-gray-400 whitespace-nowrap">
                           {fmtTime(log.timestamp, tf, { timezone: tz || null })}
@@ -3134,9 +3172,25 @@
                         >
                           {log.level}
                         </span>
-                        <span class="text-gray-100 break-all">
+                        <span class="text-gray-100 break-all flex-1 min-w-0">
                           {log.message}
                         </span>
+                        {#if log.screenshot_path}
+                          <a
+                            href="/api/import-tasks/{searchTask.id}/runs/{featuredRunId}/screenshots/{log.screenshot_path}"
+                            target="_blank"
+                            rel="noopener"
+                            class="flex-shrink-0"
+                            title="Open debug screenshot"
+                          >
+                            <img
+                              src="/api/import-tasks/{searchTask.id}/runs/{featuredRunId}/screenshots/{log.screenshot_path}"
+                              alt="screenshot"
+                              class="h-12 w-auto border border-white/20 rounded"
+                              loading="lazy"
+                            />
+                          </a>
+                        {/if}
                       </div>
                     {/each}
                   </div>
@@ -3537,6 +3591,30 @@
 
     {#if settingsOpen}
       <div class="px-4 pb-4 space-y-4">
+        {#if data.isStaff}
+          <div class="pt-2 border-t border-[var(--dash-border)]">
+            <h4 class="text-sm font-medium text-[var(--dash-text-secondary)] mb-2">
+              Debug (staff)
+            </h4>
+            <label class="inline-flex items-center gap-2 text-sm text-[var(--dash-text)] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean((searchTask as Record<string, unknown>).debug_screenshots)}
+                disabled={debugScreenshotsSaving}
+                onchange={(e) => toggleDebugScreenshots(e.currentTarget.checked)}
+                class="rounded border-[var(--dash-border)]"
+              />
+              Capture a screenshot after every browser action
+              {#if debugScreenshotsSaving}
+                <Spinner size="w-3 h-3" />
+              {/if}
+            </label>
+            <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+              Screenshots show up inline in the run logs. Off by default —
+              extra ~200ms per action and disk usage per run.
+            </p>
+          </div>
+        {/if}
         <div class="pt-2 border-t border-[var(--dash-border)]">
           <h4 class="text-sm font-medium text-red-500 mb-2">Danger Zone</h4>
           {#if showDeleteConfirm}
