@@ -165,10 +165,9 @@ export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
  * for the post-expand checkbox-match fallback.
  */
 export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> = {
-  sort_by: ["sort by", "sort", "order by"],
-  time_posted: ["date posted", "posted", "time posted"],
+  sort_by: ["sort by", "order by"],
+  time_posted: ["date posted", "time posted"],
   work_location: [
-    "workplace",
     "workplace type",
     "work type",
     "work mode",
