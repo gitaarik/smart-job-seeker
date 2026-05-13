@@ -152,6 +152,32 @@ export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
 };
 
 /**
+ * Subset of SEARCH_FILTER_ALIASES restricted to CATEGORY names (the labels
+ * that section openers/headers use), with value-name aliases stripped.
+ * Used only by the click-to-expand heuristic in configure.ts — it scans
+ * page elements looking for "Filter by X" / "All filters" style section
+ * openers. Matching on value names like "Full-time" or "Remote" produced
+ * false positives (e.g. LinkedIn's "Preferences match" modal exposes a
+ * "Full-time" link that hijacked the click), so the heuristic must only
+ * consider category-name aliases.
+ *
+ * Value-name aliases live in OPTION_LABEL_ALIASES and are used separately
+ * for the post-expand checkbox-match fallback.
+ */
+export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> = {
+  sort_by: ["sort by", "sort", "order by"],
+  time_posted: ["date posted", "posted", "time posted"],
+  work_location: [
+    "workplace",
+    "workplace type",
+    "work type",
+    "work mode",
+    "work location",
+  ],
+  job_type: ["job type", "employment type", "type of employment"],
+};
+
+/**
  * Per-(filter, option_key) synonyms for the option labels themselves.
  * Helps when a platform labels e.g. work_location.onsite as "On site"
  * (with space) or "In office" instead of our canonical "On-site".
