@@ -92,3 +92,91 @@ export const SEARCH_FILTER_NAMES = Object.keys(
 export function defaultValueKey(name: SearchFilterName): string {
   return Object.keys(SEARCH_FILTER_DEFINITIONS[name].values)[0];
 }
+
+/**
+ * Per-canonical synonyms that platforms use for the same concept. Used in
+ * two places:
+ *  1. The identify prompt — listed as hints so the LLM recognizes
+ *     "Workplace type" / "Date posted" / etc. as work_location /
+ *     time_posted respectively.
+ *  2. The configure step's click-to-expand fallback — when the LLM omits a
+ *     requested filter, we scan visible button names for any of these
+ *     aliases to find a likely "Filter by X" / "All filters" section
+ *     opener.
+ *
+ * Lowercase substring match. Aliases are intentionally broad — false
+ * positives are caught later (after clicking & re-identifying, the LLM
+ * either confirms the filter or returns nothing).
+ */
+export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
+  sort_by: ["sort by", "sort", "order by", "newest", "most recent", "relevance"],
+  time_posted: [
+    "date posted",
+    "posted",
+    "time posted",
+    "past 24",
+    "past day",
+    "last 24",
+    "past week",
+    "last week",
+    "past month",
+    "last month",
+    "any time",
+  ],
+  work_location: [
+    "workplace",
+    "workplace type",
+    "work type",
+    "work mode",
+    "work location",
+    "on-site",
+    "onsite",
+    "in person",
+    "in-person",
+    "remote",
+    "hybrid",
+  ],
+  job_type: [
+    "job type",
+    "employment type",
+    "type of employment",
+    "full-time",
+    "fulltime",
+    "part-time",
+    "parttime",
+    "contract",
+    "freelance",
+    "internship",
+    "intern",
+  ],
+};
+
+/**
+ * Per-(filter, option_key) synonyms for the option labels themselves.
+ * Helps when a platform labels e.g. work_location.onsite as "On site"
+ * (with space) or "In office" instead of our canonical "On-site".
+ */
+export const OPTION_LABEL_ALIASES: Partial<
+  Record<SearchFilterName, Record<string, string[]>>
+> = {
+  work_location: {
+    remote: ["remote"],
+    hybrid: ["hybrid"],
+    onsite: ["on-site", "on site", "onsite", "in person", "in-person", "in office"],
+  },
+  job_type: {
+    fulltime: ["full-time", "fulltime", "full time"],
+    parttime: ["part-time", "parttime", "part time"],
+    contract: ["contract", "contractor", "freelance"],
+    internship: ["internship", "intern"],
+  },
+  time_posted: {
+    "24h": ["past 24 hours", "last 24 hours", "past day"],
+    week: ["past week", "last week"],
+    month: ["past month", "last month"],
+  },
+  sort_by: {
+    newest: ["newest", "most recent", "date"],
+    relevance: ["relevance", "most relevant"],
+  },
+};

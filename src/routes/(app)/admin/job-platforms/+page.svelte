@@ -40,7 +40,7 @@
           <th class="text-left px-3 py-2">Name</th>
           <th class="text-left px-3 py-2">Key</th>
           <th class="text-left px-3 py-2">Status</th>
-          <th class="text-left px-3 py-2">Presets</th>
+          <th class="text-left px-3 py-2">Search form</th>
           <th class="text-left px-3 py-2">Signals</th>
           <th class="text-left px-3 py-2">Edits</th>
           <th class="text-right px-3 py-2"></th>
@@ -80,11 +80,10 @@
             <td
               class="px-3 py-2 tabular-nums text-xs whitespace-nowrap"
             >
-              {#if platform.preset_count === 0}
-                <span class="text-[var(--dash-text-muted)]">none</span>
+              {#if platform.search_page_url}
+                <span class="text-green-600 dark:text-green-400">configured</span>
               {:else}
-                <span class="text-[var(--dash-text)]">{platform.suggestable_preset_count}</span>
-                <span class="text-[var(--dash-text-muted)]">/ {platform.preset_count}</span>
+                <span class="text-[var(--dash-text-muted)]">none</span>
               {/if}
             </td>
             <td class="px-3 py-2 tabular-nums text-xs whitespace-nowrap">

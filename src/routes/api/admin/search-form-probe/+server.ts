@@ -1,26 +1,24 @@
 /**
- * POST /api/admin/discover/[id]/start
+ * Admin-only platform discovery API.
  *
- * Transitions a draft discovery run to "queued" and enqueues the BullMQ job.
- * The admin picks credentials + device on the run detail page (kept on the
- * run row) and then calls this to actually start the worker.
- *
- * Body:
- *   { platform_profile_id, sjsbrowser_api_key_id? }
- *
- * platform_profile_id is required because discovery now requires login.
+ * GET  /api/admin/search-form-probe           — list recent runs
+ * POST /api/admin/search-form-probe           — create + enqueue a new run on an
+ *                                       existing job_platforms row, using
+ *                                       the credentials + (optional) device
+ *                                       configured on the per-platform
+ *                                       discovery page
  */
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import {
   job_platforms,
-  platform_discovery_runs,
+  search_form_probe_runs,
   platform_profiles,
 } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
-import { addDiscoveryJob } from "$lib/server/queue/discovery-queue";
+import { addSearchFormProbeJob } from "$lib/server/queue/search-form-probe-queue";
 import { hasCredentialAccess } from "$lib/server/credential-shares";
 import { hasDeviceAccess } from "$lib/server/device-shares";
 
@@ -32,40 +30,48 @@ function requireAdmin(locals: App.Locals) {
   return user;
 }
 
-export const POST: RequestHandler = async ({ locals, params, request }) => {
+export const GET: RequestHandler = async ({ locals }) => {
+  requireAdmin(locals);
+  const runs = await db
+    .select()
+    .from(search_form_probe_runs)
+    .orderBy(desc(search_form_probe_runs.started_at))
+    .limit(50);
+  return json({ runs });
+};
+
+export const POST: RequestHandler = async ({ locals, request }) => {
   const user = requireAdmin(locals);
-  const id = parseInt(params.id ?? "", 10);
-  if (!Number.isInteger(id) || id <= 0) throw error(400, "Invalid run id");
-
-  const run = await db.query.platform_discovery_runs.findFirst({
-    where: eq(platform_discovery_runs.id, id),
-    columns: {
-      id: true,
-      platform_id: true,
-      target_url: true,
-      status: true,
-    },
-  });
-  if (!run) throw error(404, "Run not found");
-  if (run.status !== "draft") {
-    throw error(400, `Run is not a draft (status: ${run.status})`);
-  }
-
-  const body = (await request.json().catch(() => ({}))) as {
+  const body = (await request.json()) as {
+    platform_id?: number;
     platform_profile_id?: number | null;
     sjsbrowser_api_key_id?: number | null;
   };
+  const platformId = Number(body.platform_id);
+  if (!Number.isInteger(platformId) || platformId <= 0) {
+    throw error(400, "platform_id is required");
+  }
 
   const platform = await db.query.job_platforms.findFirst({
-    where: eq(job_platforms.id, run.platform_id),
-    columns: { id: true, login_page_url: true },
+    where: eq(job_platforms.id, platformId),
+    columns: { id: true, url: true, name: true, login_page_url: true },
   });
-  if (!platform) throw error(404, "Platform no longer exists");
+  if (!platform) throw error(404, "Platform not found");
+  if (!platform.url) throw error(400, "Platform has no base URL");
   if (!platform.login_page_url) {
     throw error(
       400,
-      "Platform has no login_page_url — set one before starting discovery",
+      "Platform has no login_page_url — set one before running discovery",
     );
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(platform.url);
+  } catch {
+    throw error(400, "Platform URL is not a valid URL");
+  }
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw error(400, "Platform URL must be http(s)");
   }
 
   const credentialId = body.platform_profile_id ?? null;
@@ -99,26 +105,24 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
     }
   }
 
-  await db.update(platform_discovery_runs).set({
+  const [run] = await db.insert(search_form_probe_runs).values({
+    platform_id: platform.id,
+    target_url: parsed.toString(),
     status: "queued",
-    started_at: new Date(),
+    triggered_by_user_id: user.id,
     platform_profile_id: credentialId,
     sjsbrowser_api_key_id: deviceId,
-  }).where(eq(platform_discovery_runs.id, run.id));
+  }).returning();
 
-  const job = await addDiscoveryJob({
+  const job = await addSearchFormProbeJob({
     discoveryRunId: run.id,
-    targetUrl: run.target_url,
+    targetUrl: parsed.toString(),
     triggeredByUserId: user.id,
   });
 
-  await db.update(platform_discovery_runs)
+  await db.update(search_form_probe_runs)
     .set({ bullmq_job_id: job.id ?? null })
-    .where(eq(platform_discovery_runs.id, run.id));
+    .where(eq(search_form_probe_runs.id, run.id));
 
-  const updated = await db.query.platform_discovery_runs.findFirst({
-    where: eq(platform_discovery_runs.id, run.id),
-  });
-
-  return json({ run: updated });
+  return json({ run });
 };

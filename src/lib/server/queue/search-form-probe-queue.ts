@@ -9,7 +9,7 @@
 import { Queue, QueueEvents } from "bullmq";
 import { redisConnection } from "./connection.js";
 
-export interface DiscoveryJobData {
+export interface SearchFormProbeJobData {
   discoveryRunId: number;
   /** Front-page URL of the job platform being discovered. */
   targetUrl: string;
@@ -17,7 +17,7 @@ export interface DiscoveryJobData {
   triggeredByUserId: string | null;
 }
 
-export interface DiscoveryJobResult {
+export interface SearchFormProbeJobResult {
   ok: boolean;
 }
 
@@ -27,24 +27,24 @@ const defaultJobOptions = {
   attempts: 1,
 };
 
-let _q: Queue<DiscoveryJobData, DiscoveryJobResult> | null = null;
+let _q: Queue<SearchFormProbeJobData, SearchFormProbeJobResult> | null = null;
 let _qe: QueueEvents | null = null;
 
-export function getDiscoveryQueue() {
-  return (_q ??= new Queue("platform-discovery", {
+export function getSearchFormProbeQueue() {
+  return (_q ??= new Queue("search-form-probe", {
     connection: redisConnection,
     defaultJobOptions,
   }));
 }
 
-export function getDiscoveryQueueEvents() {
-  return (_qe ??= new QueueEvents("platform-discovery", {
+export function getSearchFormProbeQueueEvents() {
+  return (_qe ??= new QueueEvents("search-form-probe", {
     connection: redisConnection,
   }));
 }
 
-export async function addDiscoveryJob(data: DiscoveryJobData) {
-  const queue = getDiscoveryQueue();
+export async function addSearchFormProbeJob(data: SearchFormProbeJobData) {
+  const queue = getSearchFormProbeQueue();
   const jobId = `discovery-${data.discoveryRunId}`;
   return queue.add("discover", data, { jobId });
 }

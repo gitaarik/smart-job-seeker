@@ -15,6 +15,18 @@ export interface StripHtmlOptions {
    * E.g., ["pagination"] to preserve pagination-related classes.
    */
   extraClassPatterns?: string[];
+  /**
+   * Keep form/input/select/textarea/label etc. Off by default because they're
+   * noise for job extraction. Discovery turns this on so the LLM can identify
+   * the search-form inputs it needs to fill.
+   */
+  keepFormElements?: boolean;
+  /**
+   * Keep nav/header/[role=navigation]/[role=banner]/.global-nav. Off by default
+   * to drop site chrome. Discovery turns this on because some platforms (e.g.
+   * LinkedIn) put the primary search box inside the global navigation.
+   */
+  keepNavigation?: boolean;
 }
 
 /**
@@ -46,56 +58,63 @@ export function stripHtmlForLlm(
     ["pagination", "pager", "page-nav"].includes(p.toLowerCase())
   );
 
-  // Remove nav elements except those with pagination-related classes or aria-labels
-  $("nav").each((_, elem) => {
-    const el = $(elem);
-    const className = el.attr("class")?.toLowerCase() || "";
-    const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
-    const isPagination = className.includes("pagination") ||
-      className.includes("pager") ||
-      ariaLabel.includes("pagination");
-    if (!preservePagination || !isPagination) {
-      el.remove();
-    }
-  });
+  if (!options.keepNavigation) {
+    // Remove nav elements except those with pagination-related classes or aria-labels
+    $("nav").each((_, elem) => {
+      const el = $(elem);
+      const className = el.attr("class")?.toLowerCase() || "";
+      const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
+      const isPagination = className.includes("pagination") ||
+        className.includes("pager") ||
+        ariaLabel.includes("pagination");
+      if (!preservePagination || !isPagination) {
+        el.remove();
+      }
+    });
 
-  $("header").remove();
+    $("header").remove();
+
+    // Remove role=navigation elements except pagination
+    $("[role='navigation']").each((_, elem) => {
+      const el = $(elem);
+      const className = el.attr("class")?.toLowerCase() || "";
+      const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
+      const isPagination = className.includes("pagination") ||
+        className.includes("pager") ||
+        ariaLabel.includes("pagination");
+      if (!preservePagination || !isPagination) {
+        el.remove();
+      }
+    });
+
+    $("[role='banner']").remove();
+    $(".global-nav").remove(); // LinkedIn nav
+  }
+
   $("footer").remove();
-
-  // Remove role=navigation elements except pagination
-  $("[role='navigation']").each((_, elem) => {
-    const el = $(elem);
-    const className = el.attr("class")?.toLowerCase() || "";
-    const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
-    const isPagination = className.includes("pagination") ||
-      className.includes("pager") ||
-      ariaLabel.includes("pagination");
-    if (!preservePagination || !isPagination) {
-      el.remove();
-    }
-  });
-
-  $("[role='banner']").remove();
   $("[role='contentinfo']").remove();
   $(".artdeco-modal").remove(); // LinkedIn modals
-  $(".global-nav").remove(); // LinkedIn nav
   $("[data-test-modal]").remove(); // Generic modals
 
   // Remove all images - they take up space and LLM doesn't need them
   $("img").remove();
   $("picture").remove();
 
-  // Remove form elements - filter checkboxes, search inputs, etc. are noise for job extraction
-  $("form").remove();
-  $("input").remove();
-  $("select").remove();
-  $("textarea").remove();
-  $("label").remove();
-  $("fieldset").remove();
-  $("legend").remove();
-  $("datalist").remove();
-  $("option").remove();
-  $("optgroup").remove();
+  // Remove form elements - filter checkboxes, search inputs, etc. are noise for
+  // job extraction. Discovery opts out via keepFormElements so the LLM can see
+  // the search-form inputs it needs to identify and fill.
+  if (!options.keepFormElements) {
+    $("form").remove();
+    $("input").remove();
+    $("select").remove();
+    $("textarea").remove();
+    $("label").remove();
+    $("fieldset").remove();
+    $("legend").remove();
+    $("datalist").remove();
+    $("option").remove();
+    $("optgroup").remove();
+  }
 
   // Remove all forms of hidden content
   $("[hidden]").remove();
@@ -117,6 +136,18 @@ export function stripHtmlForLlm(
     "type", // Input types (password, email, etc.)
     "data-xxx", // Clickable markers for SPA navigation
   ]);
+  if (options.keepFormElements) {
+    // These attributes carry the semantic identity of a form input —
+    // discovery needs them to tell the LLM which input is "keywords" vs
+    // "location" vs "submit".
+    keepAttributes.add("placeholder");
+    keepAttributes.add("name");
+    keepAttributes.add("id");
+    keepAttributes.add("aria-label");
+    keepAttributes.add("aria-labelledby");
+    keepAttributes.add("role");
+    keepAttributes.add("value");
+  }
 
   // Whitelist of class name patterns to preserve for LLM context
   // Classes containing these substrings will be kept
@@ -276,7 +307,14 @@ export function stripHtmlForLlm(
       if (hasPreservedAttrs) return;
 
       const text = element.text().trim();
-      const hasContentChildren = element.find("br, hr, a, button").length > 0;
+      // Form elements like <input> carry no text and have no children, so a
+      // container DIV around them looks "empty" and would get pruned, taking
+      // the input with it. When the caller is keeping form elements, count
+      // them as content too.
+      const contentChildSelector = options.keepFormElements
+        ? "br, hr, a, button, input, select, textarea"
+        : "br, hr, a, button";
+      const hasContentChildren = element.find(contentChildSelector).length > 0;
 
       if (!text && !hasContentChildren) {
         element.remove();

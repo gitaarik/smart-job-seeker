@@ -1,64 +1,52 @@
 <script lang="ts">
   /**
-   * Friendly add-task form built on top of the per-platform preset
-   * architecture. Wraps the shared SourcePicker (used by both add and edit
-   * flows) with the form scaffolding: hidden fields the server expects,
-   * note input, submit + cancel buttons.
+   * Add-task form for the new dynamic search-form flow. The user picks a
+   * platform and types search keywords; the scraper handles search-form
+   * configuration at run time using the platform's `search_page_url`.
+   *
+   * No URL templates, no preset picker, no live URL preview. The previous
+   * version (which wrapped SourcePicker) is gone with the URL-template
+   * system. Edit-task flow still uses the old machinery and will be
+   * migrated in a follow-up.
    */
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faMagicWandSparkles } from "@fortawesome/free-solid-svg-icons";
   import { track } from "$lib/tools/analytics";
-  import SourcePicker, { type SourcePreset } from "./SourcePicker.svelte";
+  import type { SearchFilterValue } from "$lib/job-platforms/search-filters";
+  import FilterPicker from "./FilterPicker.svelte";
+
+  export type ImportablePlatform = {
+    id: number;
+    key: string;
+    name: string;
+    url: string;
+    suggestion_priority: number | null;
+    suggestion_hint: string | null;
+  };
 
   interface Props {
-    presets: SourcePreset[];
+    platforms: ImportablePlatform[];
     defaultMaxJobs: number | null;
     onCancel: () => void;
   }
 
-  let { presets, defaultMaxJobs, onCancel }: Props = $props();
+  let { platforms, defaultMaxJobs, onCancel }: Props = $props();
 
-  let platformValue = $state<string>(
-    presets.length > 0 ? presets[0].platform_key : "custom",
-  );
-  let presetId = $state<number | null>(
-    presets.length > 0 ? presets[0].preset_id : null,
+  let platformId = $state<number | null>(
+    platforms.length > 0 ? platforms[0].id : null,
   );
   let keywords = $state("");
-  let location = $state("");
-  let customUrl = $state("");
-  let resolvedUrl = $state("");
-  let filters = $state<Record<string, string | string[]>>({});
   let note = $state("");
+  let filters = $state<Record<string, SearchFilterValue>>({});
   let submitting = $state(false);
 
-  let selectedPreset = $derived.by<SourcePreset | null>(() => {
-    if (platformValue === "custom" || presetId === null) return null;
-    return presets.find((p) => p.preset_id === presetId) ?? null;
-  });
+  const selectedPlatform = $derived(
+    platforms.find((p) => p.id === platformId) ?? null,
+  );
 
-  // When the user picked a platform but switched to "Custom URL on X", we
-  // still know the platform — surface any preset of that platform so the
-  // hidden fields can carry platform_id/url/name through to the server.
-  let customPlatform = $derived.by<SourcePreset | null>(() => {
-    if (selectedPreset || platformValue === "custom") return null;
-    return presets.find((p) => p.platform_key === platformValue) ?? null;
-  });
-
-  let canSubmit = $derived.by(() => {
-    if (submitting) return false;
-    if (selectedPreset) {
-      // For presets with {KEYWORDS}, the keywords field must be non-empty.
-      if (
-        selectedPreset.url_template.includes("{KEYWORDS}") && !keywords.trim()
-      ) return false;
-    } else if (!customUrl.trim()) {
-      return false;
-    }
-    return resolvedUrl.length > 0;
-  });
+  const canSubmit = $derived(!submitting && platformId !== null);
 </script>
 
 <form
@@ -78,61 +66,84 @@
 >
   <h3 class="font-medium text-[var(--dash-text)]">Add Import Task</h3>
 
-  <SourcePicker
-    {presets}
-    bind:platformValue
-    bind:presetId
-    bind:keywords
-    bind:location
-    bind:customUrl
-    bind:resolvedUrl
-    bind:filters
-  />
-
-  <!-- Optional note -->
-  <div>
-    <label
-      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-      for="add-note"
-    >Note <span
-        class="font-normal text-[var(--dash-text-muted)]"
-      >(optional)</span></label>
-    <input
-      id="add-note"
-      type="text"
-      bind:value={note}
-      placeholder="e.g. Remote-leaning, recent posts only"
-      class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-    />
-  </div>
-
-  <!-- Hidden fields the server expects. -->
-  <input type="hidden" name="search_url" value={resolvedUrl} />
-  {#if selectedPreset}
-    <input type="hidden" name="preset_id" value={selectedPreset.preset_id} />
-    <input type="hidden" name="platform_id" value={selectedPreset.platform_id} />
-    <input type="hidden" name="platform_url" value={selectedPreset.platform_url} />
-    <input type="hidden" name="platform_name" value={selectedPreset.platform_name} />
-  {:else if customPlatform}
-    <input type="hidden" name="platform_id" value={customPlatform.platform_id} />
-    <input type="hidden" name="platform_url" value={customPlatform.platform_url} />
-    <input type="hidden" name="platform_name" value={customPlatform.platform_name} />
+  {#if platforms.length === 0}
+    <p class="text-sm text-[var(--dash-text-muted)]">
+      No platforms are configured for the import flow yet. An admin needs to set
+      <code>search_page_url</code> + a <code>suggestion_priority</code> on a platform
+      before it can be used here.
+    </p>
   {:else}
-    <input type="hidden" name="platform_url" value={customUrl.trim()} />
+    <div>
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+        for="add-platform"
+      >Platform</label>
+      <select
+        id="add-platform"
+        bind:value={platformId}
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+      >
+        {#each platforms as p (p.id)}
+          <option value={p.id}>{p.name}</option>
+        {/each}
+      </select>
+      {#if selectedPlatform?.suggestion_hint}
+        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+          {selectedPlatform.suggestion_hint}
+        </p>
+      {/if}
+    </div>
+
+    <div>
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+        for="add-keywords"
+      >Search keywords <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span></label>
+      <input
+        id="add-keywords"
+        type="text"
+        bind:value={keywords}
+        placeholder="e.g. python developer — leave empty to import all listings"
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+      />
+      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+        Typed into the platform's search input if it has one. Leave empty for
+        curated-listing sites (e.g. SvelteJobs) where you want to import everything.
+      </p>
+    </div>
+
+    <div class="border-t border-[var(--dash-border)] pt-3">
+      <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-2">
+        Filter preferences <span
+          class="font-normal text-[var(--dash-text-muted)]"
+        >(optional — the scraper applies them per-platform)</span>
+      </p>
+      <FilterPicker bind:filters compact={true} />
+    </div>
+
+    <div>
+      <label
+        class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+        for="add-note"
+      >Note <span
+          class="font-normal text-[var(--dash-text-muted)]"
+        >(optional)</span></label>
+      <input
+        id="add-note"
+        type="text"
+        bind:value={note}
+        placeholder="e.g. Remote-leaning, recent posts only"
+        class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+      />
+    </div>
   {/if}
-  {#if selectedPreset && selectedPreset.url_template.includes("{KEYWORDS}") && keywords.trim()}
-    <input type="hidden" name="search_term" value={keywords.trim()} />
-  {:else if !selectedPreset && customPlatform && keywords.trim()}
-    <input type="hidden" name="search_term" value={keywords.trim()} />
+
+  <!-- Hidden fields the server action expects. -->
+  {#if selectedPlatform}
+    <input type="hidden" name="platform_id" value={selectedPlatform.id} />
   {/if}
-  {#if selectedPreset && selectedPreset.url_template.includes("{LOCATION}") && location.trim()}
-    <input type="hidden" name="search_location" value={location.trim()} />
-  {:else if !selectedPreset && customPlatform && location.trim()}
-    <input type="hidden" name="search_location" value={location.trim()} />
-  {/if}
-  {#if Object.keys(filters).length > 0}
-    <input type="hidden" name="search_filters" value={JSON.stringify(filters)} />
-  {/if}
+  <input type="hidden" name="search_term" value={keywords} />
+  <input type="hidden" name="search_filters" value={JSON.stringify(filters)} />
   <input type="hidden" name="note" value={note} />
   <input type="hidden" name="browser_provider" value="hosted" />
   <input type="hidden" name="login_mode" value="none" />

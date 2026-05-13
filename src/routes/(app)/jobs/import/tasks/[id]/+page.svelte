@@ -11,6 +11,7 @@
   import SkillPill from "../../../components/SkillPill.svelte";
   import SearchTaskFields from "../../../components/SearchTaskFields.svelte";
   import SourceEditor from "../../components/SourceEditor.svelte";
+  import FilterEditor from "../../components/FilterEditor.svelte";
   import {
     formatJobType,
     formatSalaryRange,
@@ -810,6 +811,21 @@
         return "text-[var(--dash-text-muted)]";
       default:
         return "text-[var(--dash-text-secondary)]";
+    }
+  }
+
+  function getLogLevelColorOnDark(level: string): string {
+    switch (level) {
+      case "error":
+        return "text-red-400";
+      case "warn":
+        return "text-yellow-300";
+      case "info":
+        return "text-gray-100";
+      case "debug":
+        return "text-gray-400";
+      default:
+        return "text-gray-300";
     }
   }
 
@@ -2606,27 +2622,40 @@
     {#key data.searchTask.id}
       <SourceEditor
         taskId={searchTask.id}
-        presets={data.presets}
         initial={{
-          preset_id: searchTask.preset_id ?? null,
           platform_id: searchTask.platform_id ?? null,
-          search_url: searchTask.search_url ?? null,
           search_term: searchTask.search_term ?? null,
-          search_location: searchTask.search_location ?? null,
           search_filters: (searchTask.search_filters as Record<
             string,
             string | string[]
           >) ?? {},
         }}
         onSaved={(saved) => {
-          searchTask.preset_id = saved.preset_id;
           searchTask.platform_id = saved.platform_id;
-          searchTask.search_url = saved.search_url;
           searchTask.search_term = saved.search_term;
-          searchTask.search_location = saved.search_location;
           searchTask.search_filters = saved.search_filters;
         }}
       />
+
+      <div class="mt-6 border-t border-[var(--dash-border)] pt-4">
+        <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">
+          Filter preferences
+        </h3>
+        <p class="text-xs text-[var(--dash-text-muted)] mb-3">
+          The scraper applies these per-platform — translates each canonical
+          option into the right widget on the platform's filter UI.
+        </p>
+        <FilterEditor
+          taskId={searchTask.id}
+          initial={(searchTask.search_filters as Record<
+            string,
+            string | string[]
+          >) ?? {}}
+          onSaved={(saved) => {
+            searchTask.search_filters = saved;
+          }}
+        />
+      </div>
     {/key}
   </Card>
 
@@ -3095,19 +3124,17 @@
                   <div class="p-2 space-y-0.5 font-mono text-xs">
                     {#each runLogs[featuredRunId] as log (log.id)}
                       <div
-                        class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
+                        class="flex gap-2 py-0.5 px-1 hover:bg-white/10 rounded"
                       >
-                        <span
-                          class="text-[var(--dash-text-muted)] whitespace-nowrap"
-                        >
+                        <span class="text-gray-400 whitespace-nowrap">
                           {fmtTime(log.timestamp, tf, { timezone: tz || null })}
                         </span>
                         <span
-                          class={`uppercase w-12 ${getLogLevelColor(log.level)}`}
+                          class={`uppercase w-12 ${getLogLevelColorOnDark(log.level)}`}
                         >
                           {log.level}
                         </span>
-                        <span class="text-[var(--dash-text)] break-all">
+                        <span class="text-gray-100 break-all">
                           {log.message}
                         </span>
                       </div>

@@ -191,7 +191,7 @@
         },
         {
           label: "Platform Discovery",
-          href: "/admin/job-platforms/discover",
+          href: "/admin/job-platforms/search-form-probe",
           icon: faBinoculars,
         },
         {

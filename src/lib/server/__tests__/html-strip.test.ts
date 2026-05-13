@@ -373,4 +373,87 @@ describe("stripHtmlForLlm", () => {
     expect(result).toContain("$100k - $150k");
     expect(result).toContain("Other content");
   });
+
+  describe("discovery mode (keepFormElements + keepNavigation)", () => {
+    it("preserves an <input> nested inside structural divs (regression for LinkedIn job search box)", () => {
+      // Mirrors the LinkedIn /jobs/ DOM that broke discovery run 29: the
+      // search input sits many empty-div levels deep inside a <header>.
+      const html = `
+        <html>
+          <body>
+            <header>
+              <div><div><div><div>
+                <input
+                  id=":r2:"
+                  placeholder="Describe the job you want"
+                  data-xxx="52"
+                  value=""
+                >
+              </div></div></div></div>
+            </header>
+          </body>
+        </html>
+      `;
+
+      const result = stripHtmlForLlm(html, {
+        keepFormElements: true,
+        keepNavigation: true,
+      });
+
+      expect(result).toContain("<input");
+      expect(result).toContain('data-xxx="52"');
+      expect(result).toContain("Describe the job you want");
+    });
+
+    it("preserves identifying input attributes (placeholder, name, aria-label)", () => {
+      const html = `
+        <form>
+          <input name="q" placeholder="Search jobs" aria-label="Keywords" data-xxx="1">
+          <input name="l" placeholder="City, state, or zip" aria-label="Location" data-xxx="2">
+          <button data-xxx="3">Search</button>
+        </form>
+      `;
+
+      const result = stripHtmlForLlm(html, { keepFormElements: true });
+
+      expect(result).toContain('name="q"');
+      expect(result).toContain('placeholder="Search jobs"');
+      expect(result).toContain('aria-label="Keywords"');
+      expect(result).toContain('placeholder="City, state, or zip"');
+    });
+
+    it("default mode still strips form elements (no regression for extraction)", () => {
+      const html = `
+        <body>
+          <form>
+            <input name="q" placeholder="Search">
+          </form>
+          <p>Job listing</p>
+        </body>
+      `;
+
+      const result = stripHtmlForLlm(html);
+
+      expect(result).not.toContain("<input");
+      expect(result).not.toContain("<form");
+      expect(result).toContain("Job listing");
+    });
+
+    it("keepNavigation preserves header and nav elements", () => {
+      const html = `
+        <body>
+          <header><div><a href="/home" data-xxx="1">Home</a></div></header>
+          <nav><a href="/jobs" data-xxx="2">Jobs</a></nav>
+          <main><p>Main content</p></main>
+        </body>
+      `;
+
+      const result = stripHtmlForLlm(html, { keepNavigation: true });
+
+      expect(result).toContain("<header");
+      expect(result).toContain("<nav");
+      expect(result).toContain('data-xxx="1"');
+      expect(result).toContain('data-xxx="2"');
+    });
+  });
 });

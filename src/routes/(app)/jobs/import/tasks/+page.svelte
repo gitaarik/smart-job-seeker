@@ -307,14 +307,15 @@
   }
 
   // ── Profile-tailored task suggestions ──
+  // After the URL-template flow was removed, suggestions reference a
+  // platform_id + a free-form keywords string. The scraper handles the
+  // search-form configuration at run time using the platform's
+  // `search_page_url`; no URL is constructed up-front.
   type Suggestion = {
-    preset_id: number;
+    platform_id: number;
     platform: string;
     platform_name: string;
-    preset_label: string;
-    url: string;
     keywords: string | null;
-    location: string | null;
     note: string;
     relevance: "high" | "medium" | "low";
     /** Local-only flag used to mark a card as accepted so we can show feedback
@@ -357,20 +358,16 @@
     suggestion.submitting = true;
 
     const formData = new FormData();
-    formData.append("search_url", suggestion.url);
     if (suggestion.keywords) {
       formData.append("search_term", suggestion.keywords);
     }
     formData.append("browser_provider", "hosted");
     formData.append("login_mode", "none");
     formData.append("note", suggestion.note);
-    // Hand the server the platform domain so getOrCreatePlatform can look up
-    // the existing job_platforms row by URL — without this, the new task
-    // ends up with platform_id=NULL and no platform metadata in the UI.
-    formData.append("platform_url", suggestion.url);
-    // Attribute the task to the preset it came from so per-preset signals
-    // accumulate correctly when the scrape runs.
-    formData.append("preset_id", String(suggestion.preset_id));
+    // Pass the platform_id directly so getOrCreatePlatform can short-circuit
+    // the URL-based lookup. Without a platform_url getOrCreatePlatform would
+    // bail; we look up the platform's own url server-side from this id.
+    formData.append("platform_id", String(suggestion.platform_id));
     // Match the defaults that SearchTaskFields fills in for the regular form
     // path so suggestion-derived tasks behave the same on first run.
     formData.append("max_jobs", String(data.defaultMaxJobs ?? 25));
@@ -542,7 +539,7 @@
   <!-- Add Form -->
   {#if showAddForm}
     <SimplifiedAddTaskForm
-      presets={data.presets}
+      platforms={data.importablePlatforms}
       defaultMaxJobs={data.defaultMaxJobs}
       onCancel={resetAddForm}
     />
@@ -571,7 +568,7 @@
         </button>
       </div>
 
-      {#each suggestions as suggestion (suggestion.url)}
+      {#each suggestions as suggestion (suggestion.platform_id)}
         <div
           class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {suggestion.accepted
             ? 'opacity-60'
@@ -585,8 +582,6 @@
                 >
                   {suggestion.platform_name}
                 </span>
-                <span class="text-xs text-[var(--dash-text-muted)]"
-                >· {suggestion.preset_label}</span>
                 {#if suggestion.relevance === "high"}
                   <span
                     class="text-xs text-green-600 dark:text-green-400 font-medium"
@@ -607,44 +602,14 @@
             </div>
           </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label
-                class="block text-xs font-medium text-[var(--dash-text-secondary)]"
-                for="suggestion-url-{suggestion.url}"
-              >Search URL</label>
-              {#if suggestion.url}
-                <a
-                  href={suggestion.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-xs text-[var(--dash-primary)] hover:underline"
-                >
-                  Preview results
-                  <FontAwesomeIcon
-                    icon={faArrowUpRightFromSquare}
-                    class="w-3 h-3"
-                  />
-                </a>
-              {/if}
-            </div>
-            <input
-              id="suggestion-url-{suggestion.url}"
-              type="url"
-              bind:value={suggestion.url}
-              disabled={suggestion.accepted || suggestion.submitting}
-              class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)] disabled:opacity-60"
-            />
-          </div>
-
           {#if suggestion.keywords !== null}
             <div>
               <label
                 class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                for="suggestion-term-{suggestion.url}"
-              >Search term</label>
+                for="suggestion-keywords-{suggestion.platform_id}"
+              >Search keywords</label>
               <input
-                id="suggestion-term-{suggestion.url}"
+                id="suggestion-keywords-{suggestion.platform_id}"
                 type="text"
                 bind:value={suggestion.keywords}
                 disabled={suggestion.accepted || suggestion.submitting}
@@ -673,7 +638,7 @@
               <button
                 type="button"
                 onclick={() => acceptSuggestion(suggestion)}
-                disabled={suggestion.submitting || !suggestion.url}
+                disabled={suggestion.submitting}
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
               >
                 {#if suggestion.submitting}

@@ -319,27 +319,24 @@ export const reviewLetterSchema = z.object({
  * Schema for suggest_import_tasks prompt
  * Returns 1-3 tailored job-search task suggestions based on the user's profile.
  *
- * The LLM picks a preset_id from the presets_list it was given, then
- * provides keywords/location *as plain values* if the preset's template has
- * {KEYWORDS}/{LOCATION} placeholders. The server URL-encodes and
- * substitutes — never the LLM, so hallucinated URLs are impossible.
+ * The LLM picks a platform_id from the platforms list it was given and provides
+ * a keyword string. The scraper handles search-form configuration dynamically
+ * at run time (it types the keyword into the platform's search input), so the
+ * LLM never sees or constructs URLs.
  */
 export const suggestImportTasksSchema = z.object({
   tasks: z.array(z.object({
-    preset_id: z.number().int().describe(
-      "ID of the search preset to use. MUST be one of the preset IDs from the presets_list provided in the system prompt.",
+    platform_id: z.number().int().describe(
+      "ID of the job platform to use. MUST be one of the platform IDs from the platforms_list provided in the system prompt.",
     ),
     keywords: z.string().nullable().describe(
-      "Plain (NOT URL-encoded) keyword string to substitute into the preset's {KEYWORDS} placeholder. Null if the chosen preset has no {KEYWORDS} placeholder.",
-    ),
-    location: z.string().nullable().describe(
-      "Plain (NOT URL-encoded) location string to substitute into the preset's {LOCATION} placeholder. Null if the preset has no {LOCATION} placeholder or the profile has no relevant location.",
+      "Plain (NOT URL-encoded) keyword string the scraper will type into the platform's search input. Null when the platform is a curated single-page listing (no search box) and the user should import everything — pick this only when the platform's hint says so.",
     ),
     note: z.string().describe(
-      "One short sentence (≤80 chars) explaining why this preset matches the user's profile.",
+      "One short sentence (≤80 chars) explaining why this platform matches the user's profile.",
     ),
     relevance: z.enum(["high", "medium", "low"]).describe(
-      "How well this preset matches the profile.",
+      "How well this platform matches the profile.",
     ),
   })).min(1).max(3),
 });

@@ -1,95 +1,68 @@
+/**
+ * POST /api/jobs/import/suggest
+ *
+ * Asks the LLM to pick 1–3 job platforms tailored to the user's profile
+ * and provide a keyword string for each. The scraper handles each platform's
+ * search-form configuration at run time (login → navigate to search_page_url
+ * → type keywords → submit), so the LLM never sees or constructs URLs.
+ *
+ * Returns a list of task drafts the client form pre-fills: platform_id,
+ * platform name (for display), keywords, note, relevance. The user can edit
+ * before clicking save.
+ */
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, eq, isNotNull } from "drizzle-orm";
-import {
-  job_platform_search_presets,
-  job_platforms,
-} from "$lib/server/db/schema";
+import { and, asc, isNotNull } from "drizzle-orm";
+import { job_platforms } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../(app)/profile/utils";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
 import { suggestImportTasksSchema } from "$lib/server/schemas/ai-prompt-schemas";
-import { fillSearchTemplate } from "$lib/job-platforms/url-template";
 
-type PresetRow = {
+type SuggestablePlatform = {
   id: number;
-  platform_id: number;
-  platform_key: string;
-  platform_name: string;
-  platform_priority: number | null;
-  label: string;
-  url_template: string;
-  applicable_hint: string | null;
-  preset_priority: number | null;
+  key: string;
+  name: string;
+  suggestion_priority: number | null;
+  suggestion_hint: string | null;
 };
 
-async function fetchSuggestablePresets(): Promise<PresetRow[]> {
-  // Suggestable preset = its platform has a suggestion_priority AND the
-  // preset itself has a suggestion_priority. Ordered by platform priority
-  // then preset priority then id for determinism.
+async function fetchSuggestablePlatforms(): Promise<SuggestablePlatform[]> {
+  // A platform is suggestable when it has both a curation priority AND a
+  // search_page_url configured (the scraper needs the latter to drive the
+  // form). Ordered by priority then id for determinism.
   return await db
     .select({
-      id: job_platform_search_presets.id,
-      platform_id: job_platforms.id,
-      platform_key: job_platforms.key,
-      platform_name: job_platforms.name,
-      platform_priority: job_platforms.suggestion_priority,
-      label: job_platform_search_presets.label,
-      url_template: job_platform_search_presets.url_template,
-      applicable_hint: job_platform_search_presets.applicable_hint,
-      preset_priority: job_platform_search_presets.suggestion_priority,
+      id: job_platforms.id,
+      key: job_platforms.key,
+      name: job_platforms.name,
+      suggestion_priority: job_platforms.suggestion_priority,
+      suggestion_hint: job_platforms.suggestion_hint,
     })
-    .from(job_platform_search_presets)
-    .innerJoin(
-      job_platforms,
-      eq(job_platform_search_presets.platform_id, job_platforms.id),
+    .from(job_platforms)
+    .where(
+      and(
+        isNotNull(job_platforms.suggestion_priority),
+        isNotNull(job_platforms.search_page_url),
+      ),
     )
-    .where(and(
-      isNotNull(job_platforms.suggestion_priority),
-      isNotNull(job_platform_search_presets.suggestion_priority),
-    ))
     .orderBy(
       asc(job_platforms.suggestion_priority),
-      asc(job_platform_search_presets.suggestion_priority),
-      asc(job_platform_search_presets.id),
+      asc(job_platforms.id),
     );
 }
 
-function renderPresetsForPrompt(rows: PresetRow[]): string {
-  // Group by platform so the LLM sees the platforms structured and chooses
-  // a preset within the most-applicable platform.
-  const byPlatform = new Map<string, PresetRow[]>();
-  for (const row of rows) {
-    const list = byPlatform.get(row.platform_key) ?? [];
-    list.push(row);
-    byPlatform.set(row.platform_key, list);
-  }
+function renderPlatformsForPrompt(rows: SuggestablePlatform[]): string {
   const lines: string[] = [];
-  for (const [key, presets] of byPlatform) {
-    lines.push(`### ${presets[0].platform_name} (${key})`);
-    for (const p of presets) {
-      const placeholders = [
-        p.url_template.includes("{KEYWORDS}") ? "{KEYWORDS}" : null,
-        p.url_template.includes("{LOCATION}") ? "{LOCATION}" : null,
-      ].filter(Boolean).join(" ");
-      const placeholderInfo = placeholders.length > 0
-        ? ` — placeholders: ${placeholders}`
-        : " — literal URL, no placeholders";
-      lines.push(`- preset_id=${p.id}: "${p.label}"${placeholderInfo}`);
-      lines.push(`  Template: ${p.url_template}`);
-      if (p.applicable_hint) {
-        lines.push(`  When to pick: ${p.applicable_hint}`);
-      }
+  for (const p of rows) {
+    lines.push(`- platform_id=${p.id}: "${p.name}" (key=${p.key})`);
+    if (p.suggestion_hint) {
+      lines.push(`  When to pick: ${p.suggestion_hint}`);
     }
-    lines.push("");
   }
-  return lines.join("\n").trimEnd();
+  return lines.join("\n");
 }
-
-// fillSearchTemplate now lives in $lib/job-platforms/url-template so the
-// client-side add-task form can use the same substitution logic for its
-// live URL preview.
 
 export const POST: RequestHandler = async ({ cookies, locals }) => {
   const user = requireAuth(locals);
@@ -102,21 +75,21 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
-  const presets = await fetchSuggestablePresets();
-  if (presets.length === 0) {
+  const platforms = await fetchSuggestablePlatforms();
+  if (platforms.length === 0) {
     return json(
-      { success: false, message: "No suggestable presets configured" },
+      { success: false, message: "No suggestable platforms configured" },
       { status: 503 },
     );
   }
 
-  const presetsList = renderPresetsForPrompt(presets);
-  const validPresetIds = new Set(presets.map((p) => p.id));
+  const platformsList = renderPlatformsForPrompt(platforms);
+  const validPlatformIds = new Set(platforms.map((p) => p.id));
 
   const result = await createAndGenerateAiChat(
     profileId,
     "suggest_import_tasks",
-    { presets_list: presetsList },
+    { platforms_list: platformsList },
     undefined,
     {
       profileDataFields: [
@@ -162,61 +135,38 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
-  // Resolve each preset_id back to a real preset, substitute placeholders,
-  // build the response shape the client expects. Silently drop any
-  // suggestion that references an unknown preset_id (defensive — the LLM
-  // shouldn't, but the validator only checks schema shape, not ID validity).
+  // Drop any suggestion referencing an unknown platform_id. Defensive: the
+  // schema only validates shape, not membership, and the LLM occasionally
+  // hallucinates IDs.
   const tasks: Array<{
-    preset_id: number;
+    platform_id: number;
     platform: string;
     platform_name: string;
-    preset_label: string;
-    url: string;
     keywords: string | null;
-    location: string | null;
     note: string;
     relevance: "high" | "medium" | "low";
   }> = [];
-  const droppedPresetIds: number[] = [];
+  const droppedIds: number[] = [];
   for (const task of validated.data.tasks) {
-    if (!validPresetIds.has(task.preset_id)) {
-      droppedPresetIds.push(task.preset_id);
+    if (!validPlatformIds.has(task.platform_id)) {
+      droppedIds.push(task.platform_id);
       continue;
     }
-    const preset = presets.find((p) => p.id === task.preset_id)!;
-
-    // Reject suggestions where a *path*-position placeholder is required
-    // but null — substituting empty into the path would produce 404 URLs
-    // like wellfound.com/role/ . Query-string-position empties are
-    // handled gracefully by fillTemplate (it strips the param).
-    const pathBlankRequired =
-      (preset.url_template.match(/\/[^?]*\{KEYWORDS\}/) && !task.keywords) ||
-      (preset.url_template.match(/\/[^?]*\{LOCATION\}/) && !task.location);
-    if (pathBlankRequired) {
-      droppedPresetIds.push(task.preset_id);
-      continue;
-    }
-
+    const platform = platforms.find((p) => p.id === task.platform_id)!;
     tasks.push({
-      preset_id: preset.id,
-      platform: preset.platform_key,
-      platform_name: preset.platform_name,
-      preset_label: preset.label,
-      url: fillSearchTemplate(preset.url_template, task.keywords, task.location),
+      platform_id: platform.id,
+      platform: platform.key,
+      platform_name: platform.name,
       keywords: task.keywords,
-      location: task.location,
       note: task.note,
       relevance: task.relevance,
     });
   }
-  if (droppedPresetIds.length > 0) {
-    // Log instead of failing — observability for I3 (LLM hallucination
-    // rate or path-position misuse). The user still sees the kept tasks.
+  if (droppedIds.length > 0) {
     console.warn(
-      `[suggest_import_tasks] Dropped ${droppedPresetIds.length} task(s) ` +
-        `referencing invalid or unfillable preset_ids: ` +
-        `[${droppedPresetIds.join(", ")}]. ` +
-        `Valid IDs offered: [${[...validPresetIds].join(", ")}].`,
+      `[suggest_import_tasks] Dropped ${droppedIds.length} task(s) ` +
+        `referencing invalid platform_ids: [${droppedIds.join(", ")}]. ` +
+        `Valid IDs offered: [${[...validPlatformIds].join(", ")}].`,
     );
   }
 

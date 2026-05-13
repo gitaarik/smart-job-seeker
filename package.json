@@ -48,6 +48,8 @@
     "host:seed:test-user": "npx vite-node scripts/seed-test-user.ts",
     "host:set-user-password": "npx vite-node scripts/set-user-password.ts --",
     "host:trigger-run": "npx vite-node scripts/trigger-run.ts --",
+    "host:trigger-search-form-probe": "npx vite-node scripts/trigger-search-form-probe.ts --",
+    "host:migrate-search-terms": "npx vite-node scripts/migrate-search-terms.ts",
     "host:match:jobs": "echo 'Moved to cloud — use npm run match:jobs from the cloud directory'",
     "container:match:jobs": "echo 'Moved to cloud — use npm run match:jobs from the cloud directory'",
     "prepare": "svelte-kit sync || echo ''",

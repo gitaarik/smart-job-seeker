@@ -911,27 +911,26 @@ In your feedback:
   },
 
   "suggest_import_tasks": {
-    system_prompt: `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. Based on their profile you will suggest 1–3 tailored job-search "import tasks" — automated scrapes of search-result pages on supported job platforms.
+    system_prompt: `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. Based on their profile you will suggest 1–3 tailored job-search "import tasks" — automated scrapes that drive each platform's own search UI.
 
 ## Applicant profile
 
 \${data}
 
-## Available search presets
+## Available platforms
 
-Each platform has one or more curated "presets" — pre-validated URLs (sometimes with {KEYWORDS} and/or {LOCATION} placeholders) that the server will fill in based on the values you provide. You MUST pick a preset by its preset_id from the list below; you do NOT construct URLs.
+The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, and submits. You do NOT construct URLs — just pick a platform by its platform_id and provide search keywords.
 
-\${presets_list}
+\${platforms_list}
 
 Guidelines:
-- Pick 1–3 presets that best match the profile, drawing on the per-preset "When to pick" hints.
-- For variety, prefer presets from different platforms unless a single platform has the only strong fits.
-- Provide "keywords" only if the chosen preset's template contains {KEYWORDS}. Provide the plain (un-URL-encoded) keyword string — the server URL-encodes. Choose 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would actually search for.
-- Provide "location" only if the chosen preset's template contains {LOCATION} AND the profile has a relevant city/country. For remote-only profiles, set location to null even if the preset accepts it.
-- "note" must be ≤ 80 chars and reference what in the profile drove the suggestion (e.g. "Based on your React/TypeScript stack and Amsterdam location").
-- "relevance": "high" if the preset closely matches the profile's strongest signals; "medium" for a reasonable fit; "low" for a generic fallback when the profile is sparse.
-- If the profile is essentially empty (no title, no skills, no location), return ONE preset (LinkedIn Generic search if available) with relevance="low" and a note like "Profile is sparse — generic starter search you can edit".
-- DO NOT invent preset IDs. Every preset_id in your response MUST appear in the list above.
+- Pick 1–3 platforms that best match the profile, drawing on the per-platform "When to pick" hints.
+- For variety, prefer different platforms unless one is a clearly dominant fit.
+- "keywords" is usually present — it's what the scraper will type into the platform's search input. Provide the plain (un-URL-encoded) string. Choose 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would actually search for. Set keywords to null ONLY when the platform's hint explicitly says it's a curated single-page listing (no search box) — then the scraper imports everything on that page.
+- "note" must be ≤ 80 chars and reference what in the profile drove the suggestion (e.g. "Based on your React/TypeScript stack").
+- "relevance": "high" if the platform closely matches the profile's strongest signals; "medium" for a reasonable fit; "low" for a generic fallback when the profile is sparse.
+- If the profile is essentially empty (no title, no skills), return ONE platform (LinkedIn if available) with relevance="low" and a note like "Profile is sparse — generic starter search you can edit".
+- DO NOT invent platform IDs. Every platform_id in your response MUST appear in the list above.
 
 ## Output format
 
@@ -940,17 +939,15 @@ Return JSON with this exact shape (the wrapping key MUST be "tasks"):
 {
   "tasks": [
     {
-      "preset_id": 7,
+      "platform_id": 16,
       "keywords": "react developer",
-      "location": "Amsterdam, Netherlands",
-      "note": "Based on your React/TypeScript stack and Amsterdam location",
+      "note": "Based on your React/TypeScript stack",
       "relevance": "high"
     },
     {
-      "preset_id": 12,
-      "keywords": null,
-      "location": null,
-      "note": "Backend Python work fits this Wellfound role page",
+      "platform_id": 21,
+      "keywords": "python backend",
+      "note": "Backend Python work matches this platform's audience",
       "relevance": "medium"
     }
   ]

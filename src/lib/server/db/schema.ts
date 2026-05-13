@@ -891,11 +891,12 @@ export const job_platforms = pgTable("job_platforms", {
   type: varchar({ length: 255 }),
   key: varchar({ length: 255 }).notNull(),
   login_page_url: varchar({ length: 255 }),
-  // Search URL template with {KEYWORDS} and {LOCATION} placeholders. Null
-  // means the platform doesn't expose search via URL params (e.g. login-
-  // gated marketplaces) — suggest_import_tasks won't propose URL-flow
-  // tasks for those.
-  search_url_template: text(),
+  /** Direct URL to the platform's search entry page (the page that hosts
+   *  the keyword input + initial filter UI). Used by the search-form
+   *  scraper to navigate before identifying form fields. Falls back to
+   *  the platform's `url` when null. Example: LinkedIn's would be
+   *  `https://www.linkedin.com/jobs/`. */
+  search_page_url: varchar({ length: 512 }),
   // suggest_import_tasks sort order: 1 = top, null = not in the suggestable
   // pool. Curated manually so we can tune which platforms get surfaced first.
   suggestion_priority: integer(),
@@ -915,62 +916,6 @@ export const job_platforms = pgTable("job_platforms", {
   unique("job_platforms_key_unique").on(table.key),
 ]);
 
-// Per-platform "search presets" — canonical, ready-to-use URLs (or URL
-// templates with {KEYWORDS}/{LOCATION} placeholders) that the AI suggest
-// endpoint picks from. Replaces the single search_url_template column on
-// job_platforms, which couldn't handle platforms with multiple URL formats
-// (LinkedIn's remote-filter, last-24h, etc.) or path-slug platforms
-// (Wellfound's /role/{slug}) cleanly.
-//
-// Each preset is either:
-//  - a template with {KEYWORDS} and/or {LOCATION} placeholders (server
-//    substitutes URL-encoded values from the LLM response), or
-//  - a literal URL with no placeholders (used as-is — landing-only flows
-//    like X-Team's /jobs/ listings, or fixed path slugs like Wellfound's
-//    /role/python-developer).
-//
-// Signals migrate to per-preset granularity: which preset succeeded /
-// failed is more informative than which platform did. The platform-level
-// signal columns on job_platforms remain for aggregate dashboards.
-export const job_platform_search_presets = pgTable("job_platform_search_presets", {
-  id: serial().primaryKey().notNull(),
-  platform_id: integer().notNull(),
-  label: varchar({ length: 128 }).notNull(),
-  url_template: text().notNull(),
-  applicable_hint: text(),
-  // Per-preset filter configuration. Each entry is either:
-  //   - single-select: { multi: false, options: { value_key: url_fragment } }
-  //     where url_fragment is a complete "key=value" string appended to the URL.
-  //   - multi-select:  { multi: true, param: "<key>", sep: ",", options: { value_key: raw_value } }
-  //     where the chosen values are joined by `sep` and appended as `param=val1,val2`.
-  // Filter names are drawn from a small canonical taxonomy (sort_by,
-  // time_posted, work_location, job_type) so the picker UI can label them
-  // consistently across platforms. Empty object = no filters for this preset.
-  params: jsonb().$type<Record<
-    string,
-    | { multi: false; options: Record<string, string> }
-    | {
-      multi: true;
-      param: string;
-      sep: string;
-      options: Record<string, string>;
-    }
-  >>().default({}).notNull(),
-  // suggestion ordering within a platform; null = not in suggest pool.
-  suggestion_priority: integer(),
-  success_count: integer().default(0).notNull(),
-  failure_count: integer().default(0).notNull(),
-  last_success_at: timestamp({ withTimezone: true, mode: "date" }),
-  last_failure_at: timestamp({ withTimezone: true, mode: "date" }),
-  date_created: timestamp({ withTimezone: true, mode: "date" }).defaultNow().notNull(),
-  date_updated: timestamp({ withTimezone: true, mode: "date" }),
-}, (table) => [
-  foreignKey({
-    columns: [table.platform_id],
-    foreignColumns: [job_platforms.id],
-    name: "job_platform_search_presets_platform_id_fk",
-  }).onDelete("cascade"),
-]);
 
 // Audit log of platform edits made via the admin UI. One row per changed
 // field per save — lets us trace e.g. "this template changed two weeks ago
@@ -1194,7 +1139,7 @@ export const references = pgTable("references", {
  * the findings updates the platform's login_page_url and creates a
  * Generic-search preset on it.
  */
-export const platform_discovery_runs = pgTable("platform_discovery_runs", {
+export const search_form_probe_runs = pgTable("search_form_probe_runs", {
   id: serial().primaryKey().notNull(),
   /** Platform this run augments. Discovery always operates on an existing
    *  job_platforms row — admin first creates the platform with name + base
@@ -1252,7 +1197,7 @@ export const platform_discovery_runs = pgTable("platform_discovery_runs", {
   foreignKey({
     columns: [table.platform_id],
     foreignColumns: [job_platforms.id],
-    name: "platform_discovery_runs_platform_id_fkey",
+    name: "search_form_probe_runs_platform_id_fkey",
   }).onDelete("cascade"),
 ]);
 
@@ -1260,7 +1205,7 @@ export const platform_discovery_runs = pgTable("platform_discovery_runs", {
  * Worker-emitted log lines for a platform-discovery run. Parallels
  * scraper_logs (which is keyed to search_task_runs).
  */
-export const platform_discovery_logs = pgTable("platform_discovery_logs", {
+export const search_form_probe_logs = pgTable("search_form_probe_logs", {
   id: serial().primaryKey().notNull(),
   discovery_run_id: integer().notNull(),
   level: varchar({ length: 10 }).notNull(),
@@ -1268,15 +1213,46 @@ export const platform_discovery_logs = pgTable("platform_discovery_logs", {
   timestamp: timestamp({ precision: 6, withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
-  index("platform_discovery_logs_run_id_timestamp_idx").using(
+  index("search_form_probe_logs_run_id_timestamp_idx").using(
     "btree",
     table.discovery_run_id.asc().nullsLast().op("int4_ops"),
     table.timestamp.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.discovery_run_id],
-    foreignColumns: [platform_discovery_runs.id],
-    name: "platform_discovery_logs_run_id_fkey",
+    foreignColumns: [search_form_probe_runs.id],
+    name: "search_form_probe_logs_run_id_fkey",
+  }).onDelete("cascade"),
+]);
+
+/**
+ * HTML debug data for platform discovery runs. Stores both raw and
+ * stripped HTML captured during discovery analysis for debugging LLM issues.
+ */
+export const search_form_probe_debug = pgTable("search_form_probe_debug", {
+  id: serial().primaryKey().notNull(),
+  /** Discovery run this debug data belongs to */
+  discovery_run_id: integer().notNull(),
+  /** Stage of discovery: 'search' or 'results' */
+  stage: varchar({ length: 20 }).notNull(),
+  /** URL of the page when HTML was captured */
+  page_url: text().notNull(),
+  /** Raw HTML from the browser */
+  raw_html: text().notNull(),
+  /** Stripped HTML that was sent to the LLM for analysis */
+  stripped_html: text().notNull(),
+  /** When this debug data was captured */
+  captured_at: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  index("search_form_probe_debug_run_id_idx").using(
+    "btree",
+    table.discovery_run_id.asc().nullsLast().op("int4_ops"),
+  ),
+  foreignKey({
+    columns: [table.discovery_run_id],
+    foreignColumns: [search_form_probe_runs.id],
+    name: "search_form_probe_debug_run_id_fkey",
   }).onDelete("cascade"),
 ]);
 
@@ -1799,35 +1775,21 @@ export const search_tasks = pgTable("search_tasks", {
   }),
   sjsbrowser_api_key: integer(),
   login_mode: varchar({ length: 10 }).default("auto").notNull(),
-  // When the task was created from an AI-suggested preset, link back to the
-  // preset row so we can attribute success/failure signals to the preset
-  // (not just the platform). Null means "custom URL not derived from a
-  // preset" — the platform-level signal is the only attribution we have.
-  preset_id: integer(),
-  // Plain (un-URL-encoded) location string the user picked when creating
-  // the task from a preset whose template has a {LOCATION} placeholder.
-  // Persisted separately so the edit form can show it as a structured
-  // field instead of having to parse it back out of search_url. Null for
-  // older tasks created before this column existed; the edit form falls
-  // back to the URL when re-rendering.
+  // Plain location string the user picked when creating the task. Kept
+  // around for tasks created under the legacy URL-template flow; new
+  // tasks under the dynamic form-fill flow don't populate it. Will be
+  // resurrected when a proper structured location picker lands.
   search_location: text(),
-  // User-selected filter values for this task. For single-select filters
-  // the value is a string value_key, e.g. { sort_by: "newest" }; for
-  // multi-select filters it's an array, e.g. { work_location: ["remote",
-  // "hybrid"] }. The preset's params jsonb declares which filter is which
-  // and how each value_key maps to a URL fragment.
+  // User-selected canonical filter values. Single-select filters: a value_key
+  // string (e.g. { sort_by: "newest" }). Multi-select filters: an array
+  // (e.g. { work_location: ["remote", "hybrid"] }). Consumed at scrape time
+  // by the search-form configure step.
   search_filters: jsonb().$type<Record<string, string | string[]>>().default({}).notNull(),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
     "btree",
     table.platform_profile_id.asc().nullsLast().op("int4_ops"),
   ),
-  // Partial index on preset_id so ON DELETE SET NULL doesn't seq-scan
-  // when an admin deletes a preset; most tasks have null preset_id
-  // (custom URLs) so the partial form is much smaller than a full index.
-  index("idx_search_tasks_preset_id")
-    .on(table.preset_id)
-    .where(sql`${table.preset_id} IS NOT NULL`),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
@@ -1837,11 +1799,6 @@ export const search_tasks = pgTable("search_tasks", {
     columns: [table.platform_id],
     foreignColumns: [job_platforms.id],
     name: "search_tasks_platform_foreign",
-  }).onDelete("set null"),
-  foreignKey({
-    columns: [table.preset_id],
-    foreignColumns: [job_platform_search_presets.id],
-    name: "search_tasks_preset_id_fk",
   }).onDelete("set null"),
   foreignKey({
     columns: [table.platform_profile_id],

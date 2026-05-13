@@ -32,7 +32,7 @@ export interface DiscoveryDeviceOption {
   shared: boolean;
 }
 
-export async function loadDiscoveryFormData(
+export async function loadSearchFormProbeFormData(
   platformId: number,
   userId: string,
 ): Promise<{

@@ -32,72 +32,15 @@
   );
   let suggestionHint = $state(data.platform.suggestion_hint ?? "");
 
-  // Preset editing state — track which preset is being edited inline.
-  let editingPresetId = $state<number | null>(null);
-  let testingPresetId = $state<number | null>(null);
-  let lastTestResult = $state<
-    | {
-      presetId: number;
-      testUrl: string;
-      status: number;
-      contentLength: number;
-      lookedLikeJobs: boolean;
-      networkError: string | null;
-      bodyPreview: string;
-    }
-    | null
-  >(null);
-
-  // Inline-edit working copies (only for the preset currently being edited).
-  let editLabel = $state("");
-  let editUrlTemplate = $state("");
-  let editHint = $state("");
-  let editPriority = $state("");
-
   function discoveryStatusColor(s: string) {
     if (s === "success") return "text-green-600 dark:text-green-400";
     if (s === "error") return "text-red-600 dark:text-red-400";
     if (s === "running" || s === "queued" || s === "cancelling") {
       return "text-blue-600 dark:text-blue-400";
     }
-    if (s === "draft") return "text-amber-600 dark:text-amber-400";
     if (s === "cancelled") return "text-[var(--dash-text-muted)]";
     return "text-[var(--dash-text-muted)]";
   }
-
-  let creatingDraft = $state(false);
-  let createDraftError = $state<string | null>(null);
-
-  async function createDraftRun() {
-    creatingDraft = true;
-    createDraftError = null;
-    try {
-      const res = await fetch("/api/admin/discover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform_id: data.platform.id }),
-      });
-      if (!res.ok) {
-        createDraftError = (await res.text()) || `HTTP ${res.status}`;
-        return;
-      }
-      const json = await res.json();
-      window.location.href = `/admin/job-platforms/discover/${json.run.id}`;
-    } finally {
-      creatingDraft = false;
-    }
-  }
-
-  // Add-preset state.
-  let addingPreset = $state(false);
-  let newLabel = $state("");
-  let newUrlTemplate = $state("");
-  let newHint = $state("");
-  let newPriority = $state("");
-
-  // Test-keywords / test-location used by all preset test buttons.
-  let testKeywords = $state("engineer");
-  let testLocation = $state("");
 
   // Phase 1 platform-level signal stats.
   let totalRuns = $derived(
@@ -108,31 +51,6 @@
       ? Math.round((data.platform.success_count / totalRuns) * 100)
       : null,
   );
-
-  function startEditing(p: typeof data.presets[number]) {
-    editingPresetId = p.id;
-    editLabel = p.label;
-    editUrlTemplate = p.url_template;
-    editHint = p.applicable_hint ?? "";
-    editPriority = p.suggestion_priority?.toString() ?? "";
-    lastTestResult = null;
-  }
-
-  function cancelEditing() {
-    editingPresetId = null;
-    editLabel = "";
-    editUrlTemplate = "";
-    editHint = "";
-    editPriority = "";
-  }
-
-  function resetAddForm() {
-    addingPreset = false;
-    newLabel = "";
-    newUrlTemplate = "";
-    newHint = "";
-    newPriority = "";
-  }
 
   function formatTimestamp(ts: Date | string | null): string {
     if (!ts) return "";
@@ -337,308 +255,36 @@
     </div>
   </form>
 
-  <!-- Discovery runs -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
+  <!-- Discovery — the dedicated discovery page hosts the config + history -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
     <div class="flex items-start justify-between gap-3">
       <div>
         <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
         <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          Run the discovery scraper to auto-detect this platform's search URL
-          template + filter parameters. Discovery logs in first (so it can
-          reach gated listings), then probes the search form and filter
-          widgets. Pick a credential and optional device on the next page.
+          The discovery scraper auto-detects this platform's search URL
+          template + filter parameters by logging in, probing the search
+          form, and clicking each filter option. Configure credentials and
+          start runs on the discovery page.
         </p>
         {#if !data.platform.login_page_url}
-          <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            Set a login page URL above before starting discovery.
+          <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">
+            Set a login page URL above first — discovery requires login.
+          </p>
+        {/if}
+        {#if data.discoveryRuns.length > 0}
+          {@const lastRun = data.discoveryRuns[0]}
+          <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+            {data.discoveryRuns.length} run{data.discoveryRuns.length === 1 ? "" : "s"}
+            ·
+            <span class={discoveryStatusColor(lastRun.status)}>last {lastRun.status}</span>
+            {new Date(lastRun.started_at).toLocaleString()}
           </p>
         {/if}
       </div>
-      <button
-        type="button"
-        onclick={createDraftRun}
-        disabled={!data.platform.login_page_url || creatingDraft}
-        class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] whitespace-nowrap shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
-      >{creatingDraft ? "Creating…" : "New discovery"}</button>
-    </div>
-
-    {#if createDraftError}
-      <p class="text-xs text-red-600 dark:text-red-400">{createDraftError}</p>
-    {/if}
-
-    {#if data.discoveryRuns.length === 0}
-      <p class="text-xs text-[var(--dash-text-muted)]">No discovery runs yet.</p>
-    {:else}
-      <div class="border border-[var(--dash-border)] rounded overflow-hidden">
-        {#each data.discoveryRuns as run (run.id)}
-          <a
-            href={`/admin/job-platforms/discover/${run.id}`}
-            class="flex items-center justify-between gap-3 px-3 py-2 border-b border-[var(--dash-border)] last:border-b-0 hover:bg-[var(--dash-bg)] transition-colors text-xs"
-          >
-            <div class="min-w-0 flex-1">
-              <span class="font-mono text-[var(--dash-text)]">Run #{run.id}</span>
-              <span class="text-[var(--dash-text-muted)] ml-2">
-                {new Date(run.started_at).toLocaleString()}
-              </span>
-              {#if run.applied_at}
-                <span class="text-green-600 dark:text-green-400 ml-2">· applied</span>
-              {/if}
-            </div>
-            <span class="font-medium {discoveryStatusColor(run.status)}">{run.status}</span>
-          </a>
-        {/each}
-      </div>
-    {/if}
-  </div>
-
-  <!-- Search presets -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-4">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-sm font-medium text-[var(--dash-text)]">Search presets</h3>
-        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          One row per ready-to-use URL on this platform. Templates may use
-          <code>&#123;KEYWORDS&#125;</code> and <code>&#123;LOCATION&#125;</code>
-          placeholders — the server URL-encodes and substitutes values from the
-          LLM. Literal URLs (no placeholders) are used as-is.
-        </p>
-      </div>
-      {#if !addingPreset}
-        <button
-          type="button"
-          onclick={() => (addingPreset = true)}
-          class="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)]"
-        >
-          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-          Add preset
-        </button>
-      {/if}
-    </div>
-
-    {#if addingPreset}
-      <form
-        method="POST"
-        action="?/addPreset"
-        class="border border-[var(--dash-primary)] rounded p-3 space-y-3 bg-[var(--dash-bg)]"
-        use:enhance={() => async ({ result, update }) => {
-          if (result.type === "success") {
-            resetAddForm();
-            await invalidateAll();
-          } else {
-            await update();
-          }
-        }}
-      >
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-label">Label *</label>
-            <input id="add-label" name="label" type="text" bind:value={newLabel} required class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-priority">Priority (within platform)</label>
-            <input id="add-priority" name="suggestion_priority" type="number" bind:value={newPriority} min="1" placeholder="blank = not in pool" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-url">URL template *</label>
-          <input id="add-url" name="url_template" type="text" bind:value={newUrlTemplate} required placeholder="https://example.com/jobs?q=&#123;KEYWORDS&#125;&l=&#123;LOCATION&#125;" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)] font-mono" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="add-hint">When to pick</label>
-          <input id="add-hint" name="applicable_hint" type="text" bind:value={newHint} placeholder="Hint shown to the LLM about when to pick this preset" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-        </div>
-        <div class="flex justify-end gap-2">
-          <button type="button" onclick={resetAddForm} class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">Cancel</button>
-          <button type="submit" class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)]">Add preset</button>
-        </div>
-      </form>
-    {/if}
-
-    {#if data.presets.length === 0 && !addingPreset}
-      <p class="text-sm text-[var(--dash-text-muted)]">
-        No search presets configured yet. Add one above to make this platform
-        suggestable.
-      </p>
-    {/if}
-
-    <div class="space-y-2">
-      {#each data.presets as preset (preset.id)}
-        {@const presetTotal = preset.success_count + preset.failure_count}
-        {@const presetSuccessRate = presetTotal > 0
-          ? Math.round((preset.success_count / presetTotal) * 100)
-          : null}
-        <div
-          class="border border-[var(--dash-border)] rounded p-3 space-y-2 {editingPresetId === preset.id
-            ? 'bg-[var(--dash-bg)]'
-            : ''}"
-        >
-          {#if editingPresetId === preset.id}
-            <!-- Inline edit form -->
-            <form
-              method="POST"
-              action="?/updatePreset"
-              class="space-y-3"
-              use:enhance={() => async ({ result, update }) => {
-                if (result.type === "success") {
-                  cancelEditing();
-                  await invalidateAll();
-                } else {
-                  await update();
-                }
-              }}
-            >
-              <input type="hidden" name="preset_id" value={preset.id} />
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-label-{preset.id}">Label</label>
-                  <input id="edit-label-{preset.id}" name="label" type="text" bind:value={editLabel} required class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-priority-{preset.id}">Priority</label>
-                  <input id="edit-priority-{preset.id}" name="suggestion_priority" type="number" bind:value={editPriority} min="1" class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-                </div>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-url-{preset.id}">URL template</label>
-                <input id="edit-url-{preset.id}" name="url_template" type="text" bind:value={editUrlTemplate} required class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)] font-mono" />
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="edit-hint-{preset.id}">When to pick</label>
-                <input id="edit-hint-{preset.id}" name="applicable_hint" type="text" bind:value={editHint} class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-              </div>
-              <div class="flex justify-end gap-2">
-                <button type="button" onclick={cancelEditing} class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">Cancel</button>
-                <button type="submit" class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)]">Save preset</button>
-              </div>
-            </form>
-          {:else}
-            <!-- Read-only row -->
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-medium text-[var(--dash-text)]">{preset.label}</span>
-                  {#if preset.suggestion_priority !== null}
-                    <span class="text-xs text-[var(--dash-text-muted)]">priority {preset.suggestion_priority}</span>
-                  {:else}
-                    <span class="text-xs text-[var(--dash-text-muted)]">(not in suggest pool)</span>
-                  {/if}
-                </div>
-                <div class="text-xs font-mono text-[var(--dash-text-secondary)] mt-1 break-all">
-                  {preset.url_template}
-                </div>
-                {#if preset.applicable_hint}
-                  <div class="text-xs text-[var(--dash-text-secondary)] mt-1">{preset.applicable_hint}</div>
-                {/if}
-                <div class="flex items-center gap-3 text-xs mt-2">
-                  <span class="text-[var(--dash-text-muted)]">Signals:</span>
-                  {#if presetTotal === 0}
-                    <span class="text-[var(--dash-text-muted)]">no runs yet</span>
-                  {:else}
-                    <span class="text-green-600 dark:text-green-400">{preset.success_count} ok</span>
-                    <span class="text-red-600 dark:text-red-400">{preset.failure_count} fail</span>
-                    {#if presetSuccessRate != null}
-                      <span class="text-[var(--dash-text)]">({presetSuccessRate}%)</span>
-                    {/if}
-                  {/if}
-                </div>
-              </div>
-              <div class="flex items-start gap-1 flex-shrink-0">
-                <button type="button" onclick={() => startEditing(preset)} class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] rounded hover:bg-[var(--dash-bg)]" title="Edit">
-                  <FontAwesomeIcon icon={faPenToSquare} class="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (testingPresetId = testingPresetId === preset.id ? null : preset.id)}
-                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] rounded hover:bg-[var(--dash-bg)]"
-                  title="Test"
-                >
-                  <FontAwesomeIcon icon={faFlask} class="w-3 h-3" />
-                </button>
-                <form
-                  method="POST"
-                  action="?/deletePreset"
-                  use:enhance={() => async ({ result, update }) => {
-                    if (result.type === "success") {
-                      await invalidateAll();
-                    } else {
-                      await update();
-                    }
-                  }}
-                >
-                  <input type="hidden" name="preset_id" value={preset.id} />
-                  <button
-                    type="submit"
-                    onclick={(e) => {
-                      if (!confirm(`Delete preset "${preset.label}"? This can't be undone.`)) e.preventDefault();
-                    }}
-                    class="p-1.5 text-[var(--dash-text-secondary)] hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-[var(--dash-bg)]"
-                    title="Delete"
-                  >
-                    <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {#if testingPresetId === preset.id}
-              <form
-                method="POST"
-                action="?/testPreset"
-                class="mt-2 p-3 bg-[var(--dash-bg)] rounded border border-[var(--dash-border)] space-y-2"
-                use:enhance={() => async ({ result }) => {
-                  // Read straight from `result.data` rather than the `form`
-                  // prop — the prop is the previous-action's data until
-                  // SvelteKit re-renders, and we don't want to wait for
-                  // that (or risk reading stale state).
-                  if (
-                    result.type === "success" &&
-                    result.data &&
-                    "testResult" in result.data &&
-                    result.data.testResult
-                  ) {
-                    lastTestResult = {
-                      presetId: preset.id,
-                      ...(result.data.testResult as Omit<
-                        NonNullable<typeof lastTestResult>,
-                        "presetId"
-                      >),
-                    };
-                  }
-                }}
-              >
-                <input type="hidden" name="url_template" value={preset.url_template} />
-                <div class="grid grid-cols-2 gap-2">
-                  <input name="test_keywords" type="text" bind:value={testKeywords} placeholder="keywords" class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-                  <input name="test_location" type="text" bind:value={testLocation} placeholder="location (optional)" class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded bg-[var(--dash-card)] text-[var(--dash-text)]" />
-                </div>
-                <div class="flex items-center justify-between">
-                  <p class="text-xs text-[var(--dash-text-muted)]">
-                    Many sites 403 anti-bot fetches — that's expected and doesn't mean broken.
-                  </p>
-                  <button type="submit" class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text)] hover:bg-[var(--dash-card)]">Run test</button>
-                </div>
-                {#if lastTestResult && lastTestResult.presetId === preset.id}
-                  <div class="text-xs space-y-1 pt-2 border-t border-[var(--dash-border)]">
-                    <div class="flex justify-between gap-2">
-                      <span class="font-mono break-all flex-1 text-[var(--dash-text-secondary)]">{lastTestResult.testUrl}</span>
-                      <a href={lastTestResult.testUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--dash-primary)] hover:underline whitespace-nowrap">Open</a>
-                    </div>
-                    {#if lastTestResult.networkError}
-                      <div class="text-red-600 dark:text-red-400">Network error: {lastTestResult.networkError}</div>
-                    {:else}
-                      <div class="flex gap-4">
-                        <span>HTTP <span class={lastTestResult.status >= 200 && lastTestResult.status < 300 ? 'text-green-600 dark:text-green-400' : lastTestResult.status >= 400 ? 'text-red-600 dark:text-red-400' : ''}>{lastTestResult.status}</span></span>
-                        <span class="text-[var(--dash-text-secondary)]">{lastTestResult.contentLength} bytes</span>
-                        <span class={lastTestResult.lookedLikeJobs ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}>{lastTestResult.lookedLikeJobs ? "Looks like jobs" : "Inconclusive"}</span>
-                      </div>
-                    {/if}
-                  </div>
-                {/if}
-              </form>
-            {/if}
-          {/if}
-        </div>
-      {/each}
+      <a
+        href={`/admin/job-platforms/${data.platform.id}/discover`}
+        class="px-4 py-2 text-sm bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] whitespace-nowrap shrink-0"
+      >Open discovery</a>
     </div>
   </div>
 
@@ -652,7 +298,7 @@
       <h3 class="text-sm font-medium text-[var(--dash-text)]">Platform-level signals</h3>
       <span
         class="text-xs text-[var(--dash-text-muted)]"
-      >aggregate across all presets</span>
+      >aggregate across all scrape runs</span>
     </div>
     {#if totalRuns === 0}
       <p

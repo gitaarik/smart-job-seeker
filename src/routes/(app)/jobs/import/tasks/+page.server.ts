@@ -4,7 +4,6 @@ import { dbDirect as db } from "$lib/server/db";
 import { and, asc, desc, eq, isNotNull, like, or } from "drizzle-orm";
 import {
   api_keys,
-  job_platform_search_presets,
   job_platforms,
   platform_profiles,
   profiles,
@@ -87,36 +86,24 @@ export const load: PageServerLoad = async ({ parent }) => {
     }
   }
 
-  // All suggestable presets across all in-pool platforms, for the
-  // simplified add-task form's platform/preset picker.
-  const presetRows = await db
+  // Platforms the add-task form will offer: any platform with a
+  // `search_page_url` configured (so the scraper knows where to drive the
+  // search form) and a `suggestion_priority` (curated for the import flow).
+  const importablePlatforms = await db
     .select({
-      preset_id: job_platform_search_presets.id,
-      preset_label: job_platform_search_presets.label,
-      preset_priority: job_platform_search_presets.suggestion_priority,
-      url_template: job_platform_search_presets.url_template,
-      applicable_hint: job_platform_search_presets.applicable_hint,
-      params: job_platform_search_presets.params,
-      platform_id: job_platforms.id,
-      platform_key: job_platforms.key,
-      platform_name: job_platforms.name,
-      platform_url: job_platforms.url,
-      platform_priority: job_platforms.suggestion_priority,
+      id: job_platforms.id,
+      key: job_platforms.key,
+      name: job_platforms.name,
+      url: job_platforms.url,
+      suggestion_priority: job_platforms.suggestion_priority,
+      suggestion_hint: job_platforms.suggestion_hint,
     })
-    .from(job_platform_search_presets)
-    .innerJoin(
-      job_platforms,
-      eq(job_platform_search_presets.platform_id, job_platforms.id),
-    )
+    .from(job_platforms)
     .where(and(
       isNotNull(job_platforms.suggestion_priority),
-      isNotNull(job_platform_search_presets.suggestion_priority),
+      isNotNull(job_platforms.search_page_url),
     ))
-    .orderBy(
-      asc(job_platforms.suggestion_priority),
-      asc(job_platform_search_presets.suggestion_priority),
-      asc(job_platform_search_presets.id),
-    );
+    .orderBy(asc(job_platforms.suggestion_priority), asc(job_platforms.id));
 
   return {
     searchTasks,
@@ -129,7 +116,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     browserCountryCode: profile.browser_country_code ?? "",
     defaultCountryCode: profile.country_code ?? "",
     apiKeyDevices,
-    presets: presetRows,
+    importablePlatforms,
   };
 };
 
@@ -140,9 +127,8 @@ async function getOrCreatePlatform(
   isNew: boolean,
   loginPageUrl: string | null = null,
 ): Promise<number | null> {
-  if (!platformUrl) return null;
-
-  // If we have an existing platform ID and it's not new, update login_page_url if provided
+  // Fast path: existing platform_id, no creation needed (AI suggestions hit
+  // this — they pass platform_id directly without a URL).
   if (platformId && !isNew) {
     if (loginPageUrl !== null) {
       await db.update(job_platforms).set({
@@ -151,6 +137,8 @@ async function getOrCreatePlatform(
     }
     return parseInt(platformId);
   }
+
+  if (!platformUrl) return null;
 
   // Try to find existing platform by URL
   const parsed = new URL(platformUrl);
@@ -288,22 +276,10 @@ export const actions: Actions = {
       "new_credential_security_answer",
     ) as string;
 
-    // Optional preset_id when the task was created from an AI suggestion —
-    // lets us attribute scrape signals back to the preset that produced it.
-    // Strict integer parse: parseInt is too lenient ("13abc" → 13, negatives
-    // pass) and a bogus value here would create a task whose preset signals
-    // never accrue. Reject silently (null = "no preset attribution").
-    const presetIdRaw = formData.get("preset_id");
-    const presetIdStr = typeof presetIdRaw === "string"
-      ? presetIdRaw.trim()
-      : "";
-    const presetId = /^\d+$/.test(presetIdStr)
-      ? parseInt(presetIdStr, 10)
-      : null;
-
-    if (!search_url || search_url.trim().length === 0) {
-      return fail(400, { error: "Search URL is required" });
-    }
+    // search_term is OPTIONAL — listing-only platforms (SvelteJobs, X-Team)
+    // have no search input to fill, so we just navigate and extract. The
+    // scraper checks for keywords/filters at run time and skips form-fill
+    // when there's nothing to apply.
 
     // Get or create platform
     const resolvedPlatformId = await getOrCreatePlatform(
@@ -396,14 +372,12 @@ export const actions: Actions = {
 
     const [newTask] = await db.insert(search_tasks).values({
       note: note?.trim() || null,
-      search_url: search_url.trim(),
+      search_url: search_url?.trim() || null,
       search_term: search_term?.trim() || null,
       search_location: search_location?.trim() || null,
       search_filters,
       platform_id: resolvedPlatformId,
       platform_profile_id: resolvedCredentialId,
-      // presetId was already validated as a strict positive int above.
-      preset_id: presetId,
       login_mode: ["auto", "manual", "none"].includes(loginMode)
         ? loginMode
         : "auto",

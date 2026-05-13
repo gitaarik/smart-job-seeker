@@ -122,7 +122,6 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     search_term?: string | null;
     search_location?: string | null;
     search_filters?: Record<string, string | string[]>;
-    preset_id?: number | null;
     platform_id?: number | null;
     browser_provider?: string | null;
     login_mode?: string;
@@ -143,9 +142,6 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   }
   if (body.search_filters !== undefined) {
     data.search_filters = body.search_filters;
-  }
-  if (body.preset_id !== undefined) {
-    data.preset_id = body.preset_id;
   }
   if (body.platform_id !== undefined) {
     data.platform_id = body.platform_id;
