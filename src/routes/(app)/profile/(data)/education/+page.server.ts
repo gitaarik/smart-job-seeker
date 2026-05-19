@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const items = await db.query.education.findMany({
     where: eq(education.profile_id, layoutData.selectedProfile.id),
-    orderBy: asc(education.sort),
+    orderBy: [asc(education.sort), desc(education.start_date)],
   });
 
   return { education: items, profileId: layoutData.selectedProfile.id };

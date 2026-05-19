@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const projects = await db.query.side_projects.findMany({
     where: eq(side_projects.profile_id, layoutData.selectedProfile.id),
-    orderBy: asc(side_projects.sort),
+    orderBy: [asc(side_projects.sort), desc(side_projects.start_date)],
     with: {
       side_project_achievements: {
         orderBy: asc(side_project_achievements.sort),

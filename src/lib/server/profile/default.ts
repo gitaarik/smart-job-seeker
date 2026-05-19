@@ -25,15 +25,15 @@ const PROFILE_INCLUDE = {
       work_experience_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
       work_experience_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
     },
-    orderBy: (t: any, { asc }: any) => asc(t.sort),
+    orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
   },
-  educations: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+  educations: { orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)] },
   side_projects: {
     with: {
       side_project_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
       side_project_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
     },
-    orderBy: (t: any, { asc }: any) => asc(t.sort),
+    orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
   },
   references: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
   certificates: { orderBy: (t: any, { asc }: any) => asc(t.sort) },

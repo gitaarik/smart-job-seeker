@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const experiences = await db.query.work_experiences.findMany({
     where: eq(work_experiences.profile_id, layoutData.selectedProfile.id),
-    orderBy: asc(work_experiences.sort),
+    orderBy: [asc(work_experiences.sort), desc(work_experiences.start_date)],
     with: {
       work_experience_achievements: {
         orderBy: asc(work_experience_achievements.sort),
