@@ -194,9 +194,10 @@
   Add Achievement
 </button>
 
+<svelte:window onkeydown={(e) => { if (e.key === "Escape" && editingIndex !== null) closeEdit(); }} />
+
 <!-- Edit Popup -->
 {#if editingIndex !== null}
-  <svelte:window onkeydown={(e) => { if (e.key === "Escape") closeEdit(); }} />
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
