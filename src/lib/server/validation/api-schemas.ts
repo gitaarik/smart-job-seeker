@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { error as httpError } from "@sveltejs/kit";
 
-const trimmedString = (maxLen = 255) =>
-  z.string().trim().max(maxLen);
+const trimmedString = (maxLen = 255) => z.string().trim().max(maxLen);
 
 const requiredTrimmedString = (field: string, maxLen = 255) =>
   z.string().trim().min(1, `${field} is required`).max(maxLen);
@@ -94,7 +93,10 @@ export const jobPreferencesSchema = z.object({
   profile_id: positiveInt(),
   job_types: z.array(z.string()).min(1, "Please select at least one job type"),
   experience_levels: z.array(z.string()).optional().nullable(),
-  work_location: z.array(z.string()).min(1, "Please select at least one work location option"),
+  work_location: z.array(z.string()).min(
+    1,
+    "Please select at least one work location option",
+  ),
   locations: z.array(z.string()).optional().nullable(),
   remote_only: z.boolean().optional(),
   match_community_jobs: z.boolean().optional(),
@@ -103,9 +105,13 @@ export const jobPreferencesSchema = z.object({
 
 export const jobPreferencesPatchSchema = z.object({
   profile_id: positiveInt(),
-  job_types: z.array(z.string()).min(1, "Please select at least one job type").optional(),
+  job_types: z.array(z.string()).min(1, "Please select at least one job type")
+    .optional(),
   experience_levels: z.array(z.string()).optional().nullable(),
-  work_location: z.array(z.string()).min(1, "Please select at least one work location option").optional(),
+  work_location: z.array(z.string()).min(
+    1,
+    "Please select at least one work location option",
+  ).optional(),
   locations: z.array(z.string()).optional().nullable(),
   remote_only: z.boolean().optional(),
   match_community_jobs: z.boolean().optional(),
@@ -123,8 +129,14 @@ export const platformCreateSchema = z.object({
 // Platform credentials
 
 export const platformCredentialsSchema = z.object({
-  profileId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]),
-  credentialId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
+  profileId: z.union([
+    positiveInt(),
+    z.string().regex(/^\d+$/).transform(Number),
+  ]),
+  credentialId: z.union([
+    positiveInt(),
+    z.string().regex(/^\d+$/).transform(Number),
+  ]).optional(),
   username: optionalTrimmedString(),
   password: optionalTrimmedString(1000),
   security_answer: optionalTrimmedString(500),
@@ -158,18 +170,24 @@ export const searchTaskUpdateSchema = z.object({
   max_jobs: z.union([
     z.null(),
     z.number().int().positive("max_jobs must be a positive integer"),
-    z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive("max_jobs must be a positive integer")),
+    z.string().regex(/^\d+$/).transform(Number).pipe(
+      z.number().int().positive("max_jobs must be a positive integer"),
+    ),
   ]).optional(),
   skip_existing: z.boolean().optional(),
   stop_after_duplicates: z.union([
     z.null(),
     z.number().int().min(1, "stop_after_duplicates must be at least 1"),
-    z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1, "stop_after_duplicates must be at least 1")),
+    z.string().regex(/^\d+$/).transform(Number).pipe(
+      z.number().int().min(1, "stop_after_duplicates must be at least 1"),
+    ),
   ]).optional(),
   skip_first: z.union([
     z.null(),
     z.number().int().min(1, "skip_first must be at least 1"),
-    z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1, "skip_first must be at least 1")),
+    z.string().regex(/^\d+$/).transform(Number).pipe(
+      z.number().int().min(1, "skip_first must be at least 1"),
+    ),
   ]).optional(),
   new_credential: newCredentialSchema.optional(),
   platform_profile_id: z.union([
@@ -218,6 +236,8 @@ export const profileUpdateSchema = z.object({
   phone_number: optionalTrimmedString(),
   personal_website: optionalTrimmedString(),
   location: optionalTrimmedString(),
+  location_url: optionalTrimmedString(),
+  location_timezone: optionalTrimmedString(),
   linkedin_profile: optionalTrimmedString(),
   github_profile: optionalTrimmedString(),
   stackoverflow_profile: optionalTrimmedString(),

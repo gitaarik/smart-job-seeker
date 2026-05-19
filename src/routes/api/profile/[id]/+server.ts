@@ -1,10 +1,17 @@
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, ne } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { profiles } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
-import { profileUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
+import {
+  buildUpdateData,
+  parseIntParam,
+  requireAuth,
+} from "$lib/server/utils/api-helpers";
+import {
+  parseBody,
+  profileUpdateSchema,
+} from "$lib/server/validation/api-schemas";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -20,7 +27,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     error(403, "Access denied");
   }
 
-  const data: Record<string, unknown> = parseBody(profileUpdateSchema, await request.json());
+  const data: Record<string, unknown> = parseBody(
+    profileUpdateSchema,
+    await request.json(),
+  );
 
   // Validate and process slug if provided
   if (data.slug !== undefined && data.slug && (data.slug as string).trim()) {
@@ -55,11 +65,27 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const updateData = buildUpdateData(
     data,
     [
-      "name", "slug", "title", "subtitle", "headline", "summary",
-      "email_address", "phone_number", "personal_website", "location",
-      "linkedin_profile", "github_profile", "stackoverflow_profile",
-      "npm_profile", "pypi_profile", "country_code",
-      "browser_language", "browser_timezone", "browser_country_code",
+      "name",
+      "slug",
+      "title",
+      "subtitle",
+      "headline",
+      "summary",
+      "email_address",
+      "phone_number",
+      "personal_website",
+      "location",
+      "location_url",
+      "location_timezone",
+      "linkedin_profile",
+      "github_profile",
+      "stackoverflow_profile",
+      "npm_profile",
+      "pypi_profile",
+      "country_code",
+      "browser_language",
+      "browser_timezone",
+      "browser_country_code",
     ],
   );
 

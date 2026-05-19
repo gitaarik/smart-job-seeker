@@ -46,6 +46,8 @@
   let email_address = $state(data.profile?.email_address || "");
   let phone_number = $state(data.profile?.phone_number || "");
   let location = $state(data.profile?.location || "");
+  let location_url = $state(data.profile?.location_url || "");
+  let location_timezone = $state(data.profile?.location_timezone || "");
   let country_code = $state(data.profile?.country_code || "");
   let personal_website = $state(data.profile?.personal_website || "");
 
@@ -95,7 +97,15 @@
 
   function saveContact() {
     saveSection(
-      { email_address, phone_number, location, country_code, personal_website },
+      {
+        email_address,
+        phone_number,
+        location,
+        location_url,
+        location_timezone,
+        country_code,
+        personal_website,
+      },
       (s) => (contactState = s),
     );
   }
@@ -112,8 +122,6 @@
       (s) => (socialState = s),
     );
   }
-
-
 </script>
 
 <svelte:head>
@@ -125,8 +133,13 @@
 
   <!-- Profile Photo Section -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
-      <FontAwesomeIcon icon={faCamera} class="w-5 h-5 text-[var(--dash-primary)]" />
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2"
+    >
+      <FontAwesomeIcon
+        icon={faCamera}
+        class="w-5 h-5 text-[var(--dash-primary)]"
+      />
       Profile Photo
     </h2>
 
@@ -143,14 +156,22 @@
 
   <!-- Personal Information -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
-      <FontAwesomeIcon icon={faUser} class="w-5 h-5 text-[var(--dash-primary)]" />
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2"
+    >
+      <FontAwesomeIcon
+        icon={faUser}
+        class="w-5 h-5 text-[var(--dash-primary)]"
+      />
       Personal Information
     </h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label for="name" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="name"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Full Name <span class="text-[var(--dash-error)]">*</span>
         </label>
         <input
@@ -163,7 +184,10 @@
       </div>
 
       <div>
-        <label for="slug" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="slug"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Profile URL
         </label>
         <div class="flex items-center gap-2">
@@ -177,12 +201,16 @@
           />
         </div>
         <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          Used in your public profile URL. Only lowercase letters, numbers, and hyphens.
+          Used in your public profile URL. Only lowercase letters, numbers, and
+          hyphens.
         </p>
       </div>
 
       <div>
-        <label for="title" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="title"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Professional Title
         </label>
         <input
@@ -195,7 +223,10 @@
       </div>
 
       <div>
-        <label for="subtitle" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="subtitle"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Subtitle
         </label>
         <textarea
@@ -211,7 +242,10 @@
       </div>
 
       <div>
-        <label for="headline" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="headline"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Headline
         </label>
         <textarea
@@ -227,7 +261,10 @@
       </div>
 
       <div class="md:col-span-2">
-        <label for="summary" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="summary"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           Professional Summary
         </label>
         <textarea
@@ -247,14 +284,22 @@
 
   <!-- Contact Information -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
-      <FontAwesomeIcon icon={faEnvelope} class="w-5 h-5 text-[var(--dash-primary)]" />
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2"
+    >
+      <FontAwesomeIcon
+        icon={faEnvelope}
+        class="w-5 h-5 text-[var(--dash-primary)]"
+      />
       Contact Information
     </h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label for="email_address" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="email_address"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           <FontAwesomeIcon
             icon={faEnvelope}
             class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
@@ -271,8 +316,14 @@
       </div>
 
       <div>
-        <label for="phone_number" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-          <FontAwesomeIcon icon={faPhone} class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1" />
+        <label
+          for="phone_number"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          <FontAwesomeIcon
+            icon={faPhone}
+            class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
+          />
           Phone Number
         </label>
         <input
@@ -285,7 +336,10 @@
       </div>
 
       <div>
-        <label for="location" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="location"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           <FontAwesomeIcon
             icon={faMapMarkerAlt}
             class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
@@ -302,14 +356,64 @@
       </div>
 
       <div>
-        <label for="country_code" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="location_url"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          <FontAwesomeIcon
+            icon={faMapMarkerAlt}
+            class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
+          />
+          Location URL
+        </label>
+        <input
+          type="url"
+          id="location_url"
+          bind:value={location_url}
+          placeholder="https://maps.google.com/?q=Amsterdam"
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        />
+        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+          Optional link wrapped around the location on your resume (e.g. Google
+          Maps).
+        </p>
+      </div>
+
+      <div>
+        <label
+          for="location_timezone"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          <FontAwesomeIcon
+            icon={faMapMarkerAlt}
+            class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
+          />
+          Timezone
+        </label>
+        <input
+          type="text"
+          id="location_timezone"
+          bind:value={location_timezone}
+          placeholder="CET (UTC+1)"
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        />
+      </div>
+
+      <div>
+        <label
+          for="country_code"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           <FontAwesomeIcon
             icon={faMapMarkerAlt}
             class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
           />
           Country
         </label>
-        <CountrySelect bind:value={country_code} placeholder="Select country..." />
+        <CountrySelect
+          bind:value={country_code}
+          placeholder="Select country..."
+        />
       </div>
 
       <div>
@@ -317,7 +421,10 @@
           for="personal_website"
           class="block text-sm font-medium text-[var(--dash-text)] mb-1"
         >
-          <FontAwesomeIcon icon={faGlobe} class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1" />
+          <FontAwesomeIcon
+            icon={faGlobe}
+            class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
+          />
           Personal Website
         </label>
         <input
@@ -337,15 +444,26 @@
 
   <!-- Social Profiles -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
-      <FontAwesomeIcon icon={faGlobe} class="w-5 h-5 text-[var(--dash-primary)]" />
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2"
+    >
+      <FontAwesomeIcon
+        icon={faGlobe}
+        class="w-5 h-5 text-[var(--dash-primary)]"
+      />
       Social Profiles
     </h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label for="linkedin_profile" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-          <FontAwesomeIcon icon={faLinkedin} class="w-4 h-4 text-[#0A66C2] mr-1" />
+        <label
+          for="linkedin_profile"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          <FontAwesomeIcon
+            icon={faLinkedin}
+            class="w-4 h-4 text-[#0A66C2] mr-1"
+          />
           LinkedIn
         </label>
         <input
@@ -358,8 +476,14 @@
       </div>
 
       <div>
-        <label for="github_profile" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-          <FontAwesomeIcon icon={faGithub} class="w-4 h-4 text-[var(--dash-text)] mr-1" />
+        <label
+          for="github_profile"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          <FontAwesomeIcon
+            icon={faGithub}
+            class="w-4 h-4 text-[var(--dash-text)] mr-1"
+          />
           GitHub
         </label>
         <input
@@ -376,7 +500,10 @@
           for="stackoverflow_profile"
           class="block text-sm font-medium text-[var(--dash-text)] mb-1"
         >
-          <FontAwesomeIcon icon={faStackOverflow} class="w-4 h-4 text-[#F48024] mr-1" />
+          <FontAwesomeIcon
+            icon={faStackOverflow}
+            class="w-4 h-4 text-[#F48024] mr-1"
+          />
           Stack Overflow
         </label>
         <input
@@ -389,7 +516,10 @@
       </div>
 
       <div>
-        <label for="npm_profile" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+        <label
+          for="npm_profile"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
           <FontAwesomeIcon icon={faNpm} class="w-4 h-4 text-[#CB3837] mr-1" />
           npm
         </label>
@@ -403,8 +533,14 @@
       </div>
 
       <div>
-        <label for="pypi_profile" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-          <FontAwesomeIcon icon={faPython} class="w-4 h-4 text-[#3776AB] mr-1" />
+        <label
+          for="pypi_profile"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          <FontAwesomeIcon
+            icon={faPython}
+            class="w-4 h-4 text-[#3776AB] mr-1"
+          />
           PyPI
         </label>
         <input
@@ -421,6 +557,4 @@
       <SectionSaveButton state={socialState} onClick={saveSocial} />
     </div>
   </Card>
-
-
 </div>
