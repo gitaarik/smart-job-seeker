@@ -867,7 +867,7 @@
                   <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
                     <span class="text-xs text-[var(--dash-text-muted)]">Project Story</span>
                     {#if story.category}
-                      <span class="px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600">
+                      <span class="px-2 py-0.5 rounded-full bg-[var(--dash-info-light)] text-[var(--dash-info)] font-medium">
                         {getCategoryLabel(story.category)}
                       </span>
                     {/if}
