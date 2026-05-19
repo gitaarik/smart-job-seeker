@@ -118,7 +118,7 @@
   <!-- Inline variant for use in menus -->
   <button
     onclick={handleToggleTheme}
-    class="flex items-center justify-between w-full px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+    class="flex items-center justify-between gap-3 w-full px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
     aria-label={getAriaLabel()}
   >
     <span class="flex items-center gap-2">
