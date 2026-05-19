@@ -329,13 +329,9 @@
             job.work_experience_achievements,
           )}
             {#if filteredHighlights.length > 0}
-              <ul class="list-disc ml-3 print:ml-4">
+              <ul class="list-disc ml-3 print:ml-[18px] print:[&>li]:[text-indent:-6px]">
                 {#each filteredHighlights as highlight, index (index)}
-                  <li class="print:indent-[-6px] whitespace-nowrap">
-                    <span class="inline-block w-0 opacity-0">-&nbsp;</span>{
-                      highlight.description
-                    }
-                  </li>
+                  <li>{highlight.description}</li>
                 {/each}
               </ul>
             {/if}
@@ -353,22 +349,16 @@
 
       <hr class="mt-1 mb-2" />
 
-      <ul class="list-disc ml-3 print:ml-4">
+      <ul class="list-disc ml-3 print:ml-[18px] print:[&>li]:[text-indent:-6px]">
         {#each profile.tech_skill_categories as skillGroup, index (index)}
-          <li class="print:indent-[-2px]">
-            <span class="inline-flex items-center h-2 whitespace-nowrap">
-              <span class="w-0 opacity-0">-&nbsp;</span>
-              <span class="font-bold mr-1 print:mr-[6px]">{
-                  skillGroup.name
-                }:</span>
-              <span class="text-xs">
-                {
-                  skillGroup.tech_skills.map(
-                    (s: { name: string | null }) => s.name ?? "",
-                  ).join(" | ")
-                }
-              </span>
-              <br>
+          <li>
+            <span class="font-bold mr-1">{skillGroup.name}:</span>
+            <span class="text-xs">
+              {
+                skillGroup.tech_skills.map(
+                  (s: { name: string | null }) => s.name ?? "",
+                ).join(" | ")
+              }
             </span>
           </li>
         {/each}
