@@ -26,7 +26,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     order.map((id, index) =>
       db.update(certificates)
         .set({ sort: index, date_updated: new Date() })
-        .where(and(eq(certificates.id, id), eq(certificates.profile, profile_id)))
+        .where(and(eq(certificates.id, id), eq(certificates.profile_id, profile_id)))
     ),
   );
 

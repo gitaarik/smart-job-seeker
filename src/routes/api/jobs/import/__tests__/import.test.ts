@@ -39,7 +39,7 @@ vi.mock("drizzle-orm", () => ({
 
 vi.mock("$lib/server/db/schema", () => ({
   jobs: { id: "jobs.id", source_url: "jobs.source_url" },
-  job_importers: { job: "job_importers.job", profile: "job_importers.profile" },
+  job_importers: { job_id: "job_importers.job_id", profile_id: "job_importers.profile_id" },
 }));
 
 // Mock the import utilities

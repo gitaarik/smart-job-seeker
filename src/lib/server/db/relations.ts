@@ -586,11 +586,11 @@ export const scraper_agent_sessionsRelations = relations(scraper_agent_sessions,
 
 export const job_statusesRelations = relations(job_statuses, ({one}) => ({
 	job: one(jobs, {
-		fields: [job_statuses.job],
+		fields: [job_statuses.job_id],
 		references: [jobs.id]
 	}),
 	profile: one(profiles, {
-		fields: [job_statuses.profile],
+		fields: [job_statuses.profile_id],
 		references: [profiles.id]
 	}),
 }));
@@ -643,11 +643,11 @@ export const letter_versionsRelations = relations(letter_versions, ({one}) => ({
 
 export const job_match_historyRelations = relations(job_match_history, ({one}) => ({
 	job: one(jobs, {
-		fields: [job_match_history.job],
+		fields: [job_match_history.job_id],
 		references: [jobs.id]
 	}),
 	profile: one(profiles, {
-		fields: [job_match_history.profile],
+		fields: [job_match_history.profile_id],
 		references: [profiles.id]
 	}),
 }));
@@ -655,11 +655,11 @@ export const job_match_historyRelations = relations(job_match_history, ({one}) =
 
 export const job_importersRelations = relations(job_importers, ({one}) => ({
 	job: one(jobs, {
-		fields: [job_importers.job],
+		fields: [job_importers.job_id],
 		references: [jobs.id]
 	}),
 	profile: one(profiles, {
-		fields: [job_importers.profile],
+		fields: [job_importers.profile_id],
 		references: [profiles.id]
 	}),
 }));
@@ -751,7 +751,7 @@ export const credit_transactionsRelations = relations(credit_transactions, ({one
 
 export const certificatesRelations = relations(certificates, ({one}) => ({
 	profile: one(profiles, {
-		fields: [certificates.profile],
+		fields: [certificates.profile_id],
 		references: [profiles.id]
 	}),
 }));

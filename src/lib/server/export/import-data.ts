@@ -143,7 +143,7 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
   await dbDirect.delete(education).where(eq(education.profile_id, profileId));
   await dbDirect.delete(languages).where(eq(languages.profile_id, profileId));
   await dbDirect.delete(references).where(eq(references.profile_id, profileId));
-  await dbDirect.delete(certificates).where(eq(certificates.profile, profileId));
+  await dbDirect.delete(certificates).where(eq(certificates.profile_id, profileId));
   await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
   await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
   await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
@@ -346,7 +346,7 @@ async function importProfileEntities(
   // Certificates
   for (const cert of p.certificates ?? []) {
     await dbDirect.insert(certificates).values({
-      profile: profileId,
+      profile_id: profileId,
       status: cert.status || "draft",
       sort: cert.sort ?? null,
       name: cert.name || "",

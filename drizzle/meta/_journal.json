@@ -225,6 +225,13 @@
       "when": 1779667200000,
       "tag": "0031_backfill_search_page_url",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1779667800000,
+      "tag": "0032_normalize_job_profile_columns",
+      "breakpoints": true
     }
   ]
 }

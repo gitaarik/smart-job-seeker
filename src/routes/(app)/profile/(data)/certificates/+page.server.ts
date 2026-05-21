@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const certs = await db.query.certificates.findMany({
-    where: eq(certificates.profile, layoutData.selectedProfile.id),
+    where: eq(certificates.profile_id, layoutData.selectedProfile.id),
     orderBy: asc(certificates.sort),
   });
 
@@ -39,7 +39,7 @@ export const actions: Actions = {
     }
 
     const lastItem = await db.query.certificates.findFirst({
-      where: eq(certificates.profile, profileId),
+      where: eq(certificates.profile_id, profileId),
       orderBy: desc(certificates.sort),
     });
 
@@ -50,7 +50,7 @@ export const actions: Actions = {
       // already yields YYYY-MM-DD.
       date: date || null,
       url: url?.trim() || null,
-      profile: profileId,
+      profile_id: profileId,
       sort: (lastItem?.sort ?? -1) + 1,
       status: "published",
       date_created: new Date(),
@@ -77,7 +77,7 @@ export const actions: Actions = {
     if (!name || name.trim().length === 0) return fail(400, { error: "Certificate name is required" });
 
     const existing = await db.query.certificates.findFirst({
-      where: and(eq(certificates.id, id), eq(certificates.profile, profileId)),
+      where: and(eq(certificates.id, id), eq(certificates.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Certificate not found" });
 
@@ -106,7 +106,7 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid certificate ID" });
 
     const existing = await db.query.certificates.findFirst({
-      where: and(eq(certificates.id, id), eq(certificates.profile, profileId)),
+      where: and(eq(certificates.id, id), eq(certificates.profile_id, profileId)),
     });
     if (!existing) return fail(404, { error: "Certificate not found" });
 

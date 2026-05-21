@@ -71,7 +71,7 @@ export async function importProfileFromJson(
     await dbDirect.delete(education).where(eq(education.profile_id, overwriteProfileId));
     await dbDirect.delete(languages).where(eq(languages.profile_id, overwriteProfileId));
     await dbDirect.delete(references).where(eq(references.profile_id, overwriteProfileId));
-    await dbDirect.delete(certificates).where(eq(certificates.profile, overwriteProfileId));
+    await dbDirect.delete(certificates).where(eq(certificates.profile_id, overwriteProfileId));
     await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, overwriteProfileId));
     await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, overwriteProfileId));
     await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, overwriteProfileId));
@@ -252,7 +252,7 @@ export async function importProfileFromJson(
 
   // Certificates
   for (const cert of p.certificates ?? []) {
-    await dbDirect.insert(certificates).values({ profile: profileId, status: cert.status || "draft", sort: cert.sort ?? null, name: cert.name || "", issuer: cert.issuer || null, date: toDateString(cert.date), url: cert.url || null, date_created: new Date() });
+    await dbDirect.insert(certificates).values({ profile_id: profileId, status: cert.status || "draft", sort: cert.sort ?? null, name: cert.name || "", issuer: cert.issuer || null, date: toDateString(cert.date), url: cert.url || null, date_created: new Date() });
   }
 
   // Project stories

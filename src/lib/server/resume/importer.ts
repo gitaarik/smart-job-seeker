@@ -363,7 +363,7 @@ async function createSideProject(profileId: number, project: SideProject): Promi
 
 async function createCertificate(profileId: number, cert: Certificate): Promise<void> {
   await dbDirect.insert(certificates).values({
-    profile: profileId,
+    profile_id: profileId,
     name: cert.name,
     issuer: cert.issuer || null,
     date: parseDate(cert.date),

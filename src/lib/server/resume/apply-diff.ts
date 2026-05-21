@@ -418,10 +418,10 @@ export async function applyDiffToProfile(
   // --- Apply certificate changes ---
   if (payload.certificates) {
     for (const c of payload.certificates.added ?? []) {
-      await dbDirect.insert(certificates).values({ profile: profileId, status: "draft", name: c.name || "", issuer: c.issuer || null, date: parseDate(c.date), url: c.url || null, sort: 0, date_created: new Date() });
+      await dbDirect.insert(certificates).values({ profile_id: profileId, status: "draft", name: c.name || "", issuer: c.issuer || null, date: parseDate(c.date), url: c.url || null, sort: 0, date_created: new Date() });
     }
     for (const mod of payload.certificates.modified ?? []) {
-      const existing = await dbDirect.query.certificates.findFirst({ where: and(eq(certificates.profile, profileId), eq(certificates.name, mod.matchKey)), columns: { id: true } });
+      const existing = await dbDirect.query.certificates.findFirst({ where: and(eq(certificates.profile_id, profileId), eq(certificates.name, mod.matchKey)), columns: { id: true } });
       if (!existing) continue;
       const updateData: Record<string, unknown> = {};
       if (mod.fields.name !== undefined) updateData.name = mod.fields.name || "";
@@ -434,7 +434,7 @@ export async function applyDiffToProfile(
       }
     }
     for (const name of payload.certificates.removed ?? []) {
-      await dbDirect.delete(certificates).where(and(eq(certificates.profile, profileId), eq(certificates.name, name)));
+      await dbDirect.delete(certificates).where(and(eq(certificates.profile_id, profileId), eq(certificates.name, name)));
     }
   }
 

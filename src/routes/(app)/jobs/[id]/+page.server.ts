@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
   // Get user status from job_statuses table
   const jobStatus = await db.query.job_statuses.findFirst({
-    where: and(eq(job_statuses.profile, profileId), eq(job_statuses.job, jobId)),
+    where: and(eq(job_statuses.profile_id, profileId), eq(job_statuses.job_id, jobId)),
     columns: { status: true },
   });
 
@@ -103,7 +103,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
     // Also get profiles from job_importers (in case of manual imports without a scrape run)
     const jobImporterRows = await db.query.job_importers.findMany({
-      where: eq(job_importers.job, jobId),
+      where: eq(job_importers.job_id, jobId),
       columns: {
         date_created: true,
       },
@@ -138,7 +138,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   }[] = [];
   if (isStaff) {
     matchHistory = await db.query.job_match_history.findMany({
-      where: and(eq(job_match_history.job, jobId), eq(job_match_history.profile, profileId)),
+      where: and(eq(job_match_history.job_id, jobId), eq(job_match_history.profile_id, profileId)),
       columns: {
         score: true,
         skill_match_percentage: true,
@@ -264,9 +264,9 @@ export const actions: Actions = {
 
     const now = new Date();
     await queryRaw(sql`
-      INSERT INTO job_statuses (profile, job, status, date_created, date_updated)
+      INSERT INTO job_statuses (profile_id, job_id, status, date_created, date_updated)
       VALUES (${profileId}, ${jobId}, 'saved', ${now}, ${now})
-      ON CONFLICT (profile, job)
+      ON CONFLICT (profile_id, job_id)
       DO UPDATE SET status = 'saved', date_updated = ${now}
     `);
 
@@ -289,7 +289,7 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    await db.delete(job_statuses).where(and(eq(job_statuses.profile, profileId), eq(job_statuses.job, jobId)));
+    await db.delete(job_statuses).where(and(eq(job_statuses.profile_id, profileId), eq(job_statuses.job_id, jobId)));
 
     return { success: true, action: "unsaved" };
   },
@@ -315,13 +315,13 @@ export const actions: Actions = {
 
     if (status === "new") {
       // "new" means remove the status row
-      await db.delete(job_statuses).where(and(eq(job_statuses.profile, profileId), eq(job_statuses.job, jobId)));
+      await db.delete(job_statuses).where(and(eq(job_statuses.profile_id, profileId), eq(job_statuses.job_id, jobId)));
     } else {
       const now = new Date();
       await queryRaw(sql`
-        INSERT INTO job_statuses (profile, job, status, date_created, date_updated)
+        INSERT INTO job_statuses (profile_id, job_id, status, date_created, date_updated)
         VALUES (${profileId}, ${jobId}, ${status}, ${now}, ${now})
-        ON CONFLICT (profile, job)
+        ON CONFLICT (profile_id, job_id)
         DO UPDATE SET status = ${status}, date_updated = ${now}
       `);
     }

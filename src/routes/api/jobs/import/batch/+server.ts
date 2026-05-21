@@ -67,10 +67,10 @@ async function importSingleJob(
 
       // Upsert importer
       const existingImporter = await db.query.job_importers.findFirst({
-        where: (t, { and, eq }) => and(eq(t.job, existing.id), eq(t.profile, profileId)),
+        where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId)),
       });
       if (!existingImporter) {
-        await db.insert(job_importers).values({ job: existing.id, profile: profileId });
+        await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
       }
       await triggerMatchForImport(profileId, existing.id);
 
@@ -84,10 +84,10 @@ async function importSingleJob(
 
     // No changes — still record the importer (upsert)
     const existingImporter = await db.query.job_importers.findFirst({
-      where: (t, { and, eq }) => and(eq(t.job, existing.id), eq(t.profile, profileId)),
+      where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId)),
     });
     if (!existingImporter) {
-      await db.insert(job_importers).values({ job: existing.id, profile: profileId });
+      await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
     }
     await triggerMatchForImport(profileId, existing.id);
 
@@ -126,7 +126,7 @@ async function importSingleJob(
       date_updated: new Date(),
     }).returning();
 
-    await db.insert(job_importers).values({ job: newJob.id, profile: profileId });
+    await db.insert(job_importers).values({ job_id: newJob.id, profile_id: profileId });
     await triggerMatchForImport(profileId, newJob.id);
 
     return {

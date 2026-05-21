@@ -1973,26 +1973,26 @@ export const job_statuses = pgTable("job_statuses", {
   status: varchar({ length: 255 }).default("new").notNull(),
   date_created: timestamp({ withTimezone: true, mode: "date" }),
   date_updated: timestamp({ withTimezone: true, mode: "date" }),
-  job: integer().notNull(),
-  profile: integer().notNull(),
+  job_id: integer().notNull(),
+  profile_id: integer().notNull(),
 }, (table) => [
   uniqueIndex("job_statuses_profile_job_key").using(
     "btree",
-    table.profile.asc().nullsLast().op("int4_ops"),
-    table.job.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast().op("int4_ops"),
+    table.job_id.asc().nullsLast().op("int4_ops"),
   ),
   index("job_statuses_profile_status_idx").using(
     "btree",
-    table.profile.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast().op("int4_ops"),
     table.status.asc().nullsLast().op("text_ops"),
   ),
   foreignKey({
-    columns: [table.job],
+    columns: [table.job_id],
     foreignColumns: [jobs.id],
     name: "job_statuses_job_fkey",
   }).onDelete("cascade"),
   foreignKey({
-    columns: [table.profile],
+    columns: [table.profile_id],
     foreignColumns: [profiles.id],
     name: "job_statuses_profile_fkey",
   }).onDelete("cascade"),
@@ -2177,8 +2177,8 @@ export const letter_versions = pgTable("letter_versions", {
 
 export const job_match_history = pgTable("job_match_history", {
   id: serial().primaryKey().notNull(),
-  job: integer().notNull(),
-  profile: integer().notNull(),
+  job_id: integer().notNull(),
+  profile_id: integer().notNull(),
   score: integer().default(0).notNull(),
   skill_match_percentage: integer(),
   recommendation: varchar({ length: 255 }),
@@ -2188,21 +2188,21 @@ export const job_match_history = pgTable("job_match_history", {
 }, (table) => [
   index("job_match_history_date_idx").using(
     "btree",
-    table.job.asc().nullsLast().op("int4_ops"),
+    table.job_id.asc().nullsLast().op("int4_ops"),
     table.date_created.desc().nullsFirst().op("int4_ops"),
   ),
   index("job_match_history_profile_job_idx").using(
     "btree",
-    table.profile.asc().nullsLast().op("int4_ops"),
-    table.job.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast().op("int4_ops"),
+    table.job_id.asc().nullsLast().op("int4_ops"),
   ),
   foreignKey({
-    columns: [table.job],
+    columns: [table.job_id],
     foreignColumns: [jobs.id],
     name: "job_match_history_job_foreign",
   }).onDelete("cascade"),
   foreignKey({
-    columns: [table.profile],
+    columns: [table.profile_id],
     foreignColumns: [profiles.id],
     name: "job_match_history_profile_foreign",
   }).onDelete("cascade"),
@@ -2213,21 +2213,21 @@ export const job_importers = pgTable("job_importers", {
   date_created: timestamp({ withTimezone: true, mode: "date" }).default(
     sql`CURRENT_TIMESTAMP`,
   ),
-  job: integer().notNull(),
-  profile: integer().notNull(),
+  job_id: integer().notNull(),
+  profile_id: integer().notNull(),
 }, (table) => [
   uniqueIndex("job_importers_job_profile_unique").using(
     "btree",
-    table.job.asc().nullsLast().op("int4_ops"),
-    table.profile.asc().nullsLast().op("int4_ops"),
+    table.job_id.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast().op("int4_ops"),
   ),
   foreignKey({
-    columns: [table.job],
+    columns: [table.job_id],
     foreignColumns: [jobs.id],
     name: "job_importers_job_foreign",
   }).onDelete("cascade"),
   foreignKey({
-    columns: [table.profile],
+    columns: [table.profile_id],
     foreignColumns: [profiles.id],
     name: "job_importers_profile_foreign",
   }).onDelete("cascade"),
@@ -2495,14 +2495,14 @@ export const certificates = pgTable("certificates", {
   issuer: varchar({ length: 255 }),
   date: date(),
   url: varchar({ length: 255 }),
-  profile: integer().notNull(),
+  profile_id: integer().notNull(),
 }, (table) => [
   index("idx_certificates_profile").using(
     "btree",
-    table.profile.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast().op("int4_ops"),
   ),
   foreignKey({
-    columns: [table.profile],
+    columns: [table.profile_id],
     foreignColumns: [profiles.id],
     name: "certificates_profile_foreign",
   }).onDelete("cascade"),

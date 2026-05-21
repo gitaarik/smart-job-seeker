@@ -197,11 +197,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   } else if (hasScoreFilter || statusValues.length > 0) {
     // Query via job_matches + job_statuses tables when filtering by score or status
     let statusFilter = sql`TRUE`;
-    let statusJoin = sql`LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+    let statusJoin = sql`LEFT JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id`;
 
     if (statusValues.length > 0) {
       // When filtering by specific statuses, use INNER JOIN to require a status row
-      statusJoin = sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+      statusJoin = sql`JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id`;
       if (statusValues.length === 1) {
         statusFilter = sql`js.status = ${statusValues[0]}`;
       } else {
@@ -259,10 +259,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
       // Load user statuses from job_statuses table
       const jobStatusRows = await db.query.job_statuses.findMany({
-        where: and(eq(job_statuses.profile, profileId), inArray(job_statuses.job, matchJobIds)),
-        columns: { job: true, status: true },
+        where: and(eq(job_statuses.profile_id, profileId), inArray(job_statuses.job_id, matchJobIds)),
+        columns: { job_id: true, status: true },
       });
-      const statusByJobId = Object.fromEntries(jobStatusRows.map((s) => [s.job, s.status]));
+      const statusByJobId = Object.fromEntries(jobStatusRows.map((s) => [s.job_id, s.status]));
 
       jobs = orderedMatches.map((m) => m.job);
       matchesByJobId = Object.fromEntries(
@@ -335,10 +335,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
       // Load user statuses from job_statuses table
       const jobStatusRows = await db.query.job_statuses.findMany({
-        where: and(eq(job_statuses.profile, profileId), inArray(job_statuses.job, jobIds)),
-        columns: { job: true, status: true },
+        where: and(eq(job_statuses.profile_id, profileId), inArray(job_statuses.job_id, jobIds)),
+        columns: { job_id: true, status: true },
       });
-      const statusByJobId = Object.fromEntries(jobStatusRows.map((s) => [s.job, s.status]));
+      const statusByJobId = Object.fromEntries(jobStatusRows.map((s) => [s.job_id, s.status]));
 
       matchesByJobId = Object.fromEntries(jobMatchRows.map((m) => [m.job_id, m]));
       savedJobIds = jobIds.filter((id) => statusByJobId[id] === "saved");
