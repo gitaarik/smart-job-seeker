@@ -116,11 +116,11 @@ echo "        - Appending job-dependent table data..."
 INCLUDED_JOBS_SUBQUERY="SELECT id FROM jobs ORDER BY id DESC LIMIT 25"
 
 for TABLE_INFO in \
-  "job_matches:job" \
-  "job_match_history:job" \
-  "job_importers:job" \
-  "job_resources:job" \
-  "job_statuses:job"
+  "job_matches:job_id" \
+  "job_match_history:job_id" \
+  "job_importers:job_id" \
+  "job_resources:job_id" \
+  "job_statuses:job_id"
 do
   TABLE="${TABLE_INFO%%:*}"
   FK_COL="${TABLE_INFO##*:}"
