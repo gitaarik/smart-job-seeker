@@ -14,7 +14,9 @@ import { z } from "zod";
  * Extracts structured data from individual job posting pages
  */
 // LLMs sometimes return the string "null" instead of JSON null
-const coerceNull = (v: unknown) => (v === "null" || v === "none" || v === "N/A" ? null : v);
+const coerceNull = (
+  v: unknown,
+) => (v === "null" || v === "none" || v === "N/A" ? null : v);
 
 // Helper for optional nullable fields (field can be missing, null, or have a value)
 const optionalNullableString = () =>
@@ -24,10 +26,14 @@ const optionalNullableNumber = () =>
     (v) => {
       const n = coerceNull(v);
       // Coerce numeric strings like "50000" to actual numbers
-      if (typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim())) return Number(n);
+      if (
+        typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim())
+      ) return Number(n);
       return n;
     },
-    z.number().optional().nullable().transform((v) => (v != null ? Math.round(v) : v)),
+    z.number().optional().nullable().transform((
+      v,
+    ) => (v != null ? Math.round(v) : v)),
   );
 const optionalNullableArray = () =>
   z.preprocess(coerceNull, z.array(z.string()).optional().nullable());
@@ -94,7 +100,9 @@ export const scoreJobMatchSchema = z.object({
     .min(0)
     .max(100)
     .describe("Overall match score"),
-  summary: z.string().describe("One concise sentence (max 100 chars) summarizing why this job matches the candidate"),
+  summary: z.string().describe(
+    "One concise sentence (max 100 chars) summarizing why this job matches the candidate",
+  ),
   skill_match_percentage: z
     .number()
     .int()
@@ -104,7 +112,9 @@ export const scoreJobMatchSchema = z.object({
   matched_skills: z
     .array(z.string())
     .default([])
-    .describe("EXACT skill names from job.skills_required or job.skills_preferred that the candidate has. Copy strings verbatim - do not paraphrase."),
+    .describe(
+      "EXACT skill names from job.skills_required or job.skills_preferred that the candidate has. Copy strings verbatim - do not paraphrase.",
+    ),
   strengths: z
     .array(z.string())
     .min(0)
@@ -188,11 +198,21 @@ export const extractJobsFromSearchPageSchema = z.object({
         "Physical office location (city, region, country)",
       ),
       salary_min: z.preprocess(
-        (v) => { const n = coerceNull(v); return typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim()) ? Number(n) : n; },
+        (v) => {
+          const n = coerceNull(v);
+          return typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim())
+            ? Number(n)
+            : n;
+        },
         z.number().nullable(),
       ).describe("Minimum salary as numeric value only"),
       salary_max: z.preprocess(
-        (v) => { const n = coerceNull(v); return typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim()) ? Number(n) : n; },
+        (v) => {
+          const n = coerceNull(v);
+          return typeof n === "string" && /^\d+(\.\d+)?$/.test(n.trim())
+            ? Number(n)
+            : n;
+        },
         z.number().nullable(),
       ).describe("Maximum salary as numeric value only"),
       salary_currency: z.string().nullable().describe(
@@ -228,7 +248,9 @@ export const extractJobsFromSearchPageSchema = z.object({
 export const extractMatchedSkillsSchema = z.object({
   matched_skills: z
     .array(z.string())
-    .describe("Job skills from the provided list that the candidate possesses (exact job skill strings)."),
+    .describe(
+      "Job skills from the provided list that the candidate possesses (exact job skill strings).",
+    ),
 });
 
 /**
@@ -238,10 +260,15 @@ export const extractMatchedSkillsSchema = z.object({
 export const estimateSalaryExpectationsSchema = z.object({
   hourly_rate: z.number().int().nullable().describe("Estimated hourly rate"),
   daily_rate: z.number().int().nullable().describe("Estimated daily rate"),
-  month_salary: z.number().int().nullable().describe("Estimated monthly salary"),
+  month_salary: z.number().int().nullable().describe(
+    "Estimated monthly salary",
+  ),
   year_salary: z.number().int().nullable().describe("Estimated yearly salary"),
-  confidence: z.enum(["high", "medium", "low"]).optional().default("medium").describe("Confidence level in the estimates"),
-  reasoning: z.string().optional().default("").describe("Brief explanation of how the estimates were derived"),
+  confidence: z.enum(["high", "medium", "low"]).optional().default("medium")
+    .describe("Confidence level in the estimates"),
+  reasoning: z.string().optional().default("").describe(
+    "Brief explanation of how the estimates were derived",
+  ),
 });
 
 /**
@@ -261,7 +288,9 @@ const normalizeTextKey = (val: unknown) => {
             const o = item as Record<string, unknown>;
             const parts: string[] = [];
             if (typeof o.title === "string") parts.push(`## ${o.title}`);
-            if (Array.isArray(o.points)) parts.push(...o.points.map((p: unknown) => `- ${p}`));
+            if (Array.isArray(o.points)) {
+              parts.push(...o.points.map((p: unknown) => `- ${p}`));
+            }
             if (typeof o.content === "string") parts.push(o.content);
             return parts.join("\n");
           }
@@ -273,11 +302,18 @@ const normalizeTextKey = (val: unknown) => {
     // If "text" key is missing, try alternative key names
     if (!("text" in obj)) {
       const altKeys = [
-        "letter", "coverLetter", "cover_letter",
-        "cheatSheet", "cheat_sheet",
-        "content", "email", "body",
-        "revisedLetter", "revised_letter",
-        "revisedText", "revised_text",
+        "letter",
+        "coverLetter",
+        "cover_letter",
+        "cheatSheet",
+        "cheat_sheet",
+        "content",
+        "email",
+        "body",
+        "revisedLetter",
+        "revised_letter",
+        "revisedText",
+        "revised_text",
       ];
       for (const key of altKeys) {
         if (key in obj && typeof obj[key] === "string") {
@@ -293,35 +329,52 @@ const normalizeTextKey = (val: unknown) => {
  * Schema for text generation prompts (cover letter, cheat sheet, etc.)
  * Returns the text content only, no preamble or commentary.
  */
-export const writeLetterSchema = z.preprocess(normalizeTextKey, z.object({
-  text: z.string().describe("The complete text, ready to use. No preamble or commentary."),
-}));
+export const writeLetterSchema = z.preprocess(
+  normalizeTextKey,
+  z.object({
+    text: z.string().describe(
+      "The complete text, ready to use. No preamble or commentary.",
+    ),
+  }),
+);
 
 /**
  * Schema for text followup prompts (feedback-based revisions)
  * Returns the revised text plus brief feedback on the user's version.
  */
-export const followupLetterSchema = z.preprocess(normalizeTextKey, z.object({
-  text: z.string().nullable().describe("The complete revised text, ready to use. Include ONLY when substantive changes are needed. Set to null when the text is good and only minor tweaks are needed. No preamble or commentary."),
-  feedback: z.string().optional().describe("Brief, friendly feedback on the user's current text — what works well, what you improved, and any tips. 2-3 sentences max."),
-}));
+export const followupLetterSchema = z.preprocess(
+  normalizeTextKey,
+  z.object({
+    text: z.string().nullable().describe(
+      "The complete revised text, ready to use. Include ONLY when substantive changes are needed. Set to null when the text is good and only minor tweaks are needed. No preamble or commentary.",
+    ),
+    feedback: z.string().optional().describe(
+      "Brief, friendly feedback on the user's current text — what works well, what you improved, and any tips. 2-3 sentences max.",
+    ),
+  }),
+);
 
 /**
  * Schema for text review prompts
  * Returns feedback (markdown) and optionally a revised version of the text.
  */
 export const reviewLetterSchema = z.object({
-  feedback: z.string().describe("A single markdown string with concise, friendly feedback. What works, what to improve, with specific suggestions. NOT an array — one cohesive markdown text."),
-  revisedText: z.string().nullable().describe("The complete revised text incorporating suggestions. Include ONLY when substantive changes are needed. Set to null when the text is good and feedback is minor (e.g. small tweaks the user can make themselves). Plain text, ready to use as-is. No markdown formatting, no preamble."),
+  feedback: z.string().describe(
+    "A single markdown string with concise, friendly feedback. What works, what to improve, with specific suggestions. NOT an array — one cohesive markdown text.",
+  ),
+  revisedText: z.string().nullable().describe(
+    "The complete revised text incorporating suggestions. Include ONLY when substantive changes are needed. Set to null when the text is good and feedback is minor (e.g. small tweaks the user can make themselves). Plain text, ready to use as-is. No markdown formatting, no preamble.",
+  ),
 });
 
 /**
  * Schema for suggest_import_tasks prompt
  *
- * The LLM returns ONE entry per suggestable platform, ranked high→low. The
- * scraper drives each platform's search form at run time and silently drops
- * filters the form doesn't expose, so the LLM emits canonical filter
- * names/value_keys without per-platform support gating.
+ * The LLM returns ONE entry per suggestable platform, ranked high→low. It
+ * picks keywords, ranks fit, and writes a short note. Filters are NOT in
+ * scope for the LLM — the server computes them deterministically from the
+ * user's preferences (see preferences-to-filters.ts) and merges them in
+ * after this response is parsed.
  */
 export const suggestImportTasksSchema = z.object({
   tasks: z.array(z.object({
@@ -332,13 +385,10 @@ export const suggestImportTasksSchema = z.object({
       "Plain (NOT URL-encoded) keyword string the scraper will type into the platform's search input. Null when the platform is a curated single-page listing (no search box) and the user should import everything — pick this only when the platform's hint says so.",
     ),
     note: z.string().describe(
-      "One short sentence (≤80 chars) explaining why this platform matches the user's profile.",
+      "Short task label (≤60 chars) — the role/title this search is for, drawn from the profile's title/headline (e.g. 'Full-Stack Developer'). No explanation, no platform name.",
     ),
     relevance: z.enum(["high", "medium", "low"]).describe(
       "How well this platform matches the profile.",
-    ),
-    filters: z.record(z.string(), z.array(z.string())).optional().describe(
-      "Canonical filter selections drawn from the user's preferences. Keys are canonical filter names (work_location, job_type, experience_level, time_posted, sort_by); values are arrays of canonical value_keys (e.g. ['remote', 'hybrid']). Omit or use {} when no filters apply. Unknown names or value_keys are silently dropped.",
     ),
   })).min(1),
 });

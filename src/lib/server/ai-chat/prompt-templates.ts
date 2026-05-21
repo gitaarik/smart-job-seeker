@@ -14,7 +14,8 @@ export interface PromptTemplate {
 
 export const promptTemplates: Record<string, PromptTemplate> = {
   "answer_application_question": {
-    system_prompt: `You are a career coach helping a Software Engineer prepare compelling, authentic answers to application interview questions.
+    system_prompt:
+      `You are a career coach helping a Software Engineer prepare compelling, authentic answers to application interview questions.
 
 ## Applicant Profile:
 
@@ -30,14 +31,15 @@ Guidelines:
 - Ground answers in real work and project experience
 - When multiple suitable answers exist, present alternatives
 - Be concise — keep answers to 2-3 short paragraphs maximum`,
-    user_prompt: `Please help me answer this interview question for my application:
+    user_prompt:
+      `Please help me answer this interview question for my application:
 
 \${question}`,
   },
 
-
   "detect_job_detail_content": {
-    system_prompt: `You are analyzing a job search page HTML AFTER a user clicked on a job listing.
+    system_prompt:
+      `You are analyzing a job search page HTML AFTER a user clicked on a job listing.
 Your task is to identify WHERE the job detail content appeared on the page.
 
 Common patterns for job detail display:
@@ -65,7 +67,8 @@ CONFIDENCE SCORING:
 - Below 50: Uncertain, might be wrong container
 
 Return null for selector if you cannot identify the job detail container.`,
-    user_prompt: `Here is the HTML from a job search page AFTER clicking on a job listing.
+    user_prompt:
+      `Here is the HTML from a job search page AFTER clicking on a job listing.
 Identify the container that shows the job details (description, requirements, apply button, etc.).
 
 HTML:
@@ -78,7 +81,8 @@ Return:
   },
 
   "detect_login_fields": {
-    system_prompt: `You are a web form analysis expert. Your task is to identify login form fields in HTML markup.
+    system_prompt:
+      `You are a web form analysis expert. Your task is to identify login form fields in HTML markup.
 
 Given HTML from a login page, identify the SIMPLEST and most ROBUST selectors for:
 1. The username/email input field
@@ -94,7 +98,8 @@ SELECTOR PRIORITY (most preferred first):
 
 Return CSS selectors that can be used with document.querySelector().
 If multiple login forms exist, choose the most prominent one.`,
-    user_prompt: `Analyze this login page HTML and identify the SIMPLEST, most ROBUST field selectors:
+    user_prompt:
+      `Analyze this login page HTML and identify the SIMPLEST, most ROBUST field selectors:
 
 \${html}
 
@@ -109,7 +114,8 @@ Return your analysis with confidence score and any warnings (CAPTCHA, 2FA, etc).
   },
 
   "detect_login_page": {
-    system_prompt: `You are a login page detection specialist. Your task is to analyze HTML content and determine if the page is a login/authentication page.
+    system_prompt:
+      `You are a login page detection specialist. Your task is to analyze HTML content and determine if the page is a login/authentication page.
 
 Look for indicators such as:
 - Login forms with username/email and password input fields
@@ -122,7 +128,8 @@ Look for indicators such as:
 - Please log in to continue messages
 
 Return a JSON response with your determination. Be conservative - only return true if you're confident it's a login page.`,
-    user_prompt: `Analyze this HTML and determine if it's a login/authentication page:
+    user_prompt:
+      `Analyze this HTML and determine if it's a login/authentication page:
 
 \${html}
 
@@ -135,7 +142,8 @@ Return your determination with confidence level and reasoning.`,
   },
 
   "detect_pagination": {
-    system_prompt: `You are an expert at analyzing HTML to detect pagination patterns in job listing pages. Your task is to identify whether the page uses pagination (Next/Previous buttons, page numbers), infinite scroll, or load more buttons.`,
+    system_prompt:
+      `You are an expert at analyzing HTML to detect pagination patterns in job listing pages. Your task is to identify whether the page uses pagination (Next/Previous buttons, page numbers), infinite scroll, or load more buttons.`,
     user_prompt: `Analyze this HTML and identify pagination mechanisms.
 
 Look for:
@@ -151,7 +159,8 @@ Return the pagination type and relevant selectors for navigation.`,
   },
 
   "extract_job_click_selectors": {
-    system_prompt: `You are analyzing a job search results page to extract job titles alongside their clickable element IDs.
+    system_prompt:
+      `You are analyzing a job search results page to extract job titles alongside their clickable element IDs.
 
 CRITICAL: You MUST use the EXACT data-xxx values from the HTML. DO NOT make up or guess ID numbers.
 
@@ -161,7 +170,8 @@ Each clickable element in the HTML has a data-xxx attribute with a numeric value
 3. Return ONLY the jobs where you found both a valid ID and a title
 
 Return a JSON object with an array of jobs, each containing the EXACT clickableId from the HTML and the extracted title.`,
-    user_prompt: `Here is HTML from a job search results page with clickable elements marked:
+    user_prompt:
+      `Here is HTML from a job search results page with clickable elements marked:
 
 {{html}}
 
@@ -189,7 +199,8 @@ If you cannot find clear title/ID pairs, return an empty jobs array.`,
   },
 
   "extract_job_data": {
-    system_prompt: `You are a job vacancy data extraction specialist. Extract structured information from job posting HTML to populate a vacancy database.
+    system_prompt:
+      `You are a job vacancy data extraction specialist. Extract structured information from job posting HTML to populate a vacancy database.
 
 CRITICAL RULES:
 - ONLY extract information that is EXPLICITLY present in the HTML
@@ -320,7 +331,8 @@ The HTML may contain content from multiple tabs (e.g., "Job" and "Company" tabs)
 Additional tab content is appended at the end with <!-- TAB: TabName --> markers.
 IMPORTANT: Look for company_description in "Company", "About", or "Overview" tab sections.
 Do not skip content just because it appears at the end of the HTML.`,
-    user_prompt: `Extract comprehensive job information from this job posting HTML.
+    user_prompt:
+      `Extract comprehensive job information from this job posting HTML.
 {{searchContextHint}}
 
 HTML:
@@ -394,7 +406,8 @@ put them all in skills_required.`,
   },
 
   "extract_job_links": {
-    system_prompt: `You are a job listing link extraction specialist. Your task is to identify and extract URLs to individual job vacancy pages from job search result HTML.
+    system_prompt:
+      `You are a job listing link extraction specialist. Your task is to identify and extract URLs to individual job vacancy pages from job search result HTML.
 
 Focus on:
 - Links that point to individual job postings (not company pages, filters, or navigation)
@@ -410,7 +423,8 @@ Return format: ["url1", "url2", "url3"]`,
   },
 
   "extract_jobs_from_search_page": {
-    system_prompt: `You are analyzing a job search results page to extract job information from each listing card.
+    system_prompt:
+      `You are analyzing a job search results page to extract job information from each listing card.
 
 CRITICAL: You MUST use the EXACT data-xxx values from the HTML. DO NOT make up or guess ID numbers.
 
@@ -483,7 +497,8 @@ WHAT NOT TO DO:
 ❌ DO NOT guess salary ranges based on job title or level
 ❌ DO NOT infer remote work from "Worldwide" or location text
 ❌ DO NOT make up posting dates like "recently" or "today"`,
-    user_prompt: `Here is HTML from a job search results page with clickable elements marked with data-xxx attributes:
+    user_prompt:
+      `Here is HTML from a job search results page with clickable elements marked with data-xxx attributes:
 
 {{html}}
 
@@ -550,7 +565,8 @@ If a job has minimal information (e.g., only title and company visible):
   },
 
   "extract_matched_skills": {
-    system_prompt: `You are a strict skill matching assistant. Given a candidate's profile and a list of job skills, determine which job skills the candidate demonstrably possesses.
+    system_prompt:
+      `You are a strict skill matching assistant. Given a candidate's profile and a list of job skills, determine which job skills the candidate demonstrably possesses.
 
 Use SEMANTIC matching for technical skills — the candidate does not need to list the exact same skill name. For example:
 - Job requires "SQL databases" and candidate knows "PostgreSQL" or "MySQL" → MATCH
@@ -579,7 +595,8 @@ Candidate Profile:
   },
 
   "extract_resume_data": {
-    system_prompt: `You are a resume parser that extracts structured information from resume text. Extract all available information and return it in the specified JSON format.
+    system_prompt:
+      `You are a resume parser that extracts structured information from resume text. Extract all available information and return it in the specified JSON format.
 
 Guidelines:
 - Extract all work experience, including company name, position, dates, and accomplishments
@@ -597,7 +614,8 @@ Guidelines:
   },
 
   "find_next_page_button": {
-    system_prompt: `You are an expert at analyzing HTML to find pagination buttons in job search results pages.
+    system_prompt:
+      `You are an expert at analyzing HTML to find pagination buttons in job search results pages.
 
 The HTML has been annotated with data-xxx attributes on clickable elements. Your task is to find the button/link that navigates to the NEXT page of results.
 
@@ -622,7 +640,8 @@ Return JSON with:
   },
 
   "followup": {
-    system_prompt: `You are helping to refine a previous AI-generated response. This is a follow-up request.
+    system_prompt:
+      `You are helping to refine a previous AI-generated response. This is a follow-up request.
 
 # Previous Response:
 
@@ -667,7 +686,8 @@ Return JSON with:
   },
 
   "score_job_match": {
-    system_prompt: `You are a technical recruiter and career advisor. Your task is to evaluate how well a job opportunity matches a candidate's profile, skills, and preferences.
+    system_prompt:
+      `You are a technical recruiter and career advisor. Your task is to evaluate how well a job opportunity matches a candidate's profile, skills, and preferences.
 
 Analyze the candidate's experience, technical skills, career trajectory, and stated preferences against the job requirements. Provide an objective match score from 0-100 and detailed reasoning.
 
@@ -730,7 +750,8 @@ Provide your analysis in JSON format with:
   },
 
   "write_cover_letter": {
-    system_prompt: `You are an expert career coach writing a cover letter for a Software Engineer.
+    system_prompt:
+      `You are an expert career coach writing a cover letter for a Software Engineer.
 
 ## Applicant Profile:
 
@@ -752,7 +773,8 @@ Provide your analysis in JSON format with:
   },
 
   "advise_cover_letter": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their cover letter.
+    system_prompt:
+      `You are a career coach. Given the applicant's profile and a job description, give concise, job-specific advice for their cover letter.
 
 ## Applicant Profile:
 \${data}
@@ -772,9 +794,9 @@ What specific experiences, skills, and achievements from their profile should th
 \${additionalContext}`,
   },
 
-
   "review_cover_letter": {
-    system_prompt: `You are a friendly career coach helping someone with their cover letter. Talk directly to them — "you"/"your". Be warm but concise.
+    system_prompt:
+      `You are a friendly career coach helping someone with their cover letter. Talk directly to them — "you"/"your". Be warm but concise.
 
 ## Applicant Profile:
 \${data}
@@ -801,7 +823,8 @@ In your feedback:
   },
 
   "estimate_salary_expectations": {
-    system_prompt: `You are a compensation analyst helping a professional estimate salary expectations for a specific combination of parameters.
+    system_prompt:
+      `You are a compensation analyst helping a professional estimate salary expectations for a specific combination of parameters.
 
 ## Professional's Profile:
 
@@ -822,7 +845,8 @@ Guidelines:
 - All rates should be in the specified currency
 - Provide realistic market-rate estimates, not aspirational ones
 - If you have very little data to work with, be honest about the uncertainty but still provide your best estimate`,
-    user_prompt: `Please estimate salary expectations for the following parameters:
+    user_prompt:
+      `Please estimate salary expectations for the following parameters:
 
 - **Employment Type:** \${employmentType}
 - **Work Arrangement:** \${workArrangement}
@@ -840,7 +864,8 @@ Also include:
   },
 
   "write_cheat_sheet": {
-    system_prompt: `You are an expert career coach preparing a personalized interview cheat sheet for a Software Engineer's job application.
+    system_prompt:
+      `You are an expert career coach preparing a personalized interview cheat sheet for a Software Engineer's job application.
 
 ## Applicant Profile:
 
@@ -863,7 +888,8 @@ Also include:
   },
 
   "advise_cheat_sheet": {
-    system_prompt: `You are a career coach. Given the applicant's profile and a job description, give concise advice on what to include in their interview cheat sheet.
+    system_prompt:
+      `You are a career coach. Given the applicant's profile and a job description, give concise advice on what to include in their interview cheat sheet.
 
 ## Applicant Profile:
 \${data}
@@ -884,7 +910,8 @@ What key points should they prepare for THIS role's interview? What strengths to
   },
 
   "review_cheat_sheet": {
-    system_prompt: `You are a friendly career coach helping someone with their interview cheat sheet. Talk directly to them — "you"/"your". Be warm but concise.
+    system_prompt:
+      `You are a friendly career coach helping someone with their interview cheat sheet. Talk directly to them — "you"/"your". Be warm but concise.
 
 ## Applicant Profile:
 \${data}
@@ -911,52 +938,42 @@ In your feedback:
   },
 
   "suggest_import_tasks": {
-    system_prompt: `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. You will pre-fill an "import task" — an automated scrape that drives a platform's own search UI — for every available platform, ranked by how well each fits the user's profile and preferences.
+    system_prompt:
+      `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. You will pre-fill an "import task" — an automated scrape that drives a platform's own search UI — for every available platform, ranked by how well each fits the user's profile.
+
+Your scope is narrow: pick the search keywords, rank platforms by fit, and write a short note. Filters (work_location, job_type, experience_level, …) are pre-computed from the user's preferences and listed per platform below — DO NOT emit them yourself, and do not repeat their values in the keyword string.
 
 ## Applicant profile
 
 \${data}
 
-## Job preferences
-
-The user has set these preferences in their match config. Use them both to score platforms (better fit = higher relevance) and to populate the per-task filters.
-
-\${preferences}
-
 ## Available platforms
 
-The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, applies the filters you choose, and submits. You do NOT construct URLs — just emit one task per platform.
+The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, applies the pre-computed filters shown below, and submits. You do NOT construct URLs — just emit one task per platform.
 
-Each platform may list "Known-unsupported filters" — (filter, value_key) pairs the scraper has previously tried and failed to apply on that platform's form. When a user preference overlaps with that list, the LLM will not be able to narrow that dimension — bump the relevance DOWN for that platform, and don't bother emitting the unsupported filter (the scraper would drop it anyway).
+Each platform entry shows:
+  - the filters the scraper will apply on that platform (translated from the user's preferences, minus anything the platform has previously failed to apply)
+  - "Unsupported overlap" — (filter, value_key) pairs from the user's preferences that this platform's form can't honor. Treat this as a relevance penalty.
 
 \${platforms_list}
-
-## Canonical filter taxonomy
-
-These are the only filter names and value_keys you may emit. Anything else is silently dropped.
-
-\${filter_taxonomy}
 
 ## Guidelines
 
 Output one task per platform listed above (no more, no less). Rank them high→low by fit. Within the response array, order entries by relevance (high first, then medium, then low).
 
 Keywords:
-- "keywords" is what the scraper will type into the platform's search input. Provide the plain (un-URL-encoded) string. Choose 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would actually search for. Tailor per-platform (Upwork-style sites read differently from LinkedIn-style ones).
-- Set keywords to null ONLY when a platform is a curated single-page listing with no search box (rare). When in doubt, provide keywords.
-
-Filters (the "filters" field, optional):
-- Translate the user's preferences into canonical value_keys using the taxonomy above. Common preference mappings: "Full-time"→fulltime, "Part-time"→parttime, "Contract"/"Freelance"→contract, "Internship"→internship, "Remote"→remote, "Hybrid"→hybrid, "On-site"→onsite, "Entry-level"→entry, "Mid-level"→mid, "Senior"→senior, "Lead"→lead, "Executive"→executive. \`remote_only: true\` is shorthand for work_location=[remote]. The user's "locations" list does NOT map to a canonical filter — fold into keywords when relevant.
-- The scraper drops filters the form doesn't expose, so emit the user's full preferences as canonical filters every time UNLESS the (filter, value_key) appears in that platform's Known-unsupported list — in which case omit it AND ding relevance.
-- Output filters as a flat map of canonical filter name → array of canonical value_keys. Omit the field, or use {}, when no filters should apply.
+- "keywords" is the plain (un-URL-encoded) string the scraper will type into the platform's search input. Choose 1–3 terms drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Pick what a recruiter would actually search for — don't dump every skill.
+- DO NOT include values already covered by the pre-applied filters. If the platform has "experience_level: [senior]" applied, do NOT put "senior" in the keywords. Same for job_type ("full-time", "contract", …), work_location ("remote", "hybrid", …), etc. The filter UI handles those dimensions; the keywords are for the role/stack only.
+- It is fine — and often best — to use the same keywords across multiple platforms. Only vary per platform when there's a real stylistic reason (e.g. a freelance marketplace where skill-soup outperforms a job title).
+- Set keywords to null ONLY when a platform is a curated single-page listing with no search box (rare).
 
 Relevance:
-- "high" — platform closely matches the profile's strongest signals AND honors the user's key preferences (no overlap with Known-unsupported).
-- "medium" — reasonable fit OR honors most preferences with one minor unsupported filter.
-- "low" — generic fallback, or multiple key preferences land in Known-unsupported.
+- "high" — platform closely matches the profile's strongest signals AND no key preference appears in "Unsupported overlap".
+- "medium" — reasonable fit OR one minor preference lands in "Unsupported overlap".
+- "low" — generic fallback, or multiple key preferences land in "Unsupported overlap".
 
 Notes:
-- "note" must be ≤ 80 chars and reference what in the profile or preferences drove the ranking (e.g. "React + remote; LinkedIn covers both filters").
+- "note" is a short task label the user sees in their task list. Set it to the role/title the search is for (e.g. "Full-Stack Developer", "Senior Python Engineer") — drawn from the profile's title/headline. ≤ 60 chars. No explanation, no platform name, no filter commentary; the relevance field already conveys fit.
 - DO NOT invent platform IDs. Every platform_id in your response MUST appear in the list above. Emit exactly one task per platform.
 
 ## Output format
@@ -968,27 +985,18 @@ Return JSON with this exact shape (the wrapping key MUST be "tasks"):
     {
       "platform_id": 16,
       "keywords": "react developer",
-      "note": "React stack + remote preference; full filter support",
-      "relevance": "high",
-      "filters": {
-        "work_location": ["remote", "hybrid"],
-        "experience_level": ["senior", "lead"],
-        "job_type": ["fulltime"]
-      }
+      "note": "Full-Stack Developer",
+      "relevance": "high"
     },
     {
       "platform_id": 8,
-      "keywords": "senior react developer",
-      "note": "Remote-only board; experience filter unsupported",
-      "relevance": "medium",
-      "filters": {
-        "job_type": ["fulltime"]
-      }
+      "keywords": "react developer",
+      "note": "Full-Stack Developer",
+      "relevance": "medium"
     }
   ]
 }`,
     user_prompt:
-      `Emit one import-task draft per platform listed above, ranked high→low by fit. Apply the user's preferences as canonical filters except where a (filter, value_key) is in that platform's Known-unsupported list — in which case omit it and lower the relevance.`,
+      `Emit one import-task draft per platform listed above, ranked high→low by fit. Pick keywords from the role/stack only — never repeat values already covered by the pre-applied filters shown for each platform.`,
   },
-
 };
