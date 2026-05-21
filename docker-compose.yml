@@ -29,6 +29,9 @@ services:
       - .:/app
       - /app/node_modules
       - ./db-dumps:/db-dumps:ro
+      # Persist Patchright browser cache so start-app.sh's install is a no-op
+      # after the first download (browser is ~280MB)
+      - patchright_cache:/root/.cache/ms-playwright
     command: /app/scripts/start-app.sh
     depends_on:
       database:
@@ -68,3 +71,4 @@ services:
         condition: service_healthy
 volumes:
   postgres_data:
+  patchright_cache:
