@@ -2589,8 +2589,8 @@
         {:else}
           <button
             onclick={startScrape}
-            disabled={isStarting || !searchTask.search_url ||
-            !searchTask.platform_id}
+            disabled={isStarting ||
+              (!searchTask.platform_id && !searchTask.search_url)}
             class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if isStarting}
@@ -2641,13 +2641,9 @@
         {@render runDetails(featuredRun, true)}
       {/if}
 
-      <!-- Missing config warnings -->
-      {#if !searchTask.search_url}
-        <p class="text-sm text-[var(--dash-warning)]">
-          No search URL configured. Please add a search URL to start scraping.
-        </p>
-      {/if}
-      {#if !searchTask.platform_id}
+      <!-- Missing config warning: task needs either a platform (scraper
+           drives the search form at runtime) or a legacy direct search_url. -->
+      {#if !searchTask.platform_id && !searchTask.search_url}
         <p class="text-sm text-[var(--dash-warning)]">
           No platform selected. Please select a platform to start scraping.
         </p>
