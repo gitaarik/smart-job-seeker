@@ -22,8 +22,6 @@
     key: string;
     name: string;
     url: string;
-    suggestion_priority: number | null;
-    suggestion_hint: string | null;
   };
 
   interface Props {
@@ -69,8 +67,7 @@
   {#if platforms.length === 0}
     <p class="text-sm text-[var(--dash-text-muted)]">
       No platforms are configured for the import flow yet. An admin needs to set
-      <code>search_page_url</code> + a <code>suggestion_priority</code> on a platform
-      before it can be used here.
+      a <code>search_page_url</code> on a platform before it can be used here.
     </p>
   {:else}
     <div>
@@ -87,11 +84,6 @@
           <option value={p.id}>{p.name}</option>
         {/each}
       </select>
-      {#if selectedPlatform?.suggestion_hint}
-        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-          {selectedPlatform.suggestion_hint}
-        </p>
-      {/if}
     </div>
 
     <div>

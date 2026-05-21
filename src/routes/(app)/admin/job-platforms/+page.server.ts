@@ -18,21 +18,17 @@ export const load: PageServerLoad = async () => {
         status: job_platforms.status,
         login_page_url: job_platforms.login_page_url,
         search_page_url: job_platforms.search_page_url,
-        suggestion_priority: job_platforms.suggestion_priority,
-        suggestion_hint: job_platforms.suggestion_hint,
         success_count: job_platforms.success_count,
         failure_count: job_platforms.failure_count,
         last_success_at: job_platforms.last_success_at,
         last_failure_at: job_platforms.last_failure_at,
+        unsupported_filters: job_platforms.unsupported_filters,
+        unsupported_filters_at: job_platforms.unsupported_filters_at,
         date_created: job_platforms.date_created,
         date_updated: job_platforms.date_updated,
       })
       .from(job_platforms)
-      .orderBy(
-        sql`CASE WHEN ${job_platforms.suggestion_priority} IS NULL THEN 1 ELSE 0 END`,
-        job_platforms.suggestion_priority,
-        job_platforms.name,
-      ),
+      .orderBy(job_platforms.name),
     db
       .select({
         platform_id: job_platform_changes.platform_id,

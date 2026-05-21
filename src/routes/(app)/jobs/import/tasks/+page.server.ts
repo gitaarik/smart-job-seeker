@@ -86,24 +86,22 @@ export const load: PageServerLoad = async ({ parent }) => {
     }
   }
 
-  // Platforms the add-task form will offer: any platform with a
+  // Platforms the add-task form will offer: any published platform with a
   // `search_page_url` configured (so the scraper knows where to drive the
-  // search form) and a `suggestion_priority` (curated for the import flow).
+  // search form).
   const importablePlatforms = await db
     .select({
       id: job_platforms.id,
       key: job_platforms.key,
       name: job_platforms.name,
       url: job_platforms.url,
-      suggestion_priority: job_platforms.suggestion_priority,
-      suggestion_hint: job_platforms.suggestion_hint,
     })
     .from(job_platforms)
     .where(and(
-      isNotNull(job_platforms.suggestion_priority),
       isNotNull(job_platforms.search_page_url),
+      eq(job_platforms.status, "published"),
     ))
-    .orderBy(asc(job_platforms.suggestion_priority), asc(job_platforms.id));
+    .orderBy(asc(job_platforms.id));
 
   return {
     searchTasks,

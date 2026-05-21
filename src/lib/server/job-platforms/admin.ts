@@ -20,8 +20,6 @@ export type EditablePlatformFields = {
   type?: string | null;
   key?: string;
   login_page_url?: string | null;
-  suggestion_priority?: number | null;
-  suggestion_hint?: string | null;
 };
 
 const EDITABLE_FIELDS = [
@@ -31,8 +29,6 @@ const EDITABLE_FIELDS = [
   "type",
   "key",
   "login_page_url",
-  "suggestion_priority",
-  "suggestion_hint",
 ] as const satisfies ReadonlyArray<keyof EditablePlatformFields>;
 
 function normalize(value: unknown): string | null {

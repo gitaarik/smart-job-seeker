@@ -911,26 +911,53 @@ In your feedback:
   },
 
   "suggest_import_tasks": {
-    system_prompt: `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. Based on their profile you will suggest 1–3 tailored job-search "import tasks" — automated scrapes that drive each platform's own search UI.
+    system_prompt: `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. You will pre-fill an "import task" — an automated scrape that drives a platform's own search UI — for every available platform, ranked by how well each fits the user's profile and preferences.
 
 ## Applicant profile
 
 \${data}
 
+## Job preferences
+
+The user has set these preferences in their match config. Use them both to score platforms (better fit = higher relevance) and to populate the per-task filters.
+
+\${preferences}
+
 ## Available platforms
 
-The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, and submits. You do NOT construct URLs — just pick a platform by its platform_id and provide search keywords.
+The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, applies the filters you choose, and submits. You do NOT construct URLs — just emit one task per platform.
+
+Each platform may list "Known-unsupported filters" — (filter, value_key) pairs the scraper has previously tried and failed to apply on that platform's form. When a user preference overlaps with that list, the LLM will not be able to narrow that dimension — bump the relevance DOWN for that platform, and don't bother emitting the unsupported filter (the scraper would drop it anyway).
 
 \${platforms_list}
 
-Guidelines:
-- Pick 1–3 platforms that best match the profile, drawing on the per-platform "When to pick" hints.
-- For variety, prefer different platforms unless one is a clearly dominant fit.
-- "keywords" is usually present — it's what the scraper will type into the platform's search input. Provide the plain (un-URL-encoded) string. Choose 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would actually search for. Set keywords to null ONLY when the platform's hint explicitly says it's a curated single-page listing (no search box) — then the scraper imports everything on that page.
-- "note" must be ≤ 80 chars and reference what in the profile drove the suggestion (e.g. "Based on your React/TypeScript stack").
-- "relevance": "high" if the platform closely matches the profile's strongest signals; "medium" for a reasonable fit; "low" for a generic fallback when the profile is sparse.
-- If the profile is essentially empty (no title, no skills), return ONE platform (LinkedIn if available) with relevance="low" and a note like "Profile is sparse — generic starter search you can edit".
-- DO NOT invent platform IDs. Every platform_id in your response MUST appear in the list above.
+## Canonical filter taxonomy
+
+These are the only filter names and value_keys you may emit. Anything else is silently dropped.
+
+\${filter_taxonomy}
+
+## Guidelines
+
+Output one task per platform listed above (no more, no less). Rank them high→low by fit. Within the response array, order entries by relevance (high first, then medium, then low).
+
+Keywords:
+- "keywords" is what the scraper will type into the platform's search input. Provide the plain (un-URL-encoded) string. Choose 1–3 keywords drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Don't dump every skill — pick what a recruiter would actually search for. Tailor per-platform (Upwork-style sites read differently from LinkedIn-style ones).
+- Set keywords to null ONLY when a platform is a curated single-page listing with no search box (rare). When in doubt, provide keywords.
+
+Filters (the "filters" field, optional):
+- Translate the user's preferences into canonical value_keys using the taxonomy above. Common preference mappings: "Full-time"→fulltime, "Part-time"→parttime, "Contract"/"Freelance"→contract, "Internship"→internship, "Remote"→remote, "Hybrid"→hybrid, "On-site"→onsite, "Entry-level"→entry, "Mid-level"→mid, "Senior"→senior, "Lead"→lead, "Executive"→executive. \`remote_only: true\` is shorthand for work_location=[remote]. The user's "locations" list does NOT map to a canonical filter — fold into keywords when relevant.
+- The scraper drops filters the form doesn't expose, so emit the user's full preferences as canonical filters every time UNLESS the (filter, value_key) appears in that platform's Known-unsupported list — in which case omit it AND ding relevance.
+- Output filters as a flat map of canonical filter name → array of canonical value_keys. Omit the field, or use {}, when no filters should apply.
+
+Relevance:
+- "high" — platform closely matches the profile's strongest signals AND honors the user's key preferences (no overlap with Known-unsupported).
+- "medium" — reasonable fit OR honors most preferences with one minor unsupported filter.
+- "low" — generic fallback, or multiple key preferences land in Known-unsupported.
+
+Notes:
+- "note" must be ≤ 80 chars and reference what in the profile or preferences drove the ranking (e.g. "React + remote; LinkedIn covers both filters").
+- DO NOT invent platform IDs. Every platform_id in your response MUST appear in the list above. Emit exactly one task per platform.
 
 ## Output format
 
@@ -941,19 +968,27 @@ Return JSON with this exact shape (the wrapping key MUST be "tasks"):
     {
       "platform_id": 16,
       "keywords": "react developer",
-      "note": "Based on your React/TypeScript stack",
-      "relevance": "high"
+      "note": "React stack + remote preference; full filter support",
+      "relevance": "high",
+      "filters": {
+        "work_location": ["remote", "hybrid"],
+        "experience_level": ["senior", "lead"],
+        "job_type": ["fulltime"]
+      }
     },
     {
-      "platform_id": 21,
-      "keywords": "python backend",
-      "note": "Backend Python work matches this platform's audience",
-      "relevance": "medium"
+      "platform_id": 8,
+      "keywords": "senior react developer",
+      "note": "Remote-only board; experience filter unsupported",
+      "relevance": "medium",
+      "filters": {
+        "job_type": ["fulltime"]
+      }
     }
   ]
 }`,
     user_prompt:
-      `Suggest 1–3 import tasks tailored to this profile, ordered by relevance (highest first). Keep notes short and specific to what's in the profile.`,
+      `Emit one import-task draft per platform listed above, ranked high→low by fit. Apply the user's preferences as canonical filters except where a (filter, value_key) is in that platform's Known-unsupported list — in which case omit it and lower the relevance.`,
   },
 
 };

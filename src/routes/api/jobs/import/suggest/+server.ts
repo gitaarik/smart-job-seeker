@@ -1,67 +1,168 @@
 /**
  * POST /api/jobs/import/suggest
  *
- * Asks the LLM to pick 1–3 job platforms tailored to the user's profile
- * and provide a keyword string for each. The scraper handles each platform's
- * search-form configuration at run time (login → navigate to search_page_url
- * → type keywords → submit), so the LLM never sees or constructs URLs.
+ * Asks the LLM to rank every suggestable job platform for the user's
+ * profile and pre-fill a per-platform task draft (keywords + filters drawn
+ * from the user's match preferences). The scraper drives each platform's
+ * search form at run time, silently drops filters the form doesn't expose,
+ * and records misses to `job_platforms.unsupported_filters` so future
+ * suggestions can soft-deprioritize platforms that don't honor the user's
+ * preferred filters.
  *
- * Returns a list of task drafts the client form pre-fills: platform_id,
- * platform name (for display), keywords, note, relevance. The user can edit
- * before clicking save.
+ * Returns task drafts the client form can save: platform_id, platform name
+ * (for display), keywords, note, relevance, filters. The user can edit any
+ * field before saving.
  */
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, isNotNull } from "drizzle-orm";
-import { job_platforms } from "$lib/server/db/schema";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { job_platforms, match_config } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../(app)/profile/utils";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
 import { suggestImportTasksSchema } from "$lib/server/schemas/ai-prompt-schemas";
+import {
+  SEARCH_FILTER_DEFINITIONS,
+  type SearchFilterName,
+  type SearchFilterValue,
+} from "$lib/job-platforms/search-filters";
 
 type SuggestablePlatform = {
   id: number;
   key: string;
   name: string;
-  suggestion_priority: number | null;
-  suggestion_hint: string | null;
+  url: string;
+  search_page_url: string | null;
+  unsupported_filters: Record<string, string[]>;
+};
+
+type PreferenceConfig = {
+  job_types: string[];
+  experience_levels: string[];
+  work_location: string[];
+  locations: string[];
+  remote_only: boolean | null;
 };
 
 async function fetchSuggestablePlatforms(): Promise<SuggestablePlatform[]> {
-  // A platform is suggestable when it has both a curation priority AND a
-  // search_page_url configured (the scraper needs the latter to drive the
-  // form). Ordered by priority then id for determinism.
+  // A platform is suggestable when it has a search_page_url configured —
+  // the scraper needs it to drive the form. Ordered by id for determinism.
   return await db
     .select({
       id: job_platforms.id,
       key: job_platforms.key,
       name: job_platforms.name,
-      suggestion_priority: job_platforms.suggestion_priority,
-      suggestion_hint: job_platforms.suggestion_hint,
+      url: job_platforms.url,
+      search_page_url: job_platforms.search_page_url,
+      unsupported_filters: job_platforms.unsupported_filters,
     })
     .from(job_platforms)
     .where(
       and(
-        isNotNull(job_platforms.suggestion_priority),
         isNotNull(job_platforms.search_page_url),
+        eq(job_platforms.status, "published"),
       ),
     )
-    .orderBy(
-      asc(job_platforms.suggestion_priority),
-      asc(job_platforms.id),
-    );
+    .orderBy(asc(job_platforms.id));
+}
+
+async function fetchPreferences(profileId: number): Promise<PreferenceConfig | null> {
+  const row = await db.query.match_config.findFirst({
+    where: eq(match_config.profile_id, profileId),
+    columns: {
+      job_types: true,
+      experience_levels: true,
+      work_location: true,
+      locations: true,
+      remote_only: true,
+    },
+  });
+  if (!row) return null;
+  return {
+    job_types: (row.job_types as string[] | null) ?? [],
+    experience_levels: (row.experience_levels as string[] | null) ?? [],
+    work_location: (row.work_location as string[] | null) ?? [],
+    locations: (row.locations as string[] | null) ?? [],
+    remote_only: row.remote_only ?? null,
+  };
+}
+
+function renderPreferencesForPrompt(p: PreferenceConfig | null): string {
+  if (!p) return "(no preferences set yet)";
+  const lines: string[] = [];
+  if (p.job_types.length > 0) lines.push(`- job_types: ${p.job_types.join(", ")}`);
+  if (p.experience_levels.length > 0) {
+    lines.push(`- experience_levels: ${p.experience_levels.join(", ")}`);
+  }
+  if (p.work_location.length > 0) {
+    lines.push(`- work_location: ${p.work_location.join(", ")}`);
+  }
+  if (p.locations.length > 0) lines.push(`- locations: ${p.locations.join(", ")}`);
+  if (p.remote_only !== null) lines.push(`- remote_only: ${p.remote_only}`);
+  if (lines.length === 0) return "(no preferences set yet)";
+  return lines.join("\n");
 }
 
 function renderPlatformsForPrompt(rows: SuggestablePlatform[]): string {
   const lines: string[] = [];
   for (const p of rows) {
     lines.push(`- platform_id=${p.id}: "${p.name}" (key=${p.key})`);
-    if (p.suggestion_hint) {
-      lines.push(`  When to pick: ${p.suggestion_hint}`);
+    const unsupportedLines = renderUnsupportedFilters(p.unsupported_filters);
+    if (unsupportedLines.length > 0) {
+      lines.push("  Known-unsupported filters (deprioritize when these overlap the user's preferences):");
+      for (const ul of unsupportedLines) lines.push(`    ${ul}`);
     }
   }
   return lines.join("\n");
+}
+
+function renderUnsupportedFilters(unsupported: Record<string, string[]>): string[] {
+  const out: string[] = [];
+  for (const [name, keys] of Object.entries(unsupported)) {
+    if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
+    const def = SEARCH_FILTER_DEFINITIONS[name as SearchFilterName];
+    const validKeys = keys.filter((k) => k in def.values);
+    if (validKeys.length === 0) continue;
+    out.push(`${name}: [${validKeys.join(", ")}]`);
+  }
+  return out;
+}
+
+function renderFilterTaxonomy(): string {
+  const lines: string[] = [];
+  for (
+    const [name, def] of Object.entries(SEARCH_FILTER_DEFINITIONS) as Array<
+      [SearchFilterName, typeof SEARCH_FILTER_DEFINITIONS[SearchFilterName]]
+    >
+  ) {
+    const valueKeys = Object.keys(def.values).filter((k) =>
+      k !== Object.keys(def.values)[0]
+    );
+    lines.push(`- ${name}: [${valueKeys.join(", ")}]`);
+  }
+  return lines.join("\n");
+}
+
+/**
+ * Validate the LLM's filters output against the canonical taxonomy. Drops
+ * unknown filter names and unknown value_keys defensively, but does NOT
+ * gate on per-platform support — the scraper handles missing filters at
+ * runtime and feeds unsupported_filters back to future suggestions.
+ */
+function validateFilters(
+  raw: Record<string, string[]> | undefined,
+): Record<string, SearchFilterValue> {
+  if (!raw) return {};
+  const out: Record<string, SearchFilterValue> = {};
+  for (const [name, values] of Object.entries(raw)) {
+    if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
+    const def = SEARCH_FILTER_DEFINITIONS[name as SearchFilterName];
+    const kept = values.filter((v) => v in def.values);
+    if (kept.length === 0) continue;
+    out[name] = kept;
+  }
+  return out;
 }
 
 export const POST: RequestHandler = async ({ cookies, locals }) => {
@@ -75,7 +176,10 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
-  const platforms = await fetchSuggestablePlatforms();
+  const [platforms, preferences] = await Promise.all([
+    fetchSuggestablePlatforms(),
+    fetchPreferences(profileId),
+  ]);
   if (platforms.length === 0) {
     return json(
       { success: false, message: "No suggestable platforms configured" },
@@ -84,12 +188,18 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
   }
 
   const platformsList = renderPlatformsForPrompt(platforms);
+  const preferencesList = renderPreferencesForPrompt(preferences);
+  const filterTaxonomy = renderFilterTaxonomy();
   const validPlatformIds = new Set(platforms.map((p) => p.id));
 
   const result = await createAndGenerateAiChat(
     profileId,
     "suggest_import_tasks",
-    { platforms_list: platformsList },
+    {
+      platforms_list: platformsList,
+      preferences: preferencesList,
+      filter_taxonomy: filterTaxonomy,
+    },
     undefined,
     {
       profileDataFields: [
@@ -142,9 +252,11 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     platform_id: number;
     platform: string;
     platform_name: string;
+    platform_url: string;
     keywords: string | null;
     note: string;
     relevance: "high" | "medium" | "low";
+    filters: Record<string, SearchFilterValue>;
   }> = [];
   const droppedIds: number[] = [];
   for (const task of validated.data.tasks) {
@@ -157,9 +269,13 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
       platform_id: platform.id,
       platform: platform.key,
       platform_name: platform.name,
+      // Prefer the scraper's actual entry URL; fall back to the platform
+      // home if no search-page URL is configured.
+      platform_url: platform.search_page_url ?? platform.url,
       keywords: task.keywords,
       note: task.note,
       relevance: task.relevance,
+      filters: validateFilters(task.filters),
     });
   }
   if (droppedIds.length > 0) {

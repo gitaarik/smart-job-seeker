@@ -27,10 +27,6 @@
   let type = $state(data.platform.type ?? "");
   let status = $state(data.platform.status);
   let loginPageUrl = $state(data.platform.login_page_url ?? "");
-  let suggestionPriority = $state(
-    data.platform.suggestion_priority?.toString() ?? "",
-  );
-  let suggestionHint = $state(data.platform.suggestion_hint ?? "");
 
   function discoveryStatusColor(s: string) {
     if (s === "success") return "text-green-600 dark:text-green-400";
@@ -212,35 +208,6 @@
           type="url"
           bind:value={loginPageUrl}
           placeholder="https://example.com/login"
-          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        />
-      </div>
-      <div>
-        <label
-          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="field-priority"
-        >Platform suggestion priority</label>
-        <input
-          id="field-priority"
-          name="suggestion_priority"
-          type="number"
-          bind:value={suggestionPriority}
-          placeholder="1 = top, blank = not in pool"
-          min="1"
-          class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
-        />
-      </div>
-      <div>
-        <label
-          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          for="field-hint"
-        >Platform suggestion hint</label>
-        <input
-          id="field-hint"
-          name="suggestion_hint"
-          type="text"
-          bind:value={suggestionHint}
-          placeholder="When should the LLM consider this platform?"
           class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
         />
       </div>

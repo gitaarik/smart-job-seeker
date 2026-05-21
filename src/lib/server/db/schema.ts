@@ -897,21 +897,23 @@ export const job_platforms = pgTable("job_platforms", {
    *  the platform's `url` when null. Example: LinkedIn's would be
    *  `https://www.linkedin.com/jobs/`. */
   search_page_url: varchar({ length: 512 }),
-  // suggest_import_tasks sort order: 1 = top, null = not in the suggestable
-  // pool. Curated manually so we can tune which platforms get surfaced first.
-  suggestion_priority: integer(),
-  // Short hint passed to the LLM as part of the platforms list, telling it
-  // when to pick this platform (e.g. "remote-leaning profiles", "tech/startup").
-  suggestion_hint: text(),
   // Phase 1 usage signals — incremented when a search_task_run on this
   // platform reaches a terminal state. See planning/JOB-PLATFORM-SIGNALS.md
-  // for the full multi-phase plan. Phase 1 only collects raw counts; the
-  // suggest endpoint still uses suggestion_priority for ordering. Phase 3
-  // shifts to score-driven selection.
+  // for the full multi-phase plan.
   success_count: integer().default(0).notNull(),
   failure_count: integer().default(0).notNull(),
   last_success_at: timestamp({ withTimezone: true, mode: "date" }),
   last_failure_at: timestamp({ withTimezone: true, mode: "date" }),
+  // Aggregated record of which canonical (filter, value_key) pairs the
+  // scraper has *tried* to apply on this platform but failed to find on
+  // the search form. Merged (union) on every run; never cleared
+  // automatically. The suggest endpoint feeds this to the LLM so it can
+  // soft-deprioritize platforms whose missing filters overlap the user's
+  // preferences. Keys are SearchFilterName, values are arrays of canonical
+  // value_keys observed-as-missing.
+  unsupported_filters: jsonb().$type<Record<string, string[]>>().default({})
+    .notNull(),
+  unsupported_filters_at: timestamp({ withTimezone: true, mode: "date" }),
 }, (table) => [
   unique("job_platforms_key_unique").on(table.key),
 ]);

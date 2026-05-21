@@ -41,17 +41,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   };
 };
 
-/** Lenient nullable-int parser for priority fields. Accepts negatives and
- *  zero — caller should clamp/range-check if those are wrong for its use. */
-function parsePriority(raw: FormDataEntryValue | null): number | null {
-  if (raw === null) return null;
-  const trimmed = String(raw).trim();
-  if (trimmed === "") return null;
-  const n = parseInt(trimmed, 10);
-  if (isNaN(n)) return null;
-  return n;
-}
-
 function parseString(raw: FormDataEntryValue | null): string {
   return raw === null ? "" : String(raw);
 }
@@ -63,7 +52,7 @@ function parseNullableString(raw: FormDataEntryValue | null): string | null {
 }
 
 export const actions: Actions = {
-  /** Save platform-level fields (name, status, suggestion_priority, etc.) */
+  /** Save platform-level fields (name, status, login URL, etc.) */
   save: async ({ params, request, locals }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });
@@ -81,8 +70,6 @@ export const actions: Actions = {
         type: parseNullableString(formData.get("type")),
         status: parseString(formData.get("status")),
         login_page_url: parseNullableString(formData.get("login_page_url")),
-        suggestion_priority: parsePriority(formData.get("suggestion_priority")),
-        suggestion_hint: parseNullableString(formData.get("suggestion_hint")),
       });
       return { success: true, savedFields: result.changedFields };
     } catch (err) {

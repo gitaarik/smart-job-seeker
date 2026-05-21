@@ -317,12 +317,11 @@ export const reviewLetterSchema = z.object({
 
 /**
  * Schema for suggest_import_tasks prompt
- * Returns 1-3 tailored job-search task suggestions based on the user's profile.
  *
- * The LLM picks a platform_id from the platforms list it was given and provides
- * a keyword string. The scraper handles search-form configuration dynamically
- * at run time (it types the keyword into the platform's search input), so the
- * LLM never sees or constructs URLs.
+ * The LLM returns ONE entry per suggestable platform, ranked high→low. The
+ * scraper drives each platform's search form at run time and silently drops
+ * filters the form doesn't expose, so the LLM emits canonical filter
+ * names/value_keys without per-platform support gating.
  */
 export const suggestImportTasksSchema = z.object({
   tasks: z.array(z.object({
@@ -338,7 +337,10 @@ export const suggestImportTasksSchema = z.object({
     relevance: z.enum(["high", "medium", "low"]).describe(
       "How well this platform matches the profile.",
     ),
-  })).min(1).max(3),
+    filters: z.record(z.string(), z.array(z.string())).optional().describe(
+      "Canonical filter selections drawn from the user's preferences. Keys are canonical filter names (work_location, job_type, experience_level, time_posted, sort_by); values are arrays of canonical value_keys (e.g. ['remote', 'hybrid']). Omit or use {} when no filters apply. Unknown names or value_keys are silently dropped.",
+    ),
+  })).min(1),
 });
 
 /**

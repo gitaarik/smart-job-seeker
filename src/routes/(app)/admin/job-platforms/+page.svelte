@@ -18,16 +18,17 @@
     <h1 class="text-2xl font-semibold text-[var(--dash-text)]">Job Platforms</h1>
     <p class="text-sm text-[var(--dash-text-secondary)]">
       {data.platforms.length} total · {
-        data.platforms.filter((p) => p.suggestion_priority !== null).length
-      } in suggest pool
+        data.platforms.filter((p) =>
+          p.status === "published" && p.search_page_url !== null
+        ).length
+      } suggestable
     </p>
   </div>
 
   <p class="text-sm text-[var(--dash-text-secondary)]">
-    Platforms with a <code>suggestion_priority</code> and at least one
-    suggestable preset show up in the AI suggestion flow at
-    <code>/jobs/import/tasks</code>. Click a platform name to edit it,
-    manage presets, see signals, and review change history.
+    Any published platform with a <code>search_page_url</code> shows up in the
+    AI suggestion flow at <code>/jobs/import/tasks</code>. Click a platform
+    name to edit it, manage presets, see signals, and review change history.
   </p>
 
   <div class="overflow-x-auto bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)]">
@@ -36,7 +37,6 @@
         class="text-xs uppercase tracking-wide text-[var(--dash-text-secondary)] bg-[var(--dash-bg)]"
       >
         <tr>
-          <th class="text-left px-3 py-2">Priority</th>
           <th class="text-left px-3 py-2">Name</th>
           <th class="text-left px-3 py-2">Key</th>
           <th class="text-left px-3 py-2">Status</th>
@@ -49,9 +49,6 @@
       <tbody>
         {#each data.platforms as platform (platform.id)}
           <tr class="border-t border-[var(--dash-border)]">
-            <td class="px-3 py-2 text-[var(--dash-text-secondary)] tabular-nums">
-              {platform.suggestion_priority ?? "—"}
-            </td>
             <td class="px-3 py-2 font-medium">
               <a
                 href="/admin/job-platforms/{platform.id}"
