@@ -140,9 +140,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     const hasMe = values.includes("me");
     const hasOthers = values.includes("others");
     if (hasMe && !hasOthers) {
-      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job_id = j.id AND ji.profile_id = ${profileId})`;
     } else if (hasOthers && !hasMe) {
-      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job_id = j.id AND ji.profile_id != ${profileId})`;
     }
   }
 
@@ -449,9 +449,9 @@ async function countMatchingJobs(
     const hasMe = values.includes("me");
     const hasOthers = values.includes("others");
     if (hasMe && !hasOthers) {
-      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job_id = j.id AND ji.profile_id = ${profileId})`;
     } else if (hasOthers && !hasMe) {
-      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+      importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job_id = j.id AND ji.profile_id != ${profileId})`;
     }
   }
 
@@ -462,7 +462,7 @@ async function countMatchingJobs(
   let statusJoin = sql``;
 
   if (statusValues.length > 0) {
-    statusJoin = sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+    statusJoin = sql`JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id`;
     if (statusValues.length === 1) {
       statusFilter = sql`js.status = ${statusValues[0]}`;
     } else {
@@ -583,9 +583,9 @@ export const actions: Actions = {
       const hasMe = values.includes("me");
       const hasOthers = values.includes("others");
       if (hasMe && !hasOthers) {
-        importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile = ${profileId})`;
+        importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job_id = j.id AND ji.profile_id = ${profileId})`;
       } else if (hasOthers && !hasMe) {
-        importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job = j.id AND ji.profile != ${profileId})`;
+        importedByFilter = sql`EXISTS (SELECT 1 FROM job_importers ji WHERE ji.job_id = j.id AND ji.profile_id != ${profileId})`;
       }
     }
 
@@ -596,7 +596,7 @@ export const actions: Actions = {
     let statusJoin = sql``;
 
     if (statusValues.length > 0) {
-      statusJoin = sql`JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id`;
+      statusJoin = sql`JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id`;
       if (statusValues.length === 1) {
         statusFilter = sql`js.status = ${statusValues[0]}`;
       } else {

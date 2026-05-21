@@ -105,7 +105,7 @@ export const load: PageServerLoad = async ({ parent }) => {
           COUNT(*) FILTER (WHERE js.status = 'saved') as saved,
           COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0) as new_unreviewed
         FROM job_matches jm
-        LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
+        LEFT JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id
         WHERE jm.profile_id = ${profileId}
       `),
     ]),
@@ -114,7 +114,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     queryRaw<{ id: number }>(sql`
       SELECT jm.id
       FROM job_matches jm
-      LEFT JOIN job_statuses js ON js.profile = jm.profile_id AND js.job = jm.job_id
+      LEFT JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id
       WHERE jm.profile_id = ${profileId}
       AND jm.score >= 70
       AND COALESCE(js.status, 'new') != 'rejected'

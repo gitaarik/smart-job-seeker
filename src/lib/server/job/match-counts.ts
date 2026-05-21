@@ -45,7 +45,7 @@ export function buildVisibilityScope(
   return {
     from: sql`
       FROM jobs j
-      LEFT JOIN job_importers ji ON j.id = ji.job AND ji.profile = ${profileId}`,
+      LEFT JOIN job_importers ji ON j.id = ji.job_id AND ji.profile_id = ${profileId}`,
     where: sql`
       WHERE j.status != 'archived'
       ${ownershipFilter}
@@ -146,7 +146,7 @@ export async function getCommunityJobCountsByWindow(
       COUNT(DISTINCT j.id)::int AS cnt
     FROM UNNEST(${windows.map((w) => w ?? -1)}::int[]) AS w(days)
     LEFT JOIN jobs j ON j.status != 'archived'
-      AND j.id NOT IN (SELECT ji.job FROM job_importers ji WHERE ji.profile = ${profileId})
+      AND j.id NOT IN (SELECT ji.job_id FROM job_importers ji WHERE ji.profile_id = ${profileId})
       AND (w.days = -1 OR j.date_created >= NOW() - MAKE_INTERVAL(days => w.days))
     LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
     WHERE jm.id IS NULL
