@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { deserialize, enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { onMount } from "svelte";
@@ -332,7 +332,11 @@
           body.message || "Couldn't generate suggestions. Try again or start blank.";
         return;
       }
-      suggestions = body.tasks.map((t: Suggestion, i: number) => ({ ...t, _key: i }));
+      suggestions = body.tasks.map((t: Suggestion, i: number) => ({
+        ...t,
+        _key: i,
+        filters: t.filters ?? {},
+      }));
     } catch (err) {
       suggestionsError = err instanceof Error
         ? err.message
@@ -350,6 +354,10 @@
     if (suggestion.keywords) {
       formData.append("search_term", suggestion.keywords);
     }
+    formData.append(
+      "search_filters",
+      JSON.stringify(suggestion.filters ?? {}),
+    );
     formData.append("browser_provider", "hosted");
     formData.append("login_mode", "none");
     formData.append("note", suggestion.note);
@@ -366,23 +374,29 @@
 
     try {
       const res = await fetch("?/create", { method: "POST", body: formData });
-      const result = await res.json();
-      // SvelteKit form-action responses are wrapped in an envelope: type +
-      // data (or location for redirects).
-      if (result.type === "redirect" && typeof result.location === "string") {
+      // SvelteKit form-action responses over raw fetch encode the action's
+      // return value in `data` as a devalue string; deserialize to get
+      // structured access to taskId / error.
+      const result = deserialize(await res.text()) as
+        | { type: "success"; data?: { taskId?: number } }
+        | { type: "failure"; data?: { error?: string } }
+        | { type: "redirect"; location: string }
+        | { type: "error"; error: { message?: string } };
+      if (result.type === "redirect") {
         await goto(result.location);
         return;
       }
-      if (result.type === "success") {
+      if (result.type === "success" && result.data?.taskId) {
         track("search_task_created");
         track("suggestion_accepted");
-        suggestion.accepted = true;
-        suggestion.submitting = false;
-        // Refresh page data so the new task appears in the list below.
-        await invalidateAll();
+        // Land the user on the task's edit page (same as the manual-add
+        // flow) instead of appending to the list below — that "new task at
+        // the bottom" jump is disorienting after the suggestion card they
+        // were just looking at.
+        await goto(`/jobs/import/tasks/${result.data.taskId}`);
         return;
       }
-      suggestionsError = (result.data && result.data.error) ||
+      suggestionsError = (result.type === "failure" && result.data?.error) ||
         "Couldn't add this suggestion. You can edit it and try again, or start blank.";
       suggestion.submitting = false;
     } catch (err) {
