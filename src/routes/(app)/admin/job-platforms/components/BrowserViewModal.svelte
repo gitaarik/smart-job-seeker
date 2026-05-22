@@ -24,7 +24,6 @@
     open: boolean;
     liveUrl: string | null;
     apiKeyId: number | null;
-    profileId: number | null;
     deviceName?: string | null;
     onClose?: () => void;
   }
@@ -33,26 +32,22 @@
     open = $bindable(),
     liveUrl,
     apiKeyId,
-    profileId,
     deviceName = null,
     onClose,
   }: Props = $props();
 
   const isCloudMode = $derived(Boolean(liveUrl));
-  const isTunnelMode = $derived(
-    !isCloudMode && Boolean(apiKeyId) && profileId !== null,
-  );
+  const isTunnelMode = $derived(!isCloudMode && Boolean(apiKeyId));
 
   let screenshotSrc = $state<string | null>(null);
   let screenshotLoading = $state(false);
   let pollingInterval: ReturnType<typeof setInterval> | null = null;
 
   async function fetchScreenshot() {
-    if (!isTunnelMode || profileId === null) return;
+    if (!isTunnelMode || !apiKeyId) return;
     try {
-      const apiKeyParam = apiKeyId ? `?apiKeyId=${apiKeyId}` : "";
       const res = await fetch(
-        `/api/tunnel/screencast/${profileId}${apiKeyParam}`,
+        `/api/tunnel/screencast/${apiKeyId}`,
       );
       if (res.ok && res.status !== 204) {
         const blob = await res.blob();

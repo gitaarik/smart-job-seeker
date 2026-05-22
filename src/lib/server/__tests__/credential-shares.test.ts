@@ -13,8 +13,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock query.findFirst / findMany per table ──────────────────────────────
 const mockProfilesFindMany = vi.fn();
-const mockPlatformProfilesFindFirst = vi.fn();
-const mockPlatformProfilesFindMany = vi.fn();
+const mockPlatformCredentialsFindFirst = vi.fn();
+const mockPlatformCredentialsFindMany = vi.fn();
 const mockApiKeysFindMany = vi.fn();
 const mockDeviceSharesFindFirst = vi.fn();
 const mockCredentialSharesFindFirst = vi.fn();
@@ -32,9 +32,9 @@ vi.mock("$lib/server/db", () => ({
   db: {
     query: {
       profiles: { findMany: (...a: any[]) => mockProfilesFindMany(...a) },
-      platform_profiles: {
-        findFirst: (...a: any[]) => mockPlatformProfilesFindFirst(...a),
-        findMany: (...a: any[]) => mockPlatformProfilesFindMany(...a),
+      platform_credentials: {
+        findFirst: (...a: any[]) => mockPlatformCredentialsFindFirst(...a),
+        findMany: (...a: any[]) => mockPlatformCredentialsFindMany(...a),
       },
       api_keys: { findMany: (...a: any[]) => mockApiKeysFindMany(...a) },
       device_shares: {
@@ -63,10 +63,10 @@ vi.mock("drizzle-orm", () => ({
 }));
 
 vi.mock("$lib/server/db/schema", () => ({
-  api_keys: { id: "api_keys.id", profile_id: "api_keys.profile_id" },
+  api_keys: { id: "api_keys.id", user_id: "api_keys.user_id" },
   credential_shares: {
     id: "credential_shares.id",
-    platform_profile_id: "credential_shares.platform_profile_id",
+    platform_credential_id: "credential_shares.platform_credential_id",
     shared_with: "credential_shares.shared_with",
     date_created: "credential_shares.date_created",
   },
@@ -74,9 +74,9 @@ vi.mock("$lib/server/db/schema", () => ({
     api_key_id: "device_shares.api_key_id",
     shared_with: "device_shares.shared_with",
   },
-  platform_profiles: {
-    id: "platform_profiles.id",
-    profile_id: "platform_profiles.profile_id",
+  platform_credentials: {
+    id: "platform_credentials.id",
+    user_id: "platform_credentials.user_id",
   },
   profiles: { id: "profiles.id", user_id: "profiles.user_id" },
   users: { id: "users.id" },
@@ -116,10 +116,9 @@ beforeEach(() => {
 // ── shareCredential ────────────────────────────────────────────────────────
 describe("shareCredential", () => {
   it("refuses to share a credential the caller doesn't own", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
-      id: CRED_ID,
-      profile: { user_id: STRANGER },
-    });
+    // findFirst is scoped to (id + user_id = OWNER); a credential owned by
+    // STRANGER won't match, so the query returns null.
+    mockPlatformCredentialsFindFirst.mockResolvedValue(null);
 
     const result = await shareCredential(CRED_ID, OWNER, CONTACT);
 
@@ -129,9 +128,10 @@ describe("shareCredential", () => {
   });
 
   it("refuses to share with someone who isn't an accepted contact", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
+    mockPlatformCredentialsFindFirst.mockResolvedValue({
       id: CRED_ID,
-      profile: { user_id: OWNER },
+      username: "alice@site",
+      platform_id: 5,
     });
     mockAreContacts.mockResolvedValue(false);
 
@@ -143,9 +143,10 @@ describe("shareCredential", () => {
   });
 
   it("is idempotent — refuses a duplicate share", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
+    mockPlatformCredentialsFindFirst.mockResolvedValue({
       id: CRED_ID,
-      profile: { user_id: OWNER },
+      username: "alice@site",
+      platform_id: 5,
     });
     mockAreContacts.mockResolvedValue(true);
     mockCredentialSharesFindFirst.mockResolvedValue({ id: 1 });
@@ -158,9 +159,10 @@ describe("shareCredential", () => {
   });
 
   it("inserts the share and notifies the recipient on the happy path", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
+    mockPlatformCredentialsFindFirst.mockResolvedValue({
       id: CRED_ID,
-      profile: { user_id: OWNER },
+      username: "alice@site",
+      platform_id: 5,
     });
     mockAreContacts.mockResolvedValue(true);
     mockCredentialSharesFindFirst.mockResolvedValue(null);
@@ -174,7 +176,7 @@ describe("shareCredential", () => {
     expect(result.success).toBe(true);
     expect(mockInsertFn).toHaveBeenCalledTimes(1);
     expect(mockInsertValues).toHaveBeenCalledWith({
-      platform_profile_id: CRED_ID,
+      platform_credential_id: CRED_ID,
       shared_with: CONTACT,
     });
     expect(mockCreateNotification).toHaveBeenCalledWith(
@@ -190,10 +192,7 @@ describe("shareCredential", () => {
 // ── unshareCredential ──────────────────────────────────────────────────────
 describe("unshareCredential", () => {
   it("returns false when the caller doesn't own the credential", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
-      id: CRED_ID,
-      profile: { user_id: STRANGER },
-    });
+    mockPlatformCredentialsFindFirst.mockResolvedValue(null);
 
     const result = await unshareCredential(CRED_ID, OWNER, CONTACT);
 
@@ -202,10 +201,7 @@ describe("unshareCredential", () => {
   });
 
   it("deletes the share row when the caller owns the credential", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
-      id: CRED_ID,
-      profile: { user_id: OWNER },
-    });
+    mockPlatformCredentialsFindFirst.mockResolvedValue({ id: CRED_ID });
     mockDeleteWhere.mockResolvedValue({ rowCount: 1 });
 
     const result = await unshareCredential(CRED_ID, OWNER, CONTACT);
@@ -218,30 +214,23 @@ describe("unshareCredential", () => {
 // ── hasCredentialAccess ────────────────────────────────────────────────────
 describe("hasCredentialAccess", () => {
   it("accepts the owner", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
-      id: CRED_ID,
-      profile: { user_id: OWNER },
-    });
+    mockPlatformCredentialsFindFirst.mockResolvedValue({ id: CRED_ID });
 
     expect(await hasCredentialAccess(CRED_ID, OWNER)).toBe(true);
     expect(mockCredentialSharesFindFirst).not.toHaveBeenCalled();
   });
 
   it("accepts a recipient who has a share row", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
-      id: CRED_ID,
-      profile: { user_id: OWNER },
-    });
+    // Non-owner lookup misses (the query filters by user_id = CONTACT),
+    // so the second check falls through to credential_shares.
+    mockPlatformCredentialsFindFirst.mockResolvedValue(null);
     mockCredentialSharesFindFirst.mockResolvedValue({ id: 7 });
 
     expect(await hasCredentialAccess(CRED_ID, CONTACT)).toBe(true);
   });
 
   it("rejects a stranger who is neither owner nor recipient", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValue({
-      id: CRED_ID,
-      profile: { user_id: OWNER },
-    });
+    mockPlatformCredentialsFindFirst.mockResolvedValue(null);
     mockCredentialSharesFindFirst.mockResolvedValue(null);
 
     expect(await hasCredentialAccess(CRED_ID, STRANGER)).toBe(false);
@@ -257,13 +246,13 @@ describe("listSharedCredentialsWithMe", () => {
 
     expect(mockCredentialSharesFindMany).toHaveBeenCalledTimes(1);
     const call = mockCredentialSharesFindMany.mock.calls[0][0];
-    const ppCols = call.with.platform_profile.columns;
-    expect(ppCols.password).toBeUndefined();
-    expect(ppCols.api_token).toBeUndefined();
-    expect(ppCols.security_answer).toBeUndefined();
-    // And the only fields it does pull are safe to expose:
-    expect(Object.keys(ppCols).sort()).toEqual(
-      ["id", "platform_id", "status", "username"].sort(),
+    const pcCols = call.with.platform_credential.columns;
+    expect(pcCols.password).toBeUndefined();
+    expect(pcCols.api_token).toBeUndefined();
+    expect(pcCols.security_answer).toBeUndefined();
+    // Only safe fields requested:
+    expect(Object.keys(pcCols).sort()).toEqual(
+      ["id", "platform_id", "user_id", "username"].sort(),
     );
   });
 
@@ -272,12 +261,11 @@ describe("listSharedCredentialsWithMe", () => {
       {
         id: 1,
         date_created: new Date(0),
-        platform_profile: {
+        platform_credential: {
           id: CRED_ID,
           username: "alice@site",
           platform_id: 5,
-          status: "active",
-          profile: { user_id: OWNER },
+          user_id: OWNER,
           job_platform: { id: 5, name: "Acme" },
         },
       },
@@ -289,20 +277,21 @@ describe("listSharedCredentialsWithMe", () => {
     const result = await listSharedCredentialsWithMe(CONTACT);
 
     expect(result).toHaveLength(1);
-    const pp = result[0].platform_profile;
-    expect(pp).not.toHaveProperty("password");
-    expect(pp).not.toHaveProperty("api_token");
-    expect(pp).not.toHaveProperty("security_answer");
-    expect(pp.username).toBe("alice@site");
-    expect(pp.platform_id).toBe(5);
+    const pc = result[0].platform_credential;
+    expect(pc).not.toHaveProperty("password");
+    expect(pc).not.toHaveProperty("api_token");
+    expect(pc).not.toHaveProperty("security_answer");
+    expect(pc.username).toBe("alice@site");
+    expect(pc.platform_id).toBe(5);
+    expect(pc.owner_user_id).toBe(OWNER);
   });
 });
 
 // ── revokeOrphanedCredentialShares — only fires when devices are gone ──────
 describe("revokeOrphanedCredentialShares", () => {
   it("does nothing when at least one device of the owner remains shared", async () => {
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]); // owner profiles
-    mockApiKeysFindMany.mockResolvedValueOnce([{ id: 1 }, { id: 2 }]); // owner keys
+    // ownedApiKeyIds() now queries api_keys directly by user_id.
+    mockApiKeysFindMany.mockResolvedValueOnce([{ id: 1 }, { id: 2 }]);
     mockDeviceSharesFindFirst.mockResolvedValueOnce({ id: 1 }); // still shared
 
     const removed = await revokeOrphanedCredentialShares(OWNER, CONTACT);
@@ -312,14 +301,9 @@ describe("revokeOrphanedCredentialShares", () => {
   });
 
   it("revokes credential shares when no owner devices are left shared", async () => {
-    // ownedApiKeyIds(): profiles → keys
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
     mockApiKeysFindMany.mockResolvedValueOnce([{ id: 1 }]);
-    // Remaining device check: none
     mockDeviceSharesFindFirst.mockResolvedValueOnce(null);
-    // ownedCredentialIds(): profiles → platform_profiles
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
-    mockPlatformProfilesFindMany.mockResolvedValueOnce([
+    mockPlatformCredentialsFindMany.mockResolvedValueOnce([
       { id: CRED_ID },
       { id: CRED_ID + 1 },
     ]);
@@ -335,11 +319,9 @@ describe("revokeOrphanedCredentialShares", () => {
 // ── Cascade error handling ─────────────────────────────────────────────────
 describe("revokeOrphanedCredentialShares — error propagation", () => {
   it("propagates errors so the caller can retry", async () => {
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
     mockApiKeysFindMany.mockResolvedValueOnce([{ id: 1 }]);
     mockDeviceSharesFindFirst.mockResolvedValueOnce(null);
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
-    mockPlatformProfilesFindMany.mockResolvedValueOnce([{ id: CRED_ID }]);
+    mockPlatformCredentialsFindMany.mockResolvedValueOnce([{ id: CRED_ID }]);
     mockDeleteWhere.mockRejectedValueOnce(new Error("DB down"));
 
     await expect(
@@ -351,21 +333,19 @@ describe("revokeOrphanedCredentialShares — error propagation", () => {
 // ── revokeAllSharesBetweenContacts ─────────────────────────────────────────
 describe("revokeAllSharesBetweenContacts", () => {
   it("attempts to delete shares in both directions", async () => {
-    // ownedApiKeyIds for userA and userB run in parallel. Each runs:
-    //   profiles.findMany(by user_id) → api_keys.findMany(by profile_ids)
-    mockProfilesFindMany
-      .mockResolvedValueOnce([{ id: 100 }]) // userA profiles
-      .mockResolvedValueOnce([{ id: 200 }]); // userB profiles
+    // ownedApiKeyIds for userA and userB run in parallel (direct
+    // api_keys.findMany by user_id).
     mockApiKeysFindMany
       .mockResolvedValueOnce([{ id: 11 }]) // userA keys
       .mockResolvedValueOnce([{ id: 22 }]); // userB keys
 
-    // Then revokeAllCredentialSharesBetween(A, B): profiles + platform_profiles
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 100 }]);
-    mockPlatformProfilesFindMany.mockResolvedValueOnce([{ id: CRED_ID }]);
-    // Then revokeAllCredentialSharesBetween(B, A):
-    mockProfilesFindMany.mockResolvedValueOnce([{ id: 200 }]);
-    mockPlatformProfilesFindMany.mockResolvedValueOnce([{ id: CRED_ID + 1 }]);
+    // revokeAllCredentialSharesBetween(A, B): ownedCredentialIds queries
+    // platform_credentials directly by user_id
+    mockPlatformCredentialsFindMany.mockResolvedValueOnce([{ id: CRED_ID }]);
+    // revokeAllCredentialSharesBetween(B, A):
+    mockPlatformCredentialsFindMany.mockResolvedValueOnce([
+      { id: CRED_ID + 1 },
+    ]);
 
     await revokeAllSharesBetweenContacts(OWNER, CONTACT);
 

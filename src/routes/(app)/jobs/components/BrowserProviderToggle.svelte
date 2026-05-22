@@ -30,6 +30,8 @@
     onchange,
   }: Props = $props();
 
+  const connectedCount = $derived(devices.filter((d) => d.connected).length);
+
   function select(v: string | null) {
     if (disabled) return;
     value = v;
@@ -55,6 +57,14 @@
       >
         <FontAwesomeIcon icon={faHouseSignal} class="w-3 h-3" />
         My device
+        {#if connectedCount > 0}
+          <span
+            class="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[var(--dash-success)]"
+            title="{connectedCount} {connectedCount === 1
+              ? 'device'
+              : 'devices'} online"
+          ></span>
+        {/if}
       </button>
       <button
         type="button"

@@ -412,7 +412,7 @@
   // Credentials (edit)
   let editPlatformCredentials = $state(initialPlatformCredentials);
   let canEditPlatformUrls = $state(initialCanEditPlatformUrls);
-  const editInitialCredId = searchTask?.platform_profile_id?.toString() ??
+  const editInitialCredId = searchTask?.platform_credential_id?.toString() ??
     "none";
   let editSavedCredentialId = $state<string>(editInitialCredId);
   let editSelectedCredentialId = $state<string>(editInitialCredId);
@@ -672,17 +672,17 @@
       if (loginModeDirty) body.login_mode = editLoginMode;
       let cascadedDeviceId: number | null | undefined = undefined;
       if (credentialDirty) {
-        const credProfileId = editSelectedCredentialId === "none"
+        const credId = editSelectedCredentialId === "none"
           ? null
           : parseInt(editSelectedCredentialId);
-        body.platform_profile_id = credProfileId;
+        body.platform_credential_id = credId;
 
         // If picking a credential shared by another user, the task's device
         // must be one owned by that credential's owner. Auto-pick a
         // compatible shared device when the current one doesn't match.
-        if (credProfileId !== null) {
+        if (credId !== null) {
           const cred = editPlatformCredentials.find(
-            (c) => c.id === credProfileId,
+            (c) => c.id === credId,
           );
           const credOwner = cred?.shared ? cred.owner_user_id : null;
           if (credOwner) {
@@ -713,7 +713,7 @@
         editSavedLoginMode = editLoginMode;
       }
       if (credentialDirty) {
-        searchTask.platform_profile_id = body.platform_profile_id as
+        searchTask.platform_credential_id = body.platform_credential_id as
           | number
           | null;
         editSavedCredentialId = editSelectedCredentialId;
@@ -789,7 +789,7 @@
     defaultBrowserTimezone = newData.browserFingerprintDefaults.timezone;
     editPlatformCredentials = newData.platformCredentials;
     canEditPlatformUrls = newData.canEditPlatformUrls;
-    const credId = newData.searchTask.platform_profile_id?.toString() ??
+    const credId = newData.searchTask.platform_credential_id?.toString() ??
       "none";
     editSavedCredentialId = credId;
     editSelectedCredentialId = credId;
@@ -852,7 +852,7 @@
       savedBrowserLanguage = browserFingerprint.language;
       browserTimezone = browserFingerprint.timezone;
       savedBrowserTimezone = browserFingerprint.timezone;
-      const credId = searchTask.platform_profile_id?.toString() ?? "none";
+      const credId = searchTask.platform_credential_id?.toString() ?? "none";
       editSavedCredentialId = credId;
       editSelectedCredentialId = credId;
       editLoginMode = searchTask.login_mode ?? "auto";
@@ -1428,8 +1428,8 @@
                 saveCredential();
               }}
               oncredentialdeleted={(credId) => {
-                if (searchTask?.platform_profile_id === credId) {
-                  searchTask.platform_profile_id = null;
+                if (searchTask?.platform_credential_id === credId) {
+                  searchTask.platform_credential_id = null;
                   editSavedCredentialId = "none";
                 }
               }}

@@ -1,9 +1,10 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   api_keys,
+  platform_credentials,
   platform_profiles,
   search_tasks,
   users,
@@ -221,27 +222,49 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     );
   }
 
-  // Create new credential and assign it
-  if (body.new_credential && searchTask.platform_id) {
-    const [newCred] = await db.insert(platform_profiles).values({
+  // Resolve the search_task.platform_profile_id (per-profile runtime row)
+  // from the platform_credential the client picked or the inline new-creds
+  // payload. The picker speaks in platform_credentials.id (user-wide); we
+  // create/find the platform_profiles binding for THIS task's profile.
+  async function bindCredentialToProfile(
+    credentialId: number,
+  ): Promise<number> {
+    const existing = await db.query.platform_profiles.findFirst({
+      where: and(
+        eq(platform_profiles.profile_id, searchTask.profile_id),
+        eq(platform_profiles.platform_credential_id, credentialId),
+      ),
+      columns: { id: true },
+    });
+    if (existing) return existing.id;
+    const [created] = await db.insert(platform_profiles).values({
       profile_id: searchTask.profile_id,
+      platform_id: searchTask.platform_id,
+      platform_credential_id: credentialId,
+      status: "active",
+      date_created: new Date(),
+    }).returning({ id: platform_profiles.id });
+    return created.id;
+  }
+
+  if (body.new_credential && searchTask.platform_id) {
+    const [newCred] = await db.insert(platform_credentials).values({
+      user_id: user.id,
       platform_id: searchTask.platform_id,
       username: body.new_credential.username,
       password: encryptCredential(body.new_credential.password || null),
-      status: "active",
       date_created: new Date(),
-    }).returning();
-    data.platform_profile_id = newCred.id;
+      date_updated: new Date(),
+    }).returning({ id: platform_credentials.id });
+    data.platform_profile_id = await bindCredentialToProfile(newCred.id);
   } // Or select existing credential / clear credential
-  else if (body.platform_profile_id !== undefined) {
-    if (body.platform_profile_id === null) {
+  else if (body.platform_credential_id !== undefined) {
+    if (body.platform_credential_id === null) {
       data.platform_profile_id = null;
     } else {
-      // Either the user owns the credential, or it's been shared with them.
-      // In both cases, the credential's platform must match the task's.
-      const cred = await db.query.platform_profiles.findFirst({
-        where: eq(platform_profiles.id, body.platform_profile_id),
-        columns: { id: true, platform_id: true, profile_id: true },
+      const cred = await db.query.platform_credentials.findFirst({
+        where: eq(platform_credentials.id, body.platform_credential_id),
+        columns: { id: true, platform_id: true, user_id: true },
       });
       if (!cred) throw error(404, "Credential not found");
       if (
@@ -253,26 +276,28 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       if (!canAccess) {
         throw error(403, "You don't have access to this credential");
       }
-      data.platform_profile_id = body.platform_profile_id;
+      data.platform_profile_id = await bindCredentialToProfile(cred.id);
     }
   }
 
   // Enforce credential/device coupling: a credential shared with the user can
   // only run on devices owned by that credential's owner. Compute the final
   // (post-update) state of both fields and validate.
-  const finalCredId = data.platform_profile_id !== undefined
+  const finalPpId = data.platform_profile_id !== undefined
     ? data.platform_profile_id
     : searchTask.platform_profile_id ?? null;
   const finalDeviceId = data.sjsbrowser_api_key !== undefined
     ? data.sjsbrowser_api_key
     : searchTask.sjsbrowser_api_key ?? null;
-  if (finalCredId !== null) {
-    const cred = await db.query.platform_profiles.findFirst({
-      where: eq(platform_profiles.id, finalCredId),
+  if (finalPpId !== null) {
+    const pp = await db.query.platform_profiles.findFirst({
+      where: eq(platform_profiles.id, finalPpId),
       columns: { id: true },
-      with: { profile: { columns: { user_id: true } } },
+      with: {
+        platform_credential: { columns: { user_id: true } },
+      },
     });
-    const credOwner = cred?.profile.user_id ?? null;
+    const credOwner = pp?.platform_credential?.user_id ?? null;
     if (credOwner && credOwner !== user.id) {
       // Shared credential — device must be owned by the credential owner.
       if (finalDeviceId === null) {

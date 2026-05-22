@@ -1,64 +1,37 @@
 /**
- * Platform authentication utilities
- * Handles login automation for job platforms
+ * Platform authentication utilities.
+ *
+ * Credentials are user-wide (`platform_credentials`); per-profile login
+ * state lives on `platform_profiles`. The scraper resolves the credential
+ * inline via the task's `platform_profile_id → platform_credential_id`
+ * chain, so we don't need a public credential-lookup helper here. Only the
+ * login-error persistence helper has external callers.
  */
 
 import { dbDirect } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { platform_profiles } from "$lib/server/db/schema";
-import { decryptCredential } from "./crypto";
-
-export interface PlatformCredentials {
-  platformId: number;
-  profileId: number;
-  username?: string | null;
-  password?: string | null;
-}
 
 /**
- * Get platform credentials from database
- * @param profileId Profile ID
- * @param platformId Platform ID
- * @returns Platform credentials or null
- */
-export async function getPlatformCredentials(
-  profileId: number,
-  platformId: number,
-): Promise<PlatformCredentials | null> {
-  const platformProfile = await dbDirect.query.platform_profiles.findFirst({
-    where: and(eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, platformId)),
-  });
-
-  if (!platformProfile) {
-    return null;
-  }
-
-  return {
-    platformId,
-    profileId,
-    username: platformProfile.username,
-    password: decryptCredential(platformProfile.password),
-  };
-}
-
-/**
- * Update login error in database
- * @param profileId Profile ID
- * @param platformId Platform ID
- * @param error Error message
+ * Persist a login error on the per-profile state row. If no
+ * platform_profiles row exists yet (first login attempt for this profile),
+ * skips silently — the error is also surfaced via the run's logs.
  */
 export async function updateLoginError(
   profileId: number,
   platformId: number,
   error: string,
 ): Promise<void> {
-  const existingProfile = await dbDirect.query.platform_profiles.findFirst({
-    where: and(eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, platformId)),
+  const existing = await dbDirect.query.platform_profiles.findFirst({
+    where: and(
+      eq(platform_profiles.profile_id, profileId),
+      eq(platform_profiles.platform_id, platformId),
+    ),
   });
 
-  if (existingProfile) {
+  if (existing) {
     await dbDirect.update(platform_profiles).set({
       login_error: error,
-    }).where(eq(platform_profiles.id, existingProfile.id));
+    }).where(eq(platform_profiles.id, existing.id));
   }
 }

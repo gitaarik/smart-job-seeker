@@ -14,8 +14,8 @@ import { dbDirect as db } from "$lib/server/db";
 import { desc, eq } from "drizzle-orm";
 import {
   job_platforms,
+  platform_credentials,
   search_form_probe_runs,
-  platform_profiles,
 } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { addSearchFormProbeJob } from "$lib/server/queue/search-form-probe-queue";
@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   const user = requireAdmin(locals);
   const body = (await request.json()) as {
     platform_id?: number;
-    platform_profile_id?: number | null;
+    platform_credential_id?: number | null;
     sjsbrowser_api_key_id?: number | null;
   };
   const platformId = Number(body.platform_id);
@@ -74,15 +74,18 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     throw error(400, "Platform URL must be http(s)");
   }
 
-  const credentialId = body.platform_profile_id ?? null;
+  const credentialId = body.platform_credential_id ?? null;
   if (credentialId === null) {
-    throw error(400, "platform_profile_id is required — discovery needs a login");
+    throw error(
+      400,
+      "platform_credential_id is required — discovery needs a login",
+    );
   }
   if (!Number.isInteger(credentialId) || credentialId <= 0) {
-    throw error(400, "Invalid platform_profile_id");
+    throw error(400, "Invalid platform_credential_id");
   }
-  const cred = await db.query.platform_profiles.findFirst({
-    where: eq(platform_profiles.id, credentialId),
+  const cred = await db.query.platform_credentials.findFirst({
+    where: eq(platform_credentials.id, credentialId),
     columns: { id: true, platform_id: true },
   });
   if (!cred) throw error(404, "Credential not found");
@@ -110,7 +113,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     target_url: parsed.toString(),
     status: "queued",
     triggered_by_user_id: user.id,
-    platform_profile_id: credentialId,
+    platform_credential_id: credentialId,
     sjsbrowser_api_key_id: deviceId,
   }).returning();
 

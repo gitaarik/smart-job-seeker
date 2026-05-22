@@ -833,6 +833,53 @@ export const os_contributions = pgTable("os_contributions", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * Per-user credential for a job platform. Owned by the human, not by any
+ * one profile — multiple profiles of the same user share these by default.
+ * Cross-user sharing goes through `credential_shares`.
+ *
+ * UNIQUE (user_id, platform_id, username) lets one user maintain multiple
+ * accounts on the same platform (different angles, throwaway accounts) by
+ * disambiguating on username.
+ *
+ * Password and security_answer are stored as dotenvx-style ciphertext;
+ * see lib/server/auth/crypto.ts.
+ */
+export const platform_credentials = pgTable("platform_credentials", {
+  id: serial().primaryKey().notNull(),
+  user_id: text().notNull(),
+  platform_id: integer().notNull(),
+  username: varchar({ length: 255 }),
+  password: text(),
+  api_token: text(),
+  provider_profile_id: varchar({ length: 255 }),
+  security_answer: text(),
+  date_created: timestamp({ withTimezone: true, mode: "date" }).defaultNow(),
+  date_updated: timestamp({ withTimezone: true, mode: "date" }).defaultNow(),
+}, (table) => [
+  foreignKey({
+    columns: [table.user_id],
+    foreignColumns: [users.id],
+    name: "platform_credentials_user_fkey",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.platform_id],
+    foreignColumns: [job_platforms.id],
+    name: "platform_credentials_platform_fkey",
+  }).onDelete("cascade"),
+  uniqueIndex("platform_credentials_user_platform_username_unique").on(
+    table.user_id,
+    table.platform_id,
+    table.username,
+  ),
+]);
+
+/**
+ * Per-profile runtime state for a credential's use on a platform. Holds
+ * status (signup_in_progress / active / locked / ...), last_login_at, and
+ * the most recent login_error. The credential itself lives on
+ * `platform_credentials`, joined via `platform_credential_id`.
+ */
 export const platform_profiles = pgTable("platform_profiles", {
   id: serial().primaryKey().notNull(),
   status: varchar({ length: 255 }).default("signup_in_progress").notNull(),
@@ -841,13 +888,9 @@ export const platform_profiles = pgTable("platform_profiles", {
   date_updated: timestamp({ withTimezone: true, mode: "date" }),
   profile_id: integer().notNull(),
   platform_id: integer(),
-  username: varchar({ length: 255 }),
-  password: text(),
-  api_token: text(),
+  platform_credential_id: integer(),
   last_login_at: timestamp({ withTimezone: true, mode: "date" }),
   login_error: text(),
-  provider_profile_id: varchar({ length: 255 }),
-  security_answer: text(),
 }, (table) => [
   foreignKey({
     columns: [table.platform_id],
@@ -859,6 +902,11 @@ export const platform_profiles = pgTable("platform_profiles", {
     foreignColumns: [profiles.id],
     name: "platform_profiles_profile_foreign",
   }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.platform_credential_id],
+    foreignColumns: [platform_credentials.id],
+    name: "platform_profiles_credential_fkey",
+  }).onDelete("set null"),
 ]);
 
 export const languages = pgTable("languages", {
@@ -1157,10 +1205,10 @@ export const search_form_probe_runs = pgTable("search_form_probe_runs", {
   error_message: text(),
   /** User-id of the admin who triggered the run. */
   triggered_by_user_id: text(),
-  /** Credential to use for login, drawn from platform_profiles. Optional —
-   *  if null, discovery proceeds without login (and gated sites may fail
-   *  to expose their jobs link). */
-  platform_profile_id: integer(),
+  /** Credential to use for login, drawn from platform_credentials.
+   *  Optional — if null, discovery proceeds without login (and gated sites
+   *  may fail to expose their jobs link). */
+  platform_credential_id: integer(),
   /** Device (api_keys row) the discovery should run on. Optional — if
    *  null, the worker uses the default browser provider. Setting this
    *  routes the session through the tunnel to the user's local browser. */
@@ -1716,9 +1764,16 @@ export const applications = pgTable("applications", {
   }),
 ]);
 
+/**
+ * API keys identify a physical device (the user's machine running the
+ * desktop tunnel client). Owned by the user, not any one profile — the
+ * device is the same machine regardless of which profile is active. The
+ * tunnel server registers each connection under the owning user_id so
+ * every profile of that user sees the device as online.
+ */
 export const api_keys = pgTable("api_keys", {
   id: serial().primaryKey().notNull(),
-  profile_id: integer().notNull(),
+  user_id: text().notNull(),
   name: varchar({ length: 255 }).notNull(),
   key_hash: varchar({ length: 64 }).notNull(),
   date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
@@ -1736,14 +1791,14 @@ export const api_keys = pgTable("api_keys", {
     "btree",
     table.key_hash.asc().nullsLast().op("text_ops"),
   ),
-  index("idx_api_keys_profile").using(
+  index("idx_api_keys_user").using(
     "btree",
-    table.profile_id.asc().nullsLast().op("int4_ops"),
+    table.user_id.asc().nullsLast().op("text_ops"),
   ),
   foreignKey({
-    columns: [table.profile_id],
-    foreignColumns: [profiles.id],
-    name: "api_keys_profile_foreign",
+    columns: [table.user_id],
+    foreignColumns: [users.id],
+    name: "api_keys_user_foreign",
   }).onDelete("cascade"),
 ]);
 
@@ -2624,21 +2679,27 @@ export const contacts = pgTable("contacts", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * Cross-user credential sharing. Owner = platform_credentials.user_id;
+ * `shared_with` = the user the credential is shared with. Intra-user
+ * "sharing" doesn't need a row here — credentials are user-scoped, so all
+ * of an owner's profiles see them directly.
+ */
 export const credential_shares = pgTable("credential_shares", {
   id: serial().primaryKey().notNull(),
-  platform_profile_id: integer().notNull(),
+  platform_credential_id: integer().notNull(),
   shared_with: text().notNull(),
   date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  uniqueIndex("credential_shares_pp_user_unique").using(
+  uniqueIndex("credential_shares_credential_user_unique").using(
     "btree",
-    table.platform_profile_id.asc().nullsLast().op("int4_ops"),
+    table.platform_credential_id.asc().nullsLast().op("int4_ops"),
     table.shared_with.asc().nullsLast().op("text_ops"),
   ),
-  index("idx_credential_shares_pp").using(
+  index("idx_credential_shares_credential").using(
     "btree",
-    table.platform_profile_id.asc().nullsLast().op("int4_ops"),
+    table.platform_credential_id.asc().nullsLast().op("int4_ops"),
   ),
   index("idx_credential_shares_shared_with").using(
     "btree",
@@ -2650,9 +2711,9 @@ export const credential_shares = pgTable("credential_shares", {
     name: "credential_shares_shared_with_fkey",
   }).onDelete("cascade"),
   foreignKey({
-    columns: [table.platform_profile_id],
-    foreignColumns: [platform_profiles.id],
-    name: "credential_shares_platform_profile_id_fkey",
+    columns: [table.platform_credential_id],
+    foreignColumns: [platform_credentials.id],
+    name: "credential_shares_platform_credential_id_fkey",
   }).onDelete("cascade"),
 ]);
 
@@ -2798,6 +2859,7 @@ export type JobResources = typeof job_resources.$inferSelect;
 export type SearchTaskRuns = typeof search_task_runs.$inferSelect;
 export type OsContributions = typeof os_contributions.$inferSelect;
 export type PlatformProfiles = typeof platform_profiles.$inferSelect;
+export type PlatformCredentialsRow = typeof platform_credentials.$inferSelect;
 export type Languages = typeof languages.$inferSelect;
 export type JobPlatforms = typeof job_platforms.$inferSelect;
 export type SearchTaskRunItems = typeof search_task_run_items.$inferSelect;

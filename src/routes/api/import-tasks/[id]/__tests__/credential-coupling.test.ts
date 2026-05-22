@@ -19,6 +19,7 @@ const CONTACT = "user-contact";
 
 // ── DB mocks ───────────────────────────────────────────────────────────────
 const mockSearchTasksFindFirst = vi.fn();
+const mockPlatformCredentialsFindFirst = vi.fn();
 const mockPlatformProfilesFindFirst = vi.fn();
 const mockApiKeysFindFirst = vi.fn();
 const mockUsersFindFirst = vi.fn();
@@ -27,11 +28,20 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
+const mockInsertReturning = vi.fn().mockResolvedValue([{ id: 500 }]);
+const mockInsertValues = vi.fn().mockReturnValue({
+  returning: mockInsertReturning,
+});
+const mockInsertFn = vi.fn().mockReturnValue({ values: mockInsertValues });
+
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
     query: {
       search_tasks: {
         findFirst: (...a: any[]) => mockSearchTasksFindFirst(...a),
+      },
+      platform_credentials: {
+        findFirst: (...a: any[]) => mockPlatformCredentialsFindFirst(...a),
       },
       platform_profiles: {
         findFirst: (...a: any[]) => mockPlatformProfilesFindFirst(...a),
@@ -40,6 +50,7 @@ vi.mock("$lib/server/db", () => ({
       users: { findFirst: (...a: any[]) => mockUsersFindFirst(...a) },
     },
     update: (...a: any[]) => mockUpdateFn(...a),
+    insert: (...a: any[]) => mockInsertFn(...a),
   },
 }));
 
@@ -50,7 +61,12 @@ vi.mock("drizzle-orm", () => ({
 
 vi.mock("$lib/server/db/schema", () => ({
   api_keys: { id: "api_keys.id" },
-  platform_profiles: { id: "platform_profiles.id" },
+  platform_credentials: { id: "platform_credentials.id" },
+  platform_profiles: {
+    id: "platform_profiles.id",
+    profile_id: "platform_profiles.profile_id",
+    platform_credential_id: "platform_profiles.platform_credential_id",
+  },
   search_tasks: { id: "search_tasks.id" },
   users: { id: "users.id" },
 }));
@@ -111,6 +127,7 @@ const TASK_OWNED_BY_CONTACT = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockUpdateWhere.mockResolvedValue({});
+  mockInsertReturning.mockResolvedValue([{ id: 500 }]);
   mockSearchTasksFindFirst.mockResolvedValue(TASK_OWNED_BY_CONTACT);
 });
 
@@ -119,53 +136,67 @@ beforeEach(() => {
 describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
   it("allows picking own credential without a device", async () => {
     // Credential owned by the contact (caller) — coupling check is skipped.
-    mockPlatformProfilesFindFirst
-      .mockResolvedValueOnce({ // existence + platform check
-        id: 7,
-        platform_id: 5,
-        profile_id: 100,
-      })
-      .mockResolvedValueOnce({ // post-update coupling lookup
-        id: 7,
-        profile: { user_id: CONTACT },
-      });
+    mockPlatformCredentialsFindFirst.mockResolvedValueOnce({
+      id: 7,
+      platform_id: 5,
+      user_id: CONTACT,
+    });
     mockHasCredentialAccess.mockResolvedValueOnce(true);
+    // bindCredentialToProfile: no existing platform_profiles row → insert
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce(null);
+    mockInsertReturning.mockResolvedValueOnce([{ id: 500 }]);
+    // Post-update coupling lookup: platform_profiles.findFirst returns the
+    // binding row joined with the credential.
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce({
+      id: 500,
+      platform_credential: { user_id: CONTACT },
+    });
 
-    const res = await PATCH(createPatchEvent({ platform_profile_id: 7 }));
+    const res = await PATCH(createPatchEvent({ platform_credential_id: 7 }));
 
     expect(res.status).toBe(200);
     expect(mockUpdateSet).toHaveBeenCalledWith(
-      expect.objectContaining({ platform_profile_id: 7 }),
+      expect.objectContaining({ platform_profile_id: 500 }),
     );
     // No device coupling check ran, so api_keys.findFirst stayed cold.
     expect(mockApiKeysFindFirst).not.toHaveBeenCalled();
   });
 
   it("rejects a shared credential when no device is set on the task", async () => {
-    mockPlatformProfilesFindFirst
-      .mockResolvedValueOnce({ id: 7, platform_id: 5, profile_id: 200 })
-      .mockResolvedValueOnce({
-        id: 7,
-        profile: { user_id: OWNER },
-      });
+    mockPlatformCredentialsFindFirst.mockResolvedValueOnce({
+      id: 7,
+      platform_id: 5,
+      user_id: OWNER,
+    });
     mockHasCredentialAccess.mockResolvedValueOnce(true);
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce(null);
+    mockInsertReturning.mockResolvedValueOnce([{ id: 500 }]);
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce({
+      id: 500,
+      platform_credential: { user_id: OWNER },
+    });
 
     await expect(
-      PATCH(createPatchEvent({ platform_profile_id: 7 })),
+      PATCH(createPatchEvent({ platform_credential_id: 7 })),
     ).rejects.toMatchObject({ status: 400 });
 
     expect(mockUpdateSet).not.toHaveBeenCalled();
   });
 
   it("rejects a shared credential paired with a device owned by someone else", async () => {
-    mockPlatformProfilesFindFirst
-      .mockResolvedValueOnce({ id: 7, platform_id: 5, profile_id: 200 })
-      .mockResolvedValueOnce({
-        id: 7,
-        profile: { user_id: OWNER },
-      });
+    mockPlatformCredentialsFindFirst.mockResolvedValueOnce({
+      id: 7,
+      platform_id: 5,
+      user_id: OWNER,
+    });
     mockHasCredentialAccess.mockResolvedValueOnce(true);
-    mockHasDeviceAccess.mockResolvedValueOnce(true); // contact has share to the (wrong) device
+    mockHasDeviceAccess.mockResolvedValueOnce(true);
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce(null);
+    mockInsertReturning.mockResolvedValueOnce([{ id: 500 }]);
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce({
+      id: 500,
+      platform_credential: { user_id: OWNER },
+    });
     mockApiKeysFindFirst.mockResolvedValueOnce({
       id: 99,
       profile: { user_id: CONTACT }, // owned by contact, not OWNER
@@ -173,7 +204,10 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
 
     await expect(
       PATCH(
-        createPatchEvent({ platform_profile_id: 7, sjsbrowser_api_key: 99 }),
+        createPatchEvent({
+          platform_credential_id: 7,
+          sjsbrowser_api_key: 99,
+        }),
       ),
     ).rejects.toMatchObject({ status: 400 });
 
@@ -181,72 +215,80 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
   });
 
   it("accepts a shared credential paired with the credential owner's device", async () => {
-    mockPlatformProfilesFindFirst
-      .mockResolvedValueOnce({ id: 7, platform_id: 5, profile_id: 200 })
-      .mockResolvedValueOnce({
-        id: 7,
-        profile: { user_id: OWNER },
-      });
+    mockPlatformCredentialsFindFirst.mockResolvedValueOnce({
+      id: 7,
+      platform_id: 5,
+      user_id: OWNER,
+    });
     mockHasCredentialAccess.mockResolvedValueOnce(true);
     mockHasDeviceAccess.mockResolvedValueOnce(true);
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce(null);
+    mockInsertReturning.mockResolvedValueOnce([{ id: 500 }]);
+    mockPlatformProfilesFindFirst.mockResolvedValueOnce({
+      id: 500,
+      platform_credential: { user_id: OWNER },
+    });
     mockApiKeysFindFirst.mockResolvedValueOnce({
       id: 42,
       profile: { user_id: OWNER }, // matches the credential owner
     });
 
     const res = await PATCH(
-      createPatchEvent({ platform_profile_id: 7, sjsbrowser_api_key: 42 }),
+      createPatchEvent({
+        platform_credential_id: 7,
+        sjsbrowser_api_key: 42,
+      }),
     );
 
     expect(res.status).toBe(200);
     expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        platform_profile_id: 7,
+        platform_profile_id: 500,
         sjsbrowser_api_key: 42,
       }),
     );
   });
 
   it("rejects a credential whose platform doesn't match the task's platform", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValueOnce({
+    mockPlatformCredentialsFindFirst.mockResolvedValueOnce({
       id: 7,
       platform_id: 99, // task is on platform 5
-      profile_id: 100,
+      user_id: CONTACT,
     });
 
     await expect(
-      PATCH(createPatchEvent({ platform_profile_id: 7 })),
+      PATCH(createPatchEvent({ platform_credential_id: 7 })),
     ).rejects.toMatchObject({ status: 400 });
     expect(mockHasCredentialAccess).not.toHaveBeenCalled();
     expect(mockUpdateSet).not.toHaveBeenCalled();
   });
 
   it("rejects a credential the caller has no access to", async () => {
-    mockPlatformProfilesFindFirst.mockResolvedValueOnce({
+    mockPlatformCredentialsFindFirst.mockResolvedValueOnce({
       id: 7,
       platform_id: 5,
-      profile_id: 200,
+      user_id: OWNER,
     });
     mockHasCredentialAccess.mockResolvedValueOnce(false);
 
     await expect(
-      PATCH(createPatchEvent({ platform_profile_id: 7 })),
+      PATCH(createPatchEvent({ platform_credential_id: 7 })),
     ).rejects.toMatchObject({ status: 403 });
     expect(mockUpdateSet).not.toHaveBeenCalled();
   });
 
   it("validates coupling against the post-update state when only the device changes", async () => {
-    // Task already has a shared credential; the user is now patching only
-    // sjsbrowser_api_key. The validation should re-check the (existing cred,
-    // new device) pairing.
+    // Task already has a shared credential binding; the user is now
+    // patching only sjsbrowser_api_key. The validation should re-check the
+    // (existing binding, new device) pairing.
     mockSearchTasksFindFirst.mockResolvedValueOnce({
       ...TASK_OWNED_BY_CONTACT,
-      platform_profile_id: 7, // already-saved shared credential
+      platform_profile_id: 500, // existing binding pointing at a shared cred
     });
     mockHasDeviceAccess.mockResolvedValueOnce(true);
     mockPlatformProfilesFindFirst.mockResolvedValueOnce({
-      id: 7,
-      profile: { user_id: OWNER },
+      id: 500,
+      platform_credential: { user_id: OWNER },
     });
     mockApiKeysFindFirst.mockResolvedValueOnce({
       id: 99,

@@ -1,5 +1,8 @@
 /**
- * Device sharing service — share tunnel devices (API keys) with contacts
+ * Device sharing service — share tunnel devices (API keys) with contacts.
+ *
+ * Devices are owned by users (via `api_keys.user_id`); ownership checks
+ * are a direct comparison rather than a profile traversal.
  */
 
 import { db } from "$lib/server/db";
@@ -10,25 +13,26 @@ import { createNotification } from "$lib/server/notifications";
 import { revokeOrphanedCredentialShares } from "$lib/server/credential-shares";
 
 /**
- * Share a device with a user (must be an accepted contact)
+ * Share a device with a user (must be an accepted contact).
  */
 export async function shareDevice(
   apiKeyId: number,
   ownerId: string,
   sharedWithUserId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  // Verify the API key belongs to the owner
   const apiKey = await db.query.api_keys.findFirst({
-    where: and(eq(api_keys.id, apiKeyId), eq(api_keys.revoked, false)),
+    where: and(
+      eq(api_keys.id, apiKeyId),
+      eq(api_keys.user_id, ownerId),
+      eq(api_keys.revoked, false),
+    ),
     columns: { id: true },
-    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (!apiKey || apiKey.profile.user_id !== ownerId) {
+  if (!apiKey) {
     return { success: false, error: "Device not found" };
   }
 
-  // Verify they are contacts
   if (!(await areContacts(ownerId, sharedWithUserId))) {
     return {
       success: false,
@@ -36,7 +40,6 @@ export async function shareDevice(
     };
   }
 
-  // Check if already shared
   const existing = await db.query.device_shares.findFirst({
     where: and(
       eq(device_shares.api_key_id, apiKeyId),
@@ -56,7 +59,6 @@ export async function shareDevice(
     shared_with: sharedWithUserId,
   });
 
-  // Notify the recipient
   const ownerUser = await db.query.users.findFirst({
     where: eq(users.id, ownerId),
     columns: { name: true, email: true },
@@ -73,23 +75,22 @@ export async function shareDevice(
 }
 
 /**
- * Unshare a device from a user
+ * Unshare a device from a user.
  */
 export async function unshareDevice(
   apiKeyId: number,
   ownerId: string,
   sharedWithUserId: string,
 ): Promise<boolean> {
-  // Verify ownership
   const apiKey = await db.query.api_keys.findFirst({
-    where: eq(api_keys.id, apiKeyId),
+    where: and(
+      eq(api_keys.id, apiKeyId),
+      eq(api_keys.user_id, ownerId),
+    ),
     columns: { id: true },
-    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (!apiKey || apiKey.profile.user_id !== ownerId) {
-    return false;
-  }
+  if (!apiKey) return false;
 
   const result = await db.delete(device_shares).where(
     and(
@@ -101,17 +102,14 @@ export async function unshareDevice(
   if ((result.rowCount ?? 0) > 0) {
     // Drop any credentials this owner had shared with the contact if no
     // other devices of theirs remain shared — credentials are unusable
-    // without a device of the owner to run on. Errors propagate so the
-    // caller sees the failure rather than silently leaving orphaned shares.
+    // without a device of the owner to run on.
     await revokeOrphanedCredentialShares(ownerId, sharedWithUserId);
   }
 
   return (result.rowCount ?? 0) > 0;
 }
 
-/**
- * List shares for a specific device (who it's shared with)
- */
+/** List shares for a specific device (who it's shared with). */
 export async function listDeviceShares(apiKeyId: number) {
   return db.query.device_shares.findMany({
     where: eq(device_shares.api_key_id, apiKeyId),
@@ -126,9 +124,7 @@ export async function listDeviceShares(apiKeyId: number) {
   });
 }
 
-/**
- * List devices shared with a user (devices they can use from contacts)
- */
+/** List devices shared with a user (devices they can use from contacts). */
 export async function listSharedWithMe(userId: string) {
   const shares = await db.query.device_shares.findMany({
     where: eq(device_shares.shared_with, userId),
@@ -142,21 +138,14 @@ export async function listSharedWithMe(userId: string) {
           id: true,
           name: true,
           key_plain: true,
-        },
-        with: {
-          profile: {
-            columns: { user_id: true },
-          },
+          user_id: true,
         },
       },
     },
     orderBy: desc(device_shares.date_created),
   });
 
-  // Resolve owner names from user_ids
-  const ownerIds = [
-    ...new Set(shares.map((s) => s.api_key.profile.user_id).filter(Boolean)),
-  ] as string[];
+  const ownerIds = [...new Set(shares.map((s) => s.api_key.user_id))];
   const owners = ownerIds.length > 0
     ? await db.query.users.findMany({
       where: inArray(users.id, ownerIds),
@@ -166,7 +155,7 @@ export async function listSharedWithMe(userId: string) {
   const ownerMap = new Map(owners.map((o) => [o.id, o]));
 
   return shares.map((s) => {
-    const owner = ownerMap.get(s.api_key.profile.user_id ?? "") ?? null;
+    const owner = ownerMap.get(s.api_key.user_id) ?? null;
     return {
       id: s.id,
       date_created: s.date_created,
@@ -181,24 +170,22 @@ export async function listSharedWithMe(userId: string) {
 }
 
 /**
- * Check if a user has access to a device (either owns it or it's shared with them)
+ * Check if a user has access to a device (either owns it or it's shared with them).
  */
 export async function hasDeviceAccess(
   apiKeyId: number,
   userId: string,
 ): Promise<boolean> {
-  // Check ownership
   const owned = await db.query.api_keys.findFirst({
-    where: and(eq(api_keys.id, apiKeyId), eq(api_keys.revoked, false)),
+    where: and(
+      eq(api_keys.id, apiKeyId),
+      eq(api_keys.user_id, userId),
+      eq(api_keys.revoked, false),
+    ),
     columns: { id: true },
-    with: { profile: { columns: { user_id: true } } },
   });
+  if (owned) return true;
 
-  if (owned && owned.profile.user_id === userId) {
-    return true;
-  }
-
-  // Check shared access
   const shared = await db.query.device_shares.findFirst({
     where: and(
       eq(device_shares.api_key_id, apiKeyId),

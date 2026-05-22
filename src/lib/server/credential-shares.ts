@@ -1,12 +1,17 @@
 /**
- * Credential sharing service — share platform_profile credentials (login
- * username + encrypted password for a job platform) with contacts.
+ * Credential sharing service — share platform_credentials (login username +
+ * encrypted password for a job platform) with contacts.
  *
  * Constraint: a contact who has a credential shared with them can use it on
  * an import task ONLY in combination with one of the credential owner's
  * devices that has also been shared with them. The password never crosses
  * to the contact's session — the scraper resolves it server-side at run
- * time via `decryptCredential()` on the owner's row.
+ * time via `decryptCredential()`.
+ *
+ * Credentials are user-wide (owned via `platform_credentials.user_id`), so
+ * intra-user "sharing" doesn't exist as a row in this table — every profile
+ * of the owner already sees the credential. This table handles cross-user
+ * sharing only.
  *
  * Mirrors device-shares.ts.
  */
@@ -17,59 +22,47 @@ import {
   api_keys,
   credential_shares,
   device_shares,
-  platform_profiles,
-  profiles,
+  platform_credentials,
   users,
 } from "$lib/server/db/schema";
 import { areContacts } from "$lib/server/contacts";
 import { createNotification } from "$lib/server/notifications";
 
-/** Resolve all platform_profile ids owned (transitively, via profiles) by a user. */
+/** Resolve all platform_credential ids owned by a user. */
 async function ownedCredentialIds(ownerId: string): Promise<number[]> {
-  const ownerProfiles = await db.query.profiles.findMany({
-    where: eq(profiles.user_id, ownerId),
-    columns: { id: true },
-  });
-  const profileIds = ownerProfiles.map((p) => p.id);
-  if (profileIds.length === 0) return [];
-  const creds = await db.query.platform_profiles.findMany({
-    where: inArray(platform_profiles.profile_id, profileIds),
+  const creds = await db.query.platform_credentials.findMany({
+    where: eq(platform_credentials.user_id, ownerId),
     columns: { id: true },
   });
   return creds.map((c) => c.id);
 }
 
-/** Resolve all api_key ids owned by a user via their profiles. */
+/** Resolve all api_key ids owned by a user. */
 async function ownedApiKeyIds(ownerId: string): Promise<number[]> {
-  const ownerProfiles = await db.query.profiles.findMany({
-    where: eq(profiles.user_id, ownerId),
-    columns: { id: true },
-  });
-  const profileIds = ownerProfiles.map((p) => p.id);
-  if (profileIds.length === 0) return [];
   const keys = await db.query.api_keys.findMany({
-    where: inArray(api_keys.profile_id, profileIds),
+    where: eq(api_keys.user_id, ownerId),
     columns: { id: true },
   });
   return keys.map((k) => k.id);
 }
 
 /**
- * Share a credential (platform_profile) with a contact.
+ * Share a credential with a contact.
  */
 export async function shareCredential(
-  platformProfileId: number,
+  platformCredentialId: number,
   ownerId: string,
   sharedWithUserId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  // Verify the credential belongs to the owner via its profile
-  const credential = await db.query.platform_profiles.findFirst({
-    where: eq(platform_profiles.id, platformProfileId),
+  const credential = await db.query.platform_credentials.findFirst({
+    where: and(
+      eq(platform_credentials.id, platformCredentialId),
+      eq(platform_credentials.user_id, ownerId),
+    ),
     columns: { id: true, username: true, platform_id: true },
-    with: { profile: { columns: { user_id: true } } },
   });
 
-  if (!credential || credential.profile.user_id !== ownerId) {
+  if (!credential) {
     return { success: false, error: "Credential not found" };
   }
 
@@ -82,7 +75,7 @@ export async function shareCredential(
 
   const existing = await db.query.credential_shares.findFirst({
     where: and(
-      eq(credential_shares.platform_profile_id, platformProfileId),
+      eq(credential_shares.platform_credential_id, platformCredentialId),
       eq(credential_shares.shared_with, sharedWithUserId),
     ),
   });
@@ -94,11 +87,10 @@ export async function shareCredential(
   }
 
   await db.insert(credential_shares).values({
-    platform_profile_id: platformProfileId,
+    platform_credential_id: platformCredentialId,
     shared_with: sharedWithUserId,
   });
 
-  // Notify the recipient
   const ownerUser = await db.query.users.findFirst({
     where: eq(users.id, ownerId),
     columns: { name: true, email: true },
@@ -118,22 +110,22 @@ export async function shareCredential(
  * Unshare a credential from a contact.
  */
 export async function unshareCredential(
-  platformProfileId: number,
+  platformCredentialId: number,
   ownerId: string,
   sharedWithUserId: string,
 ): Promise<boolean> {
-  const credential = await db.query.platform_profiles.findFirst({
-    where: eq(platform_profiles.id, platformProfileId),
+  const credential = await db.query.platform_credentials.findFirst({
+    where: and(
+      eq(platform_credentials.id, platformCredentialId),
+      eq(platform_credentials.user_id, ownerId),
+    ),
     columns: { id: true },
-    with: { profile: { columns: { user_id: true } } },
   });
-  if (!credential || credential.profile.user_id !== ownerId) {
-    return false;
-  }
+  if (!credential) return false;
 
   const result = await db.delete(credential_shares).where(
     and(
-      eq(credential_shares.platform_profile_id, platformProfileId),
+      eq(credential_shares.platform_credential_id, platformCredentialId),
       eq(credential_shares.shared_with, sharedWithUserId),
     ),
   );
@@ -143,9 +135,9 @@ export async function unshareCredential(
 /**
  * List shares for a specific credential (who it's shared with).
  */
-export async function listCredentialShares(platformProfileId: number) {
+export async function listCredentialShares(platformCredentialId: number) {
   return db.query.credential_shares.findMany({
-    where: eq(credential_shares.platform_profile_id, platformProfileId),
+    where: eq(credential_shares.platform_credential_id, platformCredentialId),
     columns: {
       id: true,
       date_created: true,
@@ -165,10 +157,14 @@ export async function listSharedCredentialsWithMe(userId: string) {
     where: eq(credential_shares.shared_with, userId),
     columns: { id: true, date_created: true },
     with: {
-      platform_profile: {
-        columns: { id: true, username: true, platform_id: true, status: true },
+      platform_credential: {
+        columns: {
+          id: true,
+          username: true,
+          platform_id: true,
+          user_id: true,
+        },
         with: {
-          profile: { columns: { user_id: true } },
           job_platform: { columns: { id: true, name: true } },
         },
       },
@@ -177,10 +173,8 @@ export async function listSharedCredentialsWithMe(userId: string) {
   });
 
   const ownerIds = [
-    ...new Set(
-      shares.map((s) => s.platform_profile.profile.user_id).filter(Boolean),
-    ),
-  ] as string[];
+    ...new Set(shares.map((s) => s.platform_credential.user_id)),
+  ];
   const owners = ownerIds.length > 0
     ? await db.query.users.findMany({
       where: inArray(users.id, ownerIds),
@@ -190,18 +184,17 @@ export async function listSharedCredentialsWithMe(userId: string) {
   const ownerMap = new Map(owners.map((o) => [o.id, o]));
 
   return shares.map((s) => {
-    const ownerUserId = s.platform_profile.profile.user_id ?? "";
+    const ownerUserId = s.platform_credential.user_id;
     const owner = ownerMap.get(ownerUserId) ?? null;
     return {
       id: s.id,
       date_created: s.date_created,
-      platform_profile: {
-        id: s.platform_profile.id,
-        username: s.platform_profile.username,
-        platform_id: s.platform_profile.platform_id,
-        status: s.platform_profile.status,
-        platform: s.platform_profile.job_platform,
-        owner_user_id: ownerUserId || null,
+      platform_credential: {
+        id: s.platform_credential.id,
+        username: s.platform_credential.username,
+        platform_id: s.platform_credential.platform_id,
+        platform: s.platform_credential.job_platform,
+        owner_user_id: ownerUserId,
         owner,
       },
     };
@@ -209,23 +202,25 @@ export async function listSharedCredentialsWithMe(userId: string) {
 }
 
 /**
- * Check whether a user can pick this credential on a task — owns it directly,
- * or it's been shared with them.
+ * Check whether a user can use this credential on a task — owns it
+ * directly, or it's been shared with them.
  */
 export async function hasCredentialAccess(
-  platformProfileId: number,
+  platformCredentialId: number,
   userId: string,
 ): Promise<boolean> {
-  const owned = await db.query.platform_profiles.findFirst({
-    where: eq(platform_profiles.id, platformProfileId),
+  const owned = await db.query.platform_credentials.findFirst({
+    where: and(
+      eq(platform_credentials.id, platformCredentialId),
+      eq(platform_credentials.user_id, userId),
+    ),
     columns: { id: true },
-    with: { profile: { columns: { user_id: true } } },
   });
-  if (owned && owned.profile.user_id === userId) return true;
+  if (owned) return true;
 
   const shared = await db.query.credential_shares.findFirst({
     where: and(
-      eq(credential_shares.platform_profile_id, platformProfileId),
+      eq(credential_shares.platform_credential_id, platformCredentialId),
       eq(credential_shares.shared_with, userId),
     ),
     columns: { id: true },
@@ -267,7 +262,7 @@ export async function revokeAllCredentialSharesBetween(
   if (ids.length === 0) return 0;
   const result = await db.delete(credential_shares).where(
     and(
-      inArray(credential_shares.platform_profile_id, ids),
+      inArray(credential_shares.platform_credential_id, ids),
       eq(credential_shares.shared_with, contactId),
     ),
   );

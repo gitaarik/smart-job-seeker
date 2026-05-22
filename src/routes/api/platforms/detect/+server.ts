@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { and, eq, ilike, isNotNull, or } from "drizzle-orm";
 import {
   job_platforms,
-  platform_profiles,
+  platform_credentials,
   profiles,
 } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
@@ -97,21 +97,25 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       isNew: false,
     };
 
-    // Own credentials for this platform and profile
-    const ownCreds = await db.query.platform_profiles.findMany({
+    // User-wide credentials for this platform. Status is per-profile (lives
+    // on platform_profiles) — for the detect view we just show "active" if
+    // the user has the credential at all; the picker on the task page
+    // surfaces real status when needed.
+    const ownCreds = await db.query.platform_credentials.findMany({
       where: and(
-        eq(platform_profiles.platform_id, existingPlatform.id),
-        eq(platform_profiles.profile_id, profile.id),
-        isNotNull(platform_profiles.username),
+        eq(platform_credentials.platform_id, existingPlatform.id),
+        eq(platform_credentials.user_id, user.id),
+        isNotNull(platform_credentials.username),
       ),
       columns: {
         id: true,
         username: true,
-        status: true,
       },
     });
     credentials = ownCreds.map((c) => ({
-      ...c,
+      id: c.id,
+      username: c.username,
+      status: "active",
       shared: false,
       owner_user_id: null,
       owner_label: null,
@@ -122,16 +126,16 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     // platform here. Passwords + security answers stay server-side.
     const sharedCreds = await listSharedCredentialsWithMe(user.id);
     for (const s of sharedCreds) {
-      if (s.platform_profile.platform_id !== existingPlatform.id) continue;
-      if (!s.platform_profile.username) continue;
-      const ownerLabel = s.platform_profile.owner?.name ||
-        s.platform_profile.owner?.email || "a contact";
+      if (s.platform_credential.platform_id !== existingPlatform.id) continue;
+      if (!s.platform_credential.username) continue;
+      const ownerLabel = s.platform_credential.owner?.name ||
+        s.platform_credential.owner?.email || "a contact";
       credentials.push({
-        id: s.platform_profile.id,
-        username: s.platform_profile.username,
-        status: s.platform_profile.status ?? "active",
+        id: s.platform_credential.id,
+        username: s.platform_credential.username,
+        status: "active",
         shared: true,
-        owner_user_id: s.platform_profile.owner_user_id,
+        owner_user_id: s.platform_credential.owner_user_id,
         owner_label: ownerLabel,
       });
     }

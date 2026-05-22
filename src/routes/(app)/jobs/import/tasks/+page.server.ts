@@ -5,6 +5,7 @@ import { and, asc, desc, eq, isNotNull, like, or } from "drizzle-orm";
 import {
   api_keys,
   job_platforms,
+  platform_credentials,
   platform_profiles,
   profiles,
   search_tasks,
@@ -63,7 +64,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     shared: boolean;
     owner_user_id: string | null;
   }
-  const allApiKeys = await listApiKeys(profileId);
+  const allApiKeys = await listApiKeys(user.id);
   const apiKeyDevices: DeviceOption[] = allApiKeys
     .filter((k) => !k.revoked)
     .map((k) => ({
@@ -171,6 +172,19 @@ async function getOrCreatePlatform(
   return platform.id;
 }
 
+/**
+ * Resolve the per-profile runtime row that backs `search_tasks.platform_profile_id`.
+ *
+ * The picker speaks in `platform_credentials.id` (user-wide); the search
+ * task still references a `platform_profiles` row so each profile keeps
+ * its own login state (`status`, `last_login_at`, `login_error`) for the
+ * same shared credential. This helper resolves or creates that binding.
+ *
+ * - `credentialId === "new"`: insert into platform_credentials.
+ * - `credentialId` numeric: validate via hasCredentialAccess (owner or
+ *   share recipient), then find-or-create the platform_profiles row.
+ * - "none" / null / unparseable: return null (task saves with no cred).
+ */
 async function getOrCreateCredentials(
   profileId: number,
   platformId: number,
@@ -180,42 +194,60 @@ async function getOrCreateCredentials(
   newPassword: string | null,
   newSecurityAnswer: string | null = null,
 ): Promise<number | null> {
-  // Existing credential — accept either one the user owns or one shared with
-  // them. Always require the credential to be for this platform; reject
-  // anything the user can't access (silent drop = task saves with no
-  // credential, same as picking "none").
+  let credId: number | null = null;
+
   if (credentialId && credentialId !== "none" && credentialId !== "new") {
     const credIdNum = parseInt(credentialId);
     if (isNaN(credIdNum)) return null;
-
-    const existing = await db.query.platform_profiles.findFirst({
+    if (!(await hasCredentialAccess(credIdNum, userId))) return null;
+    // Sanity-check the platform matches; the picker shouldn't offer a
+    // credential for the wrong platform but defend anyway.
+    const cred = await db.query.platform_credentials.findFirst({
       where: and(
-        eq(platform_profiles.id, credIdNum),
-        eq(platform_profiles.platform_id, platformId),
+        eq(platform_credentials.id, credIdNum),
+        eq(platform_credentials.platform_id, platformId),
       ),
       columns: { id: true },
     });
-    if (!existing) return null;
-
-    if (!(await hasCredentialAccess(existing.id, userId))) return null;
-    return existing.id;
+    if (!cred) return null;
+    credId = cred.id;
   }
 
-  // If adding new credentials
   if (credentialId === "new" && newUsername) {
-    const [newCred] = await db.insert(platform_profiles).values({
-      profile_id: profileId,
+    const [created] = await db.insert(platform_credentials).values({
+      user_id: userId,
       platform_id: platformId,
       username: newUsername,
       password: encryptCredential(newPassword || null),
       security_answer: encryptCredential(newSecurityAnswer || null),
-      status: "active",
       date_created: new Date(),
-    }).returning();
-    return newCred.id;
+      date_updated: new Date(),
+    }).returning({ id: platform_credentials.id });
+    credId = created.id;
   }
 
-  return null;
+  if (credId === null) return null;
+
+  // Per-profile runtime row: one row per (profile, credential). Reused on
+  // subsequent task creations so login_error / last_login_at accumulate
+  // against a stable identity rather than spawning duplicate rows.
+  const existingPp = await db.query.platform_profiles.findFirst({
+    where: and(
+      eq(platform_profiles.profile_id, profileId),
+      eq(platform_profiles.platform_credential_id, credId),
+    ),
+    columns: { id: true },
+  });
+  if (existingPp) return existingPp.id;
+
+  const [newPp] = await db.insert(platform_profiles).values({
+    profile_id: profileId,
+    platform_id: platformId,
+    platform_credential_id: credId,
+    status: "active",
+    date_created: new Date(),
+  }).returning({ id: platform_profiles.id });
+  return newPp.id;
 }
 
 export const actions: Actions = {
@@ -334,12 +366,14 @@ export const actions: Actions = {
     if (!isNaN(apiKeyId) && (await hasDeviceAccess(apiKeyId, user.id))) {
       let credOwner: string | null = null;
       if (resolvedCredentialId !== null) {
-        const cred = await db.query.platform_profiles.findFirst({
+        const pp = await db.query.platform_profiles.findFirst({
           where: eq(platform_profiles.id, resolvedCredentialId),
           columns: { id: true },
-          with: { profile: { columns: { user_id: true } } },
+          with: {
+            platform_credential: { columns: { user_id: true } },
+          },
         });
-        credOwner = cred?.profile.user_id ?? null;
+        credOwner = pp?.platform_credential?.user_id ?? null;
       }
       const credIsShared = credOwner !== null && credOwner !== user.id;
       if (!credIsShared) {

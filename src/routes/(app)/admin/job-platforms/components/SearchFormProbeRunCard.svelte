@@ -35,7 +35,7 @@
     finished_at: Date | string | null;
     error_message: string | null;
     triggered_by_user_id: string | null;
-    platform_profile_id: number | null;
+    platform_credential_id: number | null;
     sjsbrowser_api_key_id: number | null;
     bullmq_job_id: string | null;
     live_url: string | null;
@@ -65,9 +65,6 @@
     initialRun: DiscoveryRun;
     initialLogs?: LogLine[];
     platformName?: string | null;
-    /** Admin's profile id — needed to fetch tunnel screenshots. When null,
-     *  the screenshot mode is disabled (only cloud iframe view works). */
-    profileId?: number | null;
     /** Hide the inline "Open browser view" button. Used by the per-platform
      *  discovery page, where the status box at the top owns the button so we
      *  don't show two of them for the latest run. */
@@ -80,7 +77,6 @@
     initialRun,
     initialLogs = [],
     platformName: _platformName = null,
-    profileId = null,
     hideBrowserView = false,
     credentialLabel,
     deviceLabel,
@@ -96,8 +92,7 @@
   let cancelError = $state<string | null>(null);
 
   const canViewBrowser = $derived(
-    Boolean(run.live_url) ||
-      (Boolean(run.sjsbrowser_api_key_id) && profileId !== null),
+    Boolean(run.live_url) || Boolean(run.sjsbrowser_api_key_id),
   );
 
   function isTerminal(status: string) {
@@ -197,7 +192,7 @@
           <span>·</span>
           <span>Started {new Date(run.started_at).toLocaleString()}</span>
           <span>·</span>
-          <span>Credential: <span class="text-[var(--dash-text)]">{credentialLabel(run.platform_profile_id)}</span></span>
+          <span>Credential: <span class="text-[var(--dash-text)]">{credentialLabel(run.platform_credential_id)}</span></span>
           {#if devName}
             <span>·</span>
             <span>Device: <span class="text-[var(--dash-text)]">{devName}</span></span>
@@ -336,7 +331,6 @@
     bind:open={showBrowser}
     liveUrl={run.live_url}
     apiKeyId={run.sjsbrowser_api_key_id}
-    {profileId}
     deviceName={deviceLabel(run.sjsbrowser_api_key_id)}
   />
 {/if}

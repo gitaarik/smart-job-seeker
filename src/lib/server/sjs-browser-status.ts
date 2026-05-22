@@ -5,9 +5,12 @@
  * query the worker's HTTP status endpoint and apply rules on top of that
  * data — for example, picking which device would be used by default when
  * the user starts a scrape.
+ *
+ * Devices are user-wide: a registered tunnel client appears under its
+ * owning user's status, regardless of which profile is active.
  */
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "$lib/server/db";
 import { api_keys, device_shares, users } from "$lib/server/db/schema";
 
@@ -33,14 +36,15 @@ export interface PreferredDevice extends SjsBrowserDevice {
   ownerLabel: string | null;
 }
 
-export async function fetchProfileSjsBrowserStatus(
-  profileId: number,
+/** Fetch live tunnel status for a user's own devices. */
+export async function fetchUserSjsBrowserStatus(
+  userId: string,
 ): Promise<SjsBrowserStatus> {
   try {
     const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
     const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
     const res = await fetch(
-      `http://${sjsBrowserHost}:${sjsBrowserPort}/status/${profileId}`,
+      `http://${sjsBrowserHost}:${sjsBrowserPort}/status/${encodeURIComponent(userId)}`,
       { signal: AbortSignal.timeout(TUNNEL_REQUEST_TIMEOUT_MS) },
     );
     if (res.ok) return await res.json();
@@ -54,7 +58,7 @@ export async function fetchProfileSjsBrowserStatus(
  * Pick the device that would be used for scraping by default.
  *
  * Rule:
- *   1. Prefer the user's own connected devices on `profileId`.
+ *   1. Prefer the user's own connected devices.
  *   2. Fall back to connected devices shared with the user.
  *   3. Within each tier, sort by api_key.date_created ASC (oldest first) so
  *      the choice is stable when new devices are added.
@@ -63,15 +67,11 @@ export async function fetchProfileSjsBrowserStatus(
  */
 export async function getPreferredDevice(
   userId: string,
-  profileId: number,
 ): Promise<PreferredDevice | null> {
-  const ownStatus = await fetchProfileSjsBrowserStatus(profileId);
+  const ownStatus = await fetchUserSjsBrowserStatus(userId);
   if (ownStatus.devices.length > 0) {
     const ownedKeys = await db.query.api_keys.findMany({
-      where: inArray(
-        api_keys.id,
-        ownStatus.devices.map((d) => d.apiKeyId),
-      ),
+      where: eq(api_keys.user_id, userId),
       columns: { id: true, date_created: true },
     });
     const dateMap = new Map(
@@ -91,36 +91,33 @@ export async function getPreferredDevice(
         columns: {
           id: true,
           name: true,
-          profile_id: true,
+          user_id: true,
           date_created: true,
-        },
-        with: {
-          profile: { columns: { user_id: true } },
         },
       },
     },
   });
   if (shares.length === 0) return null;
 
-  const profileIds = [...new Set(shares.map((s) => s.api_key.profile_id))];
+  const ownerIds = [...new Set(shares.map((s) => s.api_key.user_id))];
   const statuses = await Promise.all(
-    profileIds.map(
-      async (pid) => [pid, await fetchProfileSjsBrowserStatus(pid)] as const,
+    ownerIds.map(
+      async (uid) => [uid, await fetchUserSjsBrowserStatus(uid)] as const,
     ),
   );
-  const statusByProfile = new Map(statuses);
+  const statusByOwner = new Map(statuses);
 
   const candidates: Array<
-    { device: SjsBrowserDevice; ownerUserId: string | null; sortKey: number }
+    { device: SjsBrowserDevice; ownerUserId: string; sortKey: number }
   > = [];
   for (const share of shares) {
-    const status = statusByProfile.get(share.api_key.profile_id);
+    const status = statusByOwner.get(share.api_key.user_id);
     if (!status) continue;
     const device = status.devices.find((d) => d.apiKeyId === share.api_key.id);
     if (!device) continue;
     candidates.push({
       device,
-      ownerUserId: share.api_key.profile.user_id ?? null,
+      ownerUserId: share.api_key.user_id,
       sortKey: share.api_key.date_created?.getTime() ?? 0,
     });
   }
@@ -129,102 +126,62 @@ export async function getPreferredDevice(
   candidates.sort((a, b) => a.sortKey - b.sortKey);
   const pick = candidates[0];
 
-  let ownerLabel: string | null = null;
-  if (pick.ownerUserId) {
-    const owner = await db.query.users.findFirst({
-      where: eq(users.id, pick.ownerUserId),
-      columns: { name: true, email: true },
-    });
-    ownerLabel = owner?.name || owner?.email || null;
-  }
+  const owner = await db.query.users.findFirst({
+    where: eq(users.id, pick.ownerUserId),
+    columns: { name: true, email: true },
+  });
+  const ownerLabel = owner?.name || owner?.email || null;
 
   return { ...pick.device, isShared: true, ownerLabel };
 }
 
 /**
- * Status of a specific device by api_key id, regardless of whether it is
- * the user's preferred default. Used by the search-task UI to show the
- * device that will actually be used (the task's configured `sjsbrowser_api_key`),
- * not the user's first-connected fallback.
+ * Resolve which device the dashboard should target for a tunnel request
+ * (VNC, screencast, input). Returns the api_key id of a connected device the
+ * user has access to, or null when nothing relevant is connected.
  *
- * Returns null if the device isn't connected, isn't owned/shared by the
- * user, or doesn't belong to the given profile.
- */
-/**
- * Resolve the upstream `(profileId, apiKeyId)` pair for a tunnel-relay
- * request (VNC, screencast, input) that came in addressed to a request
- * `profileId`.
- *
- * The dashboard sends the *task's* profile_id (which is the user's profile);
- * but when the task uses a shared device, the actual tunnel registry entry
- * lives on the *device owner's* profile. Without resolving, the upstream
- * 404s with "No active tunnel".
- *
- *   1. If the caller passed an explicit `apiKeyId`, validate access to it
- *      and return that device's owner profile_id + apiKeyId.
- *   2. Otherwise auto-pick the same way the Devices page does (own
- *      connected first, then shared connected).
- *   3. If neither resolves to a connected device, return the original
- *      profileId with no apiKeyId — the upstream will 404, which is the
- *      same behaviour as before this helper existed.
+ *   1. If the caller passed an explicit `apiKeyId`, validate access and use it.
+ *   2. Otherwise auto-pick via getPreferredDevice (own first, then shared).
  */
 export async function resolveTunnelDevice(
   userId: string,
-  profileId: number,
   apiKeyIdRaw: string | null,
-): Promise<{ profileId: number; apiKeyId?: number }> {
+): Promise<{ apiKeyId: number } | null> {
   if (apiKeyIdRaw) {
     const apiKeyId = Number.parseInt(apiKeyIdRaw, 10);
-    if (!Number.isFinite(apiKeyId)) {
-      return { profileId };
-    }
-    const device = await getDeviceById(userId, profileId, apiKeyId);
-    if (!device) return { profileId };
-    const apiKey = await db.query.api_keys.findFirst({
-      where: eq(api_keys.id, apiKeyId),
-      columns: { profile_id: true },
-    });
-    return {
-      profileId: apiKey?.profile_id ?? profileId,
-      apiKeyId,
-    };
+    if (!Number.isFinite(apiKeyId)) return null;
+    const device = await getDeviceById(userId, apiKeyId);
+    if (!device) return null;
+    return { apiKeyId };
   }
 
-  const preferred = await getPreferredDevice(userId, profileId);
-  if (!preferred) return { profileId };
-
-  const apiKey = await db.query.api_keys.findFirst({
-    where: eq(api_keys.id, preferred.apiKeyId),
-    columns: { profile_id: true },
-  });
-  return {
-    profileId: apiKey?.profile_id ?? profileId,
-    apiKeyId: preferred.apiKeyId,
-  };
+  const preferred = await getPreferredDevice(userId);
+  if (!preferred) return null;
+  return { apiKeyId: preferred.apiKeyId };
 }
 
+/**
+ * Status of a specific device by api_key id, regardless of whether it is
+ * the user's preferred default. Used by the search-task UI to show the
+ * device that will actually be used (the task's configured
+ * `sjsbrowser_api_key`), not the user's first-connected fallback.
+ *
+ * Returns null if the device isn't connected or isn't owned/shared by the
+ * user.
+ */
 export async function getDeviceById(
   userId: string,
-  profileId: number,
   apiKeyId: number,
 ): Promise<PreferredDevice | null> {
   const apiKey = await db.query.api_keys.findFirst({
     where: eq(api_keys.id, apiKeyId),
-    columns: { id: true, profile_id: true },
-    with: {
-      profile: { columns: { user_id: true } },
-    },
+    columns: { id: true, user_id: true },
   });
   if (!apiKey) return null;
 
-  const ownerUserId = apiKey.profile.user_id ?? null;
+  const ownerUserId = apiKey.user_id;
   const ownedByUser = ownerUserId === userId;
 
-  // For own devices, scope to the requested profile (a user with multiple
-  // profiles shouldn't see another profile's devices on this task page).
-  // For shared devices, the device belongs to a different profile by
-  // definition; we trust the share grant.
-  if (ownedByUser && apiKey.profile_id !== profileId) return null;
   if (!ownedByUser) {
     const share = await db.query.device_shares.findFirst({
       where: and(
@@ -236,7 +193,7 @@ export async function getDeviceById(
     if (!share) return null;
   }
 
-  const status = await fetchProfileSjsBrowserStatus(apiKey.profile_id);
+  const status = await fetchUserSjsBrowserStatus(ownerUserId);
   const device = status.devices.find((d) => d.apiKeyId === apiKeyId);
   if (!device) return null;
 
@@ -244,13 +201,10 @@ export async function getDeviceById(
     return { ...device, isShared: false, ownerLabel: null };
   }
 
-  let ownerLabel: string | null = null;
-  if (ownerUserId) {
-    const owner = await db.query.users.findFirst({
-      where: eq(users.id, ownerUserId),
-      columns: { name: true, email: true },
-    });
-    ownerLabel = owner?.name || owner?.email || null;
-  }
+  const owner = await db.query.users.findFirst({
+    where: eq(users.id, ownerUserId),
+    columns: { name: true, email: true },
+  });
+  const ownerLabel = owner?.name || owner?.email || null;
   return { ...device, isShared: true, ownerLabel };
 }

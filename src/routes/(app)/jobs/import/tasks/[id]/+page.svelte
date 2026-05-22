@@ -192,11 +192,11 @@
       // device's status so the widgets reflect what will actually run —
       // not the user's auto-pick fallback.
       const preferredUrl = searchTask.sjsbrowser_api_key
-        ? `/api/tunnel/status/preferred?profileId=${data.profileId}&apiKeyId=${searchTask.sjsbrowser_api_key}`
-        : `/api/tunnel/status/preferred?profileId=${data.profileId}`;
+        ? `/api/tunnel/status/preferred?apiKeyId=${searchTask.sjsbrowser_api_key}`
+        : `/api/tunnel/status/preferred`;
       const [preferredRes, profileRes, sharedResults] = await Promise.all([
         fetch(preferredUrl),
-        fetch(`/api/tunnel/status?profileId=${data.profileId}`),
+        fetch(`/api/tunnel/status`),
         Promise.all(
           sharedKeyIds.map(async (apiKeyId) => {
             try {
@@ -507,11 +507,14 @@
       // Pin VNC to the device configured on the search task — otherwise with
       // multiple devices connected the dashboard can show a different one
       // than the scraper is driving.
-      const apiKeyParam = searchTask.sjsbrowser_api_key
-        ? `?apiKeyId=${searchTask.sjsbrowser_api_key}`
-        : "";
+      const targetApiKeyId = searchTask.sjsbrowser_api_key ??
+        preferredDevice?.apiKeyId;
+      if (!targetApiKeyId) {
+        vncError = "No connected device to drive VNC against";
+        return;
+      }
       const res = await fetch(
-        `/api/tunnel/vnc/${data.profileId}${apiKeyParam}`,
+        `/api/tunnel/vnc/${targetApiKeyId}`,
         { method: "POST" },
       );
       if (!res.ok) {
@@ -522,10 +525,10 @@
         return;
       }
 
-      const { token, profileId } = await res.json();
+      const { token, apiKeyId } = await res.json();
       const host = window.location.host;
       const encrypt = window.location.protocol === "https:" ? 1 : 0;
-      const wsPath = `tunnel/vnc/${profileId}?token=${token}`;
+      const wsPath = `tunnel/vnc/${apiKeyId}?token=${token}`;
       vncUrl =
         `/vnc/vnc.html?autoconnect=true&resize=scale&password=secret&host=${host}&path=${
           encodeURIComponent(wsPath)
@@ -560,11 +563,11 @@
 
   async function fetchScreenshot() {
     try {
-      const apiKeyParam = searchTask.sjsbrowser_api_key
-        ? `?apiKeyId=${searchTask.sjsbrowser_api_key}`
-        : "";
+      const targetApiKeyId = searchTask.sjsbrowser_api_key ??
+        preferredDevice?.apiKeyId;
+      if (!targetApiKeyId) return;
       const res = await fetch(
-        `/api/tunnel/screencast/${data.profileId}${apiKeyParam}`,
+        `/api/tunnel/screencast/${targetApiKeyId}`,
       );
       if (res.ok && res.status !== 204) {
         const blob = await res.blob();
@@ -639,10 +642,10 @@
   const MOUSE_BUTTON_MAP = ["left", "middle", "right"] as const;
 
   function sendInput(body: Record<string, unknown>) {
-    const apiKeyParam = searchTask.sjsbrowser_api_key
-      ? `?apiKeyId=${searchTask.sjsbrowser_api_key}`
-      : "";
-    fetch(`/api/tunnel/input/${data.profileId}${apiKeyParam}`, {
+    const targetApiKeyId = searchTask.sjsbrowser_api_key ??
+      preferredDevice?.apiKeyId;
+    if (!targetApiKeyId) return;
+    fetch(`/api/tunnel/input/${targetApiKeyId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -1562,23 +1565,17 @@
     });
   });
 
-  // Reactively start/stop desktop connection polling when tunnel mode changes.
-  // Also re-runs when the task's configured device changes so the widgets
-  // refresh immediately on device switch instead of waiting for the next poll.
+  // Poll desktop connection status unconditionally — the user wants to see
+  // whether their device is online regardless of which browser-control mode
+  // the task is set to, so they can switch modes informed. Tunnel-mode gating
+  // happens in the consumers (start-button enable, browser-view widgets).
+  // Re-runs when the configured device changes so the widget refreshes
+  // immediately on a device switch instead of waiting for the next poll.
   $effect(() => {
     void searchTask.sjsbrowser_api_key;
-    if (isTunnelMode) {
-      checkDesktopStatus();
-      if (!desktopPollInterval) {
-        desktopPollInterval = setInterval(checkDesktopStatus, 15000);
-      }
-    } else {
-      if (desktopPollInterval) {
-        clearInterval(desktopPollInterval);
-        desktopPollInterval = null;
-      }
-      preferredDevice = null;
-      desktopStatusChecked = false;
+    checkDesktopStatus();
+    if (!desktopPollInterval) {
+      desktopPollInterval = setInterval(checkDesktopStatus, 15000);
     }
     return () => {
       if (desktopPollInterval) {

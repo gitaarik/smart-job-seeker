@@ -33,11 +33,11 @@
   const initialMostRecentRun = data.runs[0] ?? null;
   let credentials = $state(data.credentials);
   let selectedCredentialId = $state<string>(
-    initialMostRecentRun?.platform_profile_id != null &&
+    initialMostRecentRun?.platform_credential_id != null &&
         data.credentials.some(
-          (c) => c.id === initialMostRecentRun.platform_profile_id,
+          (c) => c.id === initialMostRecentRun.platform_credential_id,
         )
-      ? String(initialMostRecentRun.platform_profile_id)
+      ? String(initialMostRecentRun.platform_credential_id)
       : data.credentials[0]
         ? String(data.credentials[0].id)
         : "",
@@ -93,7 +93,7 @@
     featuredRun !== null &&
       isActive &&
       (Boolean(featuredRun.live_url) ||
-        (Boolean(featuredRun.sjsbrowser_api_key_id) && data.profileId !== null)),
+        Boolean(featuredRun.sjsbrowser_api_key_id)),
   );
 
   async function pollFeaturedRun() {
@@ -138,7 +138,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           platform_id: data.platform.id,
-          platform_profile_id: Number(selectedCredentialId),
+          platform_credential_id: Number(selectedCredentialId),
           sjsbrowser_api_key_id: selectedDeviceId
             ? Number(selectedDeviceId)
             : null,
@@ -337,7 +337,7 @@
         </p>
         {#if featuredRun}
           <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-            Credential: <span class="text-[var(--dash-text)]">{credentialLabel(featuredRun.platform_profile_id)}</span>
+            Credential: <span class="text-[var(--dash-text)]">{credentialLabel(featuredRun.platform_credential_id)}</span>
             {#if featuredRun.sjsbrowser_api_key_id}
               · Device: <span class="text-[var(--dash-text)]">{deviceLabel(featuredRun.sjsbrowser_api_key_id) ?? `#${featuredRun.sjsbrowser_api_key_id}`}</span>
             {/if}
@@ -484,7 +484,7 @@
                     {/if}
                   </div>
                   <div class="text-xs text-[var(--dash-text-secondary)] mt-0.5">
-                    {credentialLabel(run.platform_profile_id)}
+                    {credentialLabel(run.platform_credential_id)}
                     {#if devName}
                       · {devName}
                     {/if}
@@ -503,7 +503,6 @@
                 <SearchFormProbeRunCard
                   initialRun={run}
                   platformName={data.platform.name}
-                  profileId={data.profileId}
                   hideBrowserView={true}
                   {credentialLabel}
                   {deviceLabel}
@@ -528,7 +527,6 @@
   bind:open={browserViewOpen}
   liveUrl={featuredRun?.live_url ?? null}
   apiKeyId={featuredRun?.sjsbrowser_api_key_id ?? null}
-  profileId={data.profileId}
   deviceName={featuredRun
     ? deviceLabel(featuredRun.sjsbrowser_api_key_id)
     : null}

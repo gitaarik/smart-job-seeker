@@ -3,11 +3,7 @@
  */
 
 // Platform authentication
-export {
-  getPlatformCredentials,
-  type PlatformCredentials,
-  updateLoginError,
-} from "./platform";
+export { updateLoginError } from "./platform";
 
 // Credential encryption
 export { encryptCredential, decryptCredential } from "./crypto";

@@ -9,12 +9,12 @@ export const load: PageServerLoad = async ({ parent }) => {
   if (!layoutData.selectedProfile) {
     redirect(302, "/home");
   }
+  if (!layoutData.user) {
+    redirect(302, "/login");
+  }
 
-  const apiKeys = await listApiKeys(layoutData.selectedProfile.id);
-
-  const sharedRaw = layoutData.user
-    ? await listSharedWithMe(layoutData.user.id)
-    : [];
+  const apiKeys = await listApiKeys(layoutData.user.id);
+  const sharedRaw = await listSharedWithMe(layoutData.user.id);
 
   // Drop key_plain — the contact uses the device via import flow, not by configuring a tunnel client themselves
   const sharedDevices = sharedRaw.map((s) => ({
@@ -30,6 +30,5 @@ export const load: PageServerLoad = async ({ parent }) => {
   return {
     apiKeys,
     sharedDevices,
-    profileId: layoutData.selectedProfile.id,
   };
 };

@@ -118,8 +118,8 @@
       .map((d) => d.apiKeyId);
     try {
       const [preferredRes, profileRes, sharedResults] = await Promise.all([
-        fetch(`/api/tunnel/status/preferred?profileId=${data.profileId}`),
-        fetch(`/api/tunnel/status?profileId=${data.profileId}`),
+        fetch(`/api/tunnel/status/preferred`),
+        fetch(`/api/tunnel/status`),
         Promise.all(
           sharedKeyIds.map(async (apiKeyId) => {
             try {

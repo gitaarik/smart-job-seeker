@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
 import { eq, and, isNotNull, desc, asc } from "drizzle-orm";
-import { jobs as jobsTable, job_matches, job_statuses, search_task_run_items, job_importers, job_match_history, platform_profiles, search_tasks, profiles, applications, application_status_log } from "$lib/server/db/schema";
+import { jobs as jobsTable, job_matches, job_statuses, search_task_run_items, job_importers, job_match_history, platform_credentials, search_tasks, profiles, applications, application_status_log } from "$lib/server/db/schema";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
@@ -167,22 +167,35 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     browserFingerprintDefaults: { language: string; timezone: string };
   } | null = null;
   if (isStaff && job.job_platform_id) {
-    // Fetch all credentials for this platform
-    const platformCredentials = await db.query.platform_profiles.findMany({
-      where: and(eq(platform_profiles.profile_id, profileId), eq(platform_profiles.platform_id, job.job_platform_id)),
-      columns: { id: true, username: true },
+    // Resolve the user owning this profile, then list their user-wide
+    // credentials for this platform — the rescrape picker lets staff
+    // choose any of the owner's logins.
+    const ownerProfile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, profileId),
+      columns: { user_id: true },
     });
+    const platformCredentials = ownerProfile
+      ? await db.query.platform_credentials.findMany({
+        where: and(
+          eq(platform_credentials.user_id, ownerProfile.user_id),
+          eq(platform_credentials.platform_id, job.job_platform_id),
+        ),
+        columns: { id: true, username: true },
+      })
+      : [];
 
-    // Fetch job search settings for this platform + profile
+    // Fetch job search settings for this platform + profile. Resolves the
+    // credential id via the platform_profiles binding so the rescrape picker
+    // can pre-select the right credential.
     const searchTask = await db.query.search_tasks.findFirst({
       where: and(eq(search_tasks.platform_id, job.job_platform_id), eq(search_tasks.profile_id, profileId)),
       columns: {
         browser_provider: true,
         keep_minimized: true,
-        platform_profile_id: true,
       },
       with: {
         job_platform: { columns: { login_page_url: true } },
+        platform_profile: { columns: { platform_credential_id: true } },
       },
     });
 
@@ -201,8 +214,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     rescrapeConfig = {
       platformCredentials,
       platformId: job.job_platform_id,
-      selectedCredentialId: searchTask?.platform_profile_id?.toString() ??
-        "none",
+      selectedCredentialId:
+        searchTask?.platform_profile?.platform_credential_id?.toString() ??
+          "none",
       loginUrl: searchTask?.job_platform?.login_page_url ?? null,
       browserProvider: (searchTask as any)?.browser_provider ?? null,
       keepMinimized: (searchTask as any)?.keep_minimized ?? true,

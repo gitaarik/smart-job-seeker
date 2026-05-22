@@ -190,7 +190,10 @@ export const searchTaskUpdateSchema = z.object({
     ),
   ]).optional(),
   new_credential: newCredentialSchema.optional(),
-  platform_profile_id: z.union([
+  /** ID of a `platform_credentials` row (user-wide). Null clears the
+   *  credential on the task. The endpoint resolves a per-profile
+   *  `platform_profiles` runtime row from this id. */
+  platform_credential_id: z.union([
     z.null(),
     z.number().int(),
     z.string().regex(/^\d+$/).transform(Number),

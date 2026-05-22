@@ -107,7 +107,7 @@
     try {
       const [contactsRes, sharesRes] = await Promise.all([
         fetch("/api/contacts"),
-        fetch(`/api/credential-shares?platformProfileId=${credId}`),
+        fetch(`/api/credential-shares?platformCredentialId=${credId}`),
       ]);
       const contactsData = await contactsRes.json();
       const sharesData = await sharesRes.json();
@@ -135,7 +135,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          platformProfileId: sharingCredentialId,
+          platformCredentialId: sharingCredentialId,
           userId,
         }),
       });
@@ -158,7 +158,7 @@
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          platformProfileId: sharingCredentialId,
+          platformCredentialId: sharingCredentialId,
           userId,
         }),
       });

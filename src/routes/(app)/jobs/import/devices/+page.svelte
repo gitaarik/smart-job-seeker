@@ -33,6 +33,45 @@
   let sortedApiKeys = $derived(
     [...apiKeys].sort((a, b) => Number(!!a.revoked) - Number(!!b.revoked)),
   );
+
+  // Cleanup hints. A key gets flagged when:
+  //   - duplicate: another non-revoked key shares the same name (leftover
+  //     from the pre-user-wide era where the same physical device often
+  //     registered once per profile)
+  //   - stale: never used and created more than 7 days ago, OR last_used
+  //     was more than 30 days ago
+  // These don't auto-delete — they just tag the row so the user knows
+  // which ones are safe to clean up.
+  const STALE_NEVER_USED_DAYS = 7;
+  const STALE_LAST_USED_DAYS = 30;
+
+  let duplicateNames = $derived.by(() => {
+    const counts = new Map<string, number>();
+    for (const k of apiKeys) {
+      if (k.revoked) continue;
+      counts.set(k.name, (counts.get(k.name) ?? 0) + 1);
+    }
+    const dupes = new Set<string>();
+    for (const [name, count] of counts) {
+      if (count > 1) dupes.add(name);
+    }
+    return dupes;
+  });
+
+  function isStale(key: typeof apiKeys[number]): boolean {
+    if (key.revoked) return false;
+    const now = Date.now();
+    const created = key.date_created ? new Date(key.date_created).getTime() : 0;
+    const lastUsed = key.last_used ? new Date(key.last_used).getTime() : null;
+    if (lastUsed === null) {
+      return now - created > STALE_NEVER_USED_DAYS * 24 * 3600 * 1000;
+    }
+    return now - lastUsed > STALE_LAST_USED_DAYS * 24 * 3600 * 1000;
+  }
+
+  function isDuplicate(key: typeof apiKeys[number]): boolean {
+    return !key.revoked && duplicateNames.has(key.name);
+  }
   let showAddForm = $state(false);
   let showManualInstall = $state(false);
   let newKeyName = $state("");
@@ -65,7 +104,7 @@
 
     try {
       const res = await fetch(
-        `/api/api-keys/${keyId}?profileId=${data.profileId}`,
+        `/api/api-keys/${keyId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -117,7 +156,7 @@
 
   async function pollOwnedSjsBrowserStatus() {
     try {
-      const res = await fetch(`/api/tunnel/status?profileId=${data.profileId}`);
+      const res = await fetch(`/api/tunnel/status`);
       const status = await res.json();
       connectedDevices = status.devices || [];
       sjsBrowserStatus = status.connected ? "connected" : "disconnected";
@@ -159,9 +198,7 @@
 
   async function pollPreferredDevice() {
     try {
-      const res = await fetch(
-        `/api/tunnel/status/preferred?profileId=${data.profileId}`,
-      );
+      const res = await fetch(`/api/tunnel/status/preferred`);
       const result = await res.json();
       preferredDevice = result.device ?? null;
     } catch {
@@ -197,7 +234,6 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newKeyName.trim(),
-          profileId: data.profileId,
         }),
       });
 
@@ -228,7 +264,7 @@
 
     try {
       const res = await fetch(
-        `/api/api-keys/${keyId}?profileId=${data.profileId}`,
+        `/api/api-keys/${keyId}`,
         { method: "DELETE" },
       );
       if (res.ok) {
@@ -243,7 +279,7 @@
   async function activateApiKey(keyId: number) {
     try {
       const res = await fetch(
-        `/api/api-keys/${keyId}?profileId=${data.profileId}`,
+        `/api/api-keys/${keyId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -264,7 +300,7 @@
 
     try {
       const res = await fetch(
-        `/api/api-keys/${keyId}?profileId=${data.profileId}&permanent=true`,
+        `/api/api-keys/${keyId}?permanent=true`,
         { method: "DELETE" },
       );
       if (res.ok) {
@@ -942,6 +978,27 @@ volumes:
                         class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] w-fit"
                       >
                         Connected
+                      </span>
+                    {:else if isDuplicate(key) && isStale(key)}
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 w-fit"
+                        title="Another key has the same name and this one hasn't connected — likely a leftover from the per-profile setup. Safe to delete."
+                      >
+                        Duplicate · unused
+                      </span>
+                    {:else if isDuplicate(key)}
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 w-fit"
+                        title="Another key has the same name — leftover from the per-profile setup, or a deliberate second device."
+                      >
+                        Duplicate
+                      </span>
+                    {:else if isStale(key)}
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] w-fit"
+                        title="No tunnel client has connected with this key recently."
+                      >
+                        Unused
                       </span>
                     {/if}
                   </div>

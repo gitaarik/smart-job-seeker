@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { and, asc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import {
   job_platforms,
-  platform_profiles,
+  platform_credentials,
   profiles,
   search_tasks,
 } from "$lib/server/db/schema";
@@ -30,28 +30,48 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     throw error(400, "Invalid job search ID");
   }
 
-  const searchTask = await db.query.search_tasks.findFirst({
+  const searchTaskRow = await db.query.search_tasks.findFirst({
     where: and(
       eq(search_tasks.id, searchTaskId),
       eq(search_tasks.profile_id, layoutData.selectedProfile.id),
     ),
     with: {
       job_platform: true,
-      platform_profile: true,
+      platform_profile: {
+        columns: {
+          id: true,
+          platform_credential_id: true,
+          status: true,
+          last_login_at: true,
+          login_error: true,
+        },
+      },
     },
   });
 
-  if (!searchTask) {
+  if (!searchTaskRow) {
     throw error(404, "Job search not found");
   }
 
+  // Surface the resolved credential id alongside the task. The client picker
+  // speaks in platform_credentials.id; the task references it indirectly via
+  // platform_profile_id → platform_credential_id, so expose the chain
+  // explicitly to avoid a second round-trip on the client.
+  const searchTask = {
+    ...searchTaskRow,
+    platform_credential_id:
+      searchTaskRow.platform_profile?.platform_credential_id ?? null,
+  };
+
   const user = layoutData.user;
 
-  // Load credentials the user can pick on this task: their own for this
-  // platform plus credentials for this platform shared with them. Shared
+  // Load credentials the user can pick on this task. Credentials are
+  // user-wide: any of the user's profiles surfaces all of their logins for
+  // this platform. Plus credentials shared with them by contacts. Shared
   // credentials never expose the password — that stays server-side and is
   // only resolved by the scraper at run time.
   interface CredentialOption {
+    /** platform_credentials.id */
     id: number;
     username: string | null;
     security_answer: string | null;
@@ -60,14 +80,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     owner_label: string | null;
   }
   let platformCredentials: CredentialOption[] = [];
-  if (searchTask.platform_id) {
-    const rawCredentials = await db.query.platform_profiles.findMany({
+  if (user && searchTask.platform_id) {
+    const rawCredentials = await db.query.platform_credentials.findMany({
       where: and(
-        eq(platform_profiles.profile_id, layoutData.selectedProfile.id),
-        eq(platform_profiles.platform_id, searchTask.platform_id),
+        eq(platform_credentials.user_id, user.id),
+        eq(platform_credentials.platform_id, searchTask.platform_id),
       ),
       columns: { id: true, username: true, security_answer: true },
-      orderBy: asc(platform_profiles.date_created),
+      orderBy: asc(platform_credentials.date_created),
     });
     platformCredentials = rawCredentials.map((c) => ({
       ...c,
@@ -76,21 +96,21 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       owner_user_id: null,
       owner_label: null,
     }));
-  }
 
-  if (user && searchTask.platform_id) {
     const sharedCreds = await listSharedCredentialsWithMe(user.id);
     for (const s of sharedCreds) {
-      if (s.platform_profile.platform_id !== searchTask.platform_id) continue;
-      const ownerLabel = s.platform_profile.owner?.name ||
-        s.platform_profile.owner?.email || "a contact";
+      if (s.platform_credential.platform_id !== searchTask.platform_id) {
+        continue;
+      }
+      const ownerLabel = s.platform_credential.owner?.name ||
+        s.platform_credential.owner?.email || "a contact";
       platformCredentials.push({
-        id: s.platform_profile.id,
-        username: s.platform_profile.username,
+        id: s.platform_credential.id,
+        username: s.platform_credential.username,
         // Shared credentials never reveal the security_answer either.
         security_answer: null,
         shared: true,
-        owner_user_id: s.platform_profile.owner_user_id,
+        owner_user_id: s.platform_credential.owner_user_id,
         owner_label: ownerLabel,
       });
     }
@@ -162,7 +182,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     shared: boolean;
     owner_user_id: string | null;
   }
-  const allApiKeys = await listApiKeys(layoutData.selectedProfile.id);
+  const allApiKeys = user
+    ? await listApiKeys(user.id)
+    : [];
   const apiKeyDevices: DeviceOption[] = allApiKeys
     .filter((k) => !k.revoked)
     .map((k) => ({
