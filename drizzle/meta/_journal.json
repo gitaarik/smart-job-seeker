@@ -232,6 +232,13 @@
       "when": 1779667800000,
       "tag": "0032_normalize_job_profile_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1779456735186,
+      "tag": "0033_user_wide_credentials_and_devices",
+      "breakpoints": true
     }
   ]
 }
