@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.37] - 2026-05-23
+
+79 commits since v0.5.36.
+
+### Added
+- Task auto-save with undo functionality (replaces manual Save/Cancel)
+- Experience level filter for job search
+- Location URL and timezone fields in profile editor
+- Upwork "expert" alias and single-cardinality filter support
+- Server-side filter computation in suggest flow to prevent duplicates
+- Direct-apply chip filters (radio/checkbox support)
+
+### Changed
+- Task URLs display as read-only in task detail (removed inline editing)
+- Suggest flow navigates to new tasks on accept instead of appending
+- Suggest task notes now show role/title instead of match explanation
+- Profile lists ordered by sort field then start date
+- Search form now uses dynamic form-fill instead of URL-template synthesis
+- Search filters: split category and value aliases for clarity
+- Scraper now records unsupported filters instead of observed filters
+- Theme Switcher spacing improved in inline variant
+- Interview prep category pills more visually distinctive
+
+### Fixed
+- Task runs no longer blocked when only platform_id is available
+- Upwork search context handling in filter interactions
+- CDP key-press race condition in tunnel text input
+- Login flow CDP reconnection on humanType focus miss
+- humanType diagnostic crash on missing __name variable
+- LinkedIn password field focus miss recovery
+- AchievementsList svelte:window component placement
+- Full-time filter misclick option scoping
+- Import tasks duplicate key handling
+- Search-form filter option scoping and click-to-expand detection robustness
+
+### Removed
+- Manual Save/Cancel buttons from task editor
+- Inline URL editing capability from task detail
+- Login-URL detection logic (now uses platform.search_page_url)
+- Per-platform observed-filters signal (replaced with unsupported-filters)
+
 ## [0.5.36] - 2026-05-12
 
 2 commits since v0.5.35.
