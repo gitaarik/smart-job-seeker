@@ -79,12 +79,20 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Validate required fields
-  if (!searchTask.search_url) {
-    throw error(400, "Job search has no search URL configured");
-  }
-
   if (!searchTask.platform_id) {
     throw error(400, "Job search has no platform configured");
+  }
+
+  // The scraper needs *some* URL to navigate to: either the legacy pre-built
+  // search_url on the task, or the platform's search_page_url that the
+  // form-fill flow drives. Without either the scraper has no starting page.
+  const effectiveSearchUrl = searchTask.search_url ||
+    searchTask.job_platform?.search_page_url;
+  if (!effectiveSearchUrl) {
+    throw error(
+      400,
+      "Job search has no search URL and the platform has no search page configured",
+    );
   }
 
   // Create a run record with a snapshot of current scraping settings
@@ -121,7 +129,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   const job = await addScrapeJob({
     searchTaskId,
     runId: run.id,
-    searchUrl: searchTask.search_url,
+    searchUrl: effectiveSearchUrl,
     platformId: String(searchTask.platform_id),
     triggeredBy: "user",
     browserProvider: effectiveProvider,
