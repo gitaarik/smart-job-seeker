@@ -156,10 +156,34 @@ export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
  * that section openers/headers use), with value-name aliases stripped.
  * Used only by the click-to-expand heuristic in configure.ts — it scans
  * page elements looking for "Filter by X" / "All filters" style section
- * openers. Matching on value names like "Full-time" or "Remote" produced
- * false positives (e.g. LinkedIn's "Preferences match" modal exposes a
- * "Full-time" link that hijacked the click), so the heuristic must only
- * consider category-name aliases.
+ * openers.
+ *
+ * Historical context (runs 629/630): matching on value names like
+ * "Full-time" or "Remote" used to produce false positives — LinkedIn's
+ * "Preferences match" modal exposes a "Full-time" link that hijacked the
+ * heuristic and clicked the wrong element. The split into category-only
+ * aliases was the workaround.
+ *
+ * The architecture has since added two defenses against that scenario:
+ *   (1) `findSearchBarContainer` + container scoping in
+ *       `tryClickToExpandFilter` — candidates that don't resolve inside
+ *       the filter-bar container get dropped (the Preferences match
+ *       modal lives outside it).
+ *   (2) `Escape` before each candidate scan in configure.ts — pre-empts
+ *       any lingering modal so it isn't even in the AX tree when we scan.
+ *
+ * So the absolute prohibition this comment originally enforced is
+ * overstated for the current code. Value-name aliases would now mostly
+ * be filtered out before causing harm — they are still kept out by
+ * default because (a) "section opener" is the semantic intent of this
+ * map (a category name, not a value name), and (b) the defenses above
+ * are heuristic, not airtight (page-wide fallback kicks in when the
+ * container probe fails, and that path has no firewall). When LinkedIn
+ * or another platform labels a section opener with what looks like a
+ * value name (e.g. a "Remote" button that opens the workplace-type
+ * subsection rather than directly applying), add it here — but verify
+ * the run logs first that the post-click flow finds a popup and applies
+ * options, rather than silently clicking the wrong thing.
  *
  * Value-name aliases live in OPTION_LABEL_ALIASES and are used separately
  * for the post-expand checkbox-match fallback.
