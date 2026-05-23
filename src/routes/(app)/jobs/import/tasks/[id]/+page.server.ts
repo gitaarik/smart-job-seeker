@@ -1,9 +1,8 @@
 import type { PageServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import {
-  job_platforms,
   platform_credentials,
   profiles,
   search_tasks,
@@ -120,25 +119,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const isStaff = (user as { is_staff?: boolean })?.is_staff ||
     (user as { is_admin?: boolean })?.is_admin || false;
 
-  // Check if user can edit platform URLs (login_page_url on job_platforms).
-  // Staff can always edit. Normal users can edit only if no other user's
-  // accounts reference this platform (cheap existence check with LIMIT 1).
-  let canEditPlatformUrls = isStaff;
-  if (!canEditPlatformUrls && searchTask.platform_id && user) {
-    const [otherUserUsage] = await db
-      .select({ id: search_tasks.id })
-      .from(search_tasks)
-      .innerJoin(profiles, eq(profiles.id, search_tasks.profile_id))
-      .where(
-        and(
-          eq(search_tasks.platform_id, searchTask.platform_id),
-          ne(profiles.user_id, user.id),
-        ),
-      )
-      .limit(1);
-    canEditPlatformUrls = !otherUserUsage;
-  }
-
   // Load profile data (country code + browser fingerprint fields)
   const profileData = await db.query.profiles.findFirst({
     where: eq(profiles.id, layoutData.selectedProfile.id),
@@ -221,7 +201,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     profileSkillLevels,
     profileId: layoutData.selectedProfile.id,
     isStaff,
-    canEditPlatformUrls,
     hasOtherRunning: !!otherRunning,
     subscriptionRenewDate: subscription?.currentPeriodEnd ?? null,
     browserCountryCode: profileData?.browser_country_code || "",

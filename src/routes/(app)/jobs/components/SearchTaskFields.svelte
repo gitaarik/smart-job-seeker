@@ -62,7 +62,6 @@
       owner_user_id?: string | null;
       owner_label?: string | null;
     }>;
-    canEditPlatformUrls?: boolean;
     browserCountryCode?: string;
     defaultCountryCode?: string;
     browserFingerprint?: {
@@ -112,7 +111,6 @@
     searchTaskId = 0,
     profileId = 0,
     platformCredentials: initialPlatformCredentials = [],
-    canEditPlatformUrls: initialCanEditPlatformUrls = true,
     browserCountryCode: initialBrowserCountryCode = "",
     defaultCountryCode = "",
     browserFingerprint = { language: "", timezone: "" },
@@ -261,24 +259,12 @@
   }
 
   // ── Edit-mode field state ──
-  let searchUrlInput = $state<string>(searchTask?.search_url ?? "");
+  // Search URL is shown read-only on the edit page (see template). Only
+  // the optional search-term override is editable inline.
   let searchTermInput = $state<string>(searchTask?.search_term ?? "");
-  let loginUrlInput = $state<string>(
-    searchTask?.job_platform?.login_page_url ?? "",
-  );
-  let isSavingSearchUrl = $state(false);
   let isSavingSearchTerm = $state(false);
-  let isSavingLoginUrl = $state(false);
-  let searchUrlDirty = $derived(
-    isEdit && searchUrlInput.trim() !== (searchTask?.search_url ?? ""),
-  );
   let searchTermDirty = $derived(
     isEdit && searchTermInput.trim() !== (searchTask?.search_term ?? ""),
-  );
-  let loginUrlDirty = $derived(
-    isEdit &&
-      loginUrlInput.trim() !==
-        (searchTask?.job_platform?.login_page_url ?? ""),
   );
 
   let showAdvancedSearch = $state(false);
@@ -411,7 +397,6 @@
 
   // Credentials (edit)
   let editPlatformCredentials = $state(initialPlatformCredentials);
-  let canEditPlatformUrls = $state(initialCanEditPlatformUrls);
   const editInitialCredId = searchTask?.platform_credential_id?.toString() ??
     "none";
   let editSavedCredentialId = $state<string>(editInitialCredId);
@@ -457,19 +442,6 @@
     }
   }
 
-  async function saveSearchUrl() {
-    isSavingSearchUrl = true;
-    try {
-      const url = searchUrlInput.trim() || null;
-      await patchSearchTask({ search_url: url });
-      searchTask.search_url = url;
-    } catch (err) {
-      console.error("Failed to save search URL:", err);
-    } finally {
-      isSavingSearchUrl = false;
-    }
-  }
-
   async function saveSearchTerm() {
     isSavingSearchTerm = true;
     try {
@@ -480,26 +452,6 @@
       console.error("Failed to save search term:", err);
     } finally {
       isSavingSearchTerm = false;
-    }
-  }
-
-  async function saveLoginUrl() {
-    if (!searchTask?.platform_id) return;
-    isSavingLoginUrl = true;
-    try {
-      const url = loginUrlInput.trim() || null;
-      await fetch(`/api/platforms/${searchTask.platform_id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login_page_url: url }),
-      });
-      if (searchTask.job_platform) {
-        searchTask.job_platform.login_page_url = url;
-      }
-    } catch (err) {
-      console.error("Failed to save login URL:", err);
-    } finally {
-      isSavingLoginUrl = false;
     }
   }
 
@@ -746,7 +698,6 @@
   export function resetToData(newData: {
     searchTask: any;
     platformCredentials: any[];
-    canEditPlatformUrls: boolean;
     browserCountryCode: string;
     defaultCountryCode: string;
     browserFingerprint: {
@@ -756,9 +707,7 @@
     browserFingerprintDefaults: { language: string; timezone: string };
     uiPreferences: Record<string, unknown>;
   }) {
-    searchUrlInput = newData.searchTask.search_url ?? "";
     searchTermInput = newData.searchTask.search_term ?? "";
-    loginUrlInput = newData.searchTask.job_platform?.login_page_url ?? "";
     maxJobsEnabled = newData.searchTask.max_jobs != null;
     maxJobsInput = newData.searchTask.max_jobs?.toString() ?? "";
     skipFirstEnabled = newData.searchTask.skip_first != null;
@@ -788,7 +737,6 @@
     defaultBrowserLanguage = newData.browserFingerprintDefaults.language;
     defaultBrowserTimezone = newData.browserFingerprintDefaults.timezone;
     editPlatformCredentials = newData.platformCredentials;
-    canEditPlatformUrls = newData.canEditPlatformUrls;
     const credId = newData.searchTask.platform_credential_id?.toString() ??
       "none";
     editSavedCredentialId = credId;
@@ -824,9 +772,7 @@
   // picks up and makes fields appear dirty. Re-sync all state from props after mount.
   onMount(() => {
     if (isEdit && searchTask) {
-      searchUrlInput = searchTask.search_url ?? "";
       searchTermInput = searchTask.search_term ?? "";
-      loginUrlInput = searchTask.job_platform?.login_page_url ?? "";
       maxJobsEnabled = searchTask.max_jobs != null;
       maxJobsInput = searchTask.max_jobs?.toString() ?? "";
       skipFirstEnabled = searchTask.skip_first != null;
@@ -919,7 +865,9 @@
 {/snippet}
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  <!-- Left column: Search & Credentials -->
+  <!-- Left column: Search, Credentials, Browser Control. Pairs the tallest
+       section (Browser) with the shortest (Auth) so both columns end at
+       roughly the same height on wide screens. -->
   <div class="space-y-4">
     {#if isAdd || searchTask?.platform_id}
       {#if !hideSourceFields}
@@ -1003,48 +951,6 @@
                 />
               </div>
             {/if}
-          {:else}
-            <!-- Edit mode: Search URL -->
-            <div>
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >
-                Search URL
-              </h3>
-              <div class="flex items-center gap-2">
-                <input
-                  type="url"
-                  bind:value={searchUrlInput}
-                  autocomplete="off"
-                  placeholder="https://..."
-                  class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                />
-                {#if searchTask?.search_url}
-                  <a
-                    href={searchTask.search_url}
-                    target="_blank"
-                    rel="noopener"
-                    class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                    title="Open search URL"
-                  >
-                    <FontAwesomeIcon
-                      icon={faExternalLinkAlt}
-                      class="w-3 h-3"
-                    />
-                  </a>
-                {/if}
-              </div>
-              {#if searchUrlDirty}
-                <div class="mt-2">
-                  {@render saveCancel(
-                    true,
-                    isSavingSearchUrl,
-                    saveSearchUrl,
-                    () => (searchUrlInput = searchTask?.search_url ?? ""),
-                  )}
-                </div>
-              {/if}
-            </div>
           {/if}
 
           <!-- Search Term -->
@@ -1133,7 +1039,9 @@
         {/if}
 
         {#if isAdd || (isEdit && sectionOpen.auth)}
-          <!-- Login URL -->
+          <!-- Login URL (add mode only). The edit page intentionally omits
+               this — login_page_url is a platform-level setting and is
+               edited in the platform admin, not per task. -->
           {#if isAdd}
             <div>
               <h3
@@ -1154,64 +1062,6 @@
                 URL of the login page. Used to auto-fill credentials before
                 scraping.
               </p>
-            </div>
-          {:else}
-            <div>
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >
-                Login URL
-              </h3>
-              {#if canEditPlatformUrls}
-                <div class="flex items-center gap-2">
-                  <input
-                    type="url"
-                    bind:value={loginUrlInput}
-                    autocomplete="off"
-                    placeholder="https://..."
-                    class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                  />
-                  {#if searchTask?.job_platform?.login_page_url}
-                    <a
-                      href={searchTask.job_platform.login_page_url}
-                      target="_blank"
-                      rel="noopener"
-                      class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                      title="Open login URL"
-                    >
-                      <FontAwesomeIcon
-                        icon={faExternalLinkAlt}
-                        class="w-3 h-3"
-                      />
-                    </a>
-                  {/if}
-                </div>
-                {#if loginUrlDirty}
-                  <div class="mt-2">
-                    {@render saveCancel(
-                      true,
-                      isSavingLoginUrl,
-                      saveLoginUrl,
-                      () => (loginUrlInput = searchTask?.job_platform?.login_page_url ?? ""),
-                    )}
-                  </div>
-                {/if}
-              {:else if searchTask?.job_platform?.login_page_url}
-                <a
-                  href={searchTask.job_platform.login_page_url}
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                >
-                  {searchTask.job_platform.login_page_url}
-                  <FontAwesomeIcon
-                    icon={faExternalLinkAlt}
-                    class="w-3 h-3 flex-shrink-0"
-                  />
-                </a>
-              {:else}
-                <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
-              {/if}
             </div>
           {/if}
 
@@ -1500,9 +1350,300 @@
         {/if}
       </div>
     {/if}
+
+    <!-- Browser Control -->
+    <hr class="border-[var(--dash-border)] mt-4" />
+    {#if isEdit}
+      {@render sectionToggle("browser", "Browser Control")}
+    {:else}
+      <h3
+        class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+      >
+        Browser Control
+      </h3>
+    {/if}
+
+    {#if isAdd || sectionOpen.browser}
+      <div class="space-y-3">
+        {#if isAdd}
+          <BrowserProviderToggle
+            bind:value={addBrowserProvider}
+            bind:sjsBrowserApiKey={addSjsBrowserApiKey}
+            {localBrowserAllowed}
+            {devices}
+          />
+          <input
+            type="hidden"
+            name="browser_provider"
+            value={addBrowserProvider ?? ""}
+          />
+          <input
+            type="hidden"
+            name="sjsbrowser_api_key"
+            value={addBrowserProvider === "tunnel" && addSjsBrowserApiKey != null
+            ? String(addSjsBrowserApiKey)
+            : ""}
+          />
+        {:else}
+          <BrowserProviderToggle
+            bind:value={browserProvider}
+            bind:sjsBrowserApiKey
+            {localBrowserAllowed}
+            {devices}
+          />
+          {#if browserProviderDirty || sjsBrowserApiKeyDirty}
+            {@render saveCancel(
+              true,
+              isSavingBrowserProvider || isSavingSjsBrowserApiKey,
+              async () => {
+                if (browserProviderDirty) await saveBrowserProvider();
+                if (sjsBrowserApiKeyDirty) await saveSjsBrowserApiKey();
+              },
+              () => {
+                browserProvider = savedBrowserProvider;
+                sjsBrowserApiKey = savedSjsBrowserApiKey;
+              },
+            )}
+          {/if}
+        {/if}
+
+        <!-- Desktop connection status -->
+        {#if isTunnelMode && desktopConnected !== null}
+          <div
+            class="
+              flex items-center gap-2 text-xs {isTunnelMode &&
+              !desktopConnected
+              ? 'text-amber-600'
+              : 'text-[var(--dash-text-secondary)]'}
+            "
+          >
+            <FontAwesomeIcon
+              icon={faDesktop}
+              class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"
+            />
+            {#if preferredDevice}
+              {preferredDevice.apiKeyName}
+              {#if preferredDevice.isShared && preferredDevice.ownerLabel}
+                <span class="text-[var(--dash-text-muted)]">
+                  (shared by {preferredDevice.ownerLabel})
+                </span>
+              {/if}
+            {:else if desktopConnected}
+              Device connected
+            {:else}
+              No device connected — <a
+                href="/jobs/import/devices"
+                class="underline hover:text-amber-700"
+              >Setup guide</a>
+            {/if}
+          </div>
+        {/if}
+
+        <!-- Browser Location (hosted mode) -->
+        {#if isHostedMode}
+          <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
+            <div class="flex items-center gap-2 mb-2">
+              <FontAwesomeIcon
+                icon={faGlobe}
+                class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]"
+              />
+              <h3
+                class="text-xs font-medium text-[var(--dash-text-secondary)]"
+              >
+                Browser Location
+              </h3>
+            </div>
+            {#if isAdd}
+              <div class="flex-1">
+                <CountrySelect
+                  bind:value={addBrowserCountryCode}
+                  fallback={defaultCountryCode}
+                />
+              </div>
+              <input
+                type="hidden"
+                name="browser_country_code"
+                value={addBrowserCountryCode}
+              />
+            {:else}
+              <div class="flex items-center gap-2">
+                <div class="flex-1">
+                  <CountrySelect
+                    bind:value={editBrowserCountryCode}
+                    fallback={defaultCountryCode}
+                  />
+                </div>
+                {#if browserCountryDirty}
+                  <button
+                    type="button"
+                    onclick={saveBrowserCountryCode}
+                    disabled={isSavingBrowserCountry}
+                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {#if isSavingBrowserCountry}
+                      <Spinner size="w-3 h-3" />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => (editBrowserCountryCode = savedBrowserCountryCode)}
+                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                {/if}
+                {#if isSavingBrowserCountry && !browserCountryDirty}
+                  <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+                {/if}
+              </div>
+            {/if}
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+              The country the scraper will appear to browse from. Set this to
+              match your actual location to avoid your account being flagged for
+              logging in from unusual locations.{
+                isEdit ? " If empty, your profile's country is used." : ""
+              }
+            </p>
+
+            <!-- Advanced: browser fingerprint -->
+            {#if isEdit}
+              <button
+                type="button"
+                onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
+                class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+              >
+                {#if showAdvancedBrowser}
+                  <FontAwesomeIcon
+                    icon={faChevronDown}
+                    class="w-2.5 h-2.5"
+                  />
+                {:else}
+                  <FontAwesomeIcon
+                    icon={faChevronRight}
+                    class="w-2.5 h-2.5"
+                  />
+                {/if}
+                Advanced
+              </button>
+
+              {#if showAdvancedBrowser}
+                <div
+                  class="mt-3 pt-3 border-t border-[var(--dash-border)] space-y-3"
+                >
+                  <div>
+                    <label
+                      for="browser_language"
+                      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                    >
+                      Language
+                    </label>
+                    <input
+                      type="text"
+                      id="browser_language"
+                      bind:value={browserLanguage}
+                      autocomplete="off"
+                      placeholder={defaultBrowserLanguage}
+                      class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    />
+                    {#if !browserLanguage}
+                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                        Defaults to <span class="font-mono">{
+                          defaultBrowserLanguage
+                        }</span> based on selected country
+                      </p>
+                    {/if}
+                  </div>
+
+                  <div>
+                    <label
+                      for="browser_timezone"
+                      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                    >
+                      Timezone
+                    </label>
+                    <input
+                      type="text"
+                      id="browser_timezone"
+                      bind:value={browserTimezone}
+                      autocomplete="off"
+                      placeholder={defaultBrowserTimezone}
+                      class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    />
+                    {#if !browserTimezone}
+                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                        Defaults to <span class="font-mono">{
+                          defaultBrowserTimezone
+                        }</span> based on selected country
+                      </p>
+                    {/if}
+                  </div>
+
+                  {#if browserFingerprintDirty}
+                    <div class="flex items-center gap-2 pt-1">
+                      {@render saveCancel(
+                        true,
+                        isSavingBrowserFingerprint,
+                        saveBrowserFingerprint,
+                        resetBrowserFingerprint,
+                      )}
+                    </div>
+                  {/if}
+                  {#if isSavingBrowserFingerprint && !browserFingerprintDirty}
+                    <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+                  {/if}
+                </div>
+              {/if}
+            {/if}
+          </div>
+        {/if}
+
+        <!-- Background mode (desktop tunnel only — Docker/headless always shows tabs) -->
+        {#if isTunnelMode}
+          <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
+            <div class="flex items-center flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAdd ? addKeepMinimized : keepMinimized}
+                  onchange={(e) => {
+                    if (isAdd) {
+                      addKeepMinimized = (e.target as HTMLInputElement).checked;
+                    } else keepMinimized = (e.target as HTMLInputElement).checked;
+                  }}
+                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                />
+                <span class="text-sm text-[var(--dash-text-secondary)]"
+                >Background mode</span>
+              </label>
+              {#if isAdd}
+                <input
+                  type="hidden"
+                  name="keep_minimized"
+                  value={addKeepMinimized ? "true" : "false"}
+                />
+              {:else}
+                {@render saveCancel(
+                  keepMinimizedDirty,
+                  isSavingKeepMinimized,
+                  saveKeepMinimized,
+                  () => (keepMinimized = savedKeepMinimized),
+                )}
+              {/if}
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+              When enabled, Chrome won't steal focus while the scraper runs.
+              Disable to watch tab switches in real-time via the browser view.
+            </p>
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 
-  <!-- Right column: Scraping Options & Browser Control -->
+  <!-- Right column: Scraping Options & Schedule -->
   <div
     class="lg:border-l lg:border-[var(--dash-border)] lg:pl-6 space-y-4"
   >
@@ -1852,297 +1993,6 @@
               schedulePreferredHour = savedSchedulePreferredHour;
             },
           )}
-        {/if}
-      </div>
-    {/if}
-
-    <!-- Browser Control -->
-    <hr class="border-[var(--dash-border)] mt-4" />
-    {#if isEdit}
-      {@render sectionToggle("browser", "Browser Control")}
-    {:else}
-      <h3
-        class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
-      >
-        Browser Control
-      </h3>
-    {/if}
-
-    {#if isAdd || sectionOpen.browser}
-      <div class="space-y-3">
-        {#if isAdd}
-          <BrowserProviderToggle
-            bind:value={addBrowserProvider}
-            bind:sjsBrowserApiKey={addSjsBrowserApiKey}
-            {localBrowserAllowed}
-            {devices}
-          />
-          <input
-            type="hidden"
-            name="browser_provider"
-            value={addBrowserProvider ?? ""}
-          />
-          <input
-            type="hidden"
-            name="sjsbrowser_api_key"
-            value={addBrowserProvider === "tunnel" && addSjsBrowserApiKey != null
-            ? String(addSjsBrowserApiKey)
-            : ""}
-          />
-        {:else}
-          <BrowserProviderToggle
-            bind:value={browserProvider}
-            bind:sjsBrowserApiKey
-            {localBrowserAllowed}
-            {devices}
-          />
-          {#if browserProviderDirty || sjsBrowserApiKeyDirty}
-            {@render saveCancel(
-              true,
-              isSavingBrowserProvider || isSavingSjsBrowserApiKey,
-              async () => {
-                if (browserProviderDirty) await saveBrowserProvider();
-                if (sjsBrowserApiKeyDirty) await saveSjsBrowserApiKey();
-              },
-              () => {
-                browserProvider = savedBrowserProvider;
-                sjsBrowserApiKey = savedSjsBrowserApiKey;
-              },
-            )}
-          {/if}
-        {/if}
-
-        <!-- Desktop connection status -->
-        {#if isTunnelMode && desktopConnected !== null}
-          <div
-            class="
-              flex items-center gap-2 text-xs {isTunnelMode &&
-              !desktopConnected
-              ? 'text-amber-600'
-              : 'text-[var(--dash-text-secondary)]'}
-            "
-          >
-            <FontAwesomeIcon
-              icon={faDesktop}
-              class="w-3 h-3 {desktopConnected ? 'text-green-500' : ''}"
-            />
-            {#if preferredDevice}
-              {preferredDevice.apiKeyName}
-              {#if preferredDevice.isShared && preferredDevice.ownerLabel}
-                <span class="text-[var(--dash-text-muted)]">
-                  (shared by {preferredDevice.ownerLabel})
-                </span>
-              {/if}
-            {:else if desktopConnected}
-              Device connected
-            {:else}
-              No device connected — <a
-                href="/jobs/import/devices"
-                class="underline hover:text-amber-700"
-              >Setup guide</a>
-            {/if}
-          </div>
-        {/if}
-
-        <!-- Browser Location (hosted mode) -->
-        {#if isHostedMode}
-          <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
-            <div class="flex items-center gap-2 mb-2">
-              <FontAwesomeIcon
-                icon={faGlobe}
-                class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]"
-              />
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)]"
-              >
-                Browser Location
-              </h3>
-            </div>
-            {#if isAdd}
-              <div class="flex-1">
-                <CountrySelect
-                  bind:value={addBrowserCountryCode}
-                  fallback={defaultCountryCode}
-                />
-              </div>
-              <input
-                type="hidden"
-                name="browser_country_code"
-                value={addBrowserCountryCode}
-              />
-            {:else}
-              <div class="flex items-center gap-2">
-                <div class="flex-1">
-                  <CountrySelect
-                    bind:value={editBrowserCountryCode}
-                    fallback={defaultCountryCode}
-                  />
-                </div>
-                {#if browserCountryDirty}
-                  <button
-                    type="button"
-                    onclick={saveBrowserCountryCode}
-                    disabled={isSavingBrowserCountry}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingBrowserCountry}
-                      <Spinner size="w-3 h-3" />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => (editBrowserCountryCode = savedBrowserCountryCode)}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                {/if}
-                {#if isSavingBrowserCountry && !browserCountryDirty}
-                  <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-                {/if}
-              </div>
-            {/if}
-            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              The country the scraper will appear to browse from. Set this to
-              match your actual location to avoid your account being flagged for
-              logging in from unusual locations.{
-                isEdit ? " If empty, your profile's country is used." : ""
-              }
-            </p>
-
-            <!-- Advanced: browser fingerprint -->
-            {#if isEdit}
-              <button
-                type="button"
-                onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
-                class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-              >
-                {#if showAdvancedBrowser}
-                  <FontAwesomeIcon
-                    icon={faChevronDown}
-                    class="w-2.5 h-2.5"
-                  />
-                {:else}
-                  <FontAwesomeIcon
-                    icon={faChevronRight}
-                    class="w-2.5 h-2.5"
-                  />
-                {/if}
-                Advanced
-              </button>
-
-              {#if showAdvancedBrowser}
-                <div
-                  class="mt-3 pt-3 border-t border-[var(--dash-border)] space-y-3"
-                >
-                  <div>
-                    <label
-                      for="browser_language"
-                      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      Language
-                    </label>
-                    <input
-                      type="text"
-                      id="browser_language"
-                      bind:value={browserLanguage}
-                      autocomplete="off"
-                      placeholder={defaultBrowserLanguage}
-                      class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                    {#if !browserLanguage}
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                        Defaults to <span class="font-mono">{
-                          defaultBrowserLanguage
-                        }</span> based on selected country
-                      </p>
-                    {/if}
-                  </div>
-
-                  <div>
-                    <label
-                      for="browser_timezone"
-                      class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-                    >
-                      Timezone
-                    </label>
-                    <input
-                      type="text"
-                      id="browser_timezone"
-                      bind:value={browserTimezone}
-                      autocomplete="off"
-                      placeholder={defaultBrowserTimezone}
-                      class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
-                    {#if !browserTimezone}
-                      <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
-                        Defaults to <span class="font-mono">{
-                          defaultBrowserTimezone
-                        }</span> based on selected country
-                      </p>
-                    {/if}
-                  </div>
-
-                  {#if browserFingerprintDirty}
-                    <div class="flex items-center gap-2 pt-1">
-                      {@render saveCancel(
-                        true,
-                        isSavingBrowserFingerprint,
-                        saveBrowserFingerprint,
-                        resetBrowserFingerprint,
-                      )}
-                    </div>
-                  {/if}
-                  {#if isSavingBrowserFingerprint && !browserFingerprintDirty}
-                    <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-                  {/if}
-                </div>
-              {/if}
-            {/if}
-          </div>
-        {/if}
-
-        <!-- Background mode (desktop tunnel only — Docker/headless always shows tabs) -->
-        {#if isTunnelMode}
-          <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
-            <div class="flex items-center flex-wrap gap-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAdd ? addKeepMinimized : keepMinimized}
-                  onchange={(e) => {
-                    if (isAdd) {
-                      addKeepMinimized = (e.target as HTMLInputElement).checked;
-                    } else keepMinimized = (e.target as HTMLInputElement).checked;
-                  }}
-                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                />
-                <span class="text-sm text-[var(--dash-text-secondary)]"
-                >Background mode</span>
-              </label>
-              {#if isAdd}
-                <input
-                  type="hidden"
-                  name="keep_minimized"
-                  value={addKeepMinimized ? "true" : "false"}
-                />
-              {:else}
-                {@render saveCancel(
-                  keepMinimizedDirty,
-                  isSavingKeepMinimized,
-                  saveKeepMinimized,
-                  () => (keepMinimized = savedKeepMinimized),
-                )}
-              {/if}
-            </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              When enabled, Chrome won't steal focus while the scraper runs.
-              Disable to watch tab switches in real-time via the browser view.
-            </p>
-          </div>
         {/if}
       </div>
     {/if}

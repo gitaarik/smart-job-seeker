@@ -2651,22 +2651,59 @@
   <!-- Search source: preset picker that owns search_url + search_term -->
   <Card padding="lg">
     {#key data.searchTask.id}
-      <SourceEditor
-        taskId={searchTask.id}
-        initial={{
-          platform_id: searchTask.platform_id ?? null,
-          search_term: searchTask.search_term ?? null,
-          search_filters: (searchTask.search_filters as Record<
-            string,
-            string | string[]
-          >) ?? {},
-        }}
-        onSaved={(saved) => {
-          searchTask.platform_id = saved.platform_id;
-          searchTask.search_term = saved.search_term;
-          searchTask.search_filters = saved.search_filters;
-        }}
-      />
+      <!-- Two short fields (Jobs URL display + Search keywords input) share
+           the row on wide screens; the wider Filter preferences block sits
+           full-width below. -->
+      {@const jobsUrl = searchTask.search_url
+        || searchTask.job_platform?.search_page_url
+        || null}
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
+        <!-- Read-only display of the URL the scraper will open. Per-task
+             `search_url` (legacy flow) takes precedence over the platform's
+             `search_page_url` (form-fill flow); both are platform-level
+             config edited in admin, not here. -->
+        <div>
+          <h3
+            class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+          >Jobs URL</h3>
+          {#if jobsUrl}
+            <a
+              href={jobsUrl}
+              target="_blank"
+              rel="noopener"
+              class="text-sm text-[var(--dash-primary)] hover:underline break-all inline-flex items-center gap-1"
+            >
+              {jobsUrl}
+              <FontAwesomeIcon
+                icon={faExternalLinkAlt}
+                class="w-3 h-3 flex-shrink-0"
+              />
+            </a>
+          {:else}
+            <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
+          {/if}
+          <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+            Page the scraper opens to find jobs.
+          </p>
+        </div>
+
+        <SourceEditor
+          taskId={searchTask.id}
+          initial={{
+            platform_id: searchTask.platform_id ?? null,
+            search_term: searchTask.search_term ?? null,
+            search_filters: (searchTask.search_filters as Record<
+              string,
+              string | string[]
+            >) ?? {},
+          }}
+          onSaved={(saved) => {
+            searchTask.platform_id = saved.platform_id;
+            searchTask.search_term = saved.search_term;
+            searchTask.search_filters = saved.search_filters;
+          }}
+        />
+      </div>
 
       <div class="mt-6 border-t border-[var(--dash-border)] pt-4">
         <h3 class="text-sm font-medium text-[var(--dash-text)] mb-1">
@@ -2701,7 +2738,6 @@
         searchTaskId={searchTask.id}
         profileId={data.profileId}
         platformCredentials={data.platformCredentials}
-        canEditPlatformUrls={data.canEditPlatformUrls}
         browserCountryCode={data.browserCountryCode}
         defaultCountryCode={data.defaultCountryCode}
         browserFingerprint={data.browserFingerprint}
