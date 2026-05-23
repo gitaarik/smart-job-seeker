@@ -267,8 +267,33 @@ export const OPTION_LABEL_ALIASES: Partial<
   experience_level: {
     entry: ["entry-level", "entry level", "junior", "associate", "internship"],
     mid: ["mid-level", "mid level", "intermediate"],
-    senior: ["senior", "senior-level", "sr."],
-    lead: ["lead", "principal", "staff"],
+    // "Expert" covers Upwork (3-tier scale: Entry / Intermediate / Expert) —
+    // listed last so platforms with a real "Senior" label match it first.
+    senior: ["senior", "senior-level", "sr.", "expert"],
+    // Upwork has no Lead tier; "Expert" is its top tier. Dedup in the apply
+    // pass prevents toggling the same checkbox off when the user requests
+    // both senior+lead.
+    lead: ["lead", "principal", "staff", "expert"],
     executive: ["executive", "director", "vp", "head of"],
   },
+};
+
+/**
+ * Per-platform widget cardinality overrides. Some filters render as
+ * checkbox-style controls but the underlying URL state only holds a single
+ * value — clicking a second option replaces the first instead of adding to
+ * it (Upwork's experience_level / `contractor_tier`: clicking Intermediate
+ * sets `?contractor_tier=2`, then clicking Expert sets `?contractor_tier=3`,
+ * dropping Intermediate). The apply pass uses this map to trim the
+ * requested list to the first value and log a warning, instead of
+ * click-overwriting.
+ *
+ * Keyed by lowercase platform "slug" (first label of the hostname, e.g.
+ * `upwork.com` → `upwork`). Default cardinality is multi (no entry).
+ */
+export const PLATFORM_FILTER_CARDINALITY: Record<
+  string,
+  Partial<Record<SearchFilterName, "single">>
+> = {
+  upwork: { experience_level: "single" },
 };
