@@ -21,6 +21,8 @@
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CredentialSelector from "./CredentialSelector.svelte";
   import BrowserProviderToggle from "./BrowserProviderToggle.svelte";
+  import { autoSaveField } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import { buildHourOptions } from "$lib/format-date";
   import type { TimeFormat } from "$lib/format-date";
 
@@ -90,6 +92,8 @@
      *  page is rendering a SourceEditor that owns those fields, so we
      *  don't show them here to avoid duplication. */
     hideSourceFields?: boolean;
+    /** Staff flag — unlocks the per-action debug screenshots toggle. */
+    isStaff?: boolean;
   }
 
   let {
@@ -123,6 +127,7 @@
     userTimezone = "",
     timeFormat = "12h",
     hideSourceFields = false,
+    isStaff = false,
   }: Props = $props();
 
   const isAdd = mode === "add";
@@ -241,6 +246,7 @@
         options: loadSectionOpen("options"),
         schedule: loadSectionOpen("schedule"),
         browser: loadSectionOpen("browser"),
+        advanced: loadSectionOpen("advanced", false),
       }
       : {
         search: true,
@@ -248,6 +254,7 @@
         options: true,
         schedule: true,
         browser: true,
+        advanced: true,
       },
   );
 
@@ -259,90 +266,225 @@
   }
 
   // ── Edit-mode field state ──
-  // Search URL is shown read-only on the edit page (see template). Only
-  // the optional search-term override is editable inline.
+  // Each editable field on the edit page is wrapped in an `autoSaveField`
+  // helper: it owns the debounced PATCH, the in-flight state, and the undo
+  // window. The UI just binds inputs and renders <AutoSaveIndicator>.
+  //
+  // For toggle+number combos (max_jobs, stop_after_duplicates, skip_first) the
+  // UI still owns two bindable strings/bools; a $effect feeds the computed
+  // value into the helper, which short-circuits when nothing actually changed.
+
+  // Patch helpers — defined up here so the autoSaveField factories can
+  // capture them without forward references.
+  async function patchSearchTask(body: Record<string, unknown>) {
+    const res = await fetch(`/api/import-tasks/${searchTaskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(
+        data.message || data.error || `Save failed (${res.status})`,
+      );
+    }
+  }
+
+  async function patchProfile(body: Record<string, unknown>) {
+    const res = await fetch(`/api/profile/${profileId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(
+        data.message || data.error || `Save failed (${res.status})`,
+      );
+    }
+  }
+
+  // Search term — free text, debounced.
   let searchTermInput = $state<string>(searchTask?.search_term ?? "");
-  let isSavingSearchTerm = $state(false);
-  let searchTermDirty = $derived(
-    isEdit && searchTermInput.trim() !== (searchTask?.search_term ?? ""),
-  );
+  const searchTermField = autoSaveField<string | null>({
+    initial: searchTask?.search_term ?? null,
+    save: (v) => patchSearchTask({ search_term: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.search_term = v;
+      searchTermInput = v ?? "";
+    },
+    equal: (a, b) => (a ?? "") === (b ?? ""),
+    debounceMs: 700,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    const v = searchTermInput.trim() || null;
+    searchTermField.set(v);
+  });
 
   let showAdvancedSearch = $state(false);
 
-  // Scraping options (edit)
+  // Max jobs — toggle + number.
   let maxJobsEnabled = $state<boolean>(searchTask?.max_jobs != null);
   let maxJobsInput = $state<string>(searchTask?.max_jobs?.toString() ?? "");
-  let isSavingMaxJobs = $state(false);
-  let maxJobsDirty = $derived(
-    isEdit &&
-      (maxJobsEnabled ? parseIntOrNull(maxJobsInput) : null) !==
-        (searchTask?.max_jobs ?? null),
-  );
+  const maxJobsField = autoSaveField<number | null>({
+    initial: searchTask?.max_jobs ?? null,
+    save: (v) => patchSearchTask({ max_jobs: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.max_jobs = v;
+      maxJobsEnabled = v != null;
+      maxJobsInput = v?.toString() ?? "";
+    },
+    debounceMs: 400,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    maxJobsField.set(maxJobsEnabled ? parseIntOrNull(maxJobsInput) : null);
+  });
 
+  // Skip existing — boolean toggle.
   let skipExisting = $state<boolean>(searchTask?.skip_existing ?? false);
-  let isSavingSkipExisting = $state(false);
-  let skipExistingDirty = $derived(
-    isEdit && skipExisting !== (searchTask?.skip_existing ?? false),
-  );
+  const skipExistingField = autoSaveField<boolean>({
+    initial: searchTask?.skip_existing ?? false,
+    save: (v) => patchSearchTask({ skip_existing: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.skip_existing = v;
+      skipExisting = v;
+    },
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    skipExistingField.set(skipExisting);
+  });
 
+  // Stop after N duplicates — toggle + number.
   let stopAfterDuplicatesEnabled = $state<boolean>(
     searchTask?.stop_after_duplicates != null,
   );
   let stopAfterDuplicatesInput = $state<string>(
     searchTask?.stop_after_duplicates?.toString() ?? "",
   );
-  let isSavingStopAfterDuplicates = $state(false);
-  let stopAfterDuplicatesDirty = $derived(
-    isEdit &&
-      (stopAfterDuplicatesEnabled
-          ? parseIntOrNull(stopAfterDuplicatesInput)
-          : null) !== (searchTask?.stop_after_duplicates ?? null),
-  );
+  const stopAfterDuplicatesField = autoSaveField<number | null>({
+    initial: searchTask?.stop_after_duplicates ?? null,
+    save: (v) => patchSearchTask({ stop_after_duplicates: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.stop_after_duplicates = v;
+      stopAfterDuplicatesEnabled = v != null;
+      stopAfterDuplicatesInput = v?.toString() ?? "";
+    },
+    debounceMs: 400,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    stopAfterDuplicatesField.set(
+      stopAfterDuplicatesEnabled
+        ? parseIntOrNull(stopAfterDuplicatesInput)
+        : null,
+    );
+  });
 
+  // Skip first N — toggle + number.
   let skipFirstEnabled = $state<boolean>(searchTask?.skip_first != null);
   let skipFirstInput = $state<string>(
     searchTask?.skip_first?.toString() ?? "",
   );
-  let isSavingSkipFirst = $state(false);
-  let skipFirstDirty = $derived(
-    isEdit &&
-      (skipFirstEnabled ? parseIntOrNull(skipFirstInput) : null) !==
-        (searchTask?.skip_first ?? null),
-  );
+  const skipFirstField = autoSaveField<number | null>({
+    initial: searchTask?.skip_first ?? null,
+    save: (v) => patchSearchTask({ skip_first: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.skip_first = v;
+      skipFirstEnabled = v != null;
+      skipFirstInput = v?.toString() ?? "";
+    },
+    debounceMs: 400,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    skipFirstField.set(
+      skipFirstEnabled ? parseIntOrNull(skipFirstInput) : null,
+    );
+  });
 
-  // Browser provider (edit)
+  // Browser provider + tunnel device — saved as one PATCH since switching
+  // provider can cascade a device pick, and we want a single Saved · Undo
+  // pill rather than two racing indicators.
+  type BrowserConfig = {
+    provider: string | null;
+    apiKey: number | null;
+  };
   let browserProvider = $state<string | null>(
     searchTask?.browser_provider ?? null,
   );
-  let savedBrowserProvider = $state<string | null>(
-    searchTask?.browser_provider ?? null,
-  );
-  let browserProviderDirty = $derived(
-    isEdit && browserProvider !== savedBrowserProvider,
-  );
-  let isSavingBrowserProvider = $state(false);
-
-  // Tunnel device selection (edit)
-  let sjsBrowserApiKey = $state<number | null>(searchTask?.sjsbrowser_api_key ?? null);
-  let savedSjsBrowserApiKey = $state<number | null>(
+  let sjsBrowserApiKey = $state<number | null>(
     searchTask?.sjsbrowser_api_key ?? null,
   );
-  let sjsBrowserApiKeyDirty = $derived(
-    isEdit && sjsBrowserApiKey !== savedSjsBrowserApiKey,
-  );
-  let isSavingSjsBrowserApiKey = $state(false);
+  const browserConfigField = autoSaveField<BrowserConfig>({
+    initial: {
+      provider: searchTask?.browser_provider ?? null,
+      apiKey: searchTask?.sjsbrowser_api_key ?? null,
+    },
+    save: (v) =>
+      patchSearchTask({
+        browser_provider: v.provider,
+        sjsbrowser_api_key: v.apiKey,
+      }),
+    onSaved: (v) => {
+      if (searchTask) {
+        searchTask.browser_provider = v.provider;
+        searchTask.sjsbrowser_api_key = v.apiKey;
+      }
+      browserProvider = v.provider;
+      sjsBrowserApiKey = v.apiKey;
+    },
+    equal: (a, b) => a.provider === b.provider && a.apiKey === b.apiKey,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    browserConfigField.set({
+      provider: browserProvider,
+      apiKey: sjsBrowserApiKey,
+    });
+  });
 
-  // Keep minimized (edit)
+  // Keep minimized — boolean toggle.
   let keepMinimized = $state<boolean>(searchTask?.keep_minimized ?? true);
-  let savedKeepMinimized = $state<boolean>(
-    searchTask?.keep_minimized ?? true,
-  );
-  let keepMinimizedDirty = $derived(
-    isEdit && keepMinimized !== savedKeepMinimized,
-  );
-  let isSavingKeepMinimized = $state(false);
+  const keepMinimizedField = autoSaveField<boolean>({
+    initial: searchTask?.keep_minimized ?? true,
+    save: (v) => patchSearchTask({ keep_minimized: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.keep_minimized = v;
+      keepMinimized = v;
+    },
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    keepMinimizedField.set(keepMinimized);
+  });
 
-  // Schedule (edit)
+  // Debug screenshots — boolean toggle (staff-only). PATCH endpoint also
+  // enforces the staff gate server-side, so a non-staff user with a hand-
+  // crafted request still can't enable this.
+  let debugScreenshots = $state<boolean>(
+    Boolean(searchTask?.debug_screenshots),
+  );
+  const debugScreenshotsField = autoSaveField<boolean>({
+    initial: Boolean(searchTask?.debug_screenshots),
+    save: (v) => patchSearchTask({ debug_screenshots: v }),
+    onSaved: (v) => {
+      if (searchTask) searchTask.debug_screenshots = v;
+      debugScreenshots = v;
+    },
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    debugScreenshotsField.set(debugScreenshots);
+  });
+
+  // Schedule — enabled + interval + preferred hour, all in one PATCH.
+  type ScheduleConfig = {
+    intervalHours: number | null;
+    preferredHour: number;
+  };
   let scheduleEnabled = $state<boolean>(
     searchTask?.schedule_interval_hours != null,
   );
@@ -352,50 +494,90 @@
   let schedulePreferredHour = $state<number>(
     searchTask?.schedule_preferred_hour ?? 9,
   );
-  let savedScheduleEnabled = $state<boolean>(
-    searchTask?.schedule_interval_hours != null,
-  );
-  let savedScheduleInterval = $state<string>(
-    searchTask?.schedule_interval_hours?.toString() ?? "24",
-  );
-  let savedSchedulePreferredHour = $state<number>(
-    searchTask?.schedule_preferred_hour ?? 9,
-  );
-  let isSavingSchedule = $state(false);
-  let scheduleDirty = $derived(
-    isEdit && (
-      scheduleEnabled !== savedScheduleEnabled ||
-      (scheduleEnabled && (
-        scheduleIntervalInput !== savedScheduleInterval ||
-        schedulePreferredHour !== savedSchedulePreferredHour
-      ))
-    ),
-  );
+  const scheduleField = autoSaveField<ScheduleConfig>({
+    initial: {
+      intervalHours: searchTask?.schedule_interval_hours ?? null,
+      preferredHour: searchTask?.schedule_preferred_hour ?? 9,
+    },
+    save: (v) =>
+      patchSearchTask({
+        schedule_interval_hours: v.intervalHours,
+        schedule_preferred_hour: v.preferredHour,
+      }),
+    onSaved: (v) => {
+      if (searchTask) {
+        searchTask.schedule_interval_hours = v.intervalHours;
+        searchTask.schedule_preferred_hour = v.preferredHour;
+      }
+      scheduleEnabled = v.intervalHours != null;
+      scheduleIntervalInput = (v.intervalHours ?? 24).toString();
+      schedulePreferredHour = v.preferredHour;
+    },
+    equal: (a, b) =>
+      a.intervalHours === b.intervalHours &&
+      a.preferredHour === b.preferredHour,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    scheduleField.set({
+      intervalHours: scheduleEnabled ? parseInt(scheduleIntervalInput) : null,
+      preferredHour: schedulePreferredHour,
+    });
+  });
 
-  // Browser location (edit)
+  // Browser country (edit) — patches the profile, not the task.
   let editBrowserCountryCode = $state(initialBrowserCountryCode);
-  let savedBrowserCountryCode = $state(initialBrowserCountryCode);
-  let browserCountryDirty = $derived(
-    isEdit && editBrowserCountryCode !== savedBrowserCountryCode,
-  );
-  let isSavingBrowserCountry = $state(false);
+  const browserCountryField = autoSaveField<string>({
+    initial: initialBrowserCountryCode,
+    save: (v) =>
+      patchProfile({ browser_country_code: v.trim().toUpperCase() || null }),
+    onSaved: (v) => {
+      editBrowserCountryCode = v;
+    },
+    equal: (a, b) => a.trim().toUpperCase() === b.trim().toUpperCase(),
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    browserCountryField.set(editBrowserCountryCode);
+  });
 
-  // Browser fingerprint (edit)
+  // Browser fingerprint (edit) — language + timezone, patches the profile.
+  type Fingerprint = { language: string; timezone: string };
   let showAdvancedBrowser = $state(false);
   let browserLanguage = $state(browserFingerprint.language);
-  let savedBrowserLanguage = $state(browserFingerprint.language);
   let browserTimezone = $state(browserFingerprint.timezone);
-  let savedBrowserTimezone = $state(browserFingerprint.timezone);
-  let browserFingerprintDirty = $derived(
-    isEdit &&
-      (browserLanguage !== savedBrowserLanguage ||
-        browserTimezone !== savedBrowserTimezone),
-  );
-  let isSavingBrowserFingerprint = $state(false);
   let defaultBrowserLanguage = browserFingerprintDefaults.language;
   let defaultBrowserTimezone = browserFingerprintDefaults.timezone;
+  const fingerprintField = autoSaveField<Fingerprint>({
+    initial: {
+      language: browserFingerprint.language,
+      timezone: browserFingerprint.timezone,
+    },
+    save: (v) =>
+      patchProfile({
+        browser_language: v.language.trim() || null,
+        browser_timezone: v.timezone.trim() || null,
+      }),
+    onSaved: (v) => {
+      browserLanguage = v.language;
+      browserTimezone = v.timezone;
+    },
+    equal: (a, b) =>
+      a.language.trim() === b.language.trim() &&
+      a.timezone.trim() === b.timezone.trim(),
+    debounceMs: 700,
+  });
+  $effect(() => {
+    if (!isEdit) return;
+    fingerprintField.set({
+      language: browserLanguage,
+      timezone: browserTimezone,
+    });
+  });
 
-  // Credentials (edit)
+  // Credentials (edit) — kept on manual save because picking a shared
+  // credential can cascade a device change that we want to confirm
+  // explicitly, and the combined PATCH surfaces a custom error.
   let editPlatformCredentials = $state(initialPlatformCredentials);
   const editInitialCredId = searchTask?.platform_credential_id?.toString() ??
     "none";
@@ -414,9 +596,11 @@
   );
   let isSavingLoginMode = $state(false);
 
-  // Computed: tunnel mode / hosted mode for conditional sections
+  // Computed: tunnel mode / hosted mode for conditional sections. In edit
+  // mode this tracks the *saved* provider (what's actually live) rather than
+  // the in-flight user pick.
   let effectiveBrowserProvider = $derived(
-    isEdit ? savedBrowserProvider : addBrowserProvider,
+    isEdit ? browserConfigField.saved.provider : addBrowserProvider,
   );
   let isHostedMode = $derived(
     effectiveBrowserProvider === "hosted" ||
@@ -426,192 +610,6 @@
     effectiveBrowserProvider === "tunnel" ||
       (!effectiveBrowserProvider && serverBrowserProvider === "tunnel"),
   );
-
-  // ── Edit-mode save functions ──
-  async function patchSearchTask(body: Record<string, unknown>) {
-    const res = await fetch(`/api/import-tasks/${searchTaskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(
-        data.message || data.error || `Save failed (${res.status})`,
-      );
-    }
-  }
-
-  async function saveSearchTerm() {
-    isSavingSearchTerm = true;
-    try {
-      const term = searchTermInput.trim() || null;
-      await patchSearchTask({ search_term: term });
-      searchTask.search_term = term;
-    } catch (err) {
-      console.error("Failed to save search term:", err);
-    } finally {
-      isSavingSearchTerm = false;
-    }
-  }
-
-  async function saveMaxJobs() {
-    const val = maxJobsEnabled ? parseIntOrNull(maxJobsInput) : null;
-    isSavingMaxJobs = true;
-    try {
-      await patchSearchTask({ max_jobs: val });
-      searchTask.max_jobs = val;
-    } catch (err) {
-      console.error("Failed to save max jobs:", err);
-    } finally {
-      isSavingMaxJobs = false;
-    }
-  }
-
-  async function saveSkipExisting() {
-    isSavingSkipExisting = true;
-    try {
-      await patchSearchTask({ skip_existing: skipExisting });
-      searchTask.skip_existing = skipExisting;
-    } catch (err) {
-      console.error("Failed to save skip existing:", err);
-    } finally {
-      isSavingSkipExisting = false;
-    }
-  }
-
-  async function saveStopAfterDuplicates() {
-    const val = stopAfterDuplicatesEnabled
-      ? parseIntOrNull(stopAfterDuplicatesInput)
-      : null;
-    isSavingStopAfterDuplicates = true;
-    try {
-      await patchSearchTask({ stop_after_duplicates: val });
-      searchTask.stop_after_duplicates = val;
-    } catch (err) {
-      console.error("Failed to save stop after duplicates:", err);
-    } finally {
-      isSavingStopAfterDuplicates = false;
-    }
-  }
-
-  async function saveSkipFirst() {
-    const val = skipFirstEnabled ? parseIntOrNull(skipFirstInput) : null;
-    isSavingSkipFirst = true;
-    try {
-      await patchSearchTask({ skip_first: val });
-      searchTask.skip_first = val;
-    } catch (err) {
-      console.error("Failed to save skip first:", err);
-    } finally {
-      isSavingSkipFirst = false;
-    }
-  }
-
-  async function saveBrowserProvider() {
-    isSavingBrowserProvider = true;
-    try {
-      await patchSearchTask({ browser_provider: browserProvider });
-      savedBrowserProvider = browserProvider;
-      searchTask.browser_provider = browserProvider;
-    } catch (err) {
-      console.error("Failed to save browser provider:", err);
-    } finally {
-      isSavingBrowserProvider = false;
-    }
-  }
-
-  async function saveSjsBrowserApiKey() {
-    isSavingSjsBrowserApiKey = true;
-    try {
-      await patchSearchTask({ sjsbrowser_api_key: sjsBrowserApiKey });
-      savedSjsBrowserApiKey = sjsBrowserApiKey;
-      searchTask.sjsbrowser_api_key = sjsBrowserApiKey;
-    } catch (err) {
-      console.error("Failed to save tunnel device:", err);
-    } finally {
-      isSavingSjsBrowserApiKey = false;
-    }
-  }
-
-  async function saveKeepMinimized() {
-    isSavingKeepMinimized = true;
-    try {
-      await patchSearchTask({ keep_minimized: keepMinimized });
-      savedKeepMinimized = keepMinimized;
-      searchTask.keep_minimized = keepMinimized;
-    } catch (err) {
-      console.error("Failed to save keep minimized:", err);
-    } finally {
-      isSavingKeepMinimized = false;
-    }
-  }
-
-  async function saveSchedule() {
-    isSavingSchedule = true;
-    try {
-      const intervalVal = scheduleEnabled
-        ? parseInt(scheduleIntervalInput)
-        : null;
-      await patchSearchTask({
-        schedule_interval_hours: intervalVal,
-        schedule_preferred_hour: schedulePreferredHour,
-      });
-      searchTask.schedule_interval_hours = intervalVal;
-      searchTask.schedule_preferred_hour = schedulePreferredHour;
-      savedScheduleEnabled = scheduleEnabled;
-      savedScheduleInterval = scheduleIntervalInput;
-      savedSchedulePreferredHour = schedulePreferredHour;
-    } catch (err) {
-      console.error("Failed to save schedule:", err);
-    } finally {
-      isSavingSchedule = false;
-    }
-  }
-
-  async function saveBrowserCountryCode() {
-    isSavingBrowserCountry = true;
-    try {
-      const code = editBrowserCountryCode.trim().toUpperCase() || null;
-      await fetch(`/api/profile/${profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ browser_country_code: code }),
-      });
-      const normalized = code || "";
-      editBrowserCountryCode = normalized;
-      savedBrowserCountryCode = normalized;
-    } catch (err) {
-      console.error("Failed to save browser country code:", err);
-    } finally {
-      isSavingBrowserCountry = false;
-    }
-  }
-
-  async function saveBrowserFingerprint() {
-    isSavingBrowserFingerprint = true;
-    try {
-      await fetch(`/api/profile/${profileId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          browser_language: browserLanguage.trim() || null,
-          browser_timezone: browserTimezone.trim() || null,
-        }),
-      });
-      savedBrowserLanguage = browserLanguage;
-      savedBrowserTimezone = browserTimezone;
-    } catch (err) {
-      console.error("Failed to save browser fingerprint:", err);
-    } finally {
-      isSavingBrowserFingerprint = false;
-    }
-  }
-
-  function resetBrowserFingerprint() {
-    browserLanguage = savedBrowserLanguage;
-    browserTimezone = savedBrowserTimezone;
-  }
 
   let credentialSaveError = $state<string | null>(null);
 
@@ -671,8 +669,14 @@
         editSavedCredentialId = editSelectedCredentialId;
       }
       if (cascadedDeviceId !== undefined) {
+        // The credential PATCH already wrote sjsbrowser_api_key, so just
+        // re-seed the auto-save helper to match the new saved state — no
+        // second PATCH, no stray Saved · Undo pill.
         sjsBrowserApiKey = cascadedDeviceId;
-        savedSjsBrowserApiKey = cascadedDeviceId;
+        browserConfigField.reset({
+          provider: browserConfigField.saved.provider,
+          apiKey: cascadedDeviceId,
+        });
         searchTask.sjsbrowser_api_key = cascadedDeviceId;
       }
     } catch (err) {
@@ -718,25 +722,45 @@
       newData.searchTask.stop_after_duplicates?.toString() ?? "";
     skipExisting = newData.searchTask.skip_existing ?? false;
     browserProvider = newData.searchTask.browser_provider ?? null;
-    savedBrowserProvider = newData.searchTask.browser_provider ?? null;
     keepMinimized = newData.searchTask.keep_minimized ?? true;
-    savedKeepMinimized = newData.searchTask.keep_minimized ?? true;
+    debugScreenshots = Boolean(newData.searchTask.debug_screenshots);
     scheduleEnabled = newData.searchTask.schedule_interval_hours != null;
     scheduleIntervalInput =
       newData.searchTask.schedule_interval_hours?.toString() ?? "24";
     schedulePreferredHour = newData.searchTask.schedule_preferred_hour ?? 9;
-    savedScheduleEnabled = scheduleEnabled;
-    savedScheduleInterval = scheduleIntervalInput;
-    savedSchedulePreferredHour = schedulePreferredHour;
     editBrowserCountryCode = newData.browserCountryCode;
-    savedBrowserCountryCode = newData.browserCountryCode;
     browserLanguage = newData.browserFingerprint.language;
-    savedBrowserLanguage = newData.browserFingerprint.language;
     browserTimezone = newData.browserFingerprint.timezone;
-    savedBrowserTimezone = newData.browserFingerprint.timezone;
     defaultBrowserLanguage = newData.browserFingerprintDefaults.language;
     defaultBrowserTimezone = newData.browserFingerprintDefaults.timezone;
     editPlatformCredentials = newData.platformCredentials;
+
+    // Re-seed the auto-save helpers with the new server-confirmed values so
+    // the $effects that mirror UI → helper see "unchanged" and don't trigger
+    // a save on navigation.
+    searchTermField.reset(newData.searchTask.search_term ?? null);
+    maxJobsField.reset(newData.searchTask.max_jobs ?? null);
+    skipExistingField.reset(newData.searchTask.skip_existing ?? false);
+    stopAfterDuplicatesField.reset(
+      newData.searchTask.stop_after_duplicates ?? null,
+    );
+    skipFirstField.reset(newData.searchTask.skip_first ?? null);
+    browserConfigField.reset({
+      provider: newData.searchTask.browser_provider ?? null,
+      apiKey: newData.searchTask.sjsbrowser_api_key ?? null,
+    });
+    keepMinimizedField.reset(newData.searchTask.keep_minimized ?? true);
+    debugScreenshotsField.reset(Boolean(newData.searchTask.debug_screenshots));
+    scheduleField.reset({
+      intervalHours: newData.searchTask.schedule_interval_hours ?? null,
+      preferredHour: newData.searchTask.schedule_preferred_hour ?? 9,
+    });
+    browserCountryField.reset(newData.browserCountryCode);
+    fingerprintField.reset({
+      language: newData.browserFingerprint.language,
+      timezone: newData.browserFingerprint.timezone,
+    });
+
     const credId = newData.searchTask.platform_credential_id?.toString() ??
       "none";
     editSavedCredentialId = credId;
@@ -764,12 +788,17 @@
         const v = newData.uiPreferences["task_sections_browser"];
         return v === undefined ? true : Boolean(v);
       })(),
+      advanced: (() => {
+        const v = newData.uiPreferences["task_sections_advanced"];
+        return v === undefined ? false : Boolean(v);
+      })(),
     };
   }
 
   // Prevent browser form restoration from causing dirty state on page load/refresh.
-  // Browsers can restore previous input values after Svelte hydration, which bind:value
-  // picks up and makes fields appear dirty. Re-sync all state from props after mount.
+  // Browsers can restore previous input values after Svelte hydration, which
+  // bind:value picks up. Re-sync UI state from props after mount and re-seed
+  // the auto-save helpers so the $effects don't trip a spurious save.
   onMount(() => {
     if (isEdit && searchTask) {
       searchTermInput = searchTask.search_term ?? "";
@@ -782,22 +811,38 @@
         "";
       skipExisting = searchTask.skip_existing ?? false;
       browserProvider = searchTask.browser_provider ?? null;
-      savedBrowserProvider = searchTask.browser_provider ?? null;
+      sjsBrowserApiKey = searchTask.sjsbrowser_api_key ?? null;
       keepMinimized = searchTask.keep_minimized ?? true;
-      savedKeepMinimized = searchTask.keep_minimized ?? true;
+      debugScreenshots = Boolean(searchTask.debug_screenshots);
       scheduleEnabled = searchTask.schedule_interval_hours != null;
       scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ??
         "24";
       schedulePreferredHour = searchTask.schedule_preferred_hour ?? 9;
-      savedScheduleEnabled = scheduleEnabled;
-      savedScheduleInterval = scheduleIntervalInput;
-      savedSchedulePreferredHour = schedulePreferredHour;
       editBrowserCountryCode = initialBrowserCountryCode;
-      savedBrowserCountryCode = initialBrowserCountryCode;
       browserLanguage = browserFingerprint.language;
-      savedBrowserLanguage = browserFingerprint.language;
       browserTimezone = browserFingerprint.timezone;
-      savedBrowserTimezone = browserFingerprint.timezone;
+
+      searchTermField.reset(searchTask.search_term ?? null);
+      maxJobsField.reset(searchTask.max_jobs ?? null);
+      skipExistingField.reset(searchTask.skip_existing ?? false);
+      stopAfterDuplicatesField.reset(searchTask.stop_after_duplicates ?? null);
+      skipFirstField.reset(searchTask.skip_first ?? null);
+      browserConfigField.reset({
+        provider: searchTask.browser_provider ?? null,
+        apiKey: searchTask.sjsbrowser_api_key ?? null,
+      });
+      keepMinimizedField.reset(searchTask.keep_minimized ?? true);
+      debugScreenshotsField.reset(Boolean(searchTask.debug_screenshots));
+      scheduleField.reset({
+        intervalHours: searchTask.schedule_interval_hours ?? null,
+        preferredHour: searchTask.schedule_preferred_hour ?? 9,
+      });
+      browserCountryField.reset(initialBrowserCountryCode);
+      fingerprintField.reset({
+        language: browserFingerprint.language,
+        timezone: browserFingerprint.timezone,
+      });
+
       const credId = searchTask.platform_credential_id?.toString() ?? "none";
       editSavedCredentialId = credId;
       editSelectedCredentialId = credId;
@@ -878,129 +923,95 @@
         {#if isAdd || sectionOpen.search}
           <div class="space-y-3">
             <!-- Search URL -->
-          {#if isAdd}
-            <div>
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >
-                Search URL <span class="text-[var(--dash-error)]">*</span>
-              </h3>
-              <div class="relative">
-                <input
-                  type="url"
-                  name="search_url"
-                  value={searchUrl}
-                  oninput={onsearchurlinput}
-                  placeholder="https://linkedin.com/jobs/search?keywords=frontend..."
-                  required
-                  class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-                />
-                {#if detectingPlatform}
-                  <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Spinner
-                      size="w-4 h-4"
-                      color="var(--dash-text-secondary)"
-                    />
-                  </div>
-                {/if}
-              </div>
-              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                Paste a job search URL from LinkedIn, Indeed, or other job
-                platforms
-              </p>
-            </div>
-
-            <!-- Detected Platform Info -->
-            {#if detectedPlatform}
-              <div
-                class="p-3 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]"
-              >
-                <div class="flex items-center gap-2 text-sm">
-                  <PlatformLogo
-                    platformUrl={detectedPlatform.url}
-                    size="w-5 h-5"
-                  />
-                  {#if detectedPlatform.isNew}
-                    <span class="text-[var(--dash-text)]">New platform: <strong
-                      >{detectedPlatform.name}</strong></span>
-                  {:else}
-                    <span class="text-[var(--dash-text)]"><strong>{
-                        detectedPlatform.name
-                      }</strong></span>
-                  {/if}
-                </div>
-                <input
-                  type="hidden"
-                  name="platform_id"
-                  value={detectedPlatform.id || ""}
-                />
-                <input
-                  type="hidden"
-                  name="platform_url"
-                  value={detectedPlatform.url}
-                />
-                <input
-                  type="hidden"
-                  name="platform_name"
-                  value={detectedPlatform.name}
-                />
-                <input
-                  type="hidden"
-                  name="platform_is_new"
-                  value={detectedPlatform.isNew}
-                />
-              </div>
-            {/if}
-          {/if}
-
-          <!-- Search Term -->
-          {#if isAdd}
-            <div>
-              <h3
-                class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-              >
-                Search Term
-                <span class="font-normal text-[var(--dash-text-muted)]"
-                >(optional)</span>
-              </h3>
-              <input
-                type="text"
-                name="search_term"
-                bind:value={searchTerm}
-                placeholder="e.g., frontend developer amsterdam"
-                class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-              />
-              <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-                For sites that don't support search in the URL. The scraper will
-                type this into the search field.
-              </p>
-            </div>
-          {:else}
-            <!-- Edit: collapsible advanced search term -->
-            <button
-              type="button"
-              onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
-              class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
-            >
-              {#if showAdvancedSearch}
-                <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
-              {:else}
-                <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
-              {/if}
-              Advanced
-            </button>
-
-            {#if showAdvancedSearch}
+            {#if isAdd}
               <div>
                 <h3
                   class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
                 >
-                  Search Term <span class="font-normal">(optional)</span>
+                  Search URL <span class="text-[var(--dash-error)]">*</span>
+                </h3>
+                <div class="relative">
+                  <input
+                    type="url"
+                    name="search_url"
+                    value={searchUrl}
+                    oninput={onsearchurlinput}
+                    placeholder="https://linkedin.com/jobs/search?keywords=frontend..."
+                    required
+                    class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                  />
+                  {#if detectingPlatform}
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Spinner
+                        size="w-4 h-4"
+                        color="var(--dash-text-secondary)"
+                      />
+                    </div>
+                  {/if}
+                </div>
+                <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                  Paste a job search URL from LinkedIn, Indeed, or other job
+                  platforms
+                </p>
+              </div>
+
+              <!-- Detected Platform Info -->
+              {#if detectedPlatform}
+                <div
+                  class="p-3 bg-[var(--dash-bg)] rounded-lg border border-[var(--dash-border)]"
+                >
+                  <div class="flex items-center gap-2 text-sm">
+                    <PlatformLogo
+                      platformUrl={detectedPlatform.url}
+                      size="w-5 h-5"
+                    />
+                    {#if detectedPlatform.isNew}
+                      <span class="text-[var(--dash-text)]">New platform:
+                        <strong>{detectedPlatform.name}</strong></span>
+                    {:else}
+                      <span class="text-[var(--dash-text)]"><strong>{
+                          detectedPlatform.name
+                        }</strong></span>
+                    {/if}
+                  </div>
+                  <input
+                    type="hidden"
+                    name="platform_id"
+                    value={detectedPlatform.id || ""}
+                  />
+                  <input
+                    type="hidden"
+                    name="platform_url"
+                    value={detectedPlatform.url}
+                  />
+                  <input
+                    type="hidden"
+                    name="platform_name"
+                    value={detectedPlatform.name}
+                  />
+                  <input
+                    type="hidden"
+                    name="platform_is_new"
+                    value={detectedPlatform.isNew}
+                  />
+                </div>
+              {/if}
+            {/if}
+
+            <!-- Search Term -->
+            {#if isAdd}
+              <div>
+                <h3
+                  class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                >
+                  Search Term
+                  <span class="font-normal text-[var(--dash-text-muted)]"
+                  >(optional)</span>
                 </h3>
                 <input
                   type="text"
-                  bind:value={searchTermInput}
-                  autocomplete="off"
+                  name="search_term"
+                  bind:value={searchTerm}
                   placeholder="e.g., frontend developer amsterdam"
                   class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                 />
@@ -1008,21 +1019,48 @@
                   For sites that don't support search in the URL. The scraper
                   will type this into the search field.
                 </p>
-                {#if searchTermDirty}
-                  <div class="mt-2">
-                    {@render saveCancel(
-                      true,
-                      isSavingSearchTerm,
-                      saveSearchTerm,
-                      () => (searchTermInput = searchTask?.search_term ??
-                        ""),
-                    )}
-                  </div>
-                {/if}
               </div>
+            {:else}
+              <!-- Edit: collapsible advanced search term -->
+              <button
+                type="button"
+                onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
+                class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+              >
+                {#if showAdvancedSearch}
+                  <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5" />
+                {:else}
+                  <FontAwesomeIcon icon={faChevronRight} class="w-2.5 h-2.5" />
+                {/if}
+                Advanced
+              </button>
+
+              {#if showAdvancedSearch}
+                <div>
+                  <h3
+                    class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+                  >
+                    Search Term <span class="font-normal">(optional)</span>
+                  </h3>
+                  <input
+                    type="text"
+                    bind:value={searchTermInput}
+                    onblur={searchTermField.flush}
+                    autocomplete="off"
+                    placeholder="e.g., frontend developer amsterdam"
+                    class="w-full px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                  />
+                  <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+                    For sites that don't support search in the URL. The scraper
+                    will type this into the search field.
+                  </p>
+                  <div class="mt-2">
+                    <AutoSaveIndicator field={searchTermField} />
+                  </div>
+                </div>
+              {/if}
             {/if}
-          {/if}
-        </div>
+          </div>
         {/if}
       {/if}
 
@@ -1391,20 +1429,9 @@
             {localBrowserAllowed}
             {devices}
           />
-          {#if browserProviderDirty || sjsBrowserApiKeyDirty}
-            {@render saveCancel(
-              true,
-              isSavingBrowserProvider || isSavingSjsBrowserApiKey,
-              async () => {
-                if (browserProviderDirty) await saveBrowserProvider();
-                if (sjsBrowserApiKeyDirty) await saveSjsBrowserApiKey();
-              },
-              () => {
-                browserProvider = savedBrowserProvider;
-                sjsBrowserApiKey = savedSjsBrowserApiKey;
-              },
-            )}
-          {/if}
+          <div class="mt-1 min-h-[1rem]">
+            <AutoSaveIndicator field={browserConfigField} />
+          </div>
         {/if}
 
         <!-- Desktop connection status -->
@@ -1473,31 +1500,7 @@
                     fallback={defaultCountryCode}
                   />
                 </div>
-                {#if browserCountryDirty}
-                  <button
-                    type="button"
-                    onclick={saveBrowserCountryCode}
-                    disabled={isSavingBrowserCountry}
-                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {#if isSavingBrowserCountry}
-                      <Spinner size="w-3 h-3" />
-                    {:else}
-                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                    {/if}
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => (editBrowserCountryCode = savedBrowserCountryCode)}
-                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                {/if}
-                {#if isSavingBrowserCountry && !browserCountryDirty}
-                  <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-                {/if}
+                <AutoSaveIndicator field={browserCountryField} />
               </div>
             {/if}
             <p class="text-xs text-[var(--dash-text-muted)] mt-2">
@@ -1544,6 +1547,7 @@
                       type="text"
                       id="browser_language"
                       bind:value={browserLanguage}
+                      onblur={fingerprintField.flush}
                       autocomplete="off"
                       placeholder={defaultBrowserLanguage}
                       class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
@@ -1568,6 +1572,7 @@
                       type="text"
                       id="browser_timezone"
                       bind:value={browserTimezone}
+                      onblur={fingerprintField.flush}
                       autocomplete="off"
                       placeholder={defaultBrowserTimezone}
                       class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
@@ -1581,62 +1586,12 @@
                     {/if}
                   </div>
 
-                  {#if browserFingerprintDirty}
-                    <div class="flex items-center gap-2 pt-1">
-                      {@render saveCancel(
-                        true,
-                        isSavingBrowserFingerprint,
-                        saveBrowserFingerprint,
-                        resetBrowserFingerprint,
-                      )}
-                    </div>
-                  {/if}
-                  {#if isSavingBrowserFingerprint && !browserFingerprintDirty}
-                    <Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-                  {/if}
+                  <div class="pt-1">
+                    <AutoSaveIndicator field={fingerprintField} />
+                  </div>
                 </div>
               {/if}
             {/if}
-          </div>
-        {/if}
-
-        <!-- Background mode (desktop tunnel only — Docker/headless always shows tabs) -->
-        {#if isTunnelMode}
-          <div class="mt-2 pt-3 border-t border-[var(--dash-border)]">
-            <div class="flex items-center flex-wrap gap-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAdd ? addKeepMinimized : keepMinimized}
-                  onchange={(e) => {
-                    if (isAdd) {
-                      addKeepMinimized = (e.target as HTMLInputElement).checked;
-                    } else keepMinimized = (e.target as HTMLInputElement).checked;
-                  }}
-                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-                />
-                <span class="text-sm text-[var(--dash-text-secondary)]"
-                >Background mode</span>
-              </label>
-              {#if isAdd}
-                <input
-                  type="hidden"
-                  name="keep_minimized"
-                  value={addKeepMinimized ? "true" : "false"}
-                />
-              {:else}
-                {@render saveCancel(
-                  keepMinimizedDirty,
-                  isSavingKeepMinimized,
-                  saveKeepMinimized,
-                  () => (keepMinimized = savedKeepMinimized),
-                )}
-              {/if}
-            </div>
-            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              When enabled, Chrome won't steal focus while the scraper runs.
-              Disable to watch tab switches in real-time via the browser view.
-            </p>
           </div>
         {/if}
       </div>
@@ -1695,19 +1650,12 @@
               min="1"
               placeholder="No limit"
               bind:value={maxJobsInput}
+              onblur={maxJobsField.flush}
               autocomplete="off"
               disabled={!maxJobsEnabled}
               class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
             />
-            {@render saveCancel(
-              maxJobsDirty,
-              isSavingMaxJobs,
-              saveMaxJobs,
-              () => {
-                maxJobsInput = searchTask?.max_jobs?.toString() ?? "";
-                maxJobsEnabled = searchTask?.max_jobs != null;
-              },
-            )}
+            <AutoSaveIndicator field={maxJobsField} />
           {/if}
         </div>
 
@@ -1755,12 +1703,7 @@
               value={addSkipExisting ? "true" : "false"}
             />
           {:else}
-            {@render saveCancel(
-              skipExistingDirty,
-              isSavingSkipExisting,
-              saveSkipExisting,
-              () => (skipExisting = searchTask?.skip_existing ?? false),
-            )}
+            <AutoSaveIndicator field={skipExistingField} />
           {/if}
         </div>
 
@@ -1797,6 +1740,7 @@
               min="1"
               placeholder="Off"
               bind:value={stopAfterDuplicatesInput}
+              onblur={stopAfterDuplicatesField.flush}
               autocomplete="off"
               disabled={!stopAfterDuplicatesEnabled}
               class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
@@ -1807,16 +1751,7 @@
             class:opacity-40={isAdd ? !addStopAfterDuplicatesEnabled : !stopAfterDuplicatesEnabled}
           >duplicates in a row</span>
           {#if isEdit}
-            {@render saveCancel(
-              stopAfterDuplicatesDirty,
-              isSavingStopAfterDuplicates,
-              saveStopAfterDuplicates,
-              () => {
-                stopAfterDuplicatesInput = searchTask?.stop_after_duplicates?.toString() ??
-                  "";
-                stopAfterDuplicatesEnabled = searchTask?.stop_after_duplicates != null;
-              },
-            )}
+            <AutoSaveIndicator field={stopAfterDuplicatesField} />
           {/if}
         </div>
 
@@ -1853,6 +1788,7 @@
               min="1"
               placeholder="Off"
               bind:value={skipFirstInput}
+              onblur={skipFirstField.flush}
               autocomplete="off"
               disabled={!skipFirstEnabled}
               class="w-20 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
@@ -1863,16 +1799,7 @@
             class:opacity-40={isAdd ? !addSkipFirstEnabled : !skipFirstEnabled}
           >jobs</span>
           {#if isEdit}
-            {@render saveCancel(
-              skipFirstDirty,
-              isSavingSkipFirst,
-              saveSkipFirst,
-              () => {
-                skipFirstInput = searchTask?.skip_first?.toString() ??
-                  "";
-                skipFirstEnabled = searchTask?.skip_first != null;
-              },
-            )}
+            <AutoSaveIndicator field={skipFirstField} />
           {/if}
         </div>
       </div>
@@ -1983,18 +1910,82 @@
               </div>
             </div>
           {/if}
-          {@render saveCancel(
-            scheduleDirty,
-            isSavingSchedule,
-            saveSchedule,
-            () => {
-              scheduleEnabled = savedScheduleEnabled;
-              scheduleIntervalInput = savedScheduleInterval;
-              schedulePreferredHour = savedSchedulePreferredHour;
-            },
-          )}
+          <AutoSaveIndicator field={scheduleField} />
         {/if}
       </div>
+    {/if}
+
+    <!-- Advanced (Background mode + staff debug). Only rendered when at least
+         one toggle is applicable to this user/task. -->
+    {#if isTunnelMode || (isEdit && isStaff)}
+      <hr class="border-[var(--dash-border)] mt-4" />
+      {#if isEdit}
+        {@render sectionToggle("advanced", "Advanced")}
+      {:else}
+        <h3
+          class="text-sm font-medium text-[var(--dash-text-muted)] uppercase tracking-wide"
+        >
+          Advanced
+        </h3>
+      {/if}
+
+      {#if isAdd || sectionOpen.advanced}
+        <div class="space-y-3">
+          {#if isTunnelMode}
+            <div class="flex items-center flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAdd ? addKeepMinimized : keepMinimized}
+                  onchange={(e) => {
+                    if (isAdd) {
+                      addKeepMinimized = (e.target as HTMLInputElement).checked;
+                    } else keepMinimized = (e.target as HTMLInputElement).checked;
+                  }}
+                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                />
+                <span class="text-sm text-[var(--dash-text-secondary)]"
+                >Background mode</span>
+              </label>
+              {#if isAdd}
+                <input
+                  type="hidden"
+                  name="keep_minimized"
+                  value={addKeepMinimized ? "true" : "false"}
+                />
+              {:else}
+                <AutoSaveIndicator field={keepMinimizedField} />
+              {/if}
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] -mt-1">
+              When enabled, Chrome won't steal focus while the scraper runs.
+              Disable to watch tab switches in real-time via the browser view.
+            </p>
+          {/if}
+
+          {#if isEdit && isStaff}
+            <div class="flex items-center flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  bind:checked={debugScreenshots}
+                  class="w-4 h-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                />
+                <span class="text-sm text-[var(--dash-text-secondary)]">
+                  Capture a screenshot after every action
+                  <span class="text-[var(--dash-text-muted)]"
+                  >(staff debug)</span>
+                </span>
+              </label>
+              <AutoSaveIndicator field={debugScreenshotsField} />
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] -mt-1">
+              Screenshots show up inline in the run logs. Off by default — extra
+              ~200ms per action and disk usage per run.
+            </p>
+          {/if}
+        </div>
+      {/if}
     {/if}
   </div>
 </div>
