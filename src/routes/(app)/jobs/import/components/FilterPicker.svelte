@@ -31,7 +31,11 @@
   let { filters = $bindable({}), compact = false }: Props = $props();
 
   /** Multi-select intent — checkbox group instead of single dropdown. */
-  const MULTI_SELECT = new Set<SearchFilterName>(["work_location", "job_type"]);
+  const MULTI_SELECT = new Set<SearchFilterName>([
+    "work_location",
+    "job_type",
+    "experience_level",
+  ]);
 
   function getSingle(name: SearchFilterName): string {
     const v = filters[name];
@@ -77,11 +81,19 @@
   }
 </script>
 
-<div class="space-y-3">
+<!-- Non-compact: 2-column grid on wide screens so the short single-select
+     dropdowns pair up; multi-select checkbox rows span both columns since
+     they can have many chips. Compact mode (inline use in the add form's
+     suggestion cards) stays single-column. -->
+<div
+  class={compact
+  ? "space-y-3"
+  : "grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-3"}
+>
   {#each SEARCH_FILTER_NAMES as name (name)}
     {@const def = SEARCH_FILTER_DEFINITIONS[name]}
     {#if MULTI_SELECT.has(name)}
-      <div>
+      <div class={compact ? "" : "lg:col-span-2"}>
         <p
           class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
         >{def.label} <span class="font-normal text-[var(--dash-text-muted)]">(any of)</span></p>

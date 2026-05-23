@@ -19,7 +19,8 @@ export type SearchFilterName =
   | "sort_by"
   | "time_posted"
   | "work_location"
-  | "job_type";
+  | "job_type"
+  | "experience_level";
 
 /** Per-filter configuration carried on `job_platform_search_presets.params`. */
 export type PresetFilterConfig =
@@ -80,6 +81,17 @@ export const SEARCH_FILTER_DEFINITIONS: Record<
       parttime: "Part-time",
       contract: "Contract",
       internship: "Internship",
+    },
+  },
+  experience_level: {
+    label: "Experience level",
+    values: {
+      any: "Any",
+      entry: "Entry-level",
+      mid: "Mid-level",
+      senior: "Senior",
+      lead: "Lead",
+      executive: "Executive",
     },
   },
 };
@@ -149,6 +161,24 @@ export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
     "internship",
     "intern",
   ],
+  experience_level: [
+    "experience level",
+    "experience",
+    "seniority",
+    "seniority level",
+    "career level",
+    "entry-level",
+    "entry level",
+    "junior",
+    "mid-level",
+    "mid level",
+    "senior",
+    "lead",
+    "principal",
+    "staff",
+    "executive",
+    "director",
+  ],
 };
 
 /**
@@ -198,6 +228,12 @@ export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> 
     "work location",
   ],
   job_type: ["job type", "employment type", "type of employment"],
+  experience_level: [
+    "experience level",
+    "seniority",
+    "seniority level",
+    "career level",
+  ],
 };
 
 /**
@@ -227,5 +263,12 @@ export const OPTION_LABEL_ALIASES: Partial<
   sort_by: {
     newest: ["newest", "most recent", "date"],
     relevance: ["relevance", "most relevant"],
+  },
+  experience_level: {
+    entry: ["entry-level", "entry level", "junior", "associate", "internship"],
+    mid: ["mid-level", "mid level", "intermediate"],
+    senior: ["senior", "senior-level", "sr."],
+    lead: ["lead", "principal", "staff"],
+    executive: ["executive", "director", "vp", "head of"],
   },
 };
