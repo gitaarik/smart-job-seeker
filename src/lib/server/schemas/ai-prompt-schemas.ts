@@ -370,11 +370,13 @@ export const reviewLetterSchema = z.object({
 /**
  * Schema for suggest_import_tasks prompt
  *
- * The LLM returns ONE entry per suggestable platform, ranked high→low. It
- * picks keywords, ranks fit, and writes a short note. Filters are NOT in
- * scope for the LLM — the server computes them deterministically from the
- * user's preferences (see preferences-to-filters.ts) and merges them in
- * after this response is parsed.
+ * The LLM returns ONE entry per suggestable platform, ranked high→low,
+ * SKIPPING any (platform, keywords) combination that already exists as a
+ * task. It picks keywords, ranks fit, and writes a short note. Filters are
+ * NOT in scope for the LLM — the server computes them deterministically
+ * from the user's preferences (see preferences-to-filters.ts) and merges
+ * them in after this response is parsed. The array can be empty when every
+ * suggestable platform is already covered by an existing task.
  */
 export const suggestImportTasksSchema = z.object({
   tasks: z.array(z.object({
@@ -390,7 +392,7 @@ export const suggestImportTasksSchema = z.object({
     relevance: z.enum(["high", "medium", "low"]).describe(
       "How well this platform matches the profile.",
     ),
-  })).min(1),
+  })),
 });
 
 /**

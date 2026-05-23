@@ -10,9 +10,11 @@ function makeSuggestion(overrides: Partial<Suggestion> = {}): Suggestion {
     platform_id: 16,
     platform: "linkedin",
     platform_name: "LinkedIn",
+    platform_url: "https://www.linkedin.com/jobs/",
     keywords: "developer",
     note: "Default note",
     relevance: "high",
+    filters: {},
     ...overrides,
   };
 }

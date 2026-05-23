@@ -1,11 +1,21 @@
 <script lang="ts" module>
+  import type { SearchFilterValue } from "$lib/job-platforms/search-filters";
+
   export type Suggestion = {
     platform_id: number;
     platform: string;
     platform_name: string;
+    /** URL the scraper will navigate to — `search_page_url` if set, else the
+     *  platform's home `url`. Shown on the card so the user knows what site
+     *  the import will hit. */
+    platform_url: string;
     keywords: string | null;
     note: string;
     relevance: "high" | "medium" | "low";
+    /** User-editable filter preferences for this suggestion. Mutated in
+     *  place by the embedded FilterPicker; serialized to JSON when the
+     *  suggestion is accepted. */
+    filters: Record<string, SearchFilterValue>;
     /** Stable per-row key — the LLM may return multiple suggestions sharing
      * the same platform_id, so platform_id alone is not unique. */
     _key: number;
@@ -20,11 +30,15 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowUpRightFromSquare,
     faCheck,
+    faChevronDown,
+    faChevronRight,
     faMagicWandSparkles,
     faPlus,
   } from "@fortawesome/free-solid-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
+  import FilterPicker from "./FilterPicker.svelte";
 
   let {
     suggestions,
@@ -37,6 +51,30 @@
     onDismiss: (s: Suggestion) => void;
     onClearAll: () => void;
   } = $props();
+
+  /** Per-card "show filter preferences" toggle. Keyed by suggestion._key so
+   *  it survives rerenders without leaking into the parent's state. */
+  let expandedFilters = $state<Record<number, boolean>>({});
+
+  function displayUrl(url: string): string {
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, "");
+      const path = u.pathname === "/" ? "" : u.pathname;
+      return `${host}${path}`;
+    } catch {
+      return url;
+    }
+  }
+
+  function countActiveFilters(filters: Record<string, SearchFilterValue>): number {
+    let n = 0;
+    for (const v of Object.values(filters)) {
+      if (typeof v === "string" && v.length > 0) n += 1;
+      else if (Array.isArray(v) && v.length > 0) n += 1;
+    }
+    return n;
+  }
 </script>
 
 {#if suggestions.length > 0}
@@ -61,37 +99,50 @@
     </div>
 
     {#each suggestions as suggestion (suggestion._key)}
+      {@const isExpanded = expandedFilters[suggestion._key] ?? false}
+      {@const activeFilterCount = countActiveFilters(suggestion.filters)}
       <div
         class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {suggestion.accepted
           ? 'opacity-60'
           : ''}"
       >
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
+        <!-- Header: platform name + relevance + URL link -->
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span
+              class="font-medium text-[var(--dash-text)]"
+            >{suggestion.platform_name}</span>
+            {#if suggestion.relevance === "high"}
               <span
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--dash-bg)] text-[var(--dash-text)]"
-              >
-                {suggestion.platform_name}
-              </span>
-              {#if suggestion.relevance === "high"}
-                <span
-                  class="text-xs text-green-600 dark:text-green-400 font-medium"
-                >Strong match</span>
-              {:else if suggestion.relevance === "medium"}
-                <span
-                  class="text-xs text-amber-600 dark:text-amber-400 font-medium"
-                >Decent match</span>
-              {:else}
-                <span
-                  class="text-xs text-[var(--dash-text-muted)]"
-                >Generic</span>
-              {/if}
-            </div>
-            <p
-              class="text-sm text-[var(--dash-text-secondary)] mt-1"
-            >{suggestion.note}</p>
+                class="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 font-medium"
+              >Strong match</span>
+            {:else if suggestion.relevance === "medium"}
+              <span
+                class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium"
+              >Decent match</span>
+            {:else}
+              <span
+                class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+              >Generic</span>
+            {/if}
           </div>
+          <a
+            href={suggestion.platform_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] hover:underline"
+            onclick={(e) => e.stopPropagation()}
+            title={suggestion.platform_url}
+          >
+            <FontAwesomeIcon
+              icon={faArrowUpRightFromSquare}
+              class="w-2.5 h-2.5"
+            />
+            {displayUrl(suggestion.platform_url)}
+          </a>
+          <p
+            class="text-sm text-[var(--dash-text-secondary)]"
+          >{suggestion.note}</p>
         </div>
 
         {#if suggestion.keywords !== null}
@@ -109,6 +160,38 @@
             />
           </div>
         {/if}
+
+        <!-- Collapsible filter preferences -->
+        <div>
+          <button
+            type="button"
+            onclick={() => {
+              expandedFilters[suggestion._key] = !isExpanded;
+            }}
+            disabled={suggestion.accepted || suggestion.submitting}
+            class="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] disabled:opacity-60"
+          >
+            <FontAwesomeIcon
+              icon={isExpanded ? faChevronDown : faChevronRight}
+              class="w-2.5 h-2.5"
+            />
+            Filter preferences
+            {#if activeFilterCount > 0}
+              <span
+                class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]"
+              >{activeFilterCount} set</span>
+            {:else}
+              <span
+                class="ml-1 text-[var(--dash-text-muted)] font-normal"
+              >(none set — scraper uses defaults)</span>
+            {/if}
+          </button>
+          {#if isExpanded}
+            <div class="mt-2 pl-4 border-l-2 border-[var(--dash-border)]">
+              <FilterPicker bind:filters={suggestion.filters} compact={true} />
+            </div>
+          {/if}
+        </div>
 
         <div class="flex justify-end gap-2">
           {#if suggestion.accepted}

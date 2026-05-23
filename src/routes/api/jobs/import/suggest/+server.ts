@@ -2,12 +2,18 @@
  * POST /api/jobs/import/suggest
  *
  * Asks the LLM to rank every suggestable job platform for the user's
- * profile and pre-fill a per-platform task draft (keywords + filters drawn
- * from the user's match preferences). The scraper drives each platform's
- * search form at run time, silently drops filters the form doesn't expose,
- * and records misses to `job_platforms.unsupported_filters` so future
- * suggestions can soft-deprioritize platforms that don't honor the user's
- * preferred filters.
+ * profile and pre-fill a per-platform task draft. The LLM's scope is
+ * narrow: keywords + ranking + a short note. Filters are computed
+ * deterministically from the user's match_config preferences (see
+ * preferences-to-filters.ts) — that translation is a pure taxonomy lookup
+ * and was previously being done by the LLM, which leaked filter values
+ * like "senior" into the keyword string.
+ *
+ * The scraper drives each platform's search form at run time, silently
+ * drops filters the form doesn't expose, and records misses to
+ * `job_platforms.unsupported_filters`. We feed that list back in here both
+ * to strip already-known-unsupported pairs before they reach the prompt
+ * and to surface the overlap so the LLM can downgrade relevance.
  *
  * Returns task drafts the client form can save: platform_id, platform name
  * (for display), keywords, note, relevance, filters. The user can edit any
@@ -17,7 +23,11 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { and, asc, eq, isNotNull } from "drizzle-orm";
-import { job_platforms, match_config } from "$lib/server/db/schema";
+import {
+  job_platforms,
+  match_config,
+  search_tasks,
+} from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../../(app)/profile/utils";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
@@ -27,6 +37,11 @@ import {
   type SearchFilterName,
   type SearchFilterValue,
 } from "$lib/job-platforms/search-filters";
+import {
+  preferencesToFilters,
+  stripUnsupportedFilters,
+  unsupportedOverlap,
+} from "$lib/job-platforms/preferences-to-filters";
 
 type SuggestablePlatform = {
   id: number;
@@ -43,6 +58,12 @@ type PreferenceConfig = {
   work_location: string[];
   locations: string[];
   remote_only: boolean | null;
+};
+
+type PlatformFilterPlan = {
+  platform: SuggestablePlatform;
+  filters: Record<string, SearchFilterValue>;
+  overlap: Record<string, string[]>;
 };
 
 async function fetchSuggestablePlatforms(): Promise<SuggestablePlatform[]> {
@@ -67,7 +88,58 @@ async function fetchSuggestablePlatforms(): Promise<SuggestablePlatform[]> {
     .orderBy(asc(job_platforms.id));
 }
 
-async function fetchPreferences(profileId: number): Promise<PreferenceConfig | null> {
+type ExistingTask = {
+  platform_id: number | null;
+  platform_name: string | null;
+  search_term: string | null;
+  note: string | null;
+};
+
+async function fetchExistingTasks(profileId: number): Promise<ExistingTask[]> {
+  // All tasks for this profile, with platform name for the prompt. The LLM
+  // uses (platform_id, search_term) to detect near-duplicates; the note is
+  // included for context only.
+  const rows = await db.query.search_tasks.findMany({
+    where: eq(search_tasks.profile_id, profileId),
+    columns: {
+      platform_id: true,
+      search_term: true,
+      note: true,
+    },
+    with: {
+      job_platform: { columns: { name: true } },
+    },
+  });
+  return rows.map((r) => ({
+    platform_id: r.platform_id,
+    platform_name: r.job_platform?.name ?? null,
+    search_term: r.search_term,
+    note: r.note,
+  }));
+}
+
+function renderExistingTasksForPrompt(tasks: ExistingTask[]): string {
+  if (tasks.length === 0) {
+    return "(none — the user has no import tasks yet, so no duplicates to avoid)";
+  }
+  const lines: string[] = [];
+  for (const t of tasks) {
+    if (t.platform_id === null) continue;
+    const name = t.platform_name ?? "(unknown platform)";
+    const kw = t.search_term ? `"${t.search_term}"` : "(no keywords)";
+    const note = t.note ? ` — note: "${t.note}"` : "";
+    lines.push(
+      `- platform_id=${t.platform_id} "${name}": keywords=${kw}${note}`,
+    );
+  }
+  return lines.length > 0
+    ? lines.join("\n")
+    : "(none — the user has no import tasks yet, so no duplicates to avoid)";
+}
+
+async function fetchPreferences(
+  profileId: number,
+): Promise<PreferenceConfig | null> {
   const row = await db.query.match_config.findFirst({
     where: eq(match_config.profile_id, profileId),
     columns: {
@@ -88,81 +160,100 @@ async function fetchPreferences(profileId: number): Promise<PreferenceConfig | n
   };
 }
 
-function renderPreferencesForPrompt(p: PreferenceConfig | null): string {
-  if (!p) return "(no preferences set yet)";
-  const lines: string[] = [];
-  if (p.job_types.length > 0) lines.push(`- job_types: ${p.job_types.join(", ")}`);
-  if (p.experience_levels.length > 0) {
-    lines.push(`- experience_levels: ${p.experience_levels.join(", ")}`);
-  }
-  if (p.work_location.length > 0) {
-    lines.push(`- work_location: ${p.work_location.join(", ")}`);
-  }
-  if (p.locations.length > 0) lines.push(`- locations: ${p.locations.join(", ")}`);
-  if (p.remote_only !== null) lines.push(`- remote_only: ${p.remote_only}`);
-  if (lines.length === 0) return "(no preferences set yet)";
-  return lines.join("\n");
+/**
+ * For each platform, compute the canonical filter set the scraper will
+ * apply (user preferences minus that platform's known-unsupported pairs)
+ * and record the overlap that got dropped. The overlap is what the prompt
+ * surfaces so the LLM can penalize relevance.
+ */
+function planFiltersPerPlatform(
+  platforms: SuggestablePlatform[],
+  preferences: PreferenceConfig | null,
+): PlatformFilterPlan[] {
+  const userFilters = preferences ? preferencesToFilters(preferences) : {};
+  return platforms.map((platform) => ({
+    platform,
+    filters: stripUnsupportedFilters(userFilters, platform.unsupported_filters),
+    overlap: unsupportedOverlap(userFilters, platform.unsupported_filters),
+  }));
 }
 
-function renderPlatformsForPrompt(rows: SuggestablePlatform[]): string {
+function renderFilters(filters: Record<string, SearchFilterValue>): string {
+  const entries = Object.entries(filters);
+  if (entries.length === 0) return "(none — no matching preferences)";
+  return entries
+    .map(([name, value]) => {
+      const values = Array.isArray(value) ? value : [value];
+      return `${name}: [${values.join(", ")}]`;
+    })
+    .join("; ");
+}
+
+function renderOverlap(overlap: Record<string, string[]>): string | null {
+  const entries = Object.entries(overlap);
+  if (entries.length === 0) return null;
+  return entries.map(([name, values]) => `${name}: [${values.join(", ")}]`)
+    .join("; ");
+}
+
+function renderPlatformsForPrompt(plans: PlatformFilterPlan[]): string {
   const lines: string[] = [];
-  for (const p of rows) {
-    lines.push(`- platform_id=${p.id}: "${p.name}" (key=${p.key})`);
-    const unsupportedLines = renderUnsupportedFilters(p.unsupported_filters);
-    if (unsupportedLines.length > 0) {
-      lines.push("  Known-unsupported filters (deprioritize when these overlap the user's preferences):");
-      for (const ul of unsupportedLines) lines.push(`    ${ul}`);
+  for (const plan of plans) {
+    const { platform } = plan;
+    lines.push(
+      `- platform_id=${platform.id}: "${platform.name}" (key=${platform.key})`,
+    );
+    lines.push(
+      `    Filters applied by scraper: ${renderFilters(plan.filters)}`,
+    );
+    const overlap = renderOverlap(plan.overlap);
+    if (overlap) {
+      lines.push(`    Unsupported overlap (penalize relevance): ${overlap}`);
     }
   }
   return lines.join("\n");
 }
 
-function renderUnsupportedFilters(unsupported: Record<string, string[]>): string[] {
-  const out: string[] = [];
-  for (const [name, keys] of Object.entries(unsupported)) {
-    if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
-    const def = SEARCH_FILTER_DEFINITIONS[name as SearchFilterName];
-    const validKeys = keys.filter((k) => k in def.values);
-    if (validKeys.length === 0) continue;
-    out.push(`${name}: [${validKeys.join(", ")}]`);
-  }
-  return out;
-}
-
-function renderFilterTaxonomy(): string {
-  const lines: string[] = [];
-  for (
-    const [name, def] of Object.entries(SEARCH_FILTER_DEFINITIONS) as Array<
-      [SearchFilterName, typeof SEARCH_FILTER_DEFINITIONS[SearchFilterName]]
-    >
-  ) {
-    const valueKeys = Object.keys(def.values).filter((k) =>
-      k !== Object.keys(def.values)[0]
-    );
-    lines.push(`- ${name}: [${valueKeys.join(", ")}]`);
-  }
-  return lines.join("\n");
-}
-
 /**
- * Validate the LLM's filters output against the canonical taxonomy. Drops
- * unknown filter names and unknown value_keys defensively, but does NOT
- * gate on per-platform support — the scraper handles missing filters at
- * runtime and feeds unsupported_filters back to future suggestions.
+ * Light sanity check on the LLM's keyword string: drop any token that's a
+ * label or value_key for a filter we've already applied. This is the last
+ * line of defense against the senior-in-keywords class of leak — the
+ * prompt tells the model not to do it, this enforces it.
+ *
+ * Token matching is whole-word, case-insensitive. Removes the token and
+ * trims excess whitespace; if everything gets stripped, returns null.
  */
-function validateFilters(
-  raw: Record<string, string[]> | undefined,
-): Record<string, SearchFilterValue> {
-  if (!raw) return {};
-  const out: Record<string, SearchFilterValue> = {};
-  for (const [name, values] of Object.entries(raw)) {
+function scrubKeywords(
+  keywords: string | null,
+  appliedFilters: Record<string, SearchFilterValue>,
+): string | null {
+  if (keywords === null) return null;
+  const banned = collectBannedTokens(appliedFilters);
+  if (banned.size === 0) return keywords;
+  const scrubbed = keywords
+    .split(/(\s+)/)
+    .map((part) => (banned.has(part.trim().toLowerCase()) ? "" : part))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  return scrubbed.length > 0 ? scrubbed : null;
+}
+
+function collectBannedTokens(
+  filters: Record<string, SearchFilterValue>,
+): Set<string> {
+  const banned = new Set<string>();
+  for (const [name, value] of Object.entries(filters)) {
     if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
     const def = SEARCH_FILTER_DEFINITIONS[name as SearchFilterName];
-    const kept = values.filter((v) => v in def.values);
-    if (kept.length === 0) continue;
-    out[name] = kept;
+    const values = Array.isArray(value) ? value : [value];
+    for (const valueKey of values) {
+      banned.add(valueKey.toLowerCase());
+      const label = def.values[valueKey];
+      if (label) banned.add(label.toLowerCase());
+    }
   }
-  return out;
+  return banned;
 }
 
 export const POST: RequestHandler = async ({ cookies, locals }) => {
@@ -176,9 +267,10 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
-  const [platforms, preferences] = await Promise.all([
+  const [platforms, preferences, existingTasks] = await Promise.all([
     fetchSuggestablePlatforms(),
     fetchPreferences(profileId),
+    fetchExistingTasks(profileId),
   ]);
   if (platforms.length === 0) {
     return json(
@@ -187,18 +279,17 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
-  const platformsList = renderPlatformsForPrompt(platforms);
-  const preferencesList = renderPreferencesForPrompt(preferences);
-  const filterTaxonomy = renderFilterTaxonomy();
-  const validPlatformIds = new Set(platforms.map((p) => p.id));
+  const plans = planFiltersPerPlatform(platforms, preferences);
+  const platformsList = renderPlatformsForPrompt(plans);
+  const existingTasksList = renderExistingTasksForPrompt(existingTasks);
+  const planById = new Map(plans.map((p) => [p.platform.id, p]));
 
   const result = await createAndGenerateAiChat(
     profileId,
     "suggest_import_tasks",
     {
       platforms_list: platformsList,
-      preferences: preferencesList,
-      filter_taxonomy: filterTaxonomy,
+      existing_tasks_list: existingTasksList,
     },
     undefined,
     {
@@ -222,7 +313,10 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
 
   if (!result.success || !result.aiChat?.response) {
     return json(
-      { success: false, message: result.message || "Failed to generate suggestions" },
+      {
+        success: false,
+        message: result.message || "Failed to generate suggestions",
+      },
       { status: 422 },
     );
   }
@@ -245,9 +339,9 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
     );
   }
 
-  // Drop any suggestion referencing an unknown platform_id. Defensive: the
-  // schema only validates shape, not membership, and the LLM occasionally
-  // hallucinates IDs.
+  // Merge the LLM's keywords/note/relevance with the server-computed
+  // filters. Drop any suggestion referencing an unknown platform_id —
+  // defensive against schema-shape-valid but ID-hallucinating responses.
   const tasks: Array<{
     platform_id: number;
     platform: string;
@@ -260,38 +354,40 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
   }> = [];
   const droppedIds: number[] = [];
   for (const task of validated.data.tasks) {
-    if (!validPlatformIds.has(task.platform_id)) {
+    const plan = planById.get(task.platform_id);
+    if (!plan) {
       droppedIds.push(task.platform_id);
       continue;
     }
-    const platform = platforms.find((p) => p.id === task.platform_id)!;
     tasks.push({
-      platform_id: platform.id,
-      platform: platform.key,
-      platform_name: platform.name,
+      platform_id: plan.platform.id,
+      platform: plan.platform.key,
+      platform_name: plan.platform.name,
       // Prefer the scraper's actual entry URL; fall back to the platform
       // home if no search-page URL is configured.
-      platform_url: platform.search_page_url ?? platform.url,
-      keywords: task.keywords,
+      platform_url: plan.platform.search_page_url ?? plan.platform.url,
+      keywords: scrubKeywords(task.keywords, plan.filters),
       note: task.note,
       relevance: task.relevance,
-      filters: validateFilters(task.filters),
+      filters: plan.filters,
     });
   }
   if (droppedIds.length > 0) {
     console.warn(
       `[suggest_import_tasks] Dropped ${droppedIds.length} task(s) ` +
         `referencing invalid platform_ids: [${droppedIds.join(", ")}]. ` +
-        `Valid IDs offered: [${[...validPlatformIds].join(", ")}].`,
+        `Valid IDs offered: [${[...planById.keys()].join(", ")}].`,
     );
   }
 
-  if (tasks.length === 0) {
-    return json(
-      { success: false, message: "AI returned no usable suggestions" },
-      { status: 502 },
-    );
-  }
+  // Empty tasks is a valid outcome now that the LLM skips near-duplicates of
+  // existing tasks. Distinguish "covered everything" from "fresh slate but
+  // model returned nothing" so the client can show appropriate copy.
+  const message = tasks.length === 0
+    ? (existingTasks.length > 0
+      ? "Your existing tasks already cover the suggestable platforms — no new ideas right now."
+      : "AI returned no usable suggestions")
+    : undefined;
 
-  return json({ success: true, tasks });
+  return json({ success: true, tasks, message });
 };

@@ -939,7 +939,7 @@ In your feedback:
 
   "suggest_import_tasks": {
     system_prompt:
-      `You are an assistant helping a job seeker get started on the Smart Job Seeker platform. You will pre-fill an "import task" — an automated scrape that drives a platform's own search UI — for every available platform, ranked by how well each fits the user's profile.
+      `You are an assistant helping a job seeker on the Smart Job Seeker platform. You will pre-fill "import tasks" — automated scrapes that drive each platform's own search UI — ranked by how well each fits the user's profile, while skipping anything the user has already set up.
 
 Your scope is narrow: pick the search keywords, rank platforms by fit, and write a short note. Filters (work_location, job_type, experience_level, …) are pre-computed from the user's preferences and listed per platform below — DO NOT emit them yourself, and do not repeat their values in the keyword string.
 
@@ -949,7 +949,7 @@ Your scope is narrow: pick the search keywords, rank platforms by fit, and write
 
 ## Available platforms
 
-The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, applies the pre-computed filters shown below, and submits. You do NOT construct URLs — just emit one task per platform.
+The scraper handles each platform's search form at run time: it logs in, opens the platform's search page, types the keywords you provide, applies the pre-computed filters shown below, and submits. You do NOT construct URLs — just emit one task per platform you choose to suggest.
 
 Each platform entry shows:
   - the filters the scraper will apply on that platform (translated from the user's preferences, minus anything the platform has previously failed to apply)
@@ -957,9 +957,19 @@ Each platform entry shows:
 
 \${platforms_list}
 
+## Existing import tasks (avoid duplicates)
+
+These tasks already exist for this user. Do NOT propose a near-duplicate.
+
+\${existing_tasks_list}
+
+A near-duplicate means same platform_id AND keywords that cover roughly the same role — e.g. existing "react developer" vs proposed "react engineer" on the same platform IS a duplicate; existing "react developer" vs proposed "python backend" on the same platform is NOT (different role, both worth running).
+
+When in doubt, skip — the user can always trigger another round of suggestions later.
+
 ## Guidelines
 
-Output one task per platform listed above (no more, no less). Rank them high→low by fit. Within the response array, order entries by relevance (high first, then medium, then low).
+Output one task per platform you want to suggest, skipping any platform where a near-duplicate already exists. Rank entries high→low by fit (high first, then medium, then low). If every suggestable platform is already covered, return an empty "tasks" array.
 
 Keywords:
 - "keywords" is the plain (un-URL-encoded) string the scraper will type into the platform's search input. Choose 1–3 terms drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Pick what a recruiter would actually search for — don't dump every skill.
@@ -974,11 +984,11 @@ Relevance:
 
 Notes:
 - "note" is a short task label the user sees in their task list. Set it to the role/title the search is for (e.g. "Full-Stack Developer", "Senior Python Engineer") — drawn from the profile's title/headline. ≤ 60 chars. No explanation, no platform name, no filter commentary; the relevance field already conveys fit.
-- DO NOT invent platform IDs. Every platform_id in your response MUST appear in the list above. Emit exactly one task per platform.
+- DO NOT invent platform IDs. Every platform_id in your response MUST appear in the "Available platforms" list above.
 
 ## Output format
 
-Return JSON with this exact shape (the wrapping key MUST be "tasks"):
+Return JSON with this exact shape (the wrapping key MUST be "tasks"). The array may be empty when there are no novel suggestions left:
 
 {
   "tasks": [
@@ -997,6 +1007,6 @@ Return JSON with this exact shape (the wrapping key MUST be "tasks"):
   ]
 }`,
     user_prompt:
-      `Emit one import-task draft per platform listed above, ranked high→low by fit. Pick keywords from the role/stack only — never repeat values already covered by the pre-applied filters shown for each platform.`,
+      `Emit one import-task draft per platform you want to suggest, ranked high→low by fit. Skip platforms where a near-duplicate task already exists. Pick keywords from the role/stack only — never repeat values already covered by the pre-applied filters shown for each platform.`,
   },
 };

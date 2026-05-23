@@ -316,10 +316,15 @@
   let suggestions = $state<Suggestion[] | null>(null);
   let loadingSuggestions = $state(false);
   let suggestionsError = $state<string | null>(null);
+  // Non-error status message — e.g. "every platform already has a task".
+  // Separate from suggestionsError so we can render it neutrally instead of
+  // in the red error styling.
+  let suggestionsInfo = $state<string | null>(null);
 
   async function getSuggestions() {
     loadingSuggestions = true;
     suggestionsError = null;
+    suggestionsInfo = null;
     try {
       const res = await fetch("/api/jobs/import/suggest", {
         method: "POST",
@@ -337,6 +342,9 @@
         _key: i,
         filters: t.filters ?? {},
       }));
+      if (suggestions !== null && suggestions.length === 0 && body.message) {
+        suggestionsInfo = body.message;
+      }
     } catch (err) {
       suggestionsError = err instanceof Error
         ? err.message
@@ -413,6 +421,7 @@
   function clearSuggestions() {
     suggestions = null;
     suggestionsError = null;
+    suggestionsInfo = null;
   }
 
   function handleAddSubmit() {
@@ -549,16 +558,6 @@
   {/if}
 
   <!-- Job Searches List -->
-  <!-- AI-suggested searches based on profile -->
-  {#if !showAddForm && suggestions}
-    <SuggestionsList
-      {suggestions}
-      onAccept={acceptSuggestion}
-      onDismiss={dismissSuggestion}
-      onClearAll={clearSuggestions}
-    />
-  {/if}
-
   {#if searchTasks.length === 0 && !showAddForm && (!suggestions || suggestions.length === 0)}
     <div
       class="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg"
@@ -852,6 +851,52 @@
           </div>
         </a>
       {/each}
+    </div>
+  {/if}
+
+  <!-- AI-suggested searches based on profile. Rendered below the task list
+       so they appear near the "Suggest more" trigger and don't push the
+       existing list out of view. -->
+  {#if !showAddForm && suggestions && suggestions.length > 0}
+    <SuggestionsList
+      {suggestions}
+      onAccept={acceptSuggestion}
+      onDismiss={dismissSuggestion}
+      onClearAll={clearSuggestions}
+    />
+  {/if}
+
+  <!-- "Suggest more" entry point: stays at the bottom of the task list so
+       the user can ask for additional suggestions any time. Hidden while
+       suggestion cards are on screen (dismiss them first to re-trigger),
+       and hidden when there are no tasks yet — that case uses the
+       empty-state CTA above. -->
+  {#if !showAddForm && searchTasks.length > 0 && (!suggestions || suggestions.length === 0)}
+    <div class="flex flex-col items-center gap-2 pt-2">
+      {#if suggestionsInfo}
+        <p
+          class="text-xs text-[var(--dash-text-secondary)] text-center max-w-md"
+        >{suggestionsInfo}</p>
+      {/if}
+      {#if suggestionsError}
+        <p
+          class="text-xs text-red-600 dark:text-red-400 text-center max-w-md"
+        >{suggestionsError}</p>
+      {/if}
+      <button
+        type="button"
+        onclick={getSuggestions}
+        disabled={loadingSuggestions}
+        class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs border border-[var(--dash-border)] text-[var(--dash-text-secondary)] rounded-lg hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] disabled:opacity-60 transition-colors"
+      >
+        {#if loadingSuggestions}
+          <Spinner size="w-3 h-3" />
+          Analyzing your profile…
+        {:else}
+          <FontAwesomeIcon icon={faMagicWandSparkles} class="w-3 h-3" />
+          Suggest more searches
+        {/if}
+      </button>
     </div>
   {/if}
 </div>
