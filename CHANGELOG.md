@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.39] - 2026-05-24
+
+2 commits since v0.5.38.
+
+### Fixed
+- Fixed search_page_url backfill migration ordering to execute in correct sequence
+
 ## [0.5.38] - 2026-05-24
 
 12 commits since v0.5.37.
