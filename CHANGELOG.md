@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.42] - 2026-05-24
+
+3 commits since v0.5.41.
+
+### Changed
+- Test suite runs in one-shot mode without waiting for input
+- sjs-browser watchdog now handles beta channel updates consistently with bootstrap
+- sjs-browser reverted persistent CDP WebSocket connections while maintaining /json dedup optimization
+
 ## [0.5.41] - 2026-05-24
 
 1 commit since v0.5.40.
