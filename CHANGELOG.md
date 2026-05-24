@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.45] - 2026-05-24
+
+1 commit since v0.5.44.
+
+### Fixed
+- Search form now correctly handles Tab key submission without dismissing autocomplete suggestions
+
 ## [0.5.44] - 2026-05-24
 
 3 commits since v0.5.43.
