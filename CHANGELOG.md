@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.46] - 2026-05-24
+
+1 commit since v0.5.45.
+
+### Changed
+- Improved realism of stealth mode by positioning input field clicks toward the center
+
 ## [0.5.45] - 2026-05-24
 
 1 commit since v0.5.44.
