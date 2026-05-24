@@ -9,7 +9,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, inArray, desc } from "drizzle-orm";
-import { scraper_agent_sessions, search_tasks, search_task_runs } from "$lib/server/db/schema";
+import { scraper_agent_sessions, scraper_agent_iterations, search_tasks, search_task_runs } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import { searchTaskDisplayName } from "$lib/format";
 
@@ -35,7 +35,7 @@ export const GET: RequestHandler = async ({ locals }) => {
         },
       },
       scraper_agent_iterations: {
-        orderBy: desc(scraper_agent_sessions.created_at),
+        orderBy: desc(scraper_agent_iterations.iteration),
         limit: 1,
         columns: {
           iteration: true,
