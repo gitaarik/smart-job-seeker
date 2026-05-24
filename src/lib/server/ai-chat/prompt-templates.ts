@@ -973,6 +973,7 @@ Output one task per platform you want to suggest, skipping any platform where a 
 
 Keywords:
 - "keywords" is the plain (un-URL-encoded) string the scraper will type into the platform's search input. Choose 1–3 terms drawn from the profile's title, core_stack, top tech_skills, and recent work_experiences. Pick what a recruiter would actually search for — don't dump every skill.
+- Casing: lowercase by default — that's what real searchers type into a search box. Preserve casing only for proper nouns, brands, and acronyms (React, Python, AWS, SaaS, .NET, JavaScript). Do NOT Title Case generic words like "developer", "engineer", "manager".
 - DO NOT include values already covered by the pre-applied filters. If the platform has "experience_level: [senior]" applied, do NOT put "senior" in the keywords. Same for job_type ("full-time", "contract", …), work_location ("remote", "hybrid", …), etc. The filter UI handles those dimensions; the keywords are for the role/stack only.
 - It is fine — and often best — to use the same keywords across multiple platforms. Only vary per platform when there's a real stylistic reason (e.g. a freelance marketplace where skill-soup outperforms a job title).
 - Set keywords to null ONLY when a platform is a curated single-page listing with no search box (rare).
