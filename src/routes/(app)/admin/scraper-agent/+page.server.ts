@@ -1,7 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { and, isNotNull, asc, inArray } from "drizzle-orm";
-import { search_tasks, users as usersTable } from "$lib/server/db/schema";
+import { profiles as profilesTable, search_tasks, users as usersTable } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async () => {
   // Pre-load search tasks with platform and user info
@@ -12,6 +12,7 @@ export const load: PageServerLoad = async () => {
       id: true,
       note: true,
       browser_provider: true,
+      profile_id: true,
     },
     with: {
       profile: {
@@ -46,16 +47,37 @@ export const load: PageServerLoad = async () => {
 
   const userMap = new Map(users.map((u) => [u.id, u]));
 
+  // Load all profiles for these users, not just the ones with eligible
+  // search tasks — admins want to see every profile in the user's account
+  // when filtering, even ones without tasks yet.
+  const profiles = userIds.length > 0
+    ? await db.query.profiles.findMany({
+        where: inArray(profilesTable.user_id, userIds),
+        columns: { id: true, name: true, user_id: true },
+        orderBy: asc(profilesTable.id),
+      })
+    : [];
+
   return {
     searchTasks: searchTasks.map((t) => {
       const user = userMap.get(t.profile.user_id ?? "");
       return {
         id: t.id,
         note: t.note,
+        profileId: t.profile_id,
         profileName: t.profile.name,
         platformName: t.job_platform?.name ?? null,
         browserProvider: t.browser_provider,
         userId: t.profile.user_id,
+        userName: user?.name || user?.email || null,
+      };
+    }),
+    profiles: profiles.map((p) => {
+      const user = userMap.get(p.user_id ?? "");
+      return {
+        id: p.id,
+        name: p.name ?? `Profile ${p.id}`,
+        userId: p.user_id,
         userName: user?.name || user?.email || null,
       };
     }),

@@ -13,6 +13,7 @@
   import Spinner from "$lib/components/Spinner.svelte";
   import { searchTaskDisplayName } from "$lib/format";
   import {
+    type Profile,
     type SearchTask,
     type SessionSummary,
     DEFAULT_SYSTEM_PROMPT,
@@ -34,6 +35,7 @@
   // Create form state
   let showCreateForm = $state(false);
   let createUserId = $state<string | null>(null);
+  let createProfileId = $state<number | null>(null);
   let createSearchTaskId = $state<number | null>(null);
   let createMaxIterations = $state(10);
   let createGoal = $state("");
@@ -41,10 +43,22 @@
   let createRunFirst = $state(false);
   let creating = $state(false);
 
-  let filteredSearchTasks = $derived(
+  let tasksForUser = $derived(
     createUserId
       ? (data.searchTasks as SearchTask[]).filter((t) => t.userId === createUserId)
       : (data.searchTasks as SearchTask[]),
+  );
+
+  let filteredProfiles = $derived(
+    createUserId
+      ? (data.profiles as Profile[]).filter((p) => p.userId === createUserId)
+      : (data.profiles as Profile[]),
+  );
+
+  let filteredSearchTasks = $derived(
+    createProfileId
+      ? tasksForUser.filter((t) => t.profileId === createProfileId)
+      : tasksForUser,
   );
 
   async function loadSessions() {
@@ -117,6 +131,7 @@
         const session = result.session;
         const task = (data.searchTasks as SearchTask[]).find((t) => t.id === session.searchTaskId);
         createUserId = task?.userId ?? null;
+        createProfileId = task?.profileId ?? null;
         createSearchTaskId = session.searchTaskId;
         createMaxIterations = session.maxIterations;
         createGoal = session.goal;
@@ -163,12 +178,34 @@
             <select
               id="user-filter"
               bind:value={createUserId}
-              onchange={() => (createSearchTaskId = null)}
+              onchange={() => {
+                createProfileId = null;
+                createSearchTaskId = null;
+              }}
               class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-sm text-[var(--dash-text)] px-3 py-2"
             >
               <option value={null}>All users</option>
               {#each data.users as user}
                 <option value={user.id}>{user.name}</option>
+              {/each}
+            </select>
+          </div>
+
+          <div>
+            <label for="profile-filter" class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1">
+              Profile
+            </label>
+            <select
+              id="profile-filter"
+              bind:value={createProfileId}
+              onchange={() => (createSearchTaskId = null)}
+              class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-sm text-[var(--dash-text)] px-3 py-2"
+            >
+              <option value={null}>All profiles</option>
+              {#each filteredProfiles as profile}
+                <option value={profile.id}>
+                  {profile.name}{createUserId ? "" : ` (${profile.userName || "No user"})`}
+                </option>
               {/each}
             </select>
           </div>
@@ -185,7 +222,7 @@
               <option value={null}>Select a search task...</option>
               {#each filteredSearchTasks as task}
                 <option value={task.id}>
-                  {searchTaskDisplayName(task.platformName, task.note)}{createUserId ? "" : ` (${task.userName || "No user"})`}
+                  {searchTaskDisplayName(task.platformName, task.note)}{createProfileId ? "" : ` — ${task.profileName ?? "No profile"}`}{createUserId ? "" : ` (${task.userName || "No user"})`}
                 </option>
               {/each}
             </select>

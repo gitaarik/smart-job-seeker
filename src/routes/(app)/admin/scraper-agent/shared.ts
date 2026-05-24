@@ -5,6 +5,7 @@
 export interface SearchTask {
   id: number;
   note: string | null;
+  profileId: number;
   profileName: string | null;
   platformName: string | null;
   browserProvider: string | null;
@@ -15,6 +16,13 @@ export interface SearchTask {
 export interface User {
   id: string;
   name: string;
+}
+
+export interface Profile {
+  id: number;
+  name: string;
+  userId: string | null;
+  userName: string | null;
 }
 
 export interface SessionSummary {
