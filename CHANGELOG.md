@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.43] - 2026-05-24
+
+1 commit since v0.5.42.
+
+### Changed
+- Debug screenshot capture now uses X11 (scrot) instead of Chrome's CDP queue
+
 ## [0.5.42] - 2026-05-24
 
 3 commits since v0.5.41.
