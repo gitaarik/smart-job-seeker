@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.38] - 2026-05-24
+
+12 commits since v0.5.37.
+
+### Added
+- Theme auto-mode syncs with OS theme changes
+- Scraper-agent accepts tasks driven by platform search_page_url
+- Profile filter in scraper-agent admin create form
+- Beta channel for sjs-browser bootstrap auto-updates
+
+### Changed
+- Task detail logs wrap long messages to their own line on mobile with row dividers
+- Scraper-agent default system prompt refreshed for current scraper state
+- Search-form text-fallback parity and improved keyword matching
+- Scraper uses persistent CDP WebSocket connection through sjs-browser sessions
+
+### Fixed
+- Scraper-agent admin list now correctly orders iterations
+- Search-form scraper click-target selection improved
+- Desktop scraper retries on Patchright CDP assertion crashes
+
+### Removed
+- PLATFORM_FILTER_CARDINALITY override
+
 ## [0.5.37] - 2026-05-23
 
 79 commits since v0.5.36.
