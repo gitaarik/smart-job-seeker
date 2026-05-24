@@ -2087,10 +2087,10 @@
             {/if}
           </div>
         {:else}
-          <div class="p-2 space-y-0.5 font-mono text-xs">
+          <div class="p-2 font-mono text-xs divide-y divide-[var(--dash-border)]/60">
             {#each runLogs[run.id] as log (log.id)}
               <div
-                class="flex items-start gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded"
+                class="flex items-start gap-x-2 flex-wrap sm:flex-nowrap py-1.5 px-1 hover:bg-[var(--dash-bg)] rounded"
               >
                 <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
                   {fmtTime(log.timestamp, tf, { timezone: tz || null })}
@@ -2098,7 +2098,7 @@
                 <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                   {log.level}
                 </span>
-                <span class="text-[var(--dash-text)] break-all flex-1 min-w-0">
+                <span class="text-[var(--dash-text)] break-all w-full sm:w-auto sm:flex-1 min-w-0">
                   {log.message}
                 </span>
                 {#if log.screenshot_path}
@@ -3169,10 +3169,10 @@
                     {/if}
                   </div>
                 {:else}
-                  <div class="p-2 space-y-0.5 font-mono text-xs">
+                  <div class="p-2 font-mono text-xs divide-y divide-white/10">
                     {#each runLogs[featuredRunId] as log (log.id)}
                       <div
-                        class="flex items-start gap-2 py-0.5 px-1 hover:bg-white/10 rounded"
+                        class="flex items-start gap-x-2 flex-wrap sm:flex-nowrap py-1.5 px-1 hover:bg-white/10 rounded"
                       >
                         <span class="text-gray-400 whitespace-nowrap">
                           {fmtTime(log.timestamp, tf, { timezone: tz || null })}
@@ -3182,7 +3182,7 @@
                         >
                           {log.level}
                         </span>
-                        <span class="text-gray-100 break-all flex-1 min-w-0">
+                        <span class="text-gray-100 break-all w-full sm:w-auto sm:flex-1 min-w-0">
                           {log.message}
                         </span>
                         {#if log.screenshot_path}
