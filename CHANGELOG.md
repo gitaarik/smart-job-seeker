@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.47] - 2026-05-24
+
+2 commits since v0.5.46.
+
+### Fixed
+
+- Scraper now falls back to the oldest api_key when no tunnel device is connected
+- Stealth mode now recovers from Proxy-timeout errors on type-focus clicks
+
 ## [0.5.46] - 2026-05-24
 
 1 commit since v0.5.45.
