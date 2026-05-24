@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.40] - 2026-05-24
+
+1 commit since v0.5.39.
+
+### Changed
+- Faster release builds by skipping Docker image rebuilds when sources haven't changed
+
 ## [0.5.39] - 2026-05-24
 
 2 commits since v0.5.38.
