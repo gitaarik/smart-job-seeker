@@ -5,7 +5,7 @@
   import "../app.css";
   import "./(app)/dashboard.css";
   import { onMount } from "svelte";
-  import { initializeTheme } from "$lib/stores/theme.svelte";
+  import { initializeTheme, themeState, updateDOM } from "$lib/stores/theme.svelte";
   import { identify } from "$lib/tools/analytics";
   import type { LayoutData } from "./$types";
 
@@ -19,6 +19,11 @@
       data.systemTheme,
     );
   }
+
+  // Lives here, not in ThemeSwitcher, so OS-theme changes in "auto" mode still propagate while the user menu is closed.
+  $effect(() => {
+    updateDOM(themeState.actual);
+  });
 
   // Inject Umami analytics script if configured
   onMount(() => {

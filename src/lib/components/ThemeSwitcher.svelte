@@ -3,7 +3,6 @@
     saveToCookie,
     switchTheme,
     themeState,
-    updateDOM,
   } from "$lib/stores/theme.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
@@ -22,12 +21,7 @@
   let showThemeIndicator = $state(false);
   let fadeTimeout: NodeJS.Timeout;
 
-  // Side effects: Update DOM when theme changes
-  $effect(() => {
-    updateDOM(themeState.actual);
-  });
-
-  // Side effects: Save preference to cookie when it changes
+  // DOM class sync lives in the root layout — this component unmounts when the dropdown closes.
   $effect(() => {
     saveToCookie(themeState.preference);
   });
