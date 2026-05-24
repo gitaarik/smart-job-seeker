@@ -115,17 +115,29 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, "goal is required");
   }
 
-  // Validate search task exists and is properly configured
+  // Validate search task exists and is properly configured. A task is
+  // runnable if it has a platform AND either its own search_url (legacy) or
+  // a search_page_url on the platform (new search-form flow).
   const searchTask = await db.query.search_tasks.findFirst({
     where: eq(search_tasks.id, searchTaskId),
+    with: {
+      job_platform: { columns: { search_page_url: true } },
+    },
   });
 
   if (!searchTask) {
     throw error(404, "Search task not found");
   }
 
-  if (!searchTask.search_url || !searchTask.platform_id) {
-    throw error(400, "Search task must have a URL and platform configured");
+  if (!searchTask.platform_id) {
+    throw error(400, "Search task must have a platform configured");
+  }
+
+  if (!searchTask.search_url && !searchTask.job_platform?.search_page_url) {
+    throw error(
+      400,
+      "Search task has no search URL and its platform has no search_page_url",
+    );
   }
 
   // Check no other active session for this search task

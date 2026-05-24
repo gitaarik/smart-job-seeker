@@ -1,16 +1,19 @@
 import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { and, isNotNull, asc, inArray } from "drizzle-orm";
+import { isNotNull, asc, inArray } from "drizzle-orm";
 import { profiles as profilesTable, search_tasks, users as usersTable } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async () => {
-  // Pre-load search tasks with platform and user info
-  const searchTasks = await db.query.search_tasks.findMany({
-    where: and(isNotNull(search_tasks.search_url), isNotNull(search_tasks.platform_id)),
+  // Pre-load search tasks with platform and user info. A task is runnable by
+  // the scraper agent if it has a platform AND either its own search_url
+  // (legacy) or a search_page_url on the platform (new search-form flow).
+  const allTasks = await db.query.search_tasks.findMany({
+    where: isNotNull(search_tasks.platform_id),
     orderBy: asc(search_tasks.id),
     columns: {
       id: true,
       note: true,
+      search_url: true,
       browser_provider: true,
       profile_id: true,
     },
@@ -24,10 +27,15 @@ export const load: PageServerLoad = async () => {
       job_platform: {
         columns: {
           name: true,
+          search_page_url: true,
         },
       },
     },
   });
+
+  const searchTasks = allTasks.filter(
+    (t) => t.search_url || t.job_platform?.search_page_url,
+  );
 
   // Fetch users for the filter dropdown
   const userIds = [
