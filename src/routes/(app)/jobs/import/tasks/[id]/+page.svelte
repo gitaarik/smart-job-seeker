@@ -219,6 +219,8 @@
 
   let isStarting = $state(false);
   let isStopping = $state(false);
+  let isOpeningBrowser = $state(false);
+  let openBrowserMessage = $state<string | null>(null);
   let isSendingFeedback = $state(false);
   let feedbackSent = $state(false);
   let errorMessage = $state<string | null>(null);
@@ -1176,6 +1178,44 @@
       console.error(err);
     } finally {
       isStarting = false;
+    }
+  }
+
+  // Manual-browser entrypoint: open a tab on the user's NAS Chrome at the
+  // platform URL without queueing a scrape. The same Chrome that scrapes
+  // owns the cookie jar, so changes the user makes (display language,
+  // dismissing banners, manual logins) persist into the next scrape. Auto-
+  // opens the VNC browser view so the user lands on an interactive
+  // session immediately.
+  async function openBrowser() {
+    if (isTunnelMode && !desktopConnected) {
+      openBrowserMessage =
+        "No device is connected. Connect the desktop app or self-hosted tunnel first.";
+      return;
+    }
+
+    isOpeningBrowser = true;
+    openBrowserMessage = null;
+    try {
+      const res = await fetch(
+        `/api/import-tasks/${searchTask.id}/open-browser`,
+        { method: "POST" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        openBrowserMessage = data.message || data.error
+          || "Failed to open browser";
+        return;
+      }
+      // Surface the browser panel and switch to VNC so the user can
+      // interact with the new tab without a second click.
+      showBrowser = true;
+      setViewMode("vnc");
+    } catch (err) {
+      console.error(err);
+      openBrowserMessage = "Failed to open browser";
+    } finally {
+      isOpeningBrowser = false;
     }
   }
 
@@ -2580,6 +2620,24 @@
           </button>
         {/if}
 
+        {#if isTunnelMode}
+          <button
+            onclick={openBrowser}
+            disabled={isOpeningBrowser ||
+              (!searchTask.platform_id && !searchTask.search_url)}
+            class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Open the platform in your NAS Chrome for manual interaction (no scrape)"
+          >
+            {#if isOpeningBrowser}
+              <Spinner size="w-4 h-4" />
+              <span class="text-sm">Opening...</span>
+            {:else}
+              <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
+              <span class="text-sm">Open Browser</span>
+            {/if}
+          </button>
+        {/if}
+
         <button
           onclick={() => (showBrowser = !showBrowser)}
           class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors"
@@ -2592,6 +2650,10 @@
           <span class="text-sm">Browser View</span>
         </button>
       </div>
+
+      {#if openBrowserMessage}
+        <p class="text-sm text-[var(--dash-warning)]">{openBrowserMessage}</p>
+      {/if}
 
       <!-- Active run details (jobs/logs) shown inline in status card -->
       {#if featuredRun}
