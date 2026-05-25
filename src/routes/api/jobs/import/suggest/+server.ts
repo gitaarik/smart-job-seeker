@@ -292,7 +292,7 @@ export interface SuggestError {
  * script can call it directly. The HTTP handler is a thin wrapper that adds
  * auth + query-param parsing.
  */
-export async function runSuggester(
+export async function _runSuggester(
   profileId: number,
   scopeToPlatformId?: number,
 ): Promise<SuggestResult | SuggestError> {
@@ -435,7 +435,7 @@ export const POST: RequestHandler = async ({ cookies, locals, url }) => {
     scopeToPlatformId = parsed;
   }
 
-  const result = await runSuggester(profileId, scopeToPlatformId);
+  const result = await _runSuggester(profileId, scopeToPlatformId);
   if (!result.ok) {
     return json(
       { success: false, message: result.message },

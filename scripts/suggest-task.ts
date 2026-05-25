@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Dev-only: ask the LLM suggester to draft an import task for a specific
- * platform, and optionally insert it. Calls runSuggester() directly so it
+ * platform, and optionally insert it. Calls _runSuggester() directly so it
  * doesn't need an HTTP session cookie.
  *
  * Usage (from cloud/, via npm script):
@@ -18,7 +18,7 @@ import {
   profiles,
   search_tasks,
 } from "$lib/server/db/schema";
-import { runSuggester } from "../src/routes/api/jobs/import/suggest/+server";
+import { _runSuggester } from "../src/routes/api/jobs/import/suggest/+server";
 
 function parseArgs(argv: string[]): {
   profileId: number;
@@ -62,7 +62,7 @@ async function main() {
     process.exit(1);
   }
 
-  const result = await runSuggester(profileId, platformId);
+  const result = await _runSuggester(profileId, platformId);
   if (!result.ok) {
     console.error(`Suggester failed (${result.status}): ${result.message}`);
     process.exit(1);
