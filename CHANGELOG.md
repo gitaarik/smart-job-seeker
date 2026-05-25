@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.50] - 2026-05-25
+
+9 commits since v0.5.49.
+
+### Added
+- Manual browser button and entrypoint for opening pages
+- Auto-selection of latest credentials when adding tasks
+- Optional platform_id filtering for suggestions with new suggest-task npm script
+- LLM opener fallback in search form when chip-label heuristic misses
+
 ## [0.5.49] - 2026-05-25
 
 2 commits since v0.5.48.
