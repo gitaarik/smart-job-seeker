@@ -1,3 +1,5 @@
+import { untrack } from "svelte";
+
 /**
  * Auto-save state machine for a single form field (or group of fields treated
  * as one). Replaces the manual "show Save/Cancel when dirty" pattern with
@@ -118,7 +120,12 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
   }
 
   async function runSave() {
-    if (equal(value, saved)) return;
+    // Reads of `value`/`saved` inside this function may run synchronously
+    // inside a caller's $effect (via set → scheduleSave → runSave when
+    // debounceMs=0). We untrack them so the caller doesn't depend on our
+    // internal state — otherwise our own writes (value=…, saved=…) would
+    // re-fire the calling effect.
+    if (untrack(() => equal(value, saved))) return;
     const seq = ++latestSeq;
     status = "saving";
     error = null;
@@ -126,8 +133,8 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
     // fresh undo target once this one completes.
     canUndo = false;
     clearFlash();
-    const sending = value;
-    const rollback = saved;
+    const sending = untrack(() => value);
+    const rollback = untrack(() => saved);
     try {
       await opts.save(sending);
       if (seq !== latestSeq) return; // a newer save superseded us
@@ -170,9 +177,14 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
       return canUndo;
     },
     set(v: T) {
+      // untrack the equality reads so a caller inside an $effect doesn't
+      // depend on our internal `value`/`saved` — otherwise our own writes
+      // here would re-fire the effect (and for object T, `value = v` always
+      // looks like a change because it's a new proxy reference).
+      if (untrack(() => equal(v, value))) return;
       value = v;
       error = null;
-      if (equal(v, saved)) {
+      if (untrack(() => equal(v, saved))) {
         // Snapped back to the saved value (e.g. user retyped the original).
         // Drop any pending save; leave a lingering "saved" flash alone.
         clearDebounce();
@@ -187,7 +199,7 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
       }
     },
     retry() {
-      if (!equal(value, saved)) void runSave();
+      if (!untrack(() => equal(value, saved))) void runSave();
     },
     undo() {
       if (!canUndo) return;
