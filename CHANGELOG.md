@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.49] - 2026-05-25
+
+2 commits since v0.5.48.
+
+### Fixed
+- Recorder no longer falsely records values as missing for unsupported filters or heuristic-applied values
+
 ## [0.5.48] - 2026-05-25
 
 3 commits since v0.5.47.
