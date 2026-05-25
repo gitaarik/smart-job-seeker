@@ -51,9 +51,16 @@ export function diffRequestedAgainstObserved(
       out[canonicalName] = validValues;
       continue;
     }
-    const exposedKeys = new Set(Object.keys(widget.options));
-    const missing = validValues.filter((v) => !exposedKeys.has(v));
-    if (missing.length > 0) out[canonicalName] = missing;
+    // If the widget was identified, don't record per-value misses. The LLM
+    // only emits keys it explicitly mapped — values applied via the
+    // heuristic-label-match fallback in configure.ts (e.g. Upwork's mid →
+    // "Intermediate", senior → "Expert" via OPTION_LABEL_ALIASES) won't
+    // appear in `widget.options` even though they succeed. Diffing per-key
+    // here would falsely flag those as unsupported, and the next run would
+    // skip them at apply time — silently dropping filters that worked
+    // before (run 769 hit this with experience_level=[mid,senior]). Granular
+    // per-value unsupported entries should come from explicit seed
+    // migrations, not from this auto-recorder.
   }
   return out;
 }
