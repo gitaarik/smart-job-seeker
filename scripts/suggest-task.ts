@@ -11,9 +11,13 @@
  * Skips auth checks, so do not expose on a public host.
  */
 
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { dbDirect as db } from "$lib/server/db";
-import { profiles, search_tasks } from "$lib/server/db/schema";
+import {
+  platform_profiles,
+  profiles,
+  search_tasks,
+} from "$lib/server/db/schema";
 import { runSuggester } from "../src/routes/api/jobs/import/suggest/+server";
 
 function parseArgs(argv: string[]): {
@@ -80,13 +84,27 @@ async function main() {
   console.log(`  relevance:  ${draft.relevance}`);
 
   if (!save) {
-    console.log("\n(dry-run — pass --insert to insert)");
+    console.log("\n(dry-run — pass `insert` to insert)");
     process.exit(0);
   }
+
+  // Auto-pick the latest platform_profile for (profile, platform) so the
+  // inserted task already has credentials wired up. If the user has none
+  // configured yet, leave null and the task starts un-credentialed (same
+  // outcome as the UI form when the user skips the dropdown).
+  const existingCred = await db.query.platform_profiles.findFirst({
+    where: and(
+      eq(platform_profiles.profile_id, profileId),
+      eq(platform_profiles.platform_id, draft.platform_id),
+    ),
+    orderBy: desc(platform_profiles.date_created),
+    columns: { id: true },
+  });
 
   const [created] = await db.insert(search_tasks).values({
     profile_id: profileId,
     platform_id: draft.platform_id,
+    platform_profile_id: existingCred?.id ?? null,
     search_term: draft.keywords,
     search_location: null,
     search_filters: draft.filters,
@@ -98,7 +116,13 @@ async function main() {
     keep_minimized: true,
   }).returning({ id: search_tasks.id });
 
-  console.log(`\nInserted search_task id=${created.id} for profile ${profileId}.`);
+  console.log(
+    `\nInserted search_task id=${created.id} for profile ${profileId}` +
+      (existingCred
+        ? ` (credentials: platform_profile ${existingCred.id})`
+        : " (no credentials configured)") +
+      ".",
+  );
   process.exit(0);
 }
 

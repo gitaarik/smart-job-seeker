@@ -1,7 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { and, eq, ilike, isNotNull, or } from "drizzle-orm";
+import { and, desc, eq, ilike, isNotNull, or } from "drizzle-orm";
 import {
   job_platforms,
   platform_credentials,
@@ -111,6 +111,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         id: true,
         username: true,
       },
+      // Latest-added first so the add-task form's auto-pick of
+      // credentials[0] (see SearchTaskFields.svelte) lands on the user's
+      // most-recent credential rather than the oldest.
+      orderBy: desc(platform_credentials.date_created),
     });
     credentials = ownCreds.map((c) => ({
       id: c.id,

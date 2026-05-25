@@ -1,7 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import {
   job_platforms,
   platform_credentials,
@@ -43,12 +43,18 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
     throw error(403, "Not authorized");
   }
 
+  // Order latest-added first so callers that auto-pick `credentials[0]`
+  // (the add-task form's default-selection logic in SearchTaskFields.svelte)
+  // land on the user's most-recent credential rather than whichever
+  // happened to come back first from an un-ordered scan. The dropdown still
+  // shows every row so the user can override.
   const credentials = await db.query.platform_credentials.findMany({
     where: and(
       eq(platform_credentials.user_id, user.id),
       eq(platform_credentials.platform_id, platformId),
     ),
     columns: { id: true, username: true, security_answer: true },
+    orderBy: desc(platform_credentials.date_created),
   });
 
   return json(credentials.map((c) => ({
