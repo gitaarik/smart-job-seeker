@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.48] - 2026-05-25
+
+3 commits since v0.5.47.
+
+### Changed
+- Job type filter split into separate hours commitment and employment type filters for more granular search control
+
+### Fixed
+- Search form now waits for network idle after filter option clicks to improve stability
+
 ## [0.5.47] - 2026-05-24
 
 2 commits since v0.5.46.
