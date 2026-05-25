@@ -66,9 +66,21 @@ type PlatformFilterPlan = {
   overlap: Record<string, string[]>;
 };
 
-async function fetchSuggestablePlatforms(): Promise<SuggestablePlatform[]> {
+async function fetchSuggestablePlatforms(
+  scopeToPlatformId?: number,
+): Promise<SuggestablePlatform[]> {
   // A platform is suggestable when it has a search_page_url configured —
   // the scraper needs it to drive the form. Ordered by id for determinism.
+  // When scopeToPlatformId is set, restrict to just that one row so the
+  // LLM ranks a single platform (used by the "suggest one task for this
+  // specific platform" callsite).
+  const conditions = [
+    isNotNull(job_platforms.search_page_url),
+    eq(job_platforms.status, "published"),
+  ];
+  if (scopeToPlatformId !== undefined) {
+    conditions.push(eq(job_platforms.id, scopeToPlatformId));
+  }
   return await db
     .select({
       id: job_platforms.id,
@@ -79,12 +91,7 @@ async function fetchSuggestablePlatforms(): Promise<SuggestablePlatform[]> {
       unsupported_filters: job_platforms.unsupported_filters,
     })
     .from(job_platforms)
-    .where(
-      and(
-        isNotNull(job_platforms.search_page_url),
-        eq(job_platforms.status, "published"),
-      ),
-    )
+    .where(and(...conditions))
     .orderBy(asc(job_platforms.id));
 }
 
@@ -256,27 +263,52 @@ function collectBannedTokens(
   return banned;
 }
 
-export const POST: RequestHandler = async ({ cookies, locals }) => {
-  const user = requireAuth(locals);
+export interface SuggestedTaskDraft {
+  platform_id: number;
+  platform: string;
+  platform_name: string;
+  platform_url: string;
+  keywords: string | null;
+  note: string;
+  relevance: "high" | "medium" | "low";
+  filters: Record<string, SearchFilterValue>;
+}
 
-  const profileId = await getSelectedProfileId(cookies, user.id);
-  if (!profileId) {
-    return json(
-      { success: false, message: "No active profile selected" },
-      { status: 400 },
-    );
-  }
+export interface SuggestResult {
+  ok: true;
+  tasks: SuggestedTaskDraft[];
+  message?: string;
+}
 
+export interface SuggestError {
+  ok: false;
+  status: number;
+  message: string;
+}
+
+/**
+ * Run the import-task suggester for a given profile. Pure function over a
+ * profile id — no SvelteKit/auth dependencies — so the dev `suggest-task.ts`
+ * script can call it directly. The HTTP handler is a thin wrapper that adds
+ * auth + query-param parsing.
+ */
+export async function runSuggester(
+  profileId: number,
+  scopeToPlatformId?: number,
+): Promise<SuggestResult | SuggestError> {
   const [platforms, preferences, existingTasks] = await Promise.all([
-    fetchSuggestablePlatforms(),
+    fetchSuggestablePlatforms(scopeToPlatformId),
     fetchPreferences(profileId),
     fetchExistingTasks(profileId),
   ]);
   if (platforms.length === 0) {
-    return json(
-      { success: false, message: "No suggestable platforms configured" },
-      { status: 503 },
-    );
+    return {
+      ok: false,
+      status: scopeToPlatformId !== undefined ? 404 : 503,
+      message: scopeToPlatformId !== undefined
+        ? `Platform ${scopeToPlatformId} is not suggestable (missing search_page_url or not published)`
+        : "No suggestable platforms configured",
+    };
   }
 
   const plans = planFiltersPerPlatform(platforms, preferences);
@@ -312,46 +344,29 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
   );
 
   if (!result.success || !result.aiChat?.response) {
-    return json(
-      {
-        success: false,
-        message: result.message || "Failed to generate suggestions",
-      },
-      { status: 422 },
-    );
+    return {
+      ok: false,
+      status: 422,
+      message: result.message || "Failed to generate suggestions",
+    };
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(result.aiChat.response);
   } catch {
-    return json(
-      { success: false, message: "AI returned non-JSON response" },
-      { status: 502 },
-    );
+    return { ok: false, status: 502, message: "AI returned non-JSON response" };
   }
 
   const validated = suggestImportTasksSchema.safeParse(parsed);
   if (!validated.success) {
-    return json(
-      { success: false, message: "AI response failed validation" },
-      { status: 502 },
-    );
+    return { ok: false, status: 502, message: "AI response failed validation" };
   }
 
   // Merge the LLM's keywords/note/relevance with the server-computed
   // filters. Drop any suggestion referencing an unknown platform_id —
   // defensive against schema-shape-valid but ID-hallucinating responses.
-  const tasks: Array<{
-    platform_id: number;
-    platform: string;
-    platform_name: string;
-    platform_url: string;
-    keywords: string | null;
-    note: string;
-    relevance: "high" | "medium" | "low";
-    filters: Record<string, SearchFilterValue>;
-  }> = [];
+  const tasks: SuggestedTaskDraft[] = [];
   const droppedIds: number[] = [];
   for (const task of validated.data.tasks) {
     const plan = planById.get(task.platform_id);
@@ -389,5 +404,43 @@ export const POST: RequestHandler = async ({ cookies, locals }) => {
       : "AI returned no usable suggestions")
     : undefined;
 
-  return json({ success: true, tasks, message });
+  return { ok: true, tasks, message };
+}
+
+export const POST: RequestHandler = async ({ cookies, locals, url }) => {
+  const user = requireAuth(locals);
+
+  const profileId = await getSelectedProfileId(cookies, user.id);
+  if (!profileId) {
+    return json(
+      { success: false, message: "No active profile selected" },
+      { status: 400 },
+    );
+  }
+
+  // Optional ?platform_id=<n> narrows the suggestion to a single platform.
+  // Useful when the caller already knows which platform they want a task
+  // for (e.g. the "add a task for Indeed" UI), so the LLM doesn't burn
+  // tokens ranking platforms we're going to discard.
+  let scopeToPlatformId: number | undefined;
+  const rawPlatformId = url.searchParams.get("platform_id");
+  if (rawPlatformId !== null) {
+    const parsed = Number(rawPlatformId);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return json(
+        { success: false, message: "platform_id must be a positive integer" },
+        { status: 400 },
+      );
+    }
+    scopeToPlatformId = parsed;
+  }
+
+  const result = await runSuggester(profileId, scopeToPlatformId);
+  if (!result.ok) {
+    return json(
+      { success: false, message: result.message },
+      { status: result.status },
+    );
+  }
+  return json({ success: true, tasks: result.tasks, message: result.message });
 };
