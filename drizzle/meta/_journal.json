@@ -246,6 +246,13 @@
       "when": 1779667900000,
       "tag": "0034_backfill_search_page_url",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1779668000000,
+      "tag": "0035_seed_unsupported_filters",
+      "breakpoints": true
     }
   ]
 }

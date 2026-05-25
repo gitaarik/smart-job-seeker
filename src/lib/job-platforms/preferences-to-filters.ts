@@ -31,7 +31,7 @@ export interface PreferenceInput {
 const EXTRA_LABEL_ALIASES: Partial<
   Record<SearchFilterName, Record<string, string>>
 > = {
-  job_type: {
+  employment_type: {
     "Freelance": "contract",
   },
 };
@@ -86,8 +86,16 @@ export function preferencesToFilters(
 ): Record<string, SearchFilterValue> {
   const out: Record<string, SearchFilterValue> = {};
 
-  const jobType = mapLabels("job_type", p.job_types ?? []);
-  if (jobType.length > 0) out.job_type = jobType;
+  // The user's profile-level "job_types" list pre-dates the (hours_commitment,
+  // employment_type) split — it mixes hours labels ("Full-time", "Part-time")
+  // with employment-relationship labels ("Contract", "Internship",
+  // "Freelance"). mapLabels keeps only the values that belong to each axis,
+  // so we can just feed the same list through both filters.
+  const hoursCommitment = mapLabels("hours_commitment", p.job_types ?? []);
+  if (hoursCommitment.length > 0) out.hours_commitment = hoursCommitment;
+
+  const employmentType = mapLabels("employment_type", p.job_types ?? []);
+  if (employmentType.length > 0) out.employment_type = employmentType;
 
   const experience = mapLabels("experience_level", p.experience_levels ?? []);
   if (experience.length > 0) out.experience_level = experience;

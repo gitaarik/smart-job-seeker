@@ -19,8 +19,17 @@ export type SearchFilterName =
   | "sort_by"
   | "time_posted"
   | "work_location"
-  | "job_type"
+  | "hours_commitment"
+  | "employment_type"
   | "experience_level";
+
+/**
+ * Legacy filter names we still accept on read (jsonb data persisted by older
+ * builds). Translated to the new axes via {@link normalizeFilters}.
+ */
+export type LegacySearchFilterName = "job_type";
+
+export const LEGACY_SEARCH_FILTER_NAMES: LegacySearchFilterName[] = ["job_type"];
 
 /** Per-filter configuration carried on `job_platform_search_presets.params`. */
 export type PresetFilterConfig =
@@ -73,14 +82,22 @@ export const SEARCH_FILTER_DEFINITIONS: Record<
       onsite: "On-site",
     },
   },
-  job_type: {
-    label: "Job type",
+  hours_commitment: {
+    label: "Hours",
     values: {
       any: "Any",
       fulltime: "Full-time",
       parttime: "Part-time",
+    },
+  },
+  employment_type: {
+    label: "Employment type",
+    values: {
+      any: "Any",
+      permanent: "Permanent",
       contract: "Contract",
       internship: "Internship",
+      temporary: "Temporary",
     },
   },
   experience_level: {
@@ -148,16 +165,25 @@ export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
     "remote",
     "hybrid",
   ],
-  job_type: [
-    "job type",
-    "employment type",
-    "type of employment",
+  hours_commitment: [
+    "hours",
+    "weekly hours",
+    "time commitment",
     "full-time",
     "fulltime",
     "part-time",
     "parttime",
+  ],
+  employment_type: [
+    "employment type",
+    "type of employment",
+    "job type",
+    "permanent",
     "contract",
+    "contractor",
     "freelance",
+    "temporary",
+    "temp",
     "internship",
     "intern",
   ],
@@ -227,7 +253,8 @@ export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> 
     "work mode",
     "work location",
   ],
-  job_type: ["job type", "employment type", "type of employment"],
+  hours_commitment: ["hours", "weekly hours", "time commitment"],
+  employment_type: ["employment type", "type of employment", "job type"],
   experience_level: [
     "experience level",
     "seniority",
@@ -249,11 +276,19 @@ export const OPTION_LABEL_ALIASES: Partial<
     hybrid: ["hybrid"],
     onsite: ["on-site", "on site", "onsite", "in person", "in-person", "in office"],
   },
-  job_type: {
+  hours_commitment: {
     fulltime: ["full-time", "fulltime", "full time"],
     parttime: ["part-time", "parttime", "part time"],
+  },
+  employment_type: {
+    // Most boards label W2/payroll roles as "Full-time"; the LLM/heuristic
+    // resolves this contextually (a "Full-time" checkbox in a job-type
+    // dropdown usually means permanent FTE). On Upwork there's no permanent
+    // role concept at all — handled via `unsupported_filters`.
+    permanent: ["permanent", "full-time", "fte", "w2"],
     contract: ["contract", "contractor", "freelance"],
     internship: ["internship", "intern"],
+    temporary: ["temporary", "temp", "fixed-term", "fixed term"],
   },
   time_posted: {
     "24h": ["past 24 hours", "last 24 hours", "past day"],
@@ -277,4 +312,68 @@ export const OPTION_LABEL_ALIASES: Partial<
     executive: ["executive", "director", "vp", "head of"],
   },
 };
+
+/**
+ * Map legacy `job_type` value_keys onto the new (hours_commitment,
+ * employment_type) axes. Used by {@link normalizeFilters} when reading
+ * jsonb data persisted before the split. A single legacy value can
+ * populate one or both new axes — `fulltime`/`parttime` are pure hours
+ * commitments, `contract`/`internship` are pure employment types.
+ */
+const LEGACY_JOB_TYPE_TO_NEW_AXES: Record<
+  string,
+  { hours_commitment?: string; employment_type?: string }
+> = {
+  fulltime: { hours_commitment: "fulltime" },
+  parttime: { hours_commitment: "parttime" },
+  contract: { employment_type: "contract" },
+  internship: { employment_type: "internship" },
+};
+
+/**
+ * Normalize a raw `search_filters` object (as stored on `search_tasks` or
+ * a profile preference blob) into the canonical new-axes form. Strips
+ * unknown filter names, collapses values to arrays, and translates the
+ * legacy `job_type` axis into `hours_commitment` + `employment_type`.
+ *
+ * Defensive — never throws. Unknown keys are dropped silently.
+ */
+export function normalizeFilters(
+  raw: Record<string, unknown> | null | undefined,
+): Partial<Record<SearchFilterName, string[]>> {
+  const out: Partial<Record<SearchFilterName, string[]>> = {};
+  if (!raw || typeof raw !== "object") return out;
+
+  const push = (name: SearchFilterName, value: string) => {
+    const valid = SEARCH_FILTER_DEFINITIONS[name].values;
+    if (!(value in valid)) return;
+    const existing = out[name] ?? [];
+    if (!existing.includes(value)) existing.push(value);
+    out[name] = existing;
+  };
+
+  for (const [name, rawValue] of Object.entries(raw)) {
+    const values = Array.isArray(rawValue)
+      ? rawValue.filter((v): v is string => typeof v === "string")
+      : typeof rawValue === "string"
+      ? [rawValue]
+      : [];
+    if (values.length === 0) continue;
+
+    if (name === "job_type") {
+      for (const v of values) {
+        const mapped = LEGACY_JOB_TYPE_TO_NEW_AXES[v];
+        if (!mapped) continue;
+        if (mapped.hours_commitment) push("hours_commitment", mapped.hours_commitment);
+        if (mapped.employment_type) push("employment_type", mapped.employment_type);
+      }
+      continue;
+    }
+
+    if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
+    for (const v of values) push(name as SearchFilterName, v);
+  }
+
+  return out;
+}
 
