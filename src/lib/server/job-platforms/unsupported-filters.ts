@@ -23,14 +23,24 @@ export type UnsupportedFilters = Partial<Record<SearchFilterName, string[]>>;
 /**
  * Diff the (filter, value_key) pairs the task asked for against what the
  * form actually exposes. Anything requested but not present in `observed`
- * is recorded as unsupported. Drops non-canonical names/keys defensively.
+ * (and not in `appliedViaFallback`) is recorded as unsupported. Drops
+ * non-canonical names/keys defensively.
  *
  * `observed` mirrors `SearchFormMap.filters` from the scraper:
  *   { work_location: { options: { remote: ..., hybrid: ... } } }
+ *
+ * `appliedViaFallback` is the per-canonical set of option keys that the
+ * configure step's click-to-expand / direct-chip fallbacks actually applied.
+ * Treated as evidence the widget exists on the page even when the LLM
+ * didn't surface it at form-identify time — without this, run 780 wrongly
+ * marked trueup.io's work_location=remote as unsupported despite the
+ * scraper having applied the option via click-to-expand on the Location
+ * popup.
  */
 export function diffRequestedAgainstObserved(
   requested: Record<string, string[] | string | undefined>,
   observed: Record<string, { options: Record<string, unknown> } | undefined>,
+  appliedViaFallback: Record<string, string[]> = {},
 ): UnsupportedFilters {
   const out: UnsupportedFilters = {};
   for (const [name, rawValues] of Object.entries(requested)) {
@@ -46,21 +56,24 @@ export function diffRequestedAgainstObserved(
     if (validValues.length === 0) continue;
 
     const widget = observed[name];
-    if (!widget) {
-      // Whole filter widget missing — every requested value is unsupported.
+    const fallbackApplied = appliedViaFallback[name] ?? [];
+    if (!widget && fallbackApplied.length === 0) {
+      // Whole filter widget missing AND no fallback ever applied a key —
+      // every requested value is unsupported.
       out[canonicalName] = validValues;
       continue;
     }
-    // If the widget was identified, don't record per-value misses. The LLM
-    // only emits keys it explicitly mapped — values applied via the
-    // heuristic-label-match fallback in configure.ts (e.g. Upwork's mid →
-    // "Intermediate", senior → "Expert" via OPTION_LABEL_ALIASES) won't
-    // appear in `widget.options` even though they succeed. Diffing per-key
-    // here would falsely flag those as unsupported, and the next run would
-    // skip them at apply time — silently dropping filters that worked
-    // before (run 769 hit this with experience_level=[mid,senior]). Granular
-    // per-value unsupported entries should come from explicit seed
-    // migrations, not from this auto-recorder.
+    // Widget identified OR a fallback succeeded for at least one key →
+    // don't record per-value misses. The LLM only emits keys it explicitly
+    // mapped — values applied via the heuristic-label-match fallback in
+    // configure.ts (e.g. Upwork's mid → "Intermediate", senior → "Expert"
+    // via OPTION_LABEL_ALIASES) won't appear in `widget.options` even
+    // though they succeed. Diffing per-key here would falsely flag those
+    // as unsupported, and the next run would skip them at apply time —
+    // silently dropping filters that worked before (run 769 hit this with
+    // experience_level=[mid,senior]). Granular per-value unsupported
+    // entries should come from explicit seed migrations, not from this
+    // auto-recorder.
   }
   return out;
 }
