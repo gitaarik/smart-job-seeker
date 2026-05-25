@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.52] - 2026-05-25
+
+4 commits since v0.5.51.
+
+### Added
+- Scraper automatically solves Cloudflare Turnstile "Verify you are human" challenges
+
+### Fixed
+- Auto-save no longer creates feedback loops from internal property reads
+- Fallback-applied filters no longer incorrectly marked as unsupported
+- Scraper improved to prefer exact-name matches when resolving filters
+
 ## [0.5.51] - 2026-05-25
 
 1 commit since v0.5.50.
