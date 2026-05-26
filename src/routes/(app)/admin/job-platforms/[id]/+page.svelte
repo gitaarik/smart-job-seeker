@@ -10,8 +10,8 @@
     faExternalLinkAlt,
     faFlask,
     faHistory,
-    faPlus,
     faPenToSquare,
+    faPlus,
     faTrash,
     faTriangleExclamation,
     faXmark,
@@ -27,6 +27,7 @@
   let type = $state(data.platform.type ?? "");
   let status = $state(data.platform.status);
   let loginPageUrl = $state(data.platform.login_page_url ?? "");
+  let searchPageUrl = $state(data.platform.search_page_url ?? "");
 
   function discoveryStatusColor(s: string) {
     if (s === "success") return "text-green-600 dark:text-green-400";
@@ -72,7 +73,9 @@
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
     </a>
-    <h1 class="text-2xl font-semibold text-[var(--dash-text)]">{data.platform.name}</h1>
+    <h1 class="text-2xl font-semibold text-[var(--dash-text)]">
+      {data.platform.name}
+    </h1>
     <code
       class="text-sm text-[var(--dash-text-secondary)] font-mono"
     >{data.platform.key}</code>
@@ -113,7 +116,9 @@
       };
     }}
   >
-    <h3 class="text-sm font-medium text-[var(--dash-text)]">Platform details</h3>
+    <h3 class="text-sm font-medium text-[var(--dash-text)]">
+      Platform details
+    </h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
@@ -211,6 +216,39 @@
           class="w-full px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
         />
       </div>
+      <div class="md:col-span-2">
+        <label
+          class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
+          for="field-search"
+        >Search page URL</label>
+        <div class="flex items-center gap-2">
+          <input
+            id="field-search"
+            name="search_page_url"
+            type="url"
+            bind:value={searchPageUrl}
+            placeholder="https://example.com/jobs"
+            class="flex-1 px-2 py-1 text-sm border border-[var(--dash-border)] rounded bg-[var(--dash-bg)] text-[var(--dash-text)]"
+          />
+          {#if searchPageUrl}
+            <a
+              href={searchPageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]"
+              aria-label="Open search page URL"
+            >
+              <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
+            </a>
+          {/if}
+        </div>
+        <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+          Entry page for the keyword + filter form. The scraper navigates here
+          before identifying form fields. Falls back to the base URL when empty.
+          Usually set by discovery — only edit if discovery picked the wrong
+          page.
+        </p>
+      </div>
     </div>
 
     <div class="flex justify-end">
@@ -218,20 +256,24 @@
         type="submit"
         disabled={saving}
         class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded hover:bg-[var(--dash-primary-hover)] disabled:opacity-60"
-      >{saving ? "Saving…" : "Save platform"}</button>
+      >
+        {saving ? "Saving…" : "Save platform"}
+      </button>
     </div>
   </form>
 
   <!-- Discovery — the dedicated discovery page hosts the config + history -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+  <div
+    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
+  >
     <div class="flex items-start justify-between gap-3">
       <div>
         <h3 class="text-sm font-medium text-[var(--dash-text)]">Discovery</h3>
         <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          The discovery scraper auto-detects this platform's search URL
-          template + filter parameters by logging in, probing the search
-          form, and clicking each filter option. Configure credentials and
-          start runs on the discovery page.
+          The discovery scraper auto-detects this platform's search URL template
+          + filter parameters by logging in, probing the search form, and
+          clicking each filter option. Configure credentials and start runs on
+          the discovery page.
         </p>
         {#if !data.platform.login_page_url}
           <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">
@@ -241,9 +283,13 @@
         {#if data.discoveryRuns.length > 0}
           {@const lastRun = data.discoveryRuns[0]}
           <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-            {data.discoveryRuns.length} run{data.discoveryRuns.length === 1 ? "" : "s"}
+            {data.discoveryRuns.length} run{
+              data.discoveryRuns.length === 1 ? "" : "s"
+            }
             ·
-            <span class={discoveryStatusColor(lastRun.status)}>last {lastRun.status}</span>
+            <span class={discoveryStatusColor(lastRun.status)}>last {
+                lastRun.status
+              }</span>
             {new Date(lastRun.started_at).toLocaleString()}
           </p>
         {/if}
@@ -256,13 +302,17 @@
   </div>
 
   <!-- Platform-level usage signals -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+  <div
+    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
+  >
     <div class="flex items-center gap-2 mb-3">
       <FontAwesomeIcon
         icon={faChartLine}
         class="w-4 h-4 text-[var(--dash-text-secondary)]"
       />
-      <h3 class="text-sm font-medium text-[var(--dash-text)]">Platform-level signals</h3>
+      <h3 class="text-sm font-medium text-[var(--dash-text)]">
+        Platform-level signals
+      </h3>
       <span
         class="text-xs text-[var(--dash-text-muted)]"
       >aggregate across all scrape runs</span>
@@ -270,43 +320,67 @@
     {#if totalRuns === 0}
       <p
         class="text-sm text-[var(--dash-text-muted)]"
-      >No runs recorded for this platform yet.</p>
+      >
+        No runs recorded for this platform yet.
+      </p>
     {:else}
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <div>
           <div class="text-[var(--dash-text-muted)]">Successful runs</div>
-          <div class="text-base font-medium text-green-600 dark:text-green-400 tabular-nums">{data.platform.success_count}</div>
+          <div
+            class="text-base font-medium text-green-600 dark:text-green-400 tabular-nums"
+          >
+            {data.platform.success_count}
+          </div>
           {#if data.platform.last_success_at}
-            <div class="text-[var(--dash-text-muted)] mt-0.5">last {formatTimestamp(data.platform.last_success_at)}</div>
+            <div class="text-[var(--dash-text-muted)] mt-0.5">
+              last {formatTimestamp(data.platform.last_success_at)}
+            </div>
           {/if}
         </div>
         <div>
           <div class="text-[var(--dash-text-muted)]">Failed runs</div>
-          <div class="text-base font-medium text-red-600 dark:text-red-400 tabular-nums">{data.platform.failure_count}</div>
+          <div
+            class="text-base font-medium text-red-600 dark:text-red-400 tabular-nums"
+          >
+            {data.platform.failure_count}
+          </div>
           {#if data.platform.last_failure_at}
-            <div class="text-[var(--dash-text-muted)] mt-0.5">last {formatTimestamp(data.platform.last_failure_at)}</div>
+            <div class="text-[var(--dash-text-muted)] mt-0.5">
+              last {formatTimestamp(data.platform.last_failure_at)}
+            </div>
           {/if}
         </div>
         <div>
           <div class="text-[var(--dash-text-muted)]">Total runs</div>
-          <div class="text-base font-medium text-[var(--dash-text)] tabular-nums">{totalRuns}</div>
+          <div
+            class="text-base font-medium text-[var(--dash-text)] tabular-nums"
+          >
+            {totalRuns}
+          </div>
         </div>
         <div>
           <div class="text-[var(--dash-text-muted)]">Success rate</div>
           <div
-            class="text-base font-medium tabular-nums {successRate != null && successRate >= 70
+            class="
+              text-base font-medium tabular-nums {successRate != null && successRate >= 70
               ? 'text-green-600 dark:text-green-400'
               : successRate != null && successRate >= 40
-                ? 'text-amber-600 dark:text-amber-400'
-                : 'text-red-600 dark:text-red-400'}"
-          >{successRate}%</div>
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-red-600 dark:text-red-400'}
+            "
+          >
+            {successRate}%
+          </div>
         </div>
       </div>
     {/if}
   </div>
 
   <!-- Change history -->
-  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+  <div
+    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
+  >
     <div class="flex items-center gap-2 mb-3">
       <FontAwesomeIcon
         icon={faHistory}
@@ -322,7 +396,10 @@
     {#if data.history.length === 0}
       <p
         class="text-sm text-[var(--dash-text-muted)]"
-      >No platform-level edits recorded yet. (Preset CRUD is not audited in v1.)</p>
+      >
+        No platform-level edits recorded yet. (Preset CRUD is not audited in
+        v1.)
+      </p>
     {:else}
       <div class="space-y-2 text-xs">
         {#each data.history as entry (entry.id)}

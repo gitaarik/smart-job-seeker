@@ -70,6 +70,7 @@ export const actions: Actions = {
         type: parseNullableString(formData.get("type")),
         status: parseString(formData.get("status")),
         login_page_url: parseNullableString(formData.get("login_page_url")),
+        search_page_url: parseNullableString(formData.get("search_page_url")),
       });
       return { success: true, savedFields: result.changedFields };
     } catch (err) {

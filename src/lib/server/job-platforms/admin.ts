@@ -20,6 +20,7 @@ export type EditablePlatformFields = {
   type?: string | null;
   key?: string;
   login_page_url?: string | null;
+  search_page_url?: string | null;
 };
 
 const EDITABLE_FIELDS = [
@@ -29,6 +30,7 @@ const EDITABLE_FIELDS = [
   "type",
   "key",
   "login_page_url",
+  "search_page_url",
 ] as const satisfies ReadonlyArray<keyof EditablePlatformFields>;
 
 function normalize(value: unknown): string | null {
@@ -52,7 +54,9 @@ export async function updatePlatformWithAudit(
     throw new Error(`Platform ${platformId} not found`);
   }
 
-  const changes: Array<{ field: string; old: string | null; new: string | null }> = [];
+  const changes: Array<
+    { field: string; old: string | null; new: string | null }
+  > = [];
   const setClause: Record<string, unknown> = {};
 
   for (const field of EDITABLE_FIELDS) {
@@ -75,7 +79,9 @@ export async function updatePlatformWithAudit(
   setClause.date_updated = new Date();
 
   await db.transaction(async (tx) => {
-    await tx.update(job_platforms).set(setClause).where(eq(job_platforms.id, platformId));
+    await tx.update(job_platforms).set(setClause).where(
+      eq(job_platforms.id, platformId),
+    );
     for (const c of changes) {
       await tx.insert(job_platform_changes).values({
         platform_id: platformId,
