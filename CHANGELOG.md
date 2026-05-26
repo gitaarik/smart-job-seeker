@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.57] - 2026-05-26
+
+2 commits since v0.5.56.
+
+### Changed
+- Display version information in the app header and debug API for preview and production environments
+
 ## [0.5.56] - 2026-05-26
 
 1 commit since v0.5.55.
