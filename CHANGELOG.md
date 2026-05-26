@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.60] - 2026-05-26
+
+1 commit since v0.5.59.
+
+### Fixed
+- Form config now remembers and avoids previously failed LLM-suggested field openers
+
 ## [0.5.59] - 2026-05-26
 
 1 commit since v0.5.58.
