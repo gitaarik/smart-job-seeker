@@ -41,6 +41,7 @@
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
   import type { DocType } from "$lib/utils/profile-doc-url";
   import { linkify } from "$lib/utils/linkify";
+  import { portalToBody } from "$lib/actions/portal";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -677,7 +678,7 @@
 <!-- Status Picker Modal -->
 {#if statusPickerOpen}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" onclick={(e) => { if (e.target === e.currentTarget) statusPickerOpen = false; }} onkeydown={(e) => { if (e.key === 'Escape') statusPickerOpen = false; }}>
+  <div use:portalToBody={{ onClose: () => (statusPickerOpen = false) }} class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" onclick={(e) => { if (e.target === e.currentTarget) statusPickerOpen = false; }}>
     <div class="bg-[var(--dash-card)] rounded-xl shadow-lg max-w-lg w-full p-6">
       <h3 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Update Status</h3>
 

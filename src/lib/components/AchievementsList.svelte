@@ -1,6 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+  import { portalToBody } from "$lib/actions/portal";
 
   export interface AchievementItem {
     description: string;
@@ -194,13 +195,12 @@
   Add Achievement
 </button>
 
-<svelte:window onkeydown={(e) => { if (e.key === "Escape" && editingIndex !== null) closeEdit(); }} />
-
 <!-- Edit Popup -->
 {#if editingIndex !== null}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
+    use:portalToBody={{ onClose: closeEdit }}
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
     onclick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}
   >

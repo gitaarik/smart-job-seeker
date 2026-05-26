@@ -15,6 +15,7 @@
     faUserMinus,
   } from "@fortawesome/free-solid-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { portalToBody } from "$lib/actions/portal";
 
   interface CredentialEntry {
     id: number;
@@ -708,6 +709,12 @@
 {#if sharingCredentialId !== null}
   {@const sharingCred = credentials.find((c) => c.id === sharingCredentialId)}
   <div
+    use:portalToBody={{
+      onClose: () => {
+        sharingCredentialId = null;
+        sharingError = null;
+      },
+    }}
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 sm:p-4"
   >
     <div

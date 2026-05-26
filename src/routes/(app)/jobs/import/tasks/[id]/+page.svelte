@@ -5,6 +5,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import Card from "../../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { portalToBody } from "$lib/actions/portal";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
   import ScoreBadge from "../../../components/ScoreBadge.svelte";
@@ -2801,13 +2802,13 @@
   {#if showBrowser}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      class="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:p-4"
-      onkeydown={(e) => {
-        if (e.key === "Escape") {
+      use:portalToBody={{
+        onClose: () => {
           showBrowser = false;
           if (vncEnabled) stopVnc();
-        }
+        },
       }}
+      class="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:p-4"
     >
       <!-- Backdrop (hidden on mobile since popup is full-screen) -->
       <div

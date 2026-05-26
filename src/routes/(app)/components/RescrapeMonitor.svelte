@@ -23,6 +23,7 @@
   import BrowserView from "./BrowserView.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import LogViewer from "./LogViewer.svelte";
+  import { portalToBody } from "$lib/actions/portal";
   import CountrySelect from "../jobs/components/CountrySelect.svelte";
   import CredentialSelector from "../jobs/components/CredentialSelector.svelte";
   import BrowserProviderToggle from "../jobs/components/BrowserProviderToggle.svelte";
@@ -314,10 +315,8 @@
 <!-- Modal backdrop -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
+  use:portalToBody={{ onClose: onclose }}
   class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-  onkeydown={(e) => {
-    if (e.key === "Escape") onclose();
-  }}
 >
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div

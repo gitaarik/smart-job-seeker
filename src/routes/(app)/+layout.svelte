@@ -31,6 +31,15 @@
       body: JSON.stringify(browserInfo),
     }).catch(() => {});
   });
+
+  // Mirror --imp-offset onto <body> so modals portaled out of the route subtree
+  // (via the portalToBody action) can still read it for chrome-offset padding.
+  $effect(() => {
+    document.body.style.setProperty(
+      "--imp-offset",
+      data.adminUser ? "36px" : "0px",
+    );
+  });
 </script>
 
 <svelte:head>

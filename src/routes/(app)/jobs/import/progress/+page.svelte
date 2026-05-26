@@ -9,6 +9,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import ScoreBadge from "../../components/ScoreBadge.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { portalToBody } from "$lib/actions/portal";
 
   let { data }: { data: PageData } = $props();
 
@@ -463,9 +464,9 @@
 {#if showRematchModal}
   <!-- Backdrop -->
   <div
+    use:portalToBody
     class="fixed inset-0 bg-black/50 z-40"
     onclick={() => (showRematchModal = false)}
-    onkeydown={(e) => e.key === "Escape" && (showRematchModal = false)}
     role="button"
     tabindex="-1"
     aria-label="Close modal"
@@ -473,6 +474,7 @@
 
   <!-- Rematch Modal -->
   <div
+    use:portalToBody={{ onClose: () => (showRematchModal = false) }}
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
     role="dialog"
     aria-modal="true"

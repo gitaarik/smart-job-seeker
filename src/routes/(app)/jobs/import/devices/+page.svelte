@@ -25,6 +25,7 @@
   import Card from "../../../components/Card.svelte";
   import CopyButton from "../../../components/CopyButton.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { portalToBody } from "$lib/actions/portal";
 
   let { data }: { data: PageData } = $props();
 
@@ -1218,6 +1219,7 @@ volumes:
 {#if sharingKeyId !== null}
   {@const sharingKey = apiKeys.find((k) => k.id === sharingKeyId)}
   <div
+    use:portalToBody={{ onClose: () => (sharingKeyId = null) }}
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
   >
     <div

@@ -7,6 +7,7 @@
     faCheck,
   } from "@fortawesome/free-solid-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { portalToBody } from "$lib/actions/portal";
 
   interface Props {
     entityType: string;
@@ -234,13 +235,10 @@
   {/if}
 </div>
 
-<svelte:window onkeydown={(e) => {
-  if (e.key === "Escape" && showFullPreview) showFullPreview = false;
-}} />
-
 <!-- Full preview modal -->
 {#if showFullPreview && previewUrl}
   <div
+    use:portalToBody={{ onClose: () => (showFullPreview = false) }}
     role="dialog"
     aria-modal="true"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"

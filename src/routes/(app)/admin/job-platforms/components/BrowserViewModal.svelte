@@ -19,6 +19,7 @@
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { portalToBody } from "$lib/actions/portal";
 
   interface Props {
     open: boolean;
@@ -97,11 +98,9 @@
 {#if open && (isCloudMode || isTunnelMode)}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
+    use:portalToBody={{ onClose: close }}
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
     onclick={close}
-    onkeydown={(e) => {
-      if (e.key === "Escape") close();
-    }}
     role="presentation"
   >
     <div class="absolute inset-0 bg-black/60"></div>

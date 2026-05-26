@@ -1,6 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faExclamationTriangle, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
+  import { portalToBody } from "$lib/actions/portal";
 
   interface Props {
     isOpen: boolean;
@@ -47,9 +48,9 @@
 {#if isOpen}
   <!-- Backdrop -->
   <div
+    use:portalToBody
     class="fixed inset-0 bg-black/50 z-40"
     onclick={onCancel}
-    onkeydown={(e) => e.key === "Escape" && onCancel()}
     role="button"
     tabindex="-1"
     aria-label="Close modal"
@@ -58,6 +59,7 @@
 
   <!-- Modal -->
   <div
+    use:portalToBody={{ onClose: onCancel }}
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
     role="dialog"
     aria-modal="true"
