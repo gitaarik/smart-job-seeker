@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.59] - 2026-05-26
+
+1 commit since v0.5.58.
+
+### Fixed
+- Fixed excessive scanning time in form configuration direct-fallback mode
+
 ## [0.5.58] - 2026-05-26
 
 1 commit since v0.5.57.
