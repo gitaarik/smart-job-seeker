@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.56] - 2026-05-26
+
+1 commit since v0.5.55.
+
+### Fixed
+- Scraper screenshots are now properly mounted and accessible in production app and worker containers
+
 ## [0.5.55] - 2026-05-26
 
 2 commits since v0.5.54.
