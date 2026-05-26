@@ -13,8 +13,12 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, asc } from "drizzle-orm";
-import { search_task_runs, search_task_run_items, scraper_logs } from "$lib/server/db/schema";
+import { asc, eq } from "drizzle-orm";
+import {
+  scraper_logs,
+  search_task_run_items,
+  search_task_runs,
+} from "$lib/server/db/schema";
 
 function requireDebugAuth(request: Request): void {
   const key = process.env.DEBUG_API_KEY;
@@ -105,6 +109,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
         level: true,
         message: true,
         timestamp: true,
+        screenshot_path: true,
       },
     }),
   ]);
