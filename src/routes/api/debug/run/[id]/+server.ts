@@ -19,6 +19,19 @@ import {
   search_task_run_items,
   search_task_runs,
 } from "$lib/server/db/schema";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const APP_VERSION: string = (() => {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(join(process.cwd(), "package.json"), "utf8"),
+    );
+    return typeof pkg.version === "string" ? pkg.version : "unknown";
+  } catch {
+    return "unknown";
+  }
+})();
 
 function requireDebugAuth(request: Request): void {
   const key = process.env.DEBUG_API_KEY;
@@ -139,5 +152,6 @@ export const GET: RequestHandler = async ({ params, request }) => {
     items,
     logs,
     environment: detectEnvironment(),
+    version: APP_VERSION,
   });
 };
