@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.55] - 2026-05-26
+
+2 commits since v0.5.54.
+
+### Added
+- Debug API endpoint to retrieve scraper screenshots with debug-key authentication
+- Screenshot capture and storage for scraper debug runs
+
 ## [0.5.54] - 2026-05-26
 
 2 commits since v0.5.53.
