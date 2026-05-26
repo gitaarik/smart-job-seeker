@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.58] - 2026-05-26
+
+1 commit since v0.5.57.
+
+### Fixed
+- Form configuration now correctly handles missing values in widgets during retry attempts
+
 ## [0.5.57] - 2026-05-26
 
 2 commits since v0.5.56.
