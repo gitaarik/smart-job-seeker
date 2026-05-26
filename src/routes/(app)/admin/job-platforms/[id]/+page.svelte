@@ -59,6 +59,14 @@
     if (!value) return "—";
     return value.length > max ? value.slice(0, max) + "…" : value;
   }
+
+  // Tuples of (canonical, value-keys) recorded as unsupported on this
+  // platform — drives the per-row Clear buttons below.
+  let unsupportedEntries = $derived(
+    Object.entries(
+      (data.platform.unsupported_filters ?? {}) as Record<string, string[]>,
+    ).filter(([, vs]) => Array.isArray(vs) && vs.length > 0),
+  );
 </script>
 
 <svelte:head>
@@ -374,6 +382,100 @@
           </div>
         </div>
       </div>
+    {/if}
+  </div>
+
+  <!-- Unsupported filters -->
+  <div
+    class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
+  >
+    <div class="flex items-center gap-2 mb-3">
+      <FontAwesomeIcon
+        icon={faTriangleExclamation}
+        class="w-4 h-4 text-[var(--dash-text-secondary)]"
+      />
+      <h3 class="text-sm font-medium text-[var(--dash-text)]">
+        Unsupported filters
+        <span class="text-[var(--dash-text-muted)] font-normal">
+          ({unsupportedEntries.length})
+        </span>
+      </h3>
+      {#if data.platform.unsupported_filters_at}
+        <span class="text-xs text-[var(--dash-text-muted)] ml-auto">
+          last recorded {formatTimestamp(data.platform.unsupported_filters_at)}
+        </span>
+      {/if}
+    </div>
+
+    {#if unsupportedEntries.length === 0}
+      <p class="text-sm text-[var(--dash-text-muted)]">
+        No filters recorded as unsupported on this platform.
+      </p>
+    {:else}
+      <p class="text-xs text-[var(--dash-text-muted)] mb-3">
+        Recorded automatically when the scraper requested a filter the form
+        didn't expose. Stripped from future runs — clear to let the scraper
+        re-attempt.
+      </p>
+      <ul class="space-y-1 text-sm">
+        {#each unsupportedEntries as [canonical, values] (canonical)}
+          <li
+            class="flex items-center gap-3 py-1 border-b border-[var(--dash-border)] last:border-0"
+          >
+            <span
+              class="font-mono px-1.5 py-0.5 bg-[var(--dash-bg)] rounded text-[var(--dash-text)]"
+            >{canonical}</span>
+            <span class="text-[var(--dash-text-muted)] flex-1 min-w-0 truncate">
+              [{values.join(", ")}]
+            </span>
+            <form
+              method="POST"
+              action="?/clear_unsupported"
+              use:enhance={() => {
+                return async ({ result, update }) => {
+                  await update();
+                  if (result.type === "success") await invalidateAll();
+                };
+              }}
+            >
+              <input type="hidden" name="canonical" value={canonical} />
+              <button
+                type="submit"
+                class="text-xs px-2 py-0.5 rounded border border-[var(--dash-border)] hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]"
+              >
+                Clear
+              </button>
+            </form>
+          </li>
+        {/each}
+      </ul>
+      <form
+        method="POST"
+        action="?/clear_unsupported"
+        class="mt-3 text-right"
+        use:enhance={({ cancel }) => {
+          if (
+            !confirm(
+              `Clear all ${unsupportedEntries.length} unsupported-filter record(s) for this platform?`,
+            )
+          ) {
+            cancel();
+            return;
+          }
+          return async ({ result, update }) => {
+            await update();
+            if (result.type === "success") await invalidateAll();
+          };
+        }}
+      >
+        <input type="hidden" name="canonical" value="__all__" />
+        <button
+          type="submit"
+          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]"
+        >
+          Clear all
+        </button>
+      </form>
     {/if}
   </div>
 
