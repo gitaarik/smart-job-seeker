@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.54] - 2026-05-26
+
+2 commits since v0.5.53.
+
+### Changed
+- Admin: search_page_url is now editable on the job platform detail page
+
 ## [0.5.53] - 2026-05-26
 
 1 commits since v0.5.52.
