@@ -38,3 +38,24 @@ export {
   importMediaFiles,
   deleteProfileMediaFiles,
 } from "./import-media";
+
+// Settings export/import (search_tasks, match_config, email digest, salary)
+export {
+  buildSettingsExport,
+  defaultSettingsExportOptions,
+  type SettingsExportOptions,
+} from "./settings-export";
+export {
+  importSettings,
+  validateSettingsExport,
+  type SettingsImportOptions,
+  type SettingsImportSummary,
+} from "./settings-import";
+export type {
+  SettingsExportData,
+  ExportedSearchTask,
+  ExportedMatchConfig,
+  ExportedEmailDigest,
+  ExportedSalary,
+  ExportedSalaryExpectation,
+} from "./settings-types";

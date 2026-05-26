@@ -259,7 +259,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each exports as exp (exp.id)}
           <a
-            href="/export/data/download?id={exp.id}"
+            href="/data/profile-export/download?id={exp.id}"
             download
             class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 hover:border-[var(--dash-primary)] transition-colors block"
           >

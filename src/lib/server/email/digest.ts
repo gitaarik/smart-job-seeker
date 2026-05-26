@@ -192,7 +192,7 @@ function buildDigestHtml(opts: DigestOptions): string {
       <p style="margin-top: 16px; color: #9ca3af; font-size: 12px;">
         You're receiving this because email digests are enabled for your "${escapeHtml(opts.profileName)}" profile.
         <br />
-        <a href="${opts.appUrl}/export/settings" style="color: #9ca3af;">Manage preferences</a>
+        <a href="${opts.appUrl}/jobs/import/notifications" style="color: #9ca3af;">Manage preferences</a>
       </p>
     </div>
   </div>

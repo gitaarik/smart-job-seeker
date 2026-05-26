@@ -1,5 +1,5 @@
 <script lang="ts">
-  // This page redirects to /export/import
+  // This page redirects to /data/profile-import
 </script>
 
 <p>Redirecting...</p>

@@ -1,15 +1,23 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { page } from "$app/stores";
-  import { faDownload, faFileImport, faExchangeAlt } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faDownload,
+    faFileImport,
+    faExchangeAlt,
+    faSlidersH,
+    faFileExport,
+  } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import TabNav from "../../components/TabNav.svelte";
 
   let { children }: { children: Snippet } = $props();
 
   const tabs = [
-    { label: "Import", href: "/export/import", icon: faFileImport },
-    { label: "Export", href: "/export/data", icon: faDownload },
+    { label: "Profile Import", href: "/data/profile-import", icon: faFileImport },
+    { label: "Profile Export", href: "/data/profile-export", icon: faDownload },
+    { label: "Settings Import", href: "/data/settings-import", icon: faSlidersH },
+    { label: "Settings Export", href: "/data/settings-export", icon: faFileExport },
   ];
 
   function isTabActive(href: string): boolean {

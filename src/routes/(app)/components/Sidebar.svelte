@@ -32,7 +32,6 @@
     faRobot,
     faSearch,
     faShieldAlt,
-    faSliders,
     faTimes,
     faTrash,
     faUser,
@@ -150,18 +149,22 @@
     },
     {
       label: "Data & Settings",
-      href: "/export",
+      href: "/data",
       icon: faCog,
       children: [
         {
           label: "Import & Export",
-          href: "/export/import",
+          href: "/data/profile-import",
           icon: faExchangeAlt,
-          alsoActiveFor: ["/export/data"],
+          alsoActiveFor: [
+            "/data/profile-export",
+            "/data/settings-import",
+            "/data/settings-export",
+          ],
         },
         {
-          label: "Settings",
-          href: "/export/settings",
+          label: "Account",
+          href: "/data/account",
           icon: faWrench,
         },
       ],
