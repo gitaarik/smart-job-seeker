@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.66] - 2026-05-27
+
+2 commits since v0.5.65.
+
+### Fixed
+- Client log forwarding now waits for authentication before sending
+- Email digest preferred hour no longer locks to a specific period
+
 ## [0.5.65] - 2026-05-27
 
 2 commits since v0.5.64.
