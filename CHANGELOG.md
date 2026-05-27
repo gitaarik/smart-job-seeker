@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.64] - 2026-05-27
+
+9 commits since v0.5.63.
+
+### Added
+- Mid-senior aliases for the mid search filter
+
+### Fixed
+- Search filters: hours_commitment now correctly opens employment-type and job-type popups
+- Form configuration: improved reliability with better popup detection, state verification, and timeout handling
+
 ## [0.5.63] - 2026-05-27
 
 4 commits since v0.5.62.
