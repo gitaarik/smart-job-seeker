@@ -1306,6 +1306,50 @@ export const search_form_probe_debug = pgTable("search_form_probe_debug", {
   }).onDelete("cascade"),
 ]);
 
+// Hierarchical action groupings within a scraper run. A step opens when the
+// scraper enters a logical unit of work ("login", "apply filter", "import
+// job") and closes when it finishes. Steps nest via parent_step_id so a UI
+// can render the run as a collapsible tree. Each scraper_logs row may
+// reference a step via step_id; lines outside any step attach to the run
+// root.
+export const scraper_log_steps = pgTable("scraper_log_steps", {
+  id: serial().primaryKey().notNull(),
+  run_id: integer().notNull(),
+  parent_step_id: integer(),
+  name: text().notNull(),
+  // status NULL = still running (or the process died before close). Closed
+  // steps carry 'success' | 'error' | 'skipped'.
+  status: varchar({ length: 10 }),
+  error_message: text(),
+  // Arbitrary structured payload attached to the step. Filter heuristics
+  // store {canonical, candidates, chosen, score}; item-import steps store
+  // {item_id, position}; decisions store {candidates, chosen, reason}.
+  metadata: jsonb(),
+  started_at: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+  finished_at: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
+}, (table) => [
+  index("scraper_log_steps_run_id_started_idx").using(
+    "btree",
+    table.run_id.asc().nullsLast().op("int4_ops"),
+    table.started_at.asc().nullsLast(),
+  ),
+  index("scraper_log_steps_parent_idx").using(
+    "btree",
+    table.parent_step_id.asc().nullsLast().op("int4_ops"),
+  ),
+  foreignKey({
+    columns: [table.run_id],
+    foreignColumns: [search_task_runs.id],
+    name: "scraper_log_steps_run_id_fkey",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.parent_step_id],
+    foreignColumns: [table.id],
+    name: "scraper_log_steps_parent_step_id_fkey",
+  }).onDelete("cascade"),
+]);
+
 export const scraper_logs = pgTable("scraper_logs", {
   id: serial().primaryKey().notNull(),
   run_id: integer().notNull(),
@@ -1318,17 +1362,38 @@ export const scraper_logs = pgTable("scraper_logs", {
   // debug_screenshots enabled at run time. File lives under
   // /data/scraper-screenshots/<task_id>/<run_id>/<this>.
   screenshot_path: varchar({ length: 255 }),
+  // Which process emitted the log. 'cloud' = the worker; 'tunnel' = forwarded
+  // from the user's tunnel-client over the WebSocket. Lets the debug UI
+  // interleave both views and tag them visually.
+  source: varchar({ length: 20 }).default("cloud").notNull(),
+  // Intended consumer. 'dev' is the staff debug view; 'user' is surfaced in
+  // the customer-facing run status. Default 'dev' so opting into user-facing
+  // is explicit at each log site.
+  audience: varchar({ length: 10 }).default("dev").notNull(),
+  // Owning step, if the log was emitted inside one. NULL = run-root line.
+  step_id: integer(),
+  // Free-form structured payload — same usage pattern as scraper_log_steps.metadata.
+  metadata: jsonb(),
 }, (table) => [
   index("scraper_logs_run_id_timestamp_idx").using(
     "btree",
     table.run_id.asc().nullsLast().op("int4_ops"),
     table.timestamp.asc().nullsLast().op("int4_ops"),
   ),
+  index("scraper_logs_step_id_idx").using(
+    "btree",
+    table.step_id.asc().nullsLast().op("int4_ops"),
+  ),
   foreignKey({
     columns: [table.run_id],
     foreignColumns: [search_task_runs.id],
     name: "scraper_logs_run_id_fkey",
   }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.step_id],
+    foreignColumns: [scraper_log_steps.id],
+    name: "scraper_logs_step_id_fkey",
+  }).onDelete("set null"),
 ]);
 
 export const salary_expectations = pgTable("salary_expectations", {
@@ -2869,6 +2934,7 @@ export type ProjectStories = typeof project_stories.$inferSelect;
 export type ProfileExports = typeof profile_exports.$inferSelect;
 export type References = typeof references.$inferSelect;
 export type ScraperLogs = typeof scraper_logs.$inferSelect;
+export type ScraperLogSteps = typeof scraper_log_steps.$inferSelect;
 export type SalaryExpectations = typeof salary_expectations.$inferSelect;
 export type ProfileVersions = typeof profile_versions.$inferSelect;
 export type SideProjectTechnologies =

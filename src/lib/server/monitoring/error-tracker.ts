@@ -26,12 +26,26 @@ class ErrorTracker {
    * Log an error with structured context
    */
   logError(message: string, error: Error, context?: ErrorContext): void {
+    // Errors thrown inside a scraper `step()` carry a `sjsStep` decoration
+    // (runId / stepId / parent / name). Pull it into the context so it
+    // shows up in Sentry/GlitchTip extras and the console log.
+    const stepInfo = (error as Error & { sjsStep?: Record<string, unknown> }).sjsStep;
+    const enrichedContext: ErrorContext | undefined = stepInfo
+      ? {
+        ...(context ?? {}),
+        metadata: {
+          ...(context?.metadata ?? {}),
+          sjsStep: stepInfo,
+        },
+      }
+      : context;
+
     const logEntry: LogContext = {
       level: "error",
       message,
       error,
       timestamp: new Date(),
-      ...context,
+      ...enrichedContext,
     };
 
     console.error(
@@ -40,13 +54,13 @@ class ErrorTracker {
         name: error.name,
         message: error.message,
         stack: error.stack,
-        ...context,
+        ...enrichedContext,
       },
     );
 
     if (process.env.SENTRY_DSN) {
       Sentry.captureException(error, {
-        contexts: { custom: context as Record<string, unknown> },
+        contexts: { custom: enrichedContext as Record<string, unknown> },
       });
     }
   }

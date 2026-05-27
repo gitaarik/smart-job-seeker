@@ -15,6 +15,7 @@ import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { asc, eq } from "drizzle-orm";
 import {
+  scraper_log_steps,
   scraper_logs,
   search_task_run_items,
   search_task_runs,
@@ -97,8 +98,8 @@ export const GET: RequestHandler = async ({ params, request }) => {
 
   if (!run) throw error(404, "Run not found");
 
-  // Fetch items and logs in parallel
-  const [items, logs] = await Promise.all([
+  // Fetch items, logs, and step tree in parallel
+  const [items, logs, steps] = await Promise.all([
     db.query.search_task_run_items.findMany({
       where: eq(search_task_run_items.run_id, runId),
       orderBy: asc(search_task_run_items.position),
@@ -123,6 +124,24 @@ export const GET: RequestHandler = async ({ params, request }) => {
         message: true,
         timestamp: true,
         screenshot_path: true,
+        source: true,
+        audience: true,
+        step_id: true,
+        metadata: true,
+      },
+    }),
+    db.query.scraper_log_steps.findMany({
+      where: eq(scraper_log_steps.run_id, runId),
+      orderBy: asc(scraper_log_steps.started_at),
+      columns: {
+        id: true,
+        parent_step_id: true,
+        name: true,
+        status: true,
+        error_message: true,
+        metadata: true,
+        started_at: true,
+        finished_at: true,
       },
     }),
   ]);
@@ -151,6 +170,7 @@ export const GET: RequestHandler = async ({ params, request }) => {
     },
     items,
     logs,
+    steps,
     environment: detectEnvironment(),
     version: APP_VERSION,
   });
