@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.67] - 2026-05-27
+
+2 commits since v0.5.66.
+
+### Fixed
+- Eliminated GlitchTip error monitoring noise from array casting and 404 scanner activity
+
+### Changed
+- Completed job/profile column naming consistency in matcher module
+
 ## [0.5.66] - 2026-05-27
 
 2 commits since v0.5.65.
