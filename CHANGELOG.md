@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.63] - 2026-05-27
+
+4 commits since v0.5.62.
+
+### Fixed
+- Modal portal positioning to <body> and dim overlay cut-off
+- Chromium dependencies installation in production Docker image
+- Form commit URL change validation
+
 ## [0.5.62] - 2026-05-26
 
 1 commit since v0.5.61.
