@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.68] - 2026-05-27
+
+1 commits since v0.5.67.
+
+### Changed
+- Moved WebSocket envelope traces to debug level to reduce cloud log verbosity
+
 ## [0.5.67] - 2026-05-27
 
 2 commits since v0.5.66.
