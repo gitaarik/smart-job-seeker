@@ -301,7 +301,11 @@ export const OPTION_LABEL_ALIASES: Partial<
   },
   experience_level: {
     entry: ["entry-level", "entry level", "junior", "associate", "internship"],
-    mid: ["mid-level", "mid level", "intermediate"],
+    // "Mid-Senior level" / "Mid-Senior" covers platforms whose tier
+    // collapses mid + senior into one band. Inventory-side dedup is by
+    // accessible name, so if `senior` lands on the same node first this
+    // alias won't toggle it back off.
+    mid: ["mid-level", "mid level", "intermediate", "mid-senior", "mid-senior level"],
     // "Expert" covers Upwork (3-tier scale: Entry / Intermediate / Expert) —
     // listed last so platforms with a real "Senior" label match it first.
     senior: ["senior", "senior-level", "sr.", "expert"],
