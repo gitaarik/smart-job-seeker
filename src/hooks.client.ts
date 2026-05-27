@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/sveltekit";
+import { isFrameworkClientError } from "$lib/monitoring/sentry-filters";
 
 const dsn = import.meta.env.PUBLIC_SENTRY_DSN;
 
@@ -13,6 +14,10 @@ if (dsn) {
     dsn,
     environment,
     tracesSampleRate: 0,
+    beforeSend(event) {
+      const value = event.exception?.values?.[0]?.value;
+      return isFrameworkClientError(value) ? null : event;
+    },
   });
 }
 

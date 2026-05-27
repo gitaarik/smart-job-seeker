@@ -7,7 +7,7 @@
  */
 
 import type { SQL } from "drizzle-orm";
-import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
+import { dbDirect as db, queryRaw, sql, sqlJoin } from "$lib/server/db";
 import { buildEligibilityFilter } from "$lib/server/job/eligibility";
 import { getProfileSkills } from "$lib/server/job/match-utils";
 
@@ -144,7 +144,7 @@ export async function getCommunityJobCountsByWindow(
     SELECT
       w.days,
       COUNT(DISTINCT j.id)::int AS cnt
-    FROM UNNEST(${windows.map((w) => w ?? -1)}::int[]) AS w(days)
+    FROM UNNEST(ARRAY[${sqlJoin(windows.map((w) => w ?? -1))}]::int[]) AS w(days)
     LEFT JOIN jobs j ON j.status != 'archived'
       AND j.id NOT IN (SELECT ji.job_id FROM job_importers ji WHERE ji.profile_id = ${profileId})
       AND (w.days = -1 OR j.date_created >= NOW() - MAKE_INTERVAL(days => w.days))

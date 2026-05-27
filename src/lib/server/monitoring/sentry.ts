@@ -6,6 +6,7 @@
  */
 
 import * as Sentry from "@sentry/sveltekit";
+import { isFrameworkClientError } from "$lib/monitoring/sentry-filters";
 
 function getEnvironmentName(): string {
   const host = process.env.SJS_APP_URL_HOST || "";
@@ -26,6 +27,10 @@ export function initSentry(component: "sveltekit" | "worker") {
     environment: getEnvironmentName(),
     serverName: component,
     tracesSampleRate: 0,
+    beforeSend(event) {
+      const value = event.exception?.values?.[0]?.value;
+      return isFrameworkClientError(value) ? null : event;
+    },
   });
 
   initialized = true;
