@@ -253,7 +253,20 @@ export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> 
     "work mode",
     "work location",
   ],
-  hours_commitment: ["hours", "weekly hours", "time commitment"],
+  // LinkedIn (and several other boards) puts fulltime/parttime inside an
+  // "Employment type" / "Job type" popup alongside contract/internship.
+  // Listing those aliases here lets the heuristic find the right opener
+  // directly — without them, hours_commitment falls through to the LLM
+  // identifier which has picked "Filter by Jobs" / "Filter by Company" in
+  // the past (run 805). The harvest mechanism handles the co-location.
+  hours_commitment: [
+    "hours",
+    "weekly hours",
+    "time commitment",
+    "employment type",
+    "type of employment",
+    "job type",
+  ],
   employment_type: ["employment type", "type of employment", "job type"],
   experience_level: [
     "experience level",
