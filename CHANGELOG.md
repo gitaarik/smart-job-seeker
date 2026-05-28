@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.71] - 2026-05-28
+
+1 commit since v0.5.70.
+
+### Added
+- Per-credential Chrome profile directories on the NAS for improved session isolation
+
 ## [0.5.70] - 2026-05-28
 
 3 commits since v0.5.69.
