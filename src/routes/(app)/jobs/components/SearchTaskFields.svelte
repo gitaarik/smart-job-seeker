@@ -163,11 +163,22 @@
     userPickedNew = value === "new";
   }
 
+  // Credential to default the picker to. Only ever auto-pick a credential the
+  // user owns — never a shared one. A shared credential can only run on a
+  // device owned by its owner (enforced server-side), so auto-selecting one
+  // would silently dead-end the user at save time if no such device is
+  // shared. Shared credentials still appear in the dropdown for deliberate
+  // selection. Returns "new" when the user owns no credential for the
+  // platform.
+  function defaultCredentialId(): string {
+    const owned = existingCredentials.find((c) => !c.shared);
+    return owned ? String(owned.id) : "new";
+  }
+
   // Keep the credential selection in sync with platform detection. When
-  // detection delivers credentials (own or shared), pick the first one so the
-  // dropdown always shows a meaningful selection — matching what the
-  // Auto-login tab does on click. Only override "new" when the user didn't
-  // pick it explicitly.
+  // detection delivers an owned credential, default to it so the dropdown
+  // shows a meaningful selection — matching what the Auto-login tab does on
+  // click. Only override "new" when the user didn't pick it explicitly.
   $effect(() => {
     if (!isAdd) return;
     if (addLoginMode !== "auto") return;
@@ -176,13 +187,9 @@
       (c) => String(c.id) === selectedCredentialId,
     );
     if (matches) return;
-    if (existingCredentials.length > 0) {
-      selectedCredentialId = String(existingCredentials[0].id);
-      showNewCredentials = false;
-    } else {
-      selectedCredentialId = "new";
-      showNewCredentials = true;
-    }
+    const next = defaultCredentialId();
+    selectedCredentialId = next;
+    showNewCredentials = next === "new";
   });
 
   // ── Add-mode browser provider ──
@@ -1121,9 +1128,7 @@
                   onclick={() => {
                     addLoginMode = "auto";
                     if (selectedCredentialId === "none") {
-                      selectedCredentialId = existingCredentials.length > 0
-                        ? String(existingCredentials[0].id)
-                        : "new";
+                      selectedCredentialId = defaultCredentialId();
                     }
                     showNewCredentials = selectedCredentialId === "new";
                   }}
