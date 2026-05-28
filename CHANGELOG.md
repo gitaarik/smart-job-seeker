@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.70] - 2026-05-28
+
+3 commits since v0.5.69.
+
+### Added
+- Freelance vs employment income preview
+
+### Changed
+- Tunnel now sends platform-profile ID to the client
+
 ## [0.5.69] - 2026-05-28
 
 1 commit since v0.5.68.
