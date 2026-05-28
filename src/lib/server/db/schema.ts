@@ -2177,6 +2177,7 @@ export const profiles = pgTable("profiles", {
   salary_currency: varchar({ length: 10 }).default("EUR"),
   salary_adjustments: json(),
   salary_region_overrides: json(),
+  salary_income_assumptions: jsonb(),
   email_digest_enabled: boolean().default(false),
   email_digest_frequency_days: integer().default(7),
   email_digest_min_score: integer().default(70),

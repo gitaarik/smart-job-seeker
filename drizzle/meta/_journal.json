@@ -260,6 +260,13 @@
       "when": 1779904471320,
       "tag": "0036_melted_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1779971853318,
+      "tag": "0037_minor_absorbing_man",
+      "breakpoints": true
     }
   ]
 }

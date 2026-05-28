@@ -12,7 +12,13 @@ const DAYS_PER_MONTH = 21.75; // ~261 working days / 12
 const MONTHS_PER_YEAR = 12;
 
 /** Canonical salary periods. "project" means a fixed-price/one-time amount. */
-export type SalaryPeriod = "hour" | "day" | "week" | "month" | "year" | "project";
+export type SalaryPeriod =
+  | "hour"
+  | "day"
+  | "week"
+  | "month"
+  | "year"
+  | "project";
 
 /** Map raw salary_period strings to canonical values */
 const PERIOD_ALIASES: Record<string, SalaryPeriod> = {
@@ -50,7 +56,9 @@ const PERIOD_ALIASES: Record<string, SalaryPeriod> = {
  * Normalize a raw salary_period string to a canonical SalaryPeriod.
  * Returns null if the value is unrecognized.
  */
-export function normalizeSalaryPeriod(raw: string | null | undefined): SalaryPeriod | null {
+export function normalizeSalaryPeriod(
+  raw: string | null | undefined,
+): SalaryPeriod | null {
   if (!raw) return null;
   return PERIOD_ALIASES[raw.toLowerCase().trim()] ?? null;
 }
@@ -110,7 +118,9 @@ export function hourlyToRate(hourlyRate: number, period: SalaryPeriod): number {
     case "month":
       return Math.round(hourlyRate * HOURS_PER_DAY * DAYS_PER_MONTH);
     case "year":
-      return Math.round(hourlyRate * HOURS_PER_DAY * DAYS_PER_MONTH * MONTHS_PER_YEAR);
+      return Math.round(
+        hourlyRate * HOURS_PER_DAY * DAYS_PER_MONTH * MONTHS_PER_YEAR,
+      );
     case "project":
       return hourlyRate;
   }
@@ -146,7 +156,11 @@ const EUR_RATES: Record<string, number> = {
   GBP: 0.86,
 };
 
-export function convertCurrency(amount: number, from: string, to: string): number {
+export function convertCurrency(
+  amount: number,
+  from: string,
+  to: string,
+): number {
   if (from === to) return amount;
   const fromRate = EUR_RATES[from];
   const toRate = EUR_RATES[to];
@@ -183,21 +197,112 @@ export function getEffectiveRate(
 
   let totalAdjustment = 0;
 
-  if (context.employment_type && adjustments.employment_type?.[context.employment_type] != null) {
+  if (
+    context.employment_type &&
+    adjustments.employment_type?.[context.employment_type] != null
+  ) {
     totalAdjustment += adjustments.employment_type[context.employment_type];
   }
 
-  if (context.work_arrangement && adjustments.work_arrangement?.[context.work_arrangement] != null) {
+  if (
+    context.work_arrangement &&
+    adjustments.work_arrangement?.[context.work_arrangement] != null
+  ) {
     totalAdjustment += adjustments.work_arrangement[context.work_arrangement];
   }
 
-  if (context.company_type && adjustments.company_type?.[context.company_type] != null) {
+  if (
+    context.company_type &&
+    adjustments.company_type?.[context.company_type] != null
+  ) {
     totalAdjustment += adjustments.company_type[context.company_type];
   }
 
   return {
     rate: Math.round(baseRate * (1 + totalAdjustment / 100)),
     currency: effectiveCurrency,
+  };
+}
+
+/**
+ * Assumptions for projecting an hourly contract rate into annual income.
+ * Percentages are flat estimates, not real (progressive) tax tables — they're
+ * user-editable precisely because the right number is country-specific.
+ */
+export type IncomeAssumptions = {
+  /** Billable hours per year for freelance/contract (utilization is below a paid employee year). */
+  freelanceBillableHours: number;
+  /** Freelance deductions %: income tax + self-employed social contributions + business costs. */
+  freelanceDeductionPct: number;
+  /** Employment payroll deductions %: income tax + employee social contributions. */
+  employmentTaxPct: number;
+};
+
+export const DEFAULT_INCOME_ASSUMPTIONS: IncomeAssumptions = {
+  freelanceBillableHours: 1680,
+  freelanceDeductionPct: 45,
+  employmentTaxPct: 32,
+};
+
+export type IncomePeriods = {
+  grossMonth: number;
+  grossYear: number;
+  netMonth: number;
+  netYear: number;
+};
+
+export type IncomeEstimate = {
+  currency: string;
+  freelance: IncomePeriods;
+  /** Employment salary net-matched to the freelance take-home. */
+  employment: IncomePeriods;
+};
+
+const clampPct = (pct: number) => Math.min(Math.max(pct, 0), 100);
+
+/**
+ * Project an hourly contract rate into freelance vs employment income, from one base rate.
+ *
+ * Freelance gross = rate × billable hours; net = gross − deductions.
+ * Employment take-home is matched to the freelance net, and the gross salary is
+ * grossed back up by payroll tax — i.e. "the salary you'd need to take home the
+ * same after tax." This is the apples-to-apples bridge: the same hourly number
+ * means very different things, so we compare on take-home, not on gross.
+ */
+export function estimateIncome(
+  hourlyRate: number,
+  currency: string,
+  assumptions: IncomeAssumptions,
+): IncomeEstimate {
+  const billableHours = Math.max(assumptions.freelanceBillableHours, 0);
+  const freelancePct = clampPct(assumptions.freelanceDeductionPct);
+  const employmentPct = clampPct(assumptions.employmentTaxPct);
+
+  const freelanceGrossYear = Math.round(hourlyRate * billableHours);
+  const freelanceNetYear = Math.round(
+    freelanceGrossYear * (1 - freelancePct / 100),
+  );
+
+  // Salary that nets the same take-home after payroll tax. At 100% tax the
+  // gross-up is undefined, so fall back to the net to avoid dividing by zero.
+  const employmentGrossYear = employmentPct >= 100
+    ? freelanceNetYear
+    : Math.round(freelanceNetYear / (1 - employmentPct / 100));
+
+  return {
+    currency,
+    freelance: {
+      grossYear: freelanceGrossYear,
+      grossMonth: Math.round(freelanceGrossYear / MONTHS_PER_YEAR),
+      netYear: freelanceNetYear,
+      netMonth: Math.round(freelanceNetYear / MONTHS_PER_YEAR),
+    },
+    employment: {
+      grossYear: employmentGrossYear,
+      grossMonth: Math.round(employmentGrossYear / MONTHS_PER_YEAR),
+      netYear: freelanceNetYear,
+      netMonth: Math.round(freelanceNetYear / MONTHS_PER_YEAR),
+    },
   };
 }
 
@@ -255,7 +360,8 @@ export function compareSalary(
 
     const askHourly = rateToHourly(askAmount, askPeriod);
     const askConverted = convertCurrency(askHourly, askCurrency, jCurrency);
-    const askTotal = askConverted * jobDurationWeeks * DAYS_PER_WEEK * HOURS_PER_DAY;
+    const askTotal = askConverted * jobDurationWeeks * DAYS_PER_WEEK *
+      HOURS_PER_DAY;
 
     if (jobMin != null && jobMax != null) {
       if (askTotal < jobMin) return "below";
@@ -291,7 +397,10 @@ export function compareSalary(
 /**
  * Format a currency amount for display
  */
-export function formatCurrency(amount: number | null | undefined, currency: string): string {
+export function formatCurrency(
+  amount: number | null | undefined,
+  currency: string,
+): string {
   if (amount == null) return "-";
   return new Intl.NumberFormat("en-US", {
     style: "currency",

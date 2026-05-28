@@ -2,20 +2,23 @@
   import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faChevronDown,
+    faChevronUp,
+    faGlobe,
     faMoneyBillWave,
     faPlus,
     faTrash,
-    faGlobe,
-    faChevronDown,
-    faChevronUp,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import {
-    hourlyToRate,
+    DEFAULT_INCOME_ASSUMPTIONS,
+    estimateIncome,
     formatCurrency,
     getEffectiveRate,
+    hourlyToRate,
+    type IncomeAssumptions,
     REGION_CURRENCIES,
     type SalaryAdjustments,
     type SalaryRegionOverrides,
@@ -42,9 +45,16 @@
       : {},
   );
 
+  let incomeAssumptions = $state<IncomeAssumptions>({
+    ...DEFAULT_INCOME_ASSUMPTIONS,
+    ...(settings.incomeAssumptions ?? {}),
+  });
+
   // Save states per section
   let regionRatesState = $state<SaveState>("idle");
   let adjustmentsState = $state<SaveState>("idle");
+  let incomeState = $state<SaveState>("idle");
+  let showAssumptions = $state(false);
 
   async function saveRegionRates() {
     regionRatesState = "saving";
@@ -98,23 +108,63 @@
     }
   }
 
+  async function saveIncomeAssumptions() {
+    incomeState = "saving";
+    try {
+      const formData = new FormData();
+      formData.set("income_assumptions", JSON.stringify(incomeAssumptions));
+
+      const response = await fetch("?/saveIncomeAssumptions", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        incomeState = "error";
+        setTimeout(() => (incomeState = "idle"), 2000);
+        return;
+      }
+
+      incomeState = "saved";
+      setTimeout(() => (incomeState = "idle"), 2000);
+    } catch {
+      incomeState = "error";
+      setTimeout(() => (incomeState = "idle"), 2000);
+    }
+  }
+
   const currencies = [
     { value: "EUR", label: "EUR", symbol: "\u20AC" },
     { value: "USD", label: "USD", symbol: "$" },
     { value: "GBP", label: "GBP", symbol: "\u00A3" },
   ];
 
-  const predefinedRegions = REGIONS.values.map((v) => ({ value: v.canonical, label: v.label }));
+  const predefinedRegions = REGIONS.values.map((v) => ({
+    value: v.canonical,
+    label: v.label,
+  }));
 
   // Common adjustments shown by default
-  const commonAdjustments: { key: keyof SalaryAdjustments; value: string; label: string }[] = [
-    { key: "employment_type", value: "contract", label: "Contract / Freelance" },
+  const commonAdjustments: {
+    key: keyof SalaryAdjustments;
+    value: string;
+    label: string;
+  }[] = [
+    {
+      key: "employment_type",
+      value: "contract",
+      label: "Contract / Freelance",
+    },
     { key: "work_arrangement", value: "onsite", label: "On-site" },
     { key: "work_arrangement", value: "hybrid", label: "Hybrid" },
   ];
 
   // Advanced adjustments behind toggle
-  const advancedAdjustments: { key: keyof SalaryAdjustments; value: string; label: string }[] = [
+  const advancedAdjustments: {
+    key: keyof SalaryAdjustments;
+    value: string;
+    label: string;
+  }[] = [
     { key: "employment_type", value: "part_time", label: "Part-time" },
     { key: "employment_type", value: "temporary", label: "Temporary" },
     { key: "employment_type", value: "internship", label: "Internship" },
@@ -138,7 +188,10 @@
   function addRegionOverride() {
     if (!newRegionKey) return;
     const defaultCurrency = REGION_CURRENCIES[newRegionKey] || "EUR";
-    regionOverrides = { ...regionOverrides, [newRegionKey]: { rate: 0, currency: defaultCurrency } };
+    regionOverrides = {
+      ...regionOverrides,
+      [newRegionKey]: { rate: 0, currency: defaultCurrency },
+    };
     newRegionKey = "";
   }
 
@@ -149,19 +202,35 @@
 
   function updateRegionRate(region: string, value: string) {
     const rate = parseInt(value) || 0;
-    regionOverrides = { ...regionOverrides, [region]: { ...regionOverrides[region], rate } };
+    regionOverrides = {
+      ...regionOverrides,
+      [region]: { ...regionOverrides[region], rate },
+    };
   }
 
   function updateRegionCurrency(region: string, curr: string) {
-    regionOverrides = { ...regionOverrides, [region]: { ...regionOverrides[region], currency: curr } };
+    regionOverrides = {
+      ...regionOverrides,
+      [region]: { ...regionOverrides[region], currency: curr },
+    };
   }
 
   // Linked options: setting one sets the others too
-  const linkedOptions: Record<string, { key: keyof SalaryAdjustments; values: string[] }> = {
-    "employment_type:contract": { key: "employment_type", values: ["contract", "freelance"] },
+  const linkedOptions: Record<
+    string,
+    { key: keyof SalaryAdjustments; values: string[] }
+  > = {
+    "employment_type:contract": {
+      key: "employment_type",
+      values: ["contract", "freelance"],
+    },
   };
 
-  function setAdjustment(category: keyof SalaryAdjustments, option: string, value: string) {
+  function setAdjustment(
+    category: keyof SalaryAdjustments,
+    option: string,
+    value: string,
+  ) {
     const numVal = parseInt(value);
     const cat = { ...(adjustments[category] ?? {}) };
 
@@ -193,13 +262,23 @@
     adjustments = { ...adjustments, company_type: cat };
   }
 
-  function getAdjustmentValue(category: keyof SalaryAdjustments, option: string): string {
+  function getAdjustmentValue(
+    category: keyof SalaryAdjustments,
+    option: string,
+  ): string {
     const val = adjustments[category]?.[option];
     return val != null ? String(val) : "";
   }
 
   // Preview calculation
   let baseRateNum = $derived(parseInt(baseRate) || 0);
+
+  // Income estimate from the single base rate (freelance vs employment lenses)
+  let income = $derived(
+    baseRateNum > 0
+      ? estimateIncome(baseRateNum, currency, incomeAssumptions)
+      : null,
+  );
 
   // Available regions not yet added
   let availableRegions = $derived(
@@ -209,7 +288,12 @@
   // Example scenarios for preview
   let exampleScenarios = $derived.by(() => {
     if (baseRateNum <= 0) return [];
-    const scenarios: { label: string; rate: number; currency: string; detail: string }[] = [];
+    const scenarios: {
+      label: string;
+      rate: number;
+      currency: string;
+      detail: string;
+    }[] = [];
 
     // Global default
     scenarios.push({
@@ -222,7 +306,9 @@
     // Region overrides
     for (const [region, override] of Object.entries(regionOverrides)) {
       if (override.rate > 0) {
-        const regionLabel = predefinedRegions.find((r) => r.value === region)?.label ?? region;
+        const regionLabel = predefinedRegions.find((r) =>
+          r.value === region
+        )?.label ?? region;
         scenarios.push({
           label: regionLabel,
           rate: override.rate,
@@ -235,7 +321,13 @@
     // Contract/Freelance if adjustment exists
     const contractAdj = adjustments.employment_type?.contract;
     if (contractAdj != null) {
-      const effective = getEffectiveRate(baseRateNum, currency, adjustments, regionOverrides, { employment_type: "contract" });
+      const effective = getEffectiveRate(
+        baseRateNum,
+        currency,
+        adjustments,
+        regionOverrides,
+        { employment_type: "contract" },
+      );
       scenarios.push({
         label: "Contract / Freelance",
         rate: effective.rate,
@@ -247,7 +339,13 @@
     // Onsite if adjustment exists
     const onsiteAdj = adjustments.work_arrangement?.onsite;
     if (onsiteAdj != null) {
-      const effective = getEffectiveRate(baseRateNum, currency, adjustments, regionOverrides, { work_arrangement: "onsite" });
+      const effective = getEffectiveRate(
+        baseRateNum,
+        currency,
+        adjustments,
+        regionOverrides,
+        { work_arrangement: "onsite" },
+      );
       scenarios.push({
         label: "On-site",
         rate: effective.rate,
@@ -272,17 +370,27 @@
 
   <!-- Section 1: Region Rates -->
   <Card padding="lg">
-    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-1">Region Rates</h3>
+    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-1">
+      Region Rates
+    </h3>
     <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-      Set your hourly rate per region. The global rate is the default for jobs that don't match a specific region. Percentage adjustments (below) apply on top.
+      Set your hourly rate per region. The global rate is the default for jobs
+      that don't match a specific region. Percentage adjustments (below) apply
+      on top.
     </p>
 
     <div class="space-y-3">
       <!-- Global (default) row -->
-      <div class="py-3 px-4 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg space-y-2">
+      <div
+        class="py-3 px-4 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg space-y-2"
+      >
         <div class="flex items-center gap-2">
-          <FontAwesomeIcon icon={faGlobe} class="w-4 h-4 text-[var(--dash-primary)]" />
-          <span class="text-sm font-medium text-[var(--dash-text)]">Global</span>
+          <FontAwesomeIcon
+            icon={faGlobe}
+            class="w-4 h-4 text-[var(--dash-primary)]"
+          />
+          <span class="text-sm font-medium text-[var(--dash-text)]"
+          >Global</span>
           <span class="text-xs text-[var(--dash-text-muted)]">(default)</span>
         </div>
         <div class="flex items-center gap-2">
@@ -295,14 +403,18 @@
             class="w-24 px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
           <span class="text-sm text-[var(--dash-text-secondary)]">/hr</span>
-          <div class="inline-flex rounded-md border border-[var(--dash-border)] overflow-hidden ml-2">
+          <div
+            class="inline-flex rounded-md border border-[var(--dash-border)] overflow-hidden ml-2"
+          >
             {#each currencies as opt, i}
               <button
                 type="button"
                 onclick={() => (currency = opt.value)}
-                class="px-2 py-1 text-xs transition-colors {currency === opt.value
+                class="
+                  px-2 py-1 text-xs transition-colors {currency === opt.value
                   ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] font-medium'
-                  : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}"
+                  : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}
+                "
               >
                 {opt.symbol}
               </button>
@@ -310,20 +422,31 @@
           </div>
         </div>
         {#if baseRateNum > 0}
-          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-muted)]">
-            <span>{formatCurrency(hourlyToRate(baseRateNum, "day"), currency)}/day</span>
-            <span>{formatCurrency(hourlyToRate(baseRateNum, "month"), currency)}/mo</span>
-            <span>{formatCurrency(hourlyToRate(baseRateNum, "year"), currency)}/yr</span>
+          <div
+            class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-muted)]"
+          >
+            <span>{
+                formatCurrency(hourlyToRate(baseRateNum, "day"), currency)
+              }/day</span>
+            <span>{
+                formatCurrency(hourlyToRate(baseRateNum, "month"), currency)
+              }/mo</span>
+            <span>{
+                formatCurrency(hourlyToRate(baseRateNum, "year"), currency)
+              }/yr</span>
           </div>
         {/if}
       </div>
 
       <!-- Region override rows -->
       {#each Object.entries(regionOverrides) as [region, override]}
-        {@const regionLabel = predefinedRegions.find((r) => r.value === region)?.label ?? region}
+        {@const regionLabel = predefinedRegions.find((r) => r.value === region)?.label ??
+        region}
         <div class="py-3 px-4 bg-[var(--dash-bg)] rounded-lg space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[var(--dash-text)]">{regionLabel}</span>
+            <span class="text-sm font-medium text-[var(--dash-text)]">{
+              regionLabel
+            }</span>
             <button
               type="button"
               onclick={() => removeRegionOverride(region)}
@@ -343,14 +466,18 @@
               class="w-24 px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
             <span class="text-sm text-[var(--dash-text-secondary)]">/hr</span>
-            <div class="inline-flex rounded-md border border-[var(--dash-border)] overflow-hidden ml-2">
+            <div
+              class="inline-flex rounded-md border border-[var(--dash-border)] overflow-hidden ml-2"
+            >
               {#each currencies as opt, i}
                 <button
                   type="button"
                   onclick={() => updateRegionCurrency(region, opt.value)}
-                  class="px-2 py-1 text-xs transition-colors {override.currency === opt.value
+                  class="
+                    px-2 py-1 text-xs transition-colors {override.currency === opt.value
                     ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] font-medium'
-                    : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}"
+                    : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0 ? 'border-l border-[var(--dash-border)]' : ''}
+                  "
                 >
                   {opt.symbol}
                 </button>
@@ -358,10 +485,18 @@
             </div>
           </div>
           {#if override.rate > 0}
-            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-muted)]">
-              <span>{formatCurrency(hourlyToRate(override.rate, "day"), override.currency)}/day</span>
-              <span>{formatCurrency(hourlyToRate(override.rate, "month"), override.currency)}/mo</span>
-              <span>{formatCurrency(hourlyToRate(override.rate, "year"), override.currency)}/yr</span>
+            <div
+              class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--dash-text-muted)]"
+            >
+              <span>{
+                  formatCurrency(hourlyToRate(override.rate, "day"), override.currency)
+                }/day</span>
+              <span>{
+                  formatCurrency(hourlyToRate(override.rate, "month"), override.currency)
+                }/mo</span>
+              <span>{
+                  formatCurrency(hourlyToRate(override.rate, "year"), override.currency)
+                }/yr</span>
             </div>
           {/if}
         </div>
@@ -403,9 +538,12 @@
 
   <!-- Section 2: Adjustments -->
   <Card padding="lg">
-    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-1">Rate Adjustments</h3>
+    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-1">
+      Rate Adjustments
+    </h3>
     <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-      Adjust your rate for different job types. Adjustments stack when multiple apply.
+      Adjust your rate for different job types. Adjustments stack when multiple
+      apply.
     </p>
 
     <div class="space-y-2">
@@ -413,27 +551,40 @@
         {@const isAgency = adj.key === "company_type" && adj.value === "agency"}
         {@const val = getAdjustmentValue(adj.key, adj.value)}
         {@const numVal = val !== "" ? parseInt(val) : null}
-        <div class="flex items-center gap-3 py-2 px-3 rounded-lg bg-[var(--dash-bg)]">
-          <span class="text-sm text-[var(--dash-text)] w-36 flex-shrink-0">{adj.label}</span>
+        <div
+          class="flex items-center gap-3 py-2 px-3 rounded-lg bg-[var(--dash-bg)]"
+        >
+          <span class="text-sm text-[var(--dash-text)] w-36 flex-shrink-0">{
+            adj.label
+          }</span>
           <div class="relative w-20 flex-shrink-0">
             <input
               type="number"
               value={val}
-              oninput={(e) => isAgency
+              oninput={(e) =>
+              isAgency
                 ? setAgencyAdjustment((e.target as HTMLInputElement).value)
                 : setAdjustment(adj.key, adj.value, (e.target as HTMLInputElement).value)}
               placeholder="0"
-              class="w-full px-2 py-1.5 pr-6 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent {numVal != null && numVal > 0
+              class="
+                w-full px-2 py-1.5 pr-6 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent {numVal != null && numVal > 0
                 ? 'text-[var(--dash-success)]'
                 : numVal != null && numVal < 0
                 ? 'text-[var(--dash-error)]'
-                : ''}"
+                : ''}
+              "
             />
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--dash-text-muted)]">%</span>
+            <span
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--dash-text-muted)]"
+            >%</span>
           </div>
           {#if numVal != null && baseRateNum > 0}
-            <span class="text-xs text-[var(--dash-text-muted)] hidden sm:inline">
-              = {formatCurrency(Math.round(baseRateNum * (1 + numVal / 100)), currency)}/hr
+            <span
+              class="text-xs text-[var(--dash-text-muted)] hidden sm:inline"
+            >
+              = {
+                formatCurrency(Math.round(baseRateNum * (1 + numVal / 100)), currency)
+              }/hr
             </span>
           {/if}
         </div>
@@ -446,7 +597,10 @@
       onclick={() => (showAdvanced = !showAdvanced)}
       class="flex items-center gap-1.5 mt-3 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
     >
-      <FontAwesomeIcon icon={showAdvanced ? faChevronUp : faChevronDown} class="w-3 h-3" />
+      <FontAwesomeIcon
+        icon={showAdvanced ? faChevronUp : faChevronDown}
+        class="w-3 h-3"
+      />
       {showAdvanced ? "Hide" : "More"} adjustments
     </button>
 
@@ -456,27 +610,40 @@
           {@const isAgency = adj.key === "company_type" && adj.value === "agency"}
           {@const val = getAdjustmentValue(adj.key, adj.value)}
           {@const numVal = val !== "" ? parseInt(val) : null}
-          <div class="flex items-center gap-3 py-2 px-3 rounded-lg bg-[var(--dash-bg)]">
-            <span class="text-sm text-[var(--dash-text)] w-36 flex-shrink-0">{adj.label}</span>
+          <div
+            class="flex items-center gap-3 py-2 px-3 rounded-lg bg-[var(--dash-bg)]"
+          >
+            <span class="text-sm text-[var(--dash-text)] w-36 flex-shrink-0">{
+              adj.label
+            }</span>
             <div class="relative w-20 flex-shrink-0">
               <input
                 type="number"
                 value={val}
-                oninput={(e) => isAgency
+                oninput={(e) =>
+                isAgency
                   ? setAgencyAdjustment((e.target as HTMLInputElement).value)
                   : setAdjustment(adj.key, adj.value, (e.target as HTMLInputElement).value)}
                 placeholder="0"
-                class="w-full px-2 py-1.5 pr-6 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent {numVal != null && numVal > 0
+                class="
+                  w-full px-2 py-1.5 pr-6 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent {numVal != null && numVal > 0
                   ? 'text-[var(--dash-success)]'
                   : numVal != null && numVal < 0
                   ? 'text-[var(--dash-error)]'
-                  : ''}"
+                  : ''}
+                "
               />
-              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--dash-text-muted)]">%</span>
+              <span
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--dash-text-muted)]"
+              >%</span>
             </div>
             {#if numVal != null && baseRateNum > 0}
-              <span class="text-xs text-[var(--dash-text-muted)] hidden sm:inline">
-                = {formatCurrency(Math.round(baseRateNum * (1 + numVal / 100)), currency)}/hr
+              <span
+                class="text-xs text-[var(--dash-text-muted)] hidden sm:inline"
+              >
+                = {
+                  formatCurrency(Math.round(baseRateNum * (1 + numVal / 100)), currency)
+                }/hr
               </span>
             {/if}
           </div>
@@ -492,26 +659,204 @@
   <!-- Section 3: Preview -->
   {#if exampleScenarios.length > 0}
     <Card padding="lg">
-      <h3 class="text-base font-semibold text-[var(--dash-text)] mb-1">Rate Preview</h3>
+      <h3 class="text-base font-semibold text-[var(--dash-text)] mb-1">
+        Rate Preview
+      </h3>
       <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-        Examples of how your rate adjusts for different scenarios.
+        How your hourly rate converts to income, and how contract and employment
+        compare on take-home.
       </p>
 
-      <div class="space-y-2">
-        {#each exampleScenarios as scenario}
-          <div class="flex items-center justify-between py-2 px-3 bg-[var(--dash-bg)] rounded-lg">
-            <div>
-              <span class="text-sm font-medium text-[var(--dash-text)]">{scenario.label}</span>
-              <span class="text-xs text-[var(--dash-text-muted)] ml-2">{scenario.detail}</span>
+      <!-- Income estimate: two lenses from one base rate -->
+      {#if income}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <!-- Contract / Freelance lens -->
+          <div
+            class="py-3 px-4 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg"
+          >
+            <div class="text-sm font-semibold text-[var(--dash-text)] mb-2">
+              Contract / Freelance
             </div>
-            <div class="text-right flex-shrink-0">
-              <span class="text-sm font-medium text-[var(--dash-text)]">{formatCurrency(scenario.rate, scenario.currency)}/hr</span>
-              <span class="text-xs text-[var(--dash-text-muted)] ml-2">
-                {formatCurrency(hourlyToRate(scenario.rate, "year"), scenario.currency)}/yr
-              </span>
+            <div class="space-y-1.5">
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="text-xs text-[var(--dash-text-secondary)]"
+                >Gross</span>
+                <span class="text-sm text-[var(--dash-text)]">
+                  <span class="font-medium">{
+                    formatCurrency(income.freelance.grossMonth, income.currency)
+                  }</span><span class="text-xs text-[var(--dash-text-muted)]"
+                  >/mo</span>
+                  <span class="text-xs text-[var(--dash-text-muted)] ml-1"
+                  >· {
+                      formatCurrency(income.freelance.grossYear, income.currency)
+                    }/yr</span>
+                </span>
+              </div>
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="text-xs text-[var(--dash-text-secondary)]"
+                >Take-home (est.)</span>
+                <span class="text-sm text-[var(--dash-text)]">
+                  <span class="font-medium text-[var(--dash-success)]">{
+                    formatCurrency(income.freelance.netMonth, income.currency)
+                  }</span><span class="text-xs text-[var(--dash-text-muted)]"
+                  >/mo</span>
+                  <span class="text-xs text-[var(--dash-text-muted)] ml-1"
+                  >· {
+                      formatCurrency(income.freelance.netYear, income.currency)
+                    }/yr</span>
+                </span>
+              </div>
             </div>
           </div>
-        {/each}
+
+          <!-- Employment-equivalent lens -->
+          <div
+            class="py-3 px-4 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg"
+          >
+            <div class="text-sm font-semibold text-[var(--dash-text)] mb-2">
+              Employment (equivalent)
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="text-xs text-[var(--dash-text-secondary)]"
+                >Gross salary</span>
+                <span class="text-sm text-[var(--dash-text)]">
+                  <span class="font-medium">{
+                    formatCurrency(income.employment.grossMonth, income.currency)
+                  }</span><span class="text-xs text-[var(--dash-text-muted)]"
+                  >/mo</span>
+                  <span class="text-xs text-[var(--dash-text-muted)] ml-1"
+                  >· {
+                      formatCurrency(income.employment.grossYear, income.currency)
+                    }/yr</span>
+                </span>
+              </div>
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="text-xs text-[var(--dash-text-secondary)]"
+                >Take-home (est.)</span>
+                <span class="text-sm text-[var(--dash-text)]">
+                  <span class="font-medium text-[var(--dash-success)]">{
+                    formatCurrency(income.employment.netMonth, income.currency)
+                  }</span><span class="text-xs text-[var(--dash-text-muted)]"
+                  >/mo</span>
+                  <span class="text-xs text-[var(--dash-text-muted)] ml-1"
+                  >· {
+                      formatCurrency(income.employment.netYear, income.currency)
+                    }/yr</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-xs text-[var(--dash-text-muted)] mb-2">
+          The employment figure is the gross salary you'd need to take home the
+          same as freelancing after payroll tax — matched on take-home, since
+          the same hourly number means very different things. Flat-rate
+          estimates, not tax advice.
+        </p>
+
+        <!-- Assumptions editor -->
+        <button
+          type="button"
+          onclick={() => (showAssumptions = !showAssumptions)}
+          class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+        >
+          <FontAwesomeIcon
+            icon={showAssumptions ? faChevronUp : faChevronDown}
+            class="w-3 h-3"
+          />
+          {showAssumptions ? "Hide" : "Adjust"} assumptions
+        </button>
+
+        {#if showAssumptions}
+          <div class="mt-2 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
+            <label class="flex items-center justify-between gap-3 text-sm">
+              <span class="text-[var(--dash-text-secondary)]"
+              >Freelance billable hours / year</span>
+              <input
+                type="number"
+                min="0"
+                bind:value={incomeAssumptions.freelanceBillableHours}
+                class="w-24 px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+              />
+            </label>
+            <label class="flex items-center justify-between gap-3 text-sm">
+              <span class="text-[var(--dash-text-secondary)]"
+              >Freelance deductions (tax + contributions + costs)</span>
+              <div class="relative w-24 flex-shrink-0">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  bind:value={incomeAssumptions.freelanceDeductionPct}
+                  class="w-full px-3 py-1.5 pr-6 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                />
+                <span
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--dash-text-muted)]"
+                >%</span>
+              </div>
+            </label>
+            <label class="flex items-center justify-between gap-3 text-sm">
+              <span class="text-[var(--dash-text-secondary)]"
+              >Employment payroll tax</span>
+              <div class="relative w-24 flex-shrink-0">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  bind:value={incomeAssumptions.employmentTaxPct}
+                  class="w-full px-3 py-1.5 pr-6 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                />
+                <span
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--dash-text-muted)]"
+                >%</span>
+              </div>
+            </label>
+            <div class="flex justify-end">
+              <SectionSaveButton
+                state={incomeState}
+                onClick={saveIncomeAssumptions}
+              />
+            </div>
+          </div>
+        {/if}
+      {/if}
+
+      <!-- Per-scenario rates -->
+      <div class="mt-4">
+        <div
+          class="text-xs font-medium text-[var(--dash-text-muted)] uppercase tracking-wide mb-2"
+        >
+          Rate by scenario
+        </div>
+        <div class="space-y-2">
+          {#each exampleScenarios as scenario}
+            <div
+              class="flex items-center justify-between py-2 px-3 bg-[var(--dash-bg)] rounded-lg"
+            >
+              <div>
+                <span class="text-sm font-medium text-[var(--dash-text)]">{
+                  scenario.label
+                }</span>
+                <span class="text-xs text-[var(--dash-text-muted)] ml-2">{
+                  scenario.detail
+                }</span>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <span class="text-sm font-medium text-[var(--dash-text)]">{
+                    formatCurrency(scenario.rate, scenario.currency)
+                  }/hr</span>
+                <span class="text-xs text-[var(--dash-text-muted)] ml-2">{
+                    formatCurrency(hourlyToRate(scenario.rate, "month"), scenario.currency)
+                  }/mo</span>
+                <span class="text-xs text-[var(--dash-text-muted)] ml-2">{
+                    formatCurrency(hourlyToRate(scenario.rate, "year"), scenario.currency)
+                  }/yr</span>
+              </div>
+            </div>
+          {/each}
+        </div>
       </div>
     </Card>
   {/if}

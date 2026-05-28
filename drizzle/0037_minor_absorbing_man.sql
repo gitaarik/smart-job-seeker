@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "salary_income_assumptions" jsonb;
