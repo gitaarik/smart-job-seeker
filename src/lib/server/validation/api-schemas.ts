@@ -353,6 +353,25 @@ export const followupRequestSchema = z.object({
   replaceVersionId: z.number().int().positive().optional(),
 });
 
+// Personal AI agent chat
+
+export const agentChatSchema = z.object({
+  profile_id: positiveInt(),
+  // Existing thread to append to; omitted/null starts a new conversation.
+  conversation_id: positiveInt().optional().nullable(),
+  // The user's newest message. Prior turns are loaded server-side from the
+  // conversation, so the client only sends what's new.
+  message: z.string().trim().min(1).max(8000),
+  // Optional snapshot of what the user is looking at, supplied by the page.
+  pageContext: z
+    .object({
+      label: trimmedString(200).optional(),
+      data: z.unknown().optional(),
+    })
+    .optional()
+    .nullable(),
+});
+
 /**
  * Format Zod error into a human-readable message.
  */

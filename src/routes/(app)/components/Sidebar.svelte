@@ -2,6 +2,7 @@
   import { page } from "$app/stores";
   import { sidebarState, overlayState } from "./sidebar-state.svelte";
   import { feedbackState } from "./feedback-state.svelte";
+  import { agentChatState } from "./agent-chat-state.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBars,
@@ -588,5 +589,20 @@
         {/if}
       </div>
     {/if}
+
+    <!-- Assistant entry — mobile only (desktop uses the floating launcher) -->
+    <div class="lg:hidden mt-2 pt-2 border-t border-[var(--dash-border)]">
+      <button
+        type="button"
+        onclick={() => {
+          closeMobileMenu();
+          agentChatState.open = true;
+        }}
+        class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm text-left text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faRobot} class="w-4 h-4 text-[var(--dash-primary)]" />
+        <span>Ask your assistant</span>
+      </button>
+    </div>
   </nav>
 </aside>

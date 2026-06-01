@@ -1,8 +1,20 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw, sql } from "$lib/server/db";
-import { eq, and, isNotNull, desc, asc } from "drizzle-orm";
-import { jobs as jobsTable, job_matches, job_statuses, search_task_run_items, job_importers, job_match_history, platform_credentials, search_tasks, profiles, applications, application_status_log } from "$lib/server/db/schema";
+import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import {
+  application_status_log,
+  applications,
+  job_importers,
+  job_match_history,
+  job_matches,
+  job_statuses,
+  jobs as jobsTable,
+  platform_credentials,
+  profiles,
+  search_task_run_items,
+  search_tasks,
+} from "$lib/server/db/schema";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
@@ -42,12 +54,18 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
   // Get match info if exists
   const match = await db.query.job_matches.findFirst({
-    where: and(eq(job_matches.profile_id, profileId), eq(job_matches.job_id, jobId)),
+    where: and(
+      eq(job_matches.profile_id, profileId),
+      eq(job_matches.job_id, jobId),
+    ),
   });
 
   // Get user status from job_statuses table
   const jobStatus = await db.query.job_statuses.findFirst({
-    where: and(eq(job_statuses.profile_id, profileId), eq(job_statuses.job_id, jobId)),
+    where: and(
+      eq(job_statuses.profile_id, profileId),
+      eq(job_statuses.job_id, jobId),
+    ),
     columns: { status: true },
   });
 
@@ -70,7 +88,10 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   let scrapeHistory: { processed_at: Date }[] = [];
   if (isStaff && job.scrape_count && job.scrape_count > 1) {
     scrapeHistory = await db.query.search_task_run_items.findMany({
-      where: and(eq(search_task_run_items.job_id, jobId), isNotNull(search_task_run_items.processed_at)),
+      where: and(
+        eq(search_task_run_items.job_id, jobId),
+        isNotNull(search_task_run_items.processed_at),
+      ),
       columns: { processed_at: true },
       orderBy: desc(search_task_run_items.processed_at),
     }) as { processed_at: Date }[];
@@ -138,7 +159,10 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   }[] = [];
   if (isStaff) {
     matchHistory = await db.query.job_match_history.findMany({
-      where: and(eq(job_match_history.job_id, jobId), eq(job_match_history.profile_id, profileId)),
+      where: and(
+        eq(job_match_history.job_id, jobId),
+        eq(job_match_history.profile_id, profileId),
+      ),
       columns: {
         score: true,
         skill_match_percentage: true,
@@ -188,7 +212,10 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     // credential id via the platform_profiles binding so the rescrape picker
     // can pre-select the right credential.
     const searchTask = await db.query.search_tasks.findFirst({
-      where: and(eq(search_tasks.platform_id, job.job_platform_id), eq(search_tasks.profile_id, profileId)),
+      where: and(
+        eq(search_tasks.platform_id, job.job_platform_id),
+        eq(search_tasks.profile_id, profileId),
+      ),
       columns: {
         browser_provider: true,
         keep_minimized: true,
@@ -234,9 +261,46 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
   // Check if there's an existing application for this job
   const existingApplication = await db.query.applications.findFirst({
-    where: and(eq(applications.job_id, jobId), eq(applications.profile_id, profileId)),
+    where: and(
+      eq(applications.job_id, jobId),
+      eq(applications.profile_id, profileId),
+    ),
     columns: { id: true, status: true },
   });
+
+  // Curated snapshot for the personal AI assistant — only safe, relevant
+  // fields (no credentials/fingerprints from rescrapeConfig).
+  const chatContext = {
+    label: `Job: ${job.title ?? "Untitled"}${
+      job.company ? ` at ${job.company}` : ""
+    }`,
+    data: {
+      title: job.title,
+      company: job.company,
+      job_poster: job.job_poster,
+      office_location: job.office_location,
+      work_location: job.work_location,
+      job_types: job.job_types,
+      experience_levels: job.experience_levels,
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+      salary_currency: job.salary_currency,
+      salary_period: job.salary_period,
+      skills_required: job.skills_required,
+      skills_preferred: job.skills_preferred,
+      description: job.job_description,
+      company_description: job.company_description,
+      match: match
+        ? {
+          score: match.score,
+          skill_match_percentage: match.skill_match_percentage,
+          recommendation: match.recommendation,
+          summary: match.match_summary,
+        }
+        : null,
+      user_status: jobStatus?.status ?? "new",
+    },
+  };
 
   return {
     job,
@@ -251,6 +315,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     matchHistory,
     rescrapeConfig,
     existingApplication,
+    chatContext,
   };
 };
 
@@ -271,7 +336,9 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    const job = await db.query.jobs.findFirst({ where: eq(jobsTable.id, jobId) });
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobsTable.id, jobId),
+    });
     if (!job) {
       return fail(404, { error: "Job not found" });
     }
@@ -303,7 +370,12 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    await db.delete(job_statuses).where(and(eq(job_statuses.profile_id, profileId), eq(job_statuses.job_id, jobId)));
+    await db.delete(job_statuses).where(
+      and(
+        eq(job_statuses.profile_id, profileId),
+        eq(job_statuses.job_id, jobId),
+      ),
+    );
 
     return { success: true, action: "unsaved" };
   },
@@ -329,7 +401,12 @@ export const actions: Actions = {
 
     if (status === "new") {
       // "new" means remove the status row
-      await db.delete(job_statuses).where(and(eq(job_statuses.profile_id, profileId), eq(job_statuses.job_id, jobId)));
+      await db.delete(job_statuses).where(
+        and(
+          eq(job_statuses.profile_id, profileId),
+          eq(job_statuses.job_id, jobId),
+        ),
+      );
     } else {
       const now = new Date();
       await queryRaw(sql`
@@ -361,7 +438,10 @@ export const actions: Actions = {
 
     // Check if application already exists
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.job_id, jobId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.job_id, jobId),
+        eq(applications.profile_id, profileId),
+      ),
       columns: { id: true },
     });
 

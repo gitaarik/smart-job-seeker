@@ -1987,6 +1987,60 @@ export const ai_chats = pgTable("ai_chats", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * A personal-assistant chat thread. Scoped to a user (not a profile) so the
+ * thread can keep going across profile switches; the profile that was active
+ * when it started is recorded for reference, and each message records its own.
+ */
+export const agent_conversations = pgTable("agent_conversations", {
+  id: serial().primaryKey().notNull(),
+  user_id: text().notNull(),
+  profile_id: integer(),
+  title: varchar({ length: 255 }),
+  date_created: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+  last_message_at: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  index("agent_conversations_user_idx").using(
+    "btree",
+    table.user_id.asc().nullsLast(),
+  ),
+  foreignKey({
+    columns: [table.user_id],
+    foreignColumns: [users.id],
+    name: "agent_conversations_user_foreign",
+  }).onDelete("cascade"),
+]);
+
+export const agent_messages = pgTable("agent_messages", {
+  id: serial().primaryKey().notNull(),
+  conversation_id: integer().notNull(),
+  role: varchar({ length: 16 }).notNull(),
+  content: text().notNull(),
+  // The profile this turn was sent under (assistant personalization context).
+  profile_id: integer(),
+  // Links an assistant turn to its ai_chats audit row for token/credit accounting.
+  ai_chat_id: integer(),
+  date_created: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  index("agent_messages_conversation_idx").using(
+    "btree",
+    table.conversation_id.asc().nullsLast(),
+  ),
+  foreignKey({
+    columns: [table.conversation_id],
+    foreignColumns: [agent_conversations.id],
+    name: "agent_messages_conversation_foreign",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.ai_chat_id],
+    foreignColumns: [ai_chats.id],
+    name: "agent_messages_ai_chat_foreign",
+  }).onDelete("set null"),
+]);
+
 export const search_tasks_job_sites = pgTable("search_tasks_job_sites", {
   id: serial().primaryKey().notNull(),
   search_tasks_id: integer(),

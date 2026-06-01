@@ -5,10 +5,10 @@
   import DashboardHeader from "./components/DashboardHeader.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import FeedbackWidget from "./components/FeedbackWidget.svelte";
+  import AgentChat from "./components/AgentChat.svelte";
   import { overlayState } from "./components/sidebar-state.svelte";
 
-  let { children, data }: { children: Snippet; data: LayoutData } =
-    $props();
+  let { children, data }: { children: Snippet; data: LayoutData } = $props();
 
   // Auto-capture browser fingerprint (user agent, language, timezone) for the
   // scraper's anti-detection profile. Runs once per session, only updates if
@@ -46,7 +46,10 @@
   <title>Dashboard - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[var(--dash-bg)] transition-colors" style:--imp-offset="{data.adminUser ? '36px' : '0px'}">
+<div
+  class="min-h-screen bg-[var(--dash-bg)] transition-colors"
+  style:--imp-offset={data.adminUser ? "36px" : "0px"}
+>
   {#if data.adminUser}
     <div
       class="fixed top-0 left-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-sm flex items-center justify-between z-[60]"
@@ -82,9 +85,13 @@
       type="button"
       class="fixed inset-0 bg-black/50 z-40"
       style="top: calc(65px + var(--imp-offset))"
-      onclick={() => { overlayState.onclose?.(); overlayState.onclose = null; }}
+      onclick={() => {
+        overlayState.onclose?.();
+        overlayState.onclose = null;
+      }}
       aria-label="Close menu"
-    ></button>
+    >
+    </button>
   {/if}
 
   <Sidebar creditBalance={data.creditBalance} />
@@ -96,4 +103,5 @@
   </main>
 
   <FeedbackWidget />
+  <AgentChat />
 </div>
