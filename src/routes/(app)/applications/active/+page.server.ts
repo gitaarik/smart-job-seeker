@@ -1,9 +1,46 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db, queryRaw } from "$lib/server/db";
-import { eq, and, inArray, isNotNull, ne, desc, sql } from "drizzle-orm";
-import { applications, application_letters, application_status_log, job_platforms } from "$lib/server/db/schema";
+import { eq, and, inArray, isNotNull, ne, desc, sql, ilike, or } from "drizzle-orm";
+import { applications, application_letters, application_status_log, job_importers, job_platforms, jobs } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
+
+/**
+ * Best-effort lookup of a job_platforms row whose URL matches the host of the
+ * given job URL, mirroring the domain-candidate matching in
+ * /api/platforms/detect. Returns null when the URL is empty/invalid or no
+ * platform matches — manual jobs are allowed to have no platform.
+ */
+async function detectPlatformId(sourceUrl: string | null): Promise<number | null> {
+  if (!sourceUrl) return null;
+  let domain: string;
+  try {
+    const parsed = new URL(sourceUrl.startsWith("http") ? sourceUrl : `https://${sourceUrl}`);
+    domain = parsed.hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+  const labels = domain.split(".");
+  const candidates: string[] = [];
+  for (let i = 0; i < Math.max(labels.length - 1, 1); i++) {
+    candidates.push(labels.slice(i).join("."));
+  }
+  const platform = await db.query.job_platforms.findFirst({
+    where: or(...candidates.map((d) => ilike(job_platforms.url, `%${d}%`))),
+    columns: { id: true },
+  });
+  return platform?.id ?? null;
+}
+
+function parseIntOrNull(value: FormDataEntryValue | null): number | null {
+  const n = parseInt(String(value ?? "").trim(), 10);
+  return Number.isNaN(n) ? null : n;
+}
+
+function strOrNull(value: FormDataEntryValue | null): string | null {
+  const s = String(value ?? "").trim();
+  return s === "" ? null : s;
+}
 
 const activeStatuses = ["applying", "interviewing", "negotiating"];
 const finishedStatuses = ["accepted", "withdrawn", "rejected"];
@@ -104,7 +141,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 };
 
 export const actions: Actions = {
-  createApplication: async ({ locals, cookies }) => {
+  createApplication: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
@@ -115,8 +152,53 @@ export const actions: Actions = {
       return fail(400, { error: "No profile selected" });
     }
 
+    const formData = await request.formData();
+    const title = strOrNull(formData.get("title"));
+    const company = strOrNull(formData.get("company"));
+    const officeLocation = strOrNull(formData.get("office_location"));
+    const sourceUrl = strOrNull(formData.get("source_url"));
+    const jobDescription = strOrNull(formData.get("job_description"));
+    const salaryMin = parseIntOrNull(formData.get("salary_min"));
+    const salaryMax = parseIntOrNull(formData.get("salary_max"));
+    const salaryCurrency = strOrNull(formData.get("salary_currency"));
+    const salaryPeriod = strOrNull(formData.get("salary_period"));
+
+    // Any filled job field turns this into a manual job + linked application;
+    // an empty form keeps the original one-click blank-application behavior.
+    const hasJobDetails = !!(
+      title || company || officeLocation || sourceUrl || jobDescription ||
+      salaryMin || salaryMax
+    );
+
     const now = new Date();
+
+    let jobId: number | null = null;
+    if (hasJobDetails) {
+      const platformId = await detectPlatformId(sourceUrl);
+      const [job] = await db.insert(jobs).values({
+        title,
+        company,
+        office_location: officeLocation,
+        source_url: sourceUrl,
+        job_description: jobDescription,
+        salary_min: salaryMin,
+        salary_max: salaryMax,
+        salary_currency: salaryCurrency,
+        salary_period: salaryPeriod,
+        job_platform_id: platformId,
+        created_manually: true,
+        status: "hiring",
+        date_created: now,
+        date_updated: now,
+      }).returning({ id: jobs.id });
+      jobId = job.id;
+      // Mirror the scraper import path so the job shows up in this profile's
+      // /jobs list ("imported by me").
+      await db.insert(job_importers).values({ job_id: jobId, profile_id: profileId });
+    }
+
     const [application] = await db.insert(applications).values({
+      job_id: jobId,
       profile_id: profileId,
       status: "applying",
       status_step: "Preparing",

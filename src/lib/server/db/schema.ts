@@ -1059,6 +1059,12 @@ export const jobs = pgTable("jobs", {
   rescrape_live_url: text(),
   region: varchar({ length: 50 }),
   salary_duration_weeks: doublePrecision(),
+  /**
+   * True when the job was entered by hand (e.g. via the "New application"
+   * form) rather than imported by the scraper. Orthogonal to job_platform_id:
+   * a manual job may still carry a real platform when a known URL was given.
+   */
+  created_manually: boolean().default(false).notNull(),
 }, (table) => [
   index("idx_jobs_uniqueness").using(
     "btree",

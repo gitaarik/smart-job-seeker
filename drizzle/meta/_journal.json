@@ -267,6 +267,13 @@
       "when": 1779971853318,
       "tag": "0037_minor_absorbing_man",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1780329332562,
+      "tag": "0038_military_thundra",
+      "breakpoints": true
     }
   ]
 }

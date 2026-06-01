@@ -193,6 +193,12 @@
             <span class="text-[var(--dash-text-muted)]">Platform</span>
             <span class="text-[var(--dash-text)]">{job.job_platform.name}</span>
           </div>
+        {:else if job.created_manually}
+          <div class="flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+            <span class="text-[var(--dash-text-muted)]">Source</span>
+            <span class="text-[var(--dash-text)]">Added manually</span>
+          </div>
         {/if}
         {#if job.source_url}
           <div class="flex items-center gap-1.5">
