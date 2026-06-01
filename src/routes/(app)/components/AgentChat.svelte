@@ -54,6 +54,13 @@
   let conversations = $state<ConversationSummary[]>([]);
   let historyLoading = $state(false);
 
+  // Desktop-only: the panel grows once the user starts typing. Esc and
+  // outside-click step it back down (expanded → normal → closed) rather than
+  // closing outright. `suppressExpand` stops continued typing from re-growing
+  // it right after a step-down; it clears when the input loses focus.
+  let expanded = $state(false);
+  let suppressExpand = false;
+
   // What the current page chose to expose to the assistant, if anything.
   let pageContext = $derived(
     ($page.data as { chatContext?: { label?: string; data?: unknown } })
@@ -219,10 +226,31 @@
 
   function closeChat() {
     agentChatState.open = false;
+    expanded = false;
+    suppressExpand = false;
+  }
+
+  /** Big screens only — the panel resizing would be pointless on mobile. */
+  function isDesktop() {
+    return browser && window.matchMedia("(min-width: 1024px)").matches;
+  }
+
+  function expandOnType() {
+    if (isDesktop() && !suppressExpand) expanded = true;
+  }
+
+  /** Esc / outside-click: shrink an expanded panel first, otherwise close. */
+  function stepDown() {
+    if (isDesktop() && expanded) {
+      expanded = false;
+      suppressExpand = true; // don't re-grow until the input is re-focused
+      return;
+    }
+    closeChat();
   }
 
   function onWindowKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape" && agentChatState.open) closeChat();
+    if (e.key === "Escape" && agentChatState.open) stepDown();
   }
 </script>
 
@@ -246,13 +274,15 @@
   <button
     type="button"
     class="fixed inset-0 z-40 cursor-default"
-    onclick={closeChat}
+    onclick={stepDown}
     aria-label="Close assistant"
     tabindex="-1"
   >
   </button>
   <div
-    class="fixed z-50 bottom-6 right-6 w-96 max-h-[min(70vh,640px)] flex flex-col max-lg:inset-x-4 max-lg:bottom-24 max-lg:w-auto bg-[var(--dash-card)] rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.3)] ring-[3px] ring-[var(--dash-primary)]/60"
+    class="fixed z-50 bottom-6 right-6 w-96 max-h-[min(70vh,640px)] flex flex-col max-lg:inset-x-4 max-lg:bottom-24 max-lg:w-auto bg-[var(--dash-card)] rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.3)] ring-[3px] ring-[var(--dash-primary)]/60 transition-[width,max-height] duration-200 ease-out {expanded
+      ? 'lg:w-[34rem] lg:max-h-[min(88vh,860px)]'
+      : ''}"
   >
     <!-- Header -->
     <div
@@ -421,6 +451,8 @@
         <textarea
           bind:value={input}
           onkeydown={onKeydown}
+          oninput={expandOnType}
+          onblur={() => (suppressExpand = false)}
           placeholder="Ask your assistant…"
           rows="1"
           class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-none max-h-32"
