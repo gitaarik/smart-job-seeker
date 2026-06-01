@@ -1019,6 +1019,18 @@
 />
 
 <style>
+  .cheatsheet-content :global(h1) {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(h2) {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-top: 0.85em;
+    margin-bottom: 0.5em;
+  }
   .cheatsheet-content :global(h3) {
     font-size: 1.1em;
     font-weight: 600;
