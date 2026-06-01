@@ -6,7 +6,7 @@
  * output straight into `{@html}` is an XSS sink. This module uses an isolated
  * `Marked` instance (so other `marked()` call sites are unaffected) that:
  *   - escapes any raw HTML tokens to inert text, and
- *   - drops `javascript:`/`data:`/`vbscript:` URLs from links and images.
+ *   - allowlists URL schemes on links and images (http/https/mailto only).
  *
  * Markdown formatting (bold, lists, code, http(s) links) still renders.
  */
@@ -20,17 +20,27 @@ function escapeHtml(value: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
+// Schemes allowed on links/images. An allowlist (rather than a denylist) is
+// used deliberately — see safeUrl.
+const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+
 function safeUrl(href: string | null | undefined): string | null {
   if (!href) return null;
-  const scheme = href.trim().toLowerCase();
-  if (
-    scheme.startsWith("javascript:") ||
-    scheme.startsWith("data:") ||
-    scheme.startsWith("vbscript:")
-  ) {
+  // Browsers strip embedded tabs/newlines/other control chars before parsing a
+  // URL, so a substring denylist is bypassable (e.g. "java\tscript:alert(1)"
+  // becomes "javascript:..." in the browser). Strip those control chars first,
+  // then resolve and allowlist the protocol. Resolving against a base keeps
+  // relative links ("/jobs/12", "#section") and protocol-relative URLs working.
+  const cleaned = href.replace(/[\x00-\x1f\x7f]/g, "").trim();
+  if (!cleaned) return null;
+  let url: URL;
+  try {
+    url = new URL(cleaned, "https://x.invalid/");
+  } catch {
     return null;
   }
-  return href;
+  if (!SAFE_PROTOCOLS.has(url.protocol)) return null;
+  return cleaned;
 }
 
 const md = new Marked({
