@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+  import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical } from "@fortawesome/free-solid-svg-icons";
   import { portalToBody } from "$lib/actions/portal";
 
   export interface AchievementItem {
@@ -18,6 +18,12 @@
     onRemove?: (index: number) => void;
     onUndoRemove?: (index: number) => void;
     onFocused?: () => void;
+    /**
+     * Notified after a drag-and-drop reorder so the parent can remap any
+     * index-based side state (e.g. soft-deleted indices). The component
+     * already moves the `achievements` array itself; this is parent-only.
+     */
+    onReorder?: (from: number, to: number) => void;
   }
 
   let {
@@ -30,6 +36,7 @@
     onRemove,
     onUndoRemove,
     onFocused,
+    onReorder,
   }: Props = $props();
 
   // Normalize: support both string[] and AchievementItem[]
@@ -137,6 +144,48 @@
       achievements = achievements.filter((_, i) => i !== index) as typeof achievements;
     }
   }
+
+  // --- Drag-and-drop reordering ---
+  let dragIndex = $state<number | null>(null);
+  let dragOverIndex = $state<number | null>(null);
+
+  function moveItem(from: number, to: number) {
+    if (from === to) return;
+    const arr = [...achievements];
+    const [moved] = arr.splice(from, 1);
+    arr.splice(to, 0, moved);
+    achievements = arr as typeof achievements;
+    // The component owns the array move; the parent only remaps its own
+    // index-based side state (soft-deletes, last-added) via onReorder.
+    onReorder?.(from, to);
+  }
+
+  function handleDragStart(index: number, e: DragEvent) {
+    dragIndex = index;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      // Firefox requires data to be set for a drag to start.
+      e.dataTransfer.setData("text/plain", String(index));
+    }
+  }
+
+  function handleDragOver(index: number, e: DragEvent) {
+    if (dragIndex === null) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    dragOverIndex = index;
+  }
+
+  function handleDrop(index: number) {
+    if (dragIndex !== null) moveItem(dragIndex, index);
+    dragIndex = null;
+    dragOverIndex = null;
+  }
+
+  function handleDragEnd() {
+    dragIndex = null;
+    dragOverIndex = null;
+  }
 </script>
 
 {#if achievements.length === 0}
@@ -146,7 +195,24 @@
     {#each achievements as _, index}
       {@const item = getItem(index)}
       {@const isDeleted = deletedIndices.has(index)}
-      <div class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''}">
+      {@const canDrag = achievements.length > 1}
+      <div
+        class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''} {dragIndex === index ? 'opacity-40' : ''} {dragOverIndex === index && dragIndex !== index ? 'bg-[var(--dash-primary)]/10' : ''}"
+        draggable={canDrag}
+        ondragstart={(e) => handleDragStart(index, e)}
+        ondragover={(e) => handleDragOver(index, e)}
+        ondrop={() => handleDrop(index)}
+        ondragend={handleDragEnd}
+      >
+        {#if canDrag}
+          <span
+            class="pl-2 pr-1 self-stretch flex items-center text-[var(--dash-text-secondary)]/60 hover:text-[var(--dash-text-secondary)] cursor-grab active:cursor-grabbing"
+            aria-hidden="true"
+            title="Drag to reorder"
+          >
+            <FontAwesomeIcon icon={faGripVertical} class="w-3 h-3" />
+          </span>
+        {/if}
         {#if isDeleted}
           <span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">{item.description}</span>
           <button
