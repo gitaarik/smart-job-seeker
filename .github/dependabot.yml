@@ -1,0 +1,32 @@
+# Dependabot config for smart-job-seeker (open SvelteKit app).
+version: 2
+updates:
+  # --- npm ---
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # --- Docker images ---
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      docker-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # --- GitHub Actions (active once workflows are added) ---
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
