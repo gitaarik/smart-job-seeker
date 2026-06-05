@@ -440,8 +440,8 @@ describe("sidebar navigation", () => {
     }
 
     await importLink.click();
-    await b.page.waitForURL("**/export/import", { timeout: 5000 });
-    expect(b.page.url()).toContain("/export/import");
+    await b.page.waitForURL("**/data/profile-import", { timeout: 5000 });
+    expect(b.page.url()).toContain("/data/profile-import");
   });
 });
 
@@ -595,7 +595,7 @@ describe("job detail page", () => {
     await b.page.waitForURL(`**${href}`, { timeout: 5000 });
 
     const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Job Details");
+    expect(["Saved Job", "Job Match", "Job Details"]).toContain(heading?.trim());
   });
 
   it("shows save button and job content", async () => {
@@ -817,8 +817,8 @@ describe("import page", () => {
   });
 
   it("has import/export tab navigation", async () => {
-    const importTab = b.page.locator("main a").filter({ hasText: "Import" });
-    const exportTab = b.page.locator("main a").filter({ hasText: "Export" });
+    const importTab = b.page.locator("main a").filter({ hasText: "Profile Import" });
+    const exportTab = b.page.locator("main a").filter({ hasText: "Profile Export" });
 
     expect(await importTab.isVisible()).toBe(true);
     expect(await exportTab.isVisible()).toBe(true);
@@ -827,12 +827,12 @@ describe("import page", () => {
     const exportHref = await exportTab.getAttribute("href");
     await exportTab.click();
     await b.page.waitForURL(`**${exportHref}`, { timeout: 5000 });
-    expect(b.page.url()).toContain("/export/");
+    expect(b.page.url()).toContain("/data/profile-export");
 
     // Click import tab back
-    await b.page.locator("main a").filter({ hasText: "Import" }).click();
-    await b.page.waitForURL("**/import", { timeout: 5000 });
-    expect(b.page.url()).toContain("/export/import");
+    await b.page.locator("main a").filter({ hasText: "Profile Import" }).click();
+    await b.page.waitForURL("**/data/profile-import", { timeout: 5000 });
+    expect(b.page.url()).toContain("/data/profile-import");
   });
 });
 

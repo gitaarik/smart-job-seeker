@@ -102,7 +102,7 @@ describe("dashboard pages", () => {
   });
 
   it("export page renders", async () => {
-    await expectPage("/export/import");
+    await expectPage("/data/profile-import");
   });
 });
 
