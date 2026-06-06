@@ -1,0 +1,20 @@
+extends: default
+rules:
+  # GitHub Actions uses `on:` as a key — default truthy rule reads it as a boolean.
+  truthy:
+    check-keys: false
+  # Default 80 is too narrow for keys like `actions/checkout@v6` + comments.
+  line-length:
+    max: 120
+  # We don't enforce --- at the top of every file (Dependabot config etc.).
+  document-start: disable
+  # Allow nested arrays/blocks without flagging redundant indentation.
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
+ignore: |
+  node_modules/
+  .svelte-kit/
+  package-lock.json
+  drizzle/meta/
+  db-dumps/
