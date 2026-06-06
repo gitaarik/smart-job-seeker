@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.72] - 2026-06-06
+
+48 commits since v0.5.71.
+
+### Added
+- Personal AI assistant with persistent conversation history
+- Manual application creation with linked job
+- Drag-and-drop reordering for achievements
+- Automated dependency updates via Dependabot
+- Release and unit test CI workflows
+
+### Fixed
+- Kysely 0.28.17 production build issues (direct dependency declaration, bundle externalization)
+- Docker base image reverted to Ubuntu 22.04
+- E2E test failures (stale routes, dynamic job heading, strict-mode tab locators)
+- Interview cheat-sheet heading rendering (h1/h2)
+- Credentials auto-selection for import tasks
+- Safe-markdown URL sanitizer scheme denylist bypass
+
+### Changed
+- Node runtime upgraded from 22-slim to 26-slim
+- Resume/CV on-screen content widened to match PDF width
+- AgentChat panel grows while typing, collapses on Esc/outside-click
+- Scraper refactored for better testability with new unit tests
+- Search form refactored and simplified
+- Matcher and stealth modules refactored
+- Multiple dependency updates (vite 6.4.1→8.0.16, vitest 2.1.9→4.1.0, langsmith 0.5.20→0.7.5, @fortawesome/free-brands-svg-icons 6.7.2→7.2.0, wait-on 8.0.5→9.0.10, plus 63 additional npm minor/patch updates)
+
 ## [0.5.71] - 2026-05-28
 
 1 commit since v0.5.70.
