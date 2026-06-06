@@ -14,10 +14,7 @@ export default defineConfig({
   ssr: {
     // Keep CJS packages external so Node loads them natively instead of
     // bundling require() calls into the ESM server build.
-    // @better-auth/kysely-adapter: dead code at runtime (we only use
-    // drizzleAdapter); externalised so rollup doesn't choke on the
-    // DEFAULT_MIGRATION_TABLE import that kysely 0.29 dropped.
-    external: ["cheerio", "drizzle-orm", "bullmq", "@better-auth/kysely-adapter"],
+    external: ["cheerio", "drizzle-orm", "bullmq"],
   },
   server: {
     allowedHosts: [
