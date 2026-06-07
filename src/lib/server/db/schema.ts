@@ -1934,6 +1934,11 @@ export const search_tasks = pgTable("search_tasks", {
   // still counts it toward coverage/budget and feeds it to the suggester
   // as existing context for dedup.
   auto_managed: boolean().default(false).notNull(),
+  // When the user explicitly paused this task via the list toggle. The
+  // reconciler treats a null value as "never user-paused" and may promote a
+  // runnable auto proposal to active; a set value means hands-off — promotion
+  // must never override a deliberate pause. Cleared when the user re-activates.
+  user_paused_at: timestamp({ withTimezone: true, mode: "date" }),
 }, (table) => [
   index("idx_search_tasks_platform_profile").using(
     "btree",

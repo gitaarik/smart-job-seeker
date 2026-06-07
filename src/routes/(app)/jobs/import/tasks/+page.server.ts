@@ -18,6 +18,7 @@ import { listApiKeys } from "$lib/server/auth/api-key";
 import { hasDeviceAccess, listSharedWithMe } from "$lib/server/device-shares";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { adoptAutoTaskIfManaged } from "$lib/server/import-tasks/reconcile";
+import { triggerAutoImportReconcile } from "$lib/server/import-tasks/trigger";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -446,6 +447,13 @@ export const actions: Actions = {
       date_created: new Date(),
     }).returning();
 
+    // A new login attached here can make this profile's existing gated auto
+    // proposals runnable — re-evaluate to link + promote them (no new
+    // suggestions; force past the unchanged input hash).
+    if (resolvedCredentialId !== null) {
+      triggerAutoImportReconcile(profileId, { force: true, skipTopUp: true });
+    }
+
     return { success: true, taskId: newTask.id };
   },
 
@@ -534,6 +542,12 @@ export const actions: Actions = {
     // task so the reconciler won't prune or overwrite their changes. No-op
     // unless it was an auto task.
     await adoptAutoTaskIfManaged(id);
+
+    // A login attached during the edit can unblock the profile's other gated
+    // auto proposals — re-evaluate to link + promote them.
+    if (resolvedCredentialId !== null) {
+      triggerAutoImportReconcile(profileId, { force: true, skipTopUp: true });
+    }
 
     return { success: true };
   },

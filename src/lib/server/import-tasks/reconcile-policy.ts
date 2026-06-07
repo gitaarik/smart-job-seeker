@@ -67,6 +67,31 @@ export function selectTopUpCandidates<T extends { relevance: Relevance }>(
     .slice(0, slots);
 }
 
+/**
+ * Whether the reconciler may auto-activate ("promote") an existing paused auto
+ * proposal. Only an *untouched* proposal qualifies — never one the user
+ * explicitly paused (`user_paused_at`) or already ran (`last_run`), so
+ * promotion can't fight a deliberate choice. It must also be runnable now, the
+ * plan must auto-activate, and there must be room in the active budget.
+ */
+export function canPromoteProposal(
+  task: {
+    is_active: boolean | null;
+    user_paused_at: Date | null;
+    last_run: Date | null;
+  },
+  opts: { runnable: boolean; autoActivate: boolean; hasActiveSlot: boolean },
+): boolean {
+  return (
+    !task.is_active &&
+    task.user_paused_at == null &&
+    task.last_run == null &&
+    opts.autoActivate &&
+    opts.runnable &&
+    opts.hasActiveSlot
+  );
+}
+
 export interface InputHashSources {
   title: string | null;
   core_stack: string | null;

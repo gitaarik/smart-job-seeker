@@ -1,0 +1,1 @@
+ALTER TABLE "search_tasks" ADD COLUMN "user_paused_at" timestamp with time zone;

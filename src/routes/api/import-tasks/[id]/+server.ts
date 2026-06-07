@@ -17,6 +17,7 @@ import {
 import { hasDeviceAccess } from "$lib/server/device-shares";
 import { hasCredentialAccess } from "$lib/server/credential-shares";
 import { encryptCredential } from "$lib/server/auth/crypto";
+import { triggerAutoImportReconcile } from "$lib/server/import-tasks/trigger";
 
 /**
  * Calculate next scheduled run at the preferred hour in the user's timezone.
@@ -99,7 +100,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const searchTask = await db.query.search_tasks.findFirst({
     where: eq(search_tasks.id, searchTaskId),
-    with: { profile: true },
+    with: { profile: { columns: { user_id: true } } },
   });
 
   if (!searchTask) {
@@ -134,6 +135,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     next_scheduled_run?: Date | null;
     sjsbrowser_api_key?: number | null;
     debug_screenshots?: boolean;
+    user_paused_at?: Date | null;
   } = {};
 
   if (body.note !== undefined) data.note = body.note || null;
@@ -152,6 +154,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     // activating an auto-suggested task from the overview keeps the reconciler
     // syncing its filters. Only a content edit (the form action) adopts.
     data.is_active = body.is_active;
+    // Record a deliberate pause so the reconciler never auto-promotes this task
+    // back to active behind the user's back; clear it when they re-activate.
+    data.user_paused_at = body.is_active ? null : new Date();
     data.date_updated = new Date();
   }
   if (body.platform_id !== undefined) {
@@ -332,6 +337,16 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (Object.keys(data).length > 0) {
     await db.update(search_tasks).set(data)
       .where(eq(search_tasks.id, searchTaskId));
+  }
+
+  // A newly attached login can make this profile's other gated auto proposals
+  // runnable — re-evaluate so they get linked + promoted. Force past the
+  // unchanged input hash; skip top-up (no new suggestions, just promotion).
+  if (data.platform_profile_id != null) {
+    triggerAutoImportReconcile(searchTask.profile_id, {
+      force: true,
+      skipTopUp: true,
+    });
   }
 
   return json({ ok: true });

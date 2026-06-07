@@ -53,6 +53,7 @@ import { getPreferredDevice } from "$lib/server/sjs-browser-status";
 import { providerRequiresDevice } from "$lib/import-tasks/readiness";
 import {
   applyPreferenceFilters,
+  canPromoteProposal,
   computeInputHash,
   filtersEqual,
   selectTopUpCandidates,
@@ -105,6 +106,8 @@ export interface ReconcileResult {
   created: number;
   pruned: number;
   recomputed: number;
+  /** Paused proposals flipped to active because they became runnable. */
+  promoted: number;
   toppedUp: boolean;
 }
 
@@ -118,6 +121,7 @@ function emptyResult(
     created: 0,
     pruned: 0,
     recomputed: 0,
+    promoted: 0,
     toppedUp: false,
   };
 }
@@ -161,11 +165,15 @@ async function loadOrCreateState(profileId: number) {
 /**
  * Reconcile the auto-generated import tasks for one profile. Idempotent: a
  * second call with unchanged inputs is a no-op (hash gate). Pass force=true to
- * bypass the gate (e.g. an explicit "re-suggest" action).
+ * bypass the gate (e.g. an explicit "re-suggest", or a credential/device change
+ * that doesn't move the input hash but can make paused proposals runnable).
+ * Pass skipTopUp=true to re-evaluate existing tasks (prune / recompute /
+ * promote) without spending an LLM call to generate new ones — the right mode
+ * for those credential/device triggers.
  */
 export async function reconcileAutoImportTasks(
   profileId: number,
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; skipTopUp?: boolean } = {},
 ): Promise<ReconcileResult> {
   const state = await loadOrCreateState(profileId);
   if (!state.enabled) return emptyResult(true, "disabled");
@@ -230,10 +238,13 @@ export async function reconcileAutoImportTasks(
     .select({
       id: search_tasks.id,
       platform_id: search_tasks.platform_id,
+      platform_profile_id: search_tasks.platform_profile_id,
       search_filters: search_tasks.search_filters,
+      search_term: search_tasks.search_term,
       login_mode: search_tasks.login_mode,
       is_active: search_tasks.is_active,
       last_run: search_tasks.last_run,
+      user_paused_at: search_tasks.user_paused_at,
     })
     .from(search_tasks)
     .where(
@@ -261,8 +272,58 @@ export async function reconcileAutoImportTasks(
   }
   const survivors = managed.filter((t) => !pruneIds.includes(t.id));
 
-  // 2. RECOMPUTE — refresh preference-derived filters AND the platform-derived
-  // login mode in place.
+  // Shared runtime context for RECOMPUTE-promotion and TOP-UP: the user's plan,
+  // the browser device that would run these tasks, and which platforms the
+  // profile already has a login for. Resolved once.
+  const userId = profile.user_id;
+  const policy = userId
+    ? (AUTO_IMPORT_POLICY[(await getActiveSubscription(userId)).plan] ??
+      DEFAULT_POLICY)
+    : DEFAULT_POLICY;
+  // Auto-pick the user's available browser device (own or shared, currently
+  // connected) — the same pick the run path uses. Falls back to the server
+  // default provider when nothing is connected.
+  const device = userId ? await getPreferredDevice(userId) : null;
+  const browserProvider = device ? "tunnel" : config.defaultBrowserProvider;
+  const deviceApiKeyId = device?.apiKeyId ?? null;
+  // When the resolved provider needs a device (self-hosted tunnel) and none is
+  // connected, NOTHING is runnable — it all stays a paused proposal until the
+  // user connects one.
+  const deviceOk = !providerRequiresDevice(
+    browserProvider,
+    config.browserProvider,
+  ) || !!device;
+  // Platforms this profile already has a login for, with the platform_profiles
+  // id so a proposal created before the login existed can be linked to it.
+  const credRows = await db
+    .select({
+      id: platform_profiles.id,
+      platform_id: platform_profiles.platform_id,
+    })
+    .from(platform_profiles)
+    .where(eq(platform_profiles.profile_id, profileId));
+  const ppIdByPlatform = new Map<number, number>();
+  for (const r of credRows) {
+    if (r.platform_id !== null && !ppIdByPlatform.has(r.platform_id)) {
+      ppIdByPlatform.set(r.platform_id, r.id);
+    }
+  }
+  // A platform is runnable now iff it needs no login (public) or the profile
+  // already has one for it, AND a browser is available to run it.
+  const isRunnable = (platformId: number): boolean => {
+    const platform = platformById.get(platformId);
+    const isPublic = !platform?.login_page_url;
+    return (isPublic || ppIdByPlatform.has(platformId)) && deviceOk;
+  };
+
+  const activeBudget = state.max_tasks ?? policy.maxTasks;
+  let activeCount = survivors.filter((t) => t.is_active).length;
+  let pausedCount = survivors.filter((t) => !t.is_active).length;
+
+  // 2. RECOMPUTE — in-place self-heal of every surviving auto-managed task:
+  // refresh preference-derived filters, re-derive login_mode from the
+  // platform's current login requirement, link a login that's since been added,
+  // and PROMOTE an untouched proposal to active once it can actually run.
   const userFilters = mc
     ? preferencesToFilters({
       job_types: mc.job_types ?? [],
@@ -272,10 +333,12 @@ export async function reconcileAutoImportTasks(
     })
     : {};
   let recomputed = 0;
+  const promoted: Array<
+    { id: number; platformId: number; searchTerm: string | null }
+  > = [];
   for (const task of survivors) {
-    const plat = task.platform_id !== null
-      ? platformById.get(task.platform_id)
-      : undefined;
+    const pid = task.platform_id;
+    const plat = pid !== null ? platformById.get(pid) : undefined;
     const stripped = stripUnsupportedFilters(
       userFilters,
       plat?.unsupported_filters ?? {},
@@ -288,17 +351,23 @@ export async function reconcileAutoImportTasks(
     const update: {
       search_filters?: typeof desiredFilters;
       login_mode?: string;
+      platform_profile_id?: number;
+      is_active?: boolean;
+      browser_provider?: string;
+      sjsbrowser_api_key?: number | null;
+      schedule_interval_hours?: number | null;
+      next_scheduled_run?: Date | null;
     } = {};
+
     if (!filtersEqual(desiredFilters, task.search_filters ?? {})) {
       update.search_filters = desiredFilters;
     }
+
     // Keep login_mode aligned with the platform's *current* login requirement
     // so a platform that flips public↔gated after the task was created
     // self-heals: a once-public task left on "none" would otherwise silently
-    // stall at a newly-added login wall, and a now-public one would needlessly
-    // demand credentials. Only ever toggles between the reconciler's own two
-    // modes — a user-set "manual" means the task was adopted (auto_managed=
-    // false) and wouldn't be in this set anyway.
+    // stall at a newly-added login wall. Only toggles the reconciler's own two
+    // modes — an adopted (auto_managed=false) task isn't in this set.
     const desiredLoginMode = plat?.login_page_url ? "auto" : "none";
     if (
       (task.login_mode === "auto" || task.login_mode === "none") &&
@@ -307,9 +376,43 @@ export async function reconcileAutoImportTasks(
       update.login_mode = desiredLoginMode;
     }
 
+    // Link a login the user has added since the task was created, so a gated
+    // task actually has credentials to run with (and so becomes runnable).
     if (
-      update.search_filters !== undefined || update.login_mode !== undefined
+      pid !== null && !!plat?.login_page_url &&
+      task.platform_profile_id == null && ppIdByPlatform.has(pid)
     ) {
+      update.platform_profile_id = ppIdByPlatform.get(pid);
+    }
+
+    // Promote an untouched proposal to active once it can run (a device got
+    // connected, and/or a login was added). canPromoteProposal guards against
+    // ever re-activating a task the user paused or already ran.
+    if (
+      pid !== null &&
+      canPromoteProposal(task, {
+        runnable: isRunnable(pid),
+        autoActivate: policy.autoActivate,
+        hasActiveSlot: activeCount < activeBudget,
+      })
+    ) {
+      update.is_active = true;
+      update.browser_provider = browserProvider;
+      update.sjsbrowser_api_key = deviceApiKeyId;
+      update.schedule_interval_hours = policy.scheduleIntervalHours;
+      update.next_scheduled_run = policy.scheduleIntervalHours
+        ? new Date(Date.now() + policy.scheduleIntervalHours * 3600_000)
+        : null;
+      activeCount++;
+      pausedCount--;
+      promoted.push({
+        id: task.id,
+        platformId: pid,
+        searchTerm: task.search_term,
+      });
+    }
+
+    if (Object.keys(update).length > 0) {
       await db
         .update(search_tasks)
         .set({ ...update, date_updated: new Date() })
@@ -318,62 +421,42 @@ export async function reconcileAutoImportTasks(
     }
   }
 
-  // 3. TOP-UP — fill toward budget with distinct, sufficiently-relevant
-  // suggestions. The suggester already dedups against ALL existing tasks.
-  // Sizing + activation behaviour come from the user's plan policy.
-  const userId = profile.user_id;
-  const policy = userId
-    ? (AUTO_IMPORT_POLICY[(await getActiveSubscription(userId)).plan] ??
-      DEFAULT_POLICY)
-    : DEFAULT_POLICY;
-  // Two independent budgets. Runnable tasks (public, or gated platforms the
-  // user already has a login for) get activated + run, so they're capped by the
-  // credit-relevant `max_tasks`/plan budget. Non-runnable suggestions are kept
-  // as paused, credit-free proposals up to a small separate cap — counted by
-  // is_active so the split survives across reconciles.
-  const activeBudget = state.max_tasks ?? policy.maxTasks;
-  const activeSlots = activeBudget -
-    survivors.filter((t) => t.is_active).length;
-  const proposalSlots = PROPOSAL_CAP -
-    survivors.filter((t) => !t.is_active).length;
+  // Kick off an immediate run for each freshly-promoted task — same credit-
+  // gated, best-effort path as a newly auto-activated task.
+  for (const p of promoted) {
+    const platform = platformById.get(p.platformId);
+    if (platform?.search_page_url && userId) {
+      await enqueueInitialRun({
+        searchTaskId: p.id,
+        userId,
+        platformId: p.platformId,
+        searchUrl: platform.search_page_url,
+        searchTerm: p.searchTerm,
+        browserProvider,
+      }).catch((err) => {
+        console.warn(
+          `[auto-import] promoted run enqueue failed for task ${p.id}:`,
+          err,
+        );
+      });
+    }
+  }
+
+  // 3. TOP-UP — generate new suggestions to fill the remaining budget. The
+  // suggester already dedups against ALL existing tasks. Skipped for the
+  // credential/device triggers (skipTopUp): those only re-evaluate existing
+  // tasks (promotion above) and shouldn't spend an LLM call. Two budgets:
+  // runnable suggestions fill the credit-relevant active budget; non-runnable
+  // ones become paused proposals up to PROPOSAL_CAP. Counts reflect promotions.
+  const activeSlots = activeBudget - activeCount;
+  const proposalSlots = PROPOSAL_CAP - pausedCount;
   let created = 0;
   let toppedUp = false;
   let suggesterOk = true;
-  if (activeSlots > 0 || proposalSlots > 0) {
+  if (!opts.skipTopUp && (activeSlots > 0 || proposalSlots > 0)) {
     const result = await _runSuggester(profileId);
     if (result.ok) {
       toppedUp = true;
-      // Auto-assign the user's available browser device (own or shared, and
-      // currently connected) so the tasks run on it — the same auto-pick the
-      // run path uses at runtime. Falls back to the server default provider
-      // when nothing is connected. Resolved once and shared across the set.
-      const device = userId ? await getPreferredDevice(userId) : null;
-      const browserProvider = device ? "tunnel" : config.defaultBrowserProvider;
-      const deviceApiKeyId = device?.apiKeyId ?? null;
-      // When the resolved provider needs a browser device (self-hosted tunnel)
-      // and none is connected, NOTHING is runnable — it all becomes proposals
-      // until the user connects one.
-      const deviceOk = !providerRequiresDevice(
-        browserProvider,
-        config.browserProvider,
-      ) || !!device;
-
-      // Platforms this profile already has a login for: a gated platform here
-      // can run immediately (tier 2), so it joins the runnable set.
-      const credRows = await db
-        .select({ platform_id: platform_profiles.platform_id })
-        .from(platform_profiles)
-        .where(eq(platform_profiles.profile_id, profileId));
-      const credPlatformIds = new Set(credRows.map((r) => r.platform_id));
-
-      // A suggestion is runnable now iff it needs no login (public) or the user
-      // already has one for it, AND a browser is available to run it.
-      const isRunnable = (platformId: number): boolean => {
-        const platform = platformById.get(platformId);
-        const isPublic = !platform?.login_page_url;
-        return (isPublic || credPlatformIds.has(platformId)) && deviceOk;
-      };
-
       // Fill the runnable budget first, then top up proposals from what's left.
       // Partition preserves suggester relevance order within each group.
       const runnablePicks = selectTopUpCandidates(
@@ -441,6 +524,7 @@ export async function reconcileAutoImportTasks(
     created,
     pruned: pruneIds.length,
     recomputed,
+    promoted: promoted.length,
     toppedUp,
   };
 }
@@ -564,9 +648,17 @@ async function enqueueInitialRun(opts: {
  * Fire-and-forget reconcile for request handlers. Never blocks the response
  * and never throws into the caller — the input-hash gate makes redundant calls
  * cheap, so it's safe to call from any profile/preference mutation site.
+ *
+ * Pass `{ force: true, skipTopUp: true }` from a credential/device change: those
+ * don't move the input hash (so the gate would skip them) but can make a paused
+ * proposal runnable, and they only need the prune/recompute/promote pass — not
+ * a fresh, LLM-backed top-up.
  */
-export function triggerAutoImportReconcile(profileId: number): void {
-  void reconcileAutoImportTasks(profileId).catch((err) => {
+export function triggerAutoImportReconcile(
+  profileId: number,
+  opts: { force?: boolean; skipTopUp?: boolean } = {},
+): void {
+  void reconcileAutoImportTasks(profileId, opts).catch((err) => {
     console.error(
       `[auto-import] reconcile failed for profile ${profileId}:`,
       err,

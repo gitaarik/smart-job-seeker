@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyPreferenceFilters,
   canonFilters,
+  canPromoteProposal,
   computeInputHash,
   filtersEqual,
   type InputHashSources,
@@ -20,6 +21,41 @@ const baseHashInput: InputHashSources = {
   locations: ["Berlin"],
   remote_only: false,
 };
+
+describe("canPromoteProposal", () => {
+  const fresh = { is_active: false, user_paused_at: null, last_run: null };
+  const ok = { runnable: true, autoActivate: true, hasActiveSlot: true };
+
+  it("promotes an untouched, runnable proposal when there's budget", () => {
+    expect(canPromoteProposal(fresh, ok)).toBe(true);
+  });
+
+  it("never promotes an already-active task", () => {
+    expect(canPromoteProposal({ ...fresh, is_active: true }, ok)).toBe(false);
+  });
+
+  it("never overrides a deliberate pause", () => {
+    expect(
+      canPromoteProposal({ ...fresh, user_paused_at: new Date(1) }, ok),
+    ).toBe(false);
+  });
+
+  it("never re-activates a proposal the user already ran", () => {
+    expect(canPromoteProposal({ ...fresh, last_run: new Date(1) }, ok)).toBe(
+      false,
+    );
+  });
+
+  it("requires runnability, auto-activation, and an open slot", () => {
+    expect(canPromoteProposal(fresh, { ...ok, runnable: false })).toBe(false);
+    expect(canPromoteProposal(fresh, { ...ok, autoActivate: false })).toBe(
+      false,
+    );
+    expect(canPromoteProposal(fresh, { ...ok, hasActiveSlot: false })).toBe(
+      false,
+    );
+  });
+});
 
 describe("canonFilters / filtersEqual", () => {
   it("is order-independent across keys and values", () => {
