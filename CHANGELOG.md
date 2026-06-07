@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.73] - 2026-06-07
+
+50 commits since v0.5.72.
+
+### Added
+- Auto-generate import tasks from profile + preferences with plan-based scheduling
+- Auto-assign user's browser device to generated import tasks
+- Inline enable/disable for import tasks on overview page
+- Import task readiness gates with UI indicating missing setup steps
+- Auto-promote job proposals when they become runnable
+- Runnability-tiered auto-import top-up with grouped task list
+- Keep auto-task login_mode in sync with platform on recompute
+- Docker image security scanning (dockle + grype vulnerability scans)
+- CI: PR description validation, general-checks workflow (yamllint, hadolint, lint-git), commitlint enforcement
+
+### Changed
+- Import task UI: reordered active toggle first, improved pill layout
+- Digest: render job attributes (type, experience, location) as label pills
+- sjs-browser moved to submodule architecture
+
+### Fixed
+- Docker security scan fatal-level exit handling
+- Release script: keep dev server available during release
+- Release: properly reflect manual :latest image promotion
+
+### Removed
+- In-tree sjs-browser source and CI (replaced by submodule)
+
 ## [0.5.72] - 2026-06-06
 
 48 commits since v0.5.71.
