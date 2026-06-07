@@ -1,15 +1,28 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
-import { profiles, match_config } from "$lib/server/db/schema";
+import { and, eq } from "drizzle-orm";
+import { match_config, profiles } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
-import { jobPreferencesPatchSchema, jobPreferencesSchema, parseBody } from "$lib/server/validation/api-schemas";
+import {
+  jobPreferencesPatchSchema,
+  jobPreferencesSchema,
+  parseBody,
+} from "$lib/server/validation/api-schemas";
+import { triggerAutoImportReconcile } from "$lib/server/import-tasks/reconcile";
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const { profile_id, job_types, experience_levels, work_location, locations, remote_only, match_community_jobs, community_max_age_days } =
-    parseBody(jobPreferencesSchema, await request.json());
+  const {
+    profile_id,
+    job_types,
+    experience_levels,
+    work_location,
+    locations,
+    remote_only,
+    match_community_jobs,
+    community_max_age_days,
+  } = parseBody(jobPreferencesSchema, await request.json());
 
   // Verify the profile belongs to this user
   const profile = await db.query.profiles.findFirst({
@@ -27,10 +40,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   const data = {
     job_types: job_types,
-    experience_levels:
-      experience_levels && experience_levels.length > 0
-        ? experience_levels
-        : null,
+    experience_levels: experience_levels && experience_levels.length > 0
+      ? experience_levels
+      : null,
     work_location: work_location,
     locations: locations && locations.length > 0 ? locations : null,
     ...(remote_only !== undefined && { remote_only }),
@@ -50,6 +62,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       date_created: new Date(),
     }).returning();
   }
+
+  // Preferences drive the auto-import filters — keep the generated set in sync.
+  triggerAutoImportReconcile(profile_id);
 
   return json({ success: true, id: result.id });
 };
@@ -91,23 +106,29 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
         ? fields.experience_levels
         : null;
   }
-  if (fields.work_location !== undefined)
+  if (fields.work_location !== undefined) {
     data.work_location = fields.work_location;
-  if (fields.locations !== undefined) {
-    data.locations =
-      fields.locations && fields.locations.length > 0
-        ? fields.locations
-        : null;
   }
-  if (fields.remote_only !== undefined)
+  if (fields.locations !== undefined) {
+    data.locations = fields.locations && fields.locations.length > 0
+      ? fields.locations
+      : null;
+  }
+  if (fields.remote_only !== undefined) {
     data.remote_only = fields.remote_only;
-  if (fields.match_community_jobs !== undefined)
+  }
+  if (fields.match_community_jobs !== undefined) {
     data.match_community_jobs = fields.match_community_jobs;
-  if (fields.community_max_age_days !== undefined)
+  }
+  if (fields.community_max_age_days !== undefined) {
     data.community_max_age_days = fields.community_max_age_days;
+  }
 
   const [result] = await db.update(match_config).set(data)
     .where(eq(match_config.id, existing.id)).returning();
+
+  // Preferences drive the auto-import filters — keep the generated set in sync.
+  triggerAutoImportReconcile(profile_id);
 
   return json({ success: true, id: result.id });
 };

@@ -333,8 +333,8 @@
       });
       const body = await res.json();
       if (!res.ok || !body.success) {
-        suggestionsError =
-          body.message || "Couldn't generate suggestions. Try again or start blank.";
+        suggestionsError = body.message ||
+          "Couldn't generate suggestions. Try again or start blank.";
         return;
       }
       suggestions = body.tasks.map((t: Suggestion, i: number) => ({
@@ -527,7 +527,26 @@
         </div>
       {/if}
 
-      <div class="ml-auto">
+      <div class="ml-auto flex items-center gap-2">
+        <form method="POST" action="?/toggleAutoImport">
+          <input
+            type="hidden"
+            name="enabled"
+            value={data.autoImportEnabled ? "false" : "true"}
+          />
+          <button
+            type="submit"
+            title="When on, we keep a starter set of import tasks in sync with your profile and match preferences. New ones are added paused for you to review and activate."
+            class="
+              px-3 py-1.5 text-xs rounded-lg transition-colors whitespace-nowrap {data
+              .autoImportEnabled
+              ? 'bg-purple-500/15 text-purple-600 hover:bg-purple-500/25'
+              : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)]'}
+            "
+          >
+            Auto-suggest: {data.autoImportEnabled ? "On" : "Off"}
+          </button>
+        </form>
         <button
           type="button"
           onclick={() => (showAddForm = true)}
@@ -558,7 +577,8 @@
   {/if}
 
   <!-- Job Searches List -->
-  {#if searchTasks.length === 0 && !showAddForm && (!suggestions || suggestions.length === 0)}
+  {#if searchTasks.length === 0 && !showAddForm &&
+  (!suggestions || suggestions.length === 0)}
     <div
       class="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg"
     >
@@ -572,15 +592,22 @@
       </div>
       <h3
         class="text-lg font-medium text-[var(--dash-text)] mb-2"
-      >No search tasks yet</h3>
+      >
+        No search tasks yet
+      </h3>
       <p
         class="text-[var(--dash-text-secondary)] text-center max-w-sm mb-6"
-      >Let AI suggest searches tailored to your profile, or start with a blank form.</p>
+      >
+        Let AI suggest searches tailored to your profile, or start with a blank
+        form.
+      </p>
 
       {#if suggestionsError}
         <p
           class="text-xs text-red-600 dark:text-red-400 mb-3 text-center max-w-sm"
-        >{suggestionsError}</p>
+        >
+          {suggestionsError}
+        </p>
       {/if}
 
       <div class="flex flex-col sm:flex-row gap-2">
@@ -648,6 +675,14 @@
                     >{search.note}</span>
                   {/if}
                 </h3>
+                {#if search.origin === "auto"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 whitespace-nowrap"
+                    title="Auto-suggested from your profile and match preferences. Review and activate to start scraping."
+                  >
+                    Auto-suggested
+                  </span>
+                {/if}
                 {#if search.browser_provider === "tunnel"}
                   <span
                     class={desktopConnected
@@ -871,17 +906,22 @@
        suggestion cards are on screen (dismiss them first to re-trigger),
        and hidden when there are no tasks yet — that case uses the
        empty-state CTA above. -->
-  {#if !showAddForm && searchTasks.length > 0 && (!suggestions || suggestions.length === 0)}
+  {#if !showAddForm && searchTasks.length > 0 &&
+  (!suggestions || suggestions.length === 0)}
     <div class="flex flex-col items-center gap-2 pt-2">
       {#if suggestionsInfo}
         <p
           class="text-xs text-[var(--dash-text-secondary)] text-center max-w-md"
-        >{suggestionsInfo}</p>
+        >
+          {suggestionsInfo}
+        </p>
       {/if}
       {#if suggestionsError}
         <p
           class="text-xs text-red-600 dark:text-red-400 text-center max-w-md"
-        >{suggestionsError}</p>
+        >
+          {suggestionsError}
+        </p>
       {/if}
       <button
         type="button"

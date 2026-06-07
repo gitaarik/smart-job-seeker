@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { profiles, profile_versions } from "$lib/server/db/schema";
+import { profile_versions, profiles } from "$lib/server/db/schema";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import {
   createProfileFromResume,
@@ -16,6 +16,7 @@ import {
 } from "$lib/server/resume";
 import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
 import { exportProfile } from "$lib/server/profile/export";
+import { triggerAutoImportReconcile } from "$lib/server/import-tasks/reconcile";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -160,7 +161,9 @@ export const actions: Actions = {
       );
     } catch (e) {
       console.error("[create] error:", e);
-      const message = e instanceof Error ? e.message : "Profile creation failed";
+      const message = e instanceof Error
+        ? e.message
+        : "Profile creation failed";
       return fail(500, { error: message });
     }
 
@@ -171,6 +174,9 @@ export const actions: Actions = {
     if (result.errors && result.errors.length > 0) {
       console.warn("[create] import warnings:", result.errors);
     }
+
+    // Seed a starter set of auto-generated import tasks for the new profile.
+    if (result.profileId) triggerAutoImportReconcile(result.profileId);
 
     redirect(303, `/home?profile=${result.profileId}&created=true`);
   },
@@ -232,6 +238,9 @@ export const actions: Actions = {
     // the lazy backfill in createAndGenerateAiChat fires on first use.
     await exportProfile(profile.id);
 
+    // Seed a starter set of auto-generated import tasks for the new profile.
+    triggerAutoImportReconcile(profile.id);
+
     redirect(303, `/home?profile=${profile.id}&created=true`);
   },
 
@@ -281,6 +290,9 @@ export const actions: Actions = {
       const message = e instanceof Error ? e.message : "Import failed";
       return fail(500, { error: message });
     }
+
+    // Seed a starter set of auto-generated import tasks for the new profile.
+    if (result.profileId) triggerAutoImportReconcile(result.profileId);
 
     redirect(303, `/home?profile=${result.profileId}&created=true`);
   },
