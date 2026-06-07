@@ -6,6 +6,7 @@
 
 import { sendEmail } from "./index";
 import { getScoreGradient } from "$lib/score-colors";
+import { formatWorkLocation, formatJobType, formatExperienceLevel } from "$lib/format";
 
 export interface DigestJob {
   id: number;
@@ -83,13 +84,13 @@ function buildDigestHtml(opts: DigestOptions): string {
         const scoreColors = getScoreGradient(job.score);
         const pills: string[] = [];
         if (job.work_location) {
-          for (const loc of job.work_location) pills.push(pillHtml(loc, "#ede9fe", "#6d28d9"));
+          for (const loc of job.work_location) pills.push(pillHtml(formatWorkLocation(loc), "#ede9fe", "#6d28d9"));
         }
         if (job.job_types) {
-          for (const t of job.job_types) pills.push(pillHtml(t, "#dbeafe", "#1d4ed8"));
+          for (const t of job.job_types) pills.push(pillHtml(formatJobType(t), "#dbeafe", "#1d4ed8"));
         }
         if (job.experience_levels) {
-          for (const e of job.experience_levels) pills.push(pillHtml(e, "#fef3c7", "#92400e"));
+          for (const e of job.experience_levels) pills.push(pillHtml(formatExperienceLevel(e), "#fef3c7", "#92400e"));
         }
 
         const matchedSet = new Set((job.matched_skills ?? []).map((s) => s.toLowerCase()));
