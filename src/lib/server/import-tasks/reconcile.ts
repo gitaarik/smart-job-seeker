@@ -49,6 +49,7 @@ import { addScrapeJob } from "$lib/server/queue";
 import { requireCredits } from "$lib/server/billing/require-credits";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
 import type { PlanId } from "$lib/server/billing/plans";
+import { getPreferredDevice } from "$lib/server/sjs-browser-status";
 import {
   applyPreferenceFilters,
   computeInputHash,
@@ -291,6 +292,13 @@ export async function reconcileAutoImportTasks(
     const result = await _runSuggester(profileId);
     if (result.ok) {
       toppedUp = true;
+      // Auto-assign the user's available browser device (own or shared, and
+      // currently connected) so the tasks run on it — the same auto-pick the
+      // run path uses at runtime. Falls back to the server default provider
+      // when nothing is connected. Resolved once and shared across the set.
+      const device = userId ? await getPreferredDevice(userId) : null;
+      const browserProvider = device ? "tunnel" : config.defaultBrowserProvider;
+      const deviceApiKeyId = device?.apiKeyId ?? null;
       const candidates = selectTopUpCandidates(result.tasks, slots);
       for (const draft of candidates) {
         const platform = platformById.get(draft.platform_id);
@@ -301,6 +309,8 @@ export async function reconcileAutoImportTasks(
         const taskId = await insertAutoTask(profileId, draft, {
           activate,
           scheduleIntervalHours: activate ? policy.scheduleIntervalHours : null,
+          browserProvider,
+          deviceApiKeyId,
         });
         created++;
         // Kick off one immediate run so the user sees jobs flow in. Credit-
@@ -312,6 +322,7 @@ export async function reconcileAutoImportTasks(
             platformId: draft.platform_id,
             searchUrl: platform.search_page_url,
             searchTerm: draft.keywords,
+            browserProvider,
           }).catch((err) => {
             console.warn(
               `[auto-import] initial run enqueue failed for task ${taskId}:`,
@@ -358,7 +369,12 @@ async function insertAutoTask(
     note: string;
     filters: Record<string, SearchFilterValue>;
   },
-  opts: { activate: boolean; scheduleIntervalHours: number | null },
+  opts: {
+    activate: boolean;
+    scheduleIntervalHours: number | null;
+    browserProvider: string;
+    deviceApiKeyId: number | null;
+  },
 ): Promise<number> {
   const existingCred = await db.query.platform_profiles.findFirst({
     where: and(
@@ -383,7 +399,8 @@ async function insertAutoTask(
     login_mode: "auto",
     skip_existing: false,
     keep_minimized: true,
-    browser_provider: config.defaultBrowserProvider,
+    browser_provider: opts.browserProvider,
+    sjsbrowser_api_key: opts.deviceApiKeyId,
     schedule_interval_hours: schedule,
     schedule_preferred_hour: DEFAULT_PREFERRED_HOUR,
     // First scheduled run is one interval out; the immediate run is enqueued
@@ -407,6 +424,7 @@ async function enqueueInitialRun(opts: {
   platformId: number;
   searchUrl: string;
   searchTerm: string | null;
+  browserProvider: string;
 }): Promise<void> {
   // Mirrors the run endpoint's ~15-credit pre-check. The OSS stub is a no-op;
   // the cloud overlay throws when the balance is too low, which we treat as
@@ -421,7 +439,7 @@ async function enqueueInitialRun(opts: {
     search_task_id: opts.searchTaskId,
     status: "queued",
     triggered_by: "scheduler",
-    settings: { browser_provider: config.defaultBrowserProvider },
+    settings: { browser_provider: opts.browserProvider },
   }).returning({ id: search_task_runs.id });
 
   await db.update(search_tasks).set({
@@ -430,8 +448,9 @@ async function enqueueInitialRun(opts: {
     date_updated: new Date(),
   }).where(eq(search_tasks.id, opts.searchTaskId));
 
-  // Route to the hosted queue when the server defaults to a cloud browser.
-  let effectiveProvider: string | null = config.defaultBrowserProvider;
+  // Route to the hosted queue when the server defaults to a cloud browser and
+  // no device-backed provider was chosen.
+  let effectiveProvider: string | null = opts.browserProvider;
   if (!effectiveProvider) {
     const serverDefault = process.env.SJS_BROWSER_PROVIDER || "local";
     if (serverDefault === "goLogin") effectiveProvider = "hosted";
