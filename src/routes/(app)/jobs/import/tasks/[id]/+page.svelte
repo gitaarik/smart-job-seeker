@@ -4,6 +4,8 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import Card from "../../../../components/Card.svelte";
+  import ImportTaskBlockerList from "../../components/ImportTaskBlockerList.svelte";
+  import { computeImportTaskBlockers } from "$lib/import-tasks/readiness";
   import Spinner from "$lib/components/Spinner.svelte";
   import { portalToBody } from "$lib/actions/portal";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
@@ -21,7 +23,11 @@
     timeAgo,
   } from "$lib/format";
   import { page } from "$app/stores";
-  import { formatDateTime, formatMonthDay, formatTime as fmtTime } from "$lib/format-date";
+  import {
+    formatDateTime,
+    formatMonthDay,
+    formatTime as fmtTime,
+  } from "$lib/format-date";
   import type { TimeFormat } from "$lib/format-date";
   import {
     faArrowLeft,
@@ -462,6 +468,28 @@
       (!(searchTask as any).browser_provider &&
         data.browserProvider === "tunnel"),
   );
+  // Unmet requirements that stop this task from running (needs a connected
+  // device, login credentials, etc). Same computation the run endpoint enforces
+  // and the overview list shows, so the banner never disagrees with the gate.
+  // Device status is optimistic until the live check resolves, so the device
+  // blocker doesn't flash before we actually know.
+  let blockers = $derived(
+    computeImportTaskBlockers({
+      platformId: searchTask.platform_id,
+      platformName: searchTask.job_platform?.name ?? null,
+      taskSearchUrl: (searchTask as any).search_url ?? null,
+      platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
+      platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
+      loginMode: (searchTask as any).login_mode ?? null,
+      hasCredential: (searchTask as any).platform_credential_id != null,
+      browserProvider: (searchTask as any).browser_provider ?? null,
+      serverBrowserProvider: data.browserProvider,
+      deviceConnected: !isTunnelMode
+        ? true
+        : (desktopStatusChecked ? desktopConnected : true),
+    }),
+  );
+
   // Only fall back to VNC when using local browser; show nothing while waiting for cloud live URL
   let browserViewUrl = $derived(
     liveUrl ||
@@ -1123,10 +1151,10 @@
   }
 
   async function startScrape() {
-    // Prevent starting when device is required but not connected
-    if (isTunnelMode && !desktopConnected) {
-      errorMessage =
-        "No device is connected. Connect the desktop app or a self-hosted tunnel before running an import.";
+    // Prevent starting until the task is fully configured (device, credentials,
+    // etc). Mirrors the server-side gate so the user gets the same reason here.
+    if (blockers.length > 0) {
+      errorMessage = blockers.map((b) => b.detail).join(" ");
       return;
     }
 
@@ -1204,8 +1232,8 @@
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        openBrowserMessage = data.message || data.error
-          || "Failed to open browser";
+        openBrowserMessage = data.message || data.error ||
+          "Failed to open browser";
         return;
       }
       // Surface the browser panel and switch to VNC so the user can
@@ -1727,13 +1755,17 @@
               {@const jobData = item.job}
               {@const workLocs = Array.isArray(jobData?.work_location) ? jobData.work_location : []}
               {@const jobTyps = Array.isArray(jobData?.job_types) ? jobData.job_types : []}
-              {@const expLvls = Array.isArray(jobData?.experience_levels) ? jobData.experience_levels : []}
-              {@const salaryText = jobData ? formatSalary(
+              {@const expLvls = Array.isArray(jobData?.experience_levels)
+              ? jobData.experience_levels
+              : []}
+              {@const salaryText = jobData
+              ? formatSalary(
                 jobData.salary_min,
                 jobData.salary_max,
                 jobData.salary_currency,
                 jobData.salary_period,
-              ) : ""}
+              )
+              : ""}
               {@const datePosted = jobData?.date_posted || jobData?.date_created}
               <div
                 data-item-status={item.status}
@@ -1813,7 +1845,8 @@
                       <div
                         class="flex flex-col gap-0.5 min-w-0 flex-1"
                       >
-                        {#if jobData?.company || item.company || jobData?.office_location || item.location || jobData?.job_platform}
+                        {#if jobData?.company || item.company || jobData?.office_location || item.location ||
+  jobData?.job_platform}
                           <div
                             class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--dash-text-secondary)]"
                           >
@@ -1847,37 +1880,55 @@
                           </div>
                         {/if}
                         {#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
-                          <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <div
+                            class="flex items-center gap-1.5 flex-wrap mt-0.5"
+                          >
                             {#each workLocs as loc}
-                              <CategoryPill category="work_location" value={loc} />
+                              <CategoryPill
+                                category="work_location"
+                                value={loc}
+                              />
                             {/each}
                             {#each jobTyps as type}
                               <CategoryPill category="job_type" value={type} />
                             {/each}
                             {#each expLvls as level}
-                              <CategoryPill category="experience_level" value={level} />
+                              <CategoryPill
+                                category="experience_level"
+                                value={level}
+                              />
                             {/each}
                           </div>
                         {/if}
                         {#if salaryText || datePosted}
-                          <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap mt-1.5 sm:mt-2">
+                          <div
+                            class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap mt-1.5 sm:mt-2"
+                          >
                             {#if salaryText}
-                              <span class="flex items-center gap-1 text-[var(--dash-success)]">
+                              <span
+                                class="flex items-center gap-1 text-[var(--dash-success)]"
+                              >
                                 <FontAwesomeIcon
                                   icon={faMoneyBillWave}
                                   class="w-3 h-3"
                                 />
-                                <span class="truncate max-w-[140px] sm:max-w-none">{salaryText}</span>
+                                <span
+                                  class="truncate max-w-[140px] sm:max-w-none"
+                                >{salaryText}</span>
                               </span>
                             {/if}
                             {#if datePosted}
-                              <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
+                              <span
+                                class="flex items-center gap-1 text-[var(--dash-text-secondary)]"
+                              >
                                 <FontAwesomeIcon
                                   icon={faCalendar}
                                   class="w-3 h-3"
                                 />
                                 {timeAgo(datePosted)}
-                                <span class="opacity-50">{formatMonthDay(datePosted, { fallback: "" })}</span>
+                                <span class="opacity-50">{
+                                  formatMonthDay(datePosted, { fallback: "" })
+                                }</span>
                               </span>
                             {/if}
                           </div>
@@ -1887,7 +1938,9 @@
                            desktop just the pill (score lives on the left).
                            Stacked so they share the right edge with the
                            chevron above (in the title row). -->
-                      <div class="flex flex-col items-end gap-2 ml-auto shrink-0">
+                      <div
+                        class="flex flex-col items-end gap-2 ml-auto shrink-0"
+                      >
                         {#if item.job_id && item.status === "completed"}
                           <div class="md:hidden">
                             <ScoreBadge
@@ -1897,64 +1950,64 @@
                             />
                           </div>
                         {/if}
-                      <span
-                        class="
-                          text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
-                          item.status === 'completed' && item.was_created === true
-                          ? 'bg-[var(--dash-success)] text-white'
-                          : item.status === 'completed' && item.was_created === false && run.settings?.skip_existing
-                          ? 'bg-slate-500 text-white'
-                          : item.status === 'completed'
-                          ? 'bg-[var(--dash-success)]/70 text-white'
-                          : item.status === 'processing'
-                          ? 'bg-[var(--dash-primary-light)] text-[var(--dash-primary)]'
-                          : item.status === 'skipped'
-                          ? 'bg-amber-600 text-white'
-                          : item.status === 'error'
-                          ? 'bg-red-600 text-white'
-                          : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'
-                          }
-                        "
-                      >
-                        {#if item.status === "completed" && item.was_created === false &&
+                        <span
+                          class="
+                            text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1 max-w-32 truncate {
+                            item.status === 'completed' && item.was_created === true
+                            ? 'bg-[var(--dash-success)] text-white'
+                            : item.status === 'completed' && item.was_created === false && run.settings?.skip_existing
+                            ? 'bg-slate-500 text-white'
+                            : item.status === 'completed'
+                            ? 'bg-[var(--dash-success)]/70 text-white'
+                            : item.status === 'processing'
+                            ? 'bg-[var(--dash-primary-light)] text-[var(--dash-primary)]'
+                            : item.status === 'skipped'
+                            ? 'bg-amber-600 text-white'
+                            : item.status === 'error'
+                            ? 'bg-red-600 text-white'
+                            : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'
+                            }
+                          "
+                        >
+                          {#if item.status === "completed" && item.was_created === false &&
   run.settings?.skip_existing}
-                          <FontAwesomeIcon
-                            icon={faForward}
-                            class="w-2.5 h-2.5 shrink-0"
-                          />
-                          duplicate
-                        {:else if item.status === "completed"}
-                          <FontAwesomeIcon
-                            icon={faCheck}
-                            class="w-2.5 h-2.5 shrink-0"
-                          />
-                          {
-                            item.was_created === true ? "new" : item.was_created === false ? "updated" : ""
-                          }
-                        {:else if item.status === "processing"}
-                          <FontAwesomeIcon
-                            icon={faSync}
-                            class="w-2.5 h-2.5 shrink-0 animate-spin"
-                          />
-                        {:else if item.status === "skipped"}
-                          <FontAwesomeIcon
-                            icon={faForward}
-                            class="w-2.5 h-2.5 shrink-0"
-                          />
-                          {item.status_message || "skipped"}
-                        {:else if item.status === "error"}
-                          <FontAwesomeIcon
-                            icon={faTimes}
-                            class="w-2.5 h-2.5 shrink-0"
-                          />
-                          {item.status_message || "error"}
-                        {:else}
-                          <FontAwesomeIcon
-                            icon={faClock}
-                            class="w-2.5 h-2.5 shrink-0"
-                          />
-                        {/if}
-                      </span>
+                            <FontAwesomeIcon
+                              icon={faForward}
+                              class="w-2.5 h-2.5 shrink-0"
+                            />
+                            duplicate
+                          {:else if item.status === "completed"}
+                            <FontAwesomeIcon
+                              icon={faCheck}
+                              class="w-2.5 h-2.5 shrink-0"
+                            />
+                            {
+                              item.was_created === true ? "new" : item.was_created === false ? "updated" : ""
+                            }
+                          {:else if item.status === "processing"}
+                            <FontAwesomeIcon
+                              icon={faSync}
+                              class="w-2.5 h-2.5 shrink-0 animate-spin"
+                            />
+                          {:else if item.status === "skipped"}
+                            <FontAwesomeIcon
+                              icon={faForward}
+                              class="w-2.5 h-2.5 shrink-0"
+                            />
+                            {item.status_message || "skipped"}
+                          {:else if item.status === "error"}
+                            <FontAwesomeIcon
+                              icon={faTimes}
+                              class="w-2.5 h-2.5 shrink-0"
+                            />
+                            {item.status_message || "error"}
+                          {:else}
+                            <FontAwesomeIcon
+                              icon={faClock}
+                              class="w-2.5 h-2.5 shrink-0"
+                            />
+                          {/if}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1981,9 +2034,7 @@
                 {#if expandedItemId === item.id && item.job}
                   {@const job = item.job}
                   {@const matchedSkillsSet = new Set(
-                    Array.isArray(item.match?.matched_skills)
-                      ? item.match.matched_skills
-                      : [],
+                    Array.isArray(item.match?.matched_skills) ? item.match.matched_skills : [],
                   )}
                   <div
                     class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 {getItemStatusBg(item.status, item.was_created, run.settings?.skip_existing)}"
@@ -2128,7 +2179,9 @@
             {/if}
           </div>
         {:else}
-          <div class="p-2 font-mono text-xs divide-y divide-[var(--dash-border)]/60">
+          <div
+            class="p-2 font-mono text-xs divide-y divide-[var(--dash-border)]/60"
+          >
             {#each runLogs[run.id] as log (log.id)}
               <div
                 class="flex items-start gap-x-2 flex-wrap sm:flex-nowrap py-1.5 px-1 hover:bg-[var(--dash-bg)] rounded"
@@ -2139,7 +2192,9 @@
                 <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
                   {log.level}
                 </span>
-                <span class="text-[var(--dash-text)] break-all w-full sm:w-auto sm:flex-1 min-w-0">
+                <span
+                  class="text-[var(--dash-text)] break-all w-full sm:w-auto sm:flex-1 min-w-0"
+                >
                   {log.message}
                 </span>
                 {#if log.screenshot_path}
@@ -2264,6 +2319,34 @@
       {/if}
     </div>
   </div>
+
+  <!-- Setup-needed banner: the task can't run until these are resolved. -->
+  {#if blockers.length > 0}
+    <Card padding="lg">
+      <div class="flex items-start gap-3">
+        <div
+          class="w-8 h-8 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center shrink-0"
+        >
+          <FontAwesomeIcon
+            icon={faExclamationTriangle}
+            class="w-4 h-4 text-[var(--dash-warning)]"
+          />
+        </div>
+        <div class="min-w-0 space-y-2">
+          <div>
+            <p class="font-medium text-[var(--dash-text)]">
+              Finish setup to run this import
+            </p>
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Complete the {blockers.length === 1 ? "step" : "steps"} below
+              before starting:
+            </p>
+          </div>
+          <ImportTaskBlockerList {blockers} />
+        </div>
+      </div>
+    </Card>
+  {/if}
 
   <!-- Scrape Status -->
   <Card padding="lg">
@@ -2607,8 +2690,7 @@
         {:else}
           <button
             onclick={startScrape}
-            disabled={isStarting ||
-              (!searchTask.platform_id && !searchTask.search_url)}
+            disabled={isStarting || blockers.length > 0}
             class="flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if isStarting}
@@ -2625,7 +2707,7 @@
           <button
             onclick={openBrowser}
             disabled={isOpeningBrowser ||
-              (!searchTask.platform_id && !searchTask.search_url)}
+            (!searchTask.platform_id && !searchTask.search_url)}
             class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Open the platform in your NAS Chrome for manual interaction (no scrape)"
           >
@@ -2697,9 +2779,9 @@
       <!-- Two short fields (Jobs URL display + Search keywords input) share
            the row on wide screens; the wider Filter preferences block sits
            full-width below. -->
-      {@const jobsUrl = searchTask.search_url
-        || searchTask.job_platform?.search_page_url
-        || null}
+      {@const jobsUrl = searchTask.search_url ||
+      searchTask.job_platform?.search_page_url ||
+      null}
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
         <!-- Read-only display of the URL the scraper will open. Per-task
              `search_url` (legacy flow) takes precedence over the platform's
@@ -2708,7 +2790,9 @@
         <div>
           <h3
             class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1"
-          >Jobs URL</h3>
+          >
+            Jobs URL
+          </h3>
           {#if jobsUrl}
             <a
               href={jobsUrl}
@@ -3245,7 +3329,9 @@
                         >
                           {log.level}
                         </span>
-                        <span class="text-gray-100 break-all w-full sm:w-auto sm:flex-1 min-w-0">
+                        <span
+                          class="text-gray-100 break-all w-full sm:w-auto sm:flex-1 min-w-0"
+                        >
                           {log.message}
                         </span>
                         {#if log.screenshot_path}

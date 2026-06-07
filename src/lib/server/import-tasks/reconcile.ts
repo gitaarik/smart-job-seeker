@@ -50,6 +50,7 @@ import { requireCredits } from "$lib/server/billing/require-credits";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
 import type { PlanId } from "$lib/server/billing/plans";
 import { getPreferredDevice } from "$lib/server/sjs-browser-status";
+import { providerRequiresDevice } from "$lib/import-tasks/readiness";
 import {
   applyPreferenceFilters,
   computeInputHash,
@@ -299,18 +300,28 @@ export async function reconcileAutoImportTasks(
       const device = userId ? await getPreferredDevice(userId) : null;
       const browserProvider = device ? "tunnel" : config.defaultBrowserProvider;
       const deviceApiKeyId = device?.apiKeyId ?? null;
+      // When the resolved provider needs a browser device (self-hosted tunnel)
+      // and none is connected, a run can't start — so don't auto-activate or
+      // enqueue: the task stays a paused proposal until the user connects one.
+      const deviceOk = !providerRequiresDevice(
+        browserProvider,
+        config.browserProvider,
+      ) || !!device;
       const candidates = selectTopUpCandidates(result.tasks, slots);
       for (const draft of candidates) {
         const platform = platformById.get(draft.platform_id);
-        // Activate only public (no-login) platforms — gated ones would stall
-        // at the login wall on a fresh profile. Gated suggestions stay paused.
+        // Public (no-login) platforms run without credentials; gated ones need
+        // a login set first, so configure the matching login mode up front.
         const isPublic = !platform?.login_page_url;
-        const activate = policy.autoActivate && isPublic;
+        // Activate only when the task could actually run: public platform AND a
+        // usable browser. Gated or device-less suggestions stay paused.
+        const activate = policy.autoActivate && isPublic && deviceOk;
         const taskId = await insertAutoTask(profileId, draft, {
           activate,
           scheduleIntervalHours: activate ? policy.scheduleIntervalHours : null,
           browserProvider,
           deviceApiKeyId,
+          loginMode: isPublic ? "none" : "auto",
         });
         created++;
         // Kick off one immediate run so the user sees jobs flow in. Credit-
@@ -374,6 +385,8 @@ async function insertAutoTask(
     scheduleIntervalHours: number | null;
     browserProvider: string;
     deviceApiKeyId: number | null;
+    /** "none" for public platforms, "auto" for login-gated ones. */
+    loginMode: string;
   },
 ): Promise<number> {
   const existingCred = await db.query.platform_profiles.findFirst({
@@ -396,7 +409,7 @@ async function insertAutoTask(
     is_active: opts.activate,
     origin: "auto",
     auto_managed: true,
-    login_mode: "auto",
+    login_mode: opts.loginMode,
     skip_existing: false,
     keep_minimized: true,
     browser_provider: opts.browserProvider,

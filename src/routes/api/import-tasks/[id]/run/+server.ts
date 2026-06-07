@@ -1,17 +1,30 @@
-import { json, error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, inArray, desc } from "drizzle-orm";
-import { search_tasks, search_task_runs, search_task_run_items } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import {
+  search_task_run_items,
+  search_task_runs,
+  search_tasks,
+} from "$lib/server/db/schema";
+import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
 import {
   addScrapeJob,
   getActiveJobForSearch,
   getWaitingJobForSearch,
-  removeWaitingJob,
   removeActiveJob,
+  removeWaitingJob,
 } from "$lib/server/queue";
 import { requireCredits } from "$lib/server/billing/require-credits";
+import {
+  computeImportTaskBlockers,
+  providerRequiresDevice,
+} from "$lib/import-tasks/readiness";
+import { config } from "$lib/server/config";
+import {
+  getDeviceById,
+  getPreferredDevice,
+} from "$lib/server/sjs-browser-status";
 
 /**
  * POST /api/import-tasks/[id]/run
@@ -46,7 +59,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(403, "Not authorized to run this job search");
   }
 
-  const isStaff = !!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+  const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+    !!(user as { is_admin?: boolean }).is_admin;
 
   // Pre-check: user needs at least ~15 credits for a minimal scrape
   if (!isStaff) {
@@ -95,6 +109,35 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     );
   }
 
+  // Refuse to start a task that isn't fully configured (e.g. needs a connected
+  // device or login credentials). This is the authoritative gate — the detail
+  // page and overview list surface the same blockers from the same function,
+  // but a task can only actually be launched once it has none.
+  let deviceConnected = true;
+  if (
+    providerRequiresDevice(searchTask.browser_provider, config.browserProvider)
+  ) {
+    const device = searchTask.sjsbrowser_api_key
+      ? await getDeviceById(user.id, searchTask.sjsbrowser_api_key)
+      : await getPreferredDevice(user.id);
+    deviceConnected = !!device;
+  }
+  const blockers = computeImportTaskBlockers({
+    platformId: searchTask.platform_id,
+    platformName: searchTask.job_platform?.name ?? null,
+    taskSearchUrl: searchTask.search_url,
+    platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
+    platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
+    loginMode: searchTask.login_mode,
+    hasCredential: searchTask.platform_profile_id != null,
+    browserProvider: searchTask.browser_provider,
+    serverBrowserProvider: config.browserProvider,
+    deviceConnected,
+  });
+  if (blockers.length > 0) {
+    throw error(400, blockers.map((b) => b.detail).join(" "));
+  }
+
   // Create a run record with a snapshot of current scraping settings
   const [run] = await db.insert(search_task_runs).values({
     search_task_id: searchTaskId,
@@ -104,7 +147,10 @@ export const POST: RequestHandler = async ({ params, locals }) => {
       max_jobs: searchTask.max_jobs,
       skip_existing: searchTask.skip_existing,
       skip_first: searchTask.skip_first,
-      stop_after_duplicates: (searchTask as Record<string, unknown>).stop_after_duplicates as number | null ?? null,
+      stop_after_duplicates:
+        (searchTask as Record<string, unknown>).stop_after_duplicates as
+          | number
+          | null ?? null,
       browser_provider: searchTask.browser_provider,
     },
   }).returning();
@@ -326,6 +372,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     liveUrl: latestRun?.live_url || searchTask.live_url,
     currentRunId: latestRun?.id,
     currentRunStatus: latestRun?.status,
-    nextScheduledRun: (searchTask as Record<string, unknown>).next_scheduled_run ?? null,
+    nextScheduledRun:
+      (searchTask as Record<string, unknown>).next_scheduled_run ?? null,
   });
 };

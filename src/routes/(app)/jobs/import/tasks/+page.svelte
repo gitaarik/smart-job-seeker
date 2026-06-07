@@ -27,6 +27,11 @@
   import SuggestionsList, {
     type Suggestion,
   } from "../components/SuggestionsList.svelte";
+  import ImportTaskBlockerBadge from "../components/ImportTaskBlockerBadge.svelte";
+  import {
+    computeImportTaskBlockers,
+    providerRequiresDevice,
+  } from "$lib/import-tasks/readiness";
   import { track } from "$lib/tools/analytics";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -494,6 +499,37 @@
     if (search.last_run) return "bg-green-500/10";
     return "bg-[var(--dash-bg)]";
   }
+
+  // Per-task unmet requirements (needs a device, credentials, etc). Same
+  // computation the detail page shows and the run endpoint enforces. Device
+  // status is treated as connected until the live check resolves so the badge
+  // doesn't flash before we know.
+  function blockersFor(search: (typeof searchTasks)[0]) {
+    let deviceConnected = true;
+    if (
+      desktopStatusChecked &&
+      providerRequiresDevice(
+        search.browser_provider,
+        data.serverBrowserProvider,
+      )
+    ) {
+      deviceConnected = search.sjsbrowser_api_key
+        ? connectedDeviceIds.includes(search.sjsbrowser_api_key)
+        : desktopConnected;
+    }
+    return computeImportTaskBlockers({
+      platformId: search.platform_id,
+      platformName: search.job_platform?.name ?? null,
+      taskSearchUrl: search.search_url,
+      platformSearchPageUrl: search.job_platform?.search_page_url ?? null,
+      platformLoginPageUrl: search.job_platform?.login_page_url ?? null,
+      loginMode: search.login_mode,
+      hasCredential: search.platform_profile_id != null,
+      browserProvider: search.browser_provider,
+      serverBrowserProvider: data.serverBrowserProvider,
+      deviceConnected,
+    });
+  }
 </script>
 
 <svelte:head>
@@ -667,6 +703,7 @@
     <div class="space-y-3">
       {#each sortedSearchTasks as search (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
+        {@const taskBlockers = blockersFor(search)}
         <a
           href="/jobs/import/tasks/{search.id}"
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"
@@ -704,6 +741,7 @@
               </h3>
               <!-- Status / control pills, on their own row below the title -->
               <div class="flex items-center gap-2 flex-wrap mt-1.5">
+                <ImportTaskBlockerBadge blockers={taskBlockers} />
                 {#if search.status === "running"}
                   <span
                     class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-blue-500/20 text-blue-600"
