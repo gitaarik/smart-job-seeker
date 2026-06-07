@@ -530,6 +530,21 @@
       deviceConnected,
     });
   }
+
+  // Group the list so tasks that can run now sit above the ones that still
+  // need setup (suggestions to build on). Both derive from the same blocker
+  // computation as the per-row badge.
+  let readyTasks = $derived(
+    sortedSearchTasks.filter((s) => blockersFor(s).length === 0),
+  );
+  let needsSetupTasks = $derived(
+    sortedSearchTasks.filter((s) => blockersFor(s).length > 0),
+  );
+  let orderedTasks = $derived([...readyTasks, ...needsSetupTasks]);
+  let firstNeedsSetupId = $derived(needsSetupTasks[0]?.id ?? null);
+  let showTaskGroups = $derived(
+    readyTasks.length > 0 && needsSetupTasks.length > 0,
+  );
 </script>
 
 <svelte:head>
@@ -701,9 +716,23 @@
     </div>
   {:else if !showAddForm}
     <div class="space-y-3">
-      {#each sortedSearchTasks as search (search.id)}
+      {#each orderedTasks as search, i (search.id)}
         {@const statusIcon = getSearchTaskStatusIcon(search)}
         {@const taskBlockers = blockersFor(search)}
+        {#if showTaskGroups && i === 0}
+          <h2
+            class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide px-1"
+          >
+            Importing now
+          </h2>
+        {/if}
+        {#if showTaskGroups && search.id === firstNeedsSetupId}
+          <h2
+            class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide px-1 pt-2"
+          >
+            Suggestions — finish setup to start
+          </h2>
+        {/if}
         <a
           href="/jobs/import/tasks/{search.id}"
           class="block bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors"

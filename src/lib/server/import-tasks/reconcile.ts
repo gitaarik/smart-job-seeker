@@ -61,14 +61,16 @@ import { _runSuggester } from "../../../routes/api/jobs/import/suggest/+server";
 
 /**
  * Per-plan auto-import policy. Auto-activation makes a new profile feel alive
- * (the moat is "it imports the right jobs for you"), so we activate the
- * public (no-login) suggestions, give them a gentle recurring schedule, and
- * kick off one immediate run. Free is kept small + infrequent so it doesn't
+ * (the moat is "it imports the right jobs for you"), so we activate every
+ * suggestion that can actually run now — public platforms and gated platforms
+ * the profile already has a login for — give them a gentle recurring schedule,
+ * and kick off one immediate run. Free is kept small + infrequent so it doesn't
  * chew through credits (and the run/scheduler credit gates brake it anyway).
  *
- * Login-gated platforms are NEVER auto-activated — without credentials a run
- * just stalls at the login wall. They stay paused proposals until the user
- * adds credentials.
+ * Suggestions that can't run yet (gated with no login, or anything when no
+ * browser is connected) are NEVER auto-activated — a run would just stall at
+ * the login wall / have no browser. They stay paused proposals (capped at
+ * PROPOSAL_CAP) until the user adds what's missing.
  *
  * NOTE: the paid-tier numbers are deliberate-but-tunable defaults; adjust per
  * real credit allowances. `profile_auto_import.max_tasks` overrides the count.
@@ -86,6 +88,16 @@ const AUTO_IMPORT_POLICY: Record<PlanId, AutoImportPolicy> = {
 };
 const DEFAULT_POLICY: AutoImportPolicy = AUTO_IMPORT_POLICY.explorer;
 const DEFAULT_PREFERRED_HOUR = 9;
+
+/**
+ * How many *non-runnable* suggestions (gated platforms the user has no login
+ * for yet, or anything when no browser is connected) to keep as paused
+ * proposals, on top of the runnable budget. These cost no credits — they're
+ * "set this up to unlock" call-to-actions so a fresh user with no logins still
+ * has somewhere to start, rather than an empty list. Capped so they don't
+ * drown the runnable tasks.
+ */
+const PROPOSAL_CAP = 3;
 
 export interface ReconcileResult {
   skipped: boolean;
@@ -314,12 +326,20 @@ export async function reconcileAutoImportTasks(
     ? (AUTO_IMPORT_POLICY[(await getActiveSubscription(userId)).plan] ??
       DEFAULT_POLICY)
     : DEFAULT_POLICY;
-  const budget = state.max_tasks ?? policy.maxTasks;
-  const slots = budget - survivors.length;
+  // Two independent budgets. Runnable tasks (public, or gated platforms the
+  // user already has a login for) get activated + run, so they're capped by the
+  // credit-relevant `max_tasks`/plan budget. Non-runnable suggestions are kept
+  // as paused, credit-free proposals up to a small separate cap — counted by
+  // is_active so the split survives across reconciles.
+  const activeBudget = state.max_tasks ?? policy.maxTasks;
+  const activeSlots = activeBudget -
+    survivors.filter((t) => t.is_active).length;
+  const proposalSlots = PROPOSAL_CAP -
+    survivors.filter((t) => !t.is_active).length;
   let created = 0;
   let toppedUp = false;
   let suggesterOk = true;
-  if (slots > 0) {
+  if (activeSlots > 0 || proposalSlots > 0) {
     const result = await _runSuggester(profileId);
     if (result.ok) {
       toppedUp = true;
@@ -331,21 +351,48 @@ export async function reconcileAutoImportTasks(
       const browserProvider = device ? "tunnel" : config.defaultBrowserProvider;
       const deviceApiKeyId = device?.apiKeyId ?? null;
       // When the resolved provider needs a browser device (self-hosted tunnel)
-      // and none is connected, a run can't start — so don't auto-activate or
-      // enqueue: the task stays a paused proposal until the user connects one.
+      // and none is connected, NOTHING is runnable — it all becomes proposals
+      // until the user connects one.
       const deviceOk = !providerRequiresDevice(
         browserProvider,
         config.browserProvider,
       ) || !!device;
-      const candidates = selectTopUpCandidates(result.tasks, slots);
-      for (const draft of candidates) {
+
+      // Platforms this profile already has a login for: a gated platform here
+      // can run immediately (tier 2), so it joins the runnable set.
+      const credRows = await db
+        .select({ platform_id: platform_profiles.platform_id })
+        .from(platform_profiles)
+        .where(eq(platform_profiles.profile_id, profileId));
+      const credPlatformIds = new Set(credRows.map((r) => r.platform_id));
+
+      // A suggestion is runnable now iff it needs no login (public) or the user
+      // already has one for it, AND a browser is available to run it.
+      const isRunnable = (platformId: number): boolean => {
+        const platform = platformById.get(platformId);
+        const isPublic = !platform?.login_page_url;
+        return (isPublic || credPlatformIds.has(platformId)) && deviceOk;
+      };
+
+      // Fill the runnable budget first, then top up proposals from what's left.
+      // Partition preserves suggester relevance order within each group.
+      const runnablePicks = selectTopUpCandidates(
+        result.tasks.filter((t) => isRunnable(t.platform_id)),
+        activeSlots,
+      );
+      const proposalPicks = selectTopUpCandidates(
+        result.tasks.filter((t) => !isRunnable(t.platform_id)),
+        proposalSlots,
+      );
+
+      for (const draft of [...runnablePicks, ...proposalPicks]) {
         const platform = platformById.get(draft.platform_id);
         // Public (no-login) platforms run without credentials; gated ones need
         // a login set first, so configure the matching login mode up front.
         const isPublic = !platform?.login_page_url;
-        // Activate only when the task could actually run: public platform AND a
-        // usable browser. Gated or device-less suggestions stay paused.
-        const activate = policy.autoActivate && isPublic && deviceOk;
+        // Activate when the task could actually run now (public or has a login,
+        // and a usable browser). Everything else stays a paused proposal.
+        const activate = policy.autoActivate && isRunnable(draft.platform_id);
         const taskId = await insertAutoTask(profileId, draft, {
           activate,
           scheduleIntervalHours: activate ? policy.scheduleIntervalHours : null,
