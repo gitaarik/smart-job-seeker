@@ -281,6 +281,13 @@
       "when": 1780343421196,
       "tag": "0039_blue_molten_man",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1780852623492,
+      "tag": "0040_auto_import_tasks",
+      "breakpoints": true
     }
   ]
 }
