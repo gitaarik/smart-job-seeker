@@ -704,26 +704,6 @@
               </h3>
               <!-- Status / control pills, on their own row below the title -->
               <div class="flex items-center gap-2 flex-wrap mt-1.5">
-                {#if search.origin === "auto"}
-                  <span
-                    class="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 whitespace-nowrap"
-                    title="Auto-suggested from your profile and match preferences. Review and activate to start scraping."
-                  >
-                    Auto-suggested
-                  </span>
-                {/if}
-                {#if search.browser_provider === "tunnel"}
-                  <span
-                    class={desktopConnected
-                    ? "text-green-500"
-                    : desktopStatusChecked
-                    ? "text-red-400"
-                    : "text-[var(--dash-text-muted)]"}
-                    title={preferredDevice ? preferredDevice.apiKeyName : "No device connected"}
-                  >
-                    <FontAwesomeIcon icon={faDesktop} class="w-3.5 h-3.5" />
-                  </span>
-                {/if}
                 {#if search.status === "running"}
                   <span
                     class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 bg-blue-500/20 text-blue-600"
@@ -795,6 +775,26 @@
                     </span>
                     {isActive(search) ? "Active" : "Paused"}
                   </button>
+                {/if}
+                {#if search.origin === "auto"}
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 whitespace-nowrap"
+                    title="Auto-suggested from your profile and match preferences. Review and activate to start scraping."
+                  >
+                    Auto-suggested
+                  </span>
+                {/if}
+                {#if search.browser_provider === "tunnel"}
+                  <span
+                    class={desktopConnected
+                    ? "text-green-500"
+                    : desktopStatusChecked
+                    ? "text-red-400"
+                    : "text-[var(--dash-text-muted)]"}
+                    title={preferredDevice ? preferredDevice.apiKeyName : "No device connected"}
+                  >
+                    <FontAwesomeIcon icon={faDesktop} class="w-3.5 h-3.5" />
+                  </span>
                 {/if}
                 {#if search.schedule_interval_hours}
                   {@const days = search.schedule_interval_hours / 24}
