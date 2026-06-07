@@ -123,6 +123,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     search_term?: string | null;
     search_location?: string | null;
     search_filters?: Record<string, string | string[]>;
+    is_active?: boolean;
+    date_updated?: Date;
     platform_id?: number | null;
     browser_provider?: string | null;
     login_mode?: string;
@@ -144,6 +146,13 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   }
   if (body.search_filters !== undefined) {
     data.search_filters = body.search_filters;
+  }
+  if (body.is_active !== undefined) {
+    // Pure activation toggle — deliberately does NOT touch auto_managed, so
+    // activating an auto-suggested task from the overview keeps the reconciler
+    // syncing its filters. Only a content edit (the form action) adopts.
+    data.is_active = body.is_active;
+    data.date_updated = new Date();
   }
   if (body.platform_id !== undefined) {
     data.platform_id = body.platform_id;

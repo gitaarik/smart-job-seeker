@@ -52,6 +52,34 @@
     });
   }
 
+  // Per-row optimistic active-state overrides so the toggle feels instant
+  // without reloading the list. Keyed by task id; falls back to the row's
+  // server value.
+  let activeOverrides = $state<Record<number, boolean>>({});
+  function isActive(s: { id: number; is_active: boolean | null }): boolean {
+    return activeOverrides[s.id] ?? !!s.is_active;
+  }
+  async function toggleActive(
+    s: { id: number; is_active: boolean | null },
+    e: Event,
+  ) {
+    // The whole row is a link — don't navigate when toggling.
+    e.preventDefault();
+    e.stopPropagation();
+    const next = !isActive(s);
+    activeOverrides[s.id] = next; // optimistic
+    try {
+      const res = await fetch(`/api/import-tasks/${s.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: next }),
+      });
+      if (!res.ok) activeOverrides[s.id] = !next; // revert on failure
+    } catch {
+      activeOverrides[s.id] = !next;
+    }
+  }
+
   let sortedSearchTasks = $derived.by(() => {
     const tasks = [...searchTasks];
     switch (sortBy) {
@@ -733,12 +761,21 @@
                     <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
                     Error
                   </span>
-                {:else if !search.is_active}
-                  <span
-                    class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] whitespace-nowrap"
+                {:else}
+                  <button
+                    type="button"
+                    onclick={(e) => toggleActive(search, e)}
+                    title={isActive(search) ? "Active — click to pause" : "Inactive — click to activate"}
+                    class="
+                      text-xs px-2 py-0.5 rounded-full whitespace-nowrap transition-colors {isActive(
+                      search,
+                      )
+                      ? 'bg-green-500/15 text-green-600 hover:bg-green-500/25'
+                      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)]'}
+                    "
                   >
-                    Inactive
-                  </span>
+                    {isActive(search) ? "Active" : "Inactive"}
+                  </button>
                 {/if}
                 {#if search.schedule_interval_hours}
                   {@const days = search.schedule_interval_hours / 24}

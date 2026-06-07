@@ -166,6 +166,7 @@ export const searchTaskUpdateSchema = z.object({
     z.string(),
     z.union([z.string(), z.array(z.string())]),
   ).optional(),
+  is_active: z.boolean().optional(),
   platform_id: z.union([z.null(), z.number().int()]).optional(),
   max_jobs: z.union([
     z.null(),
