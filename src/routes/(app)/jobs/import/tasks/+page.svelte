@@ -690,19 +690,20 @@
 
             <div class="flex-1 min-w-0">
               <!-- Title: platform name + optional note -->
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3
-                  class="font-medium text-[var(--dash-text)] text-sm sm:text-base"
-                >
-                  {search.job_platform?.name || "Search task"}
-                  {#if search.note}
-                    <span class="text-[var(--dash-text-secondary)] font-normal"
-                    >—</span>
-                    <span
-                      class="text-[var(--dash-text-secondary)] text-sm font-normal"
-                    >{search.note}</span>
-                  {/if}
-                </h3>
+              <h3
+                class="font-medium text-[var(--dash-text)] text-sm sm:text-base"
+              >
+                {search.job_platform?.name || "Search task"}
+                {#if search.note}
+                  <span class="text-[var(--dash-text-secondary)] font-normal"
+                  >—</span>
+                  <span
+                    class="text-[var(--dash-text-secondary)] text-sm font-normal"
+                  >{search.note}</span>
+                {/if}
+              </h3>
+              <!-- Status / control pills, on their own row below the title -->
+              <div class="flex items-center gap-2 flex-wrap mt-1.5">
                 {#if search.origin === "auto"}
                   <span
                     class="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 whitespace-nowrap"
@@ -764,17 +765,35 @@
                 {:else}
                   <button
                     type="button"
+                    role="switch"
+                    aria-checked={isActive(search)}
                     onclick={(e) => toggleActive(search, e)}
-                    title={isActive(search) ? "Active — click to pause" : "Inactive — click to activate"}
+                    title={isActive(search) ? "Active — click to pause" : "Paused — click to activate"}
                     class="
-                      text-xs px-2 py-0.5 rounded-full whitespace-nowrap transition-colors {isActive(
-                      search,
-                      )
-                      ? 'bg-green-500/15 text-green-600 hover:bg-green-500/25'
-                      : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)]'}
+                      group flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer
+                      text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors
                     "
                   >
-                    {isActive(search) ? "Active" : "Inactive"}
+                    <span
+                      class="
+                        relative inline-flex h-4 w-7 items-center rounded-full transition-colors {isActive(
+                        search,
+                        )
+                        ? 'bg-green-500'
+                        : 'bg-[var(--dash-border)] group-hover:bg-[var(--dash-text-muted)]'}
+                      "
+                    >
+                      <span
+                        class="
+                          inline-block h-3 w-3 rounded-full bg-white shadow transition-transform {isActive(
+                          search,
+                          )
+                          ? 'translate-x-3.5'
+                          : 'translate-x-0.5'}
+                        "
+                      ></span>
+                    </span>
+                    {isActive(search) ? "Active" : "Paused"}
                   </button>
                 {/if}
                 {#if search.schedule_interval_hours}
