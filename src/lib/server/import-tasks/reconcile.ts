@@ -219,6 +219,7 @@ export async function reconcileAutoImportTasks(
       id: search_tasks.id,
       platform_id: search_tasks.platform_id,
       search_filters: search_tasks.search_filters,
+      login_mode: search_tasks.login_mode,
       is_active: search_tasks.is_active,
       last_run: search_tasks.last_run,
     })
@@ -248,7 +249,8 @@ export async function reconcileAutoImportTasks(
   }
   const survivors = managed.filter((t) => !pruneIds.includes(t.id));
 
-  // 2. RECOMPUTE — refresh preference-derived filters in place.
+  // 2. RECOMPUTE — refresh preference-derived filters AND the platform-derived
+  // login mode in place.
   const userFilters = mc
     ? preferencesToFilters({
       job_types: mc.job_types ?? [],
@@ -266,11 +268,39 @@ export async function reconcileAutoImportTasks(
       userFilters,
       plat?.unsupported_filters ?? {},
     );
-    const desired = applyPreferenceFilters(task.search_filters ?? {}, stripped);
-    if (!filtersEqual(desired, task.search_filters ?? {})) {
+    const desiredFilters = applyPreferenceFilters(
+      task.search_filters ?? {},
+      stripped,
+    );
+
+    const update: {
+      search_filters?: typeof desiredFilters;
+      login_mode?: string;
+    } = {};
+    if (!filtersEqual(desiredFilters, task.search_filters ?? {})) {
+      update.search_filters = desiredFilters;
+    }
+    // Keep login_mode aligned with the platform's *current* login requirement
+    // so a platform that flips public↔gated after the task was created
+    // self-heals: a once-public task left on "none" would otherwise silently
+    // stall at a newly-added login wall, and a now-public one would needlessly
+    // demand credentials. Only ever toggles between the reconciler's own two
+    // modes — a user-set "manual" means the task was adopted (auto_managed=
+    // false) and wouldn't be in this set anyway.
+    const desiredLoginMode = plat?.login_page_url ? "auto" : "none";
+    if (
+      (task.login_mode === "auto" || task.login_mode === "none") &&
+      task.login_mode !== desiredLoginMode
+    ) {
+      update.login_mode = desiredLoginMode;
+    }
+
+    if (
+      update.search_filters !== undefined || update.login_mode !== undefined
+    ) {
       await db
         .update(search_tasks)
-        .set({ search_filters: desired, date_updated: new Date() })
+        .set({ ...update, date_updated: new Date() })
         .where(eq(search_tasks.id, task.id));
       recomputed++;
     }
