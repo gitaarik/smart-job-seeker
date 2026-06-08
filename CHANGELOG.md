@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.74] - 2026-06-08
+
+1 commit since v0.5.73.
+
+### Fixed
+- Container image publishing now uses a single manifest instead of an OCI index with provenance
+
 ## [0.5.73] - 2026-06-07
 
 50 commits since v0.5.72.
