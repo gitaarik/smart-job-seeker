@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.75] - 2026-06-09
+
+1 commit since v0.5.74.
+
+### Fixed
+- UI: Floating AI launcher no longer obscures page content
+
 ## [0.5.74] - 2026-06-08
 
 1 commit since v0.5.73.
