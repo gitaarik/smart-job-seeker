@@ -261,7 +261,7 @@
   <button
     type="button"
     onclick={() => (agentChatState.open = true)}
-    class="fixed z-40 bottom-6 right-6 hidden lg:flex items-center justify-center w-12 h-12 bg-[var(--dash-primary)] text-white rounded-full shadow-lg hover:bg-[var(--dash-primary-hover)] transition-all hover:scale-105"
+    class="fixed z-40 bottom-6 right-6 hidden lg:flex items-center justify-center w-12 h-12 bg-[var(--dash-primary)] text-white rounded-full shadow-lg opacity-60 hover:opacity-100 hover:bg-[var(--dash-primary-hover)] focus-visible:opacity-100 transition-all hover:scale-105"
     aria-label="Open assistant"
   >
     <FontAwesomeIcon icon={faRobot} class="w-5 h-5" />

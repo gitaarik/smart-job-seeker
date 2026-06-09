@@ -96,7 +96,7 @@
 
   <Sidebar creditBalance={data.creditBalance} />
 
-  <main class="text-sm py-5 px-4 lg:pl-60 pb-24 lg:pb-5 overflow-x-clip">
+  <main class="text-sm py-5 px-4 lg:pl-60 pb-24 lg:pb-20 overflow-x-clip">
     <div class="max-w-5xl mx-auto">
       {@render children()}
     </div>
