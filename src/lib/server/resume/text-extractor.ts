@@ -36,13 +36,19 @@ export function getFormatName(mimeType: string): string {
 
 /**
  * Extract text from a PDF buffer
- * Uses dynamic import to avoid pdf-parse loading test files at import time
+ * Uses dynamic import so pdf-parse (and its pdfjs dependency) is only
+ * loaded when a PDF is actually processed.
  */
 async function extractFromPdf(buffer: Buffer): Promise<string> {
-  // Import from lib/ directly to avoid pdf-parse/index.js loading a test PDF file
-  const pdf = (await import("pdf-parse/lib/pdf-parse.js")).default;
-  const pdfData = await pdf(buffer);
-  return pdfData.text;
+  const { PDFParse } = await import("pdf-parse");
+  const parser = new PDFParse({ data: buffer });
+  try {
+    const result = await parser.getText();
+    return result.text;
+  } finally {
+    // Release the underlying pdfjs document/worker resources.
+    await parser.destroy();
+  }
 }
 
 /**
