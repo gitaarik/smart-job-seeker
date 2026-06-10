@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.76] - 2026-06-10
+
+2 commits since v0.5.75.
+
+### Added
+- Age-decay ranking algorithm for Top Matches to prioritize recently-updated job postings
+- Debug and operations endpoints for match-stats data access
+
 ## [0.5.75] - 2026-06-09
 
 1 commit since v0.5.74.
