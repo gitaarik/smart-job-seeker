@@ -33,11 +33,11 @@
 </script>
 
 <svelte:head>
-  <title>Settings - Smart Job Seeker</title>
+  <title>Profile Settings - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-6">
-  <SectionHeader title="Settings" icon={faCog} />
+  <SectionHeader title="Profile Settings" icon={faCog} />
 
   <div
     class="rounded-lg border p-6 space-y-4"

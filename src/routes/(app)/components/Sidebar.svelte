@@ -164,8 +164,8 @@
           ],
         },
         {
-          label: "Account",
-          href: "/data/account",
+          label: "Profile Settings",
+          href: "/data/settings",
           icon: faWrench,
         },
       ],
