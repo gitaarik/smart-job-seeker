@@ -106,7 +106,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^7.2.0",
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
-    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/svelte-fontawesome": "^0.2.3",
     "@hono/zod-openapi": "^1.4.0",
     "@langchain/cerebras": "^1.0.4",
