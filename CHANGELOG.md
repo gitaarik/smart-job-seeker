@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.77] - 2026-06-10
+
+19 commits since v0.5.76.
+
+### Changed
+- Upgraded frontend dependencies: pdf-parse (2.4.5), Font Awesome icons (7.2.0), Marked markdown parser (18.0.5), and Svelte build tooling (7.1.2)
+- Upgraded backend dependencies: Commander (15.0.0), TypeScript (6.0.3), Node types (25.9.2), and GitHub Actions for Docker and Python
+- Updated Docker base image to Ubuntu 26.04 with enhanced CI build configuration
+- Multiple minor and patch version updates across both frontend and backend
+
+### Fixed
+- Applied security patches to xmldom, underscore, and defu
+- Resolved remaining Dependabot security alerts in development tooling
+- Optimized CI workflow by skipping commitlint validation for Dependabot PRs
+
 ## [0.5.76] - 2026-06-10
 
 2 commits since v0.5.75.
