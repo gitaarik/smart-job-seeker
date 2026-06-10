@@ -13,6 +13,22 @@ import {
 } from "$lib/server/job/job-actions";
 import { getSelectedProfileId } from "../profile/utils";
 
+// Top Matches ranking: the stored jm.score is pure relevance and ignores how
+// old a posting is, so without a decay a 90-day-old job outranks a fresher,
+// nearly-as-good one. We rank by score decayed against job age and drop
+// likely-dead listings past a hard floor.
+//
+// The first GRACE days count as equally fresh (no decay) — exponential decay
+// is steepest at the start, and without a grace window a 3-day age gap can
+// flip a 9-point relevance gap between two jobs that are both ~2 weeks old.
+// Decay only starts biting once a posting is genuinely old.
+//
+// All three are deliberately tunable — re-check the live distribution via
+// `npm run debug-match-stats` (GET /api/debug/match-stats) before changing them.
+const TOP_MATCH_AGE_GRACE_DAYS = 14; // jobs this fresh rank on pure score
+const TOP_MATCH_AGE_HALFLIFE_DAYS = 21; // ~3-week soft decay after the grace window
+const TOP_MATCH_MAX_AGE_DAYS = 60; // hard floor: never surface jobs older than this (real age)
+
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
 
@@ -110,21 +126,32 @@ export const load: PageServerLoad = async ({ parent }) => {
       `),
     ]),
 
-    // Top 5 matches by score (>= 70, excluding rejected via job_statuses)
+    // Top 5 matches: score (>= 70, excluding rejected) decayed by job age so
+    // stale postings sink below fresher ones, with a hard age floor that drops
+    // likely-filled listings. age_days prefers the board's posted date and
+    // falls back to when we first scraped it; GREATEST(0, …) guards against
+    // bogus future dates blowing up the decay. The floor uses real age; the
+    // decay subtracts the grace window first. See constants above.
     queryRaw<{ id: number }>(sql`
-      SELECT jm.id
-      FROM job_matches jm
-      LEFT JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id
-      WHERE jm.profile_id = ${profileId}
-      AND jm.score >= 70
-      AND COALESCE(js.status, 'new') != 'rejected'
-      ORDER BY jm.score DESC
+      SELECT id FROM (
+        SELECT
+          jm.id AS id,
+          jm.score AS score,
+          GREATEST(0, EXTRACT(epoch FROM now() - COALESCE(j.date_posted::timestamptz, j.date_created)) / 86400.0) AS age_days
+        FROM job_matches jm
+        JOIN jobs j ON j.id = jm.job_id
+        LEFT JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id
+        WHERE jm.profile_id = ${profileId}
+        AND jm.score >= 70
+        AND COALESCE(js.status, 'new') != 'rejected'
+      ) ranked
+      WHERE age_days <= ${TOP_MATCH_MAX_AGE_DAYS}
+      ORDER BY score * exp(-GREATEST(0, age_days - ${TOP_MATCH_AGE_GRACE_DAYS}) / ${TOP_MATCH_AGE_HALFLIFE_DAYS}) DESC
       LIMIT 5
     `).then(async (ids) => {
       if (ids.length === 0) return [];
-      return db.query.job_matches.findMany({
+      const rows = await db.query.job_matches.findMany({
         where: inArray(job_matches.id, ids.map((r) => r.id)),
-        orderBy: desc(job_matches.score),
         with: {
           job: {
             columns: {
@@ -151,6 +178,10 @@ export const load: PageServerLoad = async ({ parent }) => {
           },
         },
       });
+      // Preserve the decay-ranked order from the raw query above — the
+      // inArray fetch returns rows in an arbitrary order.
+      const rank = new Map(ids.map((r, i) => [r.id, i]));
+      return rows.sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
     }),
 
     // Skill levels for match card highlighting
