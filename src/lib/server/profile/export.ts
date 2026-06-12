@@ -267,7 +267,7 @@ async function fetchProfileData(profileId: number) {
             orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: (t: any, { asc }: any) => asc(t.sort),
+        orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
       },
       side_projects: {
         columns: {
@@ -289,7 +289,7 @@ async function fetchProfileData(profileId: number) {
             orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: (t: any, { asc }: any) => asc(t.sort),
+        orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
       },
       educations: {
         columns: {

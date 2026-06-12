@@ -9,6 +9,7 @@
   import SectionHeader from "../../components/SectionHeader.svelte";
   import EmptyState from "../../components/EmptyState.svelte";
   import ItemCard from "../../components/ItemCard.svelte";
+  import ReorderableList from "../../components/ReorderableList.svelte";
   import { getWorkExperienceLogoUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -16,6 +17,7 @@
   let experiences = $derived(data.experiences);
   let expandedId = $state<number | null>(null);
   let showAddForm = $state(false);
+  let reorderMode = $state(false);
 
   // Form states for new entry
   let newName = $state("");
@@ -249,6 +251,31 @@
       onAction={() => (showAddForm = true)}
     />
   {:else}
+    <ReorderableList
+      bind:reorderMode
+      items={experiences}
+      ordering={data.ordering}
+      type="work-experience"
+      label="Experience"
+      disabled={showAddForm}
+    >
+      {#snippet row(exp)}
+        <FontAwesomeIcon
+          icon={faBriefcase}
+          class="w-4 h-4 text-[var(--dash-primary)] flex-shrink-0"
+        />
+        <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+          {exp.position || "Untitled"}
+        </h3>
+        {#if exp.name}
+          <span class="text-xs text-[var(--dash-text-muted)] flex-shrink-0 truncate">
+            {exp.name}
+          </span>
+        {/if}
+      {/snippet}
+    </ReorderableList>
+
+    {#if !reorderMode}
     <div class="space-y-3">
       {#each experiences as exp (exp.id)}
         <ItemCard
@@ -336,5 +363,6 @@
         </ItemCard>
       {/each}
     </div>
+    {/if}
   {/if}
 </div>

@@ -12,6 +12,7 @@
   import EmptyState from "../../components/EmptyState.svelte";
   import ConfirmModal from "../../components/ConfirmModal.svelte";
   import ItemCard from "../../components/ItemCard.svelte";
+  import ReorderableList from "../../components/ReorderableList.svelte";
   import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -20,6 +21,7 @@
   let expandedId = $state<number | null>(null);
   let showAddForm = $state(false);
   let deleteId = $state<number | null>(null);
+  let reorderMode = $state(false);
 
   // Form states for new entry
   let newName = $state("");
@@ -233,6 +235,32 @@
       onAction={() => (showAddForm = true)}
     />
   {:else}
+    <ReorderableList
+      bind:reorderMode
+      items={projects}
+      ordering={data.ordering}
+      type="side-projects"
+      label="Projects"
+      disabled={showAddForm}
+    >
+      {#snippet row(project)}
+        <FontAwesomeIcon
+          icon={faLightbulb}
+          class="w-4 h-4 text-[var(--dash-primary)] flex-shrink-0"
+        />
+        <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+          {project.name || "Untitled"}
+        </h3>
+        {#if project.stars}
+          <span class="text-amber-500 text-sm flex-shrink-0">
+            <FontAwesomeIcon icon={faStar} class="w-3 h-3" />
+            {project.stars}
+          </span>
+        {/if}
+      {/snippet}
+    </ReorderableList>
+
+    {#if !reorderMode}
     <div class="space-y-3">
       {#each projects as project (project.id)}
         <ItemCard
@@ -312,6 +340,7 @@
         </ItemCard>
       {/each}
     </div>
+    {/if}
   {/if}
 </div>
 

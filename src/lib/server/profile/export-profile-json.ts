@@ -244,7 +244,7 @@ export async function buildProfileJsonExport(
             orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: (t: any, { asc }: any) => asc(t.sort),
+        orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
       },
       side_projects: {
         columns: { id: true, status: true, sort: true, name: true, start_date: true, end_date: true, url: true, stars: true, summary: true, url_label: true, tags: true },
@@ -252,7 +252,7 @@ export async function buildProfileJsonExport(
           side_project_achievements: { columns: { description: true, sort: true }, orderBy: (t: any, { asc }: any) => asc(t.sort) },
           side_project_technologies: { columns: { sort: true, name: true }, orderBy: (t: any, { asc }: any) => asc(t.sort) },
         },
-        orderBy: (t: any, { asc }: any) => asc(t.sort),
+        orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
       },
       educations: {
         columns: { status: true, sort: true, institution: true, location: true, url: true, area: true, study_type: true, graduation_year: true, start_date: true, end_date: true, summary: true, tags: true },
