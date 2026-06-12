@@ -23,7 +23,7 @@ function transformVersionToExportFormat(
 }
 
 export const GET: RequestHandler = async (
-  { params, url, locals, getClientAddress },
+  { params, url, locals, getClientAddress, request },
 ) => {
   const { slug } = params;
   const token = url.searchParams.get("t");
@@ -111,11 +111,26 @@ export const GET: RequestHandler = async (
     ? `${slug}-resume-${effectiveVersion}.pdf`
     : `${slug}-resume.pdf`;
 
+  // The file_id is a fresh UUID on every regeneration, so it doubles as a
+  // content hash. `no-cache` forces the browser (and Caddy) to revalidate on
+  // every request — a regenerated PDF is served immediately instead of a stale
+  // copy — while an unchanged file still returns a cheap 304.
+  const etag = `"${exportWithFile.export.file_id}"`;
+  const cacheControl = "private, no-cache, must-revalidate";
+
+  if (request.headers.get("if-none-match") === etag) {
+    return new Response(null, {
+      status: 304,
+      headers: { "ETag": etag, "Cache-Control": cacheControl },
+    });
+  }
+
   return new Response(new Uint8Array(exportWithFile.buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${filename}"`,
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": cacheControl,
+      "ETag": etag,
     },
   });
 };
