@@ -643,6 +643,17 @@ export const config = pgTable("config", {
   }).onDelete("set null"),
 ]);
 
+// Singleton (id = 1) holding the latest currency exchange rates, refreshed by
+// the worker's FX job. This row is the single source of truth for salary
+// currency conversion; when it's absent, comparisons degrade to "unknown"
+// rather than guessing. See cloud/src/worker.ts refreshFxRates().
+export const fx_rates = pgTable("fx_rates", {
+  id: integer().primaryKey().notNull(),
+  base: varchar({ length: 10 }).default("EUR").notNull(),
+  rates: jsonb().notNull(),
+  updated_at: timestamp({ withTimezone: true, mode: "date" }).notNull(),
+});
+
 export const education = pgTable("education", {
   id: serial().primaryKey().notNull(),
   status: varchar({ length: 255 }).default("draft").notNull(),

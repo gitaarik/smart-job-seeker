@@ -147,24 +147,41 @@ export function rateToHourly(amount: number, period: SalaryPeriod): number {
   }
 }
 
+/** EUR-based currency rates, e.g. `{ EUR: 1, USD: 1.08, GBP: 0.86 }`. */
+export type FxRates = Record<string, number>;
+
 /**
- * Approximate currency conversion rates (EUR-based).
+ * Bootstrap rates used ONLY to seed the `fx_rates` table on first migration.
+ *
+ * This is intentionally NOT a runtime fallback: live rates come from the DB,
+ * refreshed by the worker's FX job. If the DB has no rates, conversions return
+ * `null` and comparisons degrade to "unknown" rather than silently serving
+ * stale hardcoded numbers. Keeping these here only as seed data (not in the
+ * conversion path) means there's no second, rotting source of truth.
  */
-const EUR_RATES: Record<string, number> = {
+export const SEED_FX_RATES: FxRates = {
   EUR: 1,
   USD: 1.08,
   GBP: 0.86,
 };
 
+/**
+ * Convert an amount between currencies using EUR-based rates.
+ *
+ * Returns `null` when conversion isn't possible (a needed rate is missing) —
+ * callers must treat that as "comparison unavailable", not zero. Same-currency
+ * conversions need no rates and always succeed.
+ */
 export function convertCurrency(
   amount: number,
   from: string,
   to: string,
-): number {
+  rates: FxRates,
+): number | null {
   if (from === to) return amount;
-  const fromRate = EUR_RATES[from];
-  const toRate = EUR_RATES[to];
-  if (!fromRate || !toRate) return amount;
+  const fromRate = rates[from];
+  const toRate = rates[to];
+  if (!fromRate || !toRate) return null;
   return Math.round((amount / fromRate) * toRate);
 }
 
@@ -344,6 +361,7 @@ export function compareSalary(
   jobMax: number | null,
   jobCurrency: string | null,
   jobPeriod: string | null,
+  rates: FxRates,
   jobDurationWeeks?: number | null,
 ): "within" | "above" | "below" | "unknown" {
   if (jobMin == null && jobMax == null) return "unknown";
@@ -359,7 +377,9 @@ export function compareSalary(
     if (!jobDurationWeeks || jobDurationWeeks <= 0) return "unknown";
 
     const askHourly = rateToHourly(askAmount, askPeriod);
-    const askConverted = convertCurrency(askHourly, askCurrency, jCurrency);
+    const askConverted = convertCurrency(askHourly, askCurrency, jCurrency, rates);
+    // No usable FX rate for this currency pair — don't guess.
+    if (askConverted == null) return "unknown";
     const askTotal = askConverted * jobDurationWeeks * DAYS_PER_WEEK *
       HOURS_PER_DAY;
 
@@ -374,7 +394,9 @@ export function compareSalary(
   }
 
   const askHourly = rateToHourly(askAmount, askPeriod);
-  const askConverted = convertCurrency(askHourly, askCurrency, jCurrency);
+  const askConverted = convertCurrency(askHourly, askCurrency, jCurrency, rates);
+  // No usable FX rate for this currency pair — don't guess.
+  if (askConverted == null) return "unknown";
   const askInJobPeriod = hourlyToRate(askConverted, jPeriod);
 
   if (jobMin != null && jobMax != null) {

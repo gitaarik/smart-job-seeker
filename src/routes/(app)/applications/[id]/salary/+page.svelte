@@ -194,6 +194,7 @@
       job.salary_max,
       job.salary_currency,
       job.salary_period,
+      data.fxRates,
       job.salary_duration_weeks,
     );
   });

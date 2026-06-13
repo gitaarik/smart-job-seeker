@@ -302,6 +302,13 @@
       "when": 1781276876084,
       "tag": "0042_null_unsorted_profile_lists",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1781290283490,
+      "tag": "0043_fx_rates",
+      "breakpoints": true
     }
   ]
 }
