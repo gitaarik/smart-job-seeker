@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.78] - 2026-06-13
+
+10 commits since v0.5.77.
+
+### Added
+- Database-backed FX rates with day/month/year display on salary adjustments (auto-refreshed by worker)
+- Manual reordering for side-projects and work-experience lists (defaults to date order)
+
+### Changed
+- Profile section renamed from "Account" to "Profile Settings"
+
+### Fixed
+- PDF cache revalidation ensures regenerated exports serve immediately
+
 ## [0.5.77] - 2026-06-10
 
 19 commits since v0.5.76.
