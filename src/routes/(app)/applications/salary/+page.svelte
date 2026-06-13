@@ -579,13 +579,22 @@
             >%</span>
           </div>
           {#if numVal != null && baseRateNum > 0}
-            <span
-              class="text-xs text-[var(--dash-text-muted)] hidden sm:inline"
+            {@const adjustedRate = Math.round(baseRateNum * (1 + numVal / 100))}
+            <div
+              class="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--dash-text-muted)]"
             >
-              = {
-                formatCurrency(Math.round(baseRateNum * (1 + numVal / 100)), currency)
-              }/hr
-            </span>
+              <span class="text-[var(--dash-text-secondary)]"
+              >= {formatCurrency(adjustedRate, currency)}/hr</span>
+              <span>{
+                  formatCurrency(hourlyToRate(adjustedRate, "day"), currency)
+                }/day</span>
+              <span>{
+                  formatCurrency(hourlyToRate(adjustedRate, "month"), currency)
+                }/mo</span>
+              <span>{
+                  formatCurrency(hourlyToRate(adjustedRate, "year"), currency)
+                }/yr</span>
+            </div>
           {/if}
         </div>
       {/each}
@@ -638,13 +647,22 @@
               >%</span>
             </div>
             {#if numVal != null && baseRateNum > 0}
-              <span
-                class="text-xs text-[var(--dash-text-muted)] hidden sm:inline"
+              {@const adjustedRate = Math.round(baseRateNum * (1 + numVal / 100))}
+              <div
+                class="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--dash-text-muted)]"
               >
-                = {
-                  formatCurrency(Math.round(baseRateNum * (1 + numVal / 100)), currency)
-                }/hr
-              </span>
+                <span class="text-[var(--dash-text-secondary)]"
+                >= {formatCurrency(adjustedRate, currency)}/hr</span>
+                <span>{
+                    formatCurrency(hourlyToRate(adjustedRate, "day"), currency)
+                  }/day</span>
+                <span>{
+                    formatCurrency(hourlyToRate(adjustedRate, "month"), currency)
+                  }/mo</span>
+                <span>{
+                    formatCurrency(hourlyToRate(adjustedRate, "year"), currency)
+                  }/yr</span>
+              </div>
             {/if}
           </div>
         {/each}
