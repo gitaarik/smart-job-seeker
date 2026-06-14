@@ -1,23 +1,10 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, gt, like } from "drizzle-orm";
-import { verifications, users, sessions, accounts } from "$lib/server/db/schema";
-import { auth } from "$lib/server/auth/better-auth";
-import { randomBytes, scrypt } from "node:crypto";
-import { promisify } from "node:util";
-
-const scryptAsync = promisify(scrypt);
-
-/**
- * Hash a password using the same algorithm as Better Auth (scrypt).
- * Format: "salt_hex:key_hex" — compatible with Better Auth's default password hasher.
- */
-async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
-  const key = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${salt}:${key.toString("hex")}`;
-}
+import { and, gt, like } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { verifications } from "$lib/server/db/schema";
+import { createOrLinkAccount } from "$lib/server/auth/invite-account";
 
 function findInviteByToken(
   invites: { id: string; identifier: string; value: string }[],
@@ -108,60 +95,22 @@ export const actions: Actions = {
     const data = JSON.parse(invite.value);
     const email = invite.identifier.replace("invite:", "");
 
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
-
-    if (existingUser) {
-      // Existing user (invite sent after user was already created)
-      // Replace their credentials so they can log in with the new password
-      try {
-        await db.delete(sessions).where(eq(sessions.userId, existingUser.id));
-        await db.delete(accounts).where(eq(accounts.userId, existingUser.id));
-
-        const hashedPassword = await hashPassword(password);
-        const [newAccount] = await db.insert(accounts).values({
-          id: crypto.randomUUID(),
-          userId: existingUser.id,
-          accountId: existingUser.id,
-          providerId: "credential",
-          password: hashedPassword,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).returning();
-
-        // Update flags from invite data
-        await db.update(users).set({
-          is_approved: data.is_approved ?? existingUser.is_approved,
-          is_staff: data.is_staff ?? existingUser.is_staff,
-          is_admin: data.is_admin ?? existingUser.is_admin,
-        }).where(eq(users.id, existingUser.id));
-      } catch (e: unknown) {
-        const message = e instanceof Error
-          ? e.message
-          : "Failed to set up account";
-        return fail(400, { error: message });
-      }
-    } else {
-      // New user — create via Better Auth (handles password hashing + account)
-      try {
-        const result = await auth.api.signUpEmail({
-          body: { email, password, name: data.name || "" },
-        });
-
-        if (result.user) {
-          await db.update(users).set({
-            is_approved: data.is_approved ?? false,
-            is_staff: data.is_staff ?? false,
-            is_admin: data.is_admin ?? false,
-          }).where(eq(users.id, result.user.id));
-        }
-      } catch (e: unknown) {
-        const message = e instanceof Error
-          ? e.message
-          : "Failed to create account";
-        return fail(400, { error: message });
-      }
+    try {
+      await createOrLinkAccount({
+        email,
+        password,
+        name: data.name,
+        flags: {
+          is_approved: data.is_approved,
+          is_staff: data.is_staff,
+          is_admin: data.is_admin,
+        },
+      });
+    } catch (e: unknown) {
+      const message = e instanceof Error
+        ? e.message
+        : "Failed to set up account";
+      return fail(400, { error: message });
     }
 
     // Clean up the invite

@@ -11,6 +11,7 @@
     faEye,
     faEyeSlash,
     faKey,
+    faLink,
     faPencil,
     faPlus,
     faServer,
@@ -354,8 +355,35 @@
   let sharingExisting = $state<DeviceShare[]>([]);
   let sharingLoading = $state(false);
 
+  // Invite-by-link: bring in someone who isn't a contact (or a user) yet.
+  let inviteLink = $state<string | null>(null);
+  let inviteLoading = $state(false);
+
+  async function createInviteLink() {
+    if (!sharingKeyId) return;
+    inviteLoading = true;
+    try {
+      const res = await fetch("/api/device-shares/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeyId: sharingKeyId }),
+      });
+      const body = await res.json();
+      if (res.ok) {
+        inviteLink = body.url;
+      } else {
+        errorMessage = body.error || "Failed to create invite link";
+      }
+    } catch {
+      errorMessage = "Failed to create invite link";
+    } finally {
+      inviteLoading = false;
+    }
+  }
+
   async function openShareModal(apiKeyId: number) {
     sharingKeyId = apiKeyId;
+    inviteLink = null;
     sharingLoading = true;
 
     try {
@@ -437,11 +465,15 @@
   <Card padding="md">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <span class={preferredDevice ? "text-green-500" : "text-[var(--dash-text-muted)]"}>
+        <span
+          class={preferredDevice ? "text-green-500" : "text-[var(--dash-text-muted)]"}
+        >
           <FontAwesomeIcon icon={faDesktop} class="w-4 h-4" />
         </span>
         <div>
-          <p class="font-medium text-[var(--dash-text)] flex items-center gap-2 flex-wrap">
+          <p
+            class="font-medium text-[var(--dash-text)] flex items-center gap-2 flex-wrap"
+          >
             {#if sjsBrowserStatus === "checking"}
               Checking connection...
             {:else if preferredDevice}
@@ -635,10 +667,10 @@
           {:else}
             <!-- Docker instructions -->
             <p>
-              Run sjs-browser as a Docker container on a NAS (TrueNAS,
-              Synology, Unraid) or any server with Docker. The container
-              auto-updates the SJS code on its own — no Watchtower or
-              platform-level auto-update needed.
+              Run sjs-browser as a Docker container on a NAS (TrueNAS, Synology,
+              Unraid) or any server with Docker. The container auto-updates the
+              SJS code on its own — no Watchtower or platform-level
+              auto-update needed.
             </p>
 
             <div class="mt-3 space-y-3">
@@ -725,11 +757,12 @@ volumes:
                     href="https://github.com/gitaarik/sjs-browser/releases"
                     target="_blank"
                     rel="noopener"
-                    class="underline">GitHub</a> and verifies its signature
-                  against a public key baked into the image. To pin a specific
-                  version: set <code class="bg-[var(--dash-bg)] px-1 rounded"
-                  >SJS_BROWSER_CHANNEL=v0.5.27</code>. To opt out entirely:
-                  set it to <code class="bg-[var(--dash-bg)] px-1 rounded"
+                    class="underline"
+                  >GitHub</a> and verifies its signature against a public key
+                  baked into the image. To pin a specific version: set <code
+                    class="bg-[var(--dash-bg)] px-1 rounded"
+                  >SJS_BROWSER_CHANNEL=v0.5.27</code>. To opt out entirely: set
+                  it to <code class="bg-[var(--dash-bg)] px-1 rounded"
                   >disabled</code>. Pull a new image (<code
                     class="bg-[var(--dash-bg)] px-1 rounded"
                   >docker compose pull</code>) every few months for Chrome and
@@ -1247,88 +1280,132 @@ volumes:
           <div class="flex items-center justify-center py-8">
             <Spinner size="w-6 h-6" />
           </div>
-        {:else if sharingContacts.length === 0}
-          <div class="text-center py-6">
-            <p class="text-sm text-[var(--dash-text-secondary)]">
-              No contacts yet. <a
+        {:else}
+          {#if sharingContacts.length === 0 && sharingExisting.length === 0}
+            <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+              No contacts yet — invite someone with a link below, or <a
                 href="/contacts"
                 class="text-[var(--dash-primary)] hover:underline"
-              >Add contacts</a> to share devices.
+              >add a contact</a> to share directly.
             </p>
-          </div>
-        {:else}
-          <!-- Currently shared with -->
-          {#if sharingExisting.length > 0}
-            <div class="mb-4">
-              <p
-                class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
-              >
-                Shared with
-              </p>
-              <div class="space-y-2">
-                {#each sharingExisting as share (share.id)}
-                  <div
-                    class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-6 h-6 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-primary)]"
-                      >
-                        {(share.user.name || share.user.email)[0].toUpperCase()}
+          {:else}
+            <!-- Currently shared with -->
+            {#if sharingExisting.length > 0}
+              <div class="mb-4">
+                <p
+                  class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
+                >
+                  Shared with
+                </p>
+                <div class="space-y-2">
+                  {#each sharingExisting as share (share.id)}
+                    <div
+                      class="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20"
+                    >
+                      <div class="flex items-center gap-2">
+                        <div
+                          class="w-6 h-6 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-primary)]"
+                        >
+                          {
+                            (share.user.name || share.user.email)[0].toUpperCase()
+                          }
+                        </div>
+                        <span class="text-sm text-[var(--dash-text)]">{
+                          share.user.name || share.user.email
+                        }</span>
                       </div>
-                      <span class="text-sm text-[var(--dash-text)]">{
-                        share.user.name || share.user.email
-                      }</span>
+                      <button
+                        type="button"
+                        onclick={() => unshareFromContact(share.user.id)}
+                        class="p-1 text-[var(--dash-text-muted)] hover:text-red-400 transition-colors"
+                        title="Remove access"
+                      >
+                        <FontAwesomeIcon
+                          icon={faUserMinus}
+                          class="w-3.5 h-3.5"
+                        />
+                      </button>
                     </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
+            <!-- Available contacts to share with -->
+            {@const unsharedContacts = sharingContacts.filter((c) => !isSharedWith(c.id))}
+            {#if unsharedContacts.length > 0}
+              <div>
+                <p
+                  class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
+                >
+                  Your contacts
+                </p>
+                <div class="space-y-1">
+                  {#each unsharedContacts as contact (contact.id)}
                     <button
                       type="button"
-                      onclick={() => unshareFromContact(share.user.id)}
-                      class="p-1 text-[var(--dash-text-muted)] hover:text-red-400 transition-colors"
-                      title="Remove access"
+                      onclick={() => shareWithContact(contact.id)}
+                      class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-left"
                     >
-                      <FontAwesomeIcon icon={faUserMinus} class="w-3.5 h-3.5" />
+                      <div
+                        class="w-6 h-6 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-text-muted)]"
+                      >
+                        {(contact.name || contact.email)[0].toUpperCase()}
+                      </div>
+                      <span class="text-sm text-[var(--dash-text)]">{
+                        contact.name || contact.email
+                      }</span>
                     </button>
-                  </div>
-                {/each}
+                  {/each}
+                </div>
               </div>
-            </div>
+            {:else if sharingExisting.length > 0}
+              <p
+                class="text-sm text-[var(--dash-text-secondary)] text-center py-2"
+              >
+                Shared with all your contacts.
+              </p>
+            {/if}
           {/if}
 
-          <!-- Available contacts to share with -->
-          {@const unsharedContacts = sharingContacts.filter((c) => !isSharedWith(c.id))}
-          {#if unsharedContacts.length > 0}
-            <div>
-              <p
-                class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
-              >
-                Your contacts
-              </p>
-              <div class="space-y-1">
-                {#each unsharedContacts as contact (contact.id)}
-                  <button
-                    type="button"
-                    onclick={() => shareWithContact(contact.id)}
-                    class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--dash-bg)] transition-colors text-left"
-                  >
-                    <div
-                      class="w-6 h-6 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-xs font-medium text-[var(--dash-text-muted)]"
-                    >
-                      {(contact.name || contact.email)[0].toUpperCase()}
-                    </div>
-                    <span class="text-sm text-[var(--dash-text)]">{
-                      contact.name || contact.email
-                    }</span>
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if sharingExisting.length > 0}
+          <!-- Invite by link -->
+          <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
             <p
-              class="text-sm text-[var(--dash-text-secondary)] text-center py-2"
+              class="text-xs font-medium text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
             >
-              Shared with all your contacts.
+              Invite by link
             </p>
-          {/if}
+            <p class="text-xs text-[var(--dash-text-secondary)] mb-2">
+              Anyone with this link can use this device to scrape jobs — no
+              setup or install on their end. They create an account (or sign in)
+              to accept.
+            </p>
+            {#if inviteLink}
+              <div class="flex items-center gap-2">
+                <code
+                  class="flex-1 min-w-0 truncate text-xs bg-[var(--dash-bg)] px-3 py-1.5 rounded border border-[var(--dash-border)] font-mono text-[var(--dash-text-secondary)]"
+                >{inviteLink}</code>
+                <span class="shrink-0"><CopyButton text={inviteLink} /></span>
+              </div>
+              <p class="text-xs text-[var(--dash-text-muted)] mt-1.5">
+                Single-use · expires in 7 days
+              </p>
+            {:else}
+              <button
+                type="button"
+                onclick={createInviteLink}
+                disabled={inviteLoading}
+                class="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+              >
+                {#if inviteLoading}
+                  <Spinner size="w-3.5 h-3.5" />
+                {:else}
+                  <FontAwesomeIcon icon={faLink} class="w-3.5 h-3.5" />
+                {/if}
+                <span>Create invite link</span>
+              </button>
+            {/if}
+          </div>
         {/if}
       </div>
     </div>

@@ -6,11 +6,17 @@
  */
 
 import { db } from "$lib/server/db";
-import { and, desc, eq, inArray } from "drizzle-orm";
-import { api_keys, device_shares, users } from "$lib/server/db/schema";
-import { areContacts } from "$lib/server/contacts";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import {
+  api_keys,
+  device_shares,
+  users,
+  verifications,
+} from "$lib/server/db/schema";
+import { areContacts, ensureAcceptedContact } from "$lib/server/contacts";
 import { createNotification } from "$lib/server/notifications";
 import { revokeOrphanedCredentialShares } from "$lib/server/credential-shares";
+import { randomBytes } from "node:crypto";
 
 /**
  * Share a device with a user (must be an accepted contact).
@@ -38,6 +44,38 @@ export async function shareDevice(
       success: false,
       error: "You can only share devices with your contacts",
     };
+  }
+
+  return insertDeviceShare(apiKeyId, ownerId, sharedWithUserId);
+}
+
+/**
+ * Grant a device share without the contact gate.
+ *
+ * This is the bare write (ownership + duplicate check, insert, notify) that
+ * `shareDevice()` delegates to after its `areContacts()` check. It exists as a
+ * separate export so authorization can come from elsewhere — e.g. a single-use
+ * device-invite link, where the link itself is the owner's consent and there is
+ * no pre-existing contact relationship. Callers that bypass `shareDevice()` are
+ * responsible for establishing that authorization (and, where appropriate, the
+ * accepted-contact row) before calling this.
+ */
+export async function insertDeviceShare(
+  apiKeyId: number,
+  ownerId: string,
+  sharedWithUserId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const apiKey = await db.query.api_keys.findFirst({
+    where: and(
+      eq(api_keys.id, apiKeyId),
+      eq(api_keys.user_id, ownerId),
+      eq(api_keys.revoked, false),
+    ),
+    columns: { id: true },
+  });
+
+  if (!apiKey) {
+    return { success: false, error: "Device not found" };
   }
 
   const existing = await db.query.device_shares.findFirst({
@@ -195,4 +233,156 @@ export async function hasDeviceAccess(
   });
 
   return !!shared;
+}
+
+// --- Device invite links -------------------------------------------------
+//
+// A one-link onboarding for non-self-hosters: the owner mints a short-lived,
+// single-use link that, when accepted, makes the recipient an accepted contact
+// AND shares the device with them in one step — no prior contact handshake.
+// The link itself is the owner's consent, so acceptance bypasses the
+// `areContacts()` gate via `insertDeviceShare()`.
+//
+// Stored in the existing `verifications` table (same mechanism as email
+// signup invites): `identifier = "device-invite:<token>"`, `value` = the JSON
+// payload below. `value` is varchar(255), so the payload is kept compact.
+
+const DEVICE_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const DEVICE_INVITE_PREFIX = "device-invite:";
+
+interface DeviceInvitePayload {
+  token: string;
+  kind: "device-share";
+  inviterId: string;
+  apiKeyId: number;
+}
+
+/** Mint a single-use device-invite link. Caller must own the device. */
+export async function createDeviceInvite(
+  apiKeyId: number,
+  ownerId: string,
+): Promise<{ success: boolean; token?: string; error?: string }> {
+  const apiKey = await db.query.api_keys.findFirst({
+    where: and(
+      eq(api_keys.id, apiKeyId),
+      eq(api_keys.user_id, ownerId),
+      eq(api_keys.revoked, false),
+    ),
+    columns: { id: true },
+  });
+  if (!apiKey) {
+    return { success: false, error: "Device not found" };
+  }
+
+  const token = randomBytes(24).toString("hex");
+  const payload: DeviceInvitePayload = {
+    token,
+    kind: "device-share",
+    inviterId: ownerId,
+    apiKeyId,
+  };
+  const now = new Date();
+  await db.insert(verifications).values({
+    id: crypto.randomUUID(),
+    identifier: `${DEVICE_INVITE_PREFIX}${token}`,
+    value: JSON.stringify(payload),
+    expiresAt: new Date(now.getTime() + DEVICE_INVITE_TTL_MS),
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return { success: true, token };
+}
+
+export interface DeviceInviteInfo {
+  inviterId: string;
+  apiKeyId: number;
+  verificationId: string;
+  inviterName: string;
+  deviceName: string;
+}
+
+/** Resolve a device-invite token to its (unexpired, valid) details, or null. */
+export async function getDeviceInvite(
+  token: string,
+): Promise<DeviceInviteInfo | null> {
+  const row = await db.query.verifications.findFirst({
+    where: and(
+      eq(verifications.identifier, `${DEVICE_INVITE_PREFIX}${token}`),
+      gt(verifications.expiresAt, new Date()),
+    ),
+  });
+  if (!row) return null;
+
+  let payload: DeviceInvitePayload;
+  try {
+    payload = JSON.parse(row.value);
+  } catch {
+    return null;
+  }
+  if (payload.kind !== "device-share") return null;
+
+  const [inviter, device] = await Promise.all([
+    db.query.users.findFirst({
+      where: eq(users.id, payload.inviterId),
+      columns: { name: true, email: true },
+    }),
+    db.query.api_keys.findFirst({
+      where: eq(api_keys.id, payload.apiKeyId),
+      columns: { name: true },
+    }),
+  ]);
+
+  return {
+    inviterId: payload.inviterId,
+    apiKeyId: payload.apiKeyId,
+    verificationId: row.id,
+    inviterName: inviter?.name || inviter?.email || "Someone",
+    deviceName: device?.name || "a device",
+  };
+}
+
+/**
+ * Accept a device invite for `inviteeId`: make them an accepted contact of the
+ * inviter and share the device, then consume the link. Idempotent w.r.t. an
+ * already-existing share.
+ */
+export async function acceptDeviceInvite(
+  token: string,
+  inviteeId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const invite = await getDeviceInvite(token);
+  if (!invite) {
+    return {
+      success: false,
+      error: "This invite link is invalid or has expired.",
+    };
+  }
+  if (invite.inviterId === inviteeId) {
+    return {
+      success: false,
+      error: "You can't accept your own device invite.",
+    };
+  }
+
+  await ensureAcceptedContact(invite.inviterId, inviteeId);
+
+  const result = await insertDeviceShare(
+    invite.apiKeyId,
+    invite.inviterId,
+    inviteeId,
+  );
+  // An already-existing share is fine on accept — treat as success.
+  if (
+    !result.success &&
+    result.error !== "Device is already shared with this contact"
+  ) {
+    return result;
+  }
+
+  await db.delete(verifications).where(
+    eq(verifications.id, invite.verificationId),
+  );
+
+  return { success: true };
 }
