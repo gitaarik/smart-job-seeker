@@ -14,13 +14,11 @@
  * The owner running their own device is subject to the device guard but not the
  * per-sharee cap.
  *
- * COUNTING CAVEAT: runs are attributed to a device via
- * `search_tasks.sjsbrowser_api_key`. Runs on a task with no pinned device (the
- * "preferred device" fallback, `sjsbrowser_api_key IS NULL`) are NOT attributed
- * to any device and so don't count here. In the fan-out scenario this is fine —
- * sharees pin the specific shared device they were granted — but a robust fix is
- * to record the resolved `api_key_id` directly on `search_task_runs` (needs a
- * migration); then both counts become exact regardless of pinning.
+ * Runs carry the resolved device on `search_task_runs.api_key_id` (set at
+ * enqueue), so the per-device count is exact regardless of whether the task
+ * pinned a device or used the preferred-device fallback. The per-sharee count
+ * joins run → task → profile to attribute the run to its triggering user (only
+ * the profile owner can run a task, so that user is the sharee).
  */
 
 import { db } from "$lib/server/db";
@@ -56,15 +54,12 @@ export async function checkDeviceRateBudget(params: {
 
   // All runs on this device in the last 24h, newest first — gives both the
   // device-level count and the most-recent run (for spacing) in one query.
+  // Exact: api_key_id is recorded on every run at enqueue.
   const deviceRuns = await db
     .select({ started_at: search_task_runs.started_at })
     .from(search_task_runs)
-    .innerJoin(
-      search_tasks,
-      eq(search_task_runs.search_task_id, search_tasks.id),
-    )
     .where(and(
-      eq(search_tasks.sjsbrowser_api_key, params.apiKeyId),
+      eq(search_task_runs.api_key_id, params.apiKeyId),
       gt(search_task_runs.started_at, since),
     ))
     .orderBy(desc(search_task_runs.started_at));
@@ -100,7 +95,7 @@ export async function checkDeviceRateBudget(params: {
       )
       .innerJoin(profiles, eq(search_tasks.profile_id, profiles.id))
       .where(and(
-        eq(search_tasks.sjsbrowser_api_key, params.apiKeyId),
+        eq(search_task_runs.api_key_id, params.apiKeyId),
         eq(profiles.user_id, params.requesterId),
         gt(search_task_runs.started_at, since),
       ));

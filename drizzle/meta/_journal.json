@@ -309,6 +309,13 @@
       "when": 1781290283490,
       "tag": "0043_fx_rates",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1781462985657,
+      "tag": "0044_run_device_attribution",
+      "breakpoints": true
     }
   ]
 }

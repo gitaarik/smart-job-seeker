@@ -158,6 +158,9 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     search_task_id: searchTaskId,
     status: "queued",
     triggered_by: "user",
+    // Attribute the run to the device it will execute on, for exact per-device
+    // footprint accounting (device-rate-budget.ts). Null when no device is used.
+    api_key_id: resolvedDevice?.apiKeyId ?? null,
     settings: {
       max_jobs: searchTask.max_jobs,
       skip_existing: searchTask.skip_existing,
