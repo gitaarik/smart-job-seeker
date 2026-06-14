@@ -79,7 +79,15 @@
   let newKeyName = $state("");
   let isCreating = $state(false);
   let newlyCreatedKey = $state<string | null>(null);
+  let newlyCreatedKeyId = $state<number | null>(null);
+  let newlyCreatedKeyName = $state<string>("");
   let visibleKeyId = $state<number | null>(null);
+
+  function dismissNewKey() {
+    newlyCreatedKey = null;
+    newlyCreatedKeyId = null;
+    newlyCreatedKeyName = "";
+  }
   let errorMessage = $state<string | null>(null);
   let installTab = $state<"desktop" | "docker">("desktop");
 
@@ -146,6 +154,22 @@
     typeof window !== "undefined"
       ? `wss://${window.location.host}/tunnel`
       : "wss://app.smartjobseeker.com/tunnel",
+  );
+
+  // Live wiring for the just-created device key: the tunnel poll surfaces the
+  // device the instant it connects, so the setup wizard can confirm it.
+  let newKeyConnected = $derived(
+    newlyCreatedKeyId !== null &&
+      connectedDevices.some((d) => d.apiKeyId === newlyCreatedKeyId),
+  );
+  let newKeyDockerCmd = $derived(
+    newlyCreatedKey
+      ? `docker run -d --name sjs-browser --restart unless-stopped \\
+  --shm-size 512m -v sjs_chrome_data:/data \\
+  -e SJS_SERVER_URL="${sjsBrowserUrl}" \\
+  -e SJS_API_TOKEN="${newlyCreatedKey}" \\
+  gitaarik036/sjs-browser:latest`
+      : "",
   );
 
   function getDeviceStatus(apiKeyId: number): DeviceStatus | undefined {
@@ -248,8 +272,12 @@
       }
 
       newlyCreatedKey = result.key;
+      newlyCreatedKeyId = result.id;
+      newlyCreatedKeyName = newKeyName.trim();
       newKeyName = "";
       showAddForm = false;
+      // Surface the new device immediately so the wizard can watch it connect.
+      await pollOwnedSjsBrowserStatus();
       await invalidateAll();
       apiKeys = data.apiKeys;
     } catch {
@@ -837,26 +865,67 @@ volumes:
     </ol>
   </Card>
 
-  <!-- Newly Created Key Banner -->
+  <!-- Newly Created Key — connect wizard -->
   {#if newlyCreatedKey}
-    <div
-      class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4"
-    >
-      <div class="flex items-center justify-between">
-        <p class="font-medium text-[var(--dash-success)]">
-          Device key created. You can view and copy it from the list below.
-        </p>
+    <Card padding="lg">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h2 class="font-medium text-[var(--dash-text)]">
+            Connect "{newlyCreatedKeyName || "your device"}"
+          </h2>
+          <p class="text-sm text-[var(--dash-text-secondary)]">
+            Run the container below on your NAS or server — the key is already
+            filled in. Or paste the key into the desktop app.
+          </p>
+        </div>
         <button
           type="button"
-          onclick={() => {
-            newlyCreatedKey = null;
-          }}
+          onclick={dismissNewKey}
           class="text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] ml-4 flex-shrink-0"
+          title="Dismiss"
         >
           <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
         </button>
       </div>
-    </div>
+
+      <!-- Pre-filled docker command -->
+      <div class="relative">
+        <div
+          class="bg-[var(--dash-bg)] rounded-lg p-3 pr-10 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
+        >
+          <pre class="whitespace-pre">{newKeyDockerCmd}</pre>
+        </div>
+        <div class="absolute top-2 right-2">
+          <CopyButton text={newKeyDockerCmd} />
+        </div>
+      </div>
+
+      <!-- Or use the raw key -->
+      <div class="mt-2 flex items-center gap-2 text-xs">
+        <span class="text-[var(--dash-text-muted)]">Device key:</span>
+        <code
+          class="flex-1 min-w-0 truncate bg-[var(--dash-bg)] px-2 py-1 rounded border border-[var(--dash-border)] font-mono text-[var(--dash-text-secondary)]"
+        >{newlyCreatedKey}</code>
+        <span class="shrink-0"><CopyButton text={newlyCreatedKey} /></span>
+      </div>
+
+      <!-- Live connection status -->
+      <div
+        class="
+          mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm {newKeyConnected
+          ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
+          : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]'}
+        "
+      >
+        {#if newKeyConnected}
+          <span class="w-2 h-2 rounded-full bg-[var(--dash-success)]"></span>
+          <span>Connected! Your device is online and ready to import.</span>
+        {:else}
+          <Spinner size="w-3.5 h-3.5" color="var(--dash-text-muted)" />
+          <span>Waiting for your device to connect…</span>
+        {/if}
+      </div>
+    </Card>
   {/if}
 
   <!-- Error Message -->
