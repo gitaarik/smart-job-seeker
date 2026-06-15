@@ -208,6 +208,41 @@ export async function listSharedWithMe(userId: string) {
 }
 
 /**
+ * List the current user's own (non-revoked) devices that they've shared out,
+ * keyed by the contact they're shared with. Used on the contacts page to show
+ * which devices you've shared with each contact.
+ */
+export async function listDevicesSharedByMe(
+  ownerId: string,
+): Promise<Record<string, { id: number; name: string }[]>> {
+  const ownDevices = await db.query.api_keys.findMany({
+    where: and(eq(api_keys.user_id, ownerId), eq(api_keys.revoked, false)),
+    columns: { id: true, name: true },
+  });
+  if (ownDevices.length === 0) return {};
+
+  const deviceMap = new Map(ownDevices.map((d) => [d.id, d]));
+  const shares = await db.query.device_shares.findMany({
+    where: inArray(
+      device_shares.api_key_id,
+      ownDevices.map((d) => d.id),
+    ),
+    columns: { api_key_id: true, shared_with: true },
+  });
+
+  const byContact: Record<string, { id: number; name: string }[]> = {};
+  for (const s of shares) {
+    const device = deviceMap.get(s.api_key_id);
+    if (!device) continue;
+    (byContact[s.shared_with] ??= []).push({
+      id: device.id,
+      name: device.name,
+    });
+  }
+  return byContact;
+}
+
+/**
  * Check if a user has access to a device (either owns it or it's shared with them).
  */
 export async function hasDeviceAccess(

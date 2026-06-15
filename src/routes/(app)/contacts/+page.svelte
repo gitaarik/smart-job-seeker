@@ -5,6 +5,7 @@
   import {
     faCheck,
     faEnvelope,
+    faLaptop,
     faPlus,
     faTimes,
     faTrash,
@@ -24,7 +25,9 @@
 
   // Split contacts into categories
   let pendingReceived = $derived(
-    contacts.filter((c) => c.status === "pending" && c.direction === "received"),
+    contacts.filter((c) =>
+      c.status === "pending" && c.direction === "received"
+    ),
   );
   let pendingSent = $derived(
     contacts.filter((c) => c.status === "pending" && c.direction === "sent"),
@@ -101,7 +104,9 @@
     if (!confirm(`Remove ${name || "this contact"}?`)) return;
 
     try {
-      const res = await fetch(`/api/contacts/${contactId}`, { method: "DELETE" });
+      const res = await fetch(`/api/contacts/${contactId}`, {
+        method: "DELETE",
+      });
 
       if (res.ok) {
         await invalidateAll();
@@ -127,22 +132,35 @@
     </div>
     <button
       type="button"
-      onclick={() => { showAddForm = !showAddForm; errorMessage = null; successMessage = null; }}
+      onclick={() => {
+        showAddForm = !showAddForm;
+        errorMessage = null;
+        successMessage = null;
+      }}
       class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 text-sm font-medium rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors"
     >
-      <FontAwesomeIcon icon={showAddForm ? faTimes : faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
-      <span class="hidden sm:inline">{showAddForm ? "Cancel" : "Add Contact"}</span>
+      <FontAwesomeIcon
+        icon={showAddForm ? faTimes : faPlus}
+        class="w-5 h-5 sm:w-4 sm:h-4"
+      />
+      <span class="hidden sm:inline">{
+        showAddForm ? "Cancel" : "Add Contact"
+      }</span>
     </button>
   </div>
 
   <!-- Messages -->
   {#if errorMessage}
-    <div class="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+    <div
+      class="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400"
+    >
       {errorMessage}
     </div>
   {/if}
   {#if successMessage}
-    <div class="px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-400">
+    <div
+      class="px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-400"
+    >
       {successMessage}
     </div>
   {/if}
@@ -150,9 +168,18 @@
   <!-- Add Contact Form -->
   {#if showAddForm}
     <Card padding="md">
-      <form onsubmit={(e) => { e.preventDefault(); sendRequest(); }} class="flex flex-col sm:flex-row gap-3">
+      <form
+        onsubmit={(e) => {
+          e.preventDefault();
+          sendRequest();
+        }}
+        class="flex flex-col sm:flex-row gap-3"
+      >
         <div class="flex-1 flex items-center gap-2">
-          <FontAwesomeIcon icon={faEnvelope} class="w-4 h-4 text-[var(--dash-text-muted)] shrink-0" />
+          <FontAwesomeIcon
+            icon={faEnvelope}
+            class="w-4 h-4 text-[var(--dash-text-muted)] shrink-0"
+          />
           <input
             type="email"
             bind:value={inviteEmail}
@@ -178,7 +205,9 @@
       <div class="px-4 py-3 border-b border-[var(--dash-border)]">
         <h2 class="font-medium text-[var(--dash-text)]">
           Pending Requests
-          <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--dash-primary)]/20 text-[var(--dash-primary)]">
+          <span
+            class="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--dash-primary)]/20 text-[var(--dash-primary)]"
+          >
             {pendingReceived.length}
           </span>
         </h2>
@@ -187,7 +216,9 @@
         {#each pendingReceived as contact (contact.id)}
           <div class="px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-sm font-medium text-[var(--dash-primary)]">
+              <div
+                class="w-8 h-8 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-sm font-medium text-[var(--dash-primary)]"
+              >
                 {(contact.user.name || contact.user.email)[0].toUpperCase()}
               </div>
               <div>
@@ -195,7 +226,9 @@
                   {contact.user.name || contact.user.email}
                 </p>
                 {#if contact.user.name}
-                  <p class="text-xs text-[var(--dash-text-secondary)]">{contact.user.email}</p>
+                  <p class="text-xs text-[var(--dash-text-secondary)]">
+                    {contact.user.email}
+                  </p>
                 {/if}
               </div>
             </div>
@@ -229,7 +262,9 @@
       <h2 class="font-medium text-[var(--dash-text)]">
         My Contacts
         {#if accepted.length > 0}
-          <span class="ml-2 text-sm font-normal text-[var(--dash-text-secondary)]">
+          <span
+            class="ml-2 text-sm font-normal text-[var(--dash-text-secondary)]"
+          >
             ({accepted.length})
           </span>
         {/if}
@@ -237,7 +272,10 @@
     </div>
     {#if accepted.length === 0}
       <div class="px-4 py-8 text-center">
-        <FontAwesomeIcon icon={faUserPlus} class="w-8 h-8 text-[var(--dash-text-muted)] mb-3" />
+        <FontAwesomeIcon
+          icon={faUserPlus}
+          class="w-8 h-8 text-[var(--dash-text-muted)] mb-3"
+        />
         <p class="text-sm text-[var(--dash-text-secondary)]">
           No contacts yet. Add someone to share devices and collaborate.
         </p>
@@ -245,24 +283,45 @@
     {:else}
       <div class="divide-y divide-[var(--dash-border)]">
         {#each accepted as contact (contact.id)}
-          <div class="px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-sm font-medium text-[var(--dash-primary)]">
+          {@const devices = data.sharedDevices[contact.user.id] ?? []}
+          <div class="px-4 py-3 flex items-start justify-between">
+            <div class="flex items-start gap-3 min-w-0">
+              <div
+                class="w-8 h-8 shrink-0 rounded-full bg-[var(--dash-primary)]/20 flex items-center justify-center text-sm font-medium text-[var(--dash-primary)]"
+              >
                 {(contact.user.name || contact.user.email)[0].toUpperCase()}
               </div>
-              <div>
+              <div class="min-w-0">
                 <p class="text-sm font-medium text-[var(--dash-text)]">
                   {contact.user.name || contact.user.email}
                 </p>
                 {#if contact.user.name}
-                  <p class="text-xs text-[var(--dash-text-secondary)]">{contact.user.email}</p>
+                  <p class="text-xs text-[var(--dash-text-secondary)]">
+                    {contact.user.email}
+                  </p>
+                {/if}
+                {#if devices.length > 0}
+                  <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span class="text-xs text-[var(--dash-text-muted)]"
+                    >Shared:</span>
+                    {#each devices as device (device.id)}
+                      <a
+                        href="/jobs/import/devices"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/20 transition-colors"
+                        title="Manage on the Devices page"
+                      >
+                        <FontAwesomeIcon icon={faLaptop} class="w-3 h-3" />
+                        {device.name}
+                      </a>
+                    {/each}
+                  </div>
                 {/if}
               </div>
             </div>
             <button
               type="button"
               onclick={() => removeContact(contact.id, contact.user.name || contact.user.email)}
-              class="p-2 text-[var(--dash-text-muted)] hover:text-red-400 transition-colors"
+              class="p-2 shrink-0 text-[var(--dash-text-muted)] hover:text-red-400 transition-colors"
               title="Remove contact"
             >
               <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
@@ -283,7 +342,9 @@
         {#each pendingSent as contact (contact.id)}
           <div class="px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-sm font-medium text-[var(--dash-text-muted)]">
+              <div
+                class="w-8 h-8 rounded-full bg-[var(--dash-text-muted)]/20 flex items-center justify-center text-sm font-medium text-[var(--dash-text-muted)]"
+              >
                 {(contact.user.name || contact.user.email)[0].toUpperCase()}
               </div>
               <div>

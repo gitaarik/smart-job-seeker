@@ -1,6 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
 import { listContacts } from "$lib/server/contacts";
+import { listDevicesSharedByMe } from "$lib/server/device-shares";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -9,7 +10,10 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/login");
   }
 
-  const contacts = await listContacts(layoutData.user.id);
+  const [contacts, sharedDevices] = await Promise.all([
+    listContacts(layoutData.user.id),
+    listDevicesSharedByMe(layoutData.user.id),
+  ]);
 
-  return { contacts };
+  return { contacts, sharedDevices };
 };
