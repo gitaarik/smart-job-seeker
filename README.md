@@ -162,6 +162,8 @@ See [TESTING.md](docs/TESTING.md) for testing guide.
 
 ## Documentation
 
+- **[POWER_USER_GUIDE.md](docs/POWER_USER_GUIDE.md)** - Host a scraping device &
+  invite others to use it
 - **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development setup and workflows
 - **[AI_FEATURES.md](docs/AI_FEATURES.md)** - AI features and usage
 - **[TESTING.md](docs/TESTING.md)** - Testing framework
@@ -186,6 +188,7 @@ npm run build
 - Job application tracking with AI assistance
 - Interview preparation tools
 - **Job scraping infrastructure** (newly added)
+
 ### Next Steps 🚀
 
 - Profile-to-job matching engine
