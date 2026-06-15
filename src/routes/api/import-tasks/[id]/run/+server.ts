@@ -25,6 +25,7 @@ import {
   getDeviceById,
   getPreferredDevice,
 } from "$lib/server/sjs-browser-status";
+import { checkDeviceRateBudget } from "$lib/server/device-rate-budget";
 
 /**
  * POST /api/import-tasks/[id]/run
@@ -114,13 +115,14 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   // page and overview list surface the same blockers from the same function,
   // but a task can only actually be launched once it has none.
   let deviceConnected = true;
+  let resolvedDevice: Awaited<ReturnType<typeof getDeviceById>> = null;
   if (
     providerRequiresDevice(searchTask.browser_provider, config.browserProvider)
   ) {
-    const device = searchTask.sjsbrowser_api_key
+    resolvedDevice = searchTask.sjsbrowser_api_key
       ? await getDeviceById(user.id, searchTask.sjsbrowser_api_key)
       : await getPreferredDevice(user.id);
-    deviceConnected = !!device;
+    deviceConnected = !!resolvedDevice;
   }
   const blockers = computeImportTaskBlockers({
     platformId: searchTask.platform_id,
@@ -138,11 +140,27 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(400, blockers.map((b) => b.detail).join(" "));
   }
 
+  // Per-device / per-sharee rate budget — anti-detection footprint guard for
+  // shared devices (one residential IP serving many users). Staff bypass.
+  if (resolvedDevice && !isStaff) {
+    const budget = await checkDeviceRateBudget({
+      apiKeyId: resolvedDevice.apiKeyId,
+      requesterId: user.id,
+      isShared: resolvedDevice.isShared,
+    });
+    if (!budget.allowed) {
+      throw error(429, budget.error ?? "Rate limit reached for this device");
+    }
+  }
+
   // Create a run record with a snapshot of current scraping settings
   const [run] = await db.insert(search_task_runs).values({
     search_task_id: searchTaskId,
     status: "queued",
     triggered_by: "user",
+    // Attribute the run to the device it will execute on, for exact per-device
+    // footprint accounting (device-rate-budget.ts). Null when no device is used.
+    api_key_id: resolvedDevice?.apiKeyId ?? null,
     settings: {
       max_jobs: searchTask.max_jobs,
       skip_existing: searchTask.skip_existing,

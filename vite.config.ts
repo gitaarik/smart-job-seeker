@@ -14,7 +14,12 @@ export default defineConfig({
   ssr: {
     // Keep CJS packages external so Node loads them natively instead of
     // bundling require() calls into the ESM server build.
-    external: ["cheerio", "drizzle-orm", "bullmq"],
+    //
+    // pdf-parse v2 ships an ESM `exports` map that vite's SSR resolver fails
+    // to resolve ("Failed to resolve entry for package pdf-parse"); leaving it
+    // external lets Node resolve the exports map natively (used lazily in
+    // src/lib/server/resume/text-extractor.ts for CV upload).
+    external: ["cheerio", "drizzle-orm", "bullmq", "pdf-parse"],
   },
   server: {
     allowedHosts: [

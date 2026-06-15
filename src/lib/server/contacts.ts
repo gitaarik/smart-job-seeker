@@ -258,6 +258,46 @@ export async function removeContact(
 }
 
 /**
+ * Ensure two users are accepted contacts, creating or upgrading the row as
+ * needed. Idempotent — safe to call when they're already contacts.
+ *
+ * Used by flows where the relationship is established by an out-of-band consent
+ * (e.g. accepting a device-invite link) rather than the normal request/accept
+ * handshake, so no notification is sent. Checks both directions because the
+ * pair index is directional.
+ */
+export async function ensureAcceptedContact(
+  userA: string,
+  userB: string,
+): Promise<void> {
+  if (userA === userB) return;
+
+  const existing = await db.query.contacts.findFirst({
+    where: or(
+      and(eq(contacts.requester_id, userA), eq(contacts.recipient_id, userB)),
+      and(eq(contacts.requester_id, userB), eq(contacts.recipient_id, userA)),
+    ),
+    columns: { id: true, status: true },
+  });
+
+  if (existing) {
+    if (existing.status !== "accepted") {
+      await db.update(contacts).set({
+        status: "accepted",
+        date_updated: new Date(),
+      }).where(eq(contacts.id, existing.id));
+    }
+    return;
+  }
+
+  await db.insert(contacts).values({
+    requester_id: userA,
+    recipient_id: userB,
+    status: "accepted",
+  });
+}
+
+/**
  * Check if two users are accepted contacts
  */
 export async function areContacts(

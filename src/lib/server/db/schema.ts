@@ -810,17 +810,31 @@ export const search_task_runs = pgTable("search_task_runs", {
   settings: jsonb(),
   verification_data: jsonb(),
   pending_action: jsonb(),
+  // Device the run executed on, resolved at enqueue (own or shared). Nullable:
+  // historical rows and provider-driven runs that use no device stay null.
+  // Powers exact per-device footprint accounting (device-rate-budget.ts).
+  api_key_id: integer(),
 }, (table) => [
   index("search_task_runs_search_task_id_started_at_idx").using(
     "btree",
     table.search_task_id.asc().nullsLast().op("int4_ops"),
     table.started_at.asc().nullsLast().op("int4_ops"),
   ),
+  index("search_task_runs_api_key_id_started_at_idx").using(
+    "btree",
+    table.api_key_id.asc().nullsLast(),
+    table.started_at.asc().nullsLast(),
+  ),
   foreignKey({
     columns: [table.search_task_id],
     foreignColumns: [search_tasks.id],
     name: "search_task_runs_search_task_id_fkey",
   }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.api_key_id],
+    foreignColumns: [api_keys.id],
+    name: "search_task_runs_api_key_id_fkey",
+  }).onDelete("set null"),
 ]);
 
 export const os_contributions = pgTable("os_contributions", {

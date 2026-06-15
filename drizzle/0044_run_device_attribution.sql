@@ -1,0 +1,3 @@
+ALTER TABLE "search_task_runs" ADD COLUMN "api_key_id" integer;--> statement-breakpoint
+ALTER TABLE "search_task_runs" ADD CONSTRAINT "search_task_runs_api_key_id_fkey" FOREIGN KEY ("api_key_id") REFERENCES "public"."api_keys"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "search_task_runs_api_key_id_started_at_idx" ON "search_task_runs" USING btree ("api_key_id","started_at");
