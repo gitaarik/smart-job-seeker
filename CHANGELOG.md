@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.80] - 2026-06-15
+
+14 commits since v0.5.79.
+
+### Added
+- In-app user guide with contextual links to dashboard pages, accessible from the user menu
+- Top Matches as a first-class filter with infinite scroll (replacing hidden sort)
+- Collapsible device setup instructions
+- Ability to view which devices are shared with each contact
+
+### Changed
+- Filter bar layout with improved spacing and control distribution
+
+### Fixed
+- Device setup toggle refresh behavior
+
 ## [0.5.79] - 2026-06-15
 
 8 commits since v0.5.78.
