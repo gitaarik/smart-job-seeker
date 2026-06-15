@@ -1,10 +1,11 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faChevronDown,
     faAddressBook,
-    faCommentDots,
+    faBook,
+    faChevronDown,
     faCog,
+    faCommentDots,
     faSignOutAlt,
   } from "@fortawesome/free-solid-svg-icons";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
@@ -22,8 +23,12 @@
 
 <HeaderDropdown id="user" width="w-56">
   {#snippet trigger({ isOpen })}
-    <div class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors">
-      <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+    <div
+      class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors"
+    >
+      <div
+        class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
+      >
         <span class="text-[var(--dash-chrome-text)] text-sm font-medium">
           {initial}
         </span>
@@ -39,7 +44,9 @@
     <p class="text-sm font-medium text-[var(--dash-text)] truncate">
       {user.name || "User"}
     </p>
-    <p class="text-xs text-[var(--dash-text-secondary)] truncate">{user.email}</p>
+    <p class="text-xs text-[var(--dash-text-secondary)] truncate">
+      {user.email}
+    </p>
   </div>
 
   <div class="py-2">
@@ -51,6 +58,16 @@
     >
       <FontAwesomeIcon icon={faAddressBook} class="w-4 h-4" />
       <span>Contacts</span>
+    </a>
+
+    <a
+      href="/guide"
+      target="_blank"
+      rel="noopener"
+      class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+    >
+      <FontAwesomeIcon icon={faBook} class="w-4 h-4" />
+      <span>Guide</span>
     </a>
 
     <a
