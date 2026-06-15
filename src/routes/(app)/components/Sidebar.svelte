@@ -81,7 +81,7 @@
         },
         {
           label: "Job Matches",
-          href: "/jobs?minScore=50",
+          href: "/jobs?minScore=1&sort=top",
           icon: faListCheck,
         },
         {
@@ -295,7 +295,7 @@
       if (href === "/jobs?status=saved") {
         return hasStatus && currentParams.get("status")!.includes("saved");
       }
-      if (href === "/jobs?minScore=50") {
+      if (href === "/jobs?minScore=1&sort=top") {
         return hasMinScore && !hasStatus;
       }
       if (href === "/jobs") {
