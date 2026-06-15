@@ -77,17 +77,16 @@
   let showAddForm = $state(false);
   let showManualInstall = $state(false);
   // Setup-instructions panel is open by default; once a user has things wired
-  // up they tend to collapse it, so persist that choice across visits.
-  const SETUP_STORAGE_KEY = "devices:setupExpanded";
-  let setupExpanded = $state(true);
+  // up they tend to collapse it, so persist that choice. Backed by a cookie
+  // (read in +page.server.ts) so SSR renders the right state — no flash on
+  // refresh. Initial value comes from the server-rendered load data.
+  let setupExpanded = $state(data.setupExpanded);
 
   function toggleSetup() {
     setupExpanded = !setupExpanded;
-    try {
-      localStorage.setItem(SETUP_STORAGE_KEY, String(setupExpanded));
-    } catch {
-      // Ignore storage failures (private mode, quota) — toggle still works.
-    }
+    // 1-year cookie; lax is fine for a same-site UI preference.
+    document.cookie =
+      `devices_setup_expanded=${setupExpanded}; path=/; max-age=31536000; samesite=lax`;
   }
   let newKeyName = $state("");
   let isCreating = $state(false);
@@ -254,12 +253,6 @@
   }
 
   onMount(() => {
-    try {
-      const stored = localStorage.getItem(SETUP_STORAGE_KEY);
-      if (stored !== null) setupExpanded = stored === "true";
-    } catch {
-      // Ignore storage failures — fall back to the default (expanded).
-    }
     pollSjsBrowserStatus();
     statusPollInterval = setInterval(pollSjsBrowserStatus, 5000);
   });
@@ -570,10 +563,15 @@
       aria-expanded={setupExpanded}
     >
       <h2 class="font-medium text-[var(--dash-text)]">Setup Instructions</h2>
-      <FontAwesomeIcon
-        icon={setupExpanded ? faChevronUp : faChevronDown}
-        class="w-3.5 h-3.5 text-[var(--dash-text-muted)]"
-      />
+      <span
+        class="
+          inline-block text-[var(--dash-text-muted)] transition-transform duration-200 {setupExpanded
+          ? 'rotate-180'
+          : ''}
+        "
+      >
+        <FontAwesomeIcon icon={faChevronDown} class="w-3.5 h-3.5" />
+      </span>
     </button>
     {#if setupExpanded}
       <ol class="space-y-4 text-sm text-[var(--dash-text-secondary)]">
