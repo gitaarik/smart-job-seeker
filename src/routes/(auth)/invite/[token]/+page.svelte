@@ -55,6 +55,8 @@
         <p class="mt-2 text-center text-sm">
           <a
             href="/guide/how-it-works"
+            target="_blank"
+            rel="noopener"
             class="text-[var(--dash-primary)] hover:underline"
           >New to Smart Job Seeker? See how it works →</a>
         </p>

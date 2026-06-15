@@ -501,6 +501,8 @@
     app on your computer or a self-hosted Docker container on a NAS or server.
     <a
       href="/guide/devices"
+      target="_blank"
+      rel="noopener"
       class="text-[var(--dash-primary)] hover:underline"
     >How devices &amp; sharing work →</a>
   </p>

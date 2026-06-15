@@ -62,6 +62,8 @@
 
     <a
       href="/guide"
+      target="_blank"
+      rel="noopener"
       class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
     >
       <FontAwesomeIcon icon={faBook} class="w-4 h-4" />
