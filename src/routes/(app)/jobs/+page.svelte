@@ -7,16 +7,17 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBan,
-    faBriefcase,
     faBookmark,
+    faBriefcase,
     faCalendarDays,
     faCheck,
     faChevronDown,
+    faChevronLeft,
+    faChevronRight,
+    faEllipsisVertical,
     faGauge,
     faGlobe,
     faListCheck,
-    faChevronLeft,
-    faChevronRight,
     faLocationDot,
     faSearch,
     faSitemap,
@@ -25,7 +26,6 @@
     faTag,
     faTimes,
     faUser,
-    faEllipsisVertical,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -38,7 +38,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let isStaff = $derived(
-    !!(data as any).user?.is_staff || !!(data as any).user?.is_admin
+    !!(data as any).user?.is_staff || !!(data as any).user?.is_admin,
   );
   let isClearingMatches = $state(false);
   let clearMatchResult = $state<{ count: number } | null>(null);
@@ -46,33 +46,72 @@
   let clearMatchFormEl: HTMLFormElement;
   let showAdvancedMenu = $state(false);
 
-  let jobs = $derived(data.jobs);
   let platforms = $derived(data.platforms);
   let totalCount = $derived(data.totalCount);
-  let currentPage = $derived(data.currentPage);
   let totalPages = $derived(data.totalPages);
   let filters = $derived(data.filters);
 
-  // Use a plain object for reactivity (Svelte 5 tracks object property access)
-  let savedJobIds = $state<Record<number, boolean>>(
-    Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]))
-  );
+  // Infinite scroll: jobs + matches accumulate across pages. They reset when
+  // the server load returns a fresh first page (filters/sort changed) and grow
+  // as loadMore() appends. Plain objects so Svelte 5 tracks property access.
+  let jobs = $state<typeof data.jobs>([]);
+  let matchesByJobId = $state<typeof data.matchesByJobId>({});
+  let savedJobIds = $state<Record<number, boolean>>({});
+  let rejectedJobIds = $state<Record<number, boolean>>({});
+  let currentPage = $state(1);
+  let loadingMore = $state(false);
 
-  // Track rejected jobs
-  let rejectedJobIds = $state<Record<number, boolean>>(
-    Object.fromEntries(data.rejectedJobIds.map((id: number) => [id, true]))
-  );
-
-  // Re-sync when data changes (e.g. pagination)
+  // Reset the accumulator whenever fresh server data arrives. Reads only
+  // data.* so appends (which mutate the locals) don't retrigger it.
   $effect(() => {
-    savedJobIds = Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]));
-  });
-  $effect(() => {
-    rejectedJobIds = Object.fromEntries(data.rejectedJobIds.map((id: number) => [id, true]));
+    jobs = [...data.jobs];
+    matchesByJobId = { ...data.matchesByJobId };
+    savedJobIds = Object.fromEntries(
+      data.savedJobIds.map((id: number) => [id, true]),
+    );
+    rejectedJobIds = Object.fromEntries(
+      data.rejectedJobIds.map((id: number) => [id, true]),
+    );
+    currentPage = data.currentPage;
   });
 
-  // Store match data by job ID
-  let matchesByJobId = $derived(data.matchesByJobId);
+  let hasMore = $derived(currentPage < totalPages);
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    loadingMore = true;
+    try {
+      const nextPage = currentPage + 1;
+      const res = await fetch(
+        `/jobs/list${buildUrl({ page: String(nextPage) })}`,
+      );
+      if (!res.ok) return;
+      const more = await res.json();
+      jobs = [...jobs, ...more.jobs];
+      matchesByJobId = { ...matchesByJobId, ...more.matchesByJobId };
+      for (const id of more.savedJobIds as number[]) savedJobIds[id] = true;
+      for (const id of more.rejectedJobIds as number[]) {
+        rejectedJobIds[id] = true;
+      }
+      currentPage = nextPage;
+    } catch {
+      // swallow — scrolling again retries
+    } finally {
+      loadingMore = false;
+    }
+  }
+
+  // Sentinel action: trigger loadMore as the bottom comes into view.
+  function infiniteScroll(node: HTMLElement) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "600px" },
+    );
+    observer.observe(node);
+    return { destroy: () => observer.disconnect() };
+  }
 
   function isSaved(jobId: number): boolean {
     return savedJobIds[jobId] === true;
@@ -121,7 +160,10 @@
 
   let profileSkillLevels = $derived(data.profileSkillLevels);
 
-  function getSkillMatchStrength(jobId: number, skill: string): "strong" | "weak" | null {
+  function getSkillMatchStrength(
+    jobId: number,
+    skill: string,
+  ): "strong" | "weak" | null {
     const match = getMatch(jobId);
     if (!match?.matched_skills) return null;
     if (!match.matched_skills.includes(skill)) return null;
@@ -139,6 +181,7 @@
   let selectedImportedBy = $state<Set<string>>(new Set());
   let minScoreFilter = $state("");
   let datePostedFilter = $state("");
+  let sortFilter = $state("");
   let expandedId = $state<number | null>(null);
   let searchInputEl: HTMLInputElement;
   let openDropdown = $state<string | null>(null);
@@ -147,33 +190,44 @@
   $effect(() => {
     selectedStatuses = new Set(filters.status ? filters.status.split(",") : []);
     searchInput = filters.search;
-    selectedPlatforms = new Set(filters.platform ? filters.platform.split(",") : []);
-    selectedWorkLocations = new Set(filters.workLocation ? filters.workLocation.split(",") : []);
-    selectedJobTypes = new Set(filters.jobType ? filters.jobType.split(",") : []);
-    selectedImportedBy = new Set(filters.importedBy ? filters.importedBy.split(",") : []);
+    selectedPlatforms = new Set(
+      filters.platform ? filters.platform.split(",") : [],
+    );
+    selectedWorkLocations = new Set(
+      filters.workLocation ? filters.workLocation.split(",") : [],
+    );
+    selectedJobTypes = new Set(
+      filters.jobType ? filters.jobType.split(",") : [],
+    );
+    selectedImportedBy = new Set(
+      filters.importedBy ? filters.importedBy.split(",") : [],
+    );
     minScoreFilter = filters.minScore;
     datePostedFilter = filters.datePosted;
+    sortFilter = filters.sort;
     expandedId = null;
   });
 
   let pageTitle = $derived(
     selectedStatuses.has("saved")
       ? "Saved Jobs"
+      : sortFilter === "top"
+      ? "Top Matches"
       : minScoreFilter === "unmatched"
-        ? "Not Yet Scored"
-        : minScoreFilter === "0"
-          ? "No Match"
-          : minScoreFilter
-            ? "Job Matches"
-            : "All Jobs"
+      ? "Not Yet Scored"
+      : minScoreFilter === "0"
+      ? "No Match"
+      : minScoreFilter
+      ? "Job Matches"
+      : "All Jobs",
   );
 
   let pageIcon = $derived(
     selectedStatuses.has("saved")
       ? faBookmark
-      : minScoreFilter && minScoreFilter !== "0"
-        ? faListCheck
-        : faBriefcase
+      : sortFilter === "top" || (minScoreFilter && minScoreFilter !== "0")
+      ? faListCheck
+      : faBriefcase,
   );
 
   let platformString = $derived([...selectedPlatforms].join(","));
@@ -192,6 +246,7 @@
     const ms = overrides.minScore ?? minScoreFilter;
     const dp = overrides.datePosted ?? datePostedFilter;
     const ib = overrides.importedBy ?? importedByString;
+    const srt = overrides.sort ?? sortFilter;
     const pg = overrides.page ?? "1";
 
     if (st) params.set("status", st);
@@ -202,6 +257,7 @@
     if (ms) params.set("minScore", ms);
     if (dp) params.set("datePosted", dp);
     if (ib) params.set("importedBy", ib);
+    if (srt) params.set("sort", srt);
     if (pg !== "1") params.set("page", pg);
 
     return `?${params.toString()}`;
@@ -237,7 +293,12 @@
 
   function toggleWorkLocation(value: string) {
     selectedWorkLocations = toggleSetValue(selectedWorkLocations, value);
-    goto(buildUrl({ workLocation: [...selectedWorkLocations].join(","), page: "1" }));
+    goto(
+      buildUrl({
+        workLocation: [...selectedWorkLocations].join(","),
+        page: "1",
+      }),
+    );
   }
 
   function toggleJobType(value: string) {
@@ -247,12 +308,21 @@
 
   function toggleImportedBy(value: string) {
     selectedImportedBy = toggleSetValue(selectedImportedBy, value);
-    goto(buildUrl({ importedBy: [...selectedImportedBy].join(","), page: "1" }));
+    goto(
+      buildUrl({ importedBy: [...selectedImportedBy].join(","), page: "1" }),
+    );
   }
 
   function setMinScore(value: string) {
     minScoreFilter = value;
-    applyFilter({ minScore: value });
+    // Picking an explicit threshold switches off the top-matches ranking.
+    applyFilter({ minScore: value, sort: "" });
+  }
+
+  function setTopMatches() {
+    minScoreFilter = "";
+    sortFilter = "top";
+    applyFilter({ sort: "top", minScore: "" });
   }
 
   function setDatePosted(value: string) {
@@ -280,6 +350,7 @@
     selectedImportedBy = new Set();
     minScoreFilter = "";
     datePostedFilter = "";
+    sortFilter = "";
     goto(buildUrl({
       status: "",
       search: "",
@@ -289,6 +360,7 @@
       minScore: "",
       datePosted: "",
       importedBy: "",
+      sort: "",
       page: "1",
     }));
   }
@@ -323,8 +395,9 @@
   // Check if any filters are active
   let hasActiveFilters = $derived(
     filters.status || filters.search || filters.platform ||
-    filters.workLocation || filters.jobType ||
-    filters.minScore || filters.datePosted || filters.importedBy
+      filters.workLocation || filters.jobType ||
+      filters.minScore || filters.datePosted || filters.importedBy ||
+      filters.sort,
   );
 
   // Empty state messages
@@ -332,14 +405,14 @@
     selectedStatuses.has("saved")
       ? "No saved jobs yet"
       : minScoreFilter
-        ? "No job matches yet"
-        : "No jobs found"
+      ? "No job matches yet"
+      : "No jobs found",
   );
 
   let emptyDescription = $derived(
     hasActiveFilters
       ? "Try adjusting your filters or search terms."
-      : "No jobs have been imported yet. Set up job searches to start importing jobs."
+      : "No jobs have been imported yet. Set up job searches to start importing jobs.",
   );
 </script>
 
@@ -365,7 +438,9 @@
       class="bg-green-50 border border-green-400 rounded-lg p-4 dark:bg-green-900/20 dark:border-green-600 flex items-center justify-between"
     >
       <p class="text-green-700 text-sm dark:text-green-400">
-        Cleared score data for {clearMatchResult.count} job{clearMatchResult.count === 1 ? "" : "s"}. They will be re-scored in the next matcher cycle.
+        Cleared score data for {clearMatchResult.count} job{
+          clearMatchResult.count === 1 ? "" : "s"
+        }. They will be re-scored in the next matcher cycle.
       </p>
       <button
         type="button"
@@ -378,418 +453,609 @@
   {/if}
 
   <!-- Filters -->
-  <div class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-3 sm:p-4">
-    <div class="inline-flex flex-col gap-2">
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- Min Score -->
-      <div class="relative" data-dropdown="minScore">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("minScore")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {minScoreFilter
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faGauge} class="w-3 h-3 opacity-60" />
-          {minScoreFilter ? {
-            "90": "Score 90+", "80": "Score 80+", "70": "Score 70+",
-            "60": "Score 60+", "50": "Score 50+", "1-49": "Score < 50",
-            "1": "Score > 0", "0": "No match", "unmatched": "Not scored",
-          }[minScoreFilter] || "Score" : "Score"}
-          {#if !minScoreFilter}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-          {/if}
-        </button>
-        {#if openDropdown === "minScore"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[160px]">
-            {#each [
-              { value: "", label: "All jobs" },
-              { value: "90", label: "Score 90+" },
-              { value: "80", label: "Score 80+" },
-              { value: "70", label: "Score 70+" },
-              { value: "60", label: "Score 60+" },
-              { value: "50", label: "Score 50+" },
-              { value: "1-49", label: "Score < 50" },
-              { value: "1", label: "Score > 0" },
-              { value: "0", label: "No match" },
-              { value: "unmatched", label: "Not yet scored" },
-            ] as opt}
-              <button
-                type="button"
-                onclick={() => { setMinScore(opt.value); openDropdown = null; }}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+  <div
+    class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-3 sm:p-4"
+  >
+    <div class="flex flex-col gap-2">
+      <div class="flex items-start gap-2">
+        <div class="flex flex-wrap items-center gap-2 grow">
+          <!-- Min Score -->
+          <div class="relative" data-dropdown="minScore">
+            <button
+              type="button"
+              onclick={() => toggleDropdown("minScore")}
+              class="
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {sortFilter ===
+                'top' || minScoreFilter
+                ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+            >
+              <FontAwesomeIcon icon={faGauge} class="w-3 h-3 opacity-60" />
+              {
+                sortFilter === "top" ? "Top matches" : minScoreFilter
+                ? {
+                  "90": "Score 90+",
+                  "80": "Score 80+",
+                  "70": "Score 70+",
+                  "60": "Score 60+",
+                  "50": "Score 50+",
+                  "1-49": "Score < 50",
+                  "1": "Score > 0",
+                  "0": "No match",
+                  "unmatched": "Not scored",
+                }[minScoreFilter] || "Score"
+                : "Score"
+              }
+              {#if sortFilter !== "top" && !minScoreFilter}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-2.5 h-2.5 opacity-50"
+                />
+              {/if}
+            </button>
+            {#if openDropdown === "minScore"}
+              <div
+                class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[160px]"
               >
-                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {minScoreFilter === opt.value
-                  ? 'border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if minScoreFilter === opt.value}
-                    <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Status multi-select -->
-      <div class="relative" data-dropdown="status">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("status")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedStatuses.size > 0
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faTag} class="w-3 h-3 opacity-60" />
-          Marked as
-          {#if selectedStatuses.size > 0}
-            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedStatuses.size}</span>
-          {:else}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-          {/if}
-        </button>
-        {#if openDropdown === "status"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-            {#each [{ value: "saved", label: "Saved" }, { value: "rejected", label: "Not Interested" }] as opt}
-              <button
-                type="button"
-                onclick={() => toggleStatus(opt.value)}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedStatuses.has(opt.value)
-                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if selectedStatuses.has(opt.value)}
-                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Date Posted -->
-      <div class="relative" data-dropdown="datePosted">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("datePosted")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {datePostedFilter
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faCalendarDays} class="w-3 h-3 opacity-60" />
-          {datePostedFilter ? {
-            "1": "Last 24h", "3": "Last 3 days", "7": "Last 7 days",
-            "30": "Last 30 days", "90": "Last 3 months",
-          }[datePostedFilter] || "Date posted" : "Date posted"}
-          {#if !datePostedFilter}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-          {/if}
-        </button>
-        {#if openDropdown === "datePosted"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-            {#each [
-              { value: "", label: "Any time" },
-              { value: "1", label: "Last 24h" },
-              { value: "3", label: "Last 3 days" },
-              { value: "7", label: "Last 7 days" },
-              { value: "30", label: "Last 30 days" },
-              { value: "90", label: "Last 3 months" },
-            ] as opt}
-              <button
-                type="button"
-                onclick={() => { setDatePosted(opt.value); openDropdown = null; }}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {datePostedFilter === opt.value
-                  ? 'border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if datePostedFilter === opt.value}
-                    <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Job Type multi-select -->
-      <div class="relative" data-dropdown="jobType">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("jobType")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedJobTypes.size > 0
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faSitemap} class="w-3 h-3 opacity-60" />
-          Job type
-          {#if selectedJobTypes.size > 0}
-            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedJobTypes.size}</span>
-          {:else}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-          {/if}
-        </button>
-        {#if openDropdown === "jobType"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-            {#each [{ value: "full_time", label: "Full-time" }, { value: "contract", label: "Contract" }, { value: "part_time", label: "Part-time" }, { value: "freelance", label: "Freelance" }] as opt}
-              <button
-                type="button"
-                onclick={() => toggleJobType(opt.value)}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedJobTypes.has(opt.value)
-                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if selectedJobTypes.has(opt.value)}
-                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Work Location multi-select -->
-      <div class="relative" data-dropdown="workLocation">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("workLocation")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedWorkLocations.size > 0
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faLocationDot} class="w-3 h-3 opacity-60" />
-          Work location
-          {#if selectedWorkLocations.size > 0}
-            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedWorkLocations.size}</span>
-          {:else}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-          {/if}
-        </button>
-        {#if openDropdown === "workLocation"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-            {#each [{ value: "remote", label: "Remote" }, { value: "hybrid", label: "Hybrid" }, { value: "onsite", label: "On-site" }] as opt}
-              <button
-                type="button"
-                onclick={() => toggleWorkLocation(opt.value)}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
-              >
-                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedWorkLocations.has(opt.value)
-                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if selectedWorkLocations.has(opt.value)}
-                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Platform multi-select -->
-      {#if platforms.length > 0}
-        <div class="relative" data-dropdown="platform">
-          <button
-            type="button"
-            onclick={() => toggleDropdown("platform")}
-            class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedPlatforms.size > 0
-              ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-              : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-          >
-            <FontAwesomeIcon icon={faGlobe} class="w-3 h-3 opacity-60" />
-            Platform
-            {#if selectedPlatforms.size > 0}
-              <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedPlatforms.size}</span>
-            {:else}
-              <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-            {/if}
-          </button>
-          {#if openDropdown === "platform"}
-            <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-              {#each platforms as platform}
+                <!-- Top matches: curated freshness-decayed ranking -->
                 <button
                   type="button"
-                  onclick={() => togglePlatform(platform.id.toString())}
+                  onclick={() => {
+                    setTopMatches();
+                    openDropdown = null;
+                  }}
                   class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
                 >
-                  <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedPlatforms.has(platform.id.toString())
-                    ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                    : 'border-[var(--dash-border)]'}">
-                    {#if selectedPlatforms.has(platform.id.toString())}
-                      <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
+                  <span
+                    class="
+                      w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {sortFilter ===
+                      'top'
+                      ? 'border-[var(--dash-primary)]'
+                      : 'border-[var(--dash-border)]'}
+                    "
+                  >
+                    {#if sortFilter === "top"}
+                      <span
+                        class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                      ></span>
                     {/if}
                   </span>
-                  <span class="text-[var(--dash-text)]">{platform.name}</span>
+                  <span class="text-[var(--dash-text)] font-medium"
+                  >Top matches</span>
                 </button>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/if}
+                <div class="my-1 border-t border-[var(--dash-border)]"></div>
 
-      <!-- Imported by multi-select -->
-      <div class="relative" data-dropdown="importedBy">
-        <button
-          type="button"
-          onclick={() => toggleDropdown("importedBy")}
-          class="px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedImportedBy.size > 0
-            ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
-            : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}"
-        >
-          <FontAwesomeIcon icon={faUser} class="w-3 h-3 opacity-60" />
-          Imported by
-          {#if selectedImportedBy.size > 0}
-            <span class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{selectedImportedBy.size}</span>
-          {:else}
-            <FontAwesomeIcon icon={faChevronDown} class="w-2.5 h-2.5 opacity-50" />
-          {/if}
-        </button>
-        {#if openDropdown === "importedBy"}
-          <div class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-            {#each [{ value: "me", label: "Me" }, { value: "others", label: "Others" }] as opt}
+                {#each [
+                  { value: "", label: "All jobs" },
+                  { value: "90", label: "Score 90+" },
+                  { value: "80", label: "Score 80+" },
+                  { value: "70", label: "Score 70+" },
+                  { value: "60", label: "Score 60+" },
+                  { value: "50", label: "Score 50+" },
+                  { value: "1-49", label: "Score < 50" },
+                  { value: "1", label: "Score > 0" },
+                  { value: "0", label: "No match" },
+                  { value: "unmatched", label: "Not yet scored" },
+                ] as opt}
+                  {@const selected = minScoreFilter === opt.value &&
+                  sortFilter !== "top"}
+                  <button
+                    type="button"
+                    onclick={() => {
+                      setMinScore(opt.value);
+                      openDropdown = null;
+                    }}
+                    class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    <span
+                      class="
+                        w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {selected
+                        ? 'border-[var(--dash-primary)]'
+                        : 'border-[var(--dash-border)]'}
+                      "
+                    >
+                      {#if selected}
+                        <span
+                          class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                        ></span>
+                      {/if}
+                    </span>
+                    <span class="text-[var(--dash-text)]">{opt.label}</span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Status multi-select -->
+          <div class="relative" data-dropdown="status">
+            <button
+              type="button"
+              onclick={() => toggleDropdown("status")}
+              class="
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedStatuses.size > 0
+                ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+            >
+              <FontAwesomeIcon icon={faTag} class="w-3 h-3 opacity-60" />
+              Marked as
+              {#if selectedStatuses.size > 0}
+                <span
+                  class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none"
+                >{selectedStatuses.size}</span>
+              {:else}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-2.5 h-2.5 opacity-50"
+                />
+              {/if}
+            </button>
+            {#if openDropdown === "status"}
+              <div
+                class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]"
+              >
+                {#each [{ value: "saved", label: "Saved" }, {
+                  value: "rejected",
+                  label: "Not Interested",
+                }] as opt}
+                  <button
+                    type="button"
+                    onclick={() => toggleStatus(opt.value)}
+                    class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    <span
+                      class="
+                        w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedStatuses.has(opt.value)
+                        ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                        : 'border-[var(--dash-border)]'}
+                      "
+                    >
+                      {#if selectedStatuses.has(opt.value)}
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          class="w-2 h-2 text-white"
+                        />
+                      {/if}
+                    </span>
+                    <span class="text-[var(--dash-text)]">{opt.label}</span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Date Posted -->
+          <div class="relative" data-dropdown="datePosted">
+            <button
+              type="button"
+              onclick={() => toggleDropdown("datePosted")}
+              class="
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {datePostedFilter
+                ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+            >
+              <FontAwesomeIcon
+                icon={faCalendarDays}
+                class="w-3 h-3 opacity-60"
+              />
+              {
+                datePostedFilter
+                ? {
+                  "1": "Last 24h",
+                  "3": "Last 3 days",
+                  "7": "Last 7 days",
+                  "30": "Last 30 days",
+                  "90": "Last 3 months",
+                }[datePostedFilter] || "Date posted"
+                : "Date posted"
+              }
+              {#if !datePostedFilter}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-2.5 h-2.5 opacity-50"
+                />
+              {/if}
+            </button>
+            {#if openDropdown === "datePosted"}
+              <div
+                class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]"
+              >
+                {#each [
+                  { value: "", label: "Any time" },
+                  { value: "1", label: "Last 24h" },
+                  { value: "3", label: "Last 3 days" },
+                  { value: "7", label: "Last 7 days" },
+                  { value: "30", label: "Last 30 days" },
+                  { value: "90", label: "Last 3 months" },
+                ] as opt}
+                  <button
+                    type="button"
+                    onclick={() => {
+                      setDatePosted(opt.value);
+                      openDropdown = null;
+                    }}
+                    class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    <span
+                      class="
+                        w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {datePostedFilter === opt.value
+                        ? 'border-[var(--dash-primary)]'
+                        : 'border-[var(--dash-border)]'}
+                      "
+                    >
+                      {#if datePostedFilter === opt.value}
+                        <span
+                          class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                        ></span>
+                      {/if}
+                    </span>
+                    <span class="text-[var(--dash-text)]">{opt.label}</span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Job Type multi-select -->
+          <div class="relative" data-dropdown="jobType">
+            <button
+              type="button"
+              onclick={() => toggleDropdown("jobType")}
+              class="
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedJobTypes.size > 0
+                ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+            >
+              <FontAwesomeIcon icon={faSitemap} class="w-3 h-3 opacity-60" />
+              Job type
+              {#if selectedJobTypes.size > 0}
+                <span
+                  class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none"
+                >{selectedJobTypes.size}</span>
+              {:else}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-2.5 h-2.5 opacity-50"
+                />
+              {/if}
+            </button>
+            {#if openDropdown === "jobType"}
+              <div
+                class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]"
+              >
+                {#each [
+                  { value: "full_time", label: "Full-time" },
+                  { value: "contract", label: "Contract" },
+                  { value: "part_time", label: "Part-time" },
+                  { value: "freelance", label: "Freelance" },
+                ] as opt}
+                  <button
+                    type="button"
+                    onclick={() => toggleJobType(opt.value)}
+                    class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    <span
+                      class="
+                        w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedJobTypes.has(opt.value)
+                        ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                        : 'border-[var(--dash-border)]'}
+                      "
+                    >
+                      {#if selectedJobTypes.has(opt.value)}
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          class="w-2 h-2 text-white"
+                        />
+                      {/if}
+                    </span>
+                    <span class="text-[var(--dash-text)]">{opt.label}</span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Work Location multi-select -->
+          <div class="relative" data-dropdown="workLocation">
+            <button
+              type="button"
+              onclick={() => toggleDropdown("workLocation")}
+              class="
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedWorkLocations.size > 0
+                ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+            >
+              <FontAwesomeIcon
+                icon={faLocationDot}
+                class="w-3 h-3 opacity-60"
+              />
+              Work location
+              {#if selectedWorkLocations.size > 0}
+                <span
+                  class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none"
+                >{selectedWorkLocations.size}</span>
+              {:else}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-2.5 h-2.5 opacity-50"
+                />
+              {/if}
+            </button>
+            {#if openDropdown === "workLocation"}
+              <div
+                class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]"
+              >
+                {#each [{ value: "remote", label: "Remote" }, { value: "hybrid", label: "Hybrid" }, {
+                  value: "onsite",
+                  label: "On-site",
+                }] as opt}
+                  <button
+                    type="button"
+                    onclick={() => toggleWorkLocation(opt.value)}
+                    class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    <span
+                      class="
+                        w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedWorkLocations.has(opt.value)
+                        ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                        : 'border-[var(--dash-border)]'}
+                      "
+                    >
+                      {#if selectedWorkLocations.has(opt.value)}
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          class="w-2 h-2 text-white"
+                        />
+                      {/if}
+                    </span>
+                    <span class="text-[var(--dash-text)]">{opt.label}</span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Platform multi-select -->
+          {#if platforms.length > 0}
+            <div class="relative" data-dropdown="platform">
               <button
                 type="button"
-                onclick={() => toggleImportedBy(opt.value)}
-                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                onclick={() => toggleDropdown("platform")}
+                class="
+                  px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedPlatforms.size > 0
+                  ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                  : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+                "
               >
-                <span class="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedImportedBy.has(opt.value)
-                  ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
-                  : 'border-[var(--dash-border)]'}">
-                  {#if selectedImportedBy.has(opt.value)}
-                    <FontAwesomeIcon icon={faCheck} class="w-2 h-2 text-white" />
-                  {/if}
-                </span>
-                <span class="text-[var(--dash-text)]">{opt.label}</span>
+                <FontAwesomeIcon icon={faGlobe} class="w-3 h-3 opacity-60" />
+                Platform
+                {#if selectedPlatforms.size > 0}
+                  <span
+                    class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none"
+                  >{selectedPlatforms.size}</span>
+                {:else}
+                  <FontAwesomeIcon
+                    icon={faChevronDown}
+                    class="w-2.5 h-2.5 opacity-50"
+                  />
+                {/if}
               </button>
-            {/each}
+              {#if openDropdown === "platform"}
+                <div
+                  class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]"
+                >
+                  {#each platforms as platform}
+                    <button
+                      type="button"
+                      onclick={() => togglePlatform(platform.id.toString())}
+                      class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                    >
+                      <span
+                        class="
+                          w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedPlatforms.has(platform.id.toString())
+                          ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                          : 'border-[var(--dash-border)]'}
+                        "
+                      >
+                        {#if selectedPlatforms.has(platform.id.toString())}
+                          <FontAwesomeIcon
+                            icon={faCheck}
+                            class="w-2 h-2 text-white"
+                          />
+                        {/if}
+                      </span>
+                      <span class="text-[var(--dash-text)]">{
+                        platform.name
+                      }</span>
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {/if}
+
+          <!-- Imported by multi-select -->
+          <div class="relative" data-dropdown="importedBy">
+            <button
+              type="button"
+              onclick={() => toggleDropdown("importedBy")}
+              class="
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedImportedBy.size > 0
+                ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
+                : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+            >
+              <FontAwesomeIcon icon={faUser} class="w-3 h-3 opacity-60" />
+              Imported by
+              {#if selectedImportedBy.size > 0}
+                <span
+                  class="bg-[var(--dash-primary)] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none"
+                >{selectedImportedBy.size}</span>
+              {:else}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-2.5 h-2.5 opacity-50"
+                />
+              {/if}
+            </button>
+            {#if openDropdown === "importedBy"}
+              <div
+                class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[140px]"
+              >
+                {#each [{ value: "me", label: "Me" }, { value: "others", label: "Others" }] as opt}
+                  <button
+                    type="button"
+                    onclick={() => toggleImportedBy(opt.value)}
+                    class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    <span
+                      class="
+                        w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 {selectedImportedBy.has(opt.value)
+                        ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)]'
+                        : 'border-[var(--dash-border)]'}
+                      "
+                    >
+                      {#if selectedImportedBy.has(opt.value)}
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          class="w-2 h-2 text-white"
+                        />
+                      {/if}
+                    </span>
+                    <span class="text-[var(--dash-text)]">{opt.label}</span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          {#if hasActiveFilters}
+            <button
+              type="button"
+              onclick={clearFilters}
+              class="px-2.5 py-1.5 text-xs rounded-md border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-1.5"
+            >
+              <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+              Clear filters
+            </button>
+          {/if}
+        </div>
+
+        {#if isStaff}
+          <form
+            bind:this={clearMatchFormEl}
+            method="POST"
+            action="?/clearMatchData"
+            use:enhance={() => {
+              isClearingMatches = true;
+              clearMatchResult = null;
+              return async ({ result, update }) => {
+                isClearingMatches = false;
+                if (result.type === "success" && result.data) {
+                  clearMatchResult = { count: (result.data as any).clearedCount ?? 0 };
+                }
+                await update();
+              };
+            }}
+            class="hidden"
+          >
+          </form>
+          <div class="relative shrink-0">
+            <button
+              type="button"
+              onclick={() => (showAdvancedMenu = !showAdvancedMenu)}
+              class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors rounded"
+              title="Advanced actions"
+            >
+              <FontAwesomeIcon icon={faEllipsisVertical} class="w-3 h-3" />
+            </button>
+            {#if showAdvancedMenu}
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <div
+                class="fixed inset-0 z-10"
+                onclick={() => (showAdvancedMenu = false)}
+                onkeydown={(e) => e.key === "Escape" && (showAdvancedMenu = false)}
+              >
+              </div>
+              <div
+                class="absolute right-0 top-full mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[180px]"
+              >
+                <button
+                  type="button"
+                  disabled={isClearingMatches}
+                  onclick={() => {
+                    showAdvancedMenu = false;
+                    showClearMatchConfirm = true;
+                  }}
+                  class="w-full px-3 py-2 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-orange-600 disabled:opacity-50"
+                >
+                  {#if isClearingMatches}
+                    <Spinner size="w-3 h-3" />
+                    Clearing...
+                  {:else}
+                    <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
+                    Clear score data
+                  {/if}
+                </button>
+              </div>
+            {/if}
           </div>
         {/if}
       </div>
 
-      {#if hasActiveFilters}
-        <button
-          type="button"
-          onclick={clearFilters}
-          class="px-2.5 py-1.5 text-xs rounded-md border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-1.5"
-        >
-          <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-          Clear filters
-        </button>
-      {/if}
-
-      {#if isStaff}
-        <form
-          bind:this={clearMatchFormEl}
-          method="POST"
-          action="?/clearMatchData"
-          use:enhance={() => {
-            isClearingMatches = true;
-            clearMatchResult = null;
-            return async ({ result, update }) => {
-              isClearingMatches = false;
-              if (result.type === "success" && result.data) {
-                clearMatchResult = { count: (result.data as any).clearedCount ?? 0 };
-              }
-              await update();
-            };
-          }}
-          class="hidden"
-        >
-        </form>
-        <div class="relative">
-          <button
-            type="button"
-            onclick={() => (showAdvancedMenu = !showAdvancedMenu)}
-            class="p-1.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors rounded"
-            title="Advanced actions"
-          >
-            <FontAwesomeIcon icon={faEllipsisVertical} class="w-3 h-3" />
-          </button>
-          {#if showAdvancedMenu}
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-              class="fixed inset-0 z-10"
-              onclick={() => (showAdvancedMenu = false)}
-              onkeydown={(e) => e.key === "Escape" && (showAdvancedMenu = false)}
-            ></div>
-            <div class="absolute right-0 top-full mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[180px]">
-              <button
-                type="button"
-                disabled={isClearingMatches}
-                onclick={() => { showAdvancedMenu = false; showClearMatchConfirm = true; }}
-                class="w-full px-3 py-2 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-orange-600 disabled:opacity-50"
-              >
-                {#if isClearingMatches}
-                  <Spinner size="w-3 h-3" />
-                  Clearing...
-                {:else}
-                  <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
-                  Clear score data
-                {/if}
-              </button>
-            </div>
+      <!-- Search -->
+      <div class="flex">
+        <div class="relative flex-1">
+          <FontAwesomeIcon
+            icon={faSearch}
+            class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--dash-text-muted)]"
+          />
+          <input
+            type="text"
+            bind:value={searchInput}
+            bind:this={searchInputEl}
+            onkeydown={(e) => e.key === "Enter" && applySearch()}
+            onfocus={() => {
+              openDropdown = null;
+            }}
+            placeholder="Search..."
+            class="w-full pl-7 pr-7 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-l-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+          />
+          {#if searchInput}
+            <button
+              type="button"
+              onclick={() => {
+                searchInput = "";
+                applySearch();
+                searchInputEl?.focus();
+              }}
+              class="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+              aria-label="Clear search"
+            >
+              <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+            </button>
           {/if}
         </div>
-      {/if}
-    </div>
-
-    <!-- Search -->
-    <div class="flex">
-      <div class="relative flex-1">
-        <FontAwesomeIcon
-          icon={faSearch}
-          class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--dash-text-muted)]"
-        />
-        <input
-          type="text"
-          bind:value={searchInput}
-          bind:this={searchInputEl}
-          onkeydown={(e) => e.key === "Enter" && applySearch()}
-          onfocus={() => { openDropdown = null; }}
-          placeholder="Search..."
-          class="w-full pl-7 pr-7 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-l-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-        />
-        {#if searchInput}
-          <button
-            type="button"
-            onclick={() => {
-              searchInput = "";
-              applySearch();
-              searchInputEl?.focus();
-            }}
-            class="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
-            aria-label="Clear search"
-          >
-            <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-          </button>
-        {/if}
+        <button
+          type="button"
+          onclick={applySearch}
+          class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-r-md hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5"
+        >
+          <FontAwesomeIcon icon={faSearch} class="w-3 h-3" />
+          Search
+        </button>
       </div>
-      <button
-        type="button"
-        onclick={applySearch}
-        class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-r-md hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5"
-      >
-        <FontAwesomeIcon icon={faSearch} class="w-3 h-3" />
-        Search
-      </button>
-    </div>
     </div>
   </div>
 
   <!-- Results Count -->
   <div class="text-sm text-[var(--dash-text-secondary)]">
-    {#if $navigating}
+    {#if $navigating && jobs.length === 0}
       <span class="flex items-center gap-2">
         <Spinner size="w-4 h-4" />
         Loading...
@@ -800,16 +1066,20 @@
       1 job found
     {:else}
       {totalCount.toLocaleString()} jobs found
-      {#if currentPage > 1 || totalPages > 1}
+      {#if jobs.length < totalCount}
         <span class="mx-1">•</span>
-        Page {currentPage} of {totalPages}
+        showing {jobs.length.toLocaleString()}
       {/if}
     {/if}
   </div>
 
   <!-- Jobs List -->
   {#if jobs.length === 0}
-    <EmptyState icon={pageIcon} title={emptyTitle} description={emptyDescription} />
+    <EmptyState
+      icon={pageIcon}
+      title={emptyTitle}
+      description={emptyDescription}
+    />
   {:else}
     <div class="space-y-3">
       {#each jobs as job (job.id)}
@@ -827,7 +1097,8 @@
         >
           {#snippet expandedContent()}
             <!-- Skills -->
-            {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
+            {#if job.skills_required && Array.isArray(job.skills_required) &&
+  job.skills_required.length > 0}
               <div class="mt-1">
                 <p
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
@@ -836,10 +1107,17 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}
-                    <SkillPill {skill} strength={getSkillMatchStrength(job.id, skill)} variant="required" size="sm" />
+                    <SkillPill
+                      {skill}
+                      strength={getSkillMatchStrength(job.id, skill)}
+                      variant="required"
+                      size="sm"
+                    />
                   {/each}
                   {#if job.skills_required.length > 10}
-                    <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
+                    <span
+                      class="px-2 py-1 text-xs text-[var(--dash-text-muted)]"
+                    >
                       +{job.skills_required.length - 10} more
                     </span>
                   {/if}
@@ -847,7 +1125,8 @@
               </div>
             {/if}
 
-            {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
+            {#if job.skills_preferred && Array.isArray(job.skills_preferred) &&
+  job.skills_preferred.length > 0}
               <div class="mt-1">
                 <p
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
@@ -856,10 +1135,17 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_preferred.slice(0, 10) as skill}
-                    <SkillPill {skill} strength={getSkillMatchStrength(job.id, skill)} variant="preferred" size="sm" />
+                    <SkillPill
+                      {skill}
+                      strength={getSkillMatchStrength(job.id, skill)}
+                      variant="preferred"
+                      size="sm"
+                    />
                   {/each}
                   {#if job.skills_preferred.length > 10}
-                    <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
+                    <span
+                      class="px-2 py-1 text-xs text-[var(--dash-text-muted)]"
+                    >
                       +{job.skills_preferred.length - 10} more
                     </span>
                   {/if}
@@ -880,60 +1166,20 @@
                 </p>
               </div>
             {/if}
-
           {/snippet}
         </JobCard>
       {/each}
     </div>
   {/if}
 
-  <!-- Pagination -->
-  {#if totalPages > 1}
-    <div class="flex items-center justify-center gap-2">
-      <button
-        type="button"
-        onclick={() => goToPage(currentPage - 1)}
-        disabled={currentPage <= 1}
-        class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <FontAwesomeIcon icon={faChevronLeft} class="w-4 h-4" />
-      </button>
-
-      {#each Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-        // Show pages around current page
-        let start = Math.max(1, currentPage - 2);
-        let end = Math.min(totalPages, start + 4);
-        if (end - start < 4) {
-          start = Math.max(1, end - 4);
-        }
-        return start + i;
-      }).filter((p) => p <= totalPages) as pageNum}
-        <button
-          type="button"
-          onclick={() => goToPage(pageNum)}
-          class="w-10 h-10 rounded-lg border transition-colors {pageNum ===
-          currentPage
-            ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
-            : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}"
-        >
-          {pageNum}
-        </button>
-      {/each}
-
-      <button
-        type="button"
-        onclick={() => goToPage(currentPage + 1)}
-        disabled={currentPage >= totalPages}
-        class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <FontAwesomeIcon icon={faChevronRight} class="w-4 h-4" />
-      </button>
+  <!-- Infinite scroll -->
+  {#if hasMore}
+    <div use:infiniteScroll class="h-1" aria-hidden="true"></div>
+  {/if}
+  {#if loadingMore || $navigating}
+    <div class="flex items-center justify-center py-4">
+      <Spinner size="w-5 h-5" />
     </div>
-    {#if $navigating}
-      <div class="flex items-center justify-center">
-        <Spinner size="w-4 h-4" />
-      </div>
-    {/if}
   {/if}
 </div>
 

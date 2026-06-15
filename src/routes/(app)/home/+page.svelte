@@ -16,14 +16,13 @@
   import GettingStartedFlow from "../components/GettingStartedFlow.svelte";
   import JobCardList from "../jobs/components/JobCardList.svelte";
   import Card from "../components/Card.svelte";
-  import {
-    getStatusLabel,
-    getStatusColor,
-  } from "$lib/application-status";
+  import { getStatusColor, getStatusLabel } from "$lib/application-status";
 
   let { data }: { data: PageData } = $props();
 
-  let showCreatedBanner = $state($page.url.searchParams.get("created") === "true");
+  let showCreatedBanner = $state(
+    $page.url.searchParams.get("created") === "true",
+  );
 
   // Track profile-creation as an activation event. onMount keeps this client-
   // side only — the banner state is the trigger.
@@ -77,15 +76,23 @@
 
   <!-- Profile Created Banner -->
   {#if showCreatedBanner}
-    <div class="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-800">
-      <FontAwesomeIcon icon={faCheckCircle} class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+    <div
+      class="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-800"
+    >
+      <FontAwesomeIcon
+        icon={faCheckCircle}
+        class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0"
+      />
       <div class="flex-1 min-w-0">
         <p class="text-sm font-medium text-green-800 dark:text-green-200">
           Profile created successfully!
         </p>
         <p class="text-sm text-green-700 dark:text-green-300 mt-1">
           You can review and add more details on the
-          <a href="/profile/edit" class="underline font-medium hover:text-green-900 dark:hover:text-green-100">profile data page</a>.
+          <a
+            href="/profile/edit"
+            class="underline font-medium hover:text-green-900 dark:hover:text-green-100"
+          >profile data page</a>.
         </p>
       </div>
       <button
@@ -142,22 +149,36 @@
                   <FontAwesomeIcon icon={faPaperPlane} class="w-3.5 h-3.5" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-sm font-medium text-[var(--dash-text)] truncate">
+                  <h4
+                    class="text-sm font-medium text-[var(--dash-text)] truncate"
+                  >
                     {job?.title || "Unknown Position"}
                   </h4>
                   {#if job?.company}
-                    <p class="text-xs text-[var(--dash-text-secondary)] truncate">{job.company}</p>
+                    <p
+                      class="text-xs text-[var(--dash-text-secondary)] truncate"
+                    >
+                      {job.company}
+                    </p>
                   {/if}
                 </div>
                 <div class="flex-shrink-0 text-right">
-                  <span class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}">
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full font-medium {getStatusColor(app.status)}"
+                  >
                     {getStatusLabel(app.status)}
                   </span>
                   {#if app.status_step}
-                    <p class="text-xs text-[var(--dash-text-secondary)] italic mt-2">{app.status_step}</p>
+                    <p
+                      class="text-xs text-[var(--dash-text-secondary)] italic mt-2"
+                    >
+                      {app.status_step}
+                    </p>
                   {/if}
                   {#if app.status_action}
-                    <p class="text-xs text-[var(--dash-primary)] font-medium mt-2">
+                    <p
+                      class="text-xs text-[var(--dash-primary)] font-medium mt-2"
+                    >
                       → {app.status_action}
                       {#if app.status_action === "Scheduled" && app.status_action_date}
                         — {formatDate(app.status_action_date)}
@@ -181,7 +202,7 @@
           Top Matches
         </h3>
         <a
-          href="/jobs?minScore=1"
+          href="/jobs?sort=top"
           class="text-sm text-[var(--dash-primary)] hover:underline flex items-center gap-1"
         >
           View all
@@ -199,5 +220,4 @@
     {/if}
     <MatchConfigSummary {matchConfig} />
   </div>
-
 </div>

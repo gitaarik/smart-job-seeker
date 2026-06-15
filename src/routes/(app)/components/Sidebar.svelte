@@ -81,7 +81,7 @@
         },
         {
           label: "Job Matches",
-          href: "/jobs?minScore=50",
+          href: "/jobs?sort=top",
           icon: faListCheck,
         },
         {
@@ -291,15 +291,17 @@
     if (currentPath === "/jobs" && hrefPath === "/jobs") {
       const hasStatus = currentParams.has("status");
       const hasMinScore = currentParams.has("minScore");
+      const hasTopSort = currentParams.get("sort") === "top";
 
       if (href === "/jobs?status=saved") {
         return hasStatus && currentParams.get("status")!.includes("saved");
       }
-      if (href === "/jobs?minScore=50") {
-        return hasMinScore && !hasStatus;
+      if (href === "/jobs?sort=top") {
+        // "Job Matches" — top-matches ranking or any score threshold
+        return (hasTopSort || hasMinScore) && !hasStatus;
       }
       if (href === "/jobs") {
-        return !hasMinScore && !hasStatus;
+        return !hasMinScore && !hasStatus && !hasTopSort;
       }
       return false;
     }
