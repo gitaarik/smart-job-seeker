@@ -31,7 +31,7 @@ Two ways, you only need one:
 
 To connect one:
 
-1. Go to **Job Import → Devices** and click **New Key**.
+1. Go to **[Job Import → Devices](/jobs/import/devices)** and click **New Key**.
 2. Follow the **connect wizard** — for Docker it gives you a ready-to-run
    command with your key already filled in, and a live indicator that turns
    green the moment your device connects.
@@ -46,7 +46,8 @@ To connect one:
 Once your device is connected, you can let people you trust use it — no setup on
 their end:
 
-1. On the **Devices** page, open the **⋮** menu on your device → **Share**.
+1. On the **[Devices](/jobs/import/devices)** page, open the **⋮** menu on your
+   device → **Share**.
 2. Under **Invite by link**, click **Create invite link**.
 3. Send the link. It's **single-use** and expires in **7 days**.
 

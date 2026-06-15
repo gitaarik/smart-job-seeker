@@ -4,14 +4,15 @@ Smart Job Seeker turns a scattered job hunt into one organised pipeline. The
 flow is simple:
 
 1. **Build your profile once.** Your experience, skills, and preferences live in
-   one place and power everything else.
-2. **Scrape job boards.** SJS even suggests searches based on your profile when
-   you import it; once configured, it opens them in a real browser and pulls in
-   matching listings — automatically, on a schedule if you want.
+   [your profile](/profile/edit) and power everything else.
+2. **Scrape job boards.** SJS even suggests searches based on your profile, then
+   runs them from [Job Import](/jobs/import) — a real browser pulls in matching
+   listings, automatically and on a schedule if you want.
 3. **Match with AI.** Each job is scored against your profile so the best fits
-   rise to the top instead of drowning in a feed.
+   rise to the top of your [Job Matches](/jobs?minScore=50).
 4. **Apply and track.** Generate tailored cover letters and answers with AI, and
-   keep every application, interview, and follow-up in one tracker.
+   keep every application, interview, and follow-up in your
+   [tracker](/applications).
 
 ## The on-device browser
 

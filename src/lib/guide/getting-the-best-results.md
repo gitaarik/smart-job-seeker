@@ -5,8 +5,8 @@ off in much better matches and far less manual work.
 
 ## 1. Make your profile complete
 
-Matching scores each job against your profile, so the more it knows, the sharper
-the results:
+Matching scores each job against [your profile](/profile/edit), so the more it
+knows, the sharper the results:
 
 - Fill in **work experience, skills, and education** in real detail — not just
   titles. The specifics are what matching keys on.
@@ -22,8 +22,9 @@ the results:
 
 You don't start from a blank slate. **When you first import your profile, SJS
 automatically suggests a set of Import Tasks** (saved job-board searches) based
-on your experience and match preferences. They start **paused** — your job is
-mostly to finish configuring them and switch them on.
+on your experience and match preferences. You'll find them on the
+[Job Import](/jobs/import) page, started **paused** — your job is mostly to
+finish configuring them and switch them on.
 
 To make a suggested task runnable, clear its two common blockers:
 
@@ -45,9 +46,9 @@ you rely on **on a schedule** so fresh jobs arrive without you lifting a finger.
 
 ## 3. Let matching do the triage
 
-After a scrape, jobs are scored against your profile. Work from the **top
-matches down** instead of reading everything. Low scores are usually a sign the
-search is too broad — tighten the Import Task's filters.
+After a scrape, jobs are scored against your profile. Work from your
+[top matches](/jobs?minScore=50) down instead of reading everything. Low scores
+are usually a sign the search is too broad — tighten the Import Task's filters.
 
 ## 4. Use AI for the writing, not the thinking
 
@@ -58,5 +59,6 @@ send unread.
 
 ## 5. Keep the tracker honest
 
-Log applications, interviews, and follow-ups as you go. The tracker is what
-turns a pile of tabs into a pipeline you can actually manage.
+Log applications, interviews, and follow-ups as you go. The
+[tracker](/applications) is what turns a pile of tabs into a pipeline you can
+actually manage.
