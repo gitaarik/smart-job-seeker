@@ -6,6 +6,13 @@ Only if you want to run your own scraping device. If someone **shared a device
 with you**, you don't install anything — just pick their device when you run a
 search. See [Devices & sharing](/guide/devices).
 
+## Do I have to set up job searches from scratch?
+
+No. When you first import your profile, SJS **suggests Import Tasks** for you.
+You mostly just finish configuring each one — pick a device and, for boards that
+need signing in, log in once (Manual login) — then activate it. See
+[Getting the best results](/guide/getting-the-best-results).
+
 ## Why isn't my device connecting?
 
 - Check the container or desktop app is actually **running**.

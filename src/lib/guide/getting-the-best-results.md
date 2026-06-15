@@ -18,18 +18,30 @@ the results:
 > If you add a skill and immediately run an AI feature, give it a moment — the
 > profile snapshot used by AI refreshes shortly after you edit.
 
-## 2. Set up focused searches (Import Tasks)
+## 2. Finish setting up your Import Tasks
 
-An **Import Task** is a saved job-board search that SJS runs for you.
+You don't start from a blank slate. **When you first import your profile, SJS
+automatically suggests a set of Import Tasks** (saved job-board searches) based
+on your experience and match preferences. They start **paused** — your job is
+mostly to finish configuring them and switch them on.
 
-- Start from a **good search URL** on the board itself — apply the filters
-  (location, remote, seniority, keywords) _there_, then bring that URL in. A
-  tight search beats a broad one every time.
-- Give each task a clear name so you can tell them apart.
-- Set a sensible **max jobs** and let **skip-existing** avoid re-pulling what
-  you already have.
-- Once it's working, put it on a **schedule** so fresh jobs arrive without you
-  lifting a finger.
+To make a suggested task runnable, clear its two common blockers:
+
+- **Pick a device.** Choose the browser device the task runs on — your own, or
+  one shared with you. (See [Devices & sharing](/guide/devices).)
+- **Handle login for gated boards.** Many boards only show good results when
+  you're signed in. The easiest way is **Manual login**: the first time the task
+  runs, sign in yourself in the live browser. The session persists, so you stay
+  logged in for later runs — **you only log in once.** (Prefer hands-off? Save
+  credentials and use **Auto login**; or **No login** for public boards.)
+
+Then **activate** the task. Activating is also the only step that spends credits
+— the suggestions are generated for free.
+
+You're not limited to the suggestions — **refine** them (tighten filters,
+rename) or **add your own**: apply the filters on a board's site, copy that
+search URL in, and a tight search beats a broad one every time. Put the tasks
+you rely on **on a schedule** so fresh jobs arrive without you lifting a finger.
 
 ## 3. Let matching do the triage
 
