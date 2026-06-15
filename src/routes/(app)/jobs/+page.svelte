@@ -457,14 +457,14 @@
     class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-3 sm:p-4"
   >
     <div class="flex flex-col gap-2">
-      <div class="flex flex-wrap items-stretch gap-2">
+      <div class="flex flex-wrap items-center justify-center gap-2">
         <!-- Min Score -->
-        <div class="relative grow basis-32" data-dropdown="minScore">
+        <div class="relative" data-dropdown="minScore">
           <button
             type="button"
             onclick={() => toggleDropdown("minScore")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {sortFilter ===
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {sortFilter ===
               'top' || minScoreFilter
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
@@ -568,12 +568,12 @@
         </div>
 
         <!-- Status multi-select -->
-        <div class="relative grow basis-32" data-dropdown="status">
+        <div class="relative" data-dropdown="status">
           <button
             type="button"
             onclick={() => toggleDropdown("status")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {selectedStatuses.size > 0
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedStatuses.size > 0
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
             "
@@ -626,12 +626,12 @@
         </div>
 
         <!-- Date Posted -->
-        <div class="relative grow basis-32" data-dropdown="datePosted">
+        <div class="relative" data-dropdown="datePosted">
           <button
             type="button"
             onclick={() => toggleDropdown("datePosted")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {datePostedFilter
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {datePostedFilter
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
             "
@@ -696,12 +696,12 @@
         </div>
 
         <!-- Job Type multi-select -->
-        <div class="relative grow basis-32" data-dropdown="jobType">
+        <div class="relative" data-dropdown="jobType">
           <button
             type="button"
             onclick={() => toggleDropdown("jobType")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {selectedJobTypes.size > 0
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedJobTypes.size > 0
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
             "
@@ -756,12 +756,12 @@
         </div>
 
         <!-- Work Location multi-select -->
-        <div class="relative grow basis-32" data-dropdown="workLocation">
+        <div class="relative" data-dropdown="workLocation">
           <button
             type="button"
             onclick={() => toggleDropdown("workLocation")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {selectedWorkLocations.size > 0
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedWorkLocations.size > 0
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
             "
@@ -815,12 +815,12 @@
 
         <!-- Platform multi-select -->
         {#if platforms.length > 0}
-          <div class="relative grow basis-32" data-dropdown="platform">
+          <div class="relative" data-dropdown="platform">
             <button
               type="button"
               onclick={() => toggleDropdown("platform")}
               class="
-                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {selectedPlatforms.size > 0
+                px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedPlatforms.size > 0
                 ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
                 : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
               "
@@ -871,12 +871,12 @@
         {/if}
 
         <!-- Imported by multi-select -->
-        <div class="relative grow basis-32" data-dropdown="importedBy">
+        <div class="relative" data-dropdown="importedBy">
           <button
             type="button"
             onclick={() => toggleDropdown("importedBy")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center justify-center gap-1.5 w-full {selectedImportedBy.size > 0
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {selectedImportedBy.size > 0
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
             "
@@ -929,7 +929,7 @@
           <button
             type="button"
             onclick={clearFilters}
-            class="grow basis-32 justify-center px-2.5 py-1.5 text-xs rounded-md border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-1.5"
+            class="px-2.5 py-1.5 text-xs rounded-md border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-1.5"
           >
             <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
             Clear filters
@@ -955,7 +955,7 @@
             class="hidden"
           >
           </form>
-          <div class="relative shrink-0 flex items-center">
+          <div class="relative">
             <button
               type="button"
               onclick={() => (showAdvancedMenu = !showAdvancedMenu)}
