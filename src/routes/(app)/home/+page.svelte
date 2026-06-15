@@ -202,7 +202,7 @@
           Top Matches
         </h3>
         <a
-          href="/jobs?minScore=1&sort=top"
+          href="/jobs?sort=top"
           class="text-sm text-[var(--dash-primary)] hover:underline flex items-center gap-1"
         >
           View all

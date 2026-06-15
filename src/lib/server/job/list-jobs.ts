@@ -271,6 +271,10 @@ export async function listJobs(
     }
 
     const orderBy = topSort ? TOP_ORDER : DATE_ORDER;
+    // Top matches with no explicit threshold still excludes "scored, no match".
+    const effectiveScoreFilter = topSort && !filters.minScore
+      ? sql`jm.score > 0`
+      : scoreFilter;
 
     const matchRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
       SELECT jm.id, COUNT(*) OVER() as cnt
@@ -279,7 +283,7 @@ export async function listJobs(
       ${statusJoin}
       WHERE jm.profile_id = ${profileId}
       AND ${statusFilter}
-      AND ${scoreFilter}
+      AND ${effectiveScoreFilter}
       AND ${searchFilter}
       AND ${platformFilter}
       AND ${dateFilter}

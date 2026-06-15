@@ -211,6 +211,8 @@
   let pageTitle = $derived(
     selectedStatuses.has("saved")
       ? "Saved Jobs"
+      : sortFilter === "top"
+      ? "Top Matches"
       : minScoreFilter === "unmatched"
       ? "Not Yet Scored"
       : minScoreFilter === "0"
@@ -223,7 +225,7 @@
   let pageIcon = $derived(
     selectedStatuses.has("saved")
       ? faBookmark
-      : minScoreFilter && minScoreFilter !== "0"
+      : sortFilter === "top" || (minScoreFilter && minScoreFilter !== "0")
       ? faListCheck
       : faBriefcase,
   );
@@ -313,7 +315,14 @@
 
   function setMinScore(value: string) {
     minScoreFilter = value;
-    applyFilter({ minScore: value });
+    // Picking an explicit threshold switches off the top-matches ranking.
+    applyFilter({ minScore: value, sort: "" });
+  }
+
+  function setTopMatches() {
+    minScoreFilter = "";
+    sortFilter = "top";
+    applyFilter({ sort: "top", minScore: "" });
   }
 
   function setDatePosted(value: string) {
@@ -341,6 +350,7 @@
     selectedImportedBy = new Set();
     minScoreFilter = "";
     datePostedFilter = "";
+    sortFilter = "";
     goto(buildUrl({
       status: "",
       search: "",
@@ -350,6 +360,7 @@
       minScore: "",
       datePosted: "",
       importedBy: "",
+      sort: "",
       page: "1",
     }));
   }
@@ -385,7 +396,8 @@
   let hasActiveFilters = $derived(
     filters.status || filters.search || filters.platform ||
       filters.workLocation || filters.jobType ||
-      filters.minScore || filters.datePosted || filters.importedBy,
+      filters.minScore || filters.datePosted || filters.importedBy ||
+      filters.sort,
   );
 
   // Empty state messages
@@ -452,14 +464,15 @@
             type="button"
             onclick={() => toggleDropdown("minScore")}
             class="
-              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {minScoreFilter
+              px-2.5 py-1.5 text-xs rounded-md border transition-colors flex items-center gap-1.5 {sortFilter ===
+              'top' || minScoreFilter
               ? 'bg-[var(--dash-primary)]/10 border-[var(--dash-primary)]/30 text-[var(--dash-primary)]'
               : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
             "
           >
             <FontAwesomeIcon icon={faGauge} class="w-3 h-3 opacity-60" />
             {
-              minScoreFilter
+              sortFilter === "top" ? "Top matches" : minScoreFilter
               ? {
                 "90": "Score 90+",
                 "80": "Score 80+",
@@ -473,7 +486,7 @@
               }[minScoreFilter] || "Score"
               : "Score"
             }
-            {#if !minScoreFilter}
+            {#if sortFilter !== "top" && !minScoreFilter}
               <FontAwesomeIcon
                 icon={faChevronDown}
                 class="w-2.5 h-2.5 opacity-50"
@@ -484,6 +497,34 @@
             <div
               class="absolute top-full left-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[160px]"
             >
+              <!-- Top matches: curated freshness-decayed ranking -->
+              <button
+                type="button"
+                onclick={() => {
+                  setTopMatches();
+                  openDropdown = null;
+                }}
+                class="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                <span
+                  class="
+                    w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {sortFilter ===
+                    'top'
+                    ? 'border-[var(--dash-primary)]'
+                    : 'border-[var(--dash-border)]'}
+                  "
+                >
+                  {#if sortFilter === "top"}
+                    <span
+                      class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
+                    ></span>
+                  {/if}
+                </span>
+                <span class="text-[var(--dash-text)] font-medium"
+                >Top matches</span>
+              </button>
+              <div class="my-1 border-t border-[var(--dash-border)]"></div>
+
               {#each [
                 { value: "", label: "All jobs" },
                 { value: "90", label: "Score 90+" },
@@ -496,6 +537,8 @@
                 { value: "0", label: "No match" },
                 { value: "unmatched", label: "Not yet scored" },
               ] as opt}
+                {@const selected = minScoreFilter === opt.value &&
+                sortFilter !== "top"}
                 <button
                   type="button"
                   onclick={() => {
@@ -506,12 +549,12 @@
                 >
                   <span
                     class="
-                      w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {minScoreFilter === opt.value
+                      w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 {selected
                       ? 'border-[var(--dash-primary)]'
                       : 'border-[var(--dash-border)]'}
                     "
                   >
-                    {#if minScoreFilter === opt.value}
+                    {#if selected}
                       <span
                         class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"
                       ></span>
@@ -1000,58 +1043,24 @@
     </div>
   </div>
 
-  <!-- Results Count + sort -->
-  <div
-    class="flex items-center justify-between gap-3 flex-wrap text-sm text-[var(--dash-text-secondary)]"
-  >
-    <div>
-      {#if $navigating && jobs.length === 0}
-        <span class="flex items-center gap-2">
-          <Spinner size="w-4 h-4" />
-          Loading...
-        </span>
-      {:else if totalCount === 0}
-        No jobs found
-      {:else if totalCount === 1}
-        1 job found
-      {:else}
-        {totalCount.toLocaleString()} jobs found
-        {#if jobs.length < totalCount}
-          <span class="mx-1">•</span>
-          showing {jobs.length.toLocaleString()}
-        {/if}
+  <!-- Results Count -->
+  <div class="text-sm text-[var(--dash-text-secondary)]">
+    {#if $navigating && jobs.length === 0}
+      <span class="flex items-center gap-2">
+        <Spinner size="w-4 h-4" />
+        Loading...
+      </span>
+    {:else if totalCount === 0}
+      No jobs found
+    {:else if totalCount === 1}
+      1 job found
+    {:else}
+      {totalCount.toLocaleString()} jobs found
+      {#if jobs.length < totalCount}
+        <span class="mx-1">•</span>
+        showing {jobs.length.toLocaleString()}
       {/if}
-    </div>
-
-    <!-- Sort toggle -->
-    <div
-      class="flex items-center gap-1 rounded-lg border border-[var(--dash-border)] p-0.5"
-    >
-      <button
-        type="button"
-        onclick={() => applyFilter({ sort: "top" })}
-        class="
-          px-2.5 py-1 rounded-md text-xs transition-colors {sortFilter ===
-          'top'
-          ? 'bg-[var(--dash-primary)] text-white'
-          : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
-        "
-      >
-        Top matches
-      </button>
-      <button
-        type="button"
-        onclick={() => applyFilter({ sort: "" })}
-        class="
-          px-2.5 py-1 rounded-md text-xs transition-colors {sortFilter !==
-          'top'
-          ? 'bg-[var(--dash-primary)] text-white'
-          : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}
-        "
-      >
-        Newest
-      </button>
-    </div>
+    {/if}
   </div>
 
   <!-- Jobs List -->
