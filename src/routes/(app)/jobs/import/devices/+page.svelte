@@ -76,6 +76,19 @@
   }
   let showAddForm = $state(false);
   let showManualInstall = $state(false);
+  // Setup-instructions panel is open by default; once a user has things wired
+  // up they tend to collapse it, so persist that choice across visits.
+  const SETUP_STORAGE_KEY = "devices:setupExpanded";
+  let setupExpanded = $state(true);
+
+  function toggleSetup() {
+    setupExpanded = !setupExpanded;
+    try {
+      localStorage.setItem(SETUP_STORAGE_KEY, String(setupExpanded));
+    } catch {
+      // Ignore storage failures (private mode, quota) — toggle still works.
+    }
+  }
   let newKeyName = $state("");
   let isCreating = $state(false);
   let newlyCreatedKey = $state<string | null>(null);
@@ -241,6 +254,12 @@
   }
 
   onMount(() => {
+    try {
+      const stored = localStorage.getItem(SETUP_STORAGE_KEY);
+      if (stored !== null) setupExpanded = stored === "true";
+    } catch {
+      // Ignore storage failures — fall back to the default (expanded).
+    }
     pollSjsBrowserStatus();
     statusPollInterval = setInterval(pollSjsBrowserStatus, 5000);
   });
@@ -540,182 +559,198 @@
 
   <!-- Setup Instructions -->
   <Card padding="lg">
-    <h2 class="font-medium text-[var(--dash-text)] mb-4">Setup Instructions</h2>
-    <ol class="space-y-4 text-sm text-[var(--dash-text-secondary)]">
-      <!-- Step 1: Install -->
-      <li class="flex gap-3">
-        <span
-          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
-        >1</span>
-        <div class="flex-1">
-          <p class="text-[var(--dash-text)] mb-2">Install</p>
+    <button
+      type="button"
+      onclick={toggleSetup}
+      class="
+        flex items-center justify-between w-full text-left {setupExpanded
+        ? 'mb-4'
+        : ''}
+      "
+      aria-expanded={setupExpanded}
+    >
+      <h2 class="font-medium text-[var(--dash-text)]">Setup Instructions</h2>
+      <FontAwesomeIcon
+        icon={setupExpanded ? faChevronUp : faChevronDown}
+        class="w-3.5 h-3.5 text-[var(--dash-text-muted)]"
+      />
+    </button>
+    {#if setupExpanded}
+      <ol class="space-y-4 text-sm text-[var(--dash-text-secondary)]">
+        <!-- Step 1: Install -->
+        <li class="flex gap-3">
+          <span
+            class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+          >1</span>
+          <div class="flex-1">
+            <p class="text-[var(--dash-text)] mb-2">Install</p>
 
-          <!-- Install type tabs -->
-          <div
-            class="flex rounded-md overflow-hidden border border-[var(--dash-border)] w-fit mb-3"
-          >
-            <button
-              type="button"
-              onclick={() => {
-                installTab = "desktop";
-              }}
-              class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {installTab === 'desktop' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+            <!-- Install type tabs -->
+            <div
+              class="flex rounded-md overflow-hidden border border-[var(--dash-border)] w-fit mb-3"
             >
-              <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-              Desktop App
-            </button>
-            <button
-              type="button"
-              onclick={() => {
-                installTab = "docker";
-              }}
-              class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {installTab === 'docker' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-            >
-              <FontAwesomeIcon icon={faServer} class="w-3 h-3" />
-              Docker
-            </button>
-          </div>
-
-          {#if installTab === "desktop"}
-            <!-- Desktop App instructions -->
-            <p>
-              Download the installer for your platform from <a
-                href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-                target="_blank"
-                rel="noopener"
-                class="text-[var(--dash-primary)] hover:underline"
-              >GitHub Releases</a>:
-            </p>
-            <div class="mt-2 space-y-1.5 text-xs">
-              <div class="flex items-center gap-2">
-                <span class="text-[var(--dash-text-secondary)] w-16"
-                >macOS</span>
-                <a
-                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-[var(--dash-primary)] hover:underline font-mono"
-                >.dmg</a>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-[var(--dash-text-secondary)] w-16"
-                >Windows</span>
-                <a
-                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-[var(--dash-primary)] hover:underline font-mono"
-                >.exe installer</a>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-[var(--dash-text-secondary)] w-16"
-                >Linux</span>
-                <a
-                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-[var(--dash-primary)] hover:underline font-mono"
-                >.deb</a>
-                <span class="text-[var(--dash-text-secondary)]">or</span>
-                <a
-                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-[var(--dash-primary)] hover:underline font-mono"
-                >.AppImage</a>
-              </div>
+              <button
+                type="button"
+                onclick={() => {
+                  installTab = "desktop";
+                }}
+                class="px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors {installTab === 'desktop' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+              >
+                <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                Desktop App
+              </button>
+              <button
+                type="button"
+                onclick={() => {
+                  installTab = "docker";
+                }}
+                class="px-3 py-1.5 text-xs flex items-center gap-1.5 border-l border-[var(--dash-border)] transition-colors {installTab === 'docker' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
+              >
+                <FontAwesomeIcon icon={faServer} class="w-3 h-3" />
+                Docker
+              </button>
             </div>
-            <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
-              A compatible browser will be downloaded automatically on first
-              launch.
-            </p>
 
-            <!-- Manual install toggle -->
-            <button
-              type="button"
-              onclick={() => {
-                showManualInstall = !showManualInstall;
-              }}
-              class="mt-2 flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-            >
-              <FontAwesomeIcon
-                icon={showManualInstall ? faChevronUp : faChevronDown}
-                class="w-2.5 h-2.5"
-              />
-              <span>Manual install from source</span>
-            </button>
-
-            {#if showManualInstall}
-              <div
-                class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2"
-              >
-                <p>
-                  Requires <a
-                    href="https://nodejs.org/"
+            {#if installTab === "desktop"}
+              <!-- Desktop App instructions -->
+              <p>
+                Download the installer for your platform from <a
+                  href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-[var(--dash-primary)] hover:underline"
+                >GitHub Releases</a>:
+              </p>
+              <div class="mt-2 space-y-1.5 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="text-[var(--dash-text-secondary)] w-16"
+                  >macOS</span>
+                  <a
+                    href="https://github.com/gitaarik/sjs-desktop/releases/latest"
                     target="_blank"
                     rel="noopener"
-                    class="text-[var(--dash-primary)] hover:underline"
-                  >Node.js 20+</a> and <a
-                    href="https://www.rust-lang.org/tools/install"
-                    target="_blank"
-                    rel="noopener"
-                    class="text-[var(--dash-primary)] hover:underline"
-                  >Rust</a>. Clone the repo and build:
-                </p>
-                <div
-                  class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5"
-                >
-                  <div>
-                    git clone https://github.com/gitaarik/sjs-desktop.git
-                  </div>
-                  <div>cd sjs-desktop</div>
-                  <div>npm install && npm run ui:install</div>
-                  <div>npm run tauri:build</div>
+                    class="text-[var(--dash-primary)] hover:underline font-mono"
+                  >.dmg</a>
                 </div>
-                <p>
-                  The installer will be in <code
-                    class="bg-[var(--dash-card)] px-1 rounded"
-                  >src-tauri/target/release/bundle/</code>.
-                </p>
+                <div class="flex items-center gap-2">
+                  <span class="text-[var(--dash-text-secondary)] w-16"
+                  >Windows</span>
+                  <a
+                    href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[var(--dash-primary)] hover:underline font-mono"
+                  >.exe installer</a>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[var(--dash-text-secondary)] w-16"
+                  >Linux</span>
+                  <a
+                    href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[var(--dash-primary)] hover:underline font-mono"
+                  >.deb</a>
+                  <span class="text-[var(--dash-text-secondary)]">or</span>
+                  <a
+                    href="https://github.com/gitaarik/sjs-desktop/releases/latest"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[var(--dash-primary)] hover:underline font-mono"
+                  >.AppImage</a>
+                </div>
               </div>
-            {/if}
+              <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+                A compatible browser will be downloaded automatically on first
+                launch.
+              </p>
 
-            <!-- Source code link -->
-            <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
-              <a
-                href="https://github.com/gitaarik/sjs-desktop"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+              <!-- Manual install toggle -->
+              <button
+                type="button"
+                onclick={() => {
+                  showManualInstall = !showManualInstall;
+                }}
+                class="mt-2 flex items-center gap-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
               >
-                <FontAwesomeIcon icon={faGithub} class="w-3 h-3" />
-                <span>View on GitHub</span>
-              </a>
-            </p>
-          {:else}
-            <!-- Docker instructions -->
-            <p>
-              Run sjs-browser as a Docker container on a NAS (TrueNAS, Synology,
-              Unraid) or any server with Docker. The container auto-updates the
-              SJS code on its own — no Watchtower or platform-level
-              auto-update needed.
-            </p>
+                <FontAwesomeIcon
+                  icon={showManualInstall ? faChevronUp : faChevronDown}
+                  class="w-2.5 h-2.5"
+                />
+                <span>Manual install from source</span>
+              </button>
 
-            <div class="mt-3 space-y-3">
-              <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
-                  Docker Compose (recommended)
-                </p>
-                <p class="text-xs text-[var(--dash-text-secondary)] mb-2">
-                  Create a <code class="bg-[var(--dash-bg)] px-1 rounded"
-                  >docker-compose.yml</code> file:
-                </p>
+              {#if showManualInstall}
                 <div
-                  class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
+                  class="mt-2 bg-[var(--dash-bg)] rounded-lg p-3 text-xs text-[var(--dash-text-secondary)] space-y-2"
                 >
-                  <pre
-                    class="whitespace-pre"
-                  >services:
+                  <p>
+                    Requires <a
+                      href="https://nodejs.org/"
+                      target="_blank"
+                      rel="noopener"
+                      class="text-[var(--dash-primary)] hover:underline"
+                    >Node.js 20+</a> and <a
+                      href="https://www.rust-lang.org/tools/install"
+                      target="_blank"
+                      rel="noopener"
+                      class="text-[var(--dash-primary)] hover:underline"
+                    >Rust</a>. Clone the repo and build:
+                  </p>
+                  <div
+                    class="bg-[var(--dash-card)] rounded p-2 font-mono text-[var(--dash-text-secondary)] space-y-0.5"
+                  >
+                    <div>
+                      git clone https://github.com/gitaarik/sjs-desktop.git
+                    </div>
+                    <div>cd sjs-desktop</div>
+                    <div>npm install && npm run ui:install</div>
+                    <div>npm run tauri:build</div>
+                  </div>
+                  <p>
+                    The installer will be in <code
+                      class="bg-[var(--dash-card)] px-1 rounded"
+                    >src-tauri/target/release/bundle/</code>.
+                  </p>
+                </div>
+              {/if}
+
+              <!-- Source code link -->
+              <p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+                <a
+                  href="https://github.com/gitaarik/sjs-desktop"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                >
+                  <FontAwesomeIcon icon={faGithub} class="w-3 h-3" />
+                  <span>View on GitHub</span>
+                </a>
+              </p>
+            {:else}
+              <!-- Docker instructions -->
+              <p>
+                Run sjs-browser as a Docker container on a NAS (TrueNAS,
+                Synology, Unraid) or any server with Docker. The container
+                auto-updates the SJS code on its own — no Watchtower or
+                platform-level auto-update needed.
+              </p>
+
+              <div class="mt-3 space-y-3">
+                <div>
+                  <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                    Docker Compose (recommended)
+                  </p>
+                  <p class="text-xs text-[var(--dash-text-secondary)] mb-2">
+                    Create a <code class="bg-[var(--dash-bg)] px-1 rounded"
+                    >docker-compose.yml</code> file:
+                  </p>
+                  <div
+                    class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
+                  >
+                    <pre
+                      class="whitespace-pre"
+                    >services:
   sjs-browser:
     image: gitaarik036/sjs-browser:latest
     restart: unless-stopped
@@ -733,23 +768,23 @@
 
 volumes:
   chrome_data:</pre>
+                  </div>
+                  <p class="text-xs text-[var(--dash-text-secondary)] mt-2">
+                    Then run: <code class="bg-[var(--dash-bg)] px-1 rounded"
+                    >docker compose up -d</code>
+                  </p>
                 </div>
-                <p class="text-xs text-[var(--dash-text-secondary)] mt-2">
-                  Then run: <code class="bg-[var(--dash-bg)] px-1 rounded"
-                  >docker compose up -d</code>
-                </p>
-              </div>
 
-              <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
-                  Docker Run
-                </p>
-                <div
-                  class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
-                >
-                  <pre
-                    class="whitespace-pre"
-                  >docker run -d \
+                <div>
+                  <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                    Docker Run
+                  </p>
+                  <div
+                    class="bg-[var(--dash-bg)] rounded-lg p-3 text-xs font-mono text-[var(--dash-text-secondary)] overflow-x-auto"
+                  >
+                    <pre
+                      class="whitespace-pre"
+                    >docker run -d \
   --name sjs-browser \
   --restart unless-stopped \
   --shm-size 512m \
@@ -757,112 +792,113 @@ volumes:
   -e SJS_SERVER_URL="{sjsBrowserUrl}" \
   -e SJS_API_TOKEN="your-api-key-here" \
   gitaarik036/sjs-browser:latest</pre>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
-                  TrueNAS Scale
-                </p>
+                <div>
+                  <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                    TrueNAS Scale
+                  </p>
+                  <p class="text-xs text-[var(--dash-text-secondary)]">
+                    Use <strong>Custom App</strong> with image <code
+                      class="bg-[var(--dash-bg)] px-1 rounded"
+                    >gitaarik036/sjs-browser:latest</code>. Add environment
+                    variables <code class="bg-[var(--dash-bg)] px-1 rounded"
+                    >SJS_SERVER_URL</code> and <code
+                      class="bg-[var(--dash-bg)] px-1 rounded"
+                    >SJS_API_TOKEN</code>. Set shared memory to 512 MB.
+                  </p>
+                </div>
+
+                <div>
+                  <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
+                    Updates
+                  </p>
+                  <p class="text-xs text-[var(--dash-text-secondary)]">
+                    On every container restart and every six hours, sjs-browser
+                    fetches the latest signed release tarball from <a
+                      href="https://github.com/gitaarik/sjs-browser/releases"
+                      target="_blank"
+                      rel="noopener"
+                      class="underline"
+                    >GitHub</a> and verifies its signature against a public key
+                    baked into the image. To pin a specific version: set <code
+                      class="bg-[var(--dash-bg)] px-1 rounded"
+                    >SJS_BROWSER_CHANNEL=v0.5.27</code>. To opt out entirely:
+                    set it to <code class="bg-[var(--dash-bg)] px-1 rounded"
+                    >disabled</code>. Pull a new image (<code
+                      class="bg-[var(--dash-bg)] px-1 rounded"
+                    >docker compose pull</code>) every few months for Chrome and
+                    base-OS bumps.
+                  </p>
+                </div>
+
                 <p class="text-xs text-[var(--dash-text-secondary)]">
-                  Use <strong>Custom App</strong> with image <code
-                    class="bg-[var(--dash-bg)] px-1 rounded"
-                  >gitaarik036/sjs-browser:latest</code>. Add environment
-                  variables <code class="bg-[var(--dash-bg)] px-1 rounded"
-                  >SJS_SERVER_URL</code> and <code
-                    class="bg-[var(--dash-bg)] px-1 rounded"
-                  >SJS_API_TOKEN</code>. Set shared memory to 512 MB.
+                  You can view and control the browser directly from the
+                  dashboard during import — no extra ports needed.
                 </p>
               </div>
+            {/if}
+          </div>
+        </li>
 
-              <div>
-                <p class="text-xs font-medium text-[var(--dash-text)] mb-1">
-                  Updates
-                </p>
-                <p class="text-xs text-[var(--dash-text-secondary)]">
-                  On every container restart and every six hours, sjs-browser
-                  fetches the latest signed release tarball from <a
-                    href="https://github.com/gitaarik/sjs-browser/releases"
-                    target="_blank"
-                    rel="noopener"
-                    class="underline"
-                  >GitHub</a> and verifies its signature against a public key
-                  baked into the image. To pin a specific version: set <code
-                    class="bg-[var(--dash-bg)] px-1 rounded"
-                  >SJS_BROWSER_CHANNEL=v0.5.27</code>. To opt out entirely: set
-                  it to <code class="bg-[var(--dash-bg)] px-1 rounded"
-                  >disabled</code>. Pull a new image (<code
-                    class="bg-[var(--dash-bg)] px-1 rounded"
-                  >docker compose pull</code>) every few months for Chrome and
-                  base-OS bumps.
-                </p>
-              </div>
+        <!-- Step 2: Create device key -->
+        <li class="flex gap-3">
+          <span
+            class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+          >2</span>
+          <div>
+            <p class="text-[var(--dash-text)]">Create a device key below</p>
+            <p>
+              Each device needs its own key. The key name identifies the device.
+            </p>
+          </div>
+        </li>
 
-              <p class="text-xs text-[var(--dash-text-secondary)]">
-                You can view and control the browser directly from the dashboard
-                during import — no extra ports needed.
+        <!-- Step 3: Connect -->
+        <li class="flex gap-3">
+          <span
+            class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+          >3</span>
+          <div>
+            <p class="text-[var(--dash-text)]">Connect the device</p>
+            {#if installTab === "desktop"}
+              <p>
+                In the desktop app, select the <strong>{
+                  typeof window !== "undefined" &&
+                  (window.location.host.startsWith("app.")
+                    ? "Production"
+                    : window.location.host.startsWith("preview.")
+                    ? "Preview"
+                    : "Dev")
+                }</strong> server and enter your device key.
               </p>
-            </div>
-          {/if}
-        </div>
-      </li>
+            {:else}
+              <p>
+                Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs"
+                >your-api-key-here</code> in the config with your device key and
+                start the container.
+              </p>
+            {/if}
+          </div>
+        </li>
 
-      <!-- Step 2: Create device key -->
-      <li class="flex gap-3">
-        <span
-          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
-        >2</span>
-        <div>
-          <p class="text-[var(--dash-text)]">Create a device key below</p>
-          <p>
-            Each device needs its own key. The key name identifies the device.
-          </p>
-        </div>
-      </li>
-
-      <!-- Step 3: Connect -->
-      <li class="flex gap-3">
-        <span
-          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
-        >3</span>
-        <div>
-          <p class="text-[var(--dash-text)]">Connect the device</p>
-          {#if installTab === "desktop"}
+        <!-- Step 4: Start importing -->
+        <li class="flex gap-3">
+          <span
+            class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
+          >4</span>
+          <div>
+            <p class="text-[var(--dash-text)]">Start importing</p>
             <p>
-              In the desktop app, select the <strong>{
-                typeof window !== "undefined" &&
-                (window.location.host.startsWith("app.")
-                  ? "Production"
-                  : window.location.host.startsWith("preview.")
-                  ? "Preview"
-                  : "Dev")
-              }</strong> server and enter your device key.
+              Once connected (shown above), start an import from the Import
+              Tasks page. Select "My device" as the browser and choose which
+              device to use.
             </p>
-          {:else}
-            <p>
-              Replace <code class="bg-[var(--dash-bg)] px-1 rounded text-xs"
-              >your-api-key-here</code> in the config with your device key and
-              start the container.
-            </p>
-          {/if}
-        </div>
-      </li>
-
-      <!-- Step 4: Start importing -->
-      <li class="flex gap-3">
-        <span
-          class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)] flex items-center justify-center text-xs font-semibold"
-        >4</span>
-        <div>
-          <p class="text-[var(--dash-text)]">Start importing</p>
-          <p>
-            Once connected (shown above), start an import from the Import Tasks
-            page. Select "My device" as the browser and choose which device to
-            use.
-          </p>
-        </div>
-      </li>
-    </ol>
+          </div>
+        </li>
+      </ol>
+    {/if}
   </Card>
 
   <!-- Newly Created Key — connect wizard -->
