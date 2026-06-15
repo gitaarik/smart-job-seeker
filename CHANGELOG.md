@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.79] - 2026-06-15
+
+8 commits since v0.5.78.
+
+### Added
+- Device connection wizard with live status for new API keys
+- One-link invites for sharing device keys
+- Per-device and per-sharee scrape rate budgets with device tracking
+
+### Fixed
+- pdf-parse handling in Vite SSR builds
+
 ## [0.5.78] - 2026-06-13
 
 10 commits since v0.5.77.
