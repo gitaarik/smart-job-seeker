@@ -34,6 +34,7 @@
     getStatusDotColor,
     getStatusBgColor,
     getStatusColor,
+    getQuickStatusActions,
   } from "$lib/application-status";
   import StatusStepper from "./StatusStepper.svelte";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
@@ -68,6 +69,16 @@
   // Status widget
   let statusPickerOpen = $state(false);
   let statusSaving = $state(false);
+  let quickSaving = $state(false);
+  let quickActions = $derived(getQuickStatusActions(app.status, app.status_step));
+
+  const quickToneClass: Record<string, string> = {
+    advance:
+      "border-[var(--dash-primary)] text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/10",
+    positive: "border-green-400 text-green-600 hover:bg-green-50",
+    negative:
+      "border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]",
+  };
 
   function formatDate(date: Date | string | null): string {
     return fmtDate(date, { fallback: "" });
@@ -131,6 +142,88 @@
   <h2 class="text-2xl font-bold text-[var(--dash-text)]">
     {job?.title || "Untitled Position"}
   </h2>
+
+  <!-- Status Widget (top of page) -->
+  <Card padding="lg">
+    <div class="space-y-3">
+      <div class="flex items-center gap-2 mb-2">
+        <FontAwesomeIcon
+          icon={faClipboardList}
+          class="w-4 h-4 text-[var(--dash-text-secondary)]"
+        />
+        <h2
+          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
+        >
+          Status
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        onclick={() => statusPickerOpen = true}
+        class="flex w-full items-center gap-5 px-5 py-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
+      >
+        <div class="min-w-0 flex-1 space-y-1.5">
+          <p class="text-sm font-semibold uppercase tracking-wide {getStatusDotColor(app.status)}">
+            {getStatusLabel(app.status)}
+          </p>
+          {#if app.status_step}
+            <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
+          {/if}
+          {#if app.status_action}
+            {@const isWaiting = app.status_action.startsWith("Awaiting")}
+            {@const isScheduled = app.status_action === "Scheduled"}
+            <p class="text-sm font-medium flex items-center gap-1.5 {isWaiting ? 'text-[var(--dash-text-muted)]' : isScheduled ? 'text-[var(--dash-success)]' : 'text-[var(--dash-primary)]'}">
+              {#key app.status_action}
+                <FontAwesomeIcon icon={isWaiting ? faClock : isScheduled ? faCalendarCheck : faHandPointRight} class="w-3.5 h-3.5" />
+              {/key}
+              {app.status_action}
+              {#if isScheduled && app.status_action_date}
+                — {formatDate(app.status_action_date)}
+              {/if}
+            </p>
+          {/if}
+        </div>
+        <span class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] flex-shrink-0">
+          <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+          Edit
+        </span>
+      </button>
+
+      <!-- Quick update: one-tap transitions for the current phase -->
+      {#if quickActions.length > 0}
+        <div class="pt-1">
+          <p class="text-xs text-[var(--dash-text-muted)] mb-2">Quick update</p>
+          <div class="flex flex-wrap gap-2">
+            {#each quickActions as qa (qa.label)}
+              <form
+                method="POST"
+                action="?/updateStatus"
+                use:enhance={() => {
+                  quickSaving = true;
+                  return async ({ update }) => {
+                    await update();
+                    quickSaving = false;
+                  };
+                }}
+              >
+                <input type="hidden" name="status" value={qa.status} />
+                <input type="hidden" name="step" value={qa.step ?? ""} />
+                <input type="hidden" name="action" value={qa.action ?? ""} />
+                <button
+                  type="submit"
+                  disabled={quickSaving}
+                  class="px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors disabled:opacity-50 {quickToneClass[qa.tone]}"
+                >
+                  {qa.label}
+                </button>
+              </form>
+            {/each}
+          </div>
+        </div>
+      {/if}
+    </div>
+  </Card>
 
   <!-- Job Details -->
   <Card padding="lg">
@@ -233,56 +326,8 @@
     {/if}
   </Card>
 
-  <!-- Status + Application Details -->
-  <div class="flex flex-col lg:flex-row gap-6">
-  <!-- Status Widget -->
-  <Card padding="lg" class="flex-1 min-w-0">
-    <div class="space-y-3">
-      <div class="flex items-center gap-2 mb-2">
-        <FontAwesomeIcon
-          icon={faClipboardList}
-          class="w-4 h-4 text-[var(--dash-text-secondary)]"
-        />
-        <h2
-          class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide"
-        >
-          Status
-        </h2>
-      </div>
-
-      <button
-        type="button"
-        onclick={() => statusPickerOpen = true}
-        class="inline-flex items-center gap-5 px-5 py-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:border-[var(--dash-primary)] transition-colors text-left"
-      >
-        <div class="min-w-0 space-y-1.5">
-          <p class="text-sm font-semibold uppercase tracking-wide {getStatusDotColor(app.status)}">
-            {getStatusLabel(app.status)}
-          </p>
-          {#if app.status_step}
-            <p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
-          {/if}
-          {#if app.status_action}
-            {@const isWaiting = app.status_action.startsWith("Awaiting")}
-            {@const isScheduled = app.status_action === "Scheduled"}
-            <p class="text-sm font-medium flex items-center gap-1.5 {isWaiting ? 'text-[var(--dash-text-muted)]' : isScheduled ? 'text-[var(--dash-success)]' : 'text-[var(--dash-primary)]'}">
-              {#key app.status_action}
-                <FontAwesomeIcon icon={isWaiting ? faClock : isScheduled ? faCalendarCheck : faHandPointRight} class="w-3.5 h-3.5" />
-              {/key}
-              {app.status_action}
-              {#if isScheduled && app.status_action_date}
-                — {formatDate(app.status_action_date)}
-              {/if}
-            </p>
-          {/if}
-        </div>
-        <FontAwesomeIcon icon={faPencil} class="w-3 h-3 text-[var(--dash-text-muted)] flex-shrink-0" />
-      </button>
-    </div>
-  </Card>
-
   <!-- Application Details (Texts, Documents, Salary) -->
-  <Card padding="lg" class="flex-1 min-w-0">
+  <Card padding="lg">
     <div class="space-y-4">
       <div class="flex items-center gap-2 mb-4">
         <FontAwesomeIcon
@@ -400,7 +445,6 @@
       </div>
     </div>
   </Card>
-  </div>
 
   <!-- Notes -->
   <Card padding="lg">

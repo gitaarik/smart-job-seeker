@@ -173,6 +173,98 @@ export const defaultActionByStep: Record<string, string> = {
   "Counter-offer sent": "Awaiting response",
 };
 
+// --- Quick actions ---
+// One-tap status transitions surfaced directly on the application page, so users
+// can advance a pending application without opening the full status editor.
+
+export type QuickStatusAction = {
+  label: string;
+  status: string;
+  step: string | null;
+  action: string | null;
+  tone: "advance" | "positive" | "negative";
+};
+
+export function getQuickStatusActions(
+  status: string,
+  step: string | null,
+): QuickStatusAction[] {
+  const phase = getStepperPhase(status);
+  switch (phase) {
+    case "applying": {
+      const notApplied = !step || step === "Preparing";
+      return [
+        ...(notApplied
+          ? [{
+            label: "Mark as applied",
+            status: "applying",
+            step: "Applied through job platform",
+            action: "Awaiting response",
+            tone: "advance" as const,
+          }]
+          : []),
+        {
+          label: "Heard back",
+          status: "interviewing",
+          step: "Screening call",
+          action: "Need to schedule",
+          tone: "advance",
+        },
+        {
+          label: "Not selected",
+          status: "rejected",
+          step: null,
+          action: null,
+          tone: "negative",
+        },
+      ];
+    }
+    case "interviewing":
+      return [
+        {
+          label: "Got an offer",
+          status: "negotiating",
+          step: "Offer received",
+          action: "Respond",
+          tone: "positive",
+        },
+        {
+          label: "Not selected",
+          status: "rejected",
+          step: null,
+          action: null,
+          tone: "negative",
+        },
+      ];
+    case "negotiating":
+      return [
+        {
+          label: "Accepted",
+          status: "accepted",
+          step: null,
+          action: null,
+          tone: "positive",
+        },
+        {
+          label: "Discontinued",
+          status: "withdrawn",
+          step: null,
+          action: null,
+          tone: "negative",
+        },
+        {
+          label: "Not selected",
+          status: "rejected",
+          step: null,
+          action: null,
+          tone: "negative",
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
 // --- Status colors ---
 
 export function getStatusColor(status: string): string {
