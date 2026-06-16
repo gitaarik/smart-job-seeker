@@ -177,8 +177,16 @@
   <h3 class="font-medium text-[var(--dash-text)] mb-1">
     Upload Your CV/Resume
   </h3>
-  <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+  <p class="text-sm text-[var(--dash-text-secondary)] mb-1">
     Upload a resume, or import from a previous export
+  </p>
+  <p class="text-xs text-[var(--dash-text-muted)] mb-4">
+    New here? See <a
+      href="/guide/how-it-works"
+      target="_blank"
+      rel="noopener"
+      class="text-[var(--dash-primary)] hover:underline">how Smart Job Seeker works</a
+    >.
   </p>
 
   <form
