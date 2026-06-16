@@ -26,6 +26,7 @@ export interface DigestJob {
   skills_preferred: string[] | null;
   matched_skills: string[] | null;
   job_description: string | null;
+  job_platform_name: string | null;
 }
 
 export interface DigestOptions {
@@ -126,6 +127,8 @@ function buildDigestHtml(opts: DigestOptions): string {
               <div style="font-size: 13px; color: #6b7280; margin-bottom: 6px;">
                 ${job.company ? escapeHtml(job.company) : ""}${job.company && job.office_location ? " · " : ""}${job.office_location ? escapeHtml(job.office_location) : ""}
               </div>
+              <!-- Platform -->
+              ${job.job_platform_name ? `<div style="font-size: 12px; color: #9ca3af; margin-bottom: 6px;">via ${escapeHtml(job.job_platform_name)}</div>` : ""}
               <!-- Category pills -->
               ${pills.length > 0 ? `<div style="margin-bottom: 6px;">${pills.join("")}</div>` : ""}
               <!-- Salary -->
@@ -158,6 +161,11 @@ function buildDigestHtml(opts: DigestOptions): string {
             <div style="font-size: 12px; color: #4b5563; line-height: 1.5; white-space: pre-wrap;">${description}</div>
           </div>` : ""}
         </div>` : ""}
+
+        <!-- Footer CTA -->
+        <div style="padding: 12px 16px; border-top: 1px solid #f3f4f6; text-align: right;">
+          <a href="${opts.appUrl}/jobs/${job.id}" style="display: inline-block; padding: 8px 16px; background-color: #1e40af; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">View job details</a>
+        </div>
       </div>`;
       },
     )

@@ -2,7 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, gte, and, desc } from "drizzle-orm";
-import { profiles, users, job_matches, jobs } from "$lib/server/db/schema";
+import { profiles, users, job_matches, jobs, job_platforms } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, requireProfileAccess } from "$lib/server/utils/api-helpers";
 import { sendDigestEmail, type DigestJob } from "$lib/server/email/digest";
 
@@ -220,9 +220,11 @@ export const POST: RequestHandler = async ({ params, locals, url }) => {
       skills_required: jobs.skills_required,
       skills_preferred: jobs.skills_preferred,
       job_description: jobs.job_description,
+      job_platform_name: job_platforms.name,
     })
     .from(job_matches)
     .innerJoin(jobs, eq(job_matches.job_id, jobs.id))
+    .leftJoin(job_platforms, eq(jobs.job_platform_id, job_platforms.id))
     .where(
       and(
         eq(job_matches.profile_id, profileId),
@@ -251,6 +253,7 @@ export const POST: RequestHandler = async ({ params, locals, url }) => {
     skills_preferred: m.skills_preferred as string[] | null,
     matched_skills: m.matched_skills as string[] | null,
     job_description: m.job_description,
+    job_platform_name: m.job_platform_name,
   }));
 
   const appUrl = url.origin;
