@@ -38,6 +38,19 @@ export interface AppConfig {
   deepseekApiKey: string;
   cerebrasApiKey: string;
 
+  // Embeddings (semantic skill matching / RAG retrieval)
+  // Separate from the chat provider: the chat default (groq) has no embeddings
+  // API, so embeddings get their own provider/model. Reuses the chat API keys.
+  embeddingProvider: "openai" | "gemini";
+  embeddingModel: string;
+  embeddingDimensions: number;
+  // Master switch — when off (or no key for the provider), semantic features
+  // degrade gracefully to the existing exact matching.
+  embeddingEnabled: boolean;
+  // Cosine threshold above which two skills count as a semantic match.
+  // Needs empirical tuning per embedding model (see SEMANTIC-MATCHING plan).
+  embeddingSkillThreshold: number;
+
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
 
@@ -92,9 +105,23 @@ function getModelForProvider(provider: string): string {
 /**
  * Load and validate configuration
  */
+// Default embedding model + dimensions per provider.
+const EMBEDDING_DEFAULTS: Record<
+  string,
+  { model: string; dimensions: number }
+> = {
+  openai: { model: "text-embedding-3-small", dimensions: 1536 },
+  gemini: { model: "text-embedding-004", dimensions: 768 },
+};
+
 function loadConfig(): AppConfig {
   const nodeEnv = getEnv("NODE_ENV", "development");
   const llmProvider = getEnv("SJS_LLM_PROVIDER", "groq");
+  const embeddingProvider: "openai" | "gemini" =
+    getEnv("SJS_EMBEDDING_PROVIDER", "openai") === "gemini"
+      ? "gemini"
+      : "openai";
+  const embeddingDefaults = EMBEDDING_DEFAULTS[embeddingProvider];
 
   const config = {
     // Environment
@@ -130,6 +157,18 @@ function loadConfig(): AppConfig {
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
     deepseekApiKey: getEnv("SJS_LLM_API_KEY_DEEPSEEK", ""),
     cerebrasApiKey: getEnv("SJS_LLM_API_KEY_CEREBRAS", ""),
+
+    // Embeddings
+    embeddingProvider,
+    embeddingModel: getEnv("SJS_EMBEDDING_MODEL", embeddingDefaults.model),
+    embeddingDimensions: parseInt(
+      getEnv("SJS_EMBEDDING_DIMENSIONS", String(embeddingDefaults.dimensions)),
+      10,
+    ),
+    embeddingEnabled: getEnv("SJS_EMBEDDING_ENABLED", "false") === "true",
+    embeddingSkillThreshold: parseFloat(
+      getEnv("SJS_EMBEDDING_SKILL_THRESHOLD", "0.55"),
+    ),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(

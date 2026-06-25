@@ -5,6 +5,7 @@
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { tech_skills, tech_skill_categories } from "$lib/server/db/schema";
+import { expandProfileSkills } from "./skill-embeddings";
 
 /**
  * Extract tech skills from a profile
@@ -21,6 +22,20 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
   return rows
     .map((s) => s.name)
     .filter((name): name is string => !!name);
+}
+
+/**
+ * Profile skills augmented with semantically-related vocabulary terms via
+ * embeddings (so "React" also matches jobs requiring "frontend"). Used by the
+ * matcher/eligibility/count paths so semantic recall is consistent everywhere.
+ *
+ * Degrades to plain getProfileSkills() when embeddings are unconfigured
+ * (SJS_EMBEDDING_ENABLED) — safe to call unconditionally.
+ */
+export async function getExpandedProfileSkills(
+  profileId: number,
+): Promise<string[]> {
+  return expandProfileSkills(await getProfileSkills(profileId));
 }
 
 /**

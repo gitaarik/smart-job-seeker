@@ -9,7 +9,7 @@
 import type { SQL } from "drizzle-orm";
 import { dbDirect as db, queryRaw, sql, sqlJoin } from "$lib/server/db";
 import { buildEligibilityFilter } from "$lib/server/job/eligibility";
-import { getProfileSkills } from "$lib/server/job/match-utils";
+import { getExpandedProfileSkills } from "$lib/server/job/match-utils";
 
 export interface MatchCounts {
   totalJobs: number;
@@ -107,7 +107,7 @@ export async function getEligibleUnmatchedCount(
 ): Promise<number> {
   const workLocations = matchConfig?.work_location as string[] | null;
   const jobTypes = matchConfig?.job_types as string[] | null;
-  const profileSkills = await getProfileSkills(profileId);
+  const profileSkills = await getExpandedProfileSkills(profileId);
 
   if (!workLocations?.length || !jobTypes?.length || profileSkills.length === 0) {
     return 0;

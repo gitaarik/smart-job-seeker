@@ -654,6 +654,22 @@ export const fx_rates = pgTable("fx_rates", {
   updated_at: timestamp({ withTimezone: true, mode: "date" }).notNull(),
 });
 
+// Cached embeddings for the bounded skill vocabulary (semantic skill matching).
+// Keyed by the normalized skill string (output of normalizeSkill) so casing /
+// separator variants share one row. Vector stored as jsonb (number[]) — the
+// vocab is small enough to load into memory and cosine-compare in JS, so no
+// pgvector dependency here. `model` lets us invalidate when the embedding model
+// changes (different models produce incomparable vectors).
+export const skill_embeddings = pgTable("skill_embeddings", {
+  skill: varchar({ length: 255 }).primaryKey().notNull(),
+  label: varchar({ length: 255 }).notNull(),
+  embedding: jsonb().notNull(),
+  model: varchar({ length: 100 }).notNull(),
+  created_at: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+});
+
 export const education = pgTable("education", {
   id: serial().primaryKey().notNull(),
   status: varchar({ length: 255 }).default("draft").notNull(),

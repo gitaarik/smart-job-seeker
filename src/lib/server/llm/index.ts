@@ -30,6 +30,13 @@ export {
 
 export { llmCache } from "./cache.js";
 
+export {
+  cosineSimilarity,
+  embed,
+  embedBatch,
+  isEmbeddingConfigured,
+} from "./embeddings.js";
+
 // Re-export zod so worker code in `cloud/` shares the same module identity
 // as langchain.ts when building structured-output schemas. Importing zod
 // directly from `cloud/` would resolve to a different node_modules tree,
