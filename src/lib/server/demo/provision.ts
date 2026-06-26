@@ -12,9 +12,9 @@ import { createHmac } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { dbDirect as db } from "$lib/server/db";
 import {
-  type DemoLinks,
   demo_link_devices,
   demo_links,
+  type DemoLinks,
   profiles,
   subscriptions,
   users,
@@ -121,24 +121,42 @@ async function mintDemoUser(link: DemoLinks): Promise<DemoCredentials> {
   return { userId, email, password };
 }
 
-/** Clone the template profile (+ its search tasks) into the demo user. */
-async function cloneTemplateInto(userId: string): Promise<void> {
-  const templateProfileId = await getTemplateProfileId();
+/**
+ * Clone a profile (+ its search tasks / match config / salary) into a target
+ * user, same-DB. Reused by demo provisioning (template → demo user) and by the
+ * seed script (an existing profile → the template account). Pass
+ * `overwriteProfileId` to re-key an existing profile in place (idempotent seed).
+ * Returns the new/updated profile id.
+ */
+export async function cloneProfileInto(
+  sourceProfileId: number,
+  targetUserId: string,
+  opts: { overwriteProfileId?: number } = {},
+): Promise<number> {
+  const { data } = await buildProfileExport(sourceProfileId);
+  const { profileId } = await importExportData(data, targetUserId, opts);
 
-  const { data } = await buildProfileExport(templateProfileId);
-  const { profileId } = await importExportData(data, userId);
-
-  const settings = await buildSettingsExport(templateProfileId);
-  await importSettings(profileId, userId, settings, {
+  const settings = await buildSettingsExport(sourceProfileId);
+  await importSettings(profileId, targetUserId, settings, {
     replaceExistingTasks: true,
     applyMatchConfig: true,
     applyEmailDigest: false, // demo users shouldn't get scheduled digest emails
     applySalary: true,
   });
+  return profileId;
+}
+
+/** Clone the template profile (+ its search tasks) into the demo user. */
+async function cloneTemplateInto(userId: string): Promise<void> {
+  const templateProfileId = await getTemplateProfileId();
+  await cloneProfileInto(templateProfileId, userId);
 }
 
 /** Grant the demo user access to every device on the link. */
-async function grantLinkDevices(link: DemoLinks, userId: string): Promise<void> {
+async function grantLinkDevices(
+  link: DemoLinks,
+  userId: string,
+): Promise<void> {
   const devices = await db.query.demo_link_devices.findMany({
     where: eq(demo_link_devices.demo_link_id, link.id),
     columns: { api_key_id: true },
