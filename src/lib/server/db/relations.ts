@@ -388,7 +388,7 @@ export const profile_versionsRelations = relations(profile_versions, ({one, many
 	profile_version_extensions_extended_id: many(profile_version_extensions, {
 		relationName: "profile_version_extensions_extended_id_profile_versions_id"
 	}),
-	profile_version_extensions_extender_id: many(profile_version_extensions, {
+	extension_links: many(profile_version_extensions, {
 		relationName: "profile_version_extensions_extender_id_profile_versions_id"
 	}),
 	profiles_public_cv_version_id: many(profiles, {
@@ -536,7 +536,7 @@ export const cheat_sheetsRelations = relations(cheat_sheets, ({one}) => ({
 
 
 export const profile_version_extensionsRelations = relations(profile_version_extensions, ({one}) => ({
-	profile_version_extended_id: one(profile_versions, {
+	extended: one(profile_versions, {
 		fields: [profile_version_extensions.extended_id],
 		references: [profile_versions.id],
 		relationName: "profile_version_extensions_extended_id_profile_versions_id"

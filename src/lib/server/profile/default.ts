@@ -50,7 +50,7 @@ const PROFILE_INCLUDE = {
       toggles: true,
     },
     with: {
-      profile_version_extensions_extender_id: true,
+      extension_links: true,
     },
     orderBy: (t: any, { asc }: any) => asc(t.sort),
     where: (t: any, { eq }: any) => eq(t.status, "published"),

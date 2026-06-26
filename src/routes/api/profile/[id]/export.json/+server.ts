@@ -70,10 +70,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           toggles: true,
         },
         with: {
-          profile_version_extensions_extender_id: {
+          extension_links: {
             columns: {},
             with: {
-              profile_version_extended_id: {
+              extended: {
                 columns: {
                   slug: true,
                 },
@@ -278,9 +278,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         slug: pv.slug || undefined,
         name: pv.name || undefined,
         toggles: pv.toggles,
-        extends_from: pv.profile_version_extensions_extender_id
+        extends_from: pv.extension_links
           ?.[0]
-          ?.profile_version_extended_id
+          ?.extended
           ?.slug,
       })),
       highlights: baseProfile.highlights,

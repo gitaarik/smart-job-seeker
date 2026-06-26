@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const version = await db.query.profile_versions.findFirst({
     where: and(eq(profile_versions.id, id), eq(profile_versions.profile_id, layoutData.selectedProfile.id)),
     with: {
-      profile_version_extensions_extender_id:
+      extension_links:
         {
           columns: {
             extended_id: true,
@@ -37,7 +37,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   const {
-    profile_version_extensions_extender_id: exts,
+    extension_links: exts,
     ...v
   } = version;
 

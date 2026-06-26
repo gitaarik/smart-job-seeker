@@ -199,9 +199,9 @@ export async function buildProfileJsonExport(
       profile_versions: {
         columns: { status: true, sort: true, slug: true, name: true, toggles: true },
         with: {
-          profile_version_extensions_extender_id: {
+          extension_links: {
             with: {
-              profile_version_extended_id: { columns: { slug: true } },
+              extended: { columns: { slug: true } },
             },
           },
         },
@@ -332,9 +332,9 @@ export async function buildProfileJsonExport(
             name: pv.name || undefined,
             toggles: pv.toggles,
             extends_from: pv
-              .profile_version_extensions_extender_id
+              .extension_links
               ?.[0]
-              ?.profile_version_extended_id
+              ?.extended
               ?.slug,
           }),
         ),

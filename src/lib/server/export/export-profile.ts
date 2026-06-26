@@ -30,9 +30,9 @@ export async function buildProfileExport(
           toggles: true,
         },
         with: {
-          profile_version_extensions_extender_id: {
+          extension_links: {
             with: {
-              profile_version_extended_id: {
+              extended: {
                 columns: { slug: true },
               },
             },
@@ -310,8 +310,8 @@ export async function buildProfileExport(
         toggles: pv.toggles,
         extends_from:
           pv
-            .profile_version_extensions_extender_id?.[0]
-            ?.profile_version_extended_id
+            .extension_links?.[0]
+            ?.extended
             ?.slug || null,
       })),
 

@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     db.query.profile_versions.findMany({
       where: eq(profile_versions.profile_id, layoutData.selectedProfile.id),
       with: {
-        profile_version_extensions_extender_id:
+        extension_links:
           {
             columns: {
               extended_id: true,
@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const publicResumeVersionId = profile?.public_resume_version_id ?? null;
   const publicCvVersionId = profile?.public_cv_version_id ?? null;
 
-  const mapped = versions.map(({ profile_version_extensions_extender_id: exts, ...v }) => {
+  const mapped = versions.map(({ extension_links: exts, ...v }) => {
     const hasResumePdf = profileExports.some(
       (e) => e.export_type === "resume" && e.description?.includes(`(${v.slug})`)
     );

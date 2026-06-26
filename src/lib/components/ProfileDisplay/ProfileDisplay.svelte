@@ -89,7 +89,7 @@
       // Drizzle relation rows from `profile_version_extensions` keyed on
       // extender_id. Each junction row has the extended_id (the parent
       // version this version extends).
-      profile_version_extensions_extender_id: Array<{
+      extension_links: Array<{
         id: number;
         extended_id: number | null;
         extender_id: number | null;
@@ -127,11 +127,11 @@
       if (
         versionObj &&
         versionObj
-          .profile_version_extensions_extender_id
+          .extension_links
       ) {
         for (
           const junctionObj of versionObj
-            .profile_version_extensions_extender_id
+            .extension_links
         ) {
           if (junctionObj.extended_id == null) continue;
           const extObj = getVersion(junctionObj.extended_id);
