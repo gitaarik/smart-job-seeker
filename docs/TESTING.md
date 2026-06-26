@@ -31,63 +31,93 @@ npm run test:ui
 
 ## Test Structure
 
-Tests are organized in `__tests__` directories alongside the code they test:
+Tests live next to the code they cover — usually in `__tests__` directories,
+and sometimes as colocated `*.test.ts` / `*.svelte.test.ts` files:
 
 ```
 src/
-  lib/server/
-    ai-chat/
-      __tests__/                   # AI chat tests
-    auth/
-      __tests__/                   # Auth tests
-    job/
-      __tests__/                   # Job matching tests
-    profile/
-      __tests__/                   # Profile tests
-    queue/
-      __tests__/                   # Queue tests
-    schemas/
-      __tests__/                   # Schema tests
-    __tests__/                     # General server tests
+  lib/
+    server/
+      __tests__/                     # AI chat, HTML processing, LLM, profile export, device/credential
+      ai-chat/__tests__/             # prompt interpolation utils
+      auth/__tests__/                # API keys, auth guards, token gen/validation
+      browser/__tests__/             # geo utilities
+      email/__tests__/               # verification parser/relay
+      job/__tests__/                 # matching, URL normalization, validation, skill embeddings
+      llm/__tests__/                 # embeddings
+      profile/__tests__/             # access control, import
+      queue/__tests__/               # scraper / rescrape queues
+      schemas/__tests__/             # AI prompt schemas
+      utils/__tests__/               # slug generator
+    import-tasks/readiness.test.ts   # colocated unit test
+    salary/conversion.test.ts        # colocated unit test
+    monitoring/__tests__/            # Sentry filters
+    tools/__tests__/                 # date utilities
   routes/api/
-    webhook/__tests__/             # Webhook endpoint tests
-    education/__tests__/           # Education API tests
+    education/[id]/__tests__/                  # education API
+    job-preferences/__tests__/                 # job-preferences API
+    platforms/[id]/credentials/__tests__/      # platform credentials API
+    interview-stories/__tests__/               # interview-stories API
+    profile/[id]/__tests__/                    # profile API
     ...
 ```
 
 ## Test Coverage Areas
 
-The test suite covers (~508 tests across 37 files):
+The test suite covers (over 580 tests across 45 files):
 
 1. **AI Chat** - Prompt generation, response generation, follow-ups, context
    building, variable interpolation
 2. **Authentication** - Token generation/validation, API key auth, auth guards
-3. **Job Processing** - Matching, normalization, validation
+3. **Job Processing** - Matching, URL normalization, validation, skill embeddings
 4. **Profile** - Access control, import, export
 5. **Queue** - Scraper queues, rescrape operations
-6. **Webhooks** - Profile export handler, signature verification
-7. **HTML Processing** - Extraction, stripping
-8. **Browser** - Geo-utilities
-9. **API Endpoints** - Education, job preferences, platforms, interview stories
+6. **HTML Processing** - Extraction, stripping
+7. **Browser** - Geo-utilities
+8. **Email** - Verification parsing/relay
+9. **LLM** - Chat completion, embeddings
+10. **API Endpoints** - Education, job preferences, platforms, interview
+    stories, profile
 
 ## Mocking Strategy
 
 ### Database Mocking
 
-Tests mock the database client using Vitest's `vi.mock()`:
+Tests mock the Drizzle client (`$lib/server/db`) using Vitest's `vi.mock()`.
+For reads, mock the relational query API (`db.query.<table>.findFirst` /
+`findMany`):
 
 ```typescript
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   db: {
-    profiles: {
-      findUnique: vi.fn(),
-    },
-    collected_data: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
+    query: {
+      ai_chats: {
+        findFirst: vi.fn(),
+      },
+      collected_data: {
+        findFirst: vi.fn(),
+      },
     },
   },
+}));
+```
+
+For builder-style queries (`select`/`insert`/`update`/`delete`), mock the
+fluent chain so each link returns the next and the leaf resolves the rows.
+Tests that touch `db/schema` and `drizzle-orm` helpers (e.g. `eq`) usually
+mock those too:
+
+```typescript
+const mockUpdateWhere = vi.fn().mockResolvedValue({});
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
+
+vi.mock("$lib/server/db", () => ({
+  db: { update: (...args: any[]) => mockUpdateFn(...args) },
+}));
+
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: any, val: any) => val),
 }));
 ```
 
@@ -100,33 +130,43 @@ This allows tests to:
 
 ### LLM Mocking
 
-AI tests mock the LangChain integration rather than individual provider SDKs.
-The LLM layer at `src/lib/server/llm/` is mocked to return controlled
-responses:
+The LLM layer at `src/lib/server/llm/` is a LangChain wrapper. Its public
+entry points are `generateChatCompletion` / `generateChatCompletionTracked`
+(see `src/lib/server/llm/index.ts`). AI tests mock the underlying LangChain
+provider SDK rather than these wrappers, so the real completion/retry/cache
+code still runs against a fake model. The provider's `invoke` is hoisted and
+returns a LangChain `AIMessage`:
 
 ```typescript
-vi.mock("$lib/server/llm", () => ({
-  generateLLMResponse: vi.fn().mockResolvedValue({
-    content: "Mocked AI response content",
-    usage: {
-      prompt_tokens: 100,
-      completion_tokens: 50,
-      total_tokens: 150,
-    },
-  }),
+const { mockInvoke } = vi.hoisted(() => ({ mockInvoke: vi.fn() }));
+
+vi.mock("@langchain/groq", () => ({
+  ChatGroq: class ChatGroq {
+    constructor(config: any) {}
+    async invoke(messages: any) {
+      return mockInvoke(messages);
+    }
+  },
 }));
+
+// in a test:
+import { AIMessage } from "@langchain/core/messages";
+mockInvoke.mockResolvedValueOnce(new AIMessage("Mocked AI response content"));
 ```
+
+Alternatively, you can stub a wrapper such as `getInterpolatedPrompts` (from
+`$lib/server/ai-chat/utils`) to control the prompts fed into the LLM call.
 
 ### Importing Mocked Modules
 
 After mocking, import the actual module to get the mocked version:
 
 ```typescript
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 
 // db is now the mocked version
 const mockDb = db as any;
-mockDb.profiles.findUnique.mockResolvedValueOnce({ id: 1 });
+mockDb.query.profiles.findFirst.mockResolvedValueOnce({ id: 1 });
 ```
 
 ## Writing New Tests
@@ -178,7 +218,7 @@ npm run test -- profile-export.test.ts
 ### Run tests matching a pattern
 
 ```bash
-npm run test -- --grep "signature verification"
+npm run test -- -t "interpolate"          # or --testNamePattern "interpolate"
 ```
 
 ### Run with detailed output
@@ -199,9 +239,10 @@ AI features use a multi-layered testing approach:
 
 1. **Unit Tests** - Individual utility functions (context building, variable
    interpolation, prompt generation) in `src/lib/server/ai-chat/__tests__/`
-2. **Integration Tests** - Complete AI workflows (generation + database updates)
-3. **API Tests** - End-to-end API endpoint testing at
-   `src/routes/api/ai/__tests__/`
+   and `src/lib/server/__tests__/ai-chat-utils.test.ts`
+2. **Integration Tests** - Complete AI workflows (generation + database
+   updates) in `src/lib/server/__tests__/` (e.g.
+   `ai-chat-response-generate.test.ts`, the `ai-chat-*-followup.test.ts` files)
 
 ### Running AI Tests Only
 
@@ -231,11 +272,13 @@ npm run test -- ai-chat-response-generate.test.ts
 **Testing Context Interpolation:**
 
 ```typescript
+import { interpolatePrompt } from "$lib/server/ai-chat/utils";
+
 it("should interpolate profile data into template", () => {
   const template = "Hello ${name}, your email is ${email}";
-  const context = { name: "John", email: "john@example.com" };
+  const variables = { name: "John", email: "john@example.com" };
 
-  const result = interpolateVariables(template, context);
+  const result = interpolatePrompt(template, variables);
 
   expect(result).toBe("Hello John, your email is john@example.com");
 });
@@ -245,8 +288,12 @@ it("should interpolate profile data into template", () => {
 
 ```typescript
 it("should handle LLM rate limit error", async () => {
-  mockLLM.generateLLMResponse.mockRejectedValueOnce(
-    new LLMRateLimitError("Rate limit exceeded"),
+  (getInterpolatedPrompts as any).mockResolvedValueOnce({
+    systemPrompt: "You are helpful",
+    userPrompt: "Tell me a joke",
+  });
+  mockInvoke.mockRejectedValueOnce(
+    new Error("Groq API error: Rate limit exceeded"),
   );
 
   const result = await generateAiChatResponse(1);

@@ -63,14 +63,15 @@ npm run docker:cli               # Access app container shell
 npm run docker:db:cli            # Access PostgreSQL CLI
 
 # Database operations
-npx drizzle-kit push             # Push schema changes to DB
-npm run docker:db:migrate        # Run database migrations
+npx drizzle-kit push             # Push schema changes to DB (dev)
+npm run docker:db:migrate:new    # Generate a migration file
+npm run docker:db:migrate:deploy # Apply migration files
 npm run docker:db:backup         # Backup database
 npm run docker:db:restore        # Restore database
 
 # Profile export/import
 npm run docker:export-profile-json
-npm run docker:export-profile-schema
+npm run docker:export-collected-data
 npm run docker:export-profiles-pdf
 
 # Code quality
@@ -119,11 +120,10 @@ npm run test:ui                 # Test UI dashboard
 smart-job-seeker/
 ├── src/
 │   ├── routes/                    # SvelteKit pages and API routes
-│   │   ├── dashboard/             # Dashboard UI (profile, jobs, applications)
+│   │   ├── (app)/                 # Authenticated app UI (profile, jobs, applications)
+│   │   ├── (auth)/                # Auth pages (login, signup)
 │   │   ├── p/[slug]/              # Public profile pages
 │   │   │   └── portfolio/         # Portfolio website
-│   │   ├── login/                 # Auth pages
-│   │   ├── signup/
 │   │   └── api/                   # API endpoints
 │   │       ├── ai/                # AI generation (letters, questions, chats)
 │   │       ├── profile/           # Profile endpoints
@@ -136,7 +136,7 @@ smart-job-seeker/
 │   │   │   ├── llm/               # LangChain integration + cache
 │   │   │   ├── job/               # Job matching and processing
 │   │   │   ├── profile/           # Profile management
-│   │   │   ├── queue/             # Redis job queues
+│   │   │   ├── queue/             # Background job queues (Redis-backed; consumed by the worker)
 │   │   │   ├── schemas/           # Zod AI prompt schemas
 │   │   │   └── config.ts          # Centralized configuration
 │   │   ├── components/            # Reusable Svelte components

@@ -160,8 +160,8 @@ detailed!
 Generate professional letters tailored to each job application. The system
 supports four letter types, each optimized for specific scenarios.
 
-AI letter generation is available through the dashboard at `/dashboard/applications/letters/`
-or via the API endpoints at `/api/ai/`.
+AI letter generation is available in the app on an application's texts page
+(`/applications/<id>/texts/`) or via the API endpoints at `/api/ai/`.
 
 ### Cover Letters
 
@@ -351,7 +351,7 @@ Variables use the `${variableName}` syntax and are replaced with actual data:
 **Context-Specific Variables:**
 
 - `${jobDescription}` - Full job description (for application letters)
-- `${vacancyDetails}` - Object with position, company, source, etc.
+- `${jobDetails}` - Object with position, company, source, etc.
 - `${question}` - The application question text
 - `${previousResponse}` - Previous AI response (for follow-ups)
 - `${followupRequest}` - Your refinement request (for follow-ups)

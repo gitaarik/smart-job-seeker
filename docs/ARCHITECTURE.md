@@ -6,6 +6,12 @@ Smart Job Seeker is a SvelteKit application that helps users manage their job
 search process. It uses Drizzle ORM for data management and LangChain with
 multiple LLM providers for generating personalized content.
 
+This repository is the open-source web app. It *orchestrates* job scraping —
+managing search tasks, enqueueing runs, and ingesting results — but the actual
+scraping worker (browser-driven extraction) runs as a separate component and is
+not part of this repo. The modules below (`browser/`, `scraper/`, `html/`) are
+the integration/helper glue, not the scraping engine itself.
+
 ## Technology Stack
 
 ### Frontend
@@ -45,7 +51,7 @@ smart-job-seeker/
 │   │   ├── server/                # Server-side code
 │   │   │   ├── ai-chat/           # AI prompt/response generation
 │   │   │   ├── auth/              # Better Auth + API key auth
-│   │   │   ├── browser/           # Browser automation
+│   │   │   ├── browser/           # Browser helpers (geo / formatting utils)
 │   │   │   ├── email/             # Email service
 │   │   │   ├── export/            # Profile data export/import
 │   │   │   ├── html/              # HTML parsing/extraction
@@ -77,15 +83,14 @@ smart-job-seeker/
 │   │   │   ├── profile/           # Profile endpoints
 │   │   │   ├── work-experience/   # Work experience CRUD
 │   │   │   └── ...                # Other API routes
-│   │   ├── dashboard/             # Dashboard UI
+│   │   ├── (app)/                 # Authenticated app UI
 │   │   │   ├── applications/      # Applications, letters, salary
 │   │   │   ├── jobs/              # Browse, matches, saved, settings
 │   │   │   ├── profile/           # Profile editing (experience, education, skills, etc.)
-│   │   │   └── ...                # Other dashboard pages
+│   │   │   └── ...                # Other app pages
+│   │   ├── (auth)/                # Auth pages (login, signup)
 │   │   ├── p/[slug]/              # Public profile pages
 │   │   │   └── portfolio/         # Portfolio website
-│   │   ├── login/                 # Auth pages
-│   │   ├── signup/
 │   │   └── ...
 │   └── app.css                    # Global styles
 ├── drizzle/                       # Drizzle migrations
@@ -208,8 +213,7 @@ All configuration is centralized in `src/lib/server/config.ts`. Key settings:
 
 ## Testing Strategy
 
-- **508 tests** across 37 test files
-- **Vitest** for unit and integration testing
+- A comprehensive **Vitest** suite for unit and integration testing
 - Tests colocated in `__tests__/` directories alongside source code
 - External services mocked (LLM providers, database)
 
