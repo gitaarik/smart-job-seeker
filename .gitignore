@@ -34,8 +34,11 @@ vite.config.ts.timestamp-*
 # Chrome profiles for job scraping
 chrome-profiles/
 
-# Full database dumps (large, use db-dumps/smart.sql for git)
-db-dumps/full.sql
+# Database dumps — may contain REAL user data (PII, hashes, credentials).
+# NEVER commit these; they were purged from history once already.
+# Ship a synthetic seed for public dev instead of a real dump.
+db-dumps/*
+!db-dumps/.gitkeep
 
 # User uploads (keep .gitkeep only)
 uploads/*
