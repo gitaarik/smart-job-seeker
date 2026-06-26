@@ -16,13 +16,16 @@ Smart Job Seeker is built from several components. This repo is the open one:
 | Component | Open? | What it does |
 | --- | --- | --- |
 | **Web app** (this repository) | ✅ open source (GPLv3) | SvelteKit app + PostgreSQL: profiles & portfolio, job and application management, AI writing features, profile↔job **matching**, and the dashboard that schedules and queues scraping runs. |
-| **Browser / device client** | ✅ open source ([`sjs-browser`](https://github.com/gitaarik/sjs-browser)) | Runs Chrome on a device and exposes it over a tunnel — CDP bridge, stealth, live view. A separate public repo. |
-| **Scraping / extraction worker** | 🔒 closed source | The component that actually drives the browser to scrape job sites and performs the **LLM-based job extraction**. Runs as a worker that consumes jobs from the queue this app produces. |
+| **Device client** | ✅ open source — [`sjs-browser`](https://github.com/gitaarik/sjs-browser), [`sjs-desktop`](https://github.com/gitaarik/sjs-desktop) | Runs a real browser on **your own device** and connects to the SJS servers to receive navigation instructions, which it executes locally against the job sites (CDP bridge, stealth, live view). `sjs-browser` is a headless/Docker build; `sjs-desktop` is a Tauri desktop app. Both are separate public repos. |
+| **Scraping / extraction worker** | 🔒 closed source | Runs on the SJS servers. Decides how to navigate each job site, streams those instructions to your device client, and performs the **LLM-based job extraction** on the pages it returns. |
 
 In other words: this app *orchestrates* scraping — it manages search tasks,
 enqueues runs, ingests results, and matches them against profiles. The browser
-that visits job sites is open source (`sjs-browser`), but the worker that drives
-it and extracts structured job data with an LLM is the closed-source piece and is
+that actually visits job sites runs on **your own device** via the open-source
+[`sjs-browser`](https://github.com/gitaarik/sjs-browser) /
+[`sjs-desktop`](https://github.com/gitaarik/sjs-desktop) clients; those clients
+connect to the SJS servers, where the closed-source worker decides how to
+navigate each site and extracts the job data with an LLM. That closed worker is
 **not** included here.
 
 What that means if you run this repo on its own:
@@ -108,10 +111,11 @@ automatically. No sample dataset is bundled with this repository.
 - `src/lib/server/profile/` — profile export / `collected_data` snapshotting
 - `src/routes/` — SvelteKit app and API routes
 
-> The browser automation lives in the separate open-source
-> [`sjs-browser`](https://github.com/gitaarik/sjs-browser) repo; the worker that
-> drives it and extracts structured job data with an LLM is closed-source. Neither
-> is in this repository.
+> The browser that visits job sites runs on your own device via the open-source
+> [`sjs-browser`](https://github.com/gitaarik/sjs-browser) /
+> [`sjs-desktop`](https://github.com/gitaarik/sjs-desktop) clients; the
+> closed-source worker on the SJS servers tells it how to navigate and extracts
+> the job data with an LLM. Neither is in this repository.
 
 ## Development
 
