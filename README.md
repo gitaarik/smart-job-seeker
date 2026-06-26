@@ -13,15 +13,17 @@ the actual job-scraping engine is a separate, closed-source component (see
 
 Smart Job Seeker is built from several components. This repo is the open one:
 
-| Component | This repo? | What it does |
+| Component | Open? | What it does |
 | --- | --- | --- |
 | **Web app** (this repository) | ✅ open source (GPLv3) | SvelteKit app + PostgreSQL: profiles & portfolio, job and application management, AI writing features, profile↔job **matching**, and the dashboard that schedules and queues scraping runs. |
-| **Scraping engine** | 🔒 closed source | The component that performs the actual scraping: browser automation (Patchright/CDP), stealth, and LLM-based job extraction. Runs as a worker that consumes jobs from the queue this app produces. |
+| **Browser / device client** | ✅ open source ([`sjs-browser`](https://github.com/gitaarik/sjs-browser)) | Runs Chrome on a device and exposes it over a tunnel — CDP bridge, stealth, live view. A separate public repo. |
+| **Scraping / extraction worker** | 🔒 closed source | The component that actually drives the browser to scrape job sites and performs the **LLM-based job extraction**. Runs as a worker that consumes jobs from the queue this app produces. |
 
-In other words: this app *orchestrates* scraping (it manages search tasks,
-enqueues runs, ingests results, and matches them against profiles), but the
-browser-automation worker that visits job sites and extracts listings lives in
-the closed-source component and is **not** included here.
+In other words: this app *orchestrates* scraping — it manages search tasks,
+enqueues runs, ingests results, and matches them against profiles. The browser
+that visits job sites is open source (`sjs-browser`), but the worker that drives
+it and extracts structured job data with an LLM is the closed-source piece and is
+**not** included here.
 
 What that means if you run this repo on its own:
 
@@ -106,8 +108,10 @@ automatically. No sample dataset is bundled with this repository.
 - `src/lib/server/profile/` — profile export / `collected_data` snapshotting
 - `src/routes/` — SvelteKit app and API routes
 
-> The browser-automation and LLM-extraction code that actually scrapes job sites
-> is part of the closed-source scraping engine and is not in this repository.
+> The browser automation lives in the separate open-source
+> [`sjs-browser`](https://github.com/gitaarik/sjs-browser) repo; the worker that
+> drives it and extracts structured job data with an LLM is closed-source. Neither
+> is in this repository.
 
 ## Development
 
