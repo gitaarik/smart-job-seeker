@@ -1,221 +1,148 @@
 # Smart Job Seeker
 
-An intelligent job search and application management platform that helps you
-create a detailed profile, discover matching opportunities, and optimize your
-entire job application process with AI assistance.
+An intelligent job-search and application-management platform: create a detailed
+profile once, automatically match it against job listings, and manage your entire
+application process with AI assistance.
 
-**Vision:** Create your profile once, automatically match it against scraped job
-listings from various platforms, and intelligently manage your entire job search
-journey with AI-powered insights.
+This repository is the **open-source web application** — the SvelteKit app,
+database, matching engine, and AI features. It is one part of a larger product;
+the actual job-scraping engine is a separate, closed-source component (see
+[Project components](#project-components) below).
 
-## Key Features
+## Project components
 
-### Profile & Portfolio
+Smart Job Seeker is built from several components. This repo is the open one:
 
-- **Comprehensive Profiles** - Work experience, education, skills, and expertise
-- **Personal Portfolio** - Modern, responsive showcase of your professional
-  background
-- **Data Export** - Export your profile in multiple formats
+| Component | This repo? | What it does |
+| --- | --- | --- |
+| **Web app** (this repository) | ✅ open source (GPLv3) | SvelteKit app + PostgreSQL: profiles & portfolio, job and application management, AI writing features, profile↔job **matching**, and the dashboard that schedules and queues scraping runs. |
+| **Scraping engine** | 🔒 closed source | The component that performs the actual scraping: browser automation (Patchright/CDP), stealth, and LLM-based job extraction. Runs as a worker that consumes jobs from the queue this app produces. |
 
-### Job Scraping & Matching
+In other words: this app *orchestrates* scraping (it manages search tasks,
+enqueues runs, ingests results, and matches them against profiles), but the
+browser-automation worker that visits job sites and extracts listings lives in
+the closed-source component and is **not** included here.
 
-- **Automated Job Scraping** - Scrape job listings from multiple platforms using
-  pre-configured search URLs
-- **Dual-Mode Navigation** - Traditional URL-based and modern click-based (SPA)
-  navigation
-- **Patchright Browser Automation** - Reliable, auto-waiting browser control
-  with stealth capabilities (Playwright fork)
-- **CDP Integration** - Chrome DevTools Protocol for detecting clickable
-  elements
-- **HTML Processing** - Extract and clean job posting data for AI analysis
-- **LLM Integration** - AI-powered job data extraction with structured output
-- **Smart Matching** - Match your profile against scraped jobs (coming soon)
+What that means if you run this repo on its own:
 
-### Application Management
+- ✅ Profiles & portfolio, application tracking, AI writing, JSON-Resume/PDF
+  export, and profile↔job matching all work against data already in the DB.
+- ⚠️ **Live job scraping is not available** without the closed-source worker —
+  scraping runs you enqueue will sit in the queue with nothing to process them.
 
-- **Application Tracking** - Organize jobs, interviews, and follow-ups
-- **AI-Powered Writing** - Generate cover letters, follow-ups, and thank-you
-  notes
-- **Interview Prep** - AI-generated answers to application questions
-- **Activity Logging** - Track all application activities
-- **File Management** - Organize application-related documents
+## Features
 
-### Technical Highlights
+### Profile & portfolio
 
-- **Multi-Provider LLM Integration** - Groq, Anthropic, OpenAI, and more
-- **JSON Resume** - Standard resume format with PDF export
+- Comprehensive profiles — work experience, education, skills, projects
+- Personal portfolio — responsive showcase of your professional background
+- Data export — multiple formats, including [JSON Resume](https://jsonresume.org/)
+  with PDF output
 
-## Quick Start
+### Matching & applications
+
+- **Profile↔job matching** — scores jobs against your profile, with an admin
+  dashboard and an optional semantic skill-matching layer
+- Application tracking — organize jobs, interviews, and follow-ups
+- AI-powered writing — generate cover letters, follow-ups, and thank-you notes
+- Interview prep — AI-generated answers to application questions
+- Activity logging and file management
+
+### Technical highlights
+
+- Multi-provider LLM integration (e.g. Groq, Anthropic, OpenAI, Gemini, DeepSeek)
+- Background job queues (scrape / match / re-scrape) backed by Redis
+- Type-safe data layer with Drizzle ORM
+
+## Quick start
 
 ### Prerequisites
 
-- Node.js 20+
-- Docker & Docker Compose
+- **Docker & Docker Compose** (the dev environment runs entirely in containers)
+- Node.js — only needed for host-side tooling; the version is pinned in `.nvmrc`
 
-### Installation
+### Run
 
 ```bash
-# Clone and install
 git clone <repository-url>
 cd smart-job-seeker
-npm install
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env with your configuration (DB, JWT secret, LLM API keys, …)
 
-# Start development environment
+# Start the dev environment (app + database + adminer)
 npm run dev
 ```
 
 This starts:
 
-- **SvelteKit app** at http://localhost:5173
-- **PostgreSQL database** on port 5432
-- **Adminer** (DB management) at http://localhost:8080
+- **SvelteKit app** — http://localhost:5173
+- **PostgreSQL** — port 5432
+- **Adminer** (DB UI) — http://localhost:8080
+
+On first run with an empty database, Drizzle migrations are applied
+automatically. No sample dataset is bundled with this repository.
 
 ## Architecture
 
-### Tech Stack
+### Tech stack
 
-- **Frontend**: SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
-- **Backend**: Node.js, SvelteKit Server Routes, Drizzle ORM
-- **Database**: PostgreSQL, Drizzle ORM, Adminer
-- **AI**: Multi-provider LLM (Groq, Anthropic, OpenAI, Gemini, DeepSeek)
-- **Browser Automation**: Patchright (Playwright fork) with CDP
-- **DevOps**: Docker Compose, Vitest
+- **Frontend:** SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
+- **Backend:** Node.js, SvelteKit server routes, Drizzle ORM
+- **Database:** PostgreSQL (+ Adminer for inspection)
+- **Queues:** Redis-backed background jobs
+- **AI:** multi-provider LLM abstraction
+- **Dev/Ops:** Docker Compose, Vitest
 
-### Key Modules
+### Key modules (in this repo)
 
-**Job Scraping Pipeline**
+- `src/lib/server/db/` — Drizzle schema and data access (`schema.ts`)
+- `src/lib/server/job/` — matching logic (`match-utils.ts`, `matcher-state.ts`,
+  `match-trigger.ts`)
+- `src/lib/server/queue/` — background job queues that orchestrate scraping and
+  matching (`scraper-queue.ts`, `match-queue.ts`, `rescrape-queue.ts`)
+- `src/lib/server/ai-chat/` — AI prompt templates and writing features
+- `src/lib/server/profile/` — profile export / `collected_data` snapshotting
+- `src/routes/` — SvelteKit app and API routes
 
-- `scrapers/scraper.ts` - Login orchestration and CDP handoff
-- `scrapers/extraction/` - CDP element marking and LLM extraction
-- `scrapers/job-data.ts` - Job data processing and database operations
-- `browser/provider.ts` - Browser provider abstraction (Local, GoLogin)
-- `browser/cdp-utils.ts` - Chrome DevTools Protocol utilities
-- `scripts/scrape-job-sites.ts` - CLI script for running scrapes
-
-**AI Features**
-
-- AI-powered cover letter generation
-- Interview question answering
-- Iterative content refinement
-- Template-based prompt management
-
-See [AI_FEATURES.md](docs/AI_FEATURES.md) for detailed AI documentation.
-
-## Database Schema
-
-Key collections:
-
-- **jobs** - Job listings with multi-select fields for types, experience levels,
-  and remote options
-- **job_searches** - Search configurations with pre-configured search URLs
-- **job_resources** - Additional job-related resources
-- **applications** - Job application tracking
-- **profiles** - User portfolios
-- **ai_chat_templates** - AI prompt templates
-
-Complete schema: `src/lib/server/db/schema.ts`
+> The browser-automation and LLM-extraction code that actually scrapes job sites
+> is part of the closed-source scraping engine and is not in this repository.
 
 ## Development
 
-### Common Commands
-
 ```bash
 # Development
-npm run dev                      # Start all services
-npm run dev:reset                # Reset DB with dev seed
-npm run dev:restore              # Reset DB from full/smart backup
-npm run docker:cli               # Access app container
+npm run dev                      # start app + database + adminer
+npm run dev:reset                # reset the database
+npm run docker:cli               # shell into the app container
 
-# Database
-npx drizzle-kit push             # Push schema changes to DB
-npm run docker:db:backup         # Backup database
+# Database (Drizzle)
+npx drizzle-kit push             # apply schema changes in dev
+npm run docker:db:backup         # back up the local database
 
-# Code Quality
-npm run check                    # Type checking
-npm run test                     # Run tests
-npx deno fmt                     # Format code
-
-# Profile Management
-npm run docker:export-profile-json
-npm run docker:export-profiles-pdf
+# Quality
+npm run check                    # type checking
+npm run test                     # unit tests (Vitest)
+npx deno fmt                     # format
 ```
 
-See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for complete development guide.
+See the [docs](docs/) directory for more:
 
-## Testing
-
-```bash
-npm run test              # Run all tests
-npm run test:watch       # Watch mode
-npm run test:ui          # Test UI dashboard
-```
-
-- Auth guards, API route handlers, scraper logic, DB layer, queue management
-- Mocked external dependencies
-- Unit and integration tests
-
-See [TESTING.md](docs/TESTING.md) for testing guide.
-
-## Documentation
-
-- **[POWER_USER_GUIDE.md](docs/POWER_USER_GUIDE.md)** - Host a scraping device &
-  invite others to use it
-- **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development setup and workflows
-- **[AI_FEATURES.md](docs/AI_FEATURES.md)** - AI features and usage
-- **[TESTING.md](docs/TESTING.md)** - Testing framework
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
-- **[CLAUDE.md](CLAUDE.md)** - Development notes
-
-## Deployment
-
-Configured for **Vercel** deployment:
-
-```bash
-npm run build
-```
-
-- `SJS_JWT_SECRET`, `SJS_DATABASE_URL`, `SJS_LLM_API_KEY_GROQ`
-
-## Roadmap
-
-### Current Status ✅
-
-- User authentication and profiles
-- Job application tracking with AI assistance
-- Interview preparation tools
-- **Job scraping infrastructure** (newly added)
-
-### Next Steps 🚀
-
-- Profile-to-job matching engine
-- Smart job recommendations
-- Automated application workflow
-- Multi-platform scraping expansion
-
-## Contributing
-
-1. Follow code quality standards (lint, format, type check)
-2. Write tests for new features
-3. Update documentation
-4. Ensure all tests pass
-
-See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for guidelines.
+- [DEVELOPMENT.md](docs/DEVELOPMENT.md) — development setup and workflows
+- [AI_FEATURES.md](docs/AI_FEATURES.md) — AI features and usage
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — system architecture
+- [TESTING.md](docs/TESTING.md) — testing framework
+- [POWER_USER_GUIDE.md](docs/POWER_USER_GUIDE.md) — hosting a scraping device
 
 ## License
 
-GNU General Public License v3.0 - see [LICENSE](LICENSE) file.
+GNU General Public License v3.0 — see [LICENSE](LICENSE).
 
 ## About
 
-Built by **Rik Wanders**, Senior Full Stack Developer with 12+ years of
-experience.
+Built by **Rik Wanders**, Senior Full Stack Developer.
 
 - **Website:** https://www.rikwanders.tech/
 - **GitHub:** https://github.com/gitaarik
 - **LinkedIn:** https://www.linkedin.com/in/rik-wanders-software
-
-Built with TypeScript, SvelteKit, and PostgreSQL.
