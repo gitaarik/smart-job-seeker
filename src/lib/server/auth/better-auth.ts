@@ -58,6 +58,10 @@ export const auth = betterAuth({
         type: "boolean",
         defaultValue: false,
       },
+      is_demo: {
+        type: "boolean",
+        defaultValue: false,
+      },
     },
   },
   account: { modelName: "accounts" },
@@ -110,6 +114,10 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
+          // Demo users get a synthetic, non-routable address — no welcome or
+          // admin-notification emails (see lib/server/demo).
+          if (user.email.endsWith("@demo.smartjobseeker.local")) return;
+
           // Skip welcome/admin emails for invited users (they already got an invite email)
           const invite = await db.query.verifications.findFirst({
             where: eq(verifications.identifier, `invite:${user.email}`),

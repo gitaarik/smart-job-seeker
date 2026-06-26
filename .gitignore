@@ -43,3 +43,8 @@ db-dumps/*
 # User uploads (keep .gitkeep only)
 uploads/*
 !uploads/.gitkeep
+
+# Demo-template fixture: template-as-code is meant to be committed, but ONLY a
+# synthetic profile. The dev-seeded one currently clones a real profile (PII),
+# so it's ignored here. Author a synthetic template, then force-add it.
+scripts/fixtures/demo-template.json

@@ -1627,6 +1627,13 @@ export const users = pgTable("users", {
   is_admin: boolean().default(false).notNull(),
   is_staff: boolean().default(false).notNull(),
   is_approved: boolean().default(false).notNull(),
+  // Ephemeral account minted by a demo invite link (see demo_links). Gates
+  // destructive device/account controls and is excluded from real-user metrics.
+  is_demo: boolean().default(false).notNull(),
+  // The curated source account whose profile is cloned into each demo user.
+  // Never a real login; excluded from user lists. Authored on dev, shipped as a
+  // fixture (demo:export-template / demo:seed-template).
+  is_demo_template: boolean().default(false).notNull(),
   timezone: varchar({ length: 100 }),
   time_format: varchar("time_format", { length: 10 }),
 });
@@ -2964,6 +2971,77 @@ export const device_shares = pgTable("device_shares", {
   }).onDelete("cascade"),
 ]);
 
+// A shareable demo invite link. One link → one ephemeral demo user, minted on
+// first open and resumed on later opens until expiry. The link grants access to
+// the creator's devices (demo_link_devices) so scraping works out of the box.
+export const demo_links = pgTable("demo_links", {
+  id: serial().primaryKey().notNull(),
+  // Opaque token in the public URL (/demo/<token>).
+  token: varchar({ length: 255 }).notNull(),
+  // Admin who created the link (and whose devices it shares).
+  created_by: text().notNull(),
+  // TTL chosen at creation; expires_at is stamped from creation so an unopened
+  // link doesn't live forever.
+  ttl_seconds: integer().notNull(),
+  expires_at: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .notNull(),
+  // Per-link scrape-run ceiling; null = no extra cap beyond the plan/device limits.
+  max_runs: integer(),
+  // active | revoked | expired
+  status: varchar({ length: 20 }).default("active").notNull(),
+  // The demo user minted for this link; null until first open.
+  demo_user_id: text(),
+  date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  uniqueIndex("demo_links_token_unique").using(
+    "btree",
+    table.token.asc().nullsLast().op("text_ops"),
+  ),
+  index("idx_demo_links_created_by").using(
+    "btree",
+    table.created_by.asc().nullsLast().op("text_ops"),
+  ),
+  index("idx_demo_links_demo_user").using(
+    "btree",
+    table.demo_user_id.asc().nullsLast().op("text_ops"),
+  ),
+  foreignKey({
+    columns: [table.created_by],
+    foreignColumns: [users.id],
+    name: "demo_links_created_by_fkey",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.demo_user_id],
+    foreignColumns: [users.id],
+    name: "demo_links_demo_user_id_fkey",
+  }).onDelete("set null"),
+]);
+
+// Which of the creator's devices a demo link grants. On first open, each row
+// becomes a device_shares grant for the minted demo user.
+export const demo_link_devices = pgTable("demo_link_devices", {
+  id: serial().primaryKey().notNull(),
+  demo_link_id: integer().notNull(),
+  api_key_id: integer().notNull(),
+}, (table) => [
+  uniqueIndex("demo_link_devices_link_key_unique").using(
+    "btree",
+    table.demo_link_id.asc().nullsLast().op("int4_ops"),
+    table.api_key_id.asc().nullsLast().op("int4_ops"),
+  ),
+  foreignKey({
+    columns: [table.demo_link_id],
+    foreignColumns: [demo_links.id],
+    name: "demo_link_devices_demo_link_id_fkey",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.api_key_id],
+    foreignColumns: [api_keys.id],
+    name: "demo_link_devices_api_key_id_fkey",
+  }).onDelete("cascade"),
+]);
+
 export const feedback_replies = pgTable("feedback_replies", {
   id: serial().primaryKey().notNull(),
   feedback_id: integer().notNull(),
@@ -3142,6 +3220,8 @@ export type Certificates = typeof certificates.$inferSelect;
 export type InboundEmails = typeof inbound_emails.$inferSelect;
 export type Contacts = typeof contacts.$inferSelect;
 export type DeviceShares = typeof device_shares.$inferSelect;
+export type DemoLinks = typeof demo_links.$inferSelect;
+export type DemoLinkDevices = typeof demo_link_devices.$inferSelect;
 export type FeedbackReplies = typeof feedback_replies.$inferSelect;
 export type UserFeedbackSubscribers =
   typeof user_feedback_subscribers.$inferSelect;

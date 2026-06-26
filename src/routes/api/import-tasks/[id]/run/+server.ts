@@ -26,6 +26,7 @@ import {
   getPreferredDevice,
 } from "$lib/server/sjs-browser-status";
 import { checkDeviceRateBudget } from "$lib/server/device-rate-budget";
+import { checkDemoRunCap } from "$lib/server/demo/run-cap";
 
 /**
  * POST /api/import-tasks/[id]/run
@@ -66,6 +67,18 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   // Pre-check: user needs at least ~15 credits for a minimal scrape
   if (!isStaff) {
     await requireCredits(user.id, 15);
+  }
+
+  // Demo users are capped per-link so one demo can't drain credits / pound the
+  // host's device beyond the device-rate budget.
+  if ((user as { is_demo?: boolean }).is_demo) {
+    const cap = await checkDemoRunCap(user.id);
+    if (!cap.allowed) {
+      throw error(
+        429,
+        `This demo is limited to ${cap.max} scrape runs (used ${cap.used}).`,
+      );
+    }
   }
 
   // Check if this search is already running in BullMQ

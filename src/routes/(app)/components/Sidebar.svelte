@@ -184,6 +184,11 @@
           icon: faUsers,
         },
         {
+          label: "Demo Links",
+          href: "/admin/demo-links",
+          icon: faLink,
+        },
+        {
           label: "Scraper",
           href: "/admin/scraper",
           icon: faSearch,
