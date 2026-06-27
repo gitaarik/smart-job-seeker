@@ -199,7 +199,7 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
     });
     mockApiKeysFindFirst.mockResolvedValueOnce({
       id: 99,
-      profile: { user_id: CONTACT }, // owned by contact, not OWNER
+      user_id: CONTACT, // owned by contact, not OWNER
     });
 
     await expect(
@@ -230,7 +230,7 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
     });
     mockApiKeysFindFirst.mockResolvedValueOnce({
       id: 42,
-      profile: { user_id: OWNER }, // matches the credential owner
+      user_id: OWNER, // matches the credential owner
     });
 
     const res = await PATCH(
@@ -292,7 +292,7 @@ describe("PATCH /api/import-tasks/[id] — credential coupling", () => {
     });
     mockApiKeysFindFirst.mockResolvedValueOnce({
       id: 99,
-      profile: { user_id: CONTACT }, // contact's own — wrong owner
+      user_id: CONTACT, // contact's own — wrong owner
     });
 
     await expect(

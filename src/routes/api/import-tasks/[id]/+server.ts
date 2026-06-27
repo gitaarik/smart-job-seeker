@@ -322,10 +322,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       }
       const key = await db.query.api_keys.findFirst({
         where: eq(api_keys.id, finalDeviceId),
-        columns: { id: true },
-        with: { profile: { columns: { user_id: true } } },
+        columns: { id: true, user_id: true },
       });
-      if (key?.profile.user_id !== credOwner) {
+      if (key?.user_id !== credOwner) {
         throw error(
           400,
           "This credential can only be used with the owner's devices",

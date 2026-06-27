@@ -189,6 +189,16 @@ async function wireDemoCredentials(
   demoUserId: string,
   demoProfileId: number,
 ): Promise<void> {
+  // A shared credential must run on a device owned by the credential owner
+  // (the link creator). Pin to one of the link's devices — they're all the
+  // creator's. Without a device, shared credentials can't run, so skip wiring.
+  const linkDevices = await db.query.demo_link_devices.findMany({
+    where: eq(demo_link_devices.demo_link_id, link.id),
+    columns: { api_key_id: true },
+  });
+  const primaryDeviceId = linkDevices[0]?.api_key_id;
+  if (primaryDeviceId == null) return;
+
   const tasks = await db.query.search_tasks.findMany({
     where: eq(search_tasks.profile_id, demoProfileId),
     columns: { id: true, platform_id: true, platform_profile_id: true },
@@ -236,7 +246,12 @@ async function wireDemoCredentials(
       }
 
       await db.update(search_tasks)
-        .set({ platform_profile_id: bindingId, login_mode: "auto" })
+        .set({
+          platform_profile_id: bindingId,
+          login_mode: "auto",
+          // Pin the owner's device so the shared-credential coupling holds.
+          sjsbrowser_api_key: primaryDeviceId,
+        })
         .where(eq(search_tasks.id, task.id));
     }
   }
