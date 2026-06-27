@@ -3134,7 +3134,9 @@
           </div>
         {/if}
         <!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
-        <div class="relative w-full flex-1 sm:flex-initial sm:aspect-video">
+        <div
+          class="relative w-full flex-1 sm:flex-initial sm:aspect-video min-h-0"
+        >
           {#if expectsCloudBrowser && browserViewUrl}
             <iframe
               src={browserViewUrl}
@@ -3369,11 +3371,13 @@
               </div>
             </div>
           {/if}
-          <!-- Intervention controls overlay (full overlay, dismissable so user can see browser view) -->
-          {#if isBlocked && showInterventionControls}
-            <div
-              class="absolute inset-0 z-20 p-3 bg-[var(--dash-card)]/95 backdrop-blur-sm border border-[var(--dash-warning)]/30 space-y-2 overflow-y-auto"
-            >
+        </div>
+        <!-- Intervention controls — a bottom bar below the browser view (not an
+             overlay) so the page stays visible while you fill fields. -->
+        {#if isBlocked && showInterventionControls}
+          <div
+            class="shrink-0 p-3 border-t border-[var(--dash-border)] bg-[var(--dash-card)] space-y-2 overflow-y-auto max-h-[45vh]"
+          >
               <!-- Intervention message + action buttons -->
               <div
                 class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
@@ -3477,8 +3481,10 @@
                 class="flex flex-col gap-2 pt-2 border-t border-[var(--dash-border)]"
               >
                 <p class="text-xs text-[var(--dash-text-muted)]">
-                  Sends to the focused field in the browser. For
-                  username/password, click the field in the browser view first.
+                  Auto-focuses the relevant field (verification code, then any
+                  empty input) before typing. If it picks the wrong field and
+                  interactive mode is on, click the field in the browser view
+                  first.
                 </p>
                 <div class="flex items-center gap-2">
                   <input
@@ -3550,7 +3556,6 @@
               </div>
             </div>
           {/if}
-        </div>
       </Card>
     </div>
   {/if}
