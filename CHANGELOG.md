@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.84] - 2026-06-27
+
+2 commits since v0.5.83.
+
+### Added
+- Open Browser / Browser View button now displays based on import run state
+
+### Fixed
+- Improved handling of provider rate limits by respecting retry-after headers
+
 ## [0.5.83] - 2026-06-27
 
 2 commits since v0.5.82.
