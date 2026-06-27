@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.82] - 2026-06-27
+
+16 commits since v0.5.81.
+
+### Added
+- Demo invite links with auto-login and device sharing
+- Seed demo templates via in-database profile cloning
+- Semantic skill-matching embedding layer (disabled by default)
+- Link to how-it-works guide on profile creation
+- Hourly automatic demo-link cleanup in worker
+
+### Changed
+- Move applications status box to top with one-tap quick updates
+- Matcher uses semantically-expanded profile skills for improved matching
+
+### Fixed
+- Shorten profile-version relation keys to prevent PostgreSQL identifier truncation
+
 ## [0.5.81] - 2026-06-16
 
 2 commits since v0.5.80.
