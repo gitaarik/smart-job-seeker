@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.87] - 2026-06-27
+
+2 commits since v0.5.86.
+
+### Added
+- Display intervention controls in a bottom bar below the import browser view
+
+### Fixed
+- Fix OTP entry in scraper by properly focusing the target field
+
 ## [0.5.86] - 2026-06-27
 
 2 commits since v0.5.85.
