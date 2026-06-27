@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.86] - 2026-06-27
+
+2 commits since v0.5.85.
+
+### Fixed
+- Shared-credential tasks now correctly pin to owner device; fixed device coupling validation
+
 ## [0.5.85] - 2026-06-27
 
 2 commits since v0.5.84.
