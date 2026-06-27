@@ -89,6 +89,17 @@ async function mintDemoUser(link: DemoLinks): Promise<DemoCredentials> {
   const email = demoEmail(link.token);
   const password = demoPassword(link.token);
 
+  // Idempotent: a prior attempt that failed *after* creating the user (e.g.
+  // template not yet seeded) leaves this account behind. Reuse it so re-opening
+  // the link self-heals instead of dying on a duplicate-email signup.
+  const existing = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    columns: { id: true },
+  });
+  if (existing) {
+    return { userId: existing.id, email, password };
+  }
+
   const result = await auth.api.signUpEmail({
     body: { email, password, name: "Demo User" },
   });
@@ -149,7 +160,16 @@ export async function cloneProfileInto(
 /** Clone the template profile (+ its search tasks) into the demo user. */
 async function cloneTemplateInto(userId: string): Promise<void> {
   const templateProfileId = await getTemplateProfileId();
-  await cloneProfileInto(templateProfileId, userId);
+  // Overwrite an existing profile (from a retried provision) rather than
+  // stacking duplicates.
+  const existing = await db.query.profiles.findFirst({
+    where: eq(profiles.user_id, userId),
+    columns: { id: true },
+    orderBy: (p, { asc }) => asc(p.id),
+  });
+  await cloneProfileInto(templateProfileId, userId, {
+    overwriteProfileId: existing?.id,
+  });
 }
 
 /** Grant the demo user access to every device on the link. */
