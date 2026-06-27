@@ -1638,6 +1638,34 @@
     };
   });
 
+  // Notice runs that start outside this page. The fast 3s poll (startPolling)
+  // only runs when *this* client kicked off the run or it was already active
+  // at mount. A run started elsewhere — a schedule, an auto-import trigger, or
+  // a co-user/owner on a shared device — would otherwise stay invisible (the
+  // Browser View button gates on `browserLive`, derived from searchTask.status)
+  // until a manual refresh. Watch the status at a slow cadence and hand off to
+  // the fast poll once it goes live, so the button appears on its own.
+  $effect(() => {
+    const watcher = setInterval(async () => {
+      // Fast poll already covering an active run; nothing to detect.
+      if (pollInterval) return;
+      try {
+        const res = await fetch(`/api/import-tasks/${searchTask.id}/run`);
+        const result = await res.json();
+        if (
+          ["running", "blocked", "queued", "stopping"].includes(result.status)
+        ) {
+          searchTask.status = result.status;
+          searchTask.status_message = result.statusMessage;
+          startPolling();
+        }
+      } catch {
+        // Transient fetch failure — the next tick retries.
+      }
+    }, 15000);
+    return () => clearInterval(watcher);
+  });
+
   onMount(() => {
     // Load runs history
     loadRuns();
