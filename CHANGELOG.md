@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.85] - 2026-06-27
+
+2 commits since v0.5.84.
+
+### Added
+- Demo scrapers can now use shared creator credentials
+- Demo mode now provides a read-only browser view
+
+### Changed
+- Release image builds now run on the self-hosted runner
+
 ## [0.5.84] - 2026-06-27
 
 2 commits since v0.5.83.
