@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.83] - 2026-06-27
+
+2 commits since v0.5.82.
+
+### Fixed
+- Demo templates can be seeded via the admin UI; provisioning is hardened to self-heal
+
 ## [0.5.82] - 2026-06-27
 
 16 commits since v0.5.81.
