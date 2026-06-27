@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.88] - 2026-06-27
+
+2 commits since v0.5.87.
+
+### Fixed
+- Browser View now automatically displays when job imports are started externally
+- Tunnel form fields now maintain focus correctly during login attempts
+
 ## [0.5.87] - 2026-06-27
 
 2 commits since v0.5.86.
