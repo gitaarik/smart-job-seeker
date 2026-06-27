@@ -431,6 +431,10 @@
   let isQueued = $derived(searchTask.status === "queued");
   let isStoppingStatus = $derived(searchTask.status === "stopping");
   let needsIntervention = $derived(isRunning || isBlocked);
+  // A browser instance only actually exists once the run is live — queued runs
+  // haven't spun up Chrome yet. While it's live, offer "Browser View" (watch /
+  // intervene); otherwise offer "Open Browser" (manual no-scrape launch).
+  let browserLive = $derived(isRunning || isBlocked || isStoppingStatus);
   $effect(() => {
     if (isBlocked && !prevIsBlocked) showInterventionControls = true;
     prevIsBlocked = isBlocked;
@@ -2703,7 +2707,7 @@
           </button>
         {/if}
 
-        {#if isTunnelMode}
+        {#if isTunnelMode && !browserLive}
           <button
             onclick={openBrowser}
             disabled={isOpeningBrowser ||
@@ -2721,17 +2725,19 @@
           </button>
         {/if}
 
-        <button
-          onclick={() => (showBrowser = !showBrowser)}
-          class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors"
-          title="{showBrowser ? 'Hide' : 'Show'} browser view"
-        >
-          <FontAwesomeIcon
-            icon={showBrowser ? faEyeSlash : faEye}
-            class="w-4 h-4"
-          />
-          <span class="text-sm">Browser View</span>
-        </button>
+        {#if !isTunnelMode || browserLive}
+          <button
+            onclick={() => (showBrowser = !showBrowser)}
+            class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-bg-hover)] transition-colors"
+            title="{showBrowser ? 'Hide' : 'Show'} browser view"
+          >
+            <FontAwesomeIcon
+              icon={showBrowser ? faEyeSlash : faEye}
+              class="w-4 h-4"
+            />
+            <span class="text-sm">Browser View</span>
+          </button>
+        {/if}
       </div>
 
       {#if openBrowserMessage}
