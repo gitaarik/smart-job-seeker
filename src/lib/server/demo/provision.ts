@@ -12,10 +12,14 @@ import { createHmac } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { dbDirect as db } from "$lib/server/db";
 import {
+  credential_shares,
   demo_link_devices,
   demo_links,
   type DemoLinks,
+  platform_credentials,
+  platform_profiles,
   profiles,
+  search_tasks,
   subscriptions,
   users,
 } from "$lib/server/db/schema";
@@ -158,7 +162,7 @@ export async function cloneProfileInto(
 }
 
 /** Clone the template profile (+ its search tasks) into the demo user. */
-async function cloneTemplateInto(userId: string): Promise<void> {
+async function cloneTemplateInto(userId: string): Promise<number> {
   const templateProfileId = await getTemplateProfileId();
   // Overwrite an existing profile (from a retried provision) rather than
   // stacking duplicates.
@@ -167,9 +171,75 @@ async function cloneTemplateInto(userId: string): Promise<void> {
     columns: { id: true },
     orderBy: (p, { asc }) => asc(p.id),
   });
-  await cloneProfileInto(templateProfileId, userId, {
+  return cloneProfileInto(templateProfileId, userId, {
     overwriteProfileId: existing?.id,
   });
+}
+
+/**
+ * Wire the demo user's cloned tasks to log in with the link creator's
+ * credentials, so scrapers work without any manual login (the demo UI has no
+ * interactive control). For each platform the tasks target, share the creator's
+ * credential, point the task's platform_profiles binding at it, and force
+ * `login_mode: auto`. Tasks for platforms the creator has no credential for are
+ * left as-is (public scraping still works).
+ */
+async function wireDemoCredentials(
+  link: DemoLinks,
+  demoUserId: string,
+  demoProfileId: number,
+): Promise<void> {
+  const tasks = await db.query.search_tasks.findMany({
+    where: eq(search_tasks.profile_id, demoProfileId),
+    columns: { id: true, platform_id: true, platform_profile_id: true },
+  });
+
+  const platformIds = Array.from(
+    new Set(
+      tasks.map((t) => t.platform_id).filter((id): id is number => id != null),
+    ),
+  );
+
+  for (const platformId of platformIds) {
+    const credential = await db.query.platform_credentials.findFirst({
+      where: and(
+        eq(platform_credentials.user_id, link.created_by),
+        eq(platform_credentials.platform_id, platformId),
+      ),
+      columns: { id: true },
+      orderBy: (c, { asc }) => asc(c.id),
+    });
+    if (!credential) continue; // public scrape / no login available — leave task
+
+    // Share the creator's credential with the demo user (the link is the
+    // authorization, so this bypasses the contact gate).
+    await db.insert(credential_shares).values({
+      platform_credential_id: credential.id,
+      shared_with: demoUserId,
+    }).onConflictDoNothing();
+
+    for (const task of tasks.filter((t) => t.platform_id === platformId)) {
+      // Reuse the binding row importSettings made, else create one.
+      let bindingId = task.platform_profile_id;
+      if (!bindingId) {
+        const [pp] = await db.insert(platform_profiles).values({
+          profile_id: demoProfileId,
+          platform_id: platformId,
+          platform_credential_id: credential.id,
+          status: "active",
+        }).returning({ id: platform_profiles.id });
+        bindingId = pp.id;
+      } else {
+        await db.update(platform_profiles)
+          .set({ platform_credential_id: credential.id, status: "active" })
+          .where(eq(platform_profiles.id, bindingId));
+      }
+
+      await db.update(search_tasks)
+        .set({ platform_profile_id: bindingId, login_mode: "auto" })
+        .where(eq(search_tasks.id, task.id));
+    }
+  }
 }
 
 /** Grant the demo user access to every device on the link. */
@@ -196,8 +266,9 @@ export async function provisionDemoUser(
   link: DemoLinks,
 ): Promise<DemoCredentials> {
   const creds = await mintDemoUser(link);
-  await cloneTemplateInto(creds.userId);
+  const profileId = await cloneTemplateInto(creds.userId);
   await grantLinkDevices(link, creds.userId);
+  await wireDemoCredentials(link, creds.userId, profileId);
   await db.update(demo_links)
     .set({ demo_user_id: creds.userId })
     .where(eq(demo_links.id, link.id));

@@ -2955,29 +2955,33 @@
                   <FontAwesomeIcon icon={faCamera} class="w-3 h-3" />
                   <span class="hidden sm:inline">Screenshot</span>
                 </button>
-                <button
-                  onclick={() => setViewMode("vnc")}
-                  disabled={vncConnecting}
-                  class="px-2 py-1 text-xs flex items-center gap-1 border-l border-[var(--dash-border)] transition-colors {browserViewMode === 'vnc' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
-                  title="Interactive VNC mode"
-                >
-                  <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
-                  <span class="hidden sm:inline">{
-                    vncConnecting ? "Connecting..." : "Interactive"
-                  }</span>
-                </button>
+                {#if !data.isDemo}
+                  <button
+                    onclick={() => setViewMode("vnc")}
+                    disabled={vncConnecting}
+                    class="px-2 py-1 text-xs flex items-center gap-1 border-l border-[var(--dash-border)] transition-colors {browserViewMode === 'vnc' ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+                    title="Interactive VNC mode"
+                  >
+                    <FontAwesomeIcon icon={faDesktop} class="w-3 h-3" />
+                    <span class="hidden sm:inline">{
+                      vncConnecting ? "Connecting..." : "Interactive"
+                    }</span>
+                  </button>
+                {/if}
               </div>
               {#if browserViewMode === "screenshot"}
                 <!-- Inline (desktop) -->
-                <button
-                  onclick={() => {
-                    interactiveMode = !interactiveMode;
-                  }}
-                  class="hidden sm:inline-flex p-1 transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
-                  title="{interactiveMode ? 'Disable' : 'Enable'} interactive mode"
-                >
-                  <FontAwesomeIcon icon={faHandPointer} class="w-3.5 h-3.5" />
-                </button>
+                {#if !data.isDemo}
+                  <button
+                    onclick={() => {
+                      interactiveMode = !interactiveMode;
+                    }}
+                    class="hidden sm:inline-flex p-1 transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+                    title="{interactiveMode ? 'Disable' : 'Enable'} interactive mode"
+                  >
+                    <FontAwesomeIcon icon={faHandPointer} class="w-3.5 h-3.5" />
+                  </button>
+                {/if}
                 <button
                   onclick={fetchScreenshot}
                   class="hidden sm:inline-flex p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
@@ -3042,19 +3046,21 @@
                     class="absolute right-0 top-full mt-1 z-40 min-w-[180px] py-1 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg"
                   >
                     {#if isTunnelMode && browserViewMode === "screenshot"}
-                      <button
-                        onclick={() => {
-                          interactiveMode = !interactiveMode;
-                          headerMenuOpen = false;
-                        }}
-                        class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text)]'}"
-                      >
-                        <FontAwesomeIcon
-                          icon={faHandPointer}
-                          class="w-3.5 h-3.5"
-                        />
-                        {interactiveMode ? "Disable" : "Enable"} interactive
-                      </button>
+                      {#if !data.isDemo}
+                        <button
+                          onclick={() => {
+                            interactiveMode = !interactiveMode;
+                            headerMenuOpen = false;
+                          }}
+                          class="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors {interactiveMode ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text)]'}"
+                        >
+                          <FontAwesomeIcon
+                            icon={faHandPointer}
+                            class="w-3.5 h-3.5"
+                          />
+                          {interactiveMode ? "Disable" : "Enable"} interactive
+                        </button>
+                      {/if}
                       <button
                         onclick={() => {
                           fetchScreenshot();

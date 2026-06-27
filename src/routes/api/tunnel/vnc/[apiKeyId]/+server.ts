@@ -15,6 +15,12 @@ export const POST: RequestHandler = async ({ locals, params }) => {
   const user = requireAuth(locals);
   const apiKeyId = parseIntParam(params.apiKeyId, "apiKeyId");
 
+  // Demo users get a read-only browser view — never interactive control of the
+  // (shared, logged-in) browser. Defense in depth behind the hidden UI control.
+  if ((user as { is_demo?: boolean }).is_demo) {
+    throw error(403, "Interactive control isn't available in demo mode");
+  }
+
   if (!(await hasDeviceAccess(apiKeyId, user.id))) {
     throw error(403, "Not authorized for this device");
   }

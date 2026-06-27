@@ -119,6 +119,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const isStaff = (user as { is_staff?: boolean })?.is_staff ||
     (user as { is_admin?: boolean })?.is_admin || false;
 
+  // Demo users get a read-only browser view — no interactive/VNC control over
+  // the (shared, logged-in) browser.
+  const isDemo = (user as { is_demo?: boolean })?.is_demo || false;
+
   // Load profile data (country code + browser fingerprint fields)
   const profileData = await db.query.profiles.findFirst({
     where: eq(profiles.id, layoutData.selectedProfile.id),
@@ -162,9 +166,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     shared: boolean;
     owner_user_id: string | null;
   }
-  const allApiKeys = user
-    ? await listApiKeys(user.id)
-    : [];
+  const allApiKeys = user ? await listApiKeys(user.id) : [];
   const apiKeyDevices: DeviceOption[] = allApiKeys
     .filter((k) => !k.revoked)
     .map((k) => ({
@@ -201,6 +203,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     profileSkillLevels,
     profileId: layoutData.selectedProfile.id,
     isStaff,
+    isDemo,
     hasOtherRunning: !!otherRunning,
     subscriptionRenewDate: subscription?.currentPeriodEnd ?? null,
     browserCountryCode: profileData?.browser_country_code || "",

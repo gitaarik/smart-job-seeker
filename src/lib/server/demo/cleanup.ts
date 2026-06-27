@@ -14,6 +14,7 @@
 import { and, eq, inArray, lte, ne, or } from "drizzle-orm";
 import { dbDirect as db } from "$lib/server/db";
 import {
+  credential_shares,
   demo_links,
   device_shares,
   sessions,
@@ -30,7 +31,10 @@ export async function cleanupExpiredDemoLinks(): Promise<DemoCleanupResult> {
   // 'revoked' (the admin pulled it) and not yet reaped.
   const stale = await db.query.demo_links.findMany({
     where: or(
-      and(eq(demo_links.status, "active"), lte(demo_links.expires_at, new Date())),
+      and(
+        eq(demo_links.status, "active"),
+        lte(demo_links.expires_at, new Date()),
+      ),
       eq(demo_links.status, "revoked"),
     ),
   });
@@ -46,6 +50,8 @@ export async function cleanupExpiredDemoLinks(): Promise<DemoCleanupResult> {
     await db.delete(sessions).where(inArray(sessions.userId, demoUserIds));
     await db.delete(device_shares)
       .where(inArray(device_shares.shared_with, demoUserIds));
+    await db.delete(credential_shares)
+      .where(inArray(credential_shares.shared_with, demoUserIds));
     const res = await db.update(users)
       .set({ is_approved: false })
       // Guard with is_demo so we never touch a real account by accident.
