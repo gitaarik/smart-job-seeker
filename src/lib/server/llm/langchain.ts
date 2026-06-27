@@ -62,10 +62,15 @@ export class LLMAuthenticationError extends LLMError {
  * This is potentially retryable after a delay
  */
 export class LLMRateLimitError extends LLMError {
+  /** HTTP status — lets generic retry logic (`isRetryableError`) recognize this
+   *  as a 429 without string-matching the message. Without it the error was
+   *  treated as non-retryable and the very first rate-limit blip killed the run. */
+  public readonly status = 429;
   constructor(
     message: string,
     provider: string,
     model: string,
+    /** Seconds the provider told us to wait before the quota window resets. */
     public readonly retryAfter?: number,
   ) {
     super(message, provider, model);
