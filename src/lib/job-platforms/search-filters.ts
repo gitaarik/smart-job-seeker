@@ -331,6 +331,86 @@ export const OPTION_LABEL_ALIASES: Partial<
 };
 
 /**
+ * The experience-level "buckets" the search-form filter exposes — the
+ * value_keys of `SEARCH_FILTER_DEFINITIONS.experience_level` minus "any". The
+ * job taxonomy (job-taxonomy.ts EXPERIENCE_LEVELS) is finer-grained (junior,
+ * mid_senior, principal, staff, director, internship), so BOTH source-side
+ * filtering and local eligibility collapse onto these five buckets to stay
+ * consistent with each other.
+ */
+export const EXPERIENCE_LEVEL_BUCKETS = [
+  "entry",
+  "mid",
+  "senior",
+  "lead",
+  "executive",
+] as const;
+
+// Case- and separator-insensitive key, matching the normalization the
+// eligibility SQL applies: regexp_replace(lower(elem), '[-_ ]', '', 'g').
+const normalizeExpTerm = (v: string): string =>
+  v.toLowerCase().replace(/[-_\s]/g, "");
+
+/**
+ * normalized term → bucket value_keys it belongs to. Built from the bucket
+ * value_keys, their user-facing labels, and OPTION_LABEL_ALIASES — the SAME
+ * synonyms the scraper uses to tick a platform's experience checkboxes — so the
+ * taxonomy's finer levels (junior→entry, mid_senior→mid, principal/staff→lead,
+ * director→executive, internship→entry) map identically at source and locally.
+ */
+const EXPERIENCE_TERM_TO_BUCKETS: Map<string, string[]> = (() => {
+  const map = new Map<string, string[]>();
+  const add = (term: string, bucket: string) => {
+    const key = normalizeExpTerm(term);
+    const arr = map.get(key) ?? [];
+    if (!arr.includes(bucket)) arr.push(bucket);
+    map.set(key, arr);
+  };
+  for (const bucket of EXPERIENCE_LEVEL_BUCKETS) {
+    add(bucket, bucket);
+    add(SEARCH_FILTER_DEFINITIONS.experience_level.values[bucket], bucket);
+    for (const alias of OPTION_LABEL_ALIASES.experience_level?.[bucket] ?? []) {
+      add(alias, bucket);
+    }
+  }
+  return map;
+})();
+
+/**
+ * Map one raw experience-level term — a taxonomy canonical ("mid_senior"), a
+ * search-filter value_key ("senior"), or a stored match_config label
+ * ("Senior") — to the buckets it falls under. Unknown terms → [].
+ */
+export function experienceLevelBuckets(value: string): string[] {
+  return EXPERIENCE_TERM_TO_BUCKETS.get(normalizeExpTerm(value)) ?? [];
+}
+
+/** Collapse a list of experience-level terms to the unique set of buckets. */
+export function toExperienceBuckets(values: string[]): string[] {
+  const out: string[] = [];
+  for (const v of values) {
+    for (const b of experienceLevelBuckets(v)) {
+      if (!out.includes(b)) out.push(b);
+    }
+  }
+  return out;
+}
+
+/**
+ * Inverse of {@link toExperienceBuckets}: every normalized term that falls into
+ * any of the given buckets. Used to build the SQL membership list checked
+ * against a job's stored `experience_levels`.
+ */
+export function expandExperienceBuckets(buckets: string[]): string[] {
+  const wanted = new Set(buckets);
+  const out: string[] = [];
+  for (const [term, termBuckets] of EXPERIENCE_TERM_TO_BUCKETS) {
+    if (termBuckets.some((b) => wanted.has(b))) out.push(term);
+  }
+  return out;
+}
+
+/**
  * Map legacy `job_type` value_keys onto the new (hours_commitment,
  * employment_type) axes. Used by {@link normalizeFilters} when reading
  * jsonb data persisted before the split. A single legacy value can
@@ -391,6 +471,48 @@ export function normalizeFilters(
     for (const v of values) push(name as SearchFilterName, v);
   }
 
+  return out;
+}
+
+/**
+ * Filters we configure in the job board's search FORM at scrape time.
+ * Everything NOT listed here is applied LOCALLY instead (server-side
+ * eligibility + match scoring), because driving it into the form is slow
+ * (multi-step popups + retry passes) while adding little:
+ *
+ * Kept at source:
+ *  - work_location — geography dominates the result set. A remote-only seeker
+ *    against a location-anchored search would otherwise have the few remote
+ *    hits buried past the pagination cap; also often a cheap direct-apply chip.
+ *  - time_posted / sort_by — cheap (usually URL params / one click), have no
+ *    local equivalent, and protect relevance density under the page cap.
+ *
+ * Applied locally instead:
+ *  - hours_commitment / employment_type — redundant with checkEligibility's
+ *    job_types gate, and low impact on which jobs land within the page cap.
+ *  - experience_level — covered by the experience-level eligibility gate; the
+ *    form widget is an expensive popup.
+ */
+export const SOURCE_APPLIED_FILTER_NAMES: SearchFilterName[] = [
+  "sort_by",
+  "time_posted",
+  "work_location",
+];
+
+/**
+ * Keep only the filters we apply at the source (search form); see
+ * {@link SOURCE_APPLIED_FILTER_NAMES}. A task still RECORDS its full filter
+ * selection (user intent), but the scraper drives only this subset into the
+ * form — the rest are enforced locally.
+ */
+export function sourceApplicableFilters<T>(
+  filters: Record<string, T>,
+): Record<string, T> {
+  const allow = new Set<string>(SOURCE_APPLIED_FILTER_NAMES);
+  const out: Record<string, T> = {};
+  for (const [name, value] of Object.entries(filters)) {
+    if (allow.has(name)) out[name] = value;
+  }
   return out;
 }
 

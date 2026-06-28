@@ -18,10 +18,17 @@ import {
   WORK_LOCATIONS,
   buildFamilyMap,
 } from "$lib/data/job-taxonomy";
+import {
+  expandExperienceBuckets,
+  toExperienceBuckets,
+} from "$lib/job-platforms/search-filters";
 
 export interface EligibilityConfig {
   work_location: string[] | null;
   job_types: string[] | null;
+  // Optional: when set (and non-empty), jobs must overlap one of the requested
+  // experience-level buckets. Unset = no experience filter (any level).
+  experience_levels?: string[] | null;
 }
 
 // Taxonomy-derived family expansion maps (built once at module load)
@@ -37,6 +44,7 @@ const jobTypeFamilies = buildFamilyMap(JOB_TYPES);
  * - work_location overlap (NULL/json-null = any)
  * - job_types overlap (NULL/json-null = any)
  * - skills overlap in required OR preferred (NULL/json-null = any)
+ * - experience_level bucket overlap (only when config.experience_levels is set)
  */
 export function buildEligibilityFilter(
   config: EligibilityConfig,
@@ -76,6 +84,27 @@ export function buildEligibilityFilter(
     }
   });
   const jobTypes = Array.from(expandedJobTypes);
+
+  // Experience level overlap — only constrains when the user set a preference.
+  // Job rows store fine-grained taxonomy levels (junior, mid_senior, staff…);
+  // expandExperienceBuckets() turns the user's bucket selection into the full
+  // set of taxonomy terms that map into those buckets, so the membership check
+  // mirrors the source-side filter exactly.
+  const experienceBuckets = config.experience_levels
+    ? toExperienceBuckets(config.experience_levels)
+    : [];
+  const experienceTerms = expandExperienceBuckets(experienceBuckets);
+  const experienceClause = experienceTerms.length > 0
+    ? sql`
+    AND (
+      j.experience_levels IS NULL
+      OR j.experience_levels::text = 'null'
+      OR EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(j.experience_levels::jsonb) AS elem
+        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${sqlJoin(experienceTerms)}]::text[])
+      )
+    )`
+    : sql``;
 
   return sql`
     -- Minimum data: job must have a description OR at least one skill
@@ -120,5 +149,6 @@ export function buildEligibilityFilter(
     sqlJoin(profileSkills)
   }]::text[]
     )
+    ${experienceClause}
   `;
 }

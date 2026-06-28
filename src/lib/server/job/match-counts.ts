@@ -103,10 +103,11 @@ export async function getMatchCounts(
 export async function getEligibleUnmatchedCount(
   profileId: number,
   matchCommunityJobs: boolean,
-  matchConfig: { work_location: unknown; job_types: unknown; community_max_age_days?: number | null } | null,
+  matchConfig: { work_location: unknown; job_types: unknown; experience_levels?: unknown; community_max_age_days?: number | null } | null,
 ): Promise<number> {
   const workLocations = matchConfig?.work_location as string[] | null;
   const jobTypes = matchConfig?.job_types as string[] | null;
+  const experienceLevels = matchConfig?.experience_levels as string[] | null;
   const profileSkills = await getExpandedProfileSkills(profileId);
 
   if (!workLocations?.length || !jobTypes?.length || profileSkills.length === 0) {
@@ -115,7 +116,7 @@ export async function getEligibleUnmatchedCount(
 
   const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, matchConfig?.community_max_age_days);
   const eligibilityFilter = buildEligibilityFilter(
-    { work_location: workLocations, job_types: jobTypes },
+    { work_location: workLocations, job_types: jobTypes, experience_levels: experienceLevels },
     profileSkills,
   );
 
