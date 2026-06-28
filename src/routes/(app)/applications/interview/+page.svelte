@@ -505,6 +505,41 @@
   <title>Interview Prep - Smart Job Seeker</title>
 </svelte:head>
 
+<!-- Shared Add menu (header + empty state); the [data-add-menu] wrapper keeps
+     handleClickOutside from closing the menu on the same click that opens it -->
+{#snippet addMenu()}
+  <div class="relative" data-add-menu>
+    <button
+      type="button"
+      onclick={() => (showAddMenu = !showAddMenu)}
+      class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+    >
+      <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+      <span class="hidden sm:inline">Add</span>
+    </button>
+    {#if showAddMenu}
+      <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
+        <button
+          type="button"
+          onclick={() => { showAddCheatSheet = true; showAddMenu = false; }}
+          class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+        >
+          <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
+          Interview Cheat Sheet
+        </button>
+        <button
+          type="button"
+          onclick={() => { showAddStory = true; showAddMenu = false; }}
+          class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+        >
+          <FontAwesomeIcon icon={faBook} class="w-3.5 h-3.5 opacity-50" />
+          Project Story
+        </button>
+      </div>
+    {/if}
+  </div>
+{/snippet}
+
 <div class="space-y-6">
   <!-- Header with title and add button -->
   <div class="flex items-center justify-between gap-3">
@@ -512,36 +547,9 @@
       <FontAwesomeIcon icon={faBook} class="w-7 h-7 text-[var(--dash-primary)]" />
       <h2 class="text-2xl font-bold text-[var(--dash-text)]">Interview Prep</h2>
     </div>
-    <div class="relative" data-add-menu>
-      <button
-        type="button"
-        onclick={() => (showAddMenu = !showAddMenu)}
-        class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
-        <span class="hidden sm:inline">Add</span>
-      </button>
-      {#if showAddMenu}
-        <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
-          <button
-            type="button"
-            onclick={() => { showAddCheatSheet = true; showAddMenu = false; }}
-            class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
-          >
-            <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
-            Interview Cheat Sheet
-          </button>
-          <button
-            type="button"
-            onclick={() => { showAddStory = true; showAddMenu = false; }}
-            class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
-          >
-            <FontAwesomeIcon icon={faBook} class="w-3.5 h-3.5 opacity-50" />
-            Project Story
-          </button>
-        </div>
-      {/if}
-    </div>
+    {#if hasAnyItems}
+      {@render addMenu()}
+    {/if}
   </div>
 
   <!-- Filter tabs -->
@@ -668,13 +676,14 @@
 
   <!-- Items List -->
   {#if !hasAnyItems && !showAddCheatSheet && !showAddStory}
-    <EmptyState
-      icon={faBook}
-      title="No interview prep materials yet"
-      description="Create cheat sheets for quick reference or project stories using the STAR method to prepare for behavioral interview questions."
-      actionLabel="Add First Item"
-      onAction={() => (showAddMenu = true)}
-    />
+    <div class="flex flex-col items-center gap-4">
+      <EmptyState
+        icon={faBook}
+        title="No interview prep materials yet"
+        description="Create cheat sheets for quick reference or project stories using the STAR method to prepare for behavioral interview questions."
+      />
+      {@render addMenu()}
+    </div>
   {:else if reorderMode}
     <!-- Reorder Mode -->
     {#snippet reorderConfirmCancel()}
