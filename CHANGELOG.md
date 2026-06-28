@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.92] - 2026-06-28
+
+2 commits since v0.5.91.
+
+### Fixed
+- Add button in interview empty state now opens the menu
+- Pre-deploy backups now rotate and are integrity-checked
+
 ## [0.5.91] - 2026-06-28
 
 2 commits since v0.5.90.
