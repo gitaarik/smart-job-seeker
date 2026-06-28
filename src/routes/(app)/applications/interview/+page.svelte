@@ -512,38 +512,36 @@
       <FontAwesomeIcon icon={faBook} class="w-7 h-7 text-[var(--dash-primary)]" />
       <h2 class="text-2xl font-bold text-[var(--dash-text)]">Interview Prep</h2>
     </div>
-    {#if hasAnyItems}
-      <div class="relative" data-add-menu>
-        <button
-          type="button"
-          onclick={() => (showAddMenu = !showAddMenu)}
-          class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-        >
-          <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
-          <span class="hidden sm:inline">Add</span>
-        </button>
-        {#if showAddMenu}
-          <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
-            <button
-              type="button"
-              onclick={() => { showAddCheatSheet = true; showAddMenu = false; }}
-              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
-            >
-              <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
-              Interview Cheat Sheet
-            </button>
-            <button
-              type="button"
-              onclick={() => { showAddStory = true; showAddMenu = false; }}
-              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
-            >
-              <FontAwesomeIcon icon={faBook} class="w-3.5 h-3.5 opacity-50" />
-              Project Story
-            </button>
-          </div>
-        {/if}
-      </div>
-    {/if}
+    <div class="relative" data-add-menu>
+      <button
+        type="button"
+        onclick={() => (showAddMenu = !showAddMenu)}
+        class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+        <span class="hidden sm:inline">Add</span>
+      </button>
+      {#if showAddMenu}
+        <div class="absolute top-full right-0 mt-1 z-20 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg py-1 min-w-[220px]">
+          <button
+            type="button"
+            onclick={() => { showAddCheatSheet = true; showAddMenu = false; }}
+            class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+          >
+            <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
+            Interview Cheat Sheet
+          </button>
+          <button
+            type="button"
+            onclick={() => { showAddStory = true; showAddMenu = false; }}
+            class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+          >
+            <FontAwesomeIcon icon={faBook} class="w-3.5 h-3.5 opacity-50" />
+            Project Story
+          </button>
+        </div>
+      {/if}
+    </div>
   </div>
 
   <!-- Filter tabs -->
