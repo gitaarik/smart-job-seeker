@@ -1,86 +1,91 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faArrowLeft,
-    faCheck,
-    faEnvelope,
-    faPencil,
-    faSave,
-    faSync,
-    faTimes,
-    faTrash,
-    faUserSecret,
-  } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../../../profile/components/SectionHeader.svelte";
-  import Spinner from "$lib/components/Spinner.svelte";
-  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
-  import Card from "../../../components/Card.svelte";
+import type { ActionData, PageData } from "./$types";
+import { enhance } from "$app/forms";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faArrowLeft,
+  faCheck,
+  faCreditCard,
+  faEnvelope,
+  faGaugeHigh,
+  faPencil,
+  faSave,
+  faSync,
+  faTimes,
+  faTrash,
+  faUserSecret,
+} from "@fortawesome/free-solid-svg-icons";
+import SectionHeader from "../../../profile/components/SectionHeader.svelte";
+import Spinner from "$lib/components/Spinner.svelte";
+import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+import Card from "../../../components/Card.svelte";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let user = $derived(data.targetUser);
-  let subscription = $derived(data.subscription);
-  let creditBalance = $derived(data.creditBalance);
-  let recentTransactions = $derived(data.recentTransactions);
+let user = $derived(data.targetUser);
+let subscription = $derived(data.subscription);
+let creditBalance = $derived(data.creditBalance);
+let recentTransactions = $derived(data.recentTransactions);
 
-  let editing = $state(false);
-  let editName = $state("");
-  let editEmail = $state("");
-  let editApproved = $state(false);
-  let editStaff = $state(false);
-  let editAdmin = $state(false);
+let editing = $state(false);
+let editName = $state("");
+let editEmail = $state("");
+let editApproved = $state(false);
+let editStaff = $state(false);
+let editAdmin = $state(false);
 
-  let showDeleteConfirm = $state(false);
-  let showClearMatchesConfirm = $state(false);
-  let sendingInvite = $state(false);
-  let clearingMatches = $state(false);
+let showDeleteConfirm = $state(false);
+let showClearMatchesConfirm = $state(false);
+let showResetRunLimitsConfirm = $state(false);
+let showResetBillingConfirm = $state(false);
+let sendingInvite = $state(false);
+let clearingMatches = $state(false);
+let resettingRunLimits = $state(false);
+let resettingBilling = $state(false);
 
-  // Subscription form
-  let editingSubscription = $state(false);
-  let subPlan = $state("");
-  let subExpiresAt = $state("");
+// Subscription form
+let editingSubscription = $state(false);
+let subPlan = $state("");
+let subExpiresAt = $state("");
 
-  function startEdit() {
-    editing = true;
-    editName = user.name || "";
-    editEmail = user.email;
-    editApproved = user.is_approved;
-    editStaff = user.is_staff;
-    editAdmin = user.is_admin;
+function startEdit() {
+  editing = true;
+  editName = user.name || "";
+  editEmail = user.email;
+  editApproved = user.is_approved;
+  editStaff = user.is_staff;
+  editAdmin = user.is_admin;
+}
+
+function startEditSubscription() {
+  editingSubscription = true;
+  subPlan = subscription.plan;
+  if (subscription.currentPeriodEnd) {
+    subExpiresAt = new Date(subscription.currentPeriodEnd)
+      .toISOString()
+      .split("T")[0];
+  } else {
+    // Default: 1 month from now
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    subExpiresAt = d.toISOString().split("T")[0];
   }
+}
 
-  function startEditSubscription() {
-    editingSubscription = true;
-    subPlan = subscription.plan;
-    if (subscription.currentPeriodEnd) {
-      subExpiresAt = new Date(subscription.currentPeriodEnd)
-        .toISOString()
-        .split("T")[0];
-    } else {
-      // Default: 1 month from now
-      const d = new Date();
-      d.setMonth(d.getMonth() + 1);
-      subExpiresAt = d.toISOString().split("T")[0];
-    }
-  }
+function formatDate(date: Date | string | null) {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
-  function formatDate(date: Date | string | null) {
-    if (!date) return "—";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-
-  function usageColor(percentage: number): string {
-    if (percentage >= 90) return "bg-red-500";
-    if (percentage >= 70) return "bg-amber-500";
-    return "bg-green-500";
-  }
-
+function usageColor(percentage: number): string {
+  if (percentage >= 90) return "bg-red-500";
+  if (percentage >= 70) return "bg-amber-500";
+  return "bg-green-500";
+}
 </script>
 
 <div class="space-y-6">
@@ -473,6 +478,36 @@
           {/if}
         </button>
 
+        <button
+          type="button"
+          disabled={resettingRunLimits}
+          onclick={() => (showResetRunLimitsConfirm = true)}
+          class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {#if resettingRunLimits}
+            <Spinner size="w-3 h-3" />
+            Resetting...
+          {:else}
+            <FontAwesomeIcon icon={faGaugeHigh} class="w-3 h-3" />
+            Reset run limits
+          {/if}
+        </button>
+
+        <button
+          type="button"
+          disabled={resettingBilling}
+          onclick={() => (showResetBillingConfirm = true)}
+          class="px-3 py-1.5 text-xs bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {#if resettingBilling}
+            <Spinner size="w-3 h-3" />
+            Resetting...
+          {:else}
+            <FontAwesomeIcon icon={faCreditCard} class="w-3 h-3" />
+            Reset billing usage
+          {/if}
+        </button>
+
         {#if user.id !== data.user?.id}
           <form method="POST" action="?/impersonate">
             <button
@@ -525,6 +560,40 @@
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "?/clear_matches";
+    document.body.appendChild(form);
+    form.submit();
+  }}
+/>
+
+<!-- Reset Run Limits Confirmation Modal -->
+<ConfirmModal
+  isOpen={showResetRunLimitsConfirm}
+  title="Reset run limits"
+  message="This deletes this user's scrape-run history, which clears their device rate limit (incl. the 'shared device' daily cap), the min-spacing between runs, and the demo run cap. Run logs for these runs are also removed. No billing or credits are affected."
+  confirmLabel="Reset run limits"
+  onCancel={() => (showResetRunLimitsConfirm = false)}
+  onConfirm={() => {
+    resettingRunLimits = true;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/reset_run_limits";
+    document.body.appendChild(form);
+    form.submit();
+  }}
+/>
+
+<!-- Reset Billing Usage Confirmation Modal -->
+<ConfirmModal
+  isOpen={showResetBillingConfirm}
+  title="Reset billing usage"
+  message="This zeroes the user's usage counters and credits used for the current period, granting them a fresh quota. Plan allowance and purchased extras are kept. This effectively gives free usage — use deliberately."
+  confirmLabel="Reset billing usage"
+  onCancel={() => (showResetBillingConfirm = false)}
+  onConfirm={() => {
+    resettingBilling = true;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "?/reset_billing_usage";
     document.body.appendChild(form);
     form.submit();
   }}
