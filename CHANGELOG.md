@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.90] - 2026-06-28
+
+2 commits since v0.5.89.
+
+### Changed
+- Import search filters now distinguish between source-applied and local-only filters
+- Scraper now gates source filters and applies local experience filtering for better import performance
+
 ## [0.5.89] - 2026-06-28
 
 2 commits since v0.5.88.
