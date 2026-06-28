@@ -515,4 +515,66 @@ export const actions: Actions = {
       });
     }
   },
+
+  archiveJob: async ({ locals, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    // Staff-only action
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
+    if (!isStaff) {
+      return fail(403, { error: "Staff access required" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobsTable.id, jobId),
+      columns: { status: true },
+    });
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    // Toggle: archived jobs are hidden from match counts/listings; restoring
+    // returns the job to "published" (original status isn't tracked separately).
+    const newStatus = job.status === "archived" ? "published" : "archived";
+    await db.update(jobsTable)
+      .set({ status: newStatus, date_updated: new Date() })
+      .where(eq(jobsTable.id, jobId));
+
+    return { success: true, action: "archived", status: newStatus };
+  },
+
+  deleteJob: async ({ locals, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    // Staff-only action
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
+    if (!isStaff) {
+      return fail(403, { error: "Staff access required" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    // FK constraints on jobs cascade (matches/statuses/history/resources/
+    // importers) or set null (applications/search_task_run_items), so a hard
+    // delete is safe without manual cleanup.
+    await db.delete(jobsTable).where(eq(jobsTable.id, jobId));
+
+    redirect(302, "/jobs");
+  },
 };

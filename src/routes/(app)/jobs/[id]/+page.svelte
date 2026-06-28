@@ -15,10 +15,12 @@
     faMapMarkerAlt,
     faMoneyBillWave,
     faPaperPlane,
+    faBoxArchive,
     faSearch,
     faStar as faStarSolid,
     faSync,
     faTimes,
+    faTrash,
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
@@ -49,6 +51,13 @@
   let showRematchConfirm = $state(false);
   let rematchFormEl: HTMLFormElement | undefined = $state();
 
+  // Staff archive / delete
+  let isArchiving = $state(false);
+  let staffActionError = $state("");
+  let showDeleteConfirm = $state(false);
+  let deleteFormEl: HTMLFormElement | undefined = $state();
+  let isArchived = $derived(job.status === "archived");
+
   // Rescrape monitor modal — auto-show if a rescrape is in progress
   let rescrapeActive = ["queued", "scraping"].includes(
     job.rescrape_status ?? "",
@@ -65,6 +74,8 @@
       } else if (form.action === "rematched") {
         // Reload the page to get fresh match data from the server
         window.location.reload();
+      } else if (form.action === "archived") {
+        job.status = form.status as string;
       } else if (form.status) {
         jobStatus = form.status as string;
       }
@@ -555,6 +566,71 @@
                 }
               </button>
             </form>
+
+            <!-- Archive / Unarchive -->
+            <form
+              method="POST"
+              action="?/archiveJob"
+              use:enhance={() => {
+                isArchiving = true;
+                staffActionError = "";
+                return async ({ result, update }) => {
+                  if (result.type === "failure") {
+                    staffActionError =
+                      (result.data as { error?: string })?.error ||
+                      "Archive failed";
+                  } else {
+                    await update();
+                  }
+                  isArchiving = false;
+                };
+              }}
+            >
+              <button
+                type="submit"
+                disabled={isArchiving}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                title={isArchived
+                  ? "Restore this job (sets status to published)"
+                  : "Hide this job from listings and match counts"}
+              >
+                {#if isArchiving}
+                  <Spinner size="w-4 h-4" />
+                {:else}
+                  <FontAwesomeIcon icon={faBoxArchive} class="w-4 h-4" />
+                {/if}
+                {isArchived ? "Unarchive" : "Archive"}
+              </button>
+            </form>
+
+            <!-- Delete -->
+            <form
+              bind:this={deleteFormEl}
+              method="POST"
+              action="?/deleteJob"
+              use:enhance={() => {
+                staffActionError = "";
+                return async ({ result }) => {
+                  if (result.type === "failure") {
+                    staffActionError =
+                      (result.data as { error?: string })?.error ||
+                      "Delete failed";
+                  } else if (result.type === "redirect") {
+                    window.location.href = result.location;
+                  }
+                };
+              }}
+            >
+              <button
+                type="button"
+                onclick={() => (showDeleteConfirm = true)}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-error)] text-[var(--dash-error)] hover:bg-[var(--dash-error-light)] transition-colors"
+                title="Permanently delete this job"
+              >
+                <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+                Delete
+              </button>
+            </form>
           </div>
 
           <!-- Re-match Error -->
@@ -564,6 +640,17 @@
             >
               <p class="text-sm text-[var(--dash-error)]">
                 <strong>Scoring failed:</strong> {rematchError}
+              </p>
+            </div>
+          {/if}
+
+          <!-- Archive / Delete Error -->
+          {#if staffActionError}
+            <div
+              class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg"
+            >
+              <p class="text-sm text-[var(--dash-error)]">
+                {staffActionError}
               </p>
             </div>
           {/if}
@@ -703,5 +790,18 @@
   onConfirm={() => {
     showRematchConfirm = false;
     rematchFormEl?.requestSubmit();
+  }}
+/>
+
+<ConfirmModal
+  isOpen={showDeleteConfirm}
+  title="Delete Job"
+  message={`Permanently delete "${job.title}"? This removes the job for all users and cannot be undone. Use Archive instead to just hide it.`}
+  confirmLabel="Delete"
+  variant="destructive"
+  onCancel={() => (showDeleteConfirm = false)}
+  onConfirm={() => {
+    showDeleteConfirm = false;
+    deleteFormEl?.requestSubmit();
   }}
 />
