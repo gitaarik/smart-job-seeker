@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.89] - 2026-06-28
+
+2 commits since v0.5.88.
+
+### Added
+- Staff archive and delete tools on job detail page
+
+### Fixed
+- Auto-cancel runs stuck in queued state with no worker pickup
+
 ## [0.5.88] - 2026-06-27
 
 2 commits since v0.5.87.
