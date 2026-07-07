@@ -47,6 +47,8 @@
     return cats.map((c) => ({
       id: c.id,
       name: c.name || "",
+      tags: Array.isArray(c.tags) ? c.tags as string[] : null,
+      note: c.note ?? "",
       skills: mapSkills(c.tech_skills),
     }));
   }
@@ -73,7 +75,10 @@
 
   function handleCategoryCreate(category: CategoryItem) {
     if (!category.name.trim()) return;
-    postAction("createCategory", { name: category.name });
+    postAction("createCategory", {
+      name: category.name,
+      note: category.note ?? "",
+    });
   }
 
   function handleCategoryRename(category: CategoryItem) {
@@ -82,6 +87,7 @@
     postAction("updateCategory", {
       id: String(dbCat.id),
       name: category.name,
+      note: category.note ?? "",
     });
   }
 
@@ -90,6 +96,22 @@
     if (!dbCat.id) return;
     postAction("deleteCategory", { id: String(dbCat.id) });
   }
+
+  function handleCategoryTags(category: CategoryItem) {
+    const dbCat = category as DbCategoryItem;
+    if (!dbCat.id) return;
+    postAction("updateCategoryTags", {
+      id: String(dbCat.id),
+      tags: JSON.stringify(category.tags || []),
+    });
+  }
+
+  function handleCategoryClone(category: CategoryItem) {
+    const dbCat = category as DbCategoryItem;
+    if (!dbCat.id) return;
+    postAction("cloneCategory", { id: String(dbCat.id) });
+  }
+
 
   function handleSkillCreate(category: CategoryItem, skill: SkillItem) {
     const dbCat = category as DbCategoryItem;
@@ -181,6 +203,8 @@
       oncreate={handleCategoryCreate}
       onrename={handleCategoryRename}
       onremove={handleCategoryRemove}
+      oncategorytags={handleCategoryTags}
+      onclone={handleCategoryClone}
       onskillcreate={handleSkillCreate}
       onskillupdate={handleSkillUpdate}
       onskillremove={handleSkillRemove}

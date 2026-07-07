@@ -1673,6 +1673,8 @@ export const tech_skill_categories = pgTable("tech_skill_categories", {
   name: varchar({ length: 255 }),
   profile_id: integer().notNull(),
   fa_icon: varchar({ length: 255 }),
+  tags: json(),
+  note: text(),
 }, (table) => [
   foreignKey({
     columns: [table.profile_id],

@@ -65,6 +65,7 @@
     }>;
     tech_skill_categories: Array<{
       name: string | null;
+      tags?: string[] | unknown;
       tech_skills: Array<{ name: string | null }>;
     }>;
     side_projects: Array<{
@@ -162,30 +163,43 @@
     // site below before treating it as a string array.
     T extends { tags?: string[] | unknown } & Record<string, any>,
   >(objList: T[]): T[] {
-    return objList.filter((obj) => {
-      if ("tags" in obj && Array.isArray(obj.tags) && obj.tags.length) {
-        const tagsArr = obj.tags as string[];
-        if (
-          !tagsArr.includes(type || "resume") &&
-          tagsArr.includes(type === "resume" ? "cv" : "resume")
-        ) {
-          // If the opposite of `type` is in `obj.tags`, but `type` itself not
-          // For example, when `type` is "cv" and `obj.tags` contains "resume"
-          // but not "cv", then this obj should be hidden.
-          return false;
-        } else {
-          const tags = tagsArr.filter((item: string) =>
-            !(["resume", "cv"].includes(item))
-          );
-          if (!(tags.length && versionSlugs.length)) return true;
+    const currentType = type || "resume";
+    // The identifiers active for the currently-rendered document: the base
+    // template ("resume"/"cv") plus the viewed version's extension chain.
+    const activeIds = [currentType.toLowerCase(), ...versionSlugs.map((s) => s.toLowerCase())];
 
-          return versionSlugs.some((versionSlug) => {
-            return tags.includes(versionSlug);
-          });
-        }
+    return objList.filter((obj) => {
+      if (!("tags" in obj && Array.isArray(obj.tags) && obj.tags.length)) {
+        return true;
+      }
+      const tagsArr = obj.tags as string[];
+
+      // A `!slug` tag excludes the item from that version/template. Negations
+      // are a blacklist and win over any positive (whitelist) tags.
+      const negatedIds = tagsArr
+        .filter((t) => t.startsWith("!"))
+        .map((t) => t.slice(1).trim().toLowerCase())
+        .filter(Boolean);
+      if (negatedIds.some((id) => activeIds.includes(id))) return false;
+
+      const positives = tagsArr.filter((t) => !t.startsWith("!"));
+
+      if (
+        !positives.includes(currentType) &&
+        positives.includes(currentType === "resume" ? "cv" : "resume")
+      ) {
+        // The opposite base template is tagged but the current one isn't —
+        // e.g. `type` is "cv" and tags contain "resume" but not "cv" → hide.
+        return false;
       }
 
-      return true;
+      const versionTags = positives.filter((item) =>
+        !(["resume", "cv"].includes(item))
+      );
+      if (!(versionTags.length && versionSlugs.length)) return true;
+
+      // Positive version tags act as a whitelist: show only on matching versions.
+      return versionSlugs.some((versionSlug) => versionTags.includes(versionSlug));
     });
   }
 
@@ -343,14 +357,14 @@
   {/if}
 
   <!-- Skills -->
-  {#if profile.tech_skill_categories && profile.tech_skill_categories.length > 0}
+  {#if profile.tech_skill_categories && filterOnTags(profile.tech_skill_categories).length > 0}
     <section class="my-4 break-inside-avoid mb-[-20px]">
       <h2 class="text-sm font-bold">SKILLS</h2>
 
       <hr class="mt-1 mb-2" />
 
       <ul class="list-disc ml-3 print:ml-[18px] print:[&>li]:[text-indent:-6px]">
-        {#each profile.tech_skill_categories as skillGroup, index (index)}
+        {#each filterOnTags(profile.tech_skill_categories) as skillGroup, index (index)}
           <li>
             <span class="font-bold mr-1">{skillGroup.name}:</span>
             <span class="text-xs">

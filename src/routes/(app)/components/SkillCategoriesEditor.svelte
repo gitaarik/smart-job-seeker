@@ -1,13 +1,17 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faBan,
     faCheck,
     faChevronDown,
+    faChevronRight,
     faChevronUp,
     faCircleNotch,
+    faClone,
     faGripVertical,
     faPencil,
     faPlus,
+    faTags,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -19,6 +23,8 @@
 
   export interface CategoryItem {
     name: string;
+    tags?: string[] | null;
+    note?: string | null;
     skills: SkillItem[];
   }
 
@@ -31,6 +37,8 @@
     oncreate?: (category: CategoryItem) => void;
     onrename?: (category: CategoryItem) => void;
     onremove?: (category: CategoryItem) => void;
+    onclone?: (category: CategoryItem) => void;
+    oncategorytags?: (category: CategoryItem) => void;
     onskillcreate?: (category: CategoryItem, skill: SkillItem) => void;
     onskillupdate?: (category: CategoryItem, skill: SkillItem) => void;
     onskillremove?: (category: CategoryItem, skill: SkillItem) => void;
@@ -47,6 +55,8 @@
     oncreate,
     onrename,
     onremove,
+    onclone,
+    oncategorytags,
     onskillcreate,
     onskillupdate,
     onskillremove,
@@ -144,13 +154,14 @@
 
   // Track which categories are newly added (not yet persisted)
   let newIndices = $state(new Set<number>());
-  // Track original names for rename detection
+  // Track original name + note for revert/dirty detection while editing
   let originalNames = $state(new Map<number, string>());
-  // Track which category name is being edited
+  let originalNotes = $state(new Map<number, string>());
+  // Track which category (name + note) is being edited inline
   let editingNameIndex = $state<number | null>(null);
 
   function addCategory() {
-    const newCat: CategoryItem = { name: "", skills: [] };
+    const newCat: CategoryItem = { name: "", note: "", skills: [] };
     categories = [...categories, newCat];
     const idx = categories.length - 1;
     newIndices = new Set([...newIndices, idx]);
@@ -159,12 +170,17 @@
   }
 
   function startEditingName(index: number) {
-    handleNameFocus(index);
+    if (!newIndices.has(index)) {
+      if (!originalNames.has(index)) {
+        originalNames = new Map([...originalNames, [index, categories[index].name]]);
+      }
+      originalNotes = new Map([...originalNotes, [index, categories[index].note ?? ""]]);
+    }
     editingNameIndex = index;
   }
 
   function saveEditingName(index: number) {
-    handleNameBlur(index);
+    commitEditing(index);
     editingNameIndex = null;
   }
 
@@ -178,12 +194,20 @@
         else if (ni > index) updatedNew.add(ni - 1);
       }
       newIndices = updatedNew;
-    } else if (originalNames.has(index)) {
-      // Revert to original name
-      categories[index].name = originalNames.get(index)!;
-      const updated = new Map(originalNames);
-      updated.delete(index);
-      originalNames = updated;
+    } else {
+      // Revert name + note to their snapshots
+      if (originalNames.has(index)) {
+        categories[index].name = originalNames.get(index)!;
+        const m = new Map(originalNames);
+        m.delete(index);
+        originalNames = m;
+      }
+      if (originalNotes.has(index)) {
+        categories[index].note = originalNotes.get(index)!;
+        const m = new Map(originalNotes);
+        m.delete(index);
+        originalNotes = m;
+      }
     }
     editingNameIndex = null;
   }
@@ -214,33 +238,86 @@
     originalNames = updatedNames;
   }
 
-  function handleNameFocus(index: number) {
-    if (!newIndices.has(index) && !originalNames.has(index)) {
-      originalNames = new Map([...originalNames, [
-        index,
-        categories[index].name,
-      ]]);
-    }
+  function cloneCategory(index: number) {
+    // Only persisted categories can be cloned server-side.
+    if (newIndices.has(index)) return;
+    onclone?.(categories[index]);
   }
 
-  function handleNameBlur(index: number) {
+  function commitEditing(index: number) {
     const cat = categories[index];
     if (newIndices.has(index)) {
       if (cat.name.trim()) {
-        oncreate?.(cat);
+        oncreate?.(cat); // persists name + note
         const updated = new Set(newIndices);
         updated.delete(index);
         newIndices = updated;
       }
-    } else if (originalNames.has(index)) {
-      const orig = originalNames.get(index)!;
-      if (cat.name.trim() && cat.name !== orig) {
-        onrename?.(cat);
+    } else {
+      const origName = originalNames.get(index);
+      const origNote = originalNotes.get(index) ?? "";
+      const nameChanged = origName !== undefined && cat.name !== origName;
+      const noteChanged = (cat.note ?? "") !== origNote;
+      if (cat.name.trim() && (nameChanged || noteChanged)) {
+        onrename?.(cat); // updates name + note together
       }
-      const updated = new Map(originalNames);
-      updated.delete(index);
-      originalNames = updated;
+      if (originalNames.has(index)) {
+        const m = new Map(originalNames);
+        m.delete(index);
+        originalNames = m;
+      }
+      if (originalNotes.has(index)) {
+        const m = new Map(originalNotes);
+        m.delete(index);
+        originalNotes = m;
+      }
     }
+  }
+
+  // Category version tags
+  const builtinTags = ["resume", "cv"];
+  let tagsExpanded = $state<Set<number>>(new Set());
+
+  function toggleTagExpand(index: number) {
+    if (tagsExpanded.has(index)) tagsExpanded.delete(index);
+    else tagsExpanded.add(index);
+    tagsExpanded = new Set(tagsExpanded);
+  }
+
+
+  function catTags(index: number): string[] {
+    return categories[index].tags ?? [];
+  }
+
+  // The version/template slug of a tag, ignoring a leading "!" negation marker.
+  function tagSlug(tag: string): string {
+    return tag.replace(/^!/, "").trim().toLowerCase();
+  }
+
+  function catTagSuggestions(index: number): string[] {
+    const used = new Set(catTags(index).map(tagSlug));
+    const all = [
+      ...builtinTags,
+      ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase())),
+    ];
+    return all.filter((s) => !used.has(s.toLowerCase()));
+  }
+
+  function addCategoryTag(index: number, tag: string) {
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+    const slug = tagSlug(trimmed);
+    const current = categories[index].tags ?? [];
+    // Skip if this version is already tagged in either include or exclude form.
+    if (current.some((t) => tagSlug(t) === slug)) return;
+    categories[index].tags = [...current, trimmed];
+    oncategorytags?.(categories[index]);
+  }
+
+  function removeCategoryTag(index: number, tag: string) {
+    const next = (categories[index].tags ?? []).filter((t) => t !== tag);
+    categories[index].tags = next.length ? next : null;
+    oncategorytags?.(categories[index]);
   }
 </script>
 
@@ -268,7 +345,7 @@
 
 {#snippet categoryHeader(categoryIndex: number)}
   {#if editingNameIndex === categoryIndex}
-    <div class="flex items-center gap-1">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 w-full min-w-0">
       <input
         type="text"
         bind:value={categories[categoryIndex].name}
@@ -277,37 +354,58 @@
           if (e.key === "Escape") cancelEditingName(categoryIndex);
         }}
         placeholder="Category name"
-        class="px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-36 sm:w-auto"
+        class="px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-full sm:w-40 flex-shrink-0"
         use:autofocus
       />
-      <button
-        type="button"
-        onclick={() => cancelEditingName(categoryIndex)}
-        class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-        aria-label="Cancel"
-      >
-        <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-      </button>
-      <button
-        type="button"
-        onclick={() => saveEditingName(categoryIndex)}
-        class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-        aria-label="Save"
-      >
-        <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-      </button>
+      <input
+        type="text"
+        bind:value={categories[categoryIndex].note}
+        onkeydown={(e) => {
+          if (e.key === "Enter") saveEditingName(categoryIndex);
+          if (e.key === "Escape") cancelEditingName(categoryIndex);
+        }}
+        placeholder="Note (private hint — which versions this is for)"
+        class="px-3 py-1.5 text-sm italic text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-full sm:w-72"
+      />
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button
+          type="button"
+          onclick={() => cancelEditingName(categoryIndex)}
+          class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+          aria-label="Cancel"
+        >
+          <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onclick={() => saveEditingName(categoryIndex)}
+          class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+          aria-label="Save"
+        >
+          <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+        </button>
+      </div>
     </div>
   {:else}
-    <div class="flex items-center gap-2 min-w-0">
-      <h3 class="text-base font-semibold text-[var(--dash-text)] truncate">
+    {@const noteText = categories[categoryIndex].note?.trim()}
+    <div class="flex items-baseline gap-2 min-w-0">
+      <h3 class="text-base font-semibold text-[var(--dash-text)] truncate flex-shrink-0 max-w-full">
         {categories[categoryIndex].name || "Untitled category"}
       </h3>
+      {#if noteText}
+        <span
+          class="text-xs font-normal italic text-[var(--dash-text-muted)]"
+          title={noteText}
+        >
+          {noteText}
+        </span>
+      {/if}
       {#if !compact}
         <button
           type="button"
           onclick={() => startEditingName(categoryIndex)}
-          class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0"
-          aria-label="Edit category name"
+          class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0 self-center"
+          aria-label="Edit category name and note"
         >
           <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
         </button>
@@ -343,6 +441,82 @@
   />
 {/snippet}
 
+{#snippet categoryVersionTags(categoryIndex: number)}
+  {#if versionSlugs.length > 0}
+    {@const tags = catTags(categoryIndex)}
+    {@const suggestions = catTagSuggestions(categoryIndex)}
+    {@const expanded = tagsExpanded.has(categoryIndex)}
+    <div class="mt-5 mb-1">
+      <button
+        type="button"
+        onclick={() => toggleTagExpand(categoryIndex)}
+        class="flex items-center gap-1 text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors mb-1"
+      >
+        <FontAwesomeIcon icon={expanded ? faChevronDown : faChevronRight} class="w-2 h-2" />
+        <FontAwesomeIcon icon={faTags} class="w-2.5 h-2.5" />
+        Resume / CV Versions
+        {#if !expanded && tags.length > 0}
+          <span class="normal-case text-[var(--dash-primary)]">({
+            tags.map((t) => t.startsWith("!") ? `not ${t.slice(1)}` : t).join(", ")
+          })</span>
+        {/if}
+      </button>
+      {#if expanded}
+        {#if tags.length > 0}
+          <div class="flex flex-wrap gap-1.5 mb-1.5">
+            {#each tags as tag}
+              {@const isNeg = tag.startsWith("!")}
+              <button
+                type="button"
+                onclick={() => removeCategoryTag(categoryIndex, tag)}
+                class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors cursor-pointer border hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 {isNeg
+                  ? 'bg-red-500/10 text-red-600 border-red-500/25'
+                  : 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border-[var(--dash-primary)]/20'}"
+              >
+                {#if isNeg}
+                  <FontAwesomeIcon icon={faBan} class="w-2.5 h-2.5" />
+                {/if}
+                {isNeg ? tag.slice(1) : tag}
+                <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
+              </button>
+            {/each}
+          </div>
+        {:else}
+          <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">Shown on all versions</p>
+        {/if}
+        {#if suggestions.length > 0}
+          <p class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Show only on</p>
+          <div class="flex flex-wrap gap-1.5 mb-2">
+            {#each suggestions as suggestion}
+              <button
+                type="button"
+                onclick={() => addCategoryTag(categoryIndex, suggestion)}
+                class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
+              >
+                <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                {suggestion}
+              </button>
+            {/each}
+          </div>
+          <p class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Exclude from</p>
+          <div class="flex flex-wrap gap-1.5">
+            {#each suggestions as suggestion}
+              <button
+                type="button"
+                onclick={() => addCategoryTag(categoryIndex, "!" + suggestion)}
+                class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-red-500/40 hover:text-red-500 transition-colors"
+              >
+                <FontAwesomeIcon icon={faBan} class="w-2.5 h-2.5" />
+                {suggestion}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
 {#if compact}
   <div class="divide-y divide-[var(--dash-border)]">
     {#each categories as category, categoryIndex}
@@ -364,6 +538,17 @@
             {@render categoryHeader(categoryIndex)}
           </button>
           <div class="flex items-center gap-2">
+            {#if onclone}
+              <button
+                type="button"
+                onclick={() => cloneCategory(categoryIndex)}
+                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] hover:border-[var(--dash-primary)]/40 transition-colors flex items-center gap-1.5 flex-shrink-0"
+                aria-label="Clone category"
+              >
+                <FontAwesomeIcon icon={faClone} class="w-3 h-3" />
+                <span class="hidden sm:inline">Clone</span>
+              </button>
+            {/if}
             <button
               type="button"
               onclick={() => removeCategory(categoryIndex)}
@@ -392,6 +577,7 @@
         {#if expandedItems.has(categoryIndex)}
           <div class="px-3 sm:px-4 py-4">
             {@render categorySkills(categoryIndex)}
+            {@render categoryVersionTags(categoryIndex)}
           </div>
         {/if}
       </div>
@@ -446,18 +632,32 @@
       <Card class="p-3 sm:p-4">
         <div class="flex items-center justify-between mb-3 gap-2">
           {@render categoryHeader(categoryIndex)}
-          <button
-            type="button"
-            onclick={() => removeCategory(categoryIndex)}
-            class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
-            aria-label="Remove category"
-          >
-            <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-            <span class="hidden sm:inline">Remove</span>
-          </button>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            {#if onclone}
+              <button
+                type="button"
+                onclick={() => cloneCategory(categoryIndex)}
+                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] hover:border-[var(--dash-primary)]/40 transition-colors flex items-center gap-1.5"
+                aria-label="Clone category"
+              >
+                <FontAwesomeIcon icon={faClone} class="w-3 h-3" />
+                <span class="hidden sm:inline">Clone</span>
+              </button>
+            {/if}
+            <button
+              type="button"
+              onclick={() => removeCategory(categoryIndex)}
+              class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
+              aria-label="Remove category"
+            >
+              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              <span class="hidden sm:inline">Remove</span>
+            </button>
+          </div>
         </div>
 
         {@render categorySkills(categoryIndex)}
+        {@render categoryVersionTags(categoryIndex)}
       </Card>
     {/each}
 

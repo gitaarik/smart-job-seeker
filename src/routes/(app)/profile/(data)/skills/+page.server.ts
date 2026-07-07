@@ -38,6 +38,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
+    const note = ((formData.get("note") as string | null) ?? "").trim() || null;
 
     if (!name || name.trim().length === 0) return fail(400, { error: "Category name is required" });
 
@@ -48,6 +49,7 @@ export const actions: Actions = {
 
     await db.insert(tech_skill_categories).values({
       name: name.trim(),
+      note,
       profile_id: profileId,
       sort: (lastItem?.sort ?? -1) + 1,
       status: "published",
@@ -67,6 +69,7 @@ export const actions: Actions = {
     const formData = await request.formData();
     const id = parseInt(formData.get("id") as string);
     const name = formData.get("name") as string;
+    const note = ((formData.get("note") as string | null) ?? "").trim() || null;
 
     if (isNaN(id)) return fail(400, { error: "Invalid category ID" });
     if (!name || name.trim().length === 0) return fail(400, { error: "Category name is required" });
@@ -78,8 +81,113 @@ export const actions: Actions = {
 
     await db.update(tech_skill_categories).set({
       name: name.trim(),
+      note,
       date_updated: new Date(),
     }).where(eq(tech_skill_categories.id, id));
+
+    return { success: true };
+  },
+
+  updateCategoryTags: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const formData = await request.formData();
+    const id = parseInt(formData.get("id") as string);
+    const tagsJson = formData.get("tags") as string;
+
+    if (isNaN(id)) return fail(400, { error: "Invalid category ID" });
+
+    const existing = await db.query.tech_skill_categories.findFirst({
+      where: and(eq(tech_skill_categories.id, id), eq(tech_skill_categories.profile_id, profileId)),
+    });
+    if (!existing) return fail(404, { error: "Category not found" });
+
+    let tags: string[] | null = null;
+    try { tags = tagsJson ? JSON.parse(tagsJson) : null; } catch { /* ignore */ }
+    if (tags && tags.length === 0) tags = null;
+
+    await db.update(tech_skill_categories).set({
+      tags: tags ?? null,
+      date_updated: new Date(),
+    }).where(eq(tech_skill_categories.id, id));
+
+    return { success: true };
+  },
+
+  cloneCategory: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const formData = await request.formData();
+    const id = parseInt(formData.get("id") as string);
+    if (isNaN(id)) return fail(400, { error: "Invalid category ID" });
+
+    const original = await db.query.tech_skill_categories.findFirst({
+      where: and(eq(tech_skill_categories.id, id), eq(tech_skill_categories.profile_id, profileId)),
+      with: { tech_skills: { orderBy: asc(tech_skills.sort) } },
+    });
+    if (!original) return fail(404, { error: "Category not found" });
+
+    // Append a " (clone)" suffix, keeping the name within the varchar(255) limit.
+    const suffix = " (clone)";
+    const clonedName = original.name
+      ? `${original.name.slice(0, 255 - suffix.length)}${suffix}`
+      : "(clone)";
+
+    // Insert the cloned category — its sort is normalised below.
+    const [clone] = await db.insert(tech_skill_categories).values({
+      name: clonedName,
+      profile_id: profileId,
+      fa_icon: original.fa_icon,
+      tags: (original.tags as string[] | null) ?? null,
+      note: original.note ?? null,
+      sort: original.sort ?? 0,
+      status: "published",
+      date_created: new Date(),
+    }).returning({ id: tech_skill_categories.id });
+
+    // Deep-copy the skills, preserving their order and metadata.
+    if (original.tech_skills.length) {
+      await db.insert(tech_skills).values(
+        original.tech_skills.map((s) => ({
+          name: s.name,
+          level: s.level,
+          years_experience: s.years_experience,
+          tags: (s.tags as string[] | null) ?? null,
+          tech_type_id: s.tech_type_id,
+          category_id: clone.id,
+          sort: s.sort,
+          status: "published",
+          date_created: new Date(),
+        })),
+      );
+    }
+
+    // Re-sequence category sorts so the clone sits directly below the original.
+    const all = await db.query.tech_skill_categories.findMany({
+      where: eq(tech_skill_categories.profile_id, profileId),
+      orderBy: [asc(tech_skill_categories.sort), asc(tech_skill_categories.id)],
+      columns: { id: true },
+    });
+    const orderedIds: number[] = [];
+    for (const c of all) {
+      if (c.id === clone.id) continue; // placed explicitly, just after the original
+      orderedIds.push(c.id);
+      if (c.id === id) orderedIds.push(clone.id);
+    }
+    await Promise.all(
+      orderedIds.map((cid, index) =>
+        db.update(tech_skill_categories).set({ sort: index })
+          .where(eq(tech_skill_categories.id, cid))
+      ),
+    );
 
     return { success: true };
   },

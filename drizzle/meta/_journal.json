@@ -330,6 +330,20 @@
       "when": 1782413015153,
       "tag": "0046_conscious_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1783427528613,
+      "tag": "0047_gray_gunslinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1783432197204,
+      "tag": "0048_watery_doctor_octopus",
+      "breakpoints": true
     }
   ]
 }
