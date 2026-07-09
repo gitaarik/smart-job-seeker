@@ -748,7 +748,7 @@ Be objective and constructive. Highlight both strengths and gaps clearly.`,
 ### Candidate's Job Preferences:
 - Preferred job types: \${preferences.job_types}
 - Experience levels: \${preferences.experience_levels}
-- Remote preferences: \${preferences.remote_options}
+- Remote preferences: \${preferences.work_location}
 - Preferred locations: \${preferences.locations}
 
 ## Job Opportunity

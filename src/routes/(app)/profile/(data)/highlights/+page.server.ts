@@ -3,7 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { highlights } from "$lib/server/db/schema";
-import { getSelectedProfileId } from "../../utils";
+import { getSelectedProfileId, touchProfile } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -51,6 +51,7 @@ export const actions: Actions = {
       date_created: new Date(),
     });
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -80,6 +81,7 @@ export const actions: Actions = {
       date_updated: new Date(),
     }).where(eq(highlights.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -101,6 +103,7 @@ export const actions: Actions = {
 
     await db.delete(highlights).where(eq(highlights.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 };

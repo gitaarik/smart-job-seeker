@@ -2,6 +2,8 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq, and } from "drizzle-orm";
 import { profiles } from "$lib/server/db/schema";
 
+export { touchProfile } from "$lib/server/profile/touch-profile";
+
 export async function getSelectedProfileId(
   cookies: { get: (name: string) => string | undefined },
   userId: string,

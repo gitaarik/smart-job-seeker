@@ -126,6 +126,22 @@ describe("POST /api/interview-stories", () => {
       expect.objectContaining({ sort: 0 }),
     );
   });
+
+  it("bumps the profile's date_updated so the match snapshot re-exports", async () => {
+    mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
+    mockStoriesFindFirst.mockResolvedValueOnce(null);
+    mockInsertReturning.mockResolvedValueOnce([{ id: 1 }]);
+
+    await POST(createEvent("POST", { profile_id: 1, title: "First" }));
+
+    // touchProfile runs db.update(profiles).set({ date_updated }) on success.
+    expect(mockUpdateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "profiles.id" }),
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ date_updated: expect.any(Date) }),
+    );
+  });
 });
 
 describe("PUT /api/interview-stories", () => {

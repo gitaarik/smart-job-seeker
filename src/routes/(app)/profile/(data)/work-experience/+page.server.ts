@@ -3,7 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { work_experiences, work_experience_achievements, work_experience_technologies } from "$lib/server/db/schema";
-import { getSelectedProfileId } from "../../utils";
+import { getSelectedProfileId, touchProfile } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -70,6 +70,7 @@ export const actions: Actions = {
       date_created: new Date(),
     }).returning();
 
+    await touchProfile(profileId);
     redirect(302, `/profile/work-experience/${created.id}`);
   },
 
@@ -97,6 +98,7 @@ export const actions: Actions = {
       ),
     );
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -112,6 +114,7 @@ export const actions: Actions = {
       .set({ sort: null, date_updated: new Date() })
       .where(eq(work_experiences.profile_id, profileId));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -133,6 +136,7 @@ export const actions: Actions = {
 
     await db.delete(work_experiences).where(eq(work_experiences.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 };

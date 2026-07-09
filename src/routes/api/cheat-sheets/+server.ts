@@ -3,6 +3,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc } from "drizzle-orm";
 import { profiles, cheat_sheets } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import { touchProfile } from "$lib/server/profile/touch-profile";
 import {
   cheatSheetCreateSchema,
   cheatSheetUpdateSchema,
@@ -38,6 +39,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     date_created: new Date(),
   }).returning();
 
+  await touchProfile(profile_id);
+
   return json({ success: true, sheet });
 };
 
@@ -69,6 +72,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     date_updated: new Date(),
   }).where(eq(cheat_sheets.id, id)).returning();
 
+  await touchProfile(profile_id);
+
   return json({ success: true, sheet });
 };
 
@@ -93,6 +98,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
         .where(and(eq(cheat_sheets.id, id), eq(cheat_sheets.profile_id, profile_id)))
     ),
   );
+
+  await touchProfile(profile_id);
 
   return json({ success: true });
 };
@@ -119,6 +126,8 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   }
 
   await db.delete(cheat_sheets).where(eq(cheat_sheets.id, id));
+
+  await touchProfile(profile_id);
 
   return json({ success: true });
 };

@@ -4,7 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { tech_skill_categories, tech_skills } from "$lib/server/db/schema";
 import { SKILL_LEVELS } from "$lib/data/field-labels";
-import { getSelectedProfileId } from "../../utils";
+import { getSelectedProfileId, touchProfile } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -56,6 +56,7 @@ export const actions: Actions = {
       date_created: new Date(),
     });
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -85,6 +86,7 @@ export const actions: Actions = {
       date_updated: new Date(),
     }).where(eq(tech_skill_categories.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -115,6 +117,7 @@ export const actions: Actions = {
       date_updated: new Date(),
     }).where(eq(tech_skill_categories.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -189,6 +192,7 @@ export const actions: Actions = {
       ),
     );
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -210,6 +214,7 @@ export const actions: Actions = {
 
     await db.delete(tech_skill_categories).where(eq(tech_skill_categories.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -255,6 +260,7 @@ export const actions: Actions = {
       date_created: new Date(),
     });
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -295,6 +301,7 @@ export const actions: Actions = {
       date_updated: new Date(),
     }).where(eq(tech_skills.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -326,6 +333,7 @@ export const actions: Actions = {
       ),
     );
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -349,6 +357,7 @@ export const actions: Actions = {
       ),
     );
 
+    await touchProfile(profileId);
     return { success: true };
   },
 
@@ -373,6 +382,7 @@ export const actions: Actions = {
 
     await db.delete(tech_skills).where(eq(tech_skills.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 };

@@ -3,6 +3,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc } from "drizzle-orm";
 import { profiles, project_stories } from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import { touchProfile } from "$lib/server/profile/touch-profile";
 import {
   interviewStoryCreateSchema,
   interviewStoryUpdateSchema,
@@ -45,6 +46,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     date_created: new Date(),
   }).returning();
 
+  await touchProfile(profile_id);
+
   return json({ success: true, story });
 };
 
@@ -83,6 +86,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     date_updated: new Date(),
   }).where(eq(project_stories.id, id)).returning();
 
+  await touchProfile(profile_id);
+
   return json({ success: true, story });
 };
 
@@ -107,6 +112,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
         .where(and(eq(project_stories.id, id), eq(project_stories.profile_id, profile_id)))
     ),
   );
+
+  await touchProfile(profile_id);
 
   return json({ success: true });
 };
@@ -135,6 +142,8 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   }
 
   await db.delete(project_stories).where(eq(project_stories.id, id));
+
+  await touchProfile(profile_id);
 
   return json({ success: true });
 };

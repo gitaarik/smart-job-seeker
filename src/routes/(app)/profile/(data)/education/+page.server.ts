@@ -3,7 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { education } from "$lib/server/db/schema";
-import { getSelectedProfileId } from "../../utils";
+import { getSelectedProfileId, touchProfile } from "../../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -62,6 +62,7 @@ export const actions: Actions = {
       date_created: new Date(),
     }).returning();
 
+    await touchProfile(profileId);
     redirect(302, `/profile/education/${created.id}`);
   },
 
@@ -83,6 +84,7 @@ export const actions: Actions = {
 
     await db.delete(education).where(eq(education.id, id));
 
+    await touchProfile(profileId);
     return { success: true };
   },
 };
