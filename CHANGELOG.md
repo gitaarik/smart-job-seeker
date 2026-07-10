@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.93] - 2026-07-10
+
+4 commits since v0.5.92.
+
+### Added
+- Version tags, cloning, and notes for skill categories
+
+### Fixed
+- Work-location preference is now considered in match scoring
+- Stale profile snapshots are refreshed to maintain accuracy
+
 ## [0.5.92] - 2026-06-28
 
 2 commits since v0.5.91.
