@@ -15,6 +15,9 @@ import { searchTaskDisplayName } from "$lib/format";
 import {
   addScrapeJob,
   removeWaitingJob,
+  getActiveJobForSearch,
+  listQueueJobs,
+  removeJobById,
   getQueueStats,
 } from "$lib/server/queue";
 
@@ -134,6 +137,7 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
     orphanedItems,
     stuckRunsResult,
     statusMismatches,
+    queueOrphans,
   ] = await Promise.all([
     // Completed runs that still have pending/processing items
     queryRaw<{ count: bigint }>(sql`
@@ -143,10 +147,10 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
       WHERE ri.status IN ('pending', 'processing')
         AND r.status IN ('success', 'error', 'cancelled', 'partial')
     `),
-    // Runs stuck in running/queued/stopping for more than 30 minutes
+    // Runs stuck in an active state for more than 30 minutes
     db.select({ value: count() }).from(search_task_runs).where(
       and(
-        inArray(search_task_runs.status, ["running", "queued", "stopping"]),
+        inArray(search_task_runs.status, ["running", "queued", "blocked", "stopping"]),
         lt(search_task_runs.started_at, new Date(Date.now() - 30 * 60 * 1000)),
       ),
     ),
@@ -161,6 +165,9 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
             AND r.status IN ('running', 'queued', 'stopping')
         )
     `),
+    // BullMQ jobs whose DB run is already terminal (or missing) — these hold a
+    // concurrency slot / queue position for work the DB considers done.
+    countQueueOrphans(),
   ]);
 
   const orphanedCount = Number(orphanedItems[0]?.count ?? 0);
@@ -195,7 +202,50 @@ async function getHealthChecks(): Promise<HealthIssue[]> {
     });
   }
 
+  if (queueOrphans > 0) {
+    issues.push({
+      severity: "error",
+      label: "Orphaned queue jobs (blocking the queue)",
+      count: queueOrphans,
+      details:
+        "BullMQ jobs whose DB run is already finished or missing. On a concurrency:1 queue these can block every new run — remove them to unjam.",
+      fixAction: "fix-queue-orphans",
+    });
+  }
+
   return issues;
+}
+
+/**
+ * Count BullMQ scrape jobs whose DB run is terminal or missing. Such a job is
+ * drift: the DB considers the run done, but the job still occupies a queue slot
+ * (and on a concurrency:1 queue an orphaned *active* job blocks everything).
+ */
+async function countQueueOrphans(): Promise<number> {
+  return (await findQueueOrphans()).length;
+}
+
+const LIVE_RUN_STATUSES = ["running", "queued", "blocked", "stopping"];
+
+/**
+ * Resolve which queued BullMQ jobs no longer map to a live DB run. A job is an
+ * orphan when its run row is missing or already in a terminal state.
+ */
+async function findQueueOrphans() {
+  const jobs = await listQueueJobs();
+  if (jobs.length === 0) return [];
+
+  const runIds = [...new Set(jobs.map((j) => j.runId))];
+  const runs = await db.query.search_task_runs.findMany({
+    where: inArray(search_task_runs.id, runIds),
+    columns: { id: true, status: true },
+  });
+  const statusByRun = new Map(runs.map((r) => [r.id, r.status]));
+
+  return jobs.filter((j) => {
+    const status = statusByRun.get(j.runId);
+    return status === undefined || !LIVE_RUN_STATUSES.includes(status);
+  });
 }
 
 /**
@@ -211,7 +261,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   const body = await request.json();
   const { action, searchTaskId } = body as {
-    action: "stop" | "restart" | "fix-orphaned-items" | "fix-stuck-runs" | "fix-status-mismatches";
+    action:
+      | "stop"
+      | "restart"
+      | "fix-orphaned-items"
+      | "fix-stuck-runs"
+      | "fix-status-mismatches"
+      | "fix-queue-orphans";
     searchTaskId?: number;
   };
 
@@ -247,29 +303,84 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   if (action === "fix-stuck-runs") {
     const stuckRunsList = await db.query.search_task_runs.findMany({
       where: and(
-        inArray(search_task_runs.status, ["running", "queued", "stopping"]),
+        inArray(search_task_runs.status, ["running", "queued", "blocked", "stopping"]),
         lt(search_task_runs.started_at, new Date(Date.now() - 30 * 60 * 1000)),
       ),
-      columns: { id: true, search_task_id: true },
+      columns: { id: true, search_task_id: true, status: true },
     });
-    if (stuckRunsList.length > 0) {
-      const stuckIds = stuckRunsList.map((r) => r.id);
+
+    // Each stuck run is one of three cases, and only the graceful path frees a
+    // held concurrency slot:
+    //   - active BullMQ job → the worker (a separate process) is holding the
+    //     slot. We can only reach it cross-process by flagging the run
+    //     "stopping"; the worker's cancel checker then aborts + kills the
+    //     child and finalizes the run. Force-failing the Redis job here would
+    //     NOT free the slot (the worker keeps awaiting the child).
+    //   - waiting BullMQ job → not being processed; remove it and resolve the
+    //     run directly.
+    //   - no BullMQ job → an orphaned DB row (e.g. worker crashed mid-run);
+    //     resolve it directly.
+    let signalled = 0; // active jobs asked to stop via the worker
+    let cleared = 0; // waiting/orphan runs resolved directly
+    const directResolveIds: number[] = [];
+
+    for (const run of stuckRunsList) {
+      const activeJob = await getActiveJobForSearch(run.search_task_id);
+      if (activeJob && activeJob.data.runId === run.id) {
+        if (run.status !== "stopping") {
+          await db.update(search_task_runs).set({ status: "stopping" })
+            .where(eq(search_task_runs.id, run.id));
+        }
+        await db.update(search_tasks).set({
+          status: "stopping",
+          status_message: "Stopping (admin cleanup)...",
+          date_updated: new Date(),
+        }).where(eq(search_tasks.id, run.search_task_id));
+        signalled++;
+        continue;
+      }
+
+      // Not actively held — drop this run's own queued job (targeted by its
+      // deterministic id so we never remove a sibling run of the same task)
+      // and resolve the DB row.
+      await removeJobById(`scrape-${run.search_task_id}-${run.id}`);
+      directResolveIds.push(run.id);
+      await db.update(search_tasks).set({
+        status: "idle",
+        status_message: "Reset by admin",
+        live_url: null,
+        date_updated: new Date(),
+      }).where(eq(search_tasks.id, run.search_task_id));
+      cleared++;
+    }
+
+    if (directResolveIds.length > 0) {
       await db.update(search_task_runs).set({
         status: "error",
         error_message: "Timed out (cleaned up by admin)",
         finished_at: new Date(),
-      }).where(inArray(search_task_runs.id, stuckIds));
-      // Also clean up any pending items on those runs
+        live_url: null,
+      }).where(inArray(search_task_runs.id, directResolveIds));
       await db.update(search_task_run_items).set({
         status: "skipped",
         status_message: "Run timed out",
         processed_at: new Date(),
       }).where(and(
-        inArray(search_task_run_items.run_id, stuckIds),
+        inArray(search_task_run_items.run_id, directResolveIds),
         inArray(search_task_run_items.status, ["pending", "processing"]),
       ));
     }
-    return json({ status: "fixed", fixed: stuckRunsList.length });
+
+    return json({ status: "fixed", fixed: stuckRunsList.length, signalled, cleared });
+  }
+
+  if (action === "fix-queue-orphans") {
+    const orphans = await findQueueOrphans();
+    let removed = 0;
+    for (const job of orphans) {
+      if (await removeJobById(job.jobId)) removed++;
+    }
+    return json({ status: "fixed", fixed: removed });
   }
 
   if (action === "fix-status-mismatches") {

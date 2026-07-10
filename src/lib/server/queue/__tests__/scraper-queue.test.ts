@@ -10,6 +10,7 @@ const { hostedMocks, desktopMocks } = vi.hoisted(() => {
     add: vi.fn(),
     getActive: vi.fn().mockResolvedValue([]),
     getWaiting: vi.fn().mockResolvedValue([]),
+    getJob: vi.fn().mockResolvedValue(null),
     getWaitingCount: vi.fn().mockResolvedValue(0),
     getActiveCount: vi.fn().mockResolvedValue(0),
     getCompletedCount: vi.fn().mockResolvedValue(0),
@@ -36,6 +37,8 @@ import {
   getWaitingJobForSearch,
   removeWaitingJob,
   removeActiveJob,
+  listQueueJobs,
+  removeJobById,
   getQueueStats,
   type ScrapeJobData,
 } from "../scraper-queue";
@@ -219,6 +222,82 @@ describe("removeActiveJob", () => {
     hostedMocks.getActive.mockResolvedValueOnce([]);
     desktopMocks.getActive.mockResolvedValueOnce([]);
     const result = await removeActiveJob(42);
+    expect(result).toBe(false);
+  });
+});
+
+describe("listQueueJobs", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    hostedMocks.getActive.mockResolvedValue([]);
+    hostedMocks.getWaiting.mockResolvedValue([]);
+    desktopMocks.getActive.mockResolvedValue([]);
+    desktopMocks.getWaiting.mockResolvedValue([]);
+  });
+
+  it("collects active and waiting jobs from both queues with state + ids", async () => {
+    hostedMocks.getActive.mockResolvedValueOnce([
+      { id: "scrape-1-100", data: { searchTaskId: 1, runId: 100 } },
+    ]);
+    desktopMocks.getWaiting.mockResolvedValueOnce([
+      { id: "scrape-2-200", data: { searchTaskId: 2, runId: 200 } },
+    ]);
+
+    const jobs = await listQueueJobs();
+    expect(jobs).toEqual(
+      expect.arrayContaining([
+        { jobId: "scrape-1-100", queue: "hosted", state: "active", searchTaskId: 1, runId: 100 },
+        { jobId: "scrape-2-200", queue: "desktop", state: "waiting", searchTaskId: 2, runId: 200 },
+      ]),
+    );
+    expect(jobs).toHaveLength(2);
+  });
+
+  it("skips jobs without an id", async () => {
+    desktopMocks.getActive.mockResolvedValueOnce([
+      { id: undefined, data: { searchTaskId: 3, runId: 300 } },
+    ]);
+    const jobs = await listQueueJobs();
+    expect(jobs).toEqual([]);
+  });
+});
+
+describe("removeJobById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    hostedMocks.getJob.mockResolvedValue(null);
+    desktopMocks.getJob.mockResolvedValue(null);
+  });
+
+  it("force-fails an active job and returns true", async () => {
+    const moveToFailed = vi.fn().mockResolvedValueOnce(undefined);
+    hostedMocks.getJob.mockResolvedValueOnce(null);
+    desktopMocks.getJob.mockResolvedValueOnce({
+      getState: vi.fn().mockResolvedValueOnce("active"),
+      moveToFailed,
+      remove: vi.fn(),
+    });
+    const result = await removeJobById("scrape-2-200");
+    expect(result).toBe(true);
+    expect(moveToFailed).toHaveBeenCalledWith(expect.any(Error), "0", true);
+  });
+
+  it("removes a waiting job and returns true", async () => {
+    const remove = vi.fn().mockResolvedValueOnce(undefined);
+    hostedMocks.getJob.mockResolvedValueOnce({
+      getState: vi.fn().mockResolvedValueOnce("waiting"),
+      moveToFailed: vi.fn(),
+      remove,
+    });
+    const result = await removeJobById("scrape-1-100");
+    expect(result).toBe(true);
+    expect(remove).toHaveBeenCalled();
+  });
+
+  it("returns false when the job is in neither queue", async () => {
+    hostedMocks.getJob.mockResolvedValueOnce(null);
+    desktopMocks.getJob.mockResolvedValueOnce(null);
+    const result = await removeJobById("scrape-9-999");
     expect(result).toBe(false);
   });
 });

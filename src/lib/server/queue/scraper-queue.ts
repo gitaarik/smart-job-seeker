@@ -164,6 +164,66 @@ export async function removeActiveJob(
 }
 
 /**
+ * A scrape job currently present in one of the queues, with the identifiers
+ * needed to reconcile it against the DB.
+ */
+export interface QueuedScrapeJob {
+  jobId: string;
+  queue: "hosted" | "desktop";
+  state: "active" | "waiting";
+  searchTaskId: number;
+  runId: number;
+}
+
+/**
+ * List all active + waiting scrape jobs across both queues. Used by the admin
+ * reconcile action to detect drift between the queues and the DB.
+ */
+export async function listQueueJobs(): Promise<QueuedScrapeJob[]> {
+  const queues: Array<["hosted" | "desktop", Queue<ScrapeJobData, ScrapeJobResult>]> = [
+    ["hosted", getHostedQueue()],
+    ["desktop", getDesktopQueue()],
+  ];
+  const result: QueuedScrapeJob[] = [];
+  for (const [name, q] of queues) {
+    const [active, waiting] = await Promise.all([q.getActive(), q.getWaiting()]);
+    for (const [state, jobs] of [["active", active], ["waiting", waiting]] as const) {
+      for (const j of jobs) {
+        if (!j.id) continue;
+        result.push({
+          jobId: j.id,
+          queue: name,
+          state,
+          searchTaskId: j.data.searchTaskId,
+          runId: j.data.runId,
+        });
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Force-fail and remove a specific job by its BullMQ job id, regardless of
+ * which queue it lives in or whether it is active or waiting. Returns true if
+ * a job was found and removed.
+ */
+export async function removeJobById(jobId: string): Promise<boolean> {
+  for (const q of [getHostedQueue(), getDesktopQueue()]) {
+    const job = await q.getJob(jobId);
+    if (!job) continue;
+    const state = await job.getState();
+    if (state === "active") {
+      await job.moveToFailed(new Error("Cleared by admin reconcile"), "0", true);
+    } else {
+      await job.remove();
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
  * Get aggregate queue stats across both queues
  */
 export async function getQueueStats() {
