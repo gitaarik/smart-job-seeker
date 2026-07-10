@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.94] - 2026-07-10
+
+2 commits since v0.5.93.
+
+### Fixed
+- Admin reconcile now successfully unjams the scraper queue
+- Added desktop worker watchdog to prevent tunnel hangs from jamming the queue
+
 ## [0.5.93] - 2026-07-10
 
 4 commits since v0.5.92.
