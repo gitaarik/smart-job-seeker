@@ -312,11 +312,20 @@ function createLangChainModel(
   switch (provider) {
     case "groq": {
       const apiKey = config.groqApiKey || getEnv("SJS_LLM_API_KEY_GROQ", "");
+      // GPT-OSS models are reasoning models: they emit reasoning tokens before
+      // the answer, all counted against max_completion_tokens. On our
+      // small-budget JSON calls (e.g. the 256-token filter-opener lookup) the
+      // reasoning can consume the whole budget, leaving an empty body that
+      // Groq rejects with `json_validate_failed` (failed_generation: "").
+      // Cap reasoning to "low" so a JSON answer always fits; it also cuts
+      // latency and cost. Only reasoning models accept this param, so gate it.
+      const isReasoningModel = /gpt-oss/i.test(model);
       return new ChatGroq({
         apiKey,
         model,
         temperature,
         maxTokens,
+        ...(isReasoningModel ? { reasoningEffort: "low" } : {}),
       });
     }
 
