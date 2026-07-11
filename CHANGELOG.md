@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.96] - 2026-07-11
+
+2 commits since v0.5.95.
+
+### Fixed
+- Capped Groq reasoning effort for GPT-OSS to prevent empty JSON responses
+- Increased token budget for scraper filter-opener to support reasoning models
+
 ## [0.5.95] - 2026-07-11
 
 2 commits since v0.5.94.
