@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.6.0] - 2026-07-11
+
+1 commit since v0.5.96.
+
+### Added
+- Opt-in `npm run llm:smoke` test for real-API LLM validation across all features (email parser, scraper filter, resume parser, AI chat)
+
 ## [0.5.96] - 2026-07-11
 
 2 commits since v0.5.95.
