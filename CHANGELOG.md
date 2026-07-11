@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.5.95] - 2026-07-11
+
+2 commits since v0.5.94.
+
+### Changed
+- Replaced deprecated Groq Llama-4-Scout model with Gpt-oss-120b
+
 ## [0.5.94] - 2026-07-10
 
 2 commits since v0.5.93.
