@@ -17,7 +17,7 @@ vi.mock("../config", () => ({
     retryMaxDelay: 10000,
     llmCacheTTL: 3600000,
     llmProvider: "groq",
-    llmModel: "meta-llama/llama-4-scout-17b-16e-instruct",
+    llmModel: "openai/gpt-oss-120b",
   },
 }));
 

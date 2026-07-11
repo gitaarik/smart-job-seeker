@@ -4,7 +4,7 @@ import { isRetryableError, withRetry } from "../retry";
 /** Build an Error carrying the same shape the LLM layer attaches to a 429. */
 function rateLimitError(retryAfter?: number): Error {
   const err = new Error(
-    "🚫 Rate limit exceeded for groq/llama-4-scout. 429 tokens per minute",
+    "🚫 Rate limit exceeded for groq/openai/gpt-oss-120b. 429 tokens per minute",
   ) as Error & { status?: number; retryAfter?: number };
   err.status = 429;
   if (retryAfter !== undefined) err.retryAfter = retryAfter;

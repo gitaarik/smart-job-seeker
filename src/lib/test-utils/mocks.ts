@@ -106,7 +106,7 @@ export function createMockLLMResponse(content: string) {
         index: 0,
       },
     ],
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: "openai/gpt-oss-120b",
     usage: {
       prompt_tokens: 100,
       completion_tokens: 50,

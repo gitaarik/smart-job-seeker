@@ -76,7 +76,7 @@ export interface AppConfig {
  */
 function getModelForProvider(provider: string): string {
   const hardcodedDefaults: Record<string, string> = {
-    groq: "meta-llama/llama-4-scout-17b-16e-instruct",
+    groq: "openai/gpt-oss-120b",
     gemini: "gemini-2.0-flash-exp",
     openai: "gpt-4o",
     deepseek: "deepseek-chat",

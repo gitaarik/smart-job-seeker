@@ -46,7 +46,7 @@ vi.mock("../config", () => ({
     retryMaxDelay: 10000,
     llmCacheTTL: 3600000,
     llmProvider: "groq",
-    llmModel: "meta-llama/llama-4-scout-17b-16e-instruct",
+    llmModel: "openai/gpt-oss-120b",
   },
 }));
 
@@ -160,7 +160,7 @@ describe("generateAiChatResponse", () => {
 
     expect(result.success).toBe(false);
     expect(result.message).toContain("Rate limit exceeded");
-    expect(result.message).toContain("groq/meta-llama");
+    expect(result.message).toContain("groq/openai");
     expect(result.message).toContain("Please try again later");
   });
 

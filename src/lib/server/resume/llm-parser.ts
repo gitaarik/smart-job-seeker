@@ -222,7 +222,7 @@ export async function parseResumeWithLLM(
   ];
 
   const result = await generateChatCompletionTracked(messages, {
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: "openai/gpt-oss-120b",
     maxTokens: 8192,
     temperature: 0.1,
     structuredOutput: {

@@ -28,6 +28,9 @@ interface TokenCost {
  */
 const PROVIDER_COSTS: Record<string, TokenCost> = {
   // Groq — https://groq.com/pricing
+  "groq/openai/gpt-oss-120b":                          { input: 0.15e-6, output: 0.60e-6 },
+  "groq/openai/gpt-oss-20b":                           { input: 0.075e-6, output: 0.30e-6 },
+  // llama-4-scout decommissioned 2026-07-17; keep for historical backfill
   "groq/meta-llama/llama-4-scout-17b-16e-instruct":    { input: 0.11e-6, output: 0.34e-6 },
   "groq/meta-llama/llama-4-maverick-17b-128e-instruct": { input: 0.50e-6, output: 0.77e-6 },
   "groq/llama-3.3-70b-versatile":                       { input: 0.59e-6, output: 0.79e-6 },
