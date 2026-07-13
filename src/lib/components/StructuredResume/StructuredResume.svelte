@@ -375,8 +375,18 @@
 
   @media print {
     @page { size: A4; margin: 0; }
-    .bg { position: fixed; background-image: none; }
+    /* The fixed background layer renders a hair smaller than the sheet, leaving
+       a white strip on the bottom and right. Extend the layer past those edges
+       (top-left anchored) so the page clips the bleed. Keep `bottom` tiny: the
+       footer bar sits at the image's bottom, so extra shift pushes it below the
+       fold and clips it. `right` saturates ~2mm — Chrome clamps the fixed layer
+       a sub-pixel short of the sheet, so a ~0.25mm residual is unreachable from
+       CSS (would need a change to the page.pdf viewport/margins). */
+    .bg { position: fixed; background-image: none; right: -3mm; bottom: -0.7mm; }
     .bg-print { display: block; height: 100%; }
+    /* The flat-topped badge is meant to bleed off the top edge, but sits a hair
+       short (~0.4mm white above it). Pull it up so the flat top clips cleanly. */
+    .badge { margin-top: -2mm; }
     .footer { display: none; }
   }
 </style>
