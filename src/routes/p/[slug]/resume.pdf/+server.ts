@@ -7,6 +7,7 @@ import {
   getVersionSlugById,
 } from "$lib/server/profile/access-control";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
+import { templateForStorage } from "$lib/resume-templates";
 
 /**
  * Transform version slug to export_format
@@ -27,6 +28,7 @@ export const GET: RequestHandler = async (
 ) => {
   const { slug } = params;
   const token = url.searchParams.get("t");
+  const templateFilter = templateForStorage(url.searchParams.get("template"));
 
   // Get profile by slug
   const profile = await getProfileByIdentifier(slug);
@@ -72,6 +74,7 @@ export const GET: RequestHandler = async (
       exportType: "resume",
       fileType: "pdf",
       exportFormat: effectiveVersion,
+      template: templateFilter,
     });
 
     // Fall back to transformed format for backward compatibility
@@ -85,6 +88,7 @@ export const GET: RequestHandler = async (
         exportType: "resume",
         fileType: "pdf",
         exportFormat: transformedFormat,
+        template: templateFilter,
       });
     }
   } else {
@@ -93,6 +97,7 @@ export const GET: RequestHandler = async (
       profileId: profile.id,
       exportType: "resume",
       fileType: "pdf",
+      template: templateFilter,
     });
   }
 

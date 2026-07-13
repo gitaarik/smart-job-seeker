@@ -7,15 +7,20 @@ import { getSelectedProfileId } from "../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
 import { requireCredits } from "$lib/server/billing/require-credits";
+import {
+  DEFAULT_TEMPLATE_ID,
+  templateForStorage,
+} from "$lib/resume-templates";
+import { getResumeTemplatesForProfile } from "$lib/server/profile/resume-templates";
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, url }) => {
   const layoutData = await parent();
 
   if (!layoutData.selectedProfile) {
     redirect(302, "/home");
   }
 
-  const [profile, versions, profileExports] = await Promise.all([
+  const [profile, versions, profileExports, templates] = await Promise.all([
     db.query.profiles.findFirst({
       where: eq(profiles.id, layoutData.selectedProfile.id),
       columns: {
@@ -41,19 +46,43 @@ export const load: PageServerLoad = async ({ parent }) => {
         eq(profile_exports.status, "published"),
         inArray(profile_exports.export_type, ["resume", "cv"]),
       ),
-      columns: { description: true, export_type: true },
+      columns: {
+        description: true,
+        export_type: true,
+        export_format: true,
+        template: true,
+      },
     }),
+    getResumeTemplatesForProfile(layoutData.selectedProfile.id),
   ]);
+
+  // The selected template is a page-level lens from ?template=; fall back to the
+  // built-in default when the slug isn't one of this profile's templates.
+  const rawTemplate = url.searchParams.get("template") ?? DEFAULT_TEMPLATE_ID;
+  const selectedTemplate = templates.some((t) => t.slug === rawTemplate)
+    ? rawTemplate
+    : DEFAULT_TEMPLATE_ID;
+  const templateFilter = templateForStorage(selectedTemplate);
 
   const publicResumeVersionId = profile?.public_resume_version_id ?? null;
   const publicCvVersionId = profile?.public_cv_version_id ?? null;
 
+  // A stored export belongs to this version+template when its export_format is
+  // the version slug (new format) or its description mentions "(slug)" (legacy),
+  // and its template column matches the selected template (null = default).
+  const matchesVersionTemplate = (
+    e: { export_format: string | null; description: string | null; template: string | null },
+    slug: string | null,
+  ) =>
+    (e.template ?? null) === templateFilter &&
+    (e.export_format === slug || (!!slug && !!e.description?.includes(`(${slug})`)));
+
   const mapped = versions.map(({ extension_links: exts, ...v }) => {
     const hasResumePdf = profileExports.some(
-      (e) => e.export_type === "resume" && e.description?.includes(`(${v.slug})`)
+      (e) => e.export_type === "resume" && matchesVersionTemplate(e, v.slug),
     );
     const hasCvPdf = profileExports.some(
-      (e) => e.export_type === "cv" && e.description?.includes(`(${v.slug})`)
+      (e) => e.export_type === "cv" && matchesVersionTemplate(e, v.slug),
     );
     return {
       ...v,
@@ -78,6 +107,8 @@ export const load: PageServerLoad = async ({ parent }) => {
     profileId: layoutData.selectedProfile.id,
     publicResumeVersionId,
     publicCvVersionId,
+    templates,
+    selectedTemplate,
   };
 };
 
@@ -150,6 +181,13 @@ export const actions: Actions = {
     const slug = (formData.get("slug") as string) || "";
     if (!slug) return fail(400, { error: "No version specified" });
 
+    // Validate the requested template against this profile's templates.
+    const rawTemplate = (formData.get("template") as string) || DEFAULT_TEMPLATE_ID;
+    const templates = await getResumeTemplatesForProfile(profileId);
+    const templateId = templates.some((t) => t.slug === rawTemplate)
+      ? rawTemplate
+      : DEFAULT_TEMPLATE_ID;
+
     const version = await db.query.profile_versions.findFirst({
       where: and(eq(profile_versions.profile_id, profileId), eq(profile_versions.slug, slug)),
     });
@@ -157,8 +195,8 @@ export const actions: Actions = {
 
     await requireCredits(user.id, 1);
     await chargeCredits(user.id, 1, "pdf_export", "PDF export");
-    await generateVersionPdfs(profileId, slug);
+    await generateVersionPdfs(profileId, slug, templateForStorage(templateId));
 
-    return { success: true, generatedSlug: slug };
+    return { success: true, generatedSlug: slug, template: templateId };
   },
 };

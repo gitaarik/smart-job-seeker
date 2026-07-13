@@ -29,6 +29,7 @@ const DOC_TYPES = [
 export async function generateVersionPdfs(
   profileId: number,
   versionSlug: string,
+  template: string | null = null,
 ): Promise<void> {
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, profileId),
@@ -61,12 +62,16 @@ export async function generateVersionPdfs(
       "x-internal-user-id": profile.user_id,
     });
 
+    const templateQuery = template ? `&template=${template}` : "";
+    const templateLabel = template ? ` [${template}]` : "";
+
     for (const doc of DOC_TYPES) {
-      const route = `p/${profile.slug}/${doc.type}?version=${versionSlug}`;
+      const route =
+        `p/${profile.slug}/${doc.type}?version=${versionSlug}${templateQuery}`;
       const url = `${APP_INTERNAL_URL}/${route}`;
 
       console.log(
-        `[generate-version-pdfs] Generating ${doc.display} PDF for "${versionSlug}"...`,
+        `[generate-version-pdfs] Generating ${doc.display} PDF for "${versionSlug}"${templateLabel}...`,
       );
 
       await page.goto(url, {
@@ -95,7 +100,9 @@ export async function generateVersionPdfs(
 
       const displayName = profile.name || `Profile ${profileId}`;
       const docLabel = doc.type === "cv" ? "CV" : "Resume";
-      const filename = `${displayName} - ${docLabel} - ${versionSlug}.pdf`;
+      const filename = `${displayName} - ${docLabel} - ${versionSlug}${
+        template ? ` - ${template}` : ""
+      }.pdf`;
 
       const sourceUrl = buildExportUrl({ route });
 
@@ -106,7 +113,8 @@ export async function generateVersionPdfs(
         fileType: "pdf",
         exportType: doc.type,
         exportFormat: versionSlug,
-        description: `${doc.display} (${versionSlug}) - Generated ${
+        template,
+        description: `${doc.display} (${versionSlug})${templateLabel} - Generated ${
           new Date().toISOString()
         }`,
         sourceUrl,

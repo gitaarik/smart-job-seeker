@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import { createProfileFilter } from "../ProfileDisplay/profile-filter";
+  import { assetUrl, type ResumeTemplateConfig } from "$lib/resume-templates";
 
   interface WorkExperience {
     name: string | null;
@@ -47,10 +48,30 @@
 
   interface Props {
     profile: Profile;
+    config: ResumeTemplateConfig;
     type?: string | null;
     versionId?: number | null;
   }
-  let { profile, type = null, versionId = null }: Props = $props();
+  let { profile, config, type = null, versionId = null }: Props = $props();
+
+  // --- template config → local branding values ---
+  const accent = config.accent ?? "#ffd400";
+  const headingFont = config.fonts?.heading ?? "Poppins";
+  const bodyFont = config.fonts?.body ?? "Carlito";
+  const A = config.assets ?? {};
+  const badgeUrl = assetUrl(A.badge);
+  const screenBgUrl = assetUrl(A.screenBackground);
+  const printBgUrl = assetUrl(A.printBackground);
+  const footerUrl = assetUrl(A.footer);
+  const dividerUrl = assetUrl(A.divider);
+  const appendLocation = config.rules?.appendLocationToHeadline ?? false;
+
+  const rootStyle = [
+    `--accent:${accent}`,
+    `--heading-font:${headingFont}`,
+    `--body-font:${bodyFont}`,
+    screenBgUrl ? `--screen-bg:url('${screenBgUrl}')` : "",
+  ].filter(Boolean).join(";");
 
   const versionFromUrl = page.url.searchParams.get("version") || "";
   const { filterOnTags } = createProfileFilter(
@@ -64,12 +85,16 @@
   const work = filterOnTags(profile.work_experiences ?? []);
   const education = filterOnTags(profile.educations ?? []);
 
-  // Citrus-specific: the stored headline holds only the base text; the job
-  // location is appended here ("… in {location}.").
+  // Work-experience lead line. The stored headline holds only the base text;
+  // when the template opts in, the job location is appended ("… in {location}.").
   function lead(job: WorkExperience): string {
-    if (!job.headline) return "";
-    const loc = (job.location ?? "").trim();
-    return job.headline + (loc ? ` in ${loc}` : "") + ".";
+    const base = (job.headline ?? "").trim();
+    if (!base) return "";
+    if (appendLocation) {
+      const loc = (job.location ?? "").trim();
+      return base + (loc ? ` in ${loc}` : "") + ".";
+    }
+    return base.endsWith(".") ? base : base + ".";
   }
   function tech(job: WorkExperience): string {
     return (job.work_experience_technologies ?? [])
@@ -114,24 +139,32 @@
   {/if}
 {/snippet}
 
-<div class="citrus">
-  <div class="bg"><img src="/citrus/bg.png" alt="" /></div>
+<div class="resume" style={rootStyle}>
+  <!-- Background layers. An <img> (not a CSS background) is used for print
+       because a fixed <img> reliably repeats on every printed page in Chrome,
+       whereas a fixed CSS background does not. Screen tiles the decorative
+       background; print uses the full (decoration + footer) image so the bar
+       sits at the bottom of every page. -->
+  <div class="bg">
+    {#if printBgUrl}<img class="bg-print" src={printBgUrl} alt="" />{/if}
+  </div>
   <table class="page">
-    <!-- thead/tfoot repeat per printed page and reserve space so content clears
-         the badge (top) and the footer bar (bottom), both of which are painted
-         by the full-page fixed background above. -->
     <thead>
-      <tr><td class="hspace-top"></td></tr>
+      <tr><td class="badge-cell">
+        {#if badgeUrl}<img class="badge" src={badgeUrl} alt="" />{/if}
+      </td></tr>
     </thead>
     <tfoot>
-      <tr><td class="hspace-bottom"></td></tr>
+      <tr><td class="footer-cell">
+        {#if footerUrl}<img class="footer" src={footerUrl} alt="" />{/if}
+      </td></tr>
     </tfoot>
     <tbody>
       <tr>
         <td>
           <h1>{profile.name}</h1>
           {#if profile.title}<div class="subtitle">{profile.title}</div>{/if}
-          <div class="wave"><img src="/citrus/wave.png" alt="" /></div>
+          {#if dividerUrl}<div class="wave"><img src={dividerUrl} alt="" /></div>{/if}
 
           {#if profile.summary}
             <p class="summary">{profile.summary}</p>
@@ -211,38 +244,38 @@
 </div>
 
 <style>
+  /* Bundled open fonts (generic, not template-specific); a template's config
+     picks families by name via --heading-font / --body-font. */
   @font-face {
     font-family: "Poppins";
     font-style: normal;
     font-weight: 800;
     font-display: block;
-    src: url("/citrus/fonts/poppins-extrabold.woff2") format("woff2");
+    src: url("/fonts/poppins-extrabold.woff2") format("woff2");
   }
   @font-face {
     font-family: "Carlito";
     font-style: normal;
     font-weight: 400;
     font-display: block;
-    src: url("/citrus/fonts/carlito-regular.woff2") format("woff2");
+    src: url("/fonts/carlito-regular.woff2") format("woff2");
   }
   @font-face {
     font-family: "Carlito";
     font-style: normal;
     font-weight: 700;
     font-display: block;
-    src: url("/citrus/fonts/carlito-bold.woff2") format("woff2");
+    src: url("/fonts/carlito-bold.woff2") format("woff2");
   }
 
   /* White canvas (dark-mode safe) on <html>; body stays transparent so it
-     doesn't paint over the fixed background layer below. */
+     doesn't paint over the background layer below. */
   :global(html) { background: #fff !important; margin: 0; }
   :global(body) { background: transparent !important; margin: 0; }
-  @media print {
-    @page { size: A4; margin: 0; }
-  }
 
-  .citrus {
-    font-family: "Carlito", "Calibri", sans-serif;
+  .resume {
+    position: relative;
+    font-family: var(--body-font, "Carlito"), "Calibri", sans-serif;
     color: #3a3a3a;
     font-size: 9.1pt;
     line-height: 1.45;
@@ -250,22 +283,35 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .citrus * { box-sizing: border-box; }
+  .resume * { box-sizing: border-box; }
 
-  /* circles + footer bar: full-page fixed layer, repeats on every printed page.
-     z-index:0 keeps it above the white canvas; content sits above via z-index:1
-     (avoids the negative-z-index-behind-body-background gotcha). */
-  .bg { position: fixed; inset: 0; z-index: 0; }
-  .bg img { width: 100%; height: 100%; }
+  /* Screen background: tile the (A4) decorative image down the sheet at true
+     scale — every A4-height repeats the same pattern the PDF paints per page. */
+  .bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background-image: var(--screen-bg, none);
+    background-repeat: repeat-y;
+    background-position: top center;
+    background-size: 100% auto;
+  }
+  .bg img { width: 100%; }
+  .bg-print { display: none; height: 100%; }
 
-  /* thead/tfoot repeat as running header/footer on every page and reserve space */
+  /* thead badge repeats on every printed page; tfoot holds the footer bar on
+     screen (once, at the sheet bottom). Both reserve space so content clears
+     the badge/footer. */
   .page { position: relative; z-index: 1; width: 100%; border-collapse: collapse; }
-  .hspace-top { height: 30mm; padding: 0; }
-  .hspace-bottom { height: 16mm; padding: 0; }
+  .badge-cell { padding: 0 0 10mm; text-align: center; }
+  .badge { height: 21mm; display: block; margin: 0 auto; }
+  .footer-cell { height: 23mm; padding: 0; vertical-align: bottom; }
+  .footer { width: 100%; display: block; }
   tbody td { padding: 0 15mm; vertical-align: top; }
 
   h1 {
-    font-family: "Poppins", sans-serif;
+    font-family: var(--heading-font, "Poppins"), sans-serif;
     font-weight: 800;
     font-size: 31pt;
     color: #111;
@@ -289,7 +335,7 @@
   .ci :global(svg) { width: 12px; height: 12px; }
   .edu-item { display: flex; gap: 11px; align-items: stretch; min-height: 15mm; }
   .tl { flex: 0 0 10px; display: flex; flex-direction: column; align-items: center; }
-  .ydot { width: 10px; height: 10px; border-radius: 50%; background: #ffd400; margin-top: 2px; flex: 0 0 auto; }
+  .ydot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent, #ffd400); margin-top: 2px; flex: 0 0 auto; }
   .tline { width: 1.5px; flex: 1 1 auto; background: #dcdcdc; margin-top: 3px; }
   .edu-item p { font-size: 9.1pt; margin: 0; }
   .job { display: flex; gap: 16px; }
@@ -304,4 +350,23 @@
   .tech { margin-top: 5px; font-size: 8.5pt; color: #3a3a3a; }
   .tech span { font-weight: 700; color: #111; }
   .jdiv { border: 0; border-top: 1px solid #d9d9d9; margin: 13px 0; clear: both; }
+
+  /* Media overrides last so they win over the base rules above. */
+  @media screen {
+    :global(html) { background: #e9e9ec !important; }
+    .resume {
+      max-width: 210mm;
+      min-height: 297mm;
+      margin: 24px auto;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  @media print {
+    @page { size: A4; margin: 0; }
+    .bg { position: fixed; background-image: none; }
+    .bg-print { display: block; height: 100%; }
+    .footer { display: none; }
+  }
 </style>

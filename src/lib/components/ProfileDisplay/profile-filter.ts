@@ -1,6 +1,6 @@
 /**
  * Version/tag filtering shared by the resume/CV templates (default
- * ProfileDisplay and the Citrus template).
+ * ProfileDisplay and the StructuredResume templates).
  *
  * A resume "version" is a named slug whose extension chain (via
  * profile_version_extensions) plus the base template type ("resume"/"cv")

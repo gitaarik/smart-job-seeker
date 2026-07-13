@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/state";
+  import { assetUrl, DEFAULT_TEMPLATE_ID } from "$lib/resume-templates";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheckCircle,
@@ -21,6 +24,38 @@
   let versions = $derived(data.versions);
   let publicResumeVersionId = $derived(data.publicResumeVersionId);
   let publicCvVersionId = $derived(data.publicCvVersionId);
+  let selectedTemplate = $derived(data.selectedTemplate);
+  // The built-in "Standard" template plus this profile's DB-backed templates.
+  let templateTiles = $derived([
+    {
+      id: DEFAULT_TEMPLATE_ID,
+      label: "Standard",
+      description: "Clean single-column layout",
+      thumb: null as string | null,
+    },
+    ...data.templates.map((t) => ({
+      id: t.slug,
+      label: t.name,
+      description: "",
+      thumb: assetUrl(t.config?.thumbnail),
+    })),
+  ]);
+  let templateLabel = $derived(
+    templateTiles.find((t) => t.id === selectedTemplate)?.label ?? "",
+  );
+
+  // Template is a page-level lens persisted in ?template=; changing it re-runs
+  // the loader (per-template "has PDF" state) and re-lenses every doc link.
+  function selectTemplate(id: string) {
+    const u = new URL(page.url);
+    if (id === DEFAULT_TEMPLATE_ID) u.searchParams.delete("template");
+    else u.searchParams.set("template", id);
+    goto(u.pathname + u.search, {
+      keepFocus: true,
+      noScroll: true,
+      invalidateAll: true,
+    });
+  }
 
   let showAddForm = $state(false);
   let showAddAdvanced = $state(false);
@@ -122,6 +157,61 @@
     addLabel="Add Version"
     onAdd={() => (showAddForm = true)}
   />
+
+  <!-- Template switcher: re-lenses every doc link + the generate button.
+       Shown only when the profile has custom (DB-backed) templates. -->
+  {#if versions.length > 0 && data.templates.length > 0}
+    <div
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
+    >
+      <p class="text-sm font-medium text-[var(--dash-text)] mb-3">Template</p>
+      <div class="flex flex-wrap gap-3">
+        {#each templateTiles as t (t.id)}
+          {@const active = selectedTemplate === t.id}
+          <button
+            type="button"
+            onclick={() => selectTemplate(t.id)}
+            aria-pressed={active}
+            class="text-left rounded-lg border-2 p-1.5 transition-colors cursor-pointer {active
+              ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5'
+              : 'border-[var(--dash-border)] hover:border-[var(--dash-primary)]/50'}"
+          >
+            {#if t.thumb}
+              <img
+                src={t.thumb}
+                alt="{t.label} template preview"
+                class="w-28 h-40 object-cover object-top rounded bg-white border border-[var(--dash-border)]"
+              />
+            {:else}
+              <div
+                class="w-28 h-40 rounded bg-white border border-[var(--dash-border)] flex items-center justify-center"
+              >
+                <FontAwesomeIcon icon={faFileAlt} class="w-8 h-8 text-[var(--dash-text-muted)]" />
+              </div>
+            {/if}
+            <div class="mt-1.5 px-0.5">
+              <div
+                class="text-sm font-medium text-[var(--dash-text)] flex items-center gap-1.5"
+              >
+                {t.label}
+                {#if active}
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    class="w-3 h-3 text-[var(--dash-primary)]"
+                  />
+                {/if}
+              </div>
+              {#if t.description}
+                <div class="text-xs text-[var(--dash-text-muted)]">
+                  {t.description}
+                </div>
+              {/if}
+            </div>
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   {#if form?.error}
     <div
@@ -305,12 +395,12 @@
                     <p class="text-sm font-semibold text-[var(--dash-text)] mb-2">Resume</p>
                     <div class="flex items-center justify-center gap-1.5">
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id) })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), template: selectedTemplate })}
                         target="_blank"
                         class="dash-link-ext"
                       >HTML</a>
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true, template: selectedTemplate })}
                         target="_blank"
                         class="dash-link-ext"
                       >PDF</a>
@@ -320,12 +410,12 @@
                     <p class="text-sm font-semibold text-[var(--dash-text)] mb-2">CV</p>
                     <div class="flex items-center justify-center gap-1.5">
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id) })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), template: selectedTemplate })}
                         target="_blank"
                         class="dash-link-ext"
                       >HTML</a>
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true, template: selectedTemplate })}
                         target="_blank"
                         class="dash-link-ext"
                       >PDF</a>
@@ -346,12 +436,13 @@
                   {@const hasPdfs = version.hasResumePdf && version.hasCvPdf}
                   <form method="POST" action="?/generateExports" use:enhance={() => handleGenerateSubmit(version.slug ?? "")} class="inline">
                     <input type="hidden" name="slug" value={version.slug} />
+                    <input type="hidden" name="template" value={selectedTemplate} />
                     <button
                       type="submit"
                       class="dash-link-ext border border-[var(--dash-border)] {hasPdfs ? '!text-[var(--dash-text-secondary)] !bg-[var(--dash-bg)] hover:!bg-[var(--dash-primary)]/10 hover:!text-[var(--dash-primary)]' : '!text-amber-600 !bg-amber-500/10 hover:!bg-amber-500/20'}"
                     >
                       <FontAwesomeIcon icon={hasPdfs ? faSync : faFilePdf} class="w-3 h-3" />
-                      {hasPdfs ? "Regenerate PDFs" : "Generate PDFs"}
+                      {hasPdfs ? `Regenerate ${templateLabel} PDFs` : `Generate ${templateLabel} PDFs`}
                     </button>
                   </form>
                 {/if}

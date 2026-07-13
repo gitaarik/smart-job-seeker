@@ -351,6 +351,20 @@
       "when": 1783952208360,
       "tag": "0049_green_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1783960517765,
+      "tag": "0050_giant_blob",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1783964885493,
+      "tag": "0051_yielding_cobalt_man",
+      "breakpoints": true
     }
   ]
 }

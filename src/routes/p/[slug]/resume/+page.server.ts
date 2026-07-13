@@ -5,6 +5,8 @@ import {
   getVersionIdBySlug,
 } from "$lib/server/profile/access-control";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
+import { getResumeTemplate } from "$lib/server/profile/resume-templates";
+import { DEFAULT_TEMPLATE_ID } from "$lib/resume-templates";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({
@@ -58,6 +60,14 @@ export const load: PageServerLoad = async ({
     }
   }
 
+  // Resolve the selected presentation template (a DB-backed template config),
+  // or null for the built-in default renderer.
+  const templateSlug = url.searchParams.get("template");
+  const template =
+    templateSlug && templateSlug !== DEFAULT_TEMPLATE_ID
+      ? await getResumeTemplate(profile.id, templateSlug)
+      : null;
+
   return {
     profile: {
       ...profile,
@@ -66,5 +76,6 @@ export const load: PageServerLoad = async ({
     },
     versionId,
     accessType: accessResult.accessType,
+    template,
   };
 };

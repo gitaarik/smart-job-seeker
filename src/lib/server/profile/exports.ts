@@ -10,6 +10,7 @@ interface CreateExportOptions {
   fileType: "pdf" | "html" | "json" | "txt" | "docx";
   exportType: "resume" | "cv" | "structured_data";
   exportFormat?: string;
+  template?: string | null;
   description?: string;
   sourceUrl?: string;
 }
@@ -35,6 +36,7 @@ export async function createProfileExport(
       file_type: options.fileType,
       export_type: options.exportType,
       export_format: options.exportFormat,
+      template: options.template ?? null,
       description: options.description,
       source_url: options.sourceUrl,
       date_created: new Date(),

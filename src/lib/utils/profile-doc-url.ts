@@ -10,13 +10,23 @@ interface ProfileDocUrlOptions {
   versionSlug?: string | null;
   isPublicVersion?: boolean;
   pdf?: boolean;
+  /** Presentation template id; the default template is omitted from the URL. */
+  template?: string | null;
 }
 
 export function profileDocUrl(options: ProfileDocUrlOptions): string {
-  const { profileSlug, docType, versionSlug, isPublicVersion, pdf } = options;
+  const { profileSlug, docType, versionSlug, isPublicVersion, pdf, template } =
+    options;
   const path = `/p/${profileSlug}/${docType}${pdf ? ".pdf" : ""}`;
+
+  const params = new URLSearchParams();
   if (versionSlug && !isPublicVersion) {
-    return `${path}?version=${encodeURIComponent(versionSlug)}`;
+    params.set("version", versionSlug);
   }
-  return path;
+  if (template && template !== "default") {
+    params.set("template", template);
+  }
+
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
 }

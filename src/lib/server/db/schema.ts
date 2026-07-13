@@ -1195,6 +1195,9 @@ export const profile_exports = pgTable("profile_exports", {
   file_type: varchar({ length: 255 }).notNull(),
   export_type: varchar({ length: 255 }).notNull(),
   export_format: varchar({ length: 255 }),
+  // Presentation template slug the export was rendered with (a resume_templates
+  // slug); null means the default ProfileDisplay template.
+  template: varchar({ length: 50 }),
   description: text(),
   source_url: varchar({ length: 512 }),
 }, (table) => [
@@ -1817,8 +1820,8 @@ export const work_experiences = pgTable("work_experiences", {
   location: text().notNull(),
   description: text().notNull(),
   position: text().notNull(),
-  // Short one-line lead shown above the achievements on a resume (e.g. the
-  // Citrus template). Distinct from `summary`, which is the longer role blurb.
+  // Short one-line lead shown above the achievements on a resume (used by the
+  // structured templates). Distinct from `summary`, the longer role blurb.
   headline: varchar({ length: 255 }),
   summary: text().notNull(),
   id: serial().primaryKey().notNull(),
@@ -1844,6 +1847,28 @@ export const work_experiences = pgTable("work_experiences", {
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
     name: "work_experiences_profile_foreign",
+  }).onDelete("cascade"),
+]);
+
+// Per-profile resume/CV presentation templates. The rendering code is a
+// generic, brand-neutral renderer; everything specific to a template (branding,
+// fonts, uploaded asset file refs, layout rules) lives here in `config` so that
+// no consultancy-specific assets or branding are committed to the repo.
+export const resume_templates = pgTable("resume_templates", {
+  id: serial().primaryKey().notNull(),
+  profile_id: integer().notNull(),
+  name: varchar({ length: 255 }).notNull(),
+  slug: varchar({ length: 255 }).notNull(),
+  status: varchar({ length: 255 }).default("published").notNull(),
+  sort: integer(),
+  config: jsonb(),
+  date_created: timestamp({ withTimezone: true, mode: "date" }),
+  date_updated: timestamp({ withTimezone: true, mode: "date" }),
+}, (table) => [
+  foreignKey({
+    columns: [table.profile_id],
+    foreignColumns: [profiles.id],
+    name: "resume_templates_profile_foreign",
   }).onDelete("cascade"),
 ]);
 

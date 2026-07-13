@@ -4,7 +4,7 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { profile_exports } from "$lib/server/db/schema";
 import { getFile } from "$lib/server/files";
 
@@ -16,6 +16,9 @@ interface ExportQuery {
   exportType: "resume" | "cv" | "structured_data";
   fileType: "pdf" | "html" | "json" | "txt" | "docx";
   exportFormat?: string; // Optional version/variant filter
+  // Presentation template filter. `null`/undefined selects the default-template
+  // export (profile_exports.template IS NULL); a string matches that template.
+  template?: string | null;
 }
 
 /**
@@ -35,6 +38,14 @@ export async function getLatestExport(query: ExportQuery) {
   if (query.exportFormat) {
     conditions.push(eq(profile_exports.export_format, query.exportFormat));
   }
+
+  // Filter by presentation template: a string matches that template; otherwise
+  // select the default-template export (template IS NULL).
+  conditions.push(
+    query.template
+      ? eq(profile_exports.template, query.template)
+      : isNull(profile_exports.template),
+  );
 
   return db.query.profile_exports.findFirst({
     where: and(...conditions),
