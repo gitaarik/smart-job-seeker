@@ -3,6 +3,7 @@
   import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import ContactItem from "./ContactItem.svelte";
   import { createProfileFilter } from "./profile-filter";
+  import { isContactHidden } from "$lib/resume-contact-fields";
 
   interface Profile {
     name: string | null;
@@ -117,6 +118,19 @@
   );
 
   const work_experiences = filterOnTags(profile.work_experiences);
+
+  // Contact fields show when set and not hidden by a `hide:<key>` version toggle.
+  const showContact = (key: string, value: string | null | undefined) =>
+    !!value && !isContactHidden(key, toggles);
+  const contactVisible = {
+    email: showContact("email", profile.email_address),
+    phone: showContact("phone", profile.phone_number),
+    location: showContact("location", profile.location),
+    website: showContact("website", profile.personal_website),
+    linkedin: showContact("linkedin", profile.linkedin_profile),
+    github: showContact("github", profile.github_profile),
+  };
+  const anyContact = Object.values(contactVisible).some(Boolean);
 </script>
 
 <svelte:head>
@@ -136,10 +150,10 @@
   </header>
 
   <!-- Contact Details -->
-  {#if profile.email_address || profile.phone_number || profile.location || profile.personal_website || profile.linkedin_profile || profile.github_profile}
+  {#if anyContact}
     <section class="mt-1 mb-[-15px]">
       <ul class="list-disc ml-3 print:ml-4">
-        {#if profile.email_address}
+        {#if contactVisible.email}
           <li class="print:indent-[-3px]">
             <ContactItem
               label="Email"
@@ -150,7 +164,7 @@
           </li>
         {/if}
 
-        {#if profile.phone_number}
+        {#if contactVisible.phone}
           <li class="print:indent-[-3px]">
             <ContactItem
               label="Phone"
@@ -161,7 +175,7 @@
           </li>
         {/if}
 
-        {#if profile.location}
+        {#if contactVisible.location}
           <li class="print:indent-[-3px]">
             <ContactItem
               label="Location"
@@ -175,7 +189,7 @@
           </li>
         {/if}
 
-        {#if profile.personal_website}
+        {#if contactVisible.website}
           <li class="print:indent-[-3px]">
             <ContactItem
               label="Website"
@@ -185,7 +199,7 @@
           </li>
         {/if}
 
-        {#if profile.linkedin_profile}
+        {#if contactVisible.linkedin}
           <li class="print:indent-[-3px]">
             <ContactItem
               label="LinkedIn"
@@ -195,7 +209,7 @@
           </li>
         {/if}
 
-        {#if profile.github_profile}
+        {#if contactVisible.github}
           <li class="print:indent-[-3px]">
             <ContactItem
               label="GitHub"
@@ -268,16 +282,19 @@
 
       <ul class="list-disc ml-3 print:ml-[18px] print:[&>li]:[text-indent:-6px]">
         {#each filterOnTags(profile.tech_skill_categories) as skillGroup, index (index)}
-          <li>
-            <span class="font-bold mr-1">{skillGroup.name}:</span>
-            <span class="text-xs">
-              {
-                skillGroup.tech_skills.map(
-                  (s: { name: string | null }) => s.name ?? "",
-                ).join(" | ")
-              }
-            </span>
-          </li>
+          {@const skills = filterOnTags(skillGroup.tech_skills ?? [])}
+          {#if skills.length > 0}
+            <li>
+              <span class="font-bold mr-1">{skillGroup.name}:</span>
+              <span class="text-xs">
+                {
+                  skills.map(
+                    (s: { name: string | null }) => s.name ?? "",
+                  ).join(" | ")
+                }
+              </span>
+            </li>
+          {/if}
         {/each}
       </ul>
       <br>

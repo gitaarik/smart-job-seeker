@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import { createProfileFilter } from "../ProfileDisplay/profile-filter";
+  import { isContactHidden } from "$lib/resume-contact-fields";
   import { assetUrl, type ResumeTemplateConfig } from "$lib/resume-templates";
 
   interface WorkExperience {
@@ -74,7 +75,7 @@
   ].filter(Boolean).join(";");
 
   const versionFromUrl = page.url.searchParams.get("version") || "";
-  const { filterOnTags } = createProfileFilter(
+  const { filterOnTags, toggles } = createProfileFilter(
     profile.profile_versions,
     type,
     versionId,
@@ -97,7 +98,7 @@
     return base.endsWith(".") ? base : base + ".";
   }
   function tech(job: WorkExperience): string {
-    return (job.work_experience_technologies ?? [])
+    return filterOnTags(job.work_experience_technologies ?? [])
       .map((t) => t.name ?? "")
       .filter(Boolean)
       .join(", ");
@@ -113,14 +114,20 @@
     profile.location_timezone ? `(${profile.location_timezone})` : "",
   ].filter(Boolean).join(" ");
 
+  // Template-level contact overrides (brand contact points, e.g. a consultancy
+  // email) replace the profile's own value; the profile value is the fallback.
+  const contactOverrides = config.contact ?? {};
+  const contactText = (key: string, fallback: string | null) =>
+    contactOverrides[key] ?? fallback;
+
   const contacts = [
-    { icon: "mail", text: profile.email_address },
-    { icon: "phone", text: profile.phone_number },
-    { icon: "pin", text: contactLocation || null },
-    { icon: "globe", text: profile.personal_website },
-    { icon: "linkedin", text: profile.linkedin_profile },
-    { icon: "github", text: profile.github_profile },
-  ].filter((c) => !!c.text);
+    { icon: "mail", key: "email", text: contactText("email", profile.email_address) },
+    { icon: "phone", key: "phone", text: contactText("phone", profile.phone_number) },
+    { icon: "pin", key: "location", text: contactText("location", contactLocation || null) },
+    { icon: "globe", key: "website", text: contactText("website", profile.personal_website) },
+    { icon: "linkedin", key: "linkedin", text: contactText("linkedin", profile.linkedin_profile) },
+    { icon: "github", key: "github", text: contactText("github", profile.github_profile) },
+  ].filter((c) => !!c.text && !isContactHidden(c.key, toggles));
 </script>
 
 {#snippet icon(name: string)}
@@ -174,10 +181,13 @@
             <h2>Skills</h2>
             <div class="skills">
               {#each skills as cat (cat.name)}
-                <div class="skill">
-                  <h3>{cat.name}</h3>
-                  <p>{cat.tech_skills.map((s) => s.name ?? "").filter(Boolean).join(", ")}</p>
-                </div>
+                {@const catSkills = filterOnTags(cat.tech_skills ?? [])}
+                {#if catSkills.length > 0}
+                  <div class="skill">
+                    <h3>{cat.name}</h3>
+                    <p>{catSkills.map((s) => s.name ?? "").filter(Boolean).join(", ")}</p>
+                  </div>
+                {/if}
               {/each}
             </div>
           {/if}

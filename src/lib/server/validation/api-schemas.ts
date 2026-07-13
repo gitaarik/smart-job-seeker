@@ -291,7 +291,17 @@ export const workExperienceBasicSchema = z.object({
 
 export const workExperienceTechSchema = z.object({
   section: z.literal("technologies"),
-  technologies: z.array(z.string()),
+  // Accept either bare names (legacy) or {name, tags} so per-technology
+  // version tags survive the save round-trip.
+  technologies: z.array(
+    z.union([
+      z.string(),
+      z.object({
+        name: z.string(),
+        tags: z.array(z.string()).optional().nullable(),
+      }),
+    ]),
+  ),
 });
 
 export const workExperienceAchievementsSchema = z.object({

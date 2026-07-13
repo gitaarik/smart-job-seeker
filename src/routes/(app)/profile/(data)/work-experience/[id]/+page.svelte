@@ -5,6 +5,7 @@
     faArrowLeft,
     faBriefcase,
     faPlus,
+    faTags,
     faTimes,
     faTrash,
     faUndo,
@@ -13,6 +14,7 @@
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
+  import VersionTagsPopup from "$lib/components/VersionTagsPopup.svelte";
   import ConfirmModal from "../../../components/ConfirmModal.svelte";
   import Card from "../../../../components/Card.svelte";
 
@@ -52,11 +54,17 @@
   );
   let versionSlugs = $state<string[]>([]);
   let deletedAchievements = $state<Set<number>>(new Set());
-  let editTechnologies = $state<string[]>(
-    experience.work_experience_technologies.map((t) => t.name || ""),
+  type TechItem = { name: string; tags: string[] };
+  let editTechnologies = $state<TechItem[]>(
+    experience.work_experience_technologies.map((t) => ({
+      name: t.name || "",
+      tags: Array.isArray(t.tags) ? (t.tags as string[]) : [],
+    })),
   );
   let deletedTechnologies = $state<Set<number>>(new Set());
   let lastAddedTechIndex = $state<number | null>(null);
+  // Index of the technology whose version-tags popup is open (null = closed).
+  let techTagIndex = $state<number | null>(null);
 
   // Load version slugs for achievement tags
   let versionSlugsLoaded = $state(false);
@@ -115,7 +123,12 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "technologies",
-          technologies: editTechnologies.filter((t, i) => t.trim() && !deletedTechnologies.has(i)),
+          technologies: editTechnologies
+            .filter((t, i) => t.name.trim() && !deletedTechnologies.has(i))
+            .map((t) => ({
+              name: t.name.trim(),
+              tags: t.tags.length > 0 ? t.tags : null,
+            })),
         }),
       });
 
@@ -212,7 +225,7 @@
   }
 
   function addTechnology() {
-    editTechnologies = [...editTechnologies, ""];
+    editTechnologies = [...editTechnologies, { name: "", tags: [] }];
     lastAddedTechIndex = editTechnologies.length - 1;
   }
 
@@ -224,7 +237,7 @@
   }
 
   function removeTechnology(index: number) {
-    if (!editTechnologies[index]?.trim()) {
+    if (!editTechnologies[index]?.name?.trim()) {
       // Empty tag - remove immediately
       editTechnologies = editTechnologies.filter((_, i) => i !== index);
       // Adjust deleted indices for removed item
@@ -433,13 +446,13 @@
             class="flex items-center gap-1 rounded-lg pl-3 pr-1 py-1 {isDeleted ? 'bg-[var(--dash-bg)]/50 opacity-50' : 'bg-[var(--dash-bg)]'}"
           >
             <div class="relative pr-3">
-              <span class="invisible whitespace-pre text-sm min-w-[3ch] {isDeleted ? 'line-through' : ''}">{editTechnologies[index] || "Technology"}</span>
+              <span class="invisible whitespace-pre text-sm min-w-[3ch] {isDeleted ? 'line-through' : ''}">{editTechnologies[index].name || "Technology"}</span>
               {#if isDeleted}
-                <span class="absolute inset-0 text-[var(--dash-text-secondary)] text-sm line-through pr-3">{editTechnologies[index]}</span>
+                <span class="absolute inset-0 text-[var(--dash-text-secondary)] text-sm line-through pr-3">{editTechnologies[index].name}</span>
               {:else}
                 <input
                   type="text"
-                  bind:value={editTechnologies[index]}
+                  bind:value={editTechnologies[index].name}
                   placeholder="Technology"
                   use:focusIfNew={index === lastAddedTechIndex}
                   class="absolute inset-0 bg-transparent border-none focus:outline-none text-[var(--dash-text)] text-sm w-full pr-3"
@@ -456,6 +469,22 @@
                 <FontAwesomeIcon icon={faUndo} class="w-3 h-3" />
               </button>
             {:else}
+              {#if versionSlugs.length > 0 || editTechnologies[index].tags.length > 0}
+                <button
+                  type="button"
+                  onclick={() => (techTagIndex = index)}
+                  class="flex items-center gap-1 p-1 rounded transition-colors {editTechnologies[index].tags.length > 0
+                    ? 'text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]'
+                    : 'text-[var(--dash-text-secondary)]/50 hover:text-[var(--dash-primary)]'}"
+                  aria-label="Version tags"
+                  title="Resume / CV versions"
+                >
+                  <FontAwesomeIcon icon={faTags} class="w-3 h-3" />
+                  {#if editTechnologies[index].tags.length > 0}
+                    <span class="text-[10px] font-medium leading-none">{editTechnologies[index].tags.length}</span>
+                  {/if}
+                </button>
+              {/if}
               <button
                 type="button"
                 onclick={() => removeTechnology(index)}
@@ -593,3 +622,14 @@
     form.submit();
   }}
 />
+
+{#if techTagIndex !== null}
+  {@const idx = techTagIndex}
+  <VersionTagsPopup
+    title="Technology versions"
+    subtitle={editTechnologies[idx].name || undefined}
+    bind:tags={editTechnologies[idx].tags}
+    {versionSlugs}
+    onClose={() => (techTagIndex = null)}
+  />
+{/if}

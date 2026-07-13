@@ -7,6 +7,7 @@ import { getSelectedProfileId } from "../../utils";
 import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 import { chargeCredits } from "$lib/server/billing/credits";
 import { requireCredits } from "$lib/server/billing/require-credits";
+import { buildToggles } from "$lib/resume-contact-fields";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -157,9 +158,16 @@ export const actions: Actions = {
       return fail(404, { error: "Version not found" });
     }
 
+    // Contact visibility: the form submits one `contactVisible` value per field
+    // left checked. buildToggles() turns the rest into `hide:<key>` tokens and
+    // preserves any non-contact toggles (e.g. "nationality") already stored.
+    const visibleContacts = formData.getAll("contactVisible").map(String);
+    const toggles = buildToggles(visibleContacts, existing.toggles);
+
     await db.update(profile_versions).set({
       slug: slug.trim(),
       name: name?.trim() || null,
+      toggles,
       date_updated: new Date(),
     }).where(eq(profile_versions.id, id));
 

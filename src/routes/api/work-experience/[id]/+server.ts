@@ -58,21 +58,29 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
   return json({ success: true });
 }
 
-async function updateTechnologies(id: number, technologies: string[]) {
+async function updateTechnologies(
+  id: number,
+  technologies: (string | { name: string; tags?: string[] | null })[],
+) {
   await db.delete(work_experience_technologies).where(
     eq(work_experience_technologies.work_experience_id, id),
   );
 
   const now = new Date();
   const techData = technologies
-    .map((tech, i) => ({ name: tech?.trim(), sort: i }))
-    .filter((t): t is { name: string; sort: number } => !!t.name)
+    .map((tech, i) => {
+      const name = (typeof tech === "string" ? tech : tech.name)?.trim();
+      const tags = typeof tech === "string" ? null : (tech.tags ?? null);
+      return { name, tags, sort: i };
+    })
+    .filter((t): t is { name: string; tags: string[] | null; sort: number } => !!t.name)
     .map((t) => ({
       name: t.name,
       work_experience_id: id,
       sort: t.sort,
       status: "published",
       date_created: now,
+      ...(t.tags && t.tags.length > 0 ? { tags: t.tags } : {}),
     }));
 
   if (techData.length > 0) {

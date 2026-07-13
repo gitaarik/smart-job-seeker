@@ -36,6 +36,13 @@ export interface ResumeTemplateConfig {
     /** Append the work-experience location to the headline ("… in {location}."). */
     appendLocationToHeadline?: boolean;
   };
+  /**
+   * Per-field contact overrides — brand contact points that replace the
+   * profile's own value when this template is rendered (e.g. a consultancy
+   * email). Keyed by contact field key (see resume-contact-fields.ts). A field
+   * hidden by a version's `hide:` toggle stays hidden regardless.
+   */
+  contact?: Record<string, string>;
   /** File ref for the switcher thumbnail. */
   thumbnail?: string;
 }

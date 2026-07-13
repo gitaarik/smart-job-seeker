@@ -14,6 +14,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import ConfirmModal from "../../components/ConfirmModal.svelte";
+  import { CONTACT_FIELDS, isContactHidden } from "$lib/resume-contact-fields";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -29,6 +30,14 @@
   let editPublicResume = $state(data.publicResumeVersionId === data.version.id);
   let editPublicCv = $state(data.publicCvVersionId === data.version.id);
   let slugManual = $state(false);
+
+  const contactVisibility = (toggles: unknown) =>
+    Object.fromEntries(
+      CONTACT_FIELDS.map((f) => [f.key, !isContactHidden(f.key, toggles)]),
+    );
+  let editContactVisible = $state<Record<string, boolean>>(
+    contactVisibility(data.version.toggles),
+  );
 
   function slugify(text: string): string {
     return text
@@ -52,6 +61,7 @@
     editExtendsIds = [...data.version.extendsIds];
     editPublicResume = data.publicResumeVersionId === data.version.id;
     editPublicCv = data.publicCvVersionId === data.version.id;
+    editContactVisible = contactVisibility(data.version.toggles);
     slugManual = false;
   });
 
@@ -277,6 +287,37 @@
                 {/if}
               </span>
             </label>
+          </div>
+        </div>
+
+        <!-- Contact Details -->
+        <div>
+          <h3
+            class="text-sm font-semibold text-[var(--dash-text)] uppercase tracking-wide mb-1"
+          >
+            Contact Details
+          </h3>
+          <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+            Uncheck a field to hide it on this version's resume &amp; CV. Fields
+            you leave empty on your profile never appear regardless.
+          </p>
+          <div class="flex flex-wrap gap-x-4 gap-y-2">
+            {#each CONTACT_FIELDS as field}
+              <label
+                class="flex items-center gap-1.5 text-sm text-[var(--dash-text)] cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  name="contactVisible"
+                  value={field.key}
+                  checked={editContactVisible[field.key]}
+                  onchange={(e) =>
+                    (editContactVisible[field.key] = e.currentTarget.checked)}
+                  class="rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+                />
+                {field.label}
+              </label>
+            {/each}
           </div>
         </div>
 

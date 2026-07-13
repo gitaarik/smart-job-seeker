@@ -1609,6 +1609,7 @@ export const work_experience_technologies = pgTable(
     date_updated: timestamp({ withTimezone: true, mode: "date" }),
     name: varchar({ length: 255 }),
     work_experience_id: integer().notNull(),
+    tags: json(),
   },
   (table) => [
     foreignKey({

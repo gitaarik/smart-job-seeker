@@ -1,0 +1,1 @@
+ALTER TABLE "work_experience_technologies" ADD COLUMN "tags" json;
