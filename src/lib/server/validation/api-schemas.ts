@@ -282,6 +282,7 @@ export const workExperienceBasicSchema = z.object({
   position: requiredTrimmedString("Position").optional(),
   location: optionalTrimmedString(),
   website: optionalTrimmedString(2048),
+  headline: optionalTrimmedString(255),
   summary: optionalTrimmedString(10000),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),

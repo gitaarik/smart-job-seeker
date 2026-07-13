@@ -37,6 +37,7 @@
   let editPosition = $state(experience.position || "");
   let editLocation = $state(experience.location || "");
   let editWebsite = $state(experience.website || "");
+  let editHeadline = $state(experience.headline || "");
   let editSummary = $state(experience.summary || "");
   let editStartDate = $state(formatDate(experience.start_date));
   let editEndDate = $state(formatDate(experience.end_date));
@@ -86,6 +87,7 @@
           position: editPosition,
           location: editLocation,
           website: editWebsite,
+          headline: editHeadline,
           summary: editSummary,
           start_date: editStartDate || null,
           end_date: editEndDate || null,
@@ -284,6 +286,27 @@
   <!-- Basic Info -->
   <Card padding="lg">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
+
+    <div class="mb-4">
+      <label
+        for="edit-headline"
+        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+      >
+        Headline
+      </label>
+      <input
+        type="text"
+        id="edit-headline"
+        bind:value={editHeadline}
+        maxlength="255"
+        placeholder="e.g. Led the development of a ticketing platform with 10,000+ monthly active users"
+        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+      />
+      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
+        Optional one-line summary shown above your achievements on a resume.
+      </p>
+    </div>
+
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

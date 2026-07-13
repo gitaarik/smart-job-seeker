@@ -49,7 +49,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {
   const updateData = buildUpdateData(
     data,
-    ["name", "position", "location", "website", "summary", "start_date", "end_date", "tags"],
+    ["name", "position", "location", "website", "headline", "summary", "start_date", "end_date", "tags"],
     { start_date: "date", end_date: "date" },
   );
 

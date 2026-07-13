@@ -1,0 +1,1 @@
+ALTER TABLE "work_experiences" ADD COLUMN "headline" varchar(255);

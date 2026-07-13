@@ -1817,6 +1817,9 @@ export const work_experiences = pgTable("work_experiences", {
   location: text().notNull(),
   description: text().notNull(),
   position: text().notNull(),
+  // Short one-line lead shown above the achievements on a resume (e.g. the
+  // Citrus template). Distinct from `summary`, which is the longer role blurb.
+  headline: varchar({ length: 255 }),
   summary: text().notNull(),
   id: serial().primaryKey().notNull(),
   logo_id: uuid(),
