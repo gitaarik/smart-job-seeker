@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import ContactItem from "./ContactItem.svelte";
+  import { createProfileFilter } from "./profile-filter";
 
   interface Profile {
     name: string | null;
@@ -106,114 +107,16 @@
 
   let { profile, type = null, versionId = null }: Props = $props();
 
-  function getVersion(idx: string | number) {
-    if (!profile.profile_versions) return undefined;
-    if (typeof idx === "number") {
-      return profile.profile_versions.find((v) => v.id === idx);
-    } else {
-      return profile.profile_versions.find((v) => v.slug === idx);
-    }
-  }
-
   // Use versionId prop if provided, otherwise fall back to URL query param
   const versionFromUrl: string = page.url.searchParams.get("version") || "";
-  let versionObj = versionId ? getVersion(versionId) : getVersion(versionFromUrl);
-
-  type VersionObj = Profile["profile_versions"][number];
-
-  function getAllVersionObjs(versionObj: VersionObj | undefined) {
-    const versionObjs = [versionObj];
-
-    const addVersionObjs = (versionObj: VersionObj | undefined) => {
-      if (
-        versionObj &&
-        versionObj
-          .extension_links
-      ) {
-        for (
-          const junctionObj of versionObj
-            .extension_links
-        ) {
-          if (junctionObj.extended_id == null) continue;
-          const extObj = getVersion(junctionObj.extended_id);
-          versionObjs.push(extObj);
-          addVersionObjs(extObj);
-        }
-      }
-    };
-
-    addVersionObjs(versionObj);
-
-    return versionObjs;
-  }
-
-  const versionObjs = getAllVersionObjs(versionObj);
-
-  // while (versionObj && versionObj.extends_from) {
-  //   versionObj = getVersion(versionObj.extends_from);
-  //   versionObjs.push(versionObj);
-  // }
-
-  const versionSlugs = versionObjs.map((v) => v?.slug).filter(
-    Boolean,
-  ) as string[];
-
-  function filterOnTags<
-    // Drizzle `json()` columns surface as `unknown`; we narrow at the call
-    // site below before treating it as a string array.
-    T extends { tags?: string[] | unknown } & Record<string, any>,
-  >(objList: T[]): T[] {
-    const currentType = type || "resume";
-    // The identifiers active for the currently-rendered document: the base
-    // template ("resume"/"cv") plus the viewed version's extension chain.
-    const activeIds = [currentType.toLowerCase(), ...versionSlugs.map((s) => s.toLowerCase())];
-
-    return objList.filter((obj) => {
-      if (!("tags" in obj && Array.isArray(obj.tags) && obj.tags.length)) {
-        return true;
-      }
-      const tagsArr = obj.tags as string[];
-
-      // A `!slug` tag excludes the item from that version/template. Negations
-      // are a blacklist and win over any positive (whitelist) tags.
-      const negatedIds = tagsArr
-        .filter((t) => t.startsWith("!"))
-        .map((t) => t.slice(1).trim().toLowerCase())
-        .filter(Boolean);
-      if (negatedIds.some((id) => activeIds.includes(id))) return false;
-
-      const positives = tagsArr.filter((t) => !t.startsWith("!"));
-
-      if (
-        !positives.includes(currentType) &&
-        positives.includes(currentType === "resume" ? "cv" : "resume")
-      ) {
-        // The opposite base template is tagged but the current one isn't —
-        // e.g. `type` is "cv" and tags contain "resume" but not "cv" → hide.
-        return false;
-      }
-
-      const versionTags = positives.filter((item) =>
-        !(["resume", "cv"].includes(item))
-      );
-      if (!(versionTags.length && versionSlugs.length)) return true;
-
-      // Positive version tags act as a whitelist: show only on matching versions.
-      return versionSlugs.some((versionSlug) => versionTags.includes(versionSlug));
-    });
-  }
+  const { filterOnTags, toggles } = createProfileFilter(
+    profile.profile_versions,
+    type,
+    versionId,
+    versionFromUrl,
+  );
 
   const work_experiences = filterOnTags(profile.work_experiences);
-
-  let toggles: string[] = [];
-
-  versionObjs.forEach((versionObj: VersionObj | undefined) => {
-    if (Array.isArray(versionObj?.toggles) && versionObj.toggles.length) {
-      (versionObj.toggles as string[]).forEach((toggle: string) => {
-        toggles.push(toggle);
-      });
-    }
-  });
 </script>
 
 <svelte:head>
