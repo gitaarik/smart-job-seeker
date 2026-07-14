@@ -446,8 +446,9 @@
           {/if}
           {#if showVersionTags && item.skill.tags && item.skill.tags.length > 0}
             <span
-              class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
-            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {item.skill.tags.join(", ")}</span>
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
+              title={item.skill.tags.join(", ")}
+            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {item.skill.tags.length}</span>
           {/if}
         </div>
       </div>
@@ -509,8 +510,9 @@
           {/if}
           {#if showVersionTags && skill.tags && skill.tags.length > 0}
             <span
-              class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
-            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {skill.tags.join(", ")}</span>
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
+              title={skill.tags.join(", ")}
+            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {skill.tags.length}</span>
           {/if}
         </button>
 
