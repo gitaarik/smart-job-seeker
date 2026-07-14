@@ -1951,7 +1951,9 @@ export const applications = pgTable("applications", {
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
     name: "applications_profile_foreign",
-  }),
+    // Cascade so deleting a profile (e.g. via a user delete) reaps its
+    // applications instead of blocking the delete on this restrict FK.
+  }).onDelete("cascade"),
 ]);
 
 /**
@@ -2435,6 +2437,14 @@ export const profiles = pgTable("profiles", {
     foreignColumns: [profile_versions.id],
     name: "profiles_public_resume_version_foreign",
   }).onDelete("set null"),
+  // Deleting a user reaps their profiles (and everything cascading off them).
+  // Without this FK a hard-deleted user leaves orphaned profile rows the matcher
+  // keeps picking up, crashing every cycle in the credit_balances upsert.
+  foreignKey({
+    columns: [table.user_id],
+    foreignColumns: [users.id],
+    name: "profiles_user_id_fkey",
+  }).onDelete("cascade"),
   unique("profiles_slug_unique").on(table.slug),
 ]);
 
