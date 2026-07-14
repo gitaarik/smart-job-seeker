@@ -19,6 +19,8 @@
   import VersionTagsPopup from "$lib/components/VersionTagsPopup.svelte";
   import ConfirmModal from "../../../components/ConfirmModal.svelte";
   import Card from "../../../../components/Card.svelte";
+  import { dndzone } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -57,17 +59,26 @@
   );
   let versionSlugs = $state<string[]>([]);
   let deletedAchievements = $state<Set<number>>(new Set());
-  type TechItem = { name: string; tags: string[] };
+  // `_id` is a stable client-side key so drag-and-drop reordering can track
+  // items across moves (it's stripped before saving).
+  type TechItem = { name: string; tags: string[]; _id: number };
+  let techIdSeq = 0;
   let editTechnologies = $state<TechItem[]>(
     experience.work_experience_technologies.map((t) => ({
       name: t.name || "",
       tags: Array.isArray(t.tags) ? (t.tags as string[]) : [],
+      _id: techIdSeq++,
     })),
   );
   let deletedTechnologies = $state<Set<number>>(new Set());
   let lastAddedTechIndex = $state<number | null>(null);
   // Index of the technology whose version-tags popup is open (null = closed).
   let techTagIndex = $state<number | null>(null);
+  // Version tags are hidden on the chips until toggled on (like the skills page).
+  let showTechVersionTags = $state(false);
+  let hasAnyTechVersionTags = $derived(
+    versionSlugs.length > 0 || editTechnologies.some((t) => t.tags.length > 0),
+  );
 
   // Load version slugs for achievement tags
   let versionSlugsLoaded = $state(false);
@@ -246,7 +257,7 @@
   }
 
   function addTechnology() {
-    editTechnologies = [...editTechnologies, { name: "", tags: [] }];
+    editTechnologies = [...editTechnologies, { name: "", tags: [], _id: techIdSeq++ }];
     lastAddedTechIndex = editTechnologies.length - 1;
   }
 
@@ -280,25 +291,59 @@
     deletedTechnologies = newSet;
   }
 
-  // --- Drag-and-drop reordering of technologies ---
+  // --- Drag-and-drop reordering of technologies (svelte-dnd-action) ---
   // Reordering is gated behind an explicit "Reorder" mode (like the skills
   // page) so that clicking chips edits them normally until the user opts in.
+  const techFlipMs = 150;
   let techReorderMode = $state(false);
-  let techReorderSnapshot = $state<TechItem[] | null>(null);
-  let dragTechIndex = $state<number | null>(null);
-  let dragOverTechIndex = $state<number | null>(null);
+  // Snapshot both the order and the soft-delete set so Cancel is a true revert.
+  let techReorderSnapshot = $state<{ techs: TechItem[]; deleted: Set<number> } | null>(null);
+
+  interface DndTechItem {
+    id: number;
+    tech: TechItem;
+    deleted: boolean;
+  }
+  let dndTech = $state<DndTechItem[]>([]);
 
   function startTechReorder() {
-    techReorderSnapshot = editTechnologies.map((t) => ({ ...t }));
+    techReorderSnapshot = {
+      techs: editTechnologies.map((t) => ({ ...t })),
+      deleted: new Set(deletedTechnologies),
+    };
+    dndTech = editTechnologies.map((t, i) => ({
+      id: t._id,
+      tech: t,
+      deleted: deletedTechnologies.has(i),
+    }));
     techReorderMode = true;
   }
 
+  function applyDndOrder(items: DndTechItem[]) {
+    dndTech = items;
+    editTechnologies = items.map((w) => w.tech);
+    deletedTechnologies = new Set(
+      items.flatMap((w, i) => (w.deleted ? [i] : [])),
+    );
+    lastAddedTechIndex = null;
+  }
+
+  function handleTechConsider(e: CustomEvent<{ items: DndTechItem[] }>) {
+    dndTech = e.detail.items;
+  }
+
+  function handleTechFinalize(e: CustomEvent<{ items: DndTechItem[] }>) {
+    applyDndOrder(e.detail.items);
+  }
+
   function cancelTechReorder() {
-    if (techReorderSnapshot) editTechnologies = techReorderSnapshot;
+    if (techReorderSnapshot) {
+      editTechnologies = techReorderSnapshot.techs;
+      deletedTechnologies = techReorderSnapshot.deleted;
+    }
     techReorderSnapshot = null;
     techReorderMode = false;
-    dragTechIndex = null;
-    dragOverTechIndex = null;
+    dndTech = [];
   }
 
   async function saveTechReorder() {
@@ -307,52 +352,7 @@
     if (techSaveState === "error") return;
     techReorderSnapshot = null;
     techReorderMode = false;
-    dragTechIndex = null;
-    dragOverTechIndex = null;
-  }
-
-  function moveTechnology(from: number, to: number) {
-    if (from === to) return;
-    const arr = [...editTechnologies];
-    const [moved] = arr.splice(from, 1);
-    arr.splice(to, 0, moved);
-    editTechnologies = arr;
-    // Keep index-based side state aligned with the new order.
-    if (deletedTechnologies.size > 0) {
-      deletedTechnologies = new Set(
-        [...deletedTechnologies].map((i) => mapIndexAfterMove(i, from, to)),
-      );
-    }
-    if (lastAddedTechIndex !== null) {
-      lastAddedTechIndex = mapIndexAfterMove(lastAddedTechIndex, from, to);
-    }
-  }
-
-  function handleTechDragStart(index: number, e: DragEvent) {
-    dragTechIndex = index;
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move";
-      // Firefox requires data to be set for a drag to start.
-      e.dataTransfer.setData("text/plain", String(index));
-    }
-  }
-
-  function handleTechDragOver(index: number, e: DragEvent) {
-    if (dragTechIndex === null) return;
-    e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    dragOverTechIndex = index;
-  }
-
-  function handleTechDrop(index: number) {
-    if (dragTechIndex !== null) moveTechnology(dragTechIndex, index);
-    dragTechIndex = null;
-    dragOverTechIndex = null;
-  }
-
-  function handleTechDragEnd() {
-    dragTechIndex = null;
-    dragOverTechIndex = null;
+    dndTech = [];
   }
 </script>
 
@@ -515,34 +515,49 @@
   <Card padding="lg">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
-      {#if editTechnologies.length > 1}
-        <button
-          type="button"
-          onclick={() => (techReorderMode ? cancelTechReorder() : startTechReorder())}
-          class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {techReorderMode
-            ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
-            : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}"
-        >
-          <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {techReorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
-          Reorder
-        </button>
-      {/if}
+      <div class="flex items-center gap-1.5">
+        {#if !techReorderMode && hasAnyTechVersionTags}
+          <button
+            type="button"
+            onclick={() => (showTechVersionTags = !showTechVersionTags)}
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {showTechVersionTags
+              ? 'bg-teal-500/15 text-teal-700 border-teal-500/30'
+              : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}"
+          >
+            <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {showTechVersionTags ? 'bg-teal-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+            Versions
+          </button>
+        {/if}
+        {#if editTechnologies.length > 1}
+          <button
+            type="button"
+            onclick={() => (techReorderMode ? cancelTechReorder() : startTechReorder())}
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {techReorderMode
+              ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+              : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}"
+          >
+            <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {techReorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+            Reorder
+          </button>
+        {/if}
+      </div>
     </div>
 
     {#if techReorderMode}
-      <div class="flex flex-wrap gap-2">
-        {#each editTechnologies as tech, index}
-          {@const isDeleted = deletedTechnologies.has(index)}
-          <div
-            class="flex items-center gap-1.5 rounded-lg pl-2 pr-3.5 py-1.5 text-sm cursor-grab active:cursor-grabbing bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 {isDeleted ? 'opacity-50' : ''} {dragTechIndex === index ? 'opacity-40' : ''} {dragOverTechIndex === index && dragTechIndex !== index ? 'ring-2 ring-[var(--dash-primary)]/40' : ''}"
-            draggable="true"
-            ondragstart={(e) => handleTechDragStart(index, e)}
-            ondragover={(e) => handleTechDragOver(index, e)}
-            ondrop={() => handleTechDrop(index)}
-            ondragend={handleTechDragEnd}
-          >
-            <FontAwesomeIcon icon={faGripVertical} class="w-3 h-3 text-[var(--dash-text-muted)]" />
-            <span class="text-[var(--dash-text)] {isDeleted ? 'line-through' : ''}">{tech.name || "Technology"}</span>
+      <div
+        class="flex flex-wrap gap-2"
+        use:dndzone={{ items: dndTech, flipDurationMs: techFlipMs, type: "technologies" }}
+        onconsider={handleTechConsider}
+        onfinalize={handleTechFinalize}
+      >
+        {#each dndTech as item (item.id)}
+          <div animate:flip={{ duration: techFlipMs }}>
+            <div
+              class="flex items-center gap-1.5 rounded-lg pl-2 pr-3.5 py-1.5 text-sm cursor-grab active:cursor-grabbing bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 {item.deleted ? 'opacity-50' : ''}"
+            >
+              <FontAwesomeIcon icon={faGripVertical} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text)] {item.deleted ? 'line-through' : ''}">{item.tech.name || "Technology"}</span>
+            </div>
           </div>
         {/each}
       </div>
@@ -588,7 +603,7 @@
                 <FontAwesomeIcon icon={faUndo} class="w-3 h-3" />
               </button>
             {:else}
-              {#if versionSlugs.length > 0 || editTechnologies[index].tags.length > 0}
+              {#if showTechVersionTags}
                 <button
                   type="button"
                   onclick={() => (techTagIndex = index)}
