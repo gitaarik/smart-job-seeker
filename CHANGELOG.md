@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.6.1] - 2026-07-14
+
+13 commits since v0.6.0.
+
+### Added
+- Database-backed resume/CV templates with generic renderer
+- Citrus CV template for modern resume design
+- Multi-language resume export with inline translation editing
+- AI-powered auto-translation for profile fields and resume content
+- Locale-aware PDF export and download
+- Per-version contact controls and per-technology tags
+- Work experience headline field
+- Support for separate LLM providers for translation and user-facing writing
+
+### Fixed
+- Print layout white gaps in Citrus CV template
+- Search form timeout handling when clickAt events occur during submission
+
 ## [0.6.0] - 2026-07-11
 
 1 commit since v0.5.96.
