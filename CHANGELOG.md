@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.6.2] - 2026-07-14
+
+2 commits since v0.6.1.
+
+### Fixed
+
+- Profile deletion now cascades properly and matcher skips deleted owner profiles to prevent orphaned data
+
 ## [0.6.1] - 2026-07-14
 
 13 commits since v0.6.0.
