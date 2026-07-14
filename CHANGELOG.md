@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.6.3] - 2026-07-14
+
+2 commits since v0.6.2.
+
+### Changed
+- Improved database query performance by adding indexes to frequently-accessed query paths and foreign key cascades.
+
 ## [0.6.2] - 2026-07-14
 
 2 commits since v0.6.1.
