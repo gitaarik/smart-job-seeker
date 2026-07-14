@@ -30,6 +30,7 @@ export async function generateVersionPdfs(
   profileId: number,
   versionSlug: string,
   template: string | null = null,
+  locale: string | null = null,
 ): Promise<void> {
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, profileId),
@@ -64,14 +65,16 @@ export async function generateVersionPdfs(
 
     const templateQuery = template ? `&template=${template}` : "";
     const templateLabel = template ? ` [${template}]` : "";
+    const localeQuery = locale ? `&lang=${locale}` : "";
+    const localeLabel = locale ? ` <${locale}>` : "";
 
     for (const doc of DOC_TYPES) {
       const route =
-        `p/${profile.slug}/${doc.type}?version=${versionSlug}${templateQuery}`;
+        `p/${profile.slug}/${doc.type}?version=${versionSlug}${templateQuery}${localeQuery}`;
       const url = `${APP_INTERNAL_URL}/${route}`;
 
       console.log(
-        `[generate-version-pdfs] Generating ${doc.display} PDF for "${versionSlug}"${templateLabel}...`,
+        `[generate-version-pdfs] Generating ${doc.display} PDF for "${versionSlug}"${templateLabel}${localeLabel}...`,
       );
 
       await page.goto(url, {
@@ -102,7 +105,7 @@ export async function generateVersionPdfs(
       const docLabel = doc.type === "cv" ? "CV" : "Resume";
       const filename = `${displayName} - ${docLabel} - ${versionSlug}${
         template ? ` - ${template}` : ""
-      }.pdf`;
+      }${locale ? ` - ${locale}` : ""}.pdf`;
 
       const sourceUrl = buildExportUrl({ route });
 
@@ -114,7 +117,7 @@ export async function generateVersionPdfs(
         exportType: doc.type,
         exportFormat: versionSlug,
         template,
-        description: `${doc.display} (${versionSlug})${templateLabel} - Generated ${
+        description: `${doc.display} (${versionSlug})${templateLabel}${localeLabel} - Generated ${
           new Date().toISOString()
         }`,
         sourceUrl,

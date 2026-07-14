@@ -10,6 +10,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import TranslatableField from "$lib/components/TranslatableField.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
@@ -43,6 +44,7 @@
   let editTags = $state<string[]>(Array.isArray(project.tags) ? project.tags as string[] : []);
   let editAchievements = $state<AchievementItem[]>(
     project.side_project_achievements.map((a) => ({
+      id: a.id,
       description: a.description || "",
       tags: null,
     })),
@@ -120,18 +122,32 @@
   async function saveAchievements() {
     achievementsSaveState = "saving";
     try {
+      const sent = editAchievements
+        .map((a, i) => ({ a, i }))
+        .filter(({ a, i }) => a.description.trim() && !deletedAchievements.has(i));
+
       const response = await fetch(`/api/side-project/${project.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "achievements",
-          achievements: editAchievements
-            .filter((a, i) => a.description.trim() && !deletedAchievements.has(i))
-            .map((a) => a.description),
+          achievements: sent.map(({ a }) => ({
+            id: a.id,
+            description: a.description,
+          })),
         }),
       });
 
       if (response.ok) {
+        const result = await response.json().catch(() => null);
+        if (result && Array.isArray(result.achievements)) {
+          const updated = [...editAchievements];
+          sent.forEach(({ i }, k) => {
+            const newId = result.achievements[k]?.id;
+            if (newId) updated[i] = { ...updated[i], id: newId };
+          });
+          editAchievements = updated;
+        }
         achievementsSaveState = "saved";
         setTimeout(() => (achievementsSaveState = "idle"), 2000);
       } else {
@@ -275,18 +291,13 @@
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label
-            for="edit-name"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Project Name <span class="text-[var(--dash-error)]">*</span>
-          </label>
-          <input
-            type="text"
-            id="edit-name"
-            bind:value={editName}
+          <TranslatableField
+            entity="side_project"
+            id={project.id}
+            field="name"
+            label="Project Name"
             required
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            bind:value={editName}
           />
         </div>
 
@@ -306,21 +317,14 @@
           />
         </div>
 
-        <div>
-          <label
-            for="edit-url-label"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            URL Label
-          </label>
-          <input
-            type="text"
-            id="edit-url-label"
-            bind:value={editUrlLabel}
-            placeholder="e.g., View on GitHub"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
+        <TranslatableField
+          entity="side_project"
+          id={project.id}
+          field="url_label"
+          label="URL Label"
+          bind:value={editUrlLabel}
+          placeholder="e.g., View on GitHub"
+        />
 
         <div>
           <label
@@ -369,21 +373,16 @@
         </div>
       </div>
 
-      <div class="flex flex-col">
-        <label
-          for="edit-summary"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Summary
-        </label>
-        <textarea
-          id="edit-summary"
-          bind:value={editSummary}
-          rows={5}
-          placeholder="Brief description of the project..."
-          class="w-full flex-1 min-h-[120px] px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
-      </div>
+      <TranslatableField
+        entity="side_project"
+        id={project.id}
+        field="summary"
+        label="Summary"
+        multiline
+        rows={5}
+        bind:value={editSummary}
+        placeholder="Brief description of the project..."
+      />
     </div>
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
@@ -416,6 +415,7 @@
       bind:achievements={editAchievements}
       deletedIndices={deletedAchievements}
       lastAddedIndex={lastAddedAchievementIndex}
+      entity="side_project_achievement"
       onAdd={addAchievement}
       onRemove={removeAchievement}
       onUndoRemove={undoRemoveAchievement}

@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
+import { and, eq, notInArray } from "drizzle-orm";
 import { work_experiences, work_experience_technologies, work_experience_achievements } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 import {
@@ -90,32 +90,62 @@ async function updateTechnologies(
   return json({ success: true });
 }
 
-async function updateAchievements(id: number, achievements: { description: string; tags?: string[] | null }[]) {
+async function updateAchievements(
+  id: number,
+  achievements: { id?: number; description: string; tags?: string[] | null }[],
+) {
+  const now = new Date();
+  const incoming = achievements.filter((a) => a.description?.trim());
+
+  // Delete rows the client no longer has; keep everything it still references
+  // by id so their ids stay stable (translations are keyed on them).
+  const keepIds = incoming
+    .map((a) => a.id)
+    .filter((x): x is number => Number.isInteger(x));
   await db.delete(work_experience_achievements).where(
-    eq(work_experience_achievements.work_experience_id, id),
+    keepIds.length > 0
+      ? and(
+        eq(work_experience_achievements.work_experience_id, id),
+        notInArray(work_experience_achievements.id, keepIds),
+      )
+      : eq(work_experience_achievements.work_experience_id, id),
   );
 
-  const now = new Date();
-  const filtered = achievements
-    .filter((a) => a.description?.trim())
-    .map((a, i) => ({
-      description: a.description.trim(),
-      tags: a.tags,
-      sort: i,
-    }));
+  // Update existing rows in place, insert new ones; return ids in order so the
+  // client can adopt ids for freshly-added achievements.
+  const result: { id: number }[] = [];
+  for (let i = 0; i < incoming.length; i++) {
+    const a = incoming[i];
+    const description = a.description.trim();
+    const tags = a.tags && a.tags.length > 0 ? a.tags : null;
 
-  if (filtered.length > 0) {
-    await db.insert(work_experience_achievements).values(
-      filtered.map((a) => ({
-        description: a.description,
-        ...(a.tags && a.tags.length > 0 ? { tags: a.tags } : {}),
-        work_experience_id: id,
-        sort: a.sort,
-        status: "published",
-        date_created: now,
-      })),
-    );
+    let row: { id: number } | undefined;
+    if (Number.isInteger(a.id)) {
+      [row] = await db
+        .update(work_experience_achievements)
+        .set({ description, tags, sort: i, date_updated: now })
+        .where(and(
+          eq(work_experience_achievements.id, a.id as number),
+          eq(work_experience_achievements.work_experience_id, id),
+        ))
+        .returning({ id: work_experience_achievements.id });
+    }
+    // No id, or a stale id whose row is gone (e.g. deleted then undone) → insert.
+    if (!row) {
+      [row] = await db
+        .insert(work_experience_achievements)
+        .values({
+          description,
+          tags,
+          work_experience_id: id,
+          sort: i,
+          status: "published",
+          date_created: now,
+        })
+        .returning({ id: work_experience_achievements.id });
+    }
+    result.push({ id: row.id });
   }
 
-  return json({ success: true });
+  return json({ success: true, achievements: result });
 }

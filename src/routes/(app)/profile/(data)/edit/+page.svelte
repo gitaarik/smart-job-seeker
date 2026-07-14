@@ -20,6 +20,7 @@
   import Card from "../../../components/Card.svelte";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import TranslatableField from "$lib/components/TranslatableField.svelte";
   import CountrySelect from "../../../jobs/components/CountrySelect.svelte";
   import { getProfilePhotoUrl } from "$lib/utils/profile-photo-url";
 
@@ -207,73 +208,55 @@
       </div>
 
       <div>
-        <label
-          for="title"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Professional Title
-        </label>
-        <input
-          type="text"
-          id="title"
+        <TranslatableField
+          entity="profile"
+          id={profile.id}
+          field="title"
+          label="Professional Title"
           bind:value={title}
           placeholder="e.g., Senior Software Engineer"
-          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
         />
       </div>
 
       <div>
-        <label
-          for="subtitle"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Subtitle
-        </label>
-        <textarea
-          id="subtitle"
-          bind:value={subtitle}
+        <TranslatableField
+          entity="profile"
+          id={profile.id}
+          field="subtitle"
+          label="Subtitle"
+          multiline
           rows={2}
+          bind:value={subtitle}
           placeholder="e.g., Full-Stack Developer"
-          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
-        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          One sentence describing your role or specialty
-        </p>
+          hint="One sentence describing your role or specialty"
+        />
       </div>
 
       <div>
-        <label
-          for="headline"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Headline
-        </label>
-        <textarea
-          id="headline"
-          bind:value={headline}
+        <TranslatableField
+          entity="profile"
+          id={profile.id}
+          field="headline"
+          label="Headline"
+          multiline
           rows={2}
+          bind:value={headline}
           placeholder="A short tagline about yourself"
-          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
-        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-          One sentence summarizing your professional focus
-        </p>
+          hint="One sentence summarizing your professional focus"
+        />
       </div>
 
       <div class="md:col-span-2">
-        <label
-          for="summary"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Professional Summary
-        </label>
-        <textarea
-          id="summary"
-          bind:value={summary}
+        <TranslatableField
+          entity="profile"
+          id={profile.id}
+          field="summary"
+          label="Professional Summary"
+          multiline
           rows={4}
+          bind:value={summary}
           placeholder="Write a brief professional summary..."
-          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
+        />
       </div>
     </div>
 

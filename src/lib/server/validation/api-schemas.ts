@@ -307,6 +307,9 @@ export const workExperienceTechSchema = z.object({
 export const workExperienceAchievementsSchema = z.object({
   section: z.literal("achievements"),
   achievements: z.array(z.object({
+    // Present for existing rows so the id survives a save (stable across edits
+    // → translations keyed by it don't orphan); absent for newly-added ones.
+    id: z.number().int().optional(),
     description: z.string(),
     tags: z.array(z.string()).optional().nullable(),
   })),
@@ -333,7 +336,11 @@ export const sideProjectTechSchema = z.object({
 
 export const sideProjectAchievementsSchema = z.object({
   section: z.literal("achievements"),
-  achievements: z.array(z.string()),
+  achievements: z.array(z.object({
+    // See workExperienceAchievementsSchema — stable id across saves.
+    id: z.number().int().optional(),
+    description: z.string(),
+  })),
 });
 
 // Shared validation helper

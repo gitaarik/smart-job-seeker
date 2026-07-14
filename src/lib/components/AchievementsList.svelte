@@ -2,8 +2,11 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical } from "@fortawesome/free-solid-svg-icons";
   import { portalToBody } from "$lib/actions/portal";
+  import TranslatableField from "$lib/components/TranslatableField.svelte";
 
   export interface AchievementItem {
+    /** DB row id; absent for freshly-added, not-yet-saved achievements. */
+    id?: number;
     description: string;
     tags?: string[] | null;
   }
@@ -14,6 +17,12 @@
     lastAddedIndex?: number | null;
     showTags?: boolean;
     versionSlugs?: string[];
+    /**
+     * Translation entity type for the description (e.g.
+     * "work_experience_achievement"). When set, the edit popup shows inline
+     * language tabs for the description. Requires saved items (with an `id`).
+     */
+    entity?: string;
     onAdd?: () => void;
     onRemove?: (index: number) => void;
     onUndoRemove?: (index: number) => void;
@@ -32,6 +41,7 @@
     lastAddedIndex = null,
     showTags = false,
     versionSlugs = [],
+    entity,
     onAdd,
     onRemove,
     onUndoRemove,
@@ -97,6 +107,7 @@
   function saveEdit() {
     if (editingIndex === null) return;
     setItem(editingIndex, {
+      id: getItem(editingIndex).id,
       description: editDescription,
       tags: editTags.length > 0 ? editTags : null,
     });
@@ -275,16 +286,30 @@
 
       <!-- Description -->
       <div class="mb-4">
-        <label for="edit-achievement-desc" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-          Description
-        </label>
-        <textarea
-          id="edit-achievement-desc"
-          bind:value={editDescription}
-          rows={3}
-          placeholder="Describe your achievement..."
-          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
+        {#if entity}
+          {@const itemId = getItem(editingIndex).id ?? 0}
+          <TranslatableField
+            {entity}
+            id={itemId}
+            field="description"
+            label="Description"
+            multiline
+            rows={3}
+            bind:value={editDescription}
+            placeholder="Describe your achievement..."
+          />
+        {:else}
+          <label for="edit-achievement-desc" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            Description
+          </label>
+          <textarea
+            id="edit-achievement-desc"
+            bind:value={editDescription}
+            rows={3}
+            placeholder="Describe your achievement..."
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+          ></textarea>
+        {/if}
       </div>
 
       <!-- Version Tags (collapsible) -->

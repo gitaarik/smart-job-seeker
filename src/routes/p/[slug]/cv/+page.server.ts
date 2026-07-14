@@ -7,6 +7,11 @@ import {
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import { getResumeTemplate } from "$lib/server/profile/resume-templates";
 import { DEFAULT_TEMPLATE_ID } from "$lib/resume-templates";
+import { isKnownLocale } from "$lib/resume-translations";
+import {
+  applyTranslations,
+  loadTranslator,
+} from "$lib/server/profile/translations";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({
@@ -66,12 +71,22 @@ export const load: PageServerLoad = async ({
       ? await getResumeTemplate(profile.id, templateSlug)
       : null;
 
+  // Overlay non-English translations onto the profile tree (in place) so the
+  // render components stay language-agnostic. Base/unknown locale is a no-op.
+  const langParam = url.searchParams.get("lang");
+  const translator = await loadTranslator(
+    profile.id,
+    isKnownLocale(langParam) ? langParam : null,
+  );
+  applyTranslations(profile, translator);
+
   return {
     profile: {
       ...profile,
       profile_versions: profile
         .profile_versions,
     },
+    locale: translator.locale,
     versionId,
     accessType: accessResult.accessType,
     template,

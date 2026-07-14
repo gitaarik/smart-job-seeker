@@ -12,6 +12,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import TranslatableField from "$lib/components/TranslatableField.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
   import VersionTagsPopup from "$lib/components/VersionTagsPopup.svelte";
@@ -48,6 +49,7 @@
 
   let editAchievements = $state<AchievementItem[]>(
     experience.work_experience_achievements.map((a) => ({
+      id: a.id,
       description: a.description || "",
       tags: Array.isArray(a.tags) ? a.tags as string[] : null,
     })),
@@ -148,18 +150,36 @@
   async function saveAchievements() {
     achievementsSaveState = "saving";
     try {
+      // Track the original indices we send so we can write back the ids the
+      // server assigns to newly-inserted achievements (keeps them translatable
+      // without a reload).
+      const sent = editAchievements
+        .map((a, i) => ({ a, i }))
+        .filter(({ a, i }) => a.description.trim() && !deletedAchievements.has(i));
+
       const response = await fetch(`/api/work-experience/${experience.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "achievements",
-          achievements: editAchievements
-            .filter((a, i) => a.description.trim() && !deletedAchievements.has(i))
-            .map((a) => ({ description: a.description, tags: a.tags })),
+          achievements: sent.map(({ a }) => ({
+            id: a.id,
+            description: a.description,
+            tags: a.tags,
+          })),
         }),
       });
 
       if (response.ok) {
+        const result = await response.json().catch(() => null);
+        if (result && Array.isArray(result.achievements)) {
+          const updated = [...editAchievements];
+          sent.forEach(({ i }, k) => {
+            const newId = result.achievements[k]?.id;
+            if (newId) updated[i] = { ...updated[i], id: newId };
+          });
+          editAchievements = updated;
+        }
         achievementsSaveState = "saved";
         setTimeout(() => (achievementsSaveState = "idle"), 2000);
       } else {
@@ -301,23 +321,15 @@
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
 
     <div class="mb-4">
-      <label
-        for="edit-headline"
-        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-      >
-        Headline
-      </label>
-      <input
-        type="text"
-        id="edit-headline"
+      <TranslatableField
+        entity="work_experience"
+        id={experience.id}
+        field="headline"
+        label="Headline"
         bind:value={editHeadline}
-        maxlength="255"
         placeholder="e.g. Led the development of a ticketing platform with 10,000+ monthly active users"
-        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        hint="Optional one-line summary shown above your achievements on a resume."
       />
-      <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-        Optional one-line summary shown above your achievements on a resume.
-      </p>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -338,21 +350,14 @@
           />
         </div>
 
-        <div>
-          <label
-            for="edit-position"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Position <span class="text-[var(--dash-error)]">*</span>
-          </label>
-          <input
-            type="text"
-            id="edit-position"
-            bind:value={editPosition}
-            required
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
+        <TranslatableField
+          entity="work_experience"
+          id={experience.id}
+          field="position"
+          label="Position"
+          required
+          bind:value={editPosition}
+        />
 
         <div>
           <label
@@ -415,20 +420,15 @@
         </div>
       </div>
 
-      <div class="flex flex-col">
-        <label
-          for="edit-summary"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Role Summary
-        </label>
-        <textarea
-          id="edit-summary"
-          bind:value={editSummary}
-          rows={5}
-          class="w-full flex-1 min-h-[120px] px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
-      </div>
+      <TranslatableField
+        entity="work_experience"
+        id={experience.id}
+        field="summary"
+        label="Role Summary"
+        multiline
+        rows={5}
+        bind:value={editSummary}
+      />
     </div>
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
@@ -519,6 +519,7 @@
       deletedIndices={deletedAchievements}
       lastAddedIndex={lastAddedAchievementIndex}
       showTags={true}
+      entity="work_experience_achievement"
       {versionSlugs}
       onAdd={addAchievement}
       onRemove={removeAchievement}

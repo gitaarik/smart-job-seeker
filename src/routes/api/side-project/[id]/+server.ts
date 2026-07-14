@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
+import { and, eq, notInArray } from "drizzle-orm";
 import { side_projects, side_project_technologies, side_project_achievements } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 import {
@@ -81,23 +81,50 @@ async function updateTechnologies(id: number, technologies: string[]) {
   return json({ success: true });
 }
 
-async function updateAchievements(id: number, achievements: string[]) {
+async function updateAchievements(
+  id: number,
+  achievements: { id?: number; description: string }[],
+) {
+  const now = new Date();
+  const incoming = achievements.filter((a) => a.description?.trim());
+
+  // Keep rows still referenced by id (stable ids for translations); delete rest.
+  const keepIds = incoming
+    .map((a) => a.id)
+    .filter((x): x is number => Number.isInteger(x));
   await db.delete(side_project_achievements).where(
-    eq(side_project_achievements.side_project_id, id),
+    keepIds.length > 0
+      ? and(
+        eq(side_project_achievements.side_project_id, id),
+        notInArray(side_project_achievements.id, keepIds),
+      )
+      : eq(side_project_achievements.side_project_id, id),
   );
 
-  const achievementData = achievements
-    .map((desc, i) => ({ description: desc?.trim(), sort: i }))
-    .filter((a): a is { description: string; sort: number } => !!a.description)
-    .map((a) => ({
-      description: a.description,
-      side_project_id: id,
-      sort: a.sort,
-    }));
+  const result: { id: number }[] = [];
+  for (let i = 0; i < incoming.length; i++) {
+    const a = incoming[i];
+    const description = a.description.trim();
 
-  if (achievementData.length > 0) {
-    await db.insert(side_project_achievements).values(achievementData);
+    let row: { id: number } | undefined;
+    if (Number.isInteger(a.id)) {
+      [row] = await db
+        .update(side_project_achievements)
+        .set({ description, sort: i, date_updated: now })
+        .where(and(
+          eq(side_project_achievements.id, a.id as number),
+          eq(side_project_achievements.side_project_id, id),
+        ))
+        .returning({ id: side_project_achievements.id });
+    }
+    if (!row) {
+      [row] = await db
+        .insert(side_project_achievements)
+        .values({ description, side_project_id: id, sort: i, date_created: now })
+        .returning({ id: side_project_achievements.id });
+    }
+    result.push({ id: row.id });
   }
 
-  return json({ success: true });
+  return json({ success: true, achievements: result });
 }

@@ -20,6 +20,7 @@
   import Card from "./Card.svelte";
   import SkillTagsEditor from "./SkillTagsEditor.svelte";
   import type { LevelOption, SkillItem } from "./SkillTagsEditor.svelte";
+  import TranslatableField from "$lib/components/TranslatableField.svelte";
 
   export interface CategoryItem {
     name: string;
@@ -212,10 +213,6 @@
     editingNameIndex = null;
   }
 
-  function autofocus(node: HTMLElement) {
-    node.focus();
-  }
-
   function removeCategory(index: number) {
     if (!confirm("Remove this skill category?")) return;
     const cat = categories[index];
@@ -345,17 +342,18 @@
 
 {#snippet categoryHeader(categoryIndex: number)}
   {#if editingNameIndex === categoryIndex}
-    <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 w-full min-w-0">
-      <input
-        type="text"
+    {@const catId = (categories[categoryIndex] as { id?: number }).id ?? 0}
+    <div class="flex flex-col gap-1.5 w-full min-w-0">
+      <TranslatableField
+        entity="tech_skill_category"
+        id={catId}
+        field="name"
         bind:value={categories[categoryIndex].name}
+        placeholder="Category name"
         onkeydown={(e) => {
           if (e.key === "Enter") saveEditingName(categoryIndex);
           if (e.key === "Escape") cancelEditingName(categoryIndex);
         }}
-        placeholder="Category name"
-        class="px-3 py-1.5 text-sm font-medium text-[var(--dash-text)] border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent w-full sm:w-40 flex-shrink-0"
-        use:autofocus
       />
       <input
         type="text"

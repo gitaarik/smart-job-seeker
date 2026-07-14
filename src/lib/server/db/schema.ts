@@ -1490,6 +1490,43 @@ export const profile_versions = pgTable("profile_versions", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * Multi-language export overlays. English stays canonical in each entity's own
+ * columns; this sidecar holds only non-English translations — one row per
+ * (entity_type, entity_id, field, locale). Sparse and additive: a missing row
+ * falls back to the English base at render time. The translatable-field
+ * vocabulary lives in resume-translations.ts.
+ */
+export const profile_translations = pgTable(
+  "profile_translations",
+  {
+    id: serial().primaryKey().notNull(),
+    profile_id: integer().notNull(),
+    entity_type: varchar({ length: 64 }).notNull(),
+    entity_id: integer().notNull(),
+    field: varchar({ length: 64 }).notNull(),
+    locale: varchar({ length: 16 }).notNull(),
+    value: text().notNull(),
+    date_created: timestamp({ withTimezone: true, mode: "date" }),
+    date_updated: timestamp({ withTimezone: true, mode: "date" }),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    uniqueIndex("profile_translations_key").on(
+      table.profile_id,
+      table.entity_type,
+      table.entity_id,
+      table.field,
+      table.locale,
+    ),
+    index("profile_translations_lookup").on(table.profile_id, table.locale),
+    foreignKey({
+      columns: [table.profile_id],
+      foreignColumns: [profiles.id],
+      name: "profile_translations_profile_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
 export const side_project_technologies = pgTable("side_project_technologies", {
   id: serial().primaryKey().notNull(),
   sort: integer(),

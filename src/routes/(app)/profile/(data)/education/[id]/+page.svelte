@@ -8,6 +8,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import TranslatableField from "$lib/components/TranslatableField.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
   import ConfirmModal from "../../../components/ConfirmModal.svelte";
   import Card from "../../../../components/Card.svelte";
@@ -138,36 +139,22 @@
           />
         </div>
 
-        <div>
-          <label
-            for="edit-area"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Field of Study
-          </label>
-          <input
-            type="text"
-            id="edit-area"
-            bind:value={editArea}
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
+        <TranslatableField
+          entity="education"
+          id={education.id}
+          field="area"
+          label="Field of Study"
+          bind:value={editArea}
+        />
 
-        <div>
-          <label
-            for="edit-study-type"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Degree Type
-          </label>
-          <input
-            type="text"
-            id="edit-study-type"
-            bind:value={editStudyType}
-            placeholder="e.g., Bachelor's, Master's, PhD"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
+        <TranslatableField
+          entity="education"
+          id={education.id}
+          field="study_type"
+          label="Degree Type"
+          bind:value={editStudyType}
+          placeholder="e.g., Bachelor's, Master's, PhD"
+        />
 
         <div>
           <label
@@ -247,21 +234,16 @@
         </div>
       </div>
 
-      <div class="flex flex-col">
-        <label
-          for="edit-summary"
-          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-        >
-          Summary
-        </label>
-        <textarea
-          id="edit-summary"
-          bind:value={editSummary}
-          rows={5}
-          placeholder="Brief description of your studies, achievements, etc."
-          class="w-full flex-1 min-h-[120px] px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-        ></textarea>
-      </div>
+      <TranslatableField
+        entity="education"
+        id={education.id}
+        field="summary"
+        label="Summary"
+        multiline
+        rows={5}
+        bind:value={editSummary}
+        placeholder="Brief description of your studies, achievements, etc."
+      />
     </div>
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
