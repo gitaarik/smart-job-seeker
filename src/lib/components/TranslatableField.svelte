@@ -61,6 +61,13 @@
   let aiBusy = $state(false);
   async function aiTranslate() {
     if (aiBusy) return;
+    // Don't silently clobber an existing translation — confirm first.
+    if (
+      translations.get(entity, id, field).trim() &&
+      !confirm("Replace the current translation with a new AI translation?")
+    ) {
+      return;
+    }
     aiBusy = true;
     try {
       const res = await fetch("/api/translations/auto", {
@@ -119,6 +126,7 @@
         {required}
         {placeholder}
         {onkeydown}
+        lang={BASE_LOCALE}
         bind:value
         class="{inputClass} resize-y"
       ></textarea>
@@ -128,6 +136,7 @@
         {required}
         {placeholder}
         {onkeydown}
+        lang={BASE_LOCALE}
         bind:value
         class={inputClass}
       />
@@ -145,6 +154,7 @@
       <textarea
         {rows}
         placeholder="Translation…"
+        lang={active}
         value={translations.get(entity, id, field)}
         oninput={(e) => editTranslation(e.currentTarget.value)}
         onblur={flush}
@@ -154,6 +164,7 @@
       <input
         type="text"
         placeholder="Translation…"
+        lang={active}
         value={translations.get(entity, id, field)}
         oninput={(e) => editTranslation(e.currentTarget.value)}
         onblur={flush}
