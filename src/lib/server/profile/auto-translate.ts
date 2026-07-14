@@ -58,13 +58,20 @@ export async function translateFields(
             `3. Keep widely-used English job/role titles in the form conventionally used in ${language}'s ` +
             `tech industry (in many languages "Engineer", "Lead", "Full-Stack", "Frontend" stay in ` +
             `English), and translate a given title the same way every time.\n` +
-            `4. Achievement and experience lines are CV bullets: render each as a grammatical clause in ` +
-            `the natural CV register for ${language}. Use a finite past-tense verb form where the ` +
-            `language expects one — do NOT emit an ungrammatical bare participle fragment, and keep the ` +
-            `verb tense consistent across all bullets.\n` +
-            `5. Preserve every HTML tag, markup token, number, percentage, unit and piece of punctuation ` +
+            `4. Keep the common English technical and startup jargon that professionals in ${language} ` +
+            `routinely leave untranslated rather than calquing it — e.g. pipeline, deploy, release, ` +
+            `performance, coverage, backward compatibility, user engagement, responsive design, ` +
+            `web scraping, caching strategies, booking, order, event, founder, and "development" in ` +
+            `skill-category names. When in doubt, prefer the exact term a senior developer would write.\n` +
+            `5. Achievement and experience lines are CV bullets: render each as a grammatical clause using ` +
+            `the SIMPLE PAST tense in ${language} (not the present-perfect/compound-past), applied ` +
+            `consistently to every bullet; never emit a bare participle fragment.\n` +
+            `6. Prefer natural, native professional phrasing over literal calques (translate idioms like ` +
+            `"thrives in…" with an idiomatic equivalent, not word-for-word), and render role/employment ` +
+            `terms in their professional sense (e.g. an "independent" engineer in the freelance sense).\n` +
+            `7. Preserve every HTML tag, markup token, number, percentage, unit and piece of punctuation ` +
             `exactly; translate only the human-readable text.\n` +
-            `6. Output the translation only — no notes, no explanations.`,
+            `8. Output the translation only — no notes, no explanations.`,
         },
         {
           role: "user",
