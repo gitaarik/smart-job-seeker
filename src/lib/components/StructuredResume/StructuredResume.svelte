@@ -4,6 +4,7 @@
   import { createProfileFilter } from "../ProfileDisplay/profile-filter";
   import { isContactHidden } from "$lib/resume-contact-fields";
   import { assetUrl, type ResumeTemplateConfig } from "$lib/resume-templates";
+  import { templateLabel } from "$lib/resume-template-labels";
 
   interface WorkExperience {
     name: string | null;
@@ -52,8 +53,16 @@
     config: ResumeTemplateConfig;
     type?: string | null;
     versionId?: number | null;
+    /** Render locale for template chrome (section headings, "Present"). */
+    locale?: string | null;
   }
-  let { profile, config, type = null, versionId = null }: Props = $props();
+  let {
+    profile,
+    config,
+    type = null,
+    versionId = null,
+    locale = null,
+  }: Props = $props();
 
   // --- template config → local branding values ---
   const accent = config.accent ?? "#ffd400";
@@ -178,7 +187,7 @@
           {/if}
 
           {#if skills.length > 0}
-            <h2>Skills</h2>
+            <h2>{templateLabel("skills", locale)}</h2>
             <div class="skills">
               {#each skills as cat (cat.name)}
                 {@const catSkills = filterOnTags(cat.tech_skills ?? [])}
@@ -196,7 +205,7 @@
             <aside class="sidebar">
               {#if contacts.length > 0}
                 <div class="block">
-                  <h2>Contact details</h2>
+                  <h2>{templateLabel("contactDetails", locale)}</h2>
                   {#each contacts as c (c.icon)}
                     <div class="contact-row">
                       <span class="ci">{@render icon(c.icon)}</span>
@@ -207,7 +216,7 @@
               {/if}
               {#if education.length > 0}
                 <div class="block">
-                  <h2>Education</h2>
+                  <h2>{templateLabel("education", locale)}</h2>
                   {#each education as e (eduLine(e))}
                     <div class="edu-item">
                       <span class="tl"><span class="ydot"></span><span class="tline"></span></span>
@@ -219,7 +228,7 @@
             </aside>
 
             {#if work.length > 0}
-              <h2>Work experience</h2>
+              <h2>{templateLabel("workExperience", locale)}</h2>
               {#each work as job, i (i)}
                 {@const achievements = filterOnTags(job.work_experience_achievements ?? [])}
                 {@const techLine = tech(job)}
@@ -227,7 +236,7 @@
                   <div class="job-meta">
                     <div class="job-title">{job.position}</div>
                     <div class="job-co">{job.name}</div>
-                    <div class="job-date">{formatDateRangeCompact(job.start_date, job.end_date)}</div>
+                    <div class="job-date">{formatDateRangeCompact(job.start_date, job.end_date, templateLabel("present", locale))}</div>
                   </div>
                   <div class="job-body">
                     {#if lead(job)}<p class="lead">{lead(job)}</p>{/if}

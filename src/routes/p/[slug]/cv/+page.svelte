@@ -8,7 +8,7 @@
 
 {#if data.profile}
   {#if data.template}
-    <StructuredResume profile={data.profile} config={data.template.config} type="cv" versionId={data.versionId} />
+    <StructuredResume profile={data.profile} config={data.template.config} type="cv" versionId={data.versionId} locale={data.locale} />
   {:else}
     <ProfileDisplay profile={data.profile} type="cv" versionId={data.versionId} />
   {/if}

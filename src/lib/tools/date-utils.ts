@@ -124,6 +124,8 @@ export function formatDateRangeVerbose(
 export function formatDateRangeCompact(
   startDate: Date | string | null,
   endDate?: Date | string | null,
+  /** Label for an ongoing role; localized by the caller (default English). */
+  presentLabel = "Present",
 ): string {
   const formatDate = (date: Date | string) => {
     const d = toDate(date);
@@ -134,7 +136,7 @@ export function formatDateRangeCompact(
 
   if (!startDate) return "";
   const start = formatDate(startDate);
-  const end = endDate ? formatDate(endDate) : "Present";
+  const end = endDate ? formatDate(endDate) : presentLabel;
   return `${start} - ${end}`;
 }
 

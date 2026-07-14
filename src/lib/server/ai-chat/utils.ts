@@ -327,12 +327,17 @@ export async function createAndGenerateAiChat(
       }
       : undefined;
 
+    // User-facing writing (letters, application answers, chat) runs on the
+    // writing provider/model, which may differ from the extraction pipeline.
+    const writingProvider = config.llmWritingProvider;
+    const writingModel = config.llmWritingModel;
+
     const completionResult = await generateChatCompletionTracked(
       [
         { role: "system", content: interpolatedSystemPrompt },
         { role: "user", content: interpolatedUserPrompt },
       ],
-      { structuredOutput },
+      { structuredOutput, provider: writingProvider, model: writingModel },
     );
 
     // Step 8: Save response + token usage
@@ -361,7 +366,7 @@ export async function createAndGenerateAiChat(
       if (profileForCredits?.user_id) {
         const { chargeCredits } = await import("$lib/server/billing/credits");
         const providerCostUsd = estimateProviderCostUsd(
-          config.llmProvider, config.llmModel,
+          writingProvider, writingModel,
           usage.inputTokens, usage.outputTokens,
         );
         await chargeCredits(
@@ -371,7 +376,7 @@ export async function createAndGenerateAiChat(
           `${promptKey} (${usage.totalTokens} tokens)`,
           {
             aiChatId: aiChat.id, promptKey, tokens: usage,
-            provider: config.llmProvider, model: config.llmModel,
+            provider: writingProvider, model: writingModel,
             providerCostUsd,
           },
         );

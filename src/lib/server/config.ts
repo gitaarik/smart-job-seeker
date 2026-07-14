@@ -37,6 +37,12 @@ export interface AppConfig {
   // (and a different provider) than the app default.
   llmTranslateModel: string;
   llmTranslateProvider: string;
+  // Model + provider for user-facing writing (cover letters, application
+  // answers, AI chat). Prose quality matters and volume is low, so this can use
+  // a stronger model/provider than the extraction pipeline. Falls back to the
+  // app provider/model.
+  llmWritingModel: string;
+  llmWritingProvider: string;
   groqApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
@@ -122,8 +128,11 @@ const EMBEDDING_DEFAULTS: Record<
 function loadConfig(): AppConfig {
   const nodeEnv = getEnv("NODE_ENV", "development");
   const llmProvider = getEnv("SJS_LLM_PROVIDER", "groq");
-  // Translation can run on a different provider than the rest of the app.
+  // Translation and user-facing writing can each run on a different provider
+  // than the rest of the app (defaults to the app provider).
   const llmTranslateProvider = getEnv("SJS_LLM_TRANSLATE_PROVIDER", "") ||
+    llmProvider;
+  const llmWritingProvider = getEnv("SJS_LLM_WRITING_PROVIDER", "") ||
     llmProvider;
   const embeddingProvider: "openai" | "gemini" =
     getEnv("SJS_EMBEDDING_PROVIDER", "openai") === "gemini"
@@ -172,6 +181,11 @@ function loadConfig(): AppConfig {
         : llmTranslateProvider === "gemini"
         ? "gemini-2.5-pro"
         : getModelForProvider(llmTranslateProvider)),
+    llmWritingProvider,
+    llmWritingModel: getEnv("SJS_LLM_WRITING_MODEL", "") ||
+      (llmWritingProvider === "gemini"
+        ? "gemini-2.5-pro"
+        : getModelForProvider(llmWritingProvider)),
     groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
     geminiApiKey: getEnv("SJS_LLM_API_KEY_GEMINI", ""),
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),

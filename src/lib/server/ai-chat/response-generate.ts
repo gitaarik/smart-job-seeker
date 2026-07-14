@@ -37,11 +37,16 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       };
     }
 
+    // User-facing writing runs on the writing provider/model (may be a stronger
+    // model than the extraction pipeline).
+    const writingProvider = config.llmWritingProvider;
+    const writingModel = config.llmWritingModel;
+
     // Generate response using generic LLM function with token tracking
     const completionResult = await generateChatCompletionTracked([
       { role: "system", content: prompts.systemPrompt },
       { role: "user", content: prompts.userPrompt },
-    ]);
+    ], { provider: writingProvider, model: writingModel });
 
     const usage = completionResult.usage;
     const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
@@ -68,7 +73,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
         });
         if (profile?.user_id) {
           const providerCostUsd = estimateProviderCostUsd(
-            config.llmProvider, config.llmModel,
+            writingProvider, writingModel,
             usage.inputTokens, usage.outputTokens,
           );
           await chargeCredits(
@@ -78,7 +83,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
             `regenerate (${usage.totalTokens} tokens)`,
             {
               aiChatId, tokens: usage,
-              provider: config.llmProvider, model: config.llmModel,
+              provider: writingProvider, model: writingModel,
               providerCostUsd,
             },
           );
