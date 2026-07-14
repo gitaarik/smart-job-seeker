@@ -625,6 +625,10 @@ export const collected_data = pgTable("collected_data", {
   data: text(),
   profile_id: integer(),
 }, (table) => [
+  index("collected_data_profile_updated_idx").on(
+    table.profile_id,
+    table.date_updated.desc(),
+  ),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
@@ -737,6 +741,7 @@ export const match_config = pgTable("match_config", {
   remote_only: boolean().default(false).notNull(),
   community_max_age_days: integer(),
 }, (table) => [
+  index("match_config_profile_id_idx").on(table.profile_id),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
@@ -766,6 +771,11 @@ export const job_matches = pgTable("job_matches", {
   matched_skills: json(),
   match_summary: text(),
 }, (table) => [
+  index("job_matches_ai_chat_scoring_idx").on(table.ai_chat_scoring),
+  index("job_matches_profile_score_idx").on(
+    table.profile_id,
+    table.score.desc(),
+  ),
   index("job_matches_profile_id_job_id_idx").using(
     "btree",
     table.profile_id.asc().nullsLast().op("int4_ops"),
@@ -831,6 +841,9 @@ export const search_task_runs = pgTable("search_task_runs", {
   // Powers exact per-device footprint accounting (device-rate-budget.ts).
   api_key_id: integer(),
 }, (table) => [
+  index("search_task_runs_active_idx").on(table.started_at).where(
+    sql`status IN ('stopping','queued','running','blocked')`,
+  ),
   index("search_task_runs_search_task_id_started_at_idx").using(
     "btree",
     table.search_task_id.asc().nullsLast().op("int4_ops"),
@@ -1107,6 +1120,11 @@ export const jobs = pgTable("jobs", {
    */
   created_manually: boolean().default(false).notNull(),
 }, (table) => [
+  index("jobs_ai_chat_extraction_idx").on(table.ai_chat_extraction),
+  index("jobs_date_posted_idx").on(
+    table.date_posted.desc().nullsLast(),
+    table.date_created.desc(),
+  ),
   index("idx_jobs_uniqueness").using(
     "btree",
     table.title.asc().nullsLast().op("date_ops"),
@@ -1428,6 +1446,7 @@ export const scraper_logs = pgTable("scraper_logs", {
   // Free-form structured payload — same usage pattern as scraper_log_steps.metadata.
   metadata: jsonb(),
 }, (table) => [
+  index("scraper_logs_timestamp_idx").on(table.timestamp),
   index("scraper_logs_run_id_timestamp_idx").using(
     "btree",
     table.run_id.asc().nullsLast().op("int4_ops"),
@@ -1720,6 +1739,7 @@ export const tech_skill_categories = pgTable("tech_skill_categories", {
   tags: json(),
   note: text(),
 }, (table) => [
+  index("tech_skill_categories_profile_idx").on(table.profile_id),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
@@ -1759,6 +1779,7 @@ export const tech_skills = pgTable("tech_skills", {
   years_experience: integer(),
   tags: json(),
 }, (table) => [
+  index("tech_skills_category_idx").on(table.category_id),
   foreignKey({
     columns: [table.category_id],
     foreignColumns: [tech_skill_categories.id],
@@ -1937,6 +1958,11 @@ export const applications = pgTable("applications", {
   status_action_date: date(),
   cv_version_sent: varchar({ length: 255 }),
 }, (table) => [
+  index("applications_profile_status_updated_idx").on(
+    table.profile_id,
+    table.status,
+    table.date_updated.desc(),
+  ),
   foreignKey({
     columns: [table.cv_file_sent_id],
     foreignColumns: [files.id],
@@ -2061,6 +2087,9 @@ export const search_tasks = pgTable("search_tasks", {
   // must never override a deliberate pause. Cleared when the user re-activates.
   user_paused_at: timestamp({ withTimezone: true, mode: "date" }),
 }, (table) => [
+  index("search_tasks_next_run_idx").on(table.next_scheduled_run).where(
+    sql`is_active AND schedule_interval_hours IS NOT NULL`,
+  ),
   index("idx_search_tasks_platform_profile").using(
     "btree",
     table.platform_profile_id.asc().nullsLast().op("int4_ops"),
@@ -2139,6 +2168,10 @@ export const ai_chats = pgTable("ai_chats", {
   total_tokens: integer(),
   credits_charged: integer(),
 }, (table) => [
+  index("ai_chats_profile_id_idx").on(table.profile_id),
+  index("ai_chats_followup_to_idx").on(table.followup_to),
+  index("ai_chats_request_type_idx").on(table.request_type),
+  index("ai_chats_date_created_idx").on(table.date_created),
   foreignKey({
     columns: [table.ai_chat_template],
     foreignColumns: [ai_chat_templates.id],
@@ -2194,6 +2227,7 @@ export const agent_messages = pgTable("agent_messages", {
   date_created: timestamp({ withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
+  index("agent_messages_ai_chat_id_idx").on(table.ai_chat_id),
   index("agent_messages_conversation_idx").using(
     "btree",
     table.conversation_id.asc().nullsLast(),
@@ -2459,6 +2493,7 @@ export const application_letters = pgTable("application_letters", {
   status: varchar({ length: 255 }).default("draft").notNull(),
   ai_chat_response: text(),
 }, (table) => [
+  index("application_letters_ai_chat_id_idx").on(table.ai_chat_id),
   foreignKey({
     columns: [table.ai_chat_id],
     foreignColumns: [ai_chats.id],
@@ -2482,6 +2517,7 @@ export const application_questions = pgTable("application_questions", {
   ai_chat_id: integer(),
   ai_chat_response: text(),
 }, (table) => [
+  index("application_questions_ai_chat_id_idx").on(table.ai_chat_id),
   foreignKey({
     columns: [table.ai_chat_id],
     foreignColumns: [ai_chats.id],
@@ -2523,6 +2559,7 @@ export const letter_versions = pgTable("letter_versions", {
   ai_feedback: text(),
   user_request: text(),
 }, (table) => [
+  index("letter_versions_ai_chat_idx").on(table.ai_chat),
   foreignKey({
     columns: [table.ai_chat],
     foreignColumns: [ai_chats.id],
@@ -2576,6 +2613,7 @@ export const job_importers = pgTable("job_importers", {
   job_id: integer().notNull(),
   profile_id: integer().notNull(),
 }, (table) => [
+  index("job_importers_profile_job_idx").on(table.profile_id, table.job_id),
   uniqueIndex("job_importers_job_profile_unique").using(
     "btree",
     table.job_id.asc().nullsLast().op("int4_ops"),
