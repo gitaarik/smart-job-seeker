@@ -1057,10 +1057,6 @@ export const search_task_run_items = pgTable("search_task_run_items", {
   created_at: timestamp({ withTimezone: true, mode: "date" }).defaultNow(),
   processed_at: timestamp({ withTimezone: true, mode: "date" }),
 }, (table) => [
-  index("idx_search_task_run_items_run_id").using(
-    "btree",
-    table.run_id.asc().nullsLast().op("int4_ops"),
-  ),
   index("idx_search_task_run_items_run_status").using(
     "btree",
     table.run_id.asc().nullsLast().op("int4_ops"),
@@ -2005,10 +2001,6 @@ export const api_keys = pgTable("api_keys", {
     "btree",
     table.key_hash.asc().nullsLast().op("text_ops"),
   ),
-  index("idx_api_keys_hash").using(
-    "btree",
-    table.key_hash.asc().nullsLast().op("text_ops"),
-  ),
   index("idx_api_keys_user").using(
     "btree",
     table.user_id.asc().nullsLast().op("text_ops"),
@@ -2791,10 +2783,6 @@ export const usage_counters = pgTable("usage_counters", {
     "btree",
     table.period.asc().nullsLast().op("text_ops"),
   ),
-  index("usage_counters_user_id_idx").using(
-    "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
-  ),
   foreignKey({
     columns: [table.user_id],
     foreignColumns: [users.id],
@@ -2816,10 +2804,6 @@ export const verification_email_addresses = pgTable(
     last_used_at: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
   },
   (table) => [
-    index("idx_verification_email_addresses_token").using(
-      "btree",
-      table.email_token.asc().nullsLast().op("text_ops"),
-    ),
     uniqueIndex("verification_email_addresses_email_token_key").using(
       "btree",
       table.email_token.asc().nullsLast().op("text_ops"),
@@ -2844,10 +2828,6 @@ export const credit_balances = pgTable("credit_balances", {
   credits_allowance: integer().default(0).notNull(),
   extra_credits: integer().default(0).notNull(),
 }, (table) => [
-  index("credit_balances_user_id_idx").using(
-    "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
-  ),
   foreignKey({
     columns: [table.user_id],
     foreignColumns: [users.id],
@@ -3004,10 +2984,6 @@ export const contacts = pgTable("contacts", {
     "btree",
     table.recipient_id.asc().nullsLast().op("text_ops"),
   ),
-  index("idx_contacts_requester").using(
-    "btree",
-    table.requester_id.asc().nullsLast().op("text_ops"),
-  ),
   foreignKey({
     columns: [table.recipient_id],
     foreignColumns: [users.id],
@@ -3038,10 +3014,6 @@ export const credential_shares = pgTable("credential_shares", {
     table.platform_credential_id.asc().nullsLast().op("int4_ops"),
     table.shared_with.asc().nullsLast().op("text_ops"),
   ),
-  index("idx_credential_shares_credential").using(
-    "btree",
-    table.platform_credential_id.asc().nullsLast().op("int4_ops"),
-  ),
   index("idx_credential_shares_shared_with").using(
     "btree",
     table.shared_with.asc().nullsLast().op("text_ops"),
@@ -3069,10 +3041,6 @@ export const device_shares = pgTable("device_shares", {
     "btree",
     table.api_key_id.asc().nullsLast().op("text_ops"),
     table.shared_with.asc().nullsLast().op("int4_ops"),
-  ),
-  index("idx_device_shares_api_key").using(
-    "btree",
-    table.api_key_id.asc().nullsLast().op("int4_ops"),
   ),
   index("idx_device_shares_shared_with").using(
     "btree",
@@ -3215,10 +3183,6 @@ export const notifications = pgTable("notifications", {
   created_at: timestamp({ precision: 6, withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
-  index("notifications_user_id_idx").using(
-    "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
-  ),
   index("notifications_user_unread_idx").using(
     "btree",
     table.user_id.asc().nullsLast().op("text_ops"),
