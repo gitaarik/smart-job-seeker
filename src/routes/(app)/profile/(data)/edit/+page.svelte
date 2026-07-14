@@ -21,6 +21,7 @@
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
+  import AutoTranslateProfile from "$lib/components/AutoTranslateProfile.svelte";
   import CountrySelect from "../../../jobs/components/CountrySelect.svelte";
   import { getProfilePhotoUrl } from "$lib/utils/profile-photo-url";
 
@@ -264,6 +265,8 @@
       <SectionSaveButton state={personalInfoState} onClick={savePersonalInfo} />
     </div>
   </Card>
+
+  <AutoTranslateProfile />
 
   <!-- Contact Information -->
   <Card padding="lg">

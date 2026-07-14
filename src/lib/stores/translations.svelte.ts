@@ -67,6 +67,18 @@ class TranslationStore {
     this.activeLocale = locale;
   }
 
+  /** Reflect a value that the server already persisted (no re-save). */
+  setLocal(entity: string, id: number, field: string, value: string, locale = this.activeLocale): void {
+    this.values[this.#key(entity, id, field, locale)] = value;
+  }
+
+  /** Re-fetch all overlays (e.g. after a bulk auto-translate wrote many rows). */
+  async reload(): Promise<void> {
+    this.loaded = false;
+    this.#loadPromise = null;
+    await this.ensureLoaded();
+  }
+
   get(entity: string, id: number, field: string, locale = this.activeLocale): string {
     return this.values[this.#key(entity, id, field, locale)] ?? "";
   }

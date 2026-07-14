@@ -57,6 +57,28 @@
   function flush() {
     translations.flush(entity, id, field);
   }
+
+  let aiBusy = $state(false);
+  async function aiTranslate() {
+    if (aiBusy) return;
+    aiBusy = true;
+    try {
+      const res = await fetch("/api/translations/auto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entity, id, field, locale: active }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const v = data.translations?.[0]?.value;
+        if (typeof v === "string") translations.setLocal(entity, id, field, v);
+      }
+    } catch {
+      // best-effort; the field just stays as-is
+    } finally {
+      aiBusy = false;
+    }
+  }
 </script>
 
 <div>
@@ -141,14 +163,24 @@
   {/if}
 
   <div class="flex items-center justify-between gap-2 mt-1">
-    {#if hint}
-      <p class="text-xs text-[var(--dash-text-muted)]">{hint}</p>
-    {:else}
-      <span></span>
-    {/if}
+    <div class="flex items-center gap-2 min-w-0">
+      {#if !onBase && canTranslate}
+        <button
+          type="button"
+          onclick={aiTranslate}
+          disabled={aiBusy}
+          class="text-xs text-[var(--dash-primary)] hover:underline disabled:opacity-50 disabled:no-underline shrink-0"
+        >
+          {aiBusy ? "Translating…" : "✨ Auto-translate"}
+        </button>
+      {/if}
+      {#if hint}
+        <p class="text-xs text-[var(--dash-text-muted)] truncate">{hint}</p>
+      {/if}
+    </div>
     {#if !onBase && canTranslate}
       <span
-        class="text-xs {status === 'error'
+        class="text-xs shrink-0 {status === 'error'
           ? 'text-[var(--dash-error)]'
           : 'text-[var(--dash-text-muted)]'}"
       >
