@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.6.4] - 2026-07-14
+
+2 commits since v0.6.3.
+
+### Added
+- Confirmation when overwriting resume translations
+
+### Changed
+- Improved spellcheck language hints
+- Improved database performance by removing redundant indexes
+
 ## [0.6.3] - 2026-07-14
 
 2 commits since v0.6.2.
