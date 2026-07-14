@@ -4,6 +4,7 @@
   import {
     faArrowLeft,
     faBriefcase,
+    faGripVertical,
     faPlus,
     faTags,
     faTimes,
@@ -278,6 +279,81 @@
     newSet.delete(index);
     deletedTechnologies = newSet;
   }
+
+  // --- Drag-and-drop reordering of technologies ---
+  // Reordering is gated behind an explicit "Reorder" mode (like the skills
+  // page) so that clicking chips edits them normally until the user opts in.
+  let techReorderMode = $state(false);
+  let techReorderSnapshot = $state<TechItem[] | null>(null);
+  let dragTechIndex = $state<number | null>(null);
+  let dragOverTechIndex = $state<number | null>(null);
+
+  function startTechReorder() {
+    techReorderSnapshot = editTechnologies.map((t) => ({ ...t }));
+    techReorderMode = true;
+  }
+
+  function cancelTechReorder() {
+    if (techReorderSnapshot) editTechnologies = techReorderSnapshot;
+    techReorderSnapshot = null;
+    techReorderMode = false;
+    dragTechIndex = null;
+    dragOverTechIndex = null;
+  }
+
+  async function saveTechReorder() {
+    await saveTechnologies();
+    // Stay in reorder mode on failure so the user can retry.
+    if (techSaveState === "error") return;
+    techReorderSnapshot = null;
+    techReorderMode = false;
+    dragTechIndex = null;
+    dragOverTechIndex = null;
+  }
+
+  function moveTechnology(from: number, to: number) {
+    if (from === to) return;
+    const arr = [...editTechnologies];
+    const [moved] = arr.splice(from, 1);
+    arr.splice(to, 0, moved);
+    editTechnologies = arr;
+    // Keep index-based side state aligned with the new order.
+    if (deletedTechnologies.size > 0) {
+      deletedTechnologies = new Set(
+        [...deletedTechnologies].map((i) => mapIndexAfterMove(i, from, to)),
+      );
+    }
+    if (lastAddedTechIndex !== null) {
+      lastAddedTechIndex = mapIndexAfterMove(lastAddedTechIndex, from, to);
+    }
+  }
+
+  function handleTechDragStart(index: number, e: DragEvent) {
+    dragTechIndex = index;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      // Firefox requires data to be set for a drag to start.
+      e.dataTransfer.setData("text/plain", String(index));
+    }
+  }
+
+  function handleTechDragOver(index: number, e: DragEvent) {
+    if (dragTechIndex === null) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    dragOverTechIndex = index;
+  }
+
+  function handleTechDrop(index: number) {
+    if (dragTechIndex !== null) moveTechnology(dragTechIndex, index);
+    dragTechIndex = null;
+    dragOverTechIndex = null;
+  }
+
+  function handleTechDragEnd() {
+    dragTechIndex = null;
+    dragOverTechIndex = null;
+  }
 </script>
 
 <svelte:head>
@@ -437,13 +513,56 @@
 
   <!-- Technologies -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Technologies</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
+      {#if editTechnologies.length > 1}
+        <button
+          type="button"
+          onclick={() => (techReorderMode ? cancelTechReorder() : startTechReorder())}
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {techReorderMode
+            ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+            : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}"
+        >
+          <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {techReorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+          Reorder
+        </button>
+      {/if}
+    </div>
 
-    <div class="flex flex-wrap gap-2">
+    {#if techReorderMode}
+      <div class="flex flex-wrap gap-2">
         {#each editTechnologies as tech, index}
           {@const isDeleted = deletedTechnologies.has(index)}
           <div
-            class="flex items-center gap-1 rounded-lg pl-3 pr-1 py-1 {isDeleted ? 'bg-[var(--dash-bg)]/50 opacity-50' : 'bg-[var(--dash-bg)]'}"
+            class="flex items-center gap-1.5 rounded-lg pl-2 pr-3.5 py-1.5 text-sm cursor-grab active:cursor-grabbing bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 {isDeleted ? 'opacity-50' : ''} {dragTechIndex === index ? 'opacity-40' : ''} {dragOverTechIndex === index && dragTechIndex !== index ? 'ring-2 ring-[var(--dash-primary)]/40' : ''}"
+            draggable="true"
+            ondragstart={(e) => handleTechDragStart(index, e)}
+            ondragover={(e) => handleTechDragOver(index, e)}
+            ondrop={() => handleTechDrop(index)}
+            ondragend={handleTechDragEnd}
+          >
+            <FontAwesomeIcon icon={faGripVertical} class="w-3 h-3 text-[var(--dash-text-muted)]" />
+            <span class="text-[var(--dash-text)] {isDeleted ? 'line-through' : ''}">{tech.name || "Technology"}</span>
+          </div>
+        {/each}
+      </div>
+      <div class="flex items-center justify-end gap-2 mt-4">
+        <span class="mr-auto text-xs text-[var(--dash-text-muted)]">Drag the chips to reorder, then save.</span>
+        <button
+          type="button"
+          onclick={cancelTechReorder}
+          class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+        >
+          Cancel
+        </button>
+        <SectionSaveButton state={techSaveState} onClick={saveTechReorder} />
+      </div>
+    {:else}
+      <div class="flex flex-wrap gap-2">
+        {#each editTechnologies as tech, index}
+          {@const isDeleted = deletedTechnologies.has(index)}
+          <div
+            class="flex items-center gap-1 rounded-lg pl-3.5 pr-1 py-1 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 {isDeleted ? 'opacity-50' : ''}"
           >
             <div class="relative pr-3">
               <span class="invisible whitespace-pre text-sm min-w-[3ch] {isDeleted ? 'line-through' : ''}">{editTechnologies[index].name || "Technology"}</span>
@@ -499,15 +618,16 @@
         <button
           type="button"
           onclick={addTechnology}
-          class="flex items-center gap-1 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm px-3 py-1"
+          class="flex items-center gap-1 px-3 py-1 border border-dashed border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-primary)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary-hover)] transition-colors"
         >
           <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
           Add
         </button>
       </div>
-    <div class="flex justify-end mt-4">
-      <SectionSaveButton state={techSaveState} onClick={saveTechnologies} />
-    </div>
+      <div class="flex justify-end mt-4">
+        <SectionSaveButton state={techSaveState} onClick={saveTechnologies} />
+      </div>
+    {/if}
   </Card>
 
   <!-- Achievements -->
