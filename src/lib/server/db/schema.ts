@@ -1198,6 +1198,9 @@ export const profile_exports = pgTable("profile_exports", {
   // Presentation template slug the export was rendered with (a resume_templates
   // slug); null means the default ProfileDisplay template.
   template: varchar({ length: 50 }),
+  // Language the export was rendered in (a locale code); null means the base
+  // English export. Keeps per-language PDFs distinct at retrieval time.
+  locale: varchar({ length: 16 }),
   description: text(),
   source_url: varchar({ length: 512 }),
 }, (table) => [

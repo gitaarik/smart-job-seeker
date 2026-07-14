@@ -8,6 +8,7 @@ import {
 } from "$lib/server/profile/access-control";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import { templateForStorage } from "$lib/resume-templates";
+import { BASE_LOCALE, isKnownLocale } from "$lib/resume-translations";
 
 /**
  * Transform version slug to export_format
@@ -29,6 +30,10 @@ export const GET: RequestHandler = async (
   const { slug } = params;
   const token = url.searchParams.get("t");
   const templateFilter = templateForStorage(url.searchParams.get("template"));
+  const langParam = url.searchParams.get("lang");
+  const localeFilter = isKnownLocale(langParam) && langParam !== BASE_LOCALE
+    ? langParam
+    : null;
 
   // Get profile by slug
   const profile = await getProfileByIdentifier(slug);
@@ -75,6 +80,7 @@ export const GET: RequestHandler = async (
       fileType: "pdf",
       exportFormat: effectiveVersion,
       template: templateFilter,
+      locale: localeFilter,
     });
 
     // Fall back to transformed format for backward compatibility
@@ -89,6 +95,7 @@ export const GET: RequestHandler = async (
         fileType: "pdf",
         exportFormat: transformedFormat,
         template: templateFilter,
+        locale: localeFilter,
       });
     }
   } else {
@@ -98,6 +105,7 @@ export const GET: RequestHandler = async (
       exportType: "cv",
       fileType: "pdf",
       template: templateFilter,
+      locale: localeFilter,
     });
   }
 
@@ -112,9 +120,10 @@ export const GET: RequestHandler = async (
   }
 
   // Serve the PDF file
+  const localeSuffix = localeFilter ? `-${localeFilter}` : "";
   const filename = effectiveVersion
-    ? `${slug}-cv-${effectiveVersion}.pdf`
-    : `${slug}-cv.pdf`;
+    ? `${slug}-cv-${effectiveVersion}${localeSuffix}.pdf`
+    : `${slug}-cv${localeSuffix}.pdf`;
 
   // The file_id is a fresh UUID on every regeneration, so it doubles as a
   // content hash. `no-cache` forces the browser (and Caddy) to revalidate on

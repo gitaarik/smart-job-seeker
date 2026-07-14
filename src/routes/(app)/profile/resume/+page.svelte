@@ -57,6 +57,29 @@
     });
   }
 
+  // Language is a second page-level lens (?lang=), only shown when the profile
+  // has translations. Mirrors selectTemplate.
+  let selectedLocale = $derived(data.selectedLocale);
+  let availableLocales = $derived(data.availableLocales);
+  let localeLabel = $derived(
+    selectedLocale === "en"
+      ? ""
+      : ` · ${
+        availableLocales.find((l) => l.code === selectedLocale)?.nativeLabel ??
+          selectedLocale
+      }`,
+  );
+  function selectLocale(code: string) {
+    const u = new URL(page.url);
+    if (code === "en") u.searchParams.delete("lang");
+    else u.searchParams.set("lang", code);
+    goto(u.pathname + u.search, {
+      keepFocus: true,
+      noScroll: true,
+      invalidateAll: true,
+    });
+  }
+
   let showAddForm = $state(false);
   let showAddAdvanced = $state(false);
   let generatingSlug = $state<string | null>(null);
@@ -157,6 +180,35 @@
     addLabel="Add Version"
     onAdd={() => (showAddForm = true)}
   />
+
+  <!-- Language switcher: re-lenses every doc link + the generate button.
+       Shown only when the profile has translations in another language. -->
+  {#if versions.length > 0 && availableLocales.length > 1}
+    <div
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
+    >
+      <p class="text-sm font-medium text-[var(--dash-text)] mb-3">Language</p>
+      <div class="flex flex-wrap gap-2">
+        {#each availableLocales as l (l.code)}
+          {@const active = selectedLocale === l.code}
+          <button
+            type="button"
+            onclick={() => selectLocale(l.code)}
+            aria-pressed={active}
+            class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors cursor-pointer {active
+              ? 'bg-[var(--dash-primary)] text-white border-transparent'
+              : 'bg-[var(--dash-card)] text-[var(--dash-text)] border-[var(--dash-border)] hover:border-[var(--dash-primary)]'}"
+          >
+            {l.nativeLabel}
+          </button>
+        {/each}
+      </div>
+      <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+        Preview, download and generate PDFs in the selected language.
+        Untranslated fields fall back to English.
+      </p>
+    </div>
+  {/if}
 
   <!-- Template switcher: re-lenses every doc link + the generate button.
        Shown only when the profile has custom (DB-backed) templates. -->
@@ -395,12 +447,12 @@
                     <p class="text-sm font-semibold text-[var(--dash-text)] mb-2">Resume</p>
                     <div class="flex items-center justify-center gap-1.5">
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), template: selectedTemplate })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), template: selectedTemplate, locale: selectedLocale })}
                         target="_blank"
                         class="dash-link-ext"
                       >HTML</a>
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true, template: selectedTemplate })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "resume", versionSlug: vs, isPublicVersion: isPublicResume(version.id), pdf: true, template: selectedTemplate, locale: selectedLocale })}
                         target="_blank"
                         class="dash-link-ext"
                       >PDF</a>
@@ -410,12 +462,12 @@
                     <p class="text-sm font-semibold text-[var(--dash-text)] mb-2">CV</p>
                     <div class="flex items-center justify-center gap-1.5">
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), template: selectedTemplate })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), template: selectedTemplate, locale: selectedLocale })}
                         target="_blank"
                         class="dash-link-ext"
                       >HTML</a>
                       <a
-                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true, template: selectedTemplate })}
+                        href={profileDocUrl({ profileSlug: ps, docType: "cv", versionSlug: vs, isPublicVersion: isPublicCv(version.id), pdf: true, template: selectedTemplate, locale: selectedLocale })}
                         target="_blank"
                         class="dash-link-ext"
                       >PDF</a>
@@ -437,12 +489,13 @@
                   <form method="POST" action="?/generateExports" use:enhance={() => handleGenerateSubmit(version.slug ?? "")} class="inline">
                     <input type="hidden" name="slug" value={version.slug} />
                     <input type="hidden" name="template" value={selectedTemplate} />
+                    <input type="hidden" name="locale" value={selectedLocale} />
                     <button
                       type="submit"
                       class="dash-link-ext border border-[var(--dash-border)] {hasPdfs ? '!text-[var(--dash-text-secondary)] !bg-[var(--dash-bg)] hover:!bg-[var(--dash-primary)]/10 hover:!text-[var(--dash-primary)]' : '!text-amber-600 !bg-amber-500/10 hover:!bg-amber-500/20'}"
                     >
                       <FontAwesomeIcon icon={hasPdfs ? faSync : faFilePdf} class="w-3 h-3" />
-                      {hasPdfs ? `Regenerate ${templateLabel} PDFs` : `Generate ${templateLabel} PDFs`}
+                      {hasPdfs ? `Regenerate ${templateLabel} PDFs` : `Generate ${templateLabel} PDFs`}{localeLabel}
                     </button>
                   </form>
                 {/if}

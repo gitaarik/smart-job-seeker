@@ -19,6 +19,9 @@ interface ExportQuery {
   // Presentation template filter. `null`/undefined selects the default-template
   // export (profile_exports.template IS NULL); a string matches that template.
   template?: string | null;
+  // Locale filter. `null`/undefined selects the base English export
+  // (profile_exports.locale IS NULL); a code matches that language.
+  locale?: string | null;
 }
 
 /**
@@ -45,6 +48,13 @@ export async function getLatestExport(query: ExportQuery) {
     query.template
       ? eq(profile_exports.template, query.template)
       : isNull(profile_exports.template),
+  );
+
+  // Match the requested language; base English exports have locale IS NULL.
+  conditions.push(
+    query.locale
+      ? eq(profile_exports.locale, query.locale)
+      : isNull(profile_exports.locale),
   );
 
   return db.query.profile_exports.findFirst({

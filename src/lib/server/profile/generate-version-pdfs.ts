@@ -117,6 +117,7 @@ export async function generateVersionPdfs(
         exportType: doc.type,
         exportFormat: versionSlug,
         template,
+        locale,
         description: `${doc.display} (${versionSlug})${templateLabel}${localeLabel} - Generated ${
           new Date().toISOString()
         }`,

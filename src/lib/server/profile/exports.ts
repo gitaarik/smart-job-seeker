@@ -11,6 +11,8 @@ interface CreateExportOptions {
   exportType: "resume" | "cv" | "structured_data";
   exportFormat?: string;
   template?: string | null;
+  /** Locale the export was rendered in; null/undefined = base English. */
+  locale?: string | null;
   description?: string;
   sourceUrl?: string;
 }
@@ -37,6 +39,7 @@ export async function createProfileExport(
       export_type: options.exportType,
       export_format: options.exportFormat,
       template: options.template ?? null,
+      locale: options.locale ?? null,
       description: options.description,
       source_url: options.sourceUrl,
       date_created: new Date(),
