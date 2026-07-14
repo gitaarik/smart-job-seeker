@@ -32,6 +32,10 @@ export interface AppConfig {
     | "deepseek"
     | "cerebras";
   llmModel: string; // Configurable model name, with smart defaults per provider
+  // Model used specifically for résumé/CV auto-translation. Translation is a
+  // model-leverage task, so it can point at a stronger model than the app
+  // default (same provider). Falls back to llmModel when unset.
+  llmTranslateModel: string;
   groqApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
@@ -152,6 +156,15 @@ function loadConfig(): AppConfig {
       | "deepseek"
       | "cerebras"),
     llmModel: getModelForProvider(llmProvider),
+    // Translation quality benefits from a non-reasoning instruct model with
+    // clean European-language grammar. On Groq, llama-3.3-70b handles CV-style
+    // Dutch/German far better than the reasoning gpt-oss default (which emits
+    // ungrammatical bullets); other providers fall back to their app model.
+    // Override with SJS_LLM_TRANSLATE_MODEL.
+    llmTranslateModel: getEnv("SJS_LLM_TRANSLATE_MODEL", "") ||
+      (llmProvider === "groq"
+        ? "llama-3.3-70b-versatile"
+        : getModelForProvider(llmProvider)),
     groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
     geminiApiKey: getEnv("SJS_LLM_API_KEY_GEMINI", ""),
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
