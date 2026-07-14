@@ -280,6 +280,8 @@ export interface ChatCompletionOptions {
   maxTokens?: number;
   temperature?: number;
   structuredOutput?: StructuredOutputConfig;
+  /** Override the LLM provider for this call (defaults to config.llmProvider). */
+  provider?: string;
 }
 
 /**
@@ -491,8 +493,9 @@ async function generateWithLangChain(
   maxTokens: number,
   temperature: number,
   structuredOutput?: StructuredOutputConfig,
+  providerOverride?: string,
 ): Promise<CompletionResult> {
-  const provider = config.llmProvider;
+  const provider = providerOverride || config.llmProvider;
 
   try {
     // Handle Gemini system message limit
@@ -750,6 +753,7 @@ export async function generateChatCompletionTracked(
     maxTokens = 8192,
     temperature = 0.7,
     structuredOutput,
+    provider,
   } = options;
 
   // Check cache first (cached = no usage, already billed)
@@ -769,6 +773,7 @@ export async function generateChatCompletionTracked(
         maxTokens,
         temperature,
         structuredOutput,
+        provider,
       );
     },
     {

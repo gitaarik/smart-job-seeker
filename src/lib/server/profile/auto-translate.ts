@@ -34,6 +34,7 @@ export async function translateFields(
   fields: FieldToTranslate[],
   locale: string,
   model: string = config.llmTranslateModel,
+  provider: string | undefined = config.llmTranslateProvider,
 ): Promise<Map<number, string>> {
   const language = LOCALES.find((l) => l.code === locale)?.label ?? locale;
   const result = new Map<number, string>();
@@ -83,6 +84,7 @@ export async function translateFields(
       ],
       {
         model,
+        provider,
         structuredOutput: { name: "translate_fields", schema: BatchSchema },
         temperature: 0.3,
       },

@@ -32,10 +32,11 @@ export interface AppConfig {
     | "deepseek"
     | "cerebras";
   llmModel: string; // Configurable model name, with smart defaults per provider
-  // Model used specifically for résumé/CV auto-translation. Translation is a
-  // model-leverage task, so it can point at a stronger model than the app
-  // default (same provider). Falls back to llmModel when unset.
+  // Model + provider used specifically for résumé/CV auto-translation.
+  // Translation is a model-leverage task, so it can point at a stronger model
+  // (and a different provider) than the app default.
   llmTranslateModel: string;
+  llmTranslateProvider: string;
   groqApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
@@ -121,6 +122,9 @@ const EMBEDDING_DEFAULTS: Record<
 function loadConfig(): AppConfig {
   const nodeEnv = getEnv("NODE_ENV", "development");
   const llmProvider = getEnv("SJS_LLM_PROVIDER", "groq");
+  // Translation can run on a different provider than the rest of the app.
+  const llmTranslateProvider = getEnv("SJS_LLM_TRANSLATE_PROVIDER", "") ||
+    llmProvider;
   const embeddingProvider: "openai" | "gemini" =
     getEnv("SJS_EMBEDDING_PROVIDER", "openai") === "gemini"
       ? "gemini"
@@ -156,15 +160,18 @@ function loadConfig(): AppConfig {
       | "deepseek"
       | "cerebras"),
     llmModel: getModelForProvider(llmProvider),
-    // Translation quality benefits from a non-reasoning instruct model with
-    // clean European-language grammar. On Groq, llama-3.3-70b handles CV-style
-    // Dutch/German far better than the reasoning gpt-oss default (which emits
-    // ungrammatical bullets); other providers fall back to their app model.
-    // Override with SJS_LLM_TRANSLATE_MODEL.
+    // Translation is a model-leverage task and can point at a stronger model
+    // (and provider) than the app default. On Groq, llama-3.3-70b handles
+    // CV-style Dutch/German far better than the reasoning gpt-oss default; on
+    // Gemini, flash follows keep-English + uniform-past style reliably.
+    // Override with SJS_LLM_TRANSLATE_PROVIDER / SJS_LLM_TRANSLATE_MODEL.
+    llmTranslateProvider,
     llmTranslateModel: getEnv("SJS_LLM_TRANSLATE_MODEL", "") ||
-      (llmProvider === "groq"
+      (llmTranslateProvider === "groq"
         ? "llama-3.3-70b-versatile"
-        : getModelForProvider(llmProvider)),
+        : llmTranslateProvider === "gemini"
+        ? "gemini-2.5-pro"
+        : getModelForProvider(llmTranslateProvider)),
     groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
     geminiApiKey: getEnv("SJS_LLM_API_KEY_GEMINI", ""),
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
