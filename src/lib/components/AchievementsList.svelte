@@ -3,6 +3,8 @@
   import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical, faBan } from "@fortawesome/free-solid-svg-icons";
   import { portalToBody } from "$lib/actions/portal";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
+  import { translations } from "$lib/stores/translations.svelte";
+  import { BASE_LOCALE } from "$lib/resume-translations";
 
   export interface AchievementItem {
     /** DB row id; absent for freshly-added, not-yet-saved achievements. */
@@ -203,6 +205,24 @@
     dragIndex = null;
     dragOverIndex = null;
   }
+
+  // --- Translation-aware display ---
+  // Show each achievement in the active locale, falling back to the English
+  // base when that locale has no translation yet. Only kicks in for saved
+  // items of a translatable entity.
+  $effect(() => {
+    if (entity) void translations.ensureLoaded();
+  });
+
+  function shownDescription(item: AchievementItem): { text: string; fallback: boolean } {
+    const base = item.description;
+    if (entity && item.id && translations.activeLocale !== BASE_LOCALE) {
+      const t = translations.get(entity, item.id, "description", translations.activeLocale);
+      if (t.trim()) return { text: t, fallback: false };
+      return { text: base, fallback: !!base };
+    }
+    return { text: base, fallback: false };
+  }
 </script>
 
 {#if achievements.length === 0}
@@ -213,6 +233,7 @@
       {@const item = getItem(index)}
       {@const isDeleted = deletedIndices.has(index)}
       {@const canDrag = achievements.length > 1}
+      {@const shown = shownDescription(item)}
       <div
         class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''} {dragIndex === index ? 'opacity-40' : ''} {dragOverIndex === index && dragIndex !== index ? 'bg-[var(--dash-primary)]/10' : ''}"
         draggable={canDrag}
@@ -231,7 +252,7 @@
           </span>
         {/if}
         {#if isDeleted}
-          <span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">{item.description}</span>
+          <span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">{shown.text}</span>
           <button
             type="button"
             onclick={() => onUndoRemove?.(index)}
@@ -247,9 +268,17 @@
             class="flex-1 px-4 py-3 cursor-pointer hover:bg-[var(--dash-bg)]/50 transition-colors flex items-center gap-2"
             onclick={() => openEdit(index)}
           >
-            <span class="flex-1 text-[var(--dash-text)] {!item.description ? 'text-[var(--dash-text-secondary)] italic' : ''}">
-              {item.description || "Click to edit..."}
+            <span class="flex-1 text-[var(--dash-text)] {!shown.text ? 'text-[var(--dash-text-secondary)] italic' : ''}">
+              {shown.text || "Click to edit..."}
             </span>
+            {#if shown.fallback}
+              <span
+                class="shrink-0 text-[10px] font-medium uppercase text-[var(--dash-text-secondary)]/70 border border-[var(--dash-border)] rounded px-1 leading-tight"
+                title="No {translations.activeLocale.toUpperCase()} translation yet — showing English"
+              >
+                {BASE_LOCALE}
+              </span>
+            {/if}
             <FontAwesomeIcon icon={faPencil} class="w-3 h-3 text-[var(--dash-text-secondary)]" />
           </div>
           <button
