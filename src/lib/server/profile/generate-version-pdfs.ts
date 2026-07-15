@@ -15,11 +15,14 @@ const APP_INTERNAL_URL = "http://localhost:5173";
 const DEFAULT_PDF_SETTINGS = {
   format: "A4" as const,
   waitForFonts: true,
+  // Side margins are 0.4in (not 0.5in) so the PDF text column (~717px on A4)
+  // matches the on-screen ProfileDisplay width (w-782px minus px-8 = 718px);
+  // wider margins made lines wrap in the PDF that don't wrap in the HTML view.
   margin: {
     top: "0.4in",
-    right: "0.5in",
+    right: "0.4in",
     bottom: "0.4in",
-    left: "0.5in",
+    left: "0.4in",
   },
   printBackground: true,
   preferCSSPageSize: false,
