@@ -234,26 +234,11 @@
     deletedAchievements = newSet;
   }
 
-  // Map an index through a drag-and-drop move (remove at `from`, insert at `to`).
-  function mapIndexAfterMove(i: number, from: number, to: number): number {
-    if (i === from) return to;
-    let j = i;
-    if (i > from) j -= 1;
-    if (j >= to) j += 1;
-    return j;
-  }
-
-  // The AchievementsList already reordered editAchievements; keep our
-  // index-based side state (soft-deletes, last-added) aligned with it.
-  function reorderAchievements(from: number, to: number) {
-    if (deletedAchievements.size > 0) {
-      deletedAchievements = new Set(
-        [...deletedAchievements].map((i) => mapIndexAfterMove(i, from, to)),
-      );
-    }
-    if (lastAddedAchievementIndex !== null) {
-      lastAddedAchievementIndex = mapIndexAfterMove(lastAddedAchievementIndex, from, to);
-    }
+  // AchievementsList commits a reorder with the soft-delete set already
+  // remapped to the new order; realign our index-based side state to match.
+  function commitAchievementsReorder(newDeleted: Set<number>) {
+    deletedAchievements = newDeleted;
+    lastAddedAchievementIndex = null;
   }
 
   function addTechnology() {
@@ -659,7 +644,8 @@
       onAdd={addAchievement}
       onRemove={removeAchievement}
       onUndoRemove={undoRemoveAchievement}
-      onReorder={reorderAchievements}
+      onReorderCommit={commitAchievementsReorder}
+      onReorderSave={saveAchievements}
       onFocused={() => (lastAddedAchievementIndex = null)}
     />
     <div class="flex justify-end mt-4">

@@ -1,244 +1,237 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faArrowLeft,
-    faLightbulb,
-    faPlus,
-    faStar,
-    faTrash,
-  } from "@fortawesome/free-solid-svg-icons";
-  import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
-  import TranslatableField from "$lib/components/TranslatableField.svelte";
-  import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
-  import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
-  import VersionTags from "$lib/components/VersionTags.svelte";
-  import ConfirmModal from "../../../components/ConfirmModal.svelte";
-  import Card from "../../../../components/Card.svelte";
+import type { PageData } from "./$types";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faArrowLeft,
+  faLightbulb,
+  faPlus,
+  faStar,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import MediaUpload from "$lib/components/MediaUpload.svelte";
+import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+import TranslatableField from "$lib/components/TranslatableField.svelte";
+import AchievementsList, {
+  type AchievementItem,
+} from "$lib/components/AchievementsList.svelte";
+import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
+import VersionTags from "$lib/components/VersionTags.svelte";
+import ConfirmModal from "../../../components/ConfirmModal.svelte";
+import Card from "../../../../components/Card.svelte";
 
-  type SaveState = "idle" | "saving" | "saved" | "error";
+type SaveState = "idle" | "saving" | "saved" | "error";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  let imageUrl = $state(data.imageUrl);
-  let bannerUrl = $state(data.bannerUrl);
+let imageUrl = $state(data.imageUrl);
+let bannerUrl = $state(data.bannerUrl);
 
-  let project = $derived(data.project);
+let project = $derived(data.project);
 
-  let pageTitle = $derived(project.name || 'Project');
+let pageTitle = $derived(project.name || "Project");
 
-  // Section save states
-  let basicSaveState = $state<SaveState>("idle");
-  let techSaveState = $state<SaveState>("idle");
-  let achievementsSaveState = $state<SaveState>("idle");
+// Section save states
+let basicSaveState = $state<SaveState>("idle");
+let techSaveState = $state<SaveState>("idle");
+let achievementsSaveState = $state<SaveState>("idle");
 
-  // Form states
-  let editName = $state(project.name || "");
-  let editUrl = $state(project.url || "");
-  let editUrlLabel = $state(project.url_label || "");
-  let editSummary = $state(project.summary || "");
-  let editStars = $state(project.stars?.toString() || "");
-  let editStartDate = $state(formatDate(project.start_date));
-  let editEndDate = $state(formatDate(project.end_date));
-  let editTags = $state<string[]>(Array.isArray(project.tags) ? project.tags as string[] : []);
-  let editAchievements = $state<AchievementItem[]>(
-    project.side_project_achievements.map((a) => ({
-      id: a.id,
-      description: a.description || "",
-      tags: null,
-    })),
-  );
-  let editTechnologies = $state<string[]>(
-    project.side_project_technologies.map((t) => t.name || ""),
-  );
-  let deletedTechnologies = $state<Set<number>>(new Set());
-  let deletedAchievements = $state<Set<number>>(new Set());
-  let lastAddedTechIndex = $state<number | null>(null);
-  let showDeleteConfirm = $state(false);
+// Form states
+let editName = $state(project.name || "");
+let editUrl = $state(project.url || "");
+let editUrlLabel = $state(project.url_label || "");
+let editSummary = $state(project.summary || "");
+let editStars = $state(project.stars?.toString() || "");
+let editStartDate = $state(formatDate(project.start_date));
+let editEndDate = $state(formatDate(project.end_date));
+let editTags = $state<string[]>(
+  Array.isArray(project.tags) ? project.tags as string[] : [],
+);
+let editAchievements = $state<AchievementItem[]>(
+  project.side_project_achievements.map((a) => ({
+    id: a.id,
+    description: a.description || "",
+    tags: null,
+  })),
+);
+let editTechnologies = $state<string[]>(
+  project.side_project_technologies.map((t) => t.name || ""),
+);
+let deletedTechnologies = $state<Set<number>>(new Set());
+let deletedAchievements = $state<Set<number>>(new Set());
+let lastAddedTechIndex = $state<number | null>(null);
+let showDeleteConfirm = $state(false);
 
-  function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toISOString().split("T")[0];
-  }
+function formatDate(date: Date | string | null): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toISOString().split("T")[0];
+}
 
-  async function saveBasicInfo() {
-    basicSaveState = "saving";
-    try {
-      const response = await fetch(`/api/side-project/${project.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          section: "basic",
-          name: editName,
-          url: editUrl,
-          url_label: editUrlLabel,
-          summary: editSummary,
-          stars: editStars || null,
-          start_date: editStartDate || null,
-          end_date: editEndDate || null,
-        }),
-      });
+async function saveBasicInfo() {
+  basicSaveState = "saving";
+  try {
+    const response = await fetch(`/api/side-project/${project.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        section: "basic",
+        name: editName,
+        url: editUrl,
+        url_label: editUrlLabel,
+        summary: editSummary,
+        stars: editStars || null,
+        start_date: editStartDate || null,
+        end_date: editEndDate || null,
+      }),
+    });
 
-      if (response.ok) {
-        basicSaveState = "saved";
-        setTimeout(() => (basicSaveState = "idle"), 2000);
-      } else {
-        basicSaveState = "error";
-        setTimeout(() => (basicSaveState = "idle"), 3000);
-      }
-    } catch {
+    if (response.ok) {
+      basicSaveState = "saved";
+      setTimeout(() => (basicSaveState = "idle"), 2000);
+    } else {
       basicSaveState = "error";
       setTimeout(() => (basicSaveState = "idle"), 3000);
     }
+  } catch {
+    basicSaveState = "error";
+    setTimeout(() => (basicSaveState = "idle"), 3000);
   }
+}
 
-  async function saveTechnologies() {
-    techSaveState = "saving";
-    try {
-      const response = await fetch(`/api/side-project/${project.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          section: "technologies",
-          technologies: editTechnologies.filter((t, i) => t.trim() && !deletedTechnologies.has(i)),
-        }),
-      });
+async function saveTechnologies() {
+  techSaveState = "saving";
+  try {
+    const response = await fetch(`/api/side-project/${project.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        section: "technologies",
+        technologies: editTechnologies.filter((t, i) =>
+          t.trim() && !deletedTechnologies.has(i)
+        ),
+      }),
+    });
 
-      if (response.ok) {
-        techSaveState = "saved";
-        setTimeout(() => (techSaveState = "idle"), 2000);
-      } else {
-        techSaveState = "error";
-        setTimeout(() => (techSaveState = "idle"), 3000);
-      }
-    } catch {
+    if (response.ok) {
+      techSaveState = "saved";
+      setTimeout(() => (techSaveState = "idle"), 2000);
+    } else {
       techSaveState = "error";
       setTimeout(() => (techSaveState = "idle"), 3000);
     }
+  } catch {
+    techSaveState = "error";
+    setTimeout(() => (techSaveState = "idle"), 3000);
   }
+}
 
-  async function saveAchievements() {
-    achievementsSaveState = "saving";
-    try {
-      const sent = editAchievements
-        .map((a, i) => ({ a, i }))
-        .filter(({ a, i }) => a.description.trim() && !deletedAchievements.has(i));
+async function saveAchievements() {
+  achievementsSaveState = "saving";
+  try {
+    const sent = editAchievements
+      .map((a, i) => ({ a, i }))
+      .filter(({ a, i }) =>
+        a.description.trim() && !deletedAchievements.has(i)
+      );
 
-      const response = await fetch(`/api/side-project/${project.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          section: "achievements",
-          achievements: sent.map(({ a }) => ({
-            id: a.id,
-            description: a.description,
-          })),
-        }),
-      });
+    const response = await fetch(`/api/side-project/${project.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        section: "achievements",
+        achievements: sent.map(({ a }) => ({
+          id: a.id,
+          description: a.description,
+        })),
+      }),
+    });
 
-      if (response.ok) {
-        const result = await response.json().catch(() => null);
-        if (result && Array.isArray(result.achievements)) {
-          const updated = [...editAchievements];
-          sent.forEach(({ i }, k) => {
-            const newId = result.achievements[k]?.id;
-            if (newId) updated[i] = { ...updated[i], id: newId };
-          });
-          editAchievements = updated;
-        }
-        achievementsSaveState = "saved";
-        setTimeout(() => (achievementsSaveState = "idle"), 2000);
-      } else {
-        achievementsSaveState = "error";
-        setTimeout(() => (achievementsSaveState = "idle"), 3000);
+    if (response.ok) {
+      const result = await response.json().catch(() => null);
+      if (result && Array.isArray(result.achievements)) {
+        const updated = [...editAchievements];
+        sent.forEach(({ i }, k) => {
+          const newId = result.achievements[k]?.id;
+          if (newId) updated[i] = { ...updated[i], id: newId };
+        });
+        editAchievements = updated;
       }
-    } catch {
+      achievementsSaveState = "saved";
+      setTimeout(() => (achievementsSaveState = "idle"), 2000);
+    } else {
       achievementsSaveState = "error";
       setTimeout(() => (achievementsSaveState = "idle"), 3000);
     }
+  } catch {
+    achievementsSaveState = "error";
+    setTimeout(() => (achievementsSaveState = "idle"), 3000);
   }
+}
 
-  let lastAddedAchievementIndex = $state<number | null>(null);
+let lastAddedAchievementIndex = $state<number | null>(null);
 
-  function addAchievement() {
-    editAchievements = [...editAchievements, { description: "", tags: null }];
-    lastAddedAchievementIndex = editAchievements.length - 1;
+function addAchievement() {
+  editAchievements = [...editAchievements, { description: "", tags: null }];
+  lastAddedAchievementIndex = editAchievements.length - 1;
+}
+
+function removeAchievement(index: number) {
+  if (!editAchievements[index]?.description.trim()) {
+    // Empty item - remove immediately
+    editAchievements = editAchievements.filter((_, i) => i !== index);
+    // Adjust deleted indices for removed item
+    const newDeleted = new Set<number>();
+    deletedAchievements.forEach((i) => {
+      if (i > index) newDeleted.add(i - 1);
+      else if (i < index) newDeleted.add(i);
+    });
+    deletedAchievements = newDeleted;
+  } else {
+    // Has content - soft delete
+    deletedAchievements = new Set([...deletedAchievements, index]);
   }
+}
 
-  function removeAchievement(index: number) {
-    if (!editAchievements[index]?.description.trim()) {
-      // Empty item - remove immediately
-      editAchievements = editAchievements.filter((_, i) => i !== index);
-      // Adjust deleted indices for removed item
-      const newDeleted = new Set<number>();
-      deletedAchievements.forEach((i) => {
-        if (i > index) newDeleted.add(i - 1);
-        else if (i < index) newDeleted.add(i);
-      });
-      deletedAchievements = newDeleted;
-    } else {
-      // Has content - soft delete
-      deletedAchievements = new Set([...deletedAchievements, index]);
-    }
-  }
+function undoRemoveAchievement(index: number) {
+  const newSet = new Set(deletedAchievements);
+  newSet.delete(index);
+  deletedAchievements = newSet;
+}
 
-  function undoRemoveAchievement(index: number) {
-    const newSet = new Set(deletedAchievements);
-    newSet.delete(index);
-    deletedAchievements = newSet;
-  }
+// AchievementsList commits a reorder with the soft-delete set already
+// remapped to the new order; realign our index-based side state to match.
+function commitAchievementsReorder(newDeleted: Set<number>) {
+  deletedAchievements = newDeleted;
+  lastAddedAchievementIndex = null;
+}
 
-  // Map an index through a drag-and-drop move (remove at `from`, insert at `to`).
-  function mapIndexAfterMove(i: number, from: number, to: number): number {
-    if (i === from) return to;
-    let j = i;
-    if (i > from) j -= 1;
-    if (j >= to) j += 1;
-    return j;
-  }
+function addTechnology() {
+  editTechnologies = [...editTechnologies, ""];
+  lastAddedTechIndex = editTechnologies.length - 1;
+}
 
-  // The AchievementsList already reordered editAchievements; keep our
-  // index-based side state (soft-deletes, last-added) aligned with it.
-  function reorderAchievements(from: number, to: number) {
-    if (deletedAchievements.size > 0) {
-      deletedAchievements = new Set(
-        [...deletedAchievements].map((i) => mapIndexAfterMove(i, from, to)),
-      );
-    }
-    if (lastAddedAchievementIndex !== null) {
-      lastAddedAchievementIndex = mapIndexAfterMove(lastAddedAchievementIndex, from, to);
-    }
+function removeTechnology(index: number) {
+  if (!editTechnologies[index]?.trim()) {
+    // Empty tag - remove immediately
+    editTechnologies = editTechnologies.filter((_, i) => i !== index);
+    // Adjust deleted indices for removed item
+    const newDeleted = new Set<number>();
+    deletedTechnologies.forEach((i) => {
+      if (i > index) newDeleted.add(i - 1);
+      else if (i < index) newDeleted.add(i);
+    });
+    deletedTechnologies = newDeleted;
+  } else {
+    // Has content - soft delete
+    deletedTechnologies = new Set([...deletedTechnologies, index]);
   }
+}
 
-  function addTechnology() {
-    editTechnologies = [...editTechnologies, ""];
-    lastAddedTechIndex = editTechnologies.length - 1;
-  }
-
-  function removeTechnology(index: number) {
-    if (!editTechnologies[index]?.trim()) {
-      // Empty tag - remove immediately
-      editTechnologies = editTechnologies.filter((_, i) => i !== index);
-      // Adjust deleted indices for removed item
-      const newDeleted = new Set<number>();
-      deletedTechnologies.forEach((i) => {
-        if (i > index) newDeleted.add(i - 1);
-        else if (i < index) newDeleted.add(i);
-      });
-      deletedTechnologies = newDeleted;
-    } else {
-      // Has content - soft delete
-      deletedTechnologies = new Set([...deletedTechnologies, index]);
-    }
-  }
-
-  function undoRemoveTechnology(index: number) {
-    const newSet = new Set(deletedTechnologies);
-    newSet.delete(index);
-    deletedTechnologies = newSet;
-  }
+function undoRemoveTechnology(index: number) {
+  const newSet = new Set(deletedTechnologies);
+  newSet.delete(index);
+  deletedTechnologies = newSet;
+}
 </script>
 
 <svelte:head>
@@ -287,7 +280,8 @@
 
   <!-- Basic Info -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -391,7 +385,8 @@
 
   <!-- Technologies -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Technologies</h2>
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4">Technologies</h2>
 
     <TechnologyTagsEditor
       bind:technologies={editTechnologies}
@@ -409,7 +404,8 @@
 
   <!-- Achievements -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Achievements</h2>
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4">Achievements</h2>
 
     <AchievementsList
       bind:achievements={editAchievements}
@@ -419,17 +415,20 @@
       onAdd={addAchievement}
       onRemove={removeAchievement}
       onUndoRemove={undoRemoveAchievement}
-      onReorder={reorderAchievements}
+      onReorderCommit={commitAchievementsReorder}
+      onReorderSave={saveAchievements}
       onFocused={() => (lastAddedAchievementIndex = null)}
     />
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />
+      <SectionSaveButton state={achievementsSaveState}
+        onClick={saveAchievements} />
     </div>
   </Card>
 
   <!-- Portfolio Images -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
     <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
       These images are used for your portfolio display. They are not required for job search or scoring.
     </p>
@@ -465,7 +464,8 @@
   </Card>
 
   <!-- Version Tags -->
-  <VersionTags bind:tags={editTags} apiUrl={`/api/side-project/${project.id}`} section="basic" />
+  <VersionTags bind:tags={editTags} apiUrl={`/api/side-project/${project.id}`}
+    section="basic" />
 
   <!-- Danger Zone -->
   <Card padding="lg">

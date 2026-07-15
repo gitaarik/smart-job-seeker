@@ -1,10 +1,12 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical, faBan } from "@fortawesome/free-solid-svg-icons";
+  import { faCircleNotch, faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical, faBan } from "@fortawesome/free-solid-svg-icons";
   import { portalToBody } from "$lib/actions/portal";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
   import { translations } from "$lib/stores/translations.svelte";
   import { BASE_LOCALE } from "$lib/resume-translations";
+  import { dndzone } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
 
   export interface AchievementItem {
     /** DB row id; absent for freshly-added, not-yet-saved achievements. */
@@ -30,11 +32,18 @@
     onUndoRemove?: (index: number) => void;
     onFocused?: () => void;
     /**
-     * Notified after a drag-and-drop reorder so the parent can remap any
-     * index-based side state (e.g. soft-deleted indices). The component
-     * already moves the `achievements` array itself; this is parent-only.
+     * Called when a reorder is committed (Save/Done), with the soft-delete
+     * index set remapped to the new order. The component already writes the
+     * reordered `achievements` array; this lets the parent realign its own
+     * index-based side state (soft-deletes, last-added).
      */
-    onReorder?: (from: number, to: number) => void;
+    onReorderCommit?: (deletedIndices: Set<number>) => void;
+    /**
+     * Optional persist hook. When provided, reorder mode shows a Save button
+     * that commits the new order and calls this (e.g. the section's save);
+     * otherwise it shows a plain Done that just applies the order locally.
+     */
+    onReorderSave?: () => void | Promise<void>;
   }
 
   let {
@@ -48,7 +57,8 @@
     onRemove,
     onUndoRemove,
     onFocused,
-    onReorder,
+    onReorderCommit,
+    onReorderSave,
   }: Props = $props();
 
   // Normalize: support both string[] and AchievementItem[]
@@ -164,46 +174,68 @@
     }
   }
 
-  // --- Drag-and-drop reordering ---
-  let dragIndex = $state<number | null>(null);
-  let dragOverIndex = $state<number | null>(null);
+  // --- Drag-and-drop reordering (svelte-dnd-action, gated behind a toggle) ---
+  // Dragging only mutates local `dndAch` state; the reordered array and the
+  // remapped soft-delete set are committed to the parent on Save/Done, so
+  // Cancel is a clean revert with no snapshot.
+  const flipMs = 150;
+  let reorderMode = $state(false);
+  let reorderSaving = $state(false);
 
-  function moveItem(from: number, to: number) {
-    if (from === to) return;
-    const arr = [...achievements];
-    const [moved] = arr.splice(from, 1);
-    arr.splice(to, 0, moved);
-    achievements = arr as typeof achievements;
-    // The component owns the array move; the parent only remaps its own
-    // index-based side state (soft-deletes, last-added) via onReorder.
-    onReorder?.(from, to);
+  interface DndAch {
+    id: number;
+    item: AchievementItem;
+    deleted: boolean;
+  }
+  let dndAch = $state<DndAch[]>([]);
+
+  function startReorder() {
+    dndAch = achievements.map((_, i) => ({
+      id: i,
+      item: getItem(i),
+      deleted: deletedIndices.has(i),
+    }));
+    reorderMode = true;
   }
 
-  function handleDragStart(index: number, e: DragEvent) {
-    dragIndex = index;
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move";
-      // Firefox requires data to be set for a drag to start.
-      e.dataTransfer.setData("text/plain", String(index));
+  function handleReorderConsider(e: CustomEvent<{ items: DndAch[] }>) {
+    dndAch = e.detail.items;
+  }
+
+  function handleReorderFinalize(e: CustomEvent<{ items: DndAch[] }>) {
+    dndAch = e.detail.items;
+  }
+
+  // Write the reordered order back to `achievements` (preserving string[] vs
+  // AchievementItem[] shape) and return the remapped soft-delete set.
+  function commitReorder(): Set<number> {
+    const wasStrings = isStringArray(achievements);
+    const ordered = dndAch.map((w) => w.item);
+    achievements = (wasStrings ? ordered.map((a) => a.description) : ordered) as typeof achievements;
+    return new Set(dndAch.flatMap((w, i) => (w.deleted ? [i] : [])));
+  }
+
+  function exitReorder() {
+    reorderMode = false;
+    dndAch = [];
+  }
+
+  function cancelReorder() {
+    exitReorder();
+  }
+
+  async function confirmReorder() {
+    const newDeleted = commitReorder();
+    onReorderCommit?.(newDeleted);
+    if (onReorderSave) {
+      reorderSaving = true;
+      try {
+        await onReorderSave();
+      } finally {
+        reorderSaving = false;
+      }
     }
-  }
-
-  function handleDragOver(index: number, e: DragEvent) {
-    if (dragIndex === null) return;
-    e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    dragOverIndex = index;
-  }
-
-  function handleDrop(index: number) {
-    if (dragIndex !== null) moveItem(dragIndex, index);
-    dragIndex = null;
-    dragOverIndex = null;
-  }
-
-  function handleDragEnd() {
-    dragIndex = null;
-    dragOverIndex = null;
+    exitReorder();
   }
 
   // --- Translation-aware display ---
@@ -225,32 +257,76 @@
   }
 </script>
 
-{#if achievements.length === 0}
+{#if achievements.length > 1}
+  <div class="flex justify-end mb-2">
+    <button
+      type="button"
+      onclick={() => (reorderMode ? cancelReorder() : startReorder())}
+      class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded border transition-colors {reorderMode
+        ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border-[var(--dash-border)]'}"
+    >
+      <span class="inline-block w-1.5 h-1.5 rounded-full transition-colors {reorderMode ? 'bg-amber-500' : 'bg-[var(--dash-text-muted)]/30'}"></span>
+      Reorder
+    </button>
+  </div>
+{/if}
+
+{#if reorderMode}
+  <div
+    class="border border-[var(--dash-border)] rounded-md overflow-hidden"
+    use:dndzone={{ items: dndAch, flipDurationMs: flipMs, type: "achievements" }}
+    onconsider={handleReorderConsider}
+    onfinalize={handleReorderFinalize}
+  >
+    {#each dndAch as w, index (w.id)}
+      {@const shown = shownDescription(w.item)}
+      <div
+        animate:flip={{ duration: flipMs }}
+        class="flex items-center cursor-grab active:cursor-grabbing {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {w.deleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''}"
+      >
+        <span
+          class="pl-2 pr-1 self-stretch flex items-center text-[var(--dash-text-secondary)]/60"
+          aria-hidden="true"
+        >
+          <FontAwesomeIcon icon={faGripVertical} class="w-3 h-3" />
+        </span>
+        <span class="flex-1 px-2 py-3 text-[var(--dash-text)] {w.deleted ? 'line-through text-[var(--dash-text-secondary)]' : ''} {!shown.text ? 'text-[var(--dash-text-secondary)] italic' : ''}">
+          {shown.text || "(empty)"}
+        </span>
+      </div>
+    {/each}
+  </div>
+  <div class="flex items-center justify-end gap-2 mt-3">
+    <span class="mr-auto text-xs text-[var(--dash-text-muted)]">Drag to reorder, then {onReorderSave ? "save" : "done"}.</span>
+    <button
+      type="button"
+      onclick={cancelReorder}
+      class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      onclick={confirmReorder}
+      disabled={reorderSaving}
+      class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors inline-flex items-center gap-1.5 disabled:opacity-70"
+    >
+      {#if reorderSaving}<FontAwesomeIcon icon={faCircleNotch} spin class="w-3 h-3" />{/if}
+      {onReorderSave ? "Save" : "Done"}
+    </button>
+  </div>
+{:else if achievements.length === 0}
   <p class="text-[var(--dash-text-secondary)] text-sm">No achievements added yet.</p>
 {:else}
   <div class="border border-[var(--dash-border)] rounded-md overflow-hidden">
     {#each achievements as _, index}
       {@const item = getItem(index)}
       {@const isDeleted = deletedIndices.has(index)}
-      {@const canDrag = achievements.length > 1}
       {@const shown = shownDescription(item)}
       <div
-        class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''} {dragIndex === index ? 'opacity-40' : ''} {dragOverIndex === index && dragIndex !== index ? 'bg-[var(--dash-primary)]/10' : ''}"
-        draggable={canDrag}
-        ondragstart={(e) => handleDragStart(index, e)}
-        ondragover={(e) => handleDragOver(index, e)}
-        ondrop={() => handleDrop(index)}
-        ondragend={handleDragEnd}
+        class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''}"
       >
-        {#if canDrag}
-          <span
-            class="pl-2 pr-1 self-stretch flex items-center text-[var(--dash-text-secondary)]/60 hover:text-[var(--dash-text-secondary)] cursor-grab active:cursor-grabbing"
-            aria-hidden="true"
-            title="Drag to reorder"
-          >
-            <FontAwesomeIcon icon={faGripVertical} class="w-3 h-3" />
-          </span>
-        {/if}
         {#if isDeleted}
           <span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">{shown.text}</span>
           <button
@@ -298,14 +374,16 @@
     {/each}
   </div>
 {/if}
-<button
-  type="button"
-  onclick={handleAdd}
-  class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1 mt-3"
->
-  <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-  Add Achievement
-</button>
+{#if !reorderMode}
+  <button
+    type="button"
+    onclick={handleAdd}
+    class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1 mt-3"
+  >
+    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+    Add Achievement
+  </button>
+{/if}
 
 <!-- Edit Popup -->
 {#if editingIndex !== null}
