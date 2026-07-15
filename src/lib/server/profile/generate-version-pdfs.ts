@@ -8,7 +8,11 @@ import { buildExportUrl } from "$lib/server/utils/export-url-builder";
 
 const APP_INTERNAL_URL = "http://localhost:5173";
 
-const PDF_SETTINGS = {
+/**
+ * The built-in default renderer (ProfileDisplay) has no `@page` rule, so the
+ * PDF's page box is defined by these server-side margins.
+ */
+const DEFAULT_PDF_SETTINGS = {
   format: "A4" as const,
   waitForFonts: true,
   margin: {
@@ -20,6 +24,26 @@ const PDF_SETTINGS = {
   printBackground: true,
   preferCSSPageSize: false,
 };
+
+/**
+ * DB-backed templates (rendered by StructuredResume) are full-bleed: their
+ * decoration paints to the sheet edge, so they render with zero page margin.
+ * Margins live here (not in the template's CSS) because an `@page` rule can't
+ * be Svelte-scoped — a template's `@page { margin: 0 }` would leak onto the
+ * default renderer, which shares the route bundle, and strip its margins.
+ */
+const TEMPLATE_PDF_SETTINGS = {
+  format: "A4" as const,
+  waitForFonts: true,
+  margin: { top: "0", right: "0", bottom: "0", left: "0" },
+  printBackground: true,
+  preferCSSPageSize: false,
+};
+
+/** Default renderer uses fixed server margins; DB templates use their own CSS @page. */
+function pdfSettingsFor(template: string | null) {
+  return template ? TEMPLATE_PDF_SETTINGS : DEFAULT_PDF_SETTINGS;
+}
 
 const DOC_TYPES = [
   { type: "resume", display: "Resume" },
@@ -98,7 +122,7 @@ export async function generateVersionPdfs(
         );
       });
 
-      const pdfBuffer = await page.pdf(PDF_SETTINGS);
+      const pdfBuffer = await page.pdf(pdfSettingsFor(template));
       const buffer = Buffer.from(pdfBuffer);
 
       const displayName = profile.name || `Profile ${profileId}`;

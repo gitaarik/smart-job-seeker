@@ -383,7 +383,9 @@
   }
 
   @media print {
-    @page { size: A4; margin: 0; }
+    /* No `@page` rule here: it can't be Svelte-scoped and would leak onto the
+       default renderer (same route bundle), zeroing its margins. Page size and
+       the full-bleed zero margin are set on `page.pdf()` in generate-version-pdfs. */
     /* The fixed background layer renders a hair smaller than the sheet, leaving
        a white strip on the bottom and right. Extend the layer past those edges
        (top-left anchored) so the page clips the bleed. Keep `bottom` tiny: the
