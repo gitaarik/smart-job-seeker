@@ -403,9 +403,11 @@
        CSS (would need a change to the page.pdf viewport/margins). */
     .bg { position: fixed; background-image: none; right: -3mm; bottom: -0.7mm; }
     .bg-print { display: block; height: 100%; }
-    /* The flat-topped badge is meant to bleed off the top edge, but sits a hair
-       short (~0.4mm white above it). Pull it up so the flat top clips cleanly. */
-    .badge { margin-top: -2mm; }
+    /* Badge meets the top edge with no visible seam. The asset's flat top is
+       solid black to its first row; a hair of negative margin seats that black
+       against the page edge, covering the ~0.4mm layout gap that would otherwise
+       show as a white hairline. Only solid black is clipped — no logo is cut. */
+    .badge { margin-top: -0.5mm; }
     .footer { display: none; }
   }
 </style>
