@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical } from "@fortawesome/free-solid-svg-icons";
+  import { faPlus, faTimes, faUndo, faPencil, faTags, faChevronDown, faChevronRight, faGripVertical, faBan } from "@fortawesome/free-solid-svg-icons";
   import { portalToBody } from "$lib/actions/portal";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
 
@@ -84,10 +84,16 @@
 
   const builtinTags = ["resume", "cv"];
 
-  let allSuggestions = $derived.by(() => {
+  function hasEditTag(tag: string): boolean {
+    return editTags.some((t) => t.toLowerCase() === tag.toLowerCase());
+  }
+
+  // Candidates not yet decided in either form (positive or "!" exclude);
+  // once a version is whitelisted or hidden we stop re-suggesting it.
+  let availableSuggestions = $derived.by(() => {
     if (!showTags) return [];
     const all = [...builtinTags, ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))];
-    return all.filter((s) => !editTags.some((t) => t.toLowerCase() === s.toLowerCase()));
+    return all.filter((s) => !hasEditTag(s) && !hasEditTag(`!${s}`));
   });
 
   function openEdit(index: number) {
@@ -337,12 +343,16 @@
             {#if editTags.length > 0}
               <div class="flex flex-wrap gap-1.5 mb-2">
                 {#each editTags as tag}
+                  {@const isExclude = tag.startsWith("!")}
                   <button
                     type="button"
                     onclick={() => removeEditTag(tag)}
-                    class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+                    class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border transition-colors cursor-pointer
+                      {isExclude
+                        ? 'bg-amber-500/10 text-amber-700 border-amber-500/30 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30'
+                        : 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30'}"
                   >
-                    {tag}
+                    {isExclude ? `hide from ${tag.slice(1)}` : tag}
                     <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
                   </button>
                 {/each}
@@ -352,15 +362,32 @@
             {/if}
 
             <!-- Suggestions -->
-            {#if allSuggestions.length > 0}
-              <div class="flex flex-wrap gap-1.5">
-                {#each allSuggestions as suggestion}
+            {#if availableSuggestions.length > 0}
+              <!-- Show only on (whitelist) -->
+              <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1.5">Show only on</p>
+              <div class="flex flex-wrap gap-1.5 mb-3">
+                {#each availableSuggestions as suggestion}
                   <button
                     type="button"
                     onclick={() => addEditTag(suggestion)}
                     class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
                   >
                     <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                    {suggestion}
+                  </button>
+                {/each}
+              </div>
+
+              <!-- Hide from (exclude) -->
+              <p class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1.5">Hide from</p>
+              <div class="flex flex-wrap gap-1.5">
+                {#each availableSuggestions as suggestion}
+                  <button
+                    type="button"
+                    onclick={() => addEditTag(`!${suggestion}`)}
+                    class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-amber-500/40 hover:text-amber-700 transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faBan} class="w-2.5 h-2.5" />
                     {suggestion}
                   </button>
                 {/each}
