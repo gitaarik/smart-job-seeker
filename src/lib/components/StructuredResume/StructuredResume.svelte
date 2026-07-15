@@ -1,5 +1,17 @@
 <script lang="ts">
   import { page } from "$app/state";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import {
+    faEnvelope,
+    faGlobe,
+    faLocationDot,
+    faPhone,
+  } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faGithub,
+    faLinkedin,
+  } from "@fortawesome/free-brands-svg-icons";
+  import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
   import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import { createProfileFilter } from "../ProfileDisplay/profile-filter";
   import { isContactHidden } from "$lib/resume-contact-fields";
@@ -140,19 +152,15 @@
 </script>
 
 {#snippet icon(name: string)}
-  {#if name === "mail"}
-    <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" fill="none" stroke="#fff" stroke-width="2"/><path d="M4 7l8 6 8-6" fill="none" stroke="#fff" stroke-width="2"/></svg>
-  {:else if name === "phone"}
-    <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11 21 3 13 3 3c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z" fill="#fff"/></svg>
-  {:else if name === "pin"}
-    <svg viewBox="0 0 24 24"><path d="M12 22s7-6.1 7-12a7 7 0 10-14 0c0 5.9 7 12 7 12z" fill="#fff"/><circle cx="12" cy="10" r="2.4" fill="#141414"/></svg>
-  {:else if name === "globe"}
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="#fff" stroke-width="2"/></svg>
-  {:else if name === "linkedin"}
-    <svg viewBox="0 0 24 24" fill="#fff"><path d="M4.98 3.5A2.5 2.5 0 002.5 6 2.5 2.5 0 005 8.5 2.5 2.5 0 007.5 6 2.5 2.5 0 004.98 3.5zM3 9.5h4V21H3zM9.5 9.5h3.8v1.6h.1c.5-.9 1.8-1.9 3.6-1.9 3.9 0 4.6 2.5 4.6 5.8V21h-4v-4.9c0-1.2 0-2.7-1.7-2.7s-1.9 1.3-1.9 2.6V21h-4z"/></svg>
-  {:else if name === "github"}
-    <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.5 2 2 6.6 2 12.2c0 4.5 2.9 8.3 6.8 9.6.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.5-.3s1.7.1 2.5.3c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5 3.9-1.3 6.8-5.1 6.8-9.6C22 6.6 17.5 2 12 2z"/></svg>
-  {/if}
+  {@const def = ({
+    mail: faEnvelope,
+    phone: faPhone,
+    pin: faLocationDot,
+    globe: faGlobe,
+    linkedin: faLinkedin,
+    github: faGithub,
+  } as Record<string, IconDefinition>)[name]}
+  {#if def}<FontAwesomeIcon icon={def} />{/if}
 {/snippet}
 
 <div class="resume" style={rootStyle}>
@@ -350,8 +358,8 @@
   .sidebar { float: right; width: 33%; padding-left: 20px; }
   .sidebar .block { margin-bottom: 15px; }
   .contact-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 9.1pt; }
-  .ci { flex: 0 0 20px; width: 20px; height: 20px; background: #141414; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
-  .ci :global(svg) { width: 12px; height: 12px; }
+  .ci { flex: 0 0 16px; width: 16px; color: #141414; display: inline-flex; align-items: center; justify-content: center; }
+  .ci :global(svg) { width: 14px; height: 14px; }
   .edu-item { display: flex; gap: 11px; align-items: stretch; min-height: 15mm; }
   .tl { flex: 0 0 10px; display: flex; flex-direction: column; align-items: center; }
   .ydot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent, #ffd400); margin-top: 2px; flex: 0 0 auto; }
