@@ -122,7 +122,12 @@ const EMBEDDING_DEFAULTS: Record<
   { model: string; dimensions: number }
 > = {
   openai: { model: "text-embedding-3-small", dimensions: 1536 },
-  gemini: { model: "text-embedding-004", dimensions: 768 },
+  // text-embedding-004 / embedding-001 are decommissioned — they return an API
+  // error, which embedDocuments() swallows into empty vectors (see
+  // llm/embeddings.ts). gemini-embedding-001 is the current model; it supports
+  // Matryoshka truncation to 768/1536, but @langchain/google-genai@2 does not
+  // expose outputDimensionality, so we take the native 3072.
+  gemini: { model: "gemini-embedding-001", dimensions: 3072 },
 };
 
 function loadConfig(): AppConfig {
@@ -134,10 +139,14 @@ function loadConfig(): AppConfig {
     llmProvider;
   const llmWritingProvider = getEnv("SJS_LLM_WRITING_PROVIDER", "") ||
     llmProvider;
+  // Default to gemini: it is the provider this project actually pays for
+  // (SJS_LLM_WRITING_PROVIDER / SJS_LLM_TRANSLATE_PROVIDER), and Groq — the
+  // chat default — has no embeddings API at all. Defaulting to openai meant
+  // the default config pointed at a provider with no quota.
   const embeddingProvider: "openai" | "gemini" =
-    getEnv("SJS_EMBEDDING_PROVIDER", "openai") === "gemini"
-      ? "gemini"
-      : "openai";
+    getEnv("SJS_EMBEDDING_PROVIDER", "gemini") === "openai"
+      ? "openai"
+      : "gemini";
   const embeddingDefaults = EMBEDDING_DEFAULTS[embeddingProvider];
 
   const config = {
@@ -162,12 +171,12 @@ function loadConfig(): AppConfig {
     ),
 
     // LLM (for TypeScript/SvelteKit app)
-    llmProvider: (llmProvider as
+    llmProvider: llmProvider as
       | "groq"
       | "gemini"
       | "openai"
       | "deepseek"
-      | "cerebras"),
+      | "cerebras",
     llmModel: getModelForProvider(llmProvider),
     // Translation is a model-leverage task and can point at a stronger model
     // (and provider) than the app default. On Groq, llama-3.3-70b handles
@@ -200,8 +209,17 @@ function loadConfig(): AppConfig {
       10,
     ),
     embeddingEnabled: getEnv("SJS_EMBEDDING_ENABLED", "false") === "true",
+    // Tuned 2026-07-17 against gemini-embedding-001 over the live job-skill
+    // vocabulary (~7.5k skills). The previous 0.55 was never measured and sat
+    // INSIDE the noise floor: unrelated skills have a median cosine of ~0.54
+    // (p99 ~0.65), so "Python" matched "communication" (0.62) and "k8s"
+    // matched "CRM knowledge" (0.55). At 0.55 a profile listing "React"
+    // expanded to ~48% of the vocabulary, making every profile match every
+    // job. At 0.70 expansion is ~5-30 terms per skill and stays above the
+    // noise ceiling. Guarded by skill-threshold.test.ts against real data —
+    // re-tune (and regenerate that fixture) if the embedding model changes.
     embeddingSkillThreshold: parseFloat(
-      getEnv("SJS_EMBEDDING_SKILL_THRESHOLD", "0.55"),
+      getEnv("SJS_EMBEDDING_SKILL_THRESHOLD", "0.70"),
     ),
 
     // Caching (1 hour default)

@@ -106,22 +106,47 @@ async function getOrCreateVectors(
   const labels = keys.map((k) => missing.get(k)!);
   const vectors = await embedBatch(labels);
 
-  const now = new Date();
-  const rows = keys.map((key, i) => ({
-    skill: key,
-    label: labels[i],
-    embedding: vectors[i],
-    model: config.embeddingModel,
-    created_at: now,
-  }));
-
-  // Persist; ignore conflicts (another process may have inserted the same key).
-  await db.insert(skill_embeddings).values(rows).onConflictDoNothing();
-
+  // A provider failure (rate limit, decommissioned model, bad key) does NOT
+  // always throw: embedDocuments() can resolve with empty vectors where
+  // embedQuery() would reject. Persisting those is unrecoverable — the
+  // onConflictDoNothing below means a poisoned row is never re-embedded, and
+  // cosineSimilarity() returns 0 for a zero-length vector, so the skill
+  // silently stops matching forever. Only persist vectors we can verify.
+  const valid: number[] = [];
+  const invalid: string[] = [];
   for (let i = 0; i < keys.length; i++) {
-    cache.set(keys[i], { label: labels[i], vector: vectors[i] });
-    result.set(keys[i], vectors[i]);
+    if (vectors[i]?.length > 0) valid.push(i);
+    else invalid.push(labels[i]);
   }
+
+  if (valid.length > 0) {
+    const now = new Date();
+    const rows = valid.map((i) => ({
+      skill: keys[i],
+      label: labels[i],
+      embedding: vectors[i],
+      model: config.embeddingModel,
+      created_at: now,
+    }));
+    // Persist; ignore conflicts (another process may have inserted the same key).
+    await db.insert(skill_embeddings).values(rows).onConflictDoNothing();
+
+    for (const i of valid) {
+      cache.set(keys[i], { label: labels[i], vector: vectors[i] });
+      result.set(keys[i], vectors[i]);
+    }
+  }
+
+  if (invalid.length > 0) {
+    // Surface loudly. Callers on the matching path catch this and fall back to
+    // exact skills; the backfill path must not report success on a bad batch.
+    throw new Error(
+      `Embedding provider returned ${invalid.length}/${keys.length} empty vectors ` +
+        `(model=${config.embeddingModel}). Not persisted. ` +
+        `First few: ${invalid.slice(0, 3).join(", ")}`,
+    );
+  }
+
   return result;
 }
 

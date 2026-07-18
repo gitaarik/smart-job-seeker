@@ -49,7 +49,9 @@ const mockWhere = vi.fn();
 const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 const mockOnConflict = vi.fn().mockResolvedValue(undefined);
-const mockValues = vi.fn().mockReturnValue({ onConflictDoNothing: mockOnConflict });
+const mockValues = vi.fn().mockReturnValue({
+  onConflictDoNothing: mockOnConflict,
+});
 const mockInsert = vi.fn().mockReturnValue({ values: mockValues });
 
 vi.mock("$lib/server/db", () => ({
@@ -91,8 +93,18 @@ describe("expandProfileSkills", () => {
     mockValues.mockReturnValue({ onConflictDoNothing: mockOnConflict });
     // Vocabulary already contains "frontend" and "python".
     mockWhere.mockResolvedValue([
-      { skill: "frontend", label: "frontend", embedding: h.VECTORS.frontend, model: "test-model" },
-      { skill: "python", label: "Python", embedding: h.VECTORS.python, model: "test-model" },
+      {
+        skill: "frontend",
+        label: "frontend",
+        embedding: h.VECTORS.frontend,
+        model: "test-model",
+      },
+      {
+        skill: "python",
+        label: "Python",
+        embedding: h.VECTORS.python,
+        model: "test-model",
+      },
     ]);
   });
 
@@ -134,6 +146,45 @@ describe("expandProfileSkills", () => {
     );
   });
 
+  // Regression: a provider failure (rate limit, decommissioned model) can
+  // resolve with EMPTY vectors instead of rejecting — embedDocuments() does
+  // this where embedQuery() would throw. Persisting those is unrecoverable:
+  // onConflictDoNothing means the row is never re-embedded, and cosine of a
+  // zero-length vector is 0, so the skill silently stops matching forever.
+  // Observed live: a throttled backfill wrote 6,385 empty rows and reported
+  // success. Never persist what we cannot verify.
+  it("never persists empty vectors from a silently-failing provider", async () => {
+    h.embedSpy.mockResolvedValueOnce([[]]);
+    await expandProfileSkills(["BrandNewSkill"]);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("falls back to input skills when the provider returns empty vectors", async () => {
+    h.embedSpy.mockResolvedValueOnce([[]]);
+    const result = await expandProfileSkills(["BrandNewSkill"]);
+    expect(result).toEqual(["BrandNewSkill"]);
+  });
+
+  it("still persists the valid vectors in a partially-empty batch", async () => {
+    // Provider returns one good vector and one empty: keep the good one,
+    // drop the bad one, and surface the failure rather than reporting success.
+    h.embedSpy.mockResolvedValueOnce([h.VECTORS.react, []]);
+    await expect(backfillSkillVocabulary(["React", "BadSkill"])).rejects
+      .toThrow(
+        /empty vectors/,
+      );
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ skill: "react" }),
+      ]),
+    );
+    expect(mockValues).not.toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ skill: "badskill" }),
+      ]),
+    );
+  });
+
   it("memoizes: a repeat call for the same skills skips the cosine scan", async () => {
     await expandProfileSkills(["React"]);
     expect(h.cosineSpy).toHaveBeenCalled();
@@ -163,7 +214,12 @@ describe("semantic expansion rescues an otherwise-unmatched job", () => {
     mockFrom.mockReturnValue({ where: mockWhere });
     mockValues.mockReturnValue({ onConflictDoNothing: mockOnConflict });
     mockWhere.mockResolvedValue([
-      { skill: "frontend", label: "Frontend", embedding: h.VECTORS.frontend, model: "test-model" },
+      {
+        skill: "frontend",
+        label: "Frontend",
+        embedding: h.VECTORS.frontend,
+        model: "test-model",
+      },
     ]);
   });
 
