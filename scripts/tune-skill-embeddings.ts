@@ -24,6 +24,7 @@ import { config } from "$lib/server/config";
 import {
   cosineSimilarity,
   isEmbeddingConfigured,
+  truncateVector,
 } from "$lib/server/llm/embeddings";
 import { backfillSkillVocabulary } from "$lib/server/job/skill-embeddings";
 
@@ -160,10 +161,16 @@ async function main() {
   }
 
   // Load the persisted vocabulary directly (not via the module cache).
+  // Truncate to the working dim so the sweep + exported fixture reflect what
+  // the runtime actually compares (the runtime truncates on load too).
   const rows = await db.select().from(skill_embeddings);
+  const workingDims = config.embeddingWorkingDimensions;
   const vocab = rows
     .filter((r) => r.model === config.embeddingModel)
-    .map((r) => ({ label: r.label, vector: r.embedding as number[] }));
+    .map((r) => ({
+      label: r.label,
+      vector: truncateVector(r.embedding as number[], workingDims),
+    }));
 
   console.log(`=== vocabulary ===`);
   console.log(`rows for model ${config.embeddingModel}: ${vocab.length}`);

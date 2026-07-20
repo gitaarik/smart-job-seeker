@@ -38,10 +38,17 @@ vi.mock("$lib/server/llm/embeddings", () => ({
   isEmbeddingConfigured: () => h.configured.value,
   cosineSimilarity: h.cosineSpy,
   embedBatch: h.embedSpy,
+  // Working dim (768) exceeds the 3-dim mock vectors, so truncation is a no-op.
+  truncateVector: (v: number[]) => v,
 }));
 
 vi.mock("$lib/server/config", () => ({
-  config: { embeddingModel: "test-model", embeddingSkillThreshold: 0.55 },
+  config: {
+    embeddingModel: "test-model",
+    embeddingSkillThreshold: 0.55,
+    // >= the 3-dim mock vectors, so truncateVector is a no-op here.
+    embeddingWorkingDimensions: 768,
+  },
 }));
 
 // DB mock: select chain seeds the vocabulary; insert chain is a no-op.

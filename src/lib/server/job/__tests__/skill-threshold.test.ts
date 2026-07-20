@@ -24,10 +24,11 @@ import { describe, expect, it } from "vitest";
 import { config } from "$lib/server/config";
 import fixture from "./fixtures/skill-similarities.json";
 
-const { labels, sims, model, anchors } = fixture as {
+const { labels, sims, model, dimensions, anchors } = fixture as {
   labels: string[];
   sims: number[][];
   model: string;
+  dimensions: number;
   anchors: string[];
 };
 
@@ -68,6 +69,13 @@ describe("embedding model pin", () => {
   // poisoned cache (this is how text-embedding-004 broke). Fail loudly.
   it("fixture matches the configured embedding model", () => {
     expect(config.embeddingModel).toBe(model);
+  });
+
+  // The threshold is tuned for a specific working dimension (vectors are
+  // truncated to it on load). Changing the working dim shifts the cosine
+  // geometry, so the fixture must be regenerated and the threshold re-tuned.
+  it("fixture matches the configured working dimension", () => {
+    expect(config.embeddingWorkingDimensions).toBe(dimensions);
   });
 });
 

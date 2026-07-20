@@ -24,6 +24,7 @@ import {
   cosineSimilarity,
   embedBatch,
   isEmbeddingConfigured,
+  truncateVector,
 } from "$lib/server/llm/embeddings";
 
 /**
@@ -67,10 +68,16 @@ async function ensureVocabLoaded(): Promise<Map<string, VocabEntry>> {
     .select()
     .from(skill_embeddings)
     .where(eq(skill_embeddings.model, config.embeddingModel));
+  // Vectors are stored at native dim; truncate to the working dim once, here,
+  // so the cache and every downstream cosine run at the smaller size.
+  const dims = config.embeddingWorkingDimensions;
   vocab = new Map(
     rows.map((r) => [
       r.skill,
-      { label: r.label, vector: r.embedding as number[] },
+      {
+        label: r.label,
+        vector: truncateVector(r.embedding as number[], dims),
+      },
     ]),
   );
   return vocab;
@@ -128,12 +135,17 @@ async function getOrCreateVectors(
       model: config.embeddingModel,
       created_at: now,
     }));
-    // Persist; ignore conflicts (another process may have inserted the same key).
+    // Persist the NATIVE vectors; ignore conflicts (another process may have
+    // inserted the same key).
     await db.insert(skill_embeddings).values(rows).onConflictDoNothing();
 
+    // Cache + return at the WORKING dim so freshly-embedded skills compare on
+    // the same footing as vocab loaded via ensureVocabLoaded().
+    const dims = config.embeddingWorkingDimensions;
     for (const i of valid) {
-      cache.set(keys[i], { label: labels[i], vector: vectors[i] });
-      result.set(keys[i], vectors[i]);
+      const working = truncateVector(vectors[i], dims);
+      cache.set(keys[i], { label: labels[i], vector: working });
+      result.set(keys[i], working);
     }
   }
 

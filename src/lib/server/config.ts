@@ -54,7 +54,12 @@ export interface AppConfig {
   // API, so embeddings get their own provider/model. Reuses the chat API keys.
   embeddingProvider: "openai" | "gemini";
   embeddingModel: string;
+  // Native dimensionality the model returns; what we persist in skill_embeddings.
   embeddingDimensions: number;
+  // Working dimensionality: vectors are truncated to this on load for in-memory
+  // cosine (Matryoshka — see truncateVector). <= embeddingDimensions. This is
+  // what the skill threshold is tuned against, so the two move together.
+  embeddingWorkingDimensions: number;
   // Master switch — when off (or no key for the provider), semantic features
   // degrade gracefully to the existing exact matching.
   embeddingEnabled: boolean;
@@ -119,15 +124,27 @@ function getModelForProvider(provider: string): string {
 // Default embedding model + dimensions per provider.
 const EMBEDDING_DEFAULTS: Record<
   string,
-  { model: string; dimensions: number }
+  { model: string; dimensions: number; workingDimensions: number }
 > = {
-  openai: { model: "text-embedding-3-small", dimensions: 1536 },
+  // text-embedding-3-small is already compact; work at native.
+  openai: {
+    model: "text-embedding-3-small",
+    dimensions: 1536,
+    workingDimensions: 1536,
+  },
   // text-embedding-004 / embedding-001 are decommissioned — they return an API
   // error, which embedDocuments() swallows into empty vectors (see
-  // llm/embeddings.ts). gemini-embedding-001 is the current model; it supports
-  // Matryoshka truncation to 768/1536, but @langchain/google-genai@2 does not
-  // expose outputDimensionality, so we take the native 3072.
-  gemini: { model: "gemini-embedding-001", dimensions: 3072 },
+  // llm/embeddings.ts). gemini-embedding-001 is the current model. We persist
+  // the native 3072 (@langchain/google-genai@2 doesn't expose
+  // outputDimensionality) but truncate to 768 on load: measured over the live
+  // vocabulary, 768 preserves signal (k8s≈Kubernetes ~0.80) at ~1/4 the memory
+  // and cosine cost. The 0.68 skill threshold is tuned for 768 — retune if this
+  // changes.
+  gemini: {
+    model: "gemini-embedding-001",
+    dimensions: 3072,
+    workingDimensions: 768,
+  },
 };
 
 function loadConfig(): AppConfig {
@@ -208,18 +225,26 @@ function loadConfig(): AppConfig {
       getEnv("SJS_EMBEDDING_DIMENSIONS", String(embeddingDefaults.dimensions)),
       10,
     ),
+    embeddingWorkingDimensions: parseInt(
+      getEnv(
+        "SJS_EMBEDDING_WORKING_DIMENSIONS",
+        String(embeddingDefaults.workingDimensions),
+      ),
+      10,
+    ),
     embeddingEnabled: getEnv("SJS_EMBEDDING_ENABLED", "false") === "true",
-    // Tuned 2026-07-17 against gemini-embedding-001 over the live job-skill
-    // vocabulary (~7.5k skills). The previous 0.55 was never measured and sat
-    // INSIDE the noise floor: unrelated skills have a median cosine of ~0.54
-    // (p99 ~0.65), so "Python" matched "communication" (0.62) and "k8s"
-    // matched "CRM knowledge" (0.55). At 0.55 a profile listing "React"
-    // expanded to ~48% of the vocabulary, making every profile match every
-    // job. At 0.70 expansion is ~5-30 terms per skill and stays above the
-    // noise ceiling. Guarded by skill-threshold.test.ts against real data —
-    // re-tune (and regenerate that fixture) if the embedding model changes.
+    // Tuned 2026-07-20 against gemini-embedding-001 truncated to 768 working
+    // dims over the live job-skill vocabulary (9,385 skills). The original 0.55
+    // was never measured and sat INSIDE the noise floor: unrelated skills have a
+    // median cosine of ~0.51-0.54 (p99 ~0.63), so "Python" matched
+    // "communication" and "k8s" matched "CRM knowledge". At 0.55 a profile
+    // listing "React" expanded to ~half the vocabulary, making every profile
+    // match every job. At 0.68 (768 dims) expansion is ~10-30 terms per skill
+    // and stays above the noise ceiling. Guarded by skill-threshold.test.ts
+    // against real data — re-tune (and regenerate that fixture) if the model OR
+    // the working dimension changes.
     embeddingSkillThreshold: parseFloat(
-      getEnv("SJS_EMBEDDING_SKILL_THRESHOLD", "0.70"),
+      getEnv("SJS_EMBEDDING_SKILL_THRESHOLD", "0.68"),
     ),
 
     // Caching (1 hour default)
