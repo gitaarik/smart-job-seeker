@@ -1,6 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faBan,
     faCheck,
     faChevronDown,
     faChevronRight,
@@ -105,23 +106,31 @@
   // Version tag editing state
   const builtinTags = ["resume", "cv"];
 
+  // The version/template slug of a tag, ignoring a leading "!" negation marker.
+  function tagSlug(tag: string): string {
+    return tag.replace(/^!/, "").trim().toLowerCase();
+  }
+
   let editingTags = $derived.by(() => {
     if (editingIndex === null) return [];
     return skills[editingIndex]?.tags ?? [];
   });
 
   let allSuggestions = $derived.by(() => {
+    const used = new Set(editingTags.map(tagSlug));
     const all = [...builtinTags, ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))];
-    return all.filter((s) => !editingTags.some((t) => t.toLowerCase() === s.toLowerCase()));
+    return all.filter((s) => !used.has(s.toLowerCase()));
   });
 
   function addSkillTag(tag: string) {
     if (editingIndex === null) return;
     const trimmed = tag.trim();
+    if (!trimmed) return;
+    const slug = tagSlug(trimmed);
     const current = skills[editingIndex].tags ?? [];
-    if (trimmed && !current.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
-      skills[editingIndex].tags = [...current, trimmed];
-    }
+    // Skip if this version is already tagged in either include or exclude form.
+    if (current.some((t) => tagSlug(t) === slug)) return;
+    skills[editingIndex].tags = [...current, trimmed];
   }
 
   function removeSkillTag(tag: string) {
@@ -585,12 +594,18 @@
                   {#if editingTags.length > 0}
                     <div class="flex flex-wrap gap-1.5 mb-1.5">
                       {#each editingTags as tag}
+                        {@const isNeg = tag.startsWith("!")}
                         <button
                           type="button"
                           onclick={() => removeSkillTag(tag)}
-                          class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border border-[var(--dash-primary)]/20 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 transition-colors cursor-pointer"
+                          class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors cursor-pointer border hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30 {isNeg
+                            ? 'bg-red-500/10 text-red-600 border-red-500/25'
+                            : 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] border-[var(--dash-primary)]/20'}"
                         >
-                          {tag}
+                          {#if isNeg}
+                            <FontAwesomeIcon icon={faBan} class="w-2.5 h-2.5" />
+                          {/if}
+                          {isNeg ? tag.slice(1) : tag}
                           <FontAwesomeIcon icon={faTimes} class="w-2.5 h-2.5" />
                         </button>
                       {/each}
@@ -599,7 +614,8 @@
                     <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
                   {/if}
                   {#if allSuggestions.length > 0}
-                    <div class="flex flex-wrap gap-1.5">
+                    <p class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Show only on</p>
+                    <div class="flex flex-wrap gap-1.5 mb-2">
                       {#each allSuggestions as suggestion}
                         <button
                           type="button"
@@ -607,6 +623,19 @@
                           class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)] transition-colors"
                         >
                           <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                          {suggestion}
+                        </button>
+                      {/each}
+                    </div>
+                    <p class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Exclude from</p>
+                    <div class="flex flex-wrap gap-1.5">
+                      {#each allSuggestions as suggestion}
+                        <button
+                          type="button"
+                          onclick={() => addSkillTag("!" + suggestion)}
+                          class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-red-500/40 hover:text-red-500 transition-colors"
+                        >
+                          <FontAwesomeIcon icon={faBan} class="w-2.5 h-2.5" />
                           {suggestion}
                         </button>
                       {/each}
