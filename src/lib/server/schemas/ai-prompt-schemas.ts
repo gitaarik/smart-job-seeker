@@ -396,6 +396,36 @@ export const suggestImportTasksSchema = z.object({
 });
 
 /**
+ * Schema for extract_qa_pairs prompt
+ *
+ * The LLM splits a free-text blob the applicant pasted into discrete
+ * question/answer pairs, preserving their wording verbatim (extraction, not
+ * editing). `question` may be an empty string when a chunk is clearly an
+ * answer but its question can't be identified — the preview UI surfaces
+ * those (and any `confidence: "low"` pair) for the user to fix before the
+ * pairs are saved as application_questions rows.
+ */
+export const extractQaPairsSchema = z.preprocess(
+  // gpt-oss sometimes returns the bare array instead of the wrapped object
+  // (`[{...}]` rather than `{ pairs: [{...}] }`). Coerce that shape so the
+  // extraction doesn't fail on an otherwise-valid response.
+  (value) => (Array.isArray(value) ? { pairs: value } : value),
+  z.object({
+    pairs: z.array(z.object({
+      question: z.string().describe(
+        "The question being answered, verbatim. Empty string when the text is clearly an answer but its question cannot be identified.",
+      ),
+      answer: z.string().describe(
+        "The applicant's answer, verbatim — not rewritten, summarized, or translated.",
+      ),
+      confidence: z.enum(["high", "low"]).describe(
+        '"low" when the question/answer split was ambiguous (missing or merely-implied question, unclear boundary); otherwise "high".',
+      ),
+    })),
+  }),
+);
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  */
@@ -413,7 +443,9 @@ export const aiPromptSchemas = {
   followup_letter: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,
   review_cheat_sheet: reviewLetterSchema,
+  review_application_question: reviewLetterSchema,
   suggest_import_tasks: suggestImportTasksSchema,
+  extract_qa_pairs: extractQaPairsSchema,
 } as const;
 
 /**

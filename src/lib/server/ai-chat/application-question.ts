@@ -9,7 +9,7 @@ import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
 
 /** Profile data fields relevant for answering application questions */
-const QUESTION_PROFILE_FIELDS = [
+export const QUESTION_PROFILE_FIELDS = [
   "name", "title", "headline", "subtitle", "summary", "location",
   "core_stack", "highlights",
   "work_experiences", "side_projects", "education",

@@ -27,6 +27,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const question = formData.get("question") as string;
+    const answer = (formData.get("answer") as string | null)?.trim() || null;
 
     if (!question?.trim()) {
       return fail(400, { error: "Question text is required" });
@@ -38,14 +39,87 @@ export const actions: Actions = {
       orderBy: desc(application_questions.sort),
     });
 
-    await db.insert(application_questions).values({
+    const [created] = await db.insert(application_questions).values({
       application_id: appId,
       question: question.trim(),
+      answer,
       sort: (lastQuestion?.sort ?? 0) + 1,
       date_created: new Date(),
+    }).returning({ id: application_questions.id });
+
+    // Return the new id so the client can chain an AI action (e.g. review)
+    // without a round-trip to look it up.
+    return { success: true, questionId: created.id };
+  },
+
+  createQuestions: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const existing = await db.query.applications.findFirst({
+      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    const formData = await request.formData();
+    const raw = formData.get("questions") as string;
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return fail(400, { error: "Invalid questions payload" });
+    }
+    if (!Array.isArray(parsed)) {
+      return fail(400, { error: "Invalid questions payload" });
+    }
+
+    const entries = parsed.map((e) => ({
+      question: typeof (e as { question?: unknown })?.question === "string"
+        ? ((e as { question: string }).question).trim()
+        : "",
+      answer: typeof (e as { answer?: unknown })?.answer === "string"
+        ? ((e as { answer: string }).answer).trim()
+        : "",
+    }));
+
+    // Drop rows with nothing in them, but reject the whole batch if any row
+    // has an answer without a question — `question` is NOT NULL and we won't
+    // silently discard the user's text. The preview UI enforces this too.
+    const nonEmpty = entries.filter((e) => e.question || e.answer);
+    if (nonEmpty.length === 0) {
+      return fail(400, { error: "No questions to add" });
+    }
+    if (nonEmpty.some((e) => !e.question)) {
+      return fail(400, {
+        error: "Every answer needs a question before saving",
+      });
+    }
+
+    const lastQuestion = await db.query.application_questions.findFirst({
+      where: eq(application_questions.application_id, appId),
+      orderBy: desc(application_questions.sort),
     });
 
-    return { success: true };
+    let sort = lastQuestion?.sort ?? 0;
+    const now = new Date();
+    await db.insert(application_questions).values(
+      nonEmpty.map((e) => ({
+        application_id: appId,
+        question: e.question,
+        answer: e.answer || null,
+        sort: ++sort,
+        date_created: now,
+      })),
+    );
+
+    return { success: true, added: nonEmpty.length };
   },
 
   updateLetter: async ({ request, locals, cookies, params }) => {

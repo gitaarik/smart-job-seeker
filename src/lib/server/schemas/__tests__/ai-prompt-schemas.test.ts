@@ -3,8 +3,10 @@ import {
   aiPromptSchemas,
   detectLoginPageSchema,
   extractJobDataSchema,
+  extractQaPairsSchema,
   findNextPageButtonSchema,
   getSchemaForPrompt,
+  reviewLetterSchema,
   scoreJobMatchSchema,
 } from "../ai-prompt-schemas";
 
@@ -35,6 +37,15 @@ describe("AI Prompt Schemas", () => {
 
     it("should return schema for write_cover_letter (structured output)", () => {
       expect(getSchemaForPrompt("write_cover_letter")).toBeDefined();
+    });
+
+    it("should map extract_qa_pairs to its schema", () => {
+      expect(aiPromptSchemas).toHaveProperty("extract_qa_pairs");
+      expect(getSchemaForPrompt("extract_qa_pairs")).toBe(extractQaPairsSchema);
+    });
+
+    it("should reuse the letter-review schema for review_application_question", () => {
+      expect(getSchemaForPrompt("review_application_question")).toBe(reviewLetterSchema);
     });
   });
 
@@ -199,6 +210,58 @@ describe("AI Prompt Schemas", () => {
         indicators: ["Login form"],
       };
       expect(() => detectLoginPageSchema.parse(invalidConfidence)).toThrow();
+    });
+  });
+
+  describe("extractQaPairsSchema", () => {
+    it("should validate a normal question/answer pair", () => {
+      const data = {
+        pairs: [
+          { question: "Why do you want to work here?", answer: "Because...", confidence: "high" },
+        ],
+      };
+      expect(() => extractQaPairsSchema.parse(data)).not.toThrow();
+    });
+
+    it("should accept a questions-only pair (empty answer)", () => {
+      // The questions-only paste path: each question comes back with an empty
+      // answer for the user to fill in later.
+      const data = {
+        pairs: [{ question: "Describe a challenge you overcame.", answer: "", confidence: "high" }],
+      };
+      expect(() => extractQaPairsSchema.parse(data)).not.toThrow();
+    });
+
+    it("should accept an answer-only pair (empty question) flagged low", () => {
+      const data = {
+        pairs: [{ question: "", answer: "An orphaned answer chunk.", confidence: "low" }],
+      };
+      expect(() => extractQaPairsSchema.parse(data)).not.toThrow();
+    });
+
+    it("should accept an empty pairs array", () => {
+      expect(() => extractQaPairsSchema.parse({ pairs: [] })).not.toThrow();
+    });
+
+    it("should coerce a bare top-level array into { pairs } (gpt-oss quirk)", () => {
+      // The model sometimes returns [{...}] instead of { pairs: [{...}] }.
+      const bareArray = [{ question: "Q", answer: "A", confidence: "high" }];
+      const result = extractQaPairsSchema.parse(bareArray) as { pairs: unknown[] };
+      expect(result.pairs).toHaveLength(1);
+    });
+
+    it("should reject a missing confidence field", () => {
+      const data = { pairs: [{ question: "Q", answer: "A" }] };
+      expect(() => extractQaPairsSchema.parse(data)).toThrow();
+    });
+
+    it("should reject an invalid confidence enum value", () => {
+      const data = { pairs: [{ question: "Q", answer: "A", confidence: "medium" }] };
+      expect(() => extractQaPairsSchema.parse(data)).toThrow();
+    });
+
+    it("should reject when pairs is not an array", () => {
+      expect(() => extractQaPairsSchema.parse({ pairs: "nope" })).toThrow();
     });
   });
 

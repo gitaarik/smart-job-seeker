@@ -2,12 +2,14 @@
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
   import { invalidateAll } from "$app/navigation";
+  import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
     faChevronRight,
     faEnvelope,
     faLayerGroup,
+    faPaste,
     faPen,
     faPencil,
     faPlus,
@@ -42,8 +44,87 @@
   // AI generation states (for questions only)
   let generatingIds = $state<Set<string>>(new Set());
   let aiError = $state<string | null>(null);
+  // AI review states (for questions only) — non-destructive feedback, keyed by item id
+  let reviewingIds = $state<Set<string>>(new Set());
+  let reviewResults = $state<Record<string, { feedback: string; revisedText: string | null }>>({});
   // Add form states
   let newQuestion = $state("");
+  let newAnswer = $state("");
+  let addWithReview = $state(false);
+
+  // Paste-and-extract states
+  type Pair = { question: string; answer: string; confidence: "high" | "low" };
+  let showPaste = $state(false);
+  let pasteText = $state("");
+  let extracting = $state(false);
+  let extractError = $state<string | null>(null);
+  let previewPairs = $state<Pair[] | null>(null);
+
+  let canSavePairs = $derived(
+    !!previewPairs && previewPairs.length > 0
+      && previewPairs.every((p) => p.question.trim()),
+  );
+
+  function openPaste() {
+    showPaste = true;
+    showAddMenu = false;
+    showAddQuestion = false;
+    pasteText = "";
+    previewPairs = null;
+    extractError = null;
+  }
+
+  function cancelPaste() {
+    showPaste = false;
+    pasteText = "";
+    previewPairs = null;
+    extractError = null;
+  }
+
+  async function runExtract() {
+    if (!pasteText.trim()) return;
+    extracting = true;
+    extractError = null;
+    try {
+      const response = await fetch("/api/ai/questions/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: pasteText }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        extractError = result.message || "Extraction failed";
+        return;
+      }
+      if (!result.pairs?.length) {
+        extractError = "No questions and answers found in that text.";
+        return;
+      }
+      previewPairs = result.pairs;
+    } catch {
+      extractError = "Network error. Please try again.";
+    } finally {
+      extracting = false;
+    }
+  }
+
+  function addPair() {
+    previewPairs = [...(previewPairs ?? []), { question: "", answer: "", confidence: "high" }];
+  }
+
+  function removePair(index: number) {
+    if (!previewPairs) return;
+    previewPairs = previewPairs.filter((_, i) => i !== index);
+  }
+
+  function handleSavePairs() {
+    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
+      await update();
+      if (result.type === "success") {
+        cancelPaste();
+      }
+    };
+  }
 
   type LetterItem = (typeof letters)[0] & { itemType: "letter" };
   type QuestionItem = (typeof questions)[0] & { itemType: "question" };
@@ -110,11 +191,27 @@
   }
 
   function handleAddSubmit() {
-    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
+    return async (
+      { result, update }: {
+        result: { type: string; data?: { questionId?: number } };
+        update: () => Promise<void>;
+      },
+    ) => {
+      const wantReview = addWithReview;
       await update();
       if (result.type === "success") {
+        const qid = result.data?.questionId;
         showAddQuestion = false;
         newQuestion = "";
+        newAnswer = "";
+        addWithReview = false;
+        // "Add & review" saves the question, then kicks off a review of the
+        // just-saved answer so the user doesn't have to find and expand the card.
+        if (wantReview && qid) {
+          reviewAnswer({ id: qid, itemType: "question" } as Item);
+        }
+      } else {
+        addWithReview = false;
       }
     };
   }
@@ -145,6 +242,50 @@
       generatingIds.delete(itemId);
       generatingIds = new Set(generatingIds);
     }
+  }
+
+  async function reviewAnswer(item: Item) {
+    const itemId = getItemId(item);
+    generatingIds.delete(itemId);
+    reviewingIds.add(itemId);
+    reviewingIds = new Set(reviewingIds);
+    aiError = null;
+    expandedId = itemId;
+
+    try {
+      const response = await fetch(`/api/ai/questions/${item.id}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        aiError = result.message || "Review failed";
+        return;
+      }
+      reviewResults = {
+        ...reviewResults,
+        [itemId]: { feedback: result.feedback, revisedText: result.revisedText },
+      };
+    } catch {
+      aiError = "Network error. Please try again.";
+    } finally {
+      reviewingIds.delete(itemId);
+      reviewingIds = new Set(reviewingIds);
+    }
+  }
+
+  function dismissReview(itemId: string) {
+    const { [itemId]: _removed, ...rest } = reviewResults;
+    reviewResults = rest;
+  }
+
+  // Load the AI's revised text into the edit textarea so the user reviews and
+  // saves it themselves — never overwrite their answer without confirmation.
+  function applyRevision(item: Item, revised: string) {
+    startEdit(item);
+    editAnswer = revised;
+    dismissReview(getItemId(item));
   }
 
   function handleClickOutside(e: MouseEvent) {
@@ -203,6 +344,14 @@
               <FontAwesomeIcon icon={faQuestionCircle} class="w-3.5 h-3.5 opacity-50" />
               Application Question
             </button>
+            <button
+              type="button"
+              onclick={openPaste}
+              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+            >
+              <FontAwesomeIcon icon={faPaste} class="w-3.5 h-3.5 opacity-50" />
+              Paste answers
+            </button>
           </div>
         {/if}
       </div>
@@ -227,19 +376,43 @@
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
-          <div class="flex justify-end gap-2">
+          <div>
+            <label for="new-answer" class="block text-sm text-[var(--dash-text-secondary)] mb-1">
+              Answer <span class="text-[var(--dash-text-muted)]">(optional)</span>
+            </label>
+            <textarea
+              id="new-answer"
+              name="answer"
+              bind:value={newAnswer}
+              rows={4}
+              placeholder="Write your answer now, or leave blank and come back to it."
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+            ></textarea>
+          </div>
+          <div class="flex justify-end gap-2 flex-wrap">
             <button
               type="button"
-              onclick={() => (showAddQuestion = false)}
+              onclick={() => { showAddQuestion = false; newAnswer = ""; }}
               class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
+              onclick={() => (addWithReview = false)}
               class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
             >
               Add Question
+            </button>
+            <button
+              type="submit"
+              onclick={() => (addWithReview = true)}
+              disabled={!newAnswer.trim()}
+              title={newAnswer.trim() ? "" : "Write an answer to review it with AI"}
+              class="px-4 py-2 border border-[var(--dash-primary)] text-[var(--dash-primary)] rounded-lg hover:bg-[var(--dash-primary-light)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <FontAwesomeIcon icon={faRobot} class="w-4 h-4" />
+              Add &amp; review
             </button>
           </div>
         </div>
@@ -247,8 +420,142 @@
     </Card>
   {/if}
 
+  <!-- Paste & Extract Panel -->
+  {#if showPaste}
+    <Card padding="md">
+      {#if !previewPairs}
+        <!-- Step 1: paste the blob -->
+        <div class="flex items-center gap-2 mb-3">
+          <FontAwesomeIcon icon={faPaste} class="w-4 h-4 text-[var(--dash-primary)]" />
+          <h3 class="font-medium text-[var(--dash-text)]">Paste answers</h3>
+        </div>
+        <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
+          Paste text that already contains your questions and answers. AI will split it into
+          separate question/answer pairs for you to review before they're added.
+        </p>
+        <textarea
+          bind:value={pasteText}
+          rows={10}
+          placeholder="Paste your questions and answers here…"
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+        ></textarea>
+        {#if extractError}
+          <p class="text-sm text-[var(--dash-error)] mt-2">{extractError}</p>
+        {/if}
+        <div class="flex justify-end gap-2 mt-3">
+          <button
+            type="button"
+            onclick={cancelPaste}
+            class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onclick={runExtract}
+            disabled={extracting || !pasteText.trim()}
+            class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {#if extracting}
+              <Spinner size="w-4 h-4" />
+            {:else}
+              <FontAwesomeIcon icon={faRobot} class="w-4 h-4" />
+            {/if}
+            {extracting ? "Extracting…" : "Extract with AI"}
+          </button>
+        </div>
+      {:else}
+        <!-- Step 2: editable preview -->
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <FontAwesomeIcon icon={faQuestionCircle} class="w-4 h-4 text-[var(--dash-primary)]" />
+            <h3 class="font-medium text-[var(--dash-text)]">Review extracted questions</h3>
+          </div>
+          <span class="text-sm text-[var(--dash-text-secondary)]">{previewPairs.length} found</span>
+        </div>
+        <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+          Edit anything that looks off. Pairs marked <span class="text-[var(--dash-warning)]">needs review</span>
+          had an unclear split. Every pair needs a question before you can add them.
+        </p>
+        <div class="space-y-4">
+          {#each previewPairs as pair, i (i)}
+            <div class="border border-[var(--dash-border)] rounded-lg p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-[var(--dash-text-muted)]">#{i + 1}</span>
+                <div class="flex items-center gap-2">
+                  {#if pair.confidence === "low"}
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">
+                      needs review
+                    </span>
+                  {/if}
+                  <button
+                    type="button"
+                    onclick={() => removePair(i)}
+                    aria-label="Remove pair"
+                    class="p-1 text-[var(--dash-text-secondary)] hover:text-red-500 transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faTrash} class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="pair-q-{i}">Question</label>
+                <input
+                  id="pair-q-{i}"
+                  type="text"
+                  bind:value={pair.question}
+                  placeholder="Enter the question…"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent {pair.question.trim() ? 'border-[var(--dash-border)]' : 'border-[var(--dash-warning)]'}"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1" for="pair-a-{i}">Answer</label>
+                <textarea
+                  id="pair-a-{i}"
+                  bind:value={pair.answer}
+                  rows={4}
+                  class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+                ></textarea>
+              </div>
+            </div>
+          {/each}
+        </div>
+        <button
+          type="button"
+          onclick={addPair}
+          class="mt-3 text-sm text-[var(--dash-primary)] hover:underline flex items-center gap-1.5"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" /> Add another
+        </button>
+        <form
+          method="POST"
+          action="?/createQuestions"
+          use:enhance={handleSavePairs}
+          class="flex items-center justify-between mt-4 pt-4 border-t border-[var(--dash-border)]"
+        >
+          <input type="hidden" name="questions" value={JSON.stringify(previewPairs)} />
+          <button
+            type="button"
+            onclick={cancelPaste}
+            class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canSavePairs}
+            class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+            Add {previewPairs.length} question{previewPairs.length === 1 ? "" : "s"}
+          </button>
+        </form>
+      {/if}
+    </Card>
+  {/if}
+
   <!-- Items List -->
-  {#if items.length === 0 && !showAddQuestion}
+  {#if items.length === 0 && !showAddQuestion && !showPaste}
     <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div class="w-16 h-16 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mb-4">
         <FontAwesomeIcon icon={faEnvelope} class="w-8 h-8 text-[var(--dash-text-muted)]" />
@@ -286,6 +593,14 @@
             >
               <FontAwesomeIcon icon={faQuestionCircle} class="w-3.5 h-3.5 opacity-50" />
               Application Question
+            </button>
+            <button
+              type="button"
+              onclick={openPaste}
+              class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
+            >
+              <FontAwesomeIcon icon={faPaste} class="w-3.5 h-3.5 opacity-50" />
+              Paste answers
             </button>
           </div>
         {/if}
@@ -492,8 +807,53 @@
                       <p class="text-[var(--dash-text-secondary)] italic">No answer yet. Write it manually or generate with AI.</p>
                     {/if}
 
+                    <!-- AI review feedback -->
+                    {#if reviewResults[itemId]}
+                      {@const rev = reviewResults[itemId]!}
+                      <div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-primary-light)] p-3">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-sm font-medium text-[var(--dash-primary)] flex items-center gap-1.5">
+                            <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" /> AI review
+                          </span>
+                          <button
+                            type="button"
+                            onclick={() => dismissReview(itemId)}
+                            aria-label="Dismiss review"
+                            class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                          >
+                            <FontAwesomeIcon icon={faXmark} class="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div class="ai-feedback text-sm text-[var(--dash-text)]">{@html renderSafeMarkdown(rev.feedback)}</div>
+                        {#if rev.revisedText}
+                          <button
+                            type="button"
+                            onclick={() => applyRevision(item, rev.revisedText!)}
+                            class="mt-3 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5"
+                          >
+                            <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5" /> Apply suggestion
+                          </button>
+                        {/if}
+                      </div>
+                    {/if}
+
                     <!-- Action Buttons -->
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]">
+                      {#if (item as QuestionItem).answer}
+                        <button
+                          type="button"
+                          onclick={() => reviewAnswer(item)}
+                          disabled={reviewingIds.has(itemId)}
+                          class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        >
+                          {#if reviewingIds.has(itemId)}
+                            <Spinner size="w-3.5 h-3.5" />
+                          {:else}
+                            <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
+                          {/if}
+                          {reviewingIds.has(itemId) ? "Reviewing…" : "Review"}
+                        </button>
+                      {/if}
                       <button
                         type="button"
                         onclick={() => generateAi(item)}

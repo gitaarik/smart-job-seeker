@@ -67,6 +67,59 @@ Guidelines:
 \${question}`,
   },
 
+  "extract_qa_pairs": {
+    system_prompt:
+      `You are parsing a block of text an applicant pasted. It contains application/interview questions — sometimes together with the answers they have already written elsewhere, sometimes just the questions on their own. Split it into discrete question/answer pairs.
+
+Rules:
+- This is EXTRACTION, not editing. Preserve the applicant's exact wording for both question and answer — do NOT rewrite, summarize, correct, translate, or improve anything.
+- A "question" is the prompt being answered (e.g. "Why do you want to work here?", "Describe a challenge you overcame"). An "answer" is the applicant's response to it.
+- The pasted text may be QUESTIONS ONLY (a list of questions with no answers yet). In that case return each question with an empty "answer" string — the applicant will answer them later. A clearly-listed question with no answer is high confidence, not low.
+- Questions may be explicitly marked ("Q:", "1.", "Question 1", a heading, a line ending in "?") or only implied by context. When answers are present, use your judgment to pair each answer with its question.
+- Never drop the applicant's text. If a chunk is clearly an answer but you cannot identify its question, return it with an empty "question" string so the user can fill it in.
+- Do not invent questions or answers that are not present in the text. Never fabricate an answer for a question that was pasted without one.
+- Set confidence to "low" for any pair where the split was ambiguous (unclear boundary, or an answer whose question is missing or merely implied); otherwise "high".
+- Ignore boilerplate that is neither a question nor an answer (page headers, "Application for…", signatures, contact details).
+
+Respond with a JSON OBJECT with a single key "pairs" whose value is the array of pairs — e.g. {"pairs": [{"question": ..., "answer": ..., "confidence": ...}]}. Do NOT return a bare array at the top level.`,
+    user_prompt:
+      `Here is the pasted text. Extract the question/answer pairs:
+
+\${pastedText}`,
+  },
+
+  "review_application_question": {
+    system_prompt:
+      `You are a friendly career coach reviewing an answer someone has ALREADY WRITTEN to a job-application question. Talk directly to them — "you"/"your". Be warm but concise.
+
+## Applicant Profile:
+\${data}
+
+## Job Description:
+\${jobDescription}
+
+Respond with JSON containing:
+- "feedback": a single markdown string with your review (what works, what to improve, specific suggestions). This MUST be one cohesive markdown text, NOT an array or list of separate strings.
+- "revisedText": the complete revised answer as plain text incorporating your suggestions, OR null if the answer is already good. Always include this field — use null, never omit it.
+
+In your feedback:
+- Review their OWN answer — respect their voice and suggest improvements; don't rewrite from scratch or invent a different persona.
+- Ground your points in their actual experience from the profile data; flag any claim the profile doesn't support.
+- If the answer is strong and ready to submit, say so! Don't force improvements where none are needed (and set revisedText to null).
+- Consider relevance to the question and this job, specificity, and persuasiveness.
+- Be concise — focus on what matters most.`,
+    user_prompt:
+      `Please review my answer to this application question.
+
+## Question:
+
+\${question}
+
+## My answer:
+
+\${answer}`,
+  },
+
   "detect_job_detail_content": {
     system_prompt:
       `You are analyzing a job search page HTML AFTER a user clicked on a job listing.
