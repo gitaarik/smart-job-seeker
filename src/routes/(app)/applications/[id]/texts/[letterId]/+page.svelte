@@ -16,7 +16,7 @@
     faRobot,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
-  import { marked } from "marked";
+  import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
   import { track } from "$lib/tools/analytics";
   import Card from "../../../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
@@ -540,7 +540,7 @@
             {/if}
           </p>
         </div>
-        <div class="ai-feedback text-sm text-[var(--dash-text)] mb-1">{@html marked(entry.aiFeedback)}</div>
+        <div class="ai-feedback text-sm text-[var(--dash-text)] mb-1">{@html renderSafeMarkdown(entry.aiFeedback)}</div>
         {#if !entry.content && !isEditing && entry.type !== "ai_advice"}
           {@const hasExistingVersion = conversation.some((e) => e.content)}
           <button
