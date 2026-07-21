@@ -8,18 +8,26 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockAppFindFirst = vi.fn();
 const mockQFindFirst = vi.fn();
+const mockQFindMany = vi.fn();
 const mockValues = vi.fn().mockResolvedValue(undefined);
 const mockReturning = vi.fn().mockResolvedValue([{ id: 99 }]);
 const mockInsert = vi.fn().mockReturnValue({ values: mockValues, returning: mockReturning });
+const mockUpdateWhere = vi.fn().mockResolvedValue(undefined);
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdate = vi.fn().mockReturnValue({ set: mockUpdateSet });
 const mockGetSelectedProfileId = vi.fn();
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
     query: {
       applications: { findFirst: (...a: any[]) => mockAppFindFirst(...a) },
-      application_questions: { findFirst: (...a: any[]) => mockQFindFirst(...a) },
+      application_questions: {
+        findFirst: (...a: any[]) => mockQFindFirst(...a),
+        findMany: (...a: any[]) => mockQFindMany(...a),
+      },
     },
     insert: (...a: any[]) => mockInsert(...a),
+    update: (...a: any[]) => mockUpdate(...a),
   },
 }));
 
@@ -49,12 +57,16 @@ function createEvent(questions: unknown, opts: {
   user?: any;
   params?: Record<string, string>;
   rawQuestions?: string;
+  fills?: unknown;
 } = {}) {
   const fd = new FormData();
   fd.set(
     "questions",
     opts.rawQuestions !== undefined ? opts.rawQuestions : JSON.stringify(questions),
   );
+  if (opts.fills !== undefined) {
+    fd.set("fills", typeof opts.fills === "string" ? opts.fills : JSON.stringify(opts.fills));
+  }
   return {
     params: opts.params ?? { id: "1" },
     locals: { user: opts.user === undefined ? { id: "user-1" } : opts.user },
@@ -67,9 +79,13 @@ describe("createQuestions action", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockValues.mockResolvedValue(undefined);
+    mockUpdateWhere.mockResolvedValue(undefined);
+    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
+    mockUpdate.mockReturnValue({ set: mockUpdateSet });
     mockGetSelectedProfileId.mockResolvedValue(12);
     mockAppFindFirst.mockResolvedValue({ id: 1, profile_id: 12 });
     mockQFindFirst.mockResolvedValue({ sort: 5 });
+    mockQFindMany.mockResolvedValue([]);
   });
 
   it("rejects unauthenticated", async () => {
@@ -157,5 +173,49 @@ describe("createQuestions action", () => {
     await actions.createQuestions!(createEvent([{ question: "First", answer: "" }]));
     const inserted = mockValues.mock.calls[0][0];
     expect(inserted[0].sort).toBe(1);
+  });
+
+  it("fills an existing question's answer (no inserts)", async () => {
+    mockQFindMany.mockResolvedValueOnce([{ id: 42 }]);
+    const res = await actions.createQuestions!(
+      createEvent([], { fills: [{ id: 42, answer: "  a pasted answer  " }] }),
+    );
+    expect(res).toMatchObject({ success: true, added: 0, filled: 1 });
+    expect(mockInsert).not.toHaveBeenCalled();
+    // Answer is trimmed before the update.
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ answer: "a pasted answer" }),
+    );
+  });
+
+  it("rejects a fill targeting a question not on this application", async () => {
+    mockQFindMany.mockResolvedValueOnce([{ id: 7 }]); // 42 not present
+    const res = await actions.createQuestions!(
+      createEvent([], { fills: [{ id: 42, answer: "x" }] }),
+    );
+    expect(res).toMatchObject({ status: 400 });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("combines adds and fills in one save", async () => {
+    mockQFindMany.mockResolvedValueOnce([{ id: 42 }]);
+    const res = await actions.createQuestions!(
+      createEvent([{ question: "New Q", answer: "A" }], { fills: [{ id: 42, answer: "fill" }] }),
+    );
+    expect(res).toMatchObject({ success: true, added: 1, filled: 1 });
+    expect(mockValues).toHaveBeenCalled();
+    expect(mockUpdateWhere).toHaveBeenCalled();
+  });
+
+  it("drops fills with a blank answer or non-integer id", async () => {
+    const res = await actions.createQuestions!(
+      createEvent([{ question: "Q", answer: "A" }], {
+        fills: [{ id: 42, answer: "   " }, { id: "nope", answer: "y" }],
+      }),
+    );
+    expect(res).toMatchObject({ success: true, added: 1, filled: 0 });
+    // No valid fills → ownership lookup and update are skipped entirely.
+    expect(mockQFindMany).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

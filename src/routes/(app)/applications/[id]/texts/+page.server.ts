@@ -89,37 +89,85 @@ export const actions: Actions = {
         : "",
     }));
 
-    // Drop rows with nothing in them, but reject the whole batch if any row
-    // has an answer without a question — `question` is NOT NULL and we won't
-    // silently discard the user's text. The preview UI enforces this too.
+    // Rows to insert. Drop fully-empty rows, but reject the whole batch if any
+    // row has an answer without a question — `question` is NOT NULL and we
+    // won't silently discard the user's text. The preview UI enforces this too.
     const nonEmpty = entries.filter((e) => e.question || e.answer);
-    if (nonEmpty.length === 0) {
-      return fail(400, { error: "No questions to add" });
-    }
     if (nonEmpty.some((e) => !e.question)) {
       return fail(400, {
         error: "Every answer needs a question before saving",
       });
     }
 
-    const lastQuestion = await db.query.application_questions.findFirst({
-      where: eq(application_questions.application_id, appId),
-      orderBy: desc(application_questions.sort),
-    });
+    // Optional "fills": answers to write into existing questions the paste
+    // flow recognized as exact duplicates. Each targets an existing question
+    // id on THIS application; anything else is rejected (no cross-application
+    // or fabricated-id writes).
+    const fillsRaw = formData.get("fills");
+    let fills: { id: number; answer: string }[] = [];
+    if (typeof fillsRaw === "string" && fillsRaw.trim()) {
+      let parsedFills: unknown;
+      try {
+        parsedFills = JSON.parse(fillsRaw);
+      } catch {
+        return fail(400, { error: "Invalid fills payload" });
+      }
+      if (!Array.isArray(parsedFills)) {
+        return fail(400, { error: "Invalid fills payload" });
+      }
+      fills = parsedFills
+        .map((f) => ({
+          id: Number((f as { id?: unknown })?.id),
+          answer: typeof (f as { answer?: unknown })?.answer === "string"
+            ? ((f as { answer: string }).answer).trim()
+            : "",
+        }))
+        .filter((f) => Number.isInteger(f.id) && f.answer);
+    }
 
-    let sort = lastQuestion?.sort ?? 0;
+    if (nonEmpty.length === 0 && fills.length === 0) {
+      return fail(400, { error: "Nothing to save" });
+    }
+
+    // Fills must reference questions that actually belong to this application.
+    if (fills.length > 0) {
+      const appQuestions = await db.query.application_questions.findMany({
+        where: eq(application_questions.application_id, appId),
+        columns: { id: true },
+      });
+      const validIds = new Set(appQuestions.map((q) => q.id));
+      if (fills.some((f) => !validIds.has(f.id))) {
+        return fail(400, { error: "Invalid question to update" });
+      }
+    }
+
     const now = new Date();
-    await db.insert(application_questions).values(
-      nonEmpty.map((e) => ({
-        application_id: appId,
-        question: e.question,
-        answer: e.answer || null,
-        sort: ++sort,
-        date_created: now,
-      })),
-    );
 
-    return { success: true, added: nonEmpty.length };
+    if (nonEmpty.length > 0) {
+      const lastQuestion = await db.query.application_questions.findFirst({
+        where: eq(application_questions.application_id, appId),
+        orderBy: desc(application_questions.sort),
+      });
+      let sort = lastQuestion?.sort ?? 0;
+      await db.insert(application_questions).values(
+        nonEmpty.map((e) => ({
+          application_id: appId,
+          question: e.question,
+          answer: e.answer || null,
+          sort: ++sort,
+          date_created: now,
+        })),
+      );
+    }
+
+    for (const f of fills) {
+      await db.update(application_questions).set({
+        answer: f.answer,
+        date_updated: now,
+      }).where(eq(application_questions.id, f.id));
+    }
+
+    return { success: true, added: nonEmpty.length, filled: fills.length };
   },
 
   updateLetter: async ({ request, locals, cookies, params }) => {

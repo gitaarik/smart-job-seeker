@@ -3,6 +3,7 @@
   import { enhance } from "$app/forms";
   import { invalidateAll } from "$app/navigation";
   import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
+  import { normalizeQuestion } from "$lib/utils/normalize-question";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
@@ -53,17 +54,79 @@
   let addWithReview = $state(false);
 
   // Paste-and-extract states
-  type Pair = { question: string; answer: string; confidence: "high" | "low" };
+  type DupChoice = "skip" | "add" | "fill";
+  type Pair = {
+    question: string;
+    answer: string;
+    confidence: "high" | "low";
+    // Explicit user decision when the question duplicates an existing one;
+    // null means "use the default" (skip). Ignored when there's no match.
+    choice: DupChoice | null;
+  };
   let showPaste = $state(false);
   let pasteText = $state("");
   let extracting = $state(false);
   let extractError = $state<string | null>(null);
   let previewPairs = $state<Pair[] | null>(null);
 
-  let canSavePairs = $derived(
-    !!previewPairs && previewPairs.length > 0
-      && previewPairs.every((p) => p.question.trim()),
+  // Exact-match dedup: normalize away trivial differences (case, whitespace,
+  // trailing punctuation) so "Why us?" and "why us" collide, but never fuzzy-
+  // match — a wrong match would silently file an answer under the wrong
+  // question, worse than a visible duplicate.
+  function findExistingMatch(q: string) {
+    const n = normalizeQuestion(q);
+    if (!n) return undefined;
+    return questions.find((eq) => normalizeQuestion(eq.question) === n);
+  }
+  // A pasted answer can fill an existing question only when that question has
+  // no answer yet and the pasted pair actually carries one.
+  function canFill(pair: Pair): boolean {
+    const match = findExistingMatch(pair.question);
+    return !!match && !match.answer?.trim() && !!pair.answer.trim();
+  }
+  function effectiveChoice(pair: Pair): DupChoice {
+    const match = findExistingMatch(pair.question);
+    if (!match) return "add";
+    if (pair.choice === "add") return "add";
+    if (pair.choice === "fill") return canFill(pair) ? "fill" : "skip";
+    return "skip"; // duplicates are excluded by default
+  }
+
+  // What actually gets sent on save, split by action.
+  let saveAdds = $derived(
+    (previewPairs ?? [])
+      .filter((p) => effectiveChoice(p) === "add")
+      .map((p) => ({ question: p.question, answer: p.answer })),
   );
+  let saveFills = $derived(
+    (previewPairs ?? [])
+      .filter((p) => effectiveChoice(p) === "fill")
+      .map((p) => {
+        const match = findExistingMatch(p.question);
+        return match ? { id: match.id, answer: p.answer } : null;
+      })
+      .filter((f): f is { id: number; answer: string } => f !== null),
+  );
+  let skipCount = $derived((previewPairs?.length ?? 0) - saveAdds.length - saveFills.length);
+
+  let canSavePairs = $derived.by(() => {
+    if (!previewPairs || previewPairs.length === 0) return false;
+    // Every row that will be inserted needs a question (NOT NULL guard).
+    for (const p of previewPairs) {
+      if (effectiveChoice(p) === "add" && !p.question.trim()) return false;
+    }
+    return saveAdds.length > 0 || saveFills.length > 0;
+  });
+
+  let saveLabel = $derived.by(() => {
+    const parts: string[] = [];
+    if (saveAdds.length) parts.push(`Add ${saveAdds.length}`);
+    if (saveFills.length) parts.push(`fill ${saveFills.length}`);
+    if (parts.length === 0) return "Nothing to save";
+    let label = parts.join(" · ");
+    if (skipCount) label += ` · skip ${skipCount}`;
+    return label;
+  });
 
   function openPaste() {
     showPaste = true;
@@ -100,7 +163,7 @@
         extractError = "No questions and answers found in that text.";
         return;
       }
-      previewPairs = result.pairs;
+      previewPairs = (result.pairs as Omit<Pair, "choice">[]).map((p) => ({ ...p, choice: null }));
     } catch {
       extractError = "Network error. Please try again.";
     } finally {
@@ -109,7 +172,7 @@
   }
 
   function addPair() {
-    previewPairs = [...(previewPairs ?? []), { question: "", answer: "", confidence: "high" }];
+    previewPairs = [...(previewPairs ?? []), { question: "", answer: "", confidence: "high", choice: null }];
   }
 
   function removePair(index: number) {
@@ -475,14 +538,22 @@
         </div>
         <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
           Edit anything that looks off. Pairs marked <span class="text-[var(--dash-warning)]">needs review</span>
-          had an unclear split. Every pair needs a question before you can add them.
+          had an unclear split. Questions <span class="text-[var(--dash-info)]">already added</span> to this
+          application are skipped by default — you can add them anyway or use a pasted answer to fill an empty one.
         </p>
         <div class="space-y-4">
           {#each previewPairs as pair, i (i)}
-            <div class="border border-[var(--dash-border)] rounded-lg p-3 space-y-2">
+            {@const match = findExistingMatch(pair.question)}
+            {@const eff = effectiveChoice(pair)}
+            <div class="border border-[var(--dash-border)] rounded-lg p-3 space-y-2 {eff === 'skip' ? 'opacity-60' : ''}">
               <div class="flex items-center justify-between">
                 <span class="text-xs text-[var(--dash-text-muted)]">#{i + 1}</span>
                 <div class="flex items-center gap-2">
+                  {#if match}
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-info-light)] text-[var(--dash-info)]">
+                      already added
+                    </span>
+                  {/if}
                   {#if pair.confidence === "low"}
                     <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]">
                       needs review
@@ -517,6 +588,38 @@
                   class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
                 ></textarea>
               </div>
+              {#if match}
+                <div class="rounded-md bg-[var(--dash-bg)] p-2 text-xs space-y-2">
+                  <p class="text-[var(--dash-text-secondary)]">
+                    Already on this application{match.answer?.trim() ? " with an answer" : " (no answer yet)"}.
+                  </p>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onclick={() => (pair.choice = "skip")}
+                      class="px-2 py-1 rounded border transition-colors {eff === 'skip' ? 'border-[var(--dash-primary)] bg-[var(--dash-primary-light)] text-[var(--dash-primary)]' : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
+                    >
+                      Skip
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (pair.choice = "add")}
+                      class="px-2 py-1 rounded border transition-colors {eff === 'add' ? 'border-[var(--dash-primary)] bg-[var(--dash-primary-light)] text-[var(--dash-primary)]' : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
+                    >
+                      Add anyway
+                    </button>
+                    {#if canFill(pair)}
+                      <button
+                        type="button"
+                        onclick={() => (pair.choice = "fill")}
+                        class="px-2 py-1 rounded border transition-colors {eff === 'fill' ? 'border-[var(--dash-primary)] bg-[var(--dash-primary-light)] text-[var(--dash-primary)]' : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
+                      >
+                        Fill in existing answer
+                      </button>
+                    {/if}
+                  </div>
+                </div>
+              {/if}
             </div>
           {/each}
         </div>
@@ -533,7 +636,8 @@
           use:enhance={handleSavePairs}
           class="flex items-center justify-between mt-4 pt-4 border-t border-[var(--dash-border)]"
         >
-          <input type="hidden" name="questions" value={JSON.stringify(previewPairs)} />
+          <input type="hidden" name="questions" value={JSON.stringify(saveAdds)} />
+          <input type="hidden" name="fills" value={JSON.stringify(saveFills)} />
           <button
             type="button"
             onclick={cancelPaste}
@@ -547,7 +651,7 @@
             class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-            Add {previewPairs.length} question{previewPairs.length === 1 ? "" : "s"}
+            {saveLabel}
           </button>
         </form>
       {/if}
