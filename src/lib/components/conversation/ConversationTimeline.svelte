@@ -112,13 +112,12 @@
     return idx;
   });
 
-  // Collapse: once there are 2+ content versions the earlier turns are hidden by
-  // default and only the latest version (+ anything after it) shows. With 0-1
-  // versions there's nothing worth hiding, so the full thread always shows.
-  let contentVersionCount = $derived(
-    conversation.filter((e) => e.content).length,
-  );
-  let canCollapse = $derived(contentVersionCount >= 2);
+  // Collapse: when there are earlier turns before the latest version (advice
+  // replies and older versions both count), hide them by default and show only
+  // the latest version + anything after it. `lastContentIndex` is how many
+  // entries precede the latest version, i.e. how many collapsing hides.
+  let hiddenTurns = $derived(lastContentIndex > 0 ? lastContentIndex : 0);
+  let canCollapse = $derived(hiddenTurns > 0);
   let userExpanded = $state(false);
   let collapsed = $derived(canCollapse && !userExpanded);
 
@@ -555,7 +554,7 @@
       >
         <FontAwesomeIcon icon={collapsed ? faChevronDown : faChevronUp} class="w-2.5 h-2.5" />
         {collapsed
-          ? `Show full conversation · ${contentVersionCount} versions`
+          ? `Show full conversation · ${hiddenTurns} earlier ${hiddenTurns === 1 ? "turn" : "turns"}`
           : "Collapse · show only the latest"}
       </button>
     </div>
