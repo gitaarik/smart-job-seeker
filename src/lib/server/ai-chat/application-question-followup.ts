@@ -229,7 +229,10 @@ export async function createApplicationQuestionFollowup(
           userRequest: followupRequest,
         });
       } else if (updateContent && answer) {
-        // The model wrote/changed the answer → a new version.
+        // The model wrote/changed the answer → a new version, and it becomes the
+        // live answer (a revision you asked for should show on the overview
+        // without a separate "use as answer" click). Earlier versions remain
+        // pickable via "use as answer".
         await recordVersion(QUESTION_VERSIONS, {
           entityId: id,
           content: answer,
@@ -238,6 +241,10 @@ export async function createApplicationQuestionFollowup(
           aiFeedback: revisionFeedback,
           userRequest: followupRequest,
         });
+        await db.update(application_questions).set({
+          answer,
+          date_updated: new Date(),
+        }).where(eq(application_questions.id, id));
       } else if (updateContent && revisionFeedback) {
         // No new answer — the user asked a question / wanted advice. Record the
         // exchange (their message + the AI's reply) without a new version.
