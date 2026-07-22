@@ -215,6 +215,7 @@ What specific experiences, skills, and achievements from their profile should th
 - When you change the answer, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop details, projects, or points the applicant already had.
 - The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
 - Match the answer's length to what the question asks: keep simple/factual questions to 1-2 direct sentences; write more only when the question invites depth. Don't pad or turn a field into a cover letter — recruiters skim many answers.
+- A specific request from the applicant always wins over that brevity default. If they ask you to include, mention, keep, or bring back something (e.g. a named project), DO include it — even if it makes the answer a little longer than you'd otherwise write. Brevity governs what YOU choose to add, never what the applicant told you to include; never silently drop or omit something they explicitly asked for.
 - Only use information from the applicant's actual profile data; never invent facts the profile doesn't support
 - Consider the previous feedback to avoid repeating suggestions and to maintain continuity`,
     user_prompt: `\${followupRequest}`,
@@ -868,6 +869,7 @@ Return JSON with:
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - When you change the letter, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop paragraphs, projects, or points the user already had.
 - The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
+- A specific request from the user always wins over your own sense of what to keep concise. If they ask you to include, mention, keep, or bring back something (e.g. a named project), DO include it — even if it makes the letter a little longer than you'd otherwise write. Never silently drop or omit something they explicitly asked for.
 - When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences
 - Consider the previous feedback history to avoid repeating suggestions and to maintain continuity`,
     user_prompt: `\${followupRequest}`,
