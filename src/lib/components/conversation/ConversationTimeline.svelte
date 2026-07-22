@@ -566,16 +566,21 @@
                 AI review
               </button>
             {/if}
-            {#if onClearResponse && entryIndex === lastContentIndex && entry.type !== "manual_edit"}
+            {#if onClearResponse && entryIndex === lastContentIndex}
+              {@const isManual = entry.type === "manual_edit"}
               <button
                 type="button"
                 onclick={() => run("followup", () => onClearResponse(entry.versionId))}
                 disabled={busy}
-                title={entry.userRequest ? "Delete this AI response and keep your message" : "Delete this AI response"}
+                title={entry.userRequest
+                ? "Delete this AI response and keep your message"
+                : isManual
+                ? "Delete this version"
+                : "Delete this AI response"}
                 class="px-2 py-1 text-xs border border-red-500/30 rounded text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 <FontAwesomeIcon icon={faTrash} class="w-2.5 h-2.5" />
-                Delete response
+                {isManual ? "Delete version" : "Delete response"}
               </button>
             {/if}
             {#if onApplyVersion && !isCurrentAnswer}
