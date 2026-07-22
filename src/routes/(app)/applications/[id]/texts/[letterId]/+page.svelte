@@ -93,6 +93,19 @@ async function apiFollowup(
   if (!result.success) throw new Error(result.message || "Follow-up failed");
 }
 
+// POST a form action and throw if it didn't succeed, so callers (wrapped in the
+// timeline's run()) surface the failure instead of silently doing nothing.
+async function postAction(letterId: number, action: string, fd: FormData) {
+  const res = await fetch(
+    `/applications/${appId}/texts/${letterId}?/${action}`,
+    { method: "POST", headers: { "x-sveltekit-action": "true" }, body: fd },
+  );
+  const result = await res.json().catch(() => null);
+  if (result?.type !== "success") {
+    throw new Error("That change couldn't be saved — please try again.");
+  }
+}
+
 async function apiSaveContent(
   letterId: number,
   content: string,
@@ -105,10 +118,7 @@ async function apiSaveContent(
   if (deleteAfterVersionId) {
     fd.set("deleteAfterVersionId", String(deleteAfterVersionId));
   }
-  await fetch(`/applications/${appId}/texts/${letterId}?/update`, {
-    method: "POST",
-    body: fd,
-  });
+  await postAction(letterId, "update", fd);
 }
 
 // ---- Timeline callbacks (persist + invalidate; throw a message on failure) ----
@@ -171,10 +181,7 @@ async function onClearResponse(versionId: number) {
   if (isNew) return;
   const fd = new FormData();
   fd.set("versionId", String(versionId));
-  await fetch(`/applications/${appId}/texts/${letter.id}?/clearResponse`, {
-    method: "POST",
-    body: fd,
-  });
+  await postAction(letter.id, "clearResponse", fd);
   await invalidateAll();
 }
 

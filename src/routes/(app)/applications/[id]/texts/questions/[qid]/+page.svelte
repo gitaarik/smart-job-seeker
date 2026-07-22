@@ -63,6 +63,19 @@ async function apiFollowup(
   if (!result.success) throw new Error(result.message || "Follow-up failed");
 }
 
+// POST a form action and throw if it didn't succeed, so callers (wrapped in the
+// timeline's run()) surface the failure instead of silently doing nothing.
+async function postAction(action: string, fd: FormData) {
+  const res = await fetch(
+    `/applications/${appId}/texts/questions/${questionId}?/${action}`,
+    { method: "POST", headers: { "x-sveltekit-action": "true" }, body: fd },
+  );
+  const result = await res.json().catch(() => null);
+  if (result?.type !== "success") {
+    throw new Error("That change couldn't be saved — please try again.");
+  }
+}
+
 async function apiSaveContent(content: string, deleteAfterVersionId?: number) {
   const fd = new FormData();
   fd.set("content", content);
@@ -70,10 +83,7 @@ async function apiSaveContent(content: string, deleteAfterVersionId?: number) {
   if (deleteAfterVersionId) {
     fd.set("deleteAfterVersionId", String(deleteAfterVersionId));
   }
-  await fetch(`/applications/${appId}/texts/questions/${questionId}?/save`, {
-    method: "POST",
-    body: fd,
-  });
+  await postAction("save", fd);
 }
 
 // ---- Timeline callbacks (persist + invalidate; throw a message on failure) ----
@@ -122,13 +132,7 @@ async function onSaveVersion(
 async function onApplyVersion(content: string) {
   const fd = new FormData();
   fd.set("content", content);
-  await fetch(
-    `/applications/${appId}/texts/questions/${questionId}?/applyVersion`,
-    {
-      method: "POST",
-      body: fd,
-    },
-  );
+  await postAction("applyVersion", fd);
   await invalidateAll();
 }
 
@@ -136,13 +140,7 @@ async function onApplyVersion(content: string) {
 async function onClearResponse(versionId: number) {
   const fd = new FormData();
   fd.set("versionId", String(versionId));
-  await fetch(
-    `/applications/${appId}/texts/questions/${questionId}?/clearResponse`,
-    {
-      method: "POST",
-      body: fd,
-    },
-  );
+  await postAction("clearResponse", fd);
   await invalidateAll();
 }
 
