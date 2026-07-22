@@ -13,7 +13,7 @@
  * and covered by unit tests.
  */
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte } from "drizzle-orm";
 import { letter_versions, question_versions } from "$lib/server/db/schema";
 
 /** Provenance of a version. Plain varchar in the DB; enforced here in TS. */
@@ -144,4 +144,36 @@ export async function trimVersionsAfter(
   afterId: number,
 ): Promise<void> {
   await db.delete(vt.table).where(and(eq(vt.fk, entityId), gt(vt.id, afterId)));
+}
+
+/**
+ * Delete a version AND everything after it (revert-to-before-this-version).
+ * Reports whether the target existed and returns the last remaining version's
+ * ai_chat pointer + content, so the caller can restore the entity's ai_chat
+ * reference. Used by the "replace this version" followup path.
+ */
+export async function trimVersionsFrom(
+  vt: VersionBinding,
+  entityId: number,
+  fromId: number,
+): Promise<{
+  existed: boolean;
+  last: { ai_chat: number | null; content: string | null } | null;
+}> {
+  const target = await db
+    .select({ id: vt.id })
+    .from(vt.table)
+    .where(and(eq(vt.fk, entityId), eq(vt.id, fromId)))
+    .limit(1);
+  if (target.length === 0) return { existed: false, last: null };
+
+  await db.delete(vt.table).where(and(eq(vt.fk, entityId), gte(vt.id, fromId)));
+
+  const last = await db
+    .select({ ai_chat: vt.table.ai_chat, content: vt.table.content })
+    .from(vt.table)
+    .where(eq(vt.fk, entityId))
+    .orderBy(desc(vt.id))
+    .limit(1);
+  return { existed: true, last: last[0] ?? null };
 }

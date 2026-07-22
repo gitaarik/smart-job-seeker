@@ -37,6 +37,14 @@ vi.mock("$lib/server/ai-chat/create-followup", () => ({
   createFollowupAiChat: vi.fn(),
 }));
 
+// The shared version engine writes via dbDirect (not mocked here); stub it so
+// the updateEntity callback's recordVersion is a no-op. Its own behavior is
+// covered by entity-versions.test.ts.
+vi.mock("$lib/server/ai-chat/entity-versions", () => ({
+  LETTER_VERSIONS: { fkName: "letter" },
+  recordVersion: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col: any, val: any) => val),
   and: vi.fn((...args: any[]) => args),

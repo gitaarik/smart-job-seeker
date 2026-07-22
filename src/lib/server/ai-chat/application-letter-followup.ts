@@ -6,6 +6,7 @@ import { db } from "$lib/server/db";
 import { eq, and, or, isNotNull, desc, asc } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
+import { LETTER_VERSIONS, recordVersion } from "./entity-versions";
 
 /** Profile data fields relevant for letter followups */
 const LETTER_PROFILE_FIELDS = [
@@ -190,22 +191,22 @@ export async function createApplicationLetterFollowup(
             aiFeedback = aiChatResponse;
           }
         }
-        await db.insert(letter_versions).values({
-          letter: id,
+        await recordVersion(LETTER_VERSIONS, {
+          entityId: id,
           content: revisedText,
           source: "ai_review",
-          ai_chat: aiChatId,
-          ai_feedback: aiFeedback,
-          user_request: followupRequest,
+          aiChatId,
+          aiFeedback,
+          userRequest: followupRequest,
         });
       } else if (updateContent && letter) {
-        await db.insert(letter_versions).values({
-          letter: id,
+        await recordVersion(LETTER_VERSIONS, {
+          entityId: id,
           content: letter,
           source: "ai_revision",
-          ai_chat: aiChatId,
-          ai_feedback: revisionFeedback,
-          user_request: followupRequest,
+          aiChatId,
+          aiFeedback: revisionFeedback,
+          userRequest: followupRequest,
         });
       }
     },

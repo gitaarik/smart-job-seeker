@@ -5,8 +5,9 @@
 
 import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { application_letters, letter_versions } from "$lib/server/db/schema";
+import { application_letters } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
+import { LETTER_VERSIONS, recordVersion } from "./entity-versions";
 /**
  * Map letter types to their corresponding AI chat prompt request types
  */
@@ -214,29 +215,29 @@ export async function generateApplicationLetter(
     await db.update(application_letters).set(updateData)
       .where(eq(application_letters.id, letterId));
 
-    // Record version in letter_versions
+    // Record a version through the shared engine.
     if (mode === "review") {
-      await db.insert(letter_versions).values({
-        letter: letterId,
+      await recordVersion(LETTER_VERSIONS, {
+        entityId: letterId,
         content: letterContent,
         source: "ai_review",
-        ai_chat: aiChat.id,
-        ai_feedback: aiFeedback,
+        aiChatId: aiChat.id,
+        aiFeedback,
       });
     } else if (mode === "advice") {
-      await db.insert(letter_versions).values({
-        letter: letterId,
+      await recordVersion(LETTER_VERSIONS, {
+        entityId: letterId,
         content: null,
         source: "ai_advice",
-        ai_chat: aiChat.id,
-        ai_feedback: aiChat.response,
+        aiChatId: aiChat.id,
+        aiFeedback: aiChat.response,
       });
     } else if (mode === "generate" && letterContent) {
-      await db.insert(letter_versions).values({
-        letter: letterId,
+      await recordVersion(LETTER_VERSIONS, {
+        entityId: letterId,
         content: letterContent,
         source: "ai_generation",
-        ai_chat: aiChat.id,
+        aiChatId: aiChat.id,
       });
     }
   } catch (error) {
