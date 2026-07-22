@@ -57,7 +57,12 @@ The user's latest message:
 
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or projects from their profile you drew on to write this answer. Name the actual entries; be concrete. If the profile lacked something relevant, say so honestly.
-- "text": ONE complete answer the applicant can use as their first draft, in the first person, as the applicant. NOT options, alternatives, or advice about how to answer. 2-3 short paragraphs maximum. No preamble, no headings.
+- "text": ONE complete answer the applicant can use as their first draft, in the first person, as the applicant. NOT options, alternatives, or advice about how to answer. No preamble, no headings.
+
+CRITICAL — match the length and depth to what the question actually asks:
+- Most application questions are short and factual (e.g. "rate expectations", "notice period", "preferred location", "years of experience"). Answer those DIRECTLY in 1-2 sentences — just what's asked. Do NOT add a pitch, do NOT recite the applicant's background, do NOT turn a simple field into a cover letter.
+- Write more (a paragraph or two) ONLY when the question clearly invites depth — e.g. "describe a time when…", "why do you want to work here?", "tell us about a challenge".
+- Never pad: no greetings, thanks, or sign-offs unless the question itself asks for a message/letter. Recruiters skim many of these — be direct and tight.
 
 Guidelines:
 - Sound like a real human, not an LLM — professional but natural
@@ -207,6 +212,7 @@ What specific experiences, skills, and achievements from their profile should th
   - If they want you to WRITE or CHANGE the answer (e.g. "make it more concise", "write it based on your advice") → put the complete new answer in "text", and a short note of what you did in "feedback".
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - Keep the applicant's own voice; make the change they asked for — don't rewrite into a different persona
+- Match the answer's length to what the question asks: keep simple/factual questions to 1-2 direct sentences; write more only when the question invites depth. Don't pad or turn a field into a cover letter — recruiters skim many answers.
 - Only use information from the applicant's actual profile data; never invent facts the profile doesn't support
 - Consider the previous feedback to avoid repeating suggestions and to maintain continuity`,
     user_prompt: `\${followupRequest}`,
