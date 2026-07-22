@@ -244,3 +244,54 @@ export async function trimVersionsFrom(
     .limit(1);
   return { existed: true, last: last[0] ?? null };
 }
+
+/**
+ * Per-turn "delete this AI response". If the turn carries a user message, keep
+ * the message (clearVersionContent) so it can be regenerated. Otherwise — a
+ * message-less first draft or standalone review — delete it and everything
+ * after, rewinding to the last remaining version. Returns what the caller
+ * should write to the entity: the live ai_chat pointer, and, for a full delete,
+ * the content the committed field (answer/content) should rewind to (null =
+ * clear, back to the empty state). `keptMessage` tells the caller whether to
+ * leave the committed field alone (message kept) or rewind it (full delete).
+ */
+export async function deleteResponse(
+  vt: VersionBinding,
+  entityId: number,
+  versionId: number,
+): Promise<{
+  existed: boolean;
+  keptMessage: boolean;
+  aiChatId: number | null;
+  liveContent: string | null;
+}> {
+  const rows = await db
+    .select({ user_request: vt.table.user_request })
+    .from(vt.table)
+    .where(and(eq(vt.fk, entityId), eq(vt.id, versionId)))
+    .limit(1);
+  if (rows.length === 0) {
+    return {
+      existed: false,
+      keptMessage: false,
+      aiChatId: null,
+      liveContent: null,
+    };
+  }
+  if (rows[0].user_request) {
+    const { priorAiChat } = await clearVersionContent(vt, entityId, versionId);
+    return {
+      existed: true,
+      keptMessage: true,
+      aiChatId: priorAiChat,
+      liveContent: null,
+    };
+  }
+  const { last } = await trimVersionsFrom(vt, entityId, versionId);
+  return {
+    existed: true,
+    keptMessage: false,
+    aiChatId: last?.ai_chat ?? null,
+    liveContent: last?.content ?? null,
+  };
+}

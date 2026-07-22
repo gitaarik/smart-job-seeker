@@ -6,8 +6,8 @@ import { application_letters, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../profile/utils";
 import {
   buildConversation,
-  clearVersionContent,
   type ConversationEntry,
+  deleteResponse,
   ensureBaselineVersion,
   LETTER_VERSIONS,
   recordVersion,
@@ -218,15 +218,18 @@ export const actions: Actions = {
     const versionId = parseInt(formData.get("versionId") as string);
     if (isNaN(versionId)) return fail(400, { error: "Invalid version" });
 
-    const { existed, priorAiChat } = await clearVersionContent(
-      LETTER_VERSIONS,
-      letterId,
-      versionId,
-    );
+    const { existed, keptMessage, aiChatId, liveContent } =
+      await deleteResponse(
+        LETTER_VERSIONS,
+        letterId,
+        versionId,
+      );
     if (!existed) return fail(404, { error: "Version not found" });
 
-    await db.update(application_letters).set({ ai_chat_id: priorAiChat })
-      .where(eq(application_letters.id, letterId));
+    await db.update(application_letters).set({
+      ai_chat_id: aiChatId,
+      ...(keptMessage ? {} : { content: liveContent }),
+    }).where(eq(application_letters.id, letterId));
 
     return { success: true };
   },

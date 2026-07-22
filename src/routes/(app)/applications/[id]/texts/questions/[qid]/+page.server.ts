@@ -6,8 +6,8 @@ import { application_questions, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../../profile/utils";
 import {
   buildConversation,
-  clearVersionContent,
   type ConversationEntry,
+  deleteResponse,
   ensureBaselineVersion,
   QUESTION_VERSIONS,
   recordVersionIfChanged,
@@ -190,15 +190,20 @@ export const actions: Actions = {
     const versionId = parseInt(formData.get("versionId") as string);
     if (isNaN(versionId)) return fail(400, { error: "Invalid version" });
 
-    const { existed, priorAiChat } = await clearVersionContent(
-      QUESTION_VERSIONS,
-      qid,
-      versionId,
-    );
+    const { existed, keptMessage, aiChatId, liveContent } =
+      await deleteResponse(
+        QUESTION_VERSIONS,
+        qid,
+        versionId,
+      );
     if (!existed) return fail(404, { error: "Version not found" });
 
-    await db.update(application_questions).set({ ai_chat_id: priorAiChat })
-      .where(eq(application_questions.id, qid));
+    // Keep the answer when a message was kept (regenerate will set it); rewind
+    // it to the last remaining version on a full delete (null = back to empty).
+    await db.update(application_questions).set({
+      ai_chat_id: aiChatId,
+      ...(keptMessage ? {} : { answer: liveContent }),
+    }).where(eq(application_questions.id, qid));
 
     return { success: true };
   },
