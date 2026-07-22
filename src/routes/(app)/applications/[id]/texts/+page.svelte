@@ -49,6 +49,11 @@
   // AI review states (for questions only) — non-destructive feedback, keyed by item id
   let reviewingIds = $state<Set<string>>(new Set());
   let reviewResults = $state<Record<string, { feedback: string; revisedText: string | null }>>({});
+  // "Review all" triage sweep over answered questions
+  let reviewingAll = $state(false);
+  let reviewAllDone = $state(0);
+  let confirmReviewAll = $state(false);
+  let answeredQuestions = $derived(questions.filter((q) => (q.answer ?? "").trim()));
   // Add form states
   let newQuestion = $state("");
   let newAnswer = $state("");
@@ -308,13 +313,13 @@
     }
   }
 
-  async function reviewAnswer(item: Item) {
+  async function reviewAnswer(item: Item, expand = true) {
     const itemId = getItemId(item);
     generatingIds.delete(itemId);
     reviewingIds.add(itemId);
     reviewingIds = new Set(reviewingIds);
     aiError = null;
-    expandedId = itemId;
+    if (expand) expandedId = itemId;
 
     try {
       const response = await fetch(`/api/ai/questions/${item.id}/review`, {
@@ -342,6 +347,23 @@
   function dismissReview(itemId: string) {
     const { [itemId]: _removed, ...rest } = reviewResults;
     reviewResults = rest;
+  }
+
+  // Triage sweep: review every answered question sequentially. Each result
+  // lands in reviewResults[itemId]; expand a card to read it. Sequential (not
+  // parallel) keeps the cost/rate-limit predictable and the progress clear.
+  async function reviewAll() {
+    confirmReviewAll = false;
+    const targets = answeredQuestions;
+    if (targets.length === 0) return;
+    reviewingAll = true;
+    reviewAllDone = 0;
+    aiError = null;
+    for (const q of targets) {
+      await reviewAnswer({ ...q, itemType: "question" } as Item, false);
+      reviewAllDone += 1;
+    }
+    reviewingAll = false;
   }
 
   // Load the AI's revised text into the edit textarea so the user reviews and
@@ -378,7 +400,25 @@
       {/if}
     </div>
     {#if letters.length > 0 || questions.length > 0}
-      <div class="relative" data-add-menu>
+      <div class="flex items-center gap-2">
+        {#if answeredQuestions.length >= 2}
+          <button
+            type="button"
+            onclick={() => (confirmReviewAll = true)}
+            disabled={reviewingAll}
+            class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Review every answered question with AI"
+          >
+            {#if reviewingAll}
+              <Spinner size="w-4 h-4" />
+              <span class="hidden sm:inline">Reviewing {reviewAllDone}/{answeredQuestions.length}…</span>
+            {:else}
+              <FontAwesomeIcon icon={faRobot} class="w-5 h-5 sm:w-4 sm:h-4" />
+              <span class="hidden sm:inline">Review all ({answeredQuestions.length})</span>
+            {/if}
+          </button>
+        {/if}
+        <div class="relative" data-add-menu>
         <button
           type="button"
           onclick={() => (showAddMenu = !showAddMenu)}
@@ -418,6 +458,7 @@
             </button>
           </div>
         {/if}
+        </div>
       </div>
     {/if}
   </div>
@@ -828,6 +869,12 @@
                     {#if (item as QuestionItem).answer}
                       <span class="mx-1">&middot;</span>
                       <span class="text-[var(--dash-success)]">Answered</span>
+                    {/if}
+                    {#if reviewResults[itemId]}
+                      <span class="mx-1">&middot;</span>
+                      <span class="text-[var(--dash-primary)] inline-flex items-center gap-1">
+                        <FontAwesomeIcon icon={faRobot} class="w-3 h-3" /> reviewed
+                      </span>
                     {/if}
                   </p>
                 </div>
