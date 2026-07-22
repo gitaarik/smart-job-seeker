@@ -1,27 +1,21 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, gt, asc } from "drizzle-orm";
-import { applications, application_letters, letter_versions } from "$lib/server/db/schema";
+import { eq, and } from "drizzle-orm";
+import { applications, application_letters } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../profile/utils";
+import {
+  buildConversation,
+  LETTER_VERSIONS,
+  recordVersion,
+  recordVersionIfChanged,
+  trimVersionsAfter,
+  type VersionSource,
+} from "$lib/server/ai-chat/entity-versions";
 
-/**
- * source values for letter_versions:
- * - "manual_edit" — user edited and saved manually
- * - "ai_generation" — AI assisted (generated initial version)
- * - "ai_revision" — AI revised the letter based on feedback
- * - "ai_review" — AI reviewed (feedback only, content is the user's version that was reviewed)
- * - "ai_advice" — AI gave recommendations (no letter content)
- */
-
-export type ConversationEntry = {
-  versionId: number;
-  type: "manual_edit" | "ai_generation" | "ai_revision" | "ai_review" | "ai_advice";
-  content?: string | null;
-  aiFeedback?: string | null;
-  userRequest?: string | null;
-  date: Date | null;
-};
+// Version `source` values and the ConversationEntry shape live in the shared
+// engine; re-export the type so +page.svelte keeps importing it from here.
+export type { ConversationEntry } from "$lib/server/ai-chat/entity-versions";
 
 export const load: PageServerLoad = async ({ parent, params, url }) => {
   const layoutData = await parent();
@@ -59,28 +53,7 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
     error(404, "Letter not found");
   }
 
-  // Build conversation from letter_versions table
-  const versions = await db.query.letter_versions.findMany({
-    where: eq(letter_versions.letter, letterId),
-    orderBy: asc(letter_versions.id),
-    columns: {
-      id: true,
-      date_created: true,
-      content: true,
-      source: true,
-      ai_feedback: true,
-      user_request: true,
-    },
-  });
-
-  const conversation: ConversationEntry[] = versions.map((v) => ({
-    versionId: v.id,
-    type: v.source as ConversationEntry["type"],
-    content: v.content,
-    aiFeedback: v.ai_feedback,
-    userRequest: v.user_request,
-    date: v.date_created,
-  }));
+  const conversation = await buildConversation(LETTER_VERSIONS, letterId);
 
   return { isNew: false, letter, conversation };
 };
@@ -118,10 +91,10 @@ export const actions: Actions = {
 
     // If content was provided, also create a version
     if (content) {
-      await db.insert(letter_versions).values({
-        letter: newLetter.id,
+      await recordVersion(LETTER_VERSIONS, {
+        entityId: newLetter.id,
         content,
-        source,
+        source: source as VersionSource,
       });
     }
 
@@ -161,14 +134,9 @@ export const actions: Actions = {
     if (deleteAfterVersionId) {
       const afterId = parseInt(deleteAfterVersionId as string);
       if (!isNaN(afterId)) {
-        await db.delete(letter_versions).where(
-          and(eq(letter_versions.letter, letterId), gt(letter_versions.id, afterId))
-        );
+        await trimVersionsAfter(LETTER_VERSIONS, letterId, afterId);
       }
     }
-
-    // Only record a version if content actually changed
-    const contentChanged = (content || null) !== (letter.content || null);
 
     await db.update(application_letters).set({
       content: content || null,
@@ -176,13 +144,13 @@ export const actions: Actions = {
       date_updated: new Date(),
     }).where(eq(application_letters.id, letterId));
 
-    if (contentChanged && content) {
-      await db.insert(letter_versions).values({
-        letter: letterId,
-        content,
-        source,
-      });
-    }
+    // Only records when content actually changed and is non-empty.
+    await recordVersionIfChanged(LETTER_VERSIONS, {
+      entityId: letterId,
+      newContent: content || null,
+      previousContent: letter.content,
+      source: source as VersionSource,
+    });
 
     return { success: true };
   },

@@ -33,9 +33,27 @@
   let aiError = $state<string | null>(null);
   let instruction = $state("");
   // A candidate draft the user can accept or discard (from generate / refine).
-  let suggestion = $state<{ label: string; text: string } | null>(null);
+  let suggestion = $state<{ label: string; text: string; source: "ai_generation" | "ai_revision" } | null>(null);
   // Review feedback (non-destructive) with an optional revision to apply.
   let review = $state<{ feedback: string; revisedText: string | null } | null>(null);
+  // Provenance of the current draft, sent with Save so the version is attributed.
+  let draftSource = $state<"manual_edit" | "ai_generation" | "ai_revision">("manual_edit");
+  // Saved version trail; newest first for the history panel.
+  let history = $derived([...(data.conversation ?? [])].reverse());
+
+  const SOURCE_LABELS: Record<string, string> = {
+    manual_edit: "Manual edit",
+    ai_generation: "AI draft",
+    ai_revision: "AI revision",
+    ai_review: "AI review",
+    ai_advice: "AI advice",
+  };
+
+  function formatDate(date: Date | string | null): string {
+    if (!date) return "";
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
 
   async function callAi(
     kind: "generate" | "revise" | "review",
@@ -68,7 +86,7 @@
     const result = await callAi("generate", `/api/ai/questions/${questionId}/generate`, {
       commit: false,
     });
-    if (result?.text) suggestion = { label: "Generated draft", text: result.text };
+    if (result?.text) suggestion = { label: "Generated draft", text: result.text, source: "ai_generation" };
   }
 
   async function refine() {
@@ -81,7 +99,7 @@
       instruction,
     });
     if (result?.revisedText) {
-      suggestion = { label: instruction.trim() ? "Refined draft" : "Improved draft", text: result.revisedText };
+      suggestion = { label: instruction.trim() ? "Refined draft" : "Improved draft", text: result.revisedText, source: "ai_revision" };
       instruction = "";
     }
   }
@@ -97,13 +115,26 @@
   }
 
   function useSuggestion() {
-    if (suggestion) draft = suggestion.text;
+    if (suggestion) {
+      draft = suggestion.text;
+      draftSource = suggestion.source;
+    }
     suggestion = null;
   }
 
   function applyRevision() {
-    if (review?.revisedText) draft = review.revisedText;
+    if (review?.revisedText) {
+      draft = review.revisedText;
+      draftSource = "ai_revision";
+    }
     review = null;
+  }
+
+  // Restoring an earlier version is a manual choice — attribute the next save
+  // as a manual edit.
+  function restoreVersion(content: string | null | undefined) {
+    draft = content ?? "";
+    draftSource = "manual_edit";
   }
 
   function handleSave() {
@@ -117,6 +148,7 @@
       if (result.type === "success") {
         savedAnswer = draft;
         savedQuestion = questionText.trim();
+        draftSource = "manual_edit";
         await invalidateAll();
       }
     };
@@ -162,6 +194,7 @@
     <textarea
       id="draft"
       bind:value={draft}
+      oninput={() => (draftSource = "manual_edit")}
       rows={10}
       placeholder="Write your answer, or start with 'Draft with AI' below."
       class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
@@ -271,6 +304,7 @@
   <form method="POST" action="?/save" use:enhance={handleSave} class="flex items-center justify-end gap-3">
     <input type="hidden" name="answer" value={draft} />
     <input type="hidden" name="question" value={questionText} />
+    <input type="hidden" name="source" value={draftSource} />
     <button
       type="submit"
       disabled={!dirty || !questionText.trim()}
@@ -279,4 +313,45 @@
       <FontAwesomeIcon icon={faCheck} class="w-4 h-4" /> Save answer
     </button>
   </form>
+
+  <!-- Version history -->
+  {#if history.length > 0}
+    <Card padding="md">
+      <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-3">
+        History <span class="text-[var(--dash-text-muted)]">({history.length})</span>
+      </p>
+      <ul class="space-y-3">
+        {#each history as entry, i (entry.versionId)}
+          <li class="border border-[var(--dash-border)] rounded-lg p-3">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="text-xs font-medium text-[var(--dash-text)] flex items-center gap-1.5">
+                {#if entry.type !== "manual_edit"}
+                  <FontAwesomeIcon icon={faRobot} class="w-3 h-3 text-[var(--dash-primary)]" />
+                {/if}
+                {SOURCE_LABELS[entry.type] ?? entry.type}
+                {#if i === 0}<span class="text-[var(--dash-text-muted)] font-normal">· current</span>{/if}
+              </span>
+              <span class="text-xs text-[var(--dash-text-muted)]">{formatDate(entry.date)}</span>
+            </div>
+            {#if entry.content}
+              <p class="text-sm text-[var(--dash-text-secondary)] whitespace-pre-wrap line-clamp-3">{entry.content}</p>
+            {/if}
+            <div class="mt-2 flex justify-end">
+              <button
+                type="button"
+                onclick={() => restoreVersion(entry.content)}
+                disabled={draft === (entry.content ?? "")}
+                class="px-2.5 py-1 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Restore to draft
+              </button>
+            </div>
+          </li>
+        {/each}
+      </ul>
+      <p class="mt-3 text-xs text-[var(--dash-text-muted)]">
+        Restoring loads that version into the draft above — save to make it the current answer.
+      </p>
+    </Card>
+  {/if}
 </div>

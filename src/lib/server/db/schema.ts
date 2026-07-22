@@ -2564,6 +2564,30 @@ export const letter_versions = pgTable("letter_versions", {
   }).onUpdate("cascade").onDelete("cascade"),
 ]);
 
+export const question_versions = pgTable("question_versions", {
+  id: serial().primaryKey().notNull(),
+  date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .defaultNow(),
+  question: integer().notNull(),
+  content: text(),
+  source: varchar({ length: 255 }).notNull(),
+  ai_chat: integer(),
+  ai_feedback: text(),
+  user_request: text(),
+}, (table) => [
+  index("question_versions_ai_chat_idx").on(table.ai_chat),
+  foreignKey({
+    columns: [table.ai_chat],
+    foreignColumns: [ai_chats.id],
+    name: "question_versions_ai_chat_foreign",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.question],
+    foreignColumns: [application_questions.id],
+    name: "question_versions_question_foreign",
+  }).onUpdate("cascade").onDelete("cascade"),
+]);
+
 export const job_match_history = pgTable("job_match_history", {
   id: serial().primaryKey().notNull(),
   job_id: integer().notNull(),
@@ -3287,6 +3311,7 @@ export type ApplicationLetters = typeof application_letters.$inferSelect;
 export type ApplicationQuestions = typeof application_questions.$inferSelect;
 export type ApplicationStatusLog = typeof application_status_log.$inferSelect;
 export type LetterVersions = typeof letter_versions.$inferSelect;
+export type QuestionVersions = typeof question_versions.$inferSelect;
 export type JobMatchHistory = typeof job_match_history.$inferSelect;
 export type JobImporters = typeof job_importers.$inferSelect;
 export type UserFeedbackFiles = typeof user_feedback_files.$inferSelect;

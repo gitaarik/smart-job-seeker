@@ -4,6 +4,12 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq, and } from "drizzle-orm";
 import { applications, application_questions } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../../profile/utils";
+import {
+  buildConversation,
+  QUESTION_VERSIONS,
+  recordVersionIfChanged,
+  type VersionSource,
+} from "$lib/server/ai-chat/entity-versions";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -17,7 +23,10 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   );
   if (!question) error(404, "Question not found");
 
-  return { question, appId: parseInt(params.id) };
+  // The saved-answer version trail (oldest→newest) powers the history panel.
+  const conversation = await buildConversation(QUESTION_VERSIONS, qid);
+
+  return { question, appId: parseInt(params.id), conversation };
 };
 
 export const actions: Actions = {
@@ -53,6 +62,12 @@ export const actions: Actions = {
     const answer = (formData.get("answer") as string | null)?.trim() || null;
     const questionText = (formData.get("question") as string | null)?.trim();
 
+    // Provenance hint from the editor: whether the committed draft came from AI.
+    const sourceRaw = formData.get("source");
+    const source: VersionSource = sourceRaw === "ai_generation" || sourceRaw === "ai_revision"
+      ? sourceRaw
+      : "manual_edit";
+
     // The question text is NOT NULL; only overwrite it when a non-empty value
     // is provided, otherwise keep the existing one.
     if (formData.has("question") && !questionText) {
@@ -64,6 +79,16 @@ export const actions: Actions = {
       ...(questionText ? { question: questionText } : {}),
       date_updated: new Date(),
     }).where(eq(application_questions.id, qid));
+
+    // Append a version when the answer actually changed — this is the trail the
+    // history panel restores from. AI iteration on the page stays non-committing;
+    // versions are captured only at this explicit save.
+    await recordVersionIfChanged(QUESTION_VERSIONS, {
+      entityId: qid,
+      newContent: answer,
+      previousContent: question.answer,
+      source,
+    });
 
     return { success: true };
   },
