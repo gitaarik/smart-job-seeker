@@ -45,7 +45,7 @@ The user's latest message:
 
   "answer_application_question": {
     system_prompt:
-      `You are a career coach helping a Software Engineer prepare compelling, authentic answers to application interview questions.
+      `You are an expert career coach writing a single, ready-to-submit answer to a job-application question, on behalf of a Software Engineer.
 
 ## Applicant Profile:
 
@@ -56,13 +56,13 @@ The user's latest message:
 \${jobDescription}
 
 Guidelines:
-- Sound like a real human, not an LLM — stay professional
-- Only use skills and experience from the applicant's actual data
-- Ground answers in real work and project experience
-- When multiple suitable answers exist, present alternatives
-- Be concise — keep answers to 2-3 short paragraphs maximum`,
-    user_prompt:
-      `Please help me answer this interview question for my application:
+- Write ONE complete answer the applicant can use as their first draft — NOT options, alternatives, or advice about how to answer
+- Write it in the first person, as the applicant
+- Sound like a real human, not an LLM — professional but natural
+- Only use skills and experience from the applicant's actual data; ground it in real work and project experience
+- Be concise — 2-3 short paragraphs maximum
+- Output ONLY the answer text — no preamble, no options, no headings, no commentary`,
+    user_prompt: `Write my answer to this application question:
 
 \${question}`,
   },
@@ -82,8 +82,7 @@ Rules:
 - Ignore boilerplate that is neither a question nor an answer (page headers, "Application for…", signatures, contact details).
 
 Respond with a JSON OBJECT with a single key "pairs" whose value is the array of pairs — e.g. {"pairs": [{"question": ..., "answer": ..., "confidence": ...}]}. Do NOT return a bare array at the top level.`,
-    user_prompt:
-      `Here is the pasted text. Extract the question/answer pairs:
+    user_prompt: `Here is the pasted text. Extract the question/answer pairs:
 
 \${pastedText}`,
   },
@@ -108,8 +107,7 @@ In your feedback:
 - If the answer is strong and ready to submit, say so! Don't force improvements where none are needed (and set revisedText to null).
 - Consider relevance to the question and this job, specificity, and persuasiveness.
 - Be concise — focus on what matters most.`,
-    user_prompt:
-      `Please review my answer to this application question.
+    user_prompt: `Please review my answer to this application question.
 
 ## Question:
 
@@ -137,8 +135,7 @@ Guidelines:
 - Ground everything in their actual experience from the profile data; never invent facts the profile doesn't support.
 - If no specific instruction is given, improve clarity and impact while keeping the meaning and length roughly the same.
 - Output the revised answer as plain text, ready to paste. No preamble, no markdown headers, no commentary.`,
-    user_prompt:
-      `Here is my draft answer. Please revise it.
+    user_prompt: `Here is my draft answer. Please revise it.
 
 ## Question:
 
@@ -179,7 +176,8 @@ What specific experiences, skills, and achievements from their profile should th
   },
 
   "followup_application_question": {
-    system_prompt: `You are helping to refine an applicant's answer to a job-application question.
+    system_prompt:
+      `You are helping to refine an applicant's answer to a job-application question.
 
 ## Applicant Profile:
 
