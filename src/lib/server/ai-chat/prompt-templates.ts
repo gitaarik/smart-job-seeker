@@ -212,6 +212,8 @@ What specific experiences, skills, and achievements from their profile should th
   - If they want you to WRITE or CHANGE the answer (e.g. "make it more concise", "write it based on your advice") → put the complete new answer in "text", and a short note of what you did in "feedback".
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - Keep the applicant's own voice; make the change they asked for — don't rewrite into a different persona
+- When you change the answer, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop details, projects, or points the applicant already had.
+- The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
 - Match the answer's length to what the question asks: keep simple/factual questions to 1-2 direct sentences; write more only when the question invites depth. Don't pad or turn a field into a cover letter — recruiters skim many answers.
 - Only use information from the applicant's actual profile data; never invent facts the profile doesn't support
 - Consider the previous feedback to avoid repeating suggestions and to maintain continuity`,
@@ -864,6 +866,8 @@ Return JSON with:
   - If they are asking a QUESTION, seeking advice, or discussing the approach → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the letter.
   - If they want you to WRITE or CHANGE the letter → put the complete revised letter in "text", and a short note of what you did in "feedback".
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
+- When you change the letter, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop paragraphs, projects, or points the user already had.
+- The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
 - When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences
 - Consider the previous feedback history to avoid repeating suggestions and to maintain continuity`,
     user_prompt: `\${followupRequest}`,

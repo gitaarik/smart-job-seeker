@@ -9,7 +9,7 @@
  */
 
 import { db } from "$lib/server/db";
-import { and, asc, desc, eq, isNotNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import {
   application_questions,
   question_versions,
@@ -50,27 +50,32 @@ function parseAnswerResponse(
   return { text: response, feedback: null };
 }
 
-/** Build a condensed conversation history from previous question versions */
+/**
+ * Build the conversation history from previous question versions: each turn's
+ * message + the AI's note, and — for the most recent turns — the actual draft
+ * the answer was at after that turn, so the AI can reference or restore content
+ * that an earlier version had but the current one dropped. The draft window is
+ * capped so a long thread doesn't bloat the prompt.
+ */
+const DRAFT_WINDOW = 6;
 async function buildConversationHistory(questionId: number): Promise<string> {
   const versions = await db.query.question_versions.findMany({
-    where: and(
-      eq(question_versions.question, questionId),
-      or(
-        isNotNull(question_versions.user_request),
-        isNotNull(question_versions.ai_feedback),
-      ),
-    ),
+    where: eq(question_versions.question, questionId),
     orderBy: asc(question_versions.id),
-    columns: { user_request: true, ai_feedback: true },
+    columns: { user_request: true, ai_feedback: true, content: true },
   });
 
   if (versions.length === 0) return "";
+  const firstDraftIdx = Math.max(0, versions.length - DRAFT_WINDOW);
 
   const lines: string[] = [];
-  for (const v of versions) {
-    if (v.user_request) lines.push(`**User:** ${v.user_request}`);
+  versions.forEach((v, i) => {
+    if (v.user_request) lines.push(`**You:** ${v.user_request}`);
     if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
-  }
+    if (v.content && i >= firstDraftIdx) {
+      lines.push(`_The answer read, after this turn:_\n${v.content}`);
+    }
+  });
   return lines.join("\n\n");
 }
 

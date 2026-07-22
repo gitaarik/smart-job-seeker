@@ -3,7 +3,7 @@
  */
 
 import { db } from "$lib/server/db";
-import { and, asc, desc, eq, isNotNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 import {
@@ -63,27 +63,32 @@ function parseLetterResponse(
   return { letter: response, feedback: null };
 }
 
-/** Build a condensed conversation history from previous letter versions */
+/**
+ * Build the conversation history from previous letter versions: each turn's
+ * message + the AI's note, and — for the most recent turns — the actual draft
+ * the letter was at after that turn, so the AI can reference or restore content
+ * an earlier version had but the current one dropped. Capped so a long thread
+ * doesn't bloat the prompt.
+ */
+const DRAFT_WINDOW = 6;
 async function buildConversationHistory(letterId: number): Promise<string> {
   const versions = await db.query.letter_versions.findMany({
-    where: and(
-      eq(letter_versions.letter, letterId),
-      or(
-        isNotNull(letter_versions.user_request),
-        isNotNull(letter_versions.ai_feedback),
-      ),
-    ),
+    where: eq(letter_versions.letter, letterId),
     orderBy: asc(letter_versions.id),
-    columns: { user_request: true, ai_feedback: true },
+    columns: { user_request: true, ai_feedback: true, content: true },
   });
 
   if (versions.length === 0) return "";
+  const firstDraftIdx = Math.max(0, versions.length - DRAFT_WINDOW);
 
   const lines: string[] = [];
-  for (const v of versions) {
-    if (v.user_request) lines.push(`**User:** ${v.user_request}`);
+  versions.forEach((v, i) => {
+    if (v.user_request) lines.push(`**You:** ${v.user_request}`);
     if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
-  }
+    if (v.content && i >= firstDraftIdx) {
+      lines.push(`_The letter read, after this turn:_\n${v.content}`);
+    }
+  });
   return lines.join("\n\n");
 }
 
