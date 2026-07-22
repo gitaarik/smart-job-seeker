@@ -1,392 +1,291 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
-  import { invalidateAll } from "$app/navigation";
-  import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
-  import { normalizeQuestion } from "$lib/utils/normalize-question";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faCheck,
-    faChevronRight,
-    faEnvelope,
-    faLayerGroup,
-    faPaste,
-    faPen,
-    faPencil,
-    faPlus,
-    faQuestionCircle,
-    faRobot,
-    faTimes,
-    faTrash,
-    faUpRightFromSquare,
-    faXmark,
-  } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../../components/Card.svelte";
-  import Spinner from "$lib/components/Spinner.svelte";
-  import EmptyState from "../../../profile/components/EmptyState.svelte";
-  import FilterTabs from "../../../components/FilterTabs.svelte";
-  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+import type { ActionData, PageData } from "./$types";
+import { enhance } from "$app/forms";
+import { goto } from "$app/navigation";
+import { normalizeQuestion } from "$lib/utils/normalize-question";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faCheck,
+  faChevronRight,
+  faEnvelope,
+  faLayerGroup,
+  faPaste,
+  faPen,
+  faPencil,
+  faPlus,
+  faQuestionCircle,
+  faRobot,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import Card from "../../../components/Card.svelte";
+import Spinner from "$lib/components/Spinner.svelte";
+import EmptyState from "../../../profile/components/EmptyState.svelte";
+import FilterTabs from "../../../components/FilterTabs.svelte";
+import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let app = $derived(data.application);
-  let letters = $derived(app.application_letters || []);
-  let questions = $derived(app.application_questions || []);
+let app = $derived(data.application);
+let letters = $derived(app.application_letters || []);
+let questions = $derived(app.application_questions || []);
 
-  let currentType = $state("all");
-  let expandedId = $state<string | null>(null);
-  let editingId = $state<string | null>(null);
-  let deleteItem = $state<{ id: number; type: "letter" | "question" } | null>(null);
-  let showAddQuestion = $state(false);
-  let showAddMenu = $state(false);
+let currentType = $state("all");
+let expandedId = $state<string | null>(null);
+let deleteItem = $state<{ id: number; type: "letter" | "question" } | null>(
+  null,
+);
+let showAddQuestion = $state(false);
+let showAddMenu = $state(false);
 
-  // Edit states (for questions only)
-  let editAnswer = $state("");
+// Add form states
+let newQuestion = $state("");
+let newAnswer = $state("");
+// When set, jump to the new question's dedicated editor after adding.
+let openAfterAdd = $state(false);
 
-  // AI generation states (for questions only)
-  let generatingIds = $state<Set<string>>(new Set());
-  let aiError = $state<string | null>(null);
-  // AI review states (for questions only) — non-destructive feedback, keyed by item id
-  let reviewingIds = $state<Set<string>>(new Set());
-  let reviewResults = $state<Record<string, { feedback: string; revisedText: string | null }>>({});
-  // "Review all" triage sweep over answered questions
-  let reviewingAll = $state(false);
-  let reviewAllDone = $state(0);
-  let confirmReviewAll = $state(false);
-  let answeredQuestions = $derived(questions.filter((q) => (q.answer ?? "").trim()));
-  // Add form states
-  let newQuestion = $state("");
-  let newAnswer = $state("");
-  let addWithReview = $state(false);
+// Paste-and-extract states
+type DupChoice = "skip" | "add" | "fill";
+type Pair = {
+  question: string;
+  answer: string;
+  confidence: "high" | "low";
+  // Explicit user decision when the question duplicates an existing one;
+  // null means "use the default" (skip). Ignored when there's no match.
+  choice: DupChoice | null;
+};
+let showPaste = $state(false);
+let pasteText = $state("");
+let extracting = $state(false);
+let extractError = $state<string | null>(null);
+let previewPairs = $state<Pair[] | null>(null);
 
-  // Paste-and-extract states
-  type DupChoice = "skip" | "add" | "fill";
-  type Pair = {
-    question: string;
-    answer: string;
-    confidence: "high" | "low";
-    // Explicit user decision when the question duplicates an existing one;
-    // null means "use the default" (skip). Ignored when there's no match.
-    choice: DupChoice | null;
-  };
-  let showPaste = $state(false);
-  let pasteText = $state("");
-  let extracting = $state(false);
-  let extractError = $state<string | null>(null);
-  let previewPairs = $state<Pair[] | null>(null);
+// Exact-match dedup: normalize away trivial differences (case, whitespace,
+// trailing punctuation) so "Why us?" and "why us" collide, but never fuzzy-
+// match — a wrong match would silently file an answer under the wrong
+// question, worse than a visible duplicate.
+function findExistingMatch(q: string) {
+  const n = normalizeQuestion(q);
+  if (!n) return undefined;
+  return questions.find((eq) => normalizeQuestion(eq.question) === n);
+}
+// A pasted answer can fill an existing question only when that question has
+// no answer yet and the pasted pair actually carries one.
+function canFill(pair: Pair): boolean {
+  const match = findExistingMatch(pair.question);
+  return !!match && !match.answer?.trim() && !!pair.answer.trim();
+}
+function effectiveChoice(pair: Pair): DupChoice {
+  const match = findExistingMatch(pair.question);
+  if (!match) return "add";
+  if (pair.choice === "add") return "add";
+  if (pair.choice === "fill") return canFill(pair) ? "fill" : "skip";
+  return "skip"; // duplicates are excluded by default
+}
 
-  // Exact-match dedup: normalize away trivial differences (case, whitespace,
-  // trailing punctuation) so "Why us?" and "why us" collide, but never fuzzy-
-  // match — a wrong match would silently file an answer under the wrong
-  // question, worse than a visible duplicate.
-  function findExistingMatch(q: string) {
-    const n = normalizeQuestion(q);
-    if (!n) return undefined;
-    return questions.find((eq) => normalizeQuestion(eq.question) === n);
+// What actually gets sent on save, split by action.
+let saveAdds = $derived(
+  (previewPairs ?? [])
+    .filter((p) => effectiveChoice(p) === "add")
+    .map((p) => ({ question: p.question, answer: p.answer })),
+);
+let saveFills = $derived(
+  (previewPairs ?? [])
+    .filter((p) => effectiveChoice(p) === "fill")
+    .map((p) => {
+      const match = findExistingMatch(p.question);
+      return match ? { id: match.id, answer: p.answer } : null;
+    })
+    .filter((f): f is { id: number; answer: string } => f !== null),
+);
+let skipCount = $derived(
+  (previewPairs?.length ?? 0) - saveAdds.length - saveFills.length,
+);
+
+let canSavePairs = $derived.by(() => {
+  if (!previewPairs || previewPairs.length === 0) return false;
+  // Every row that will be inserted needs a question (NOT NULL guard).
+  for (const p of previewPairs) {
+    if (effectiveChoice(p) === "add" && !p.question.trim()) return false;
   }
-  // A pasted answer can fill an existing question only when that question has
-  // no answer yet and the pasted pair actually carries one.
-  function canFill(pair: Pair): boolean {
-    const match = findExistingMatch(pair.question);
-    return !!match && !match.answer?.trim() && !!pair.answer.trim();
-  }
-  function effectiveChoice(pair: Pair): DupChoice {
-    const match = findExistingMatch(pair.question);
-    if (!match) return "add";
-    if (pair.choice === "add") return "add";
-    if (pair.choice === "fill") return canFill(pair) ? "fill" : "skip";
-    return "skip"; // duplicates are excluded by default
-  }
+  return saveAdds.length > 0 || saveFills.length > 0;
+});
 
-  // What actually gets sent on save, split by action.
-  let saveAdds = $derived(
-    (previewPairs ?? [])
-      .filter((p) => effectiveChoice(p) === "add")
-      .map((p) => ({ question: p.question, answer: p.answer })),
-  );
-  let saveFills = $derived(
-    (previewPairs ?? [])
-      .filter((p) => effectiveChoice(p) === "fill")
-      .map((p) => {
-        const match = findExistingMatch(p.question);
-        return match ? { id: match.id, answer: p.answer } : null;
-      })
-      .filter((f): f is { id: number; answer: string } => f !== null),
-  );
-  let skipCount = $derived((previewPairs?.length ?? 0) - saveAdds.length - saveFills.length);
+let saveLabel = $derived.by(() => {
+  const parts: string[] = [];
+  if (saveAdds.length) parts.push(`Add ${saveAdds.length}`);
+  if (saveFills.length) parts.push(`fill ${saveFills.length}`);
+  if (parts.length === 0) return "Nothing to save";
+  let label = parts.join(" · ");
+  if (skipCount) label += ` · skip ${skipCount}`;
+  return label;
+});
 
-  let canSavePairs = $derived.by(() => {
-    if (!previewPairs || previewPairs.length === 0) return false;
-    // Every row that will be inserted needs a question (NOT NULL guard).
-    for (const p of previewPairs) {
-      if (effectiveChoice(p) === "add" && !p.question.trim()) return false;
-    }
-    return saveAdds.length > 0 || saveFills.length > 0;
-  });
+function openPaste() {
+  showPaste = true;
+  showAddMenu = false;
+  showAddQuestion = false;
+  pasteText = "";
+  previewPairs = null;
+  extractError = null;
+}
 
-  let saveLabel = $derived.by(() => {
-    const parts: string[] = [];
-    if (saveAdds.length) parts.push(`Add ${saveAdds.length}`);
-    if (saveFills.length) parts.push(`fill ${saveFills.length}`);
-    if (parts.length === 0) return "Nothing to save";
-    let label = parts.join(" · ");
-    if (skipCount) label += ` · skip ${skipCount}`;
-    return label;
-  });
+function cancelPaste() {
+  showPaste = false;
+  pasteText = "";
+  previewPairs = null;
+  extractError = null;
+}
 
-  function openPaste() {
-    showPaste = true;
-    showAddMenu = false;
-    showAddQuestion = false;
-    pasteText = "";
-    previewPairs = null;
-    extractError = null;
-  }
-
-  function cancelPaste() {
-    showPaste = false;
-    pasteText = "";
-    previewPairs = null;
-    extractError = null;
-  }
-
-  async function runExtract() {
-    if (!pasteText.trim()) return;
-    extracting = true;
-    extractError = null;
-    try {
-      const response = await fetch("/api/ai/questions/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: pasteText }),
-      });
-      const result = await response.json();
-      if (!result.success) {
-        extractError = result.message || "Extraction failed";
-        return;
-      }
-      if (!result.pairs?.length) {
-        extractError = "No questions and answers found in that text.";
-        return;
-      }
-      previewPairs = (result.pairs as Omit<Pair, "choice">[]).map((p) => ({ ...p, choice: null }));
-    } catch {
-      extractError = "Network error. Please try again.";
-    } finally {
-      extracting = false;
-    }
-  }
-
-  function addPair() {
-    previewPairs = [...(previewPairs ?? []), { question: "", answer: "", confidence: "high", choice: null }];
-  }
-
-  function removePair(index: number) {
-    if (!previewPairs) return;
-    previewPairs = previewPairs.filter((_, i) => i !== index);
-  }
-
-  function handleSavePairs() {
-    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
-      await update();
-      if (result.type === "success") {
-        cancelPaste();
-      }
-    };
-  }
-
-  type LetterItem = (typeof letters)[0] & { itemType: "letter" };
-  type QuestionItem = (typeof questions)[0] & { itemType: "question" };
-  type Item = LetterItem | QuestionItem;
-
-  let items = $derived.by((): Item[] => {
-    const letterItems: Item[] = letters.map((l) => ({ ...l, itemType: "letter" as const }));
-    const questionItems: Item[] = questions.map((q) => ({ ...q, itemType: "question" as const }));
-
-    if (currentType === "letters") return letterItems;
-    if (currentType === "questions") return questionItems;
-
-    return [...letterItems, ...questionItems].sort((a, b) => {
-      const dateA = a.date_updated || a.date_created || new Date(0);
-      const dateB = b.date_updated || b.date_created || new Date(0);
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
+async function runExtract() {
+  if (!pasteText.trim()) return;
+  extracting = true;
+  extractError = null;
+  try {
+    const response = await fetch("/api/ai/questions/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: pasteText }),
     });
-  });
+    const result = await response.json();
+    if (!result.success) {
+      extractError = result.message || "Extraction failed";
+      return;
+    }
+    if (!result.pairs?.length) {
+      extractError = "No questions and answers found in that text.";
+      return;
+    }
+    previewPairs = (result.pairs as Omit<Pair, "choice">[]).map((p) => ({
+      ...p,
+      choice: null,
+    }));
+  } catch {
+    extractError = "Network error. Please try again.";
+  } finally {
+    extracting = false;
+  }
+}
 
-  const letterTypes: Record<string, string> = {
-    cover_letter: "Cover Letter",
-    cheat_sheet: "Interview Cheat Sheet",
+function addPair() {
+  previewPairs = [...(previewPairs ?? []), {
+    question: "",
+    answer: "",
+    confidence: "high",
+    choice: null,
+  }];
+}
+
+function removePair(index: number) {
+  if (!previewPairs) return;
+  previewPairs = previewPairs.filter((_, i) => i !== index);
+}
+
+function handleSavePairs() {
+  return async (
+    { result, update }: {
+      result: { type: string };
+      update: () => Promise<void>;
+    },
+  ) => {
+    await update();
+    if (result.type === "success") {
+      cancelPaste();
+    }
   };
+}
 
-  const typeFilters = [
-    { value: "all", label: "All", icon: faLayerGroup },
-    { value: "letters", label: "Letters", icon: faEnvelope },
-    { value: "questions", label: "Questions", icon: faQuestionCircle },
-  ];
+type LetterItem = (typeof letters)[0] & { itemType: "letter" };
+type QuestionItem = (typeof questions)[0] & { itemType: "question" };
+type Item = LetterItem | QuestionItem;
 
-  function getItemId(item: Item): string {
-    return `${item.itemType}-${item.id}`;
-  }
+let items = $derived.by((): Item[] => {
+  const letterItems: Item[] = letters.map((l) => ({
+    ...l,
+    itemType: "letter" as const,
+  }));
+  const questionItems: Item[] = questions.map((q) => ({
+    ...q,
+    itemType: "question" as const,
+  }));
 
-  function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  }
+  if (currentType === "letters") return letterItems;
+  if (currentType === "questions") return questionItems;
 
-  function toggleExpand(id: string) {
-    if (editingId === id) return;
-    expandedId = expandedId === id ? null : id;
-  }
+  return [...letterItems, ...questionItems].sort((a, b) => {
+    const dateA = a.date_updated || a.date_created || new Date(0);
+    const dateB = b.date_updated || b.date_created || new Date(0);
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
+});
 
-  function startEdit(item: Item) {
-    const id = getItemId(item);
-    editingId = id;
-    expandedId = id;
-    editAnswer = (item as QuestionItem).answer || "";
-  }
+const letterTypes: Record<string, string> = {
+  cover_letter: "Cover Letter",
+  cheat_sheet: "Interview Cheat Sheet",
+};
 
-  function cancelEdit() {
-    editingId = null;
-  }
+const typeFilters = [
+  { value: "all", label: "All", icon: faLayerGroup },
+  { value: "letters", label: "Letters", icon: faEnvelope },
+  { value: "questions", label: "Questions", icon: faQuestionCircle },
+];
 
-  function handleEditSubmit() {
-    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
-      await update();
-      if (result.type === "success") {
-        editingId = null;
+function getItemId(item: Item): string {
+  return `${item.itemType}-${item.id}`;
+}
+
+function formatDate(date: Date | string | null): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function toggleExpand(id: string) {
+  expandedId = expandedId === id ? null : id;
+}
+
+function handleAddSubmit() {
+  return async (
+    { result, update }: {
+      result: { type: string; data?: { questionId?: number } };
+      update: () => Promise<void>;
+    },
+  ) => {
+    const wantOpen = openAfterAdd;
+    await update();
+    if (result.type === "success") {
+      const qid = result.data?.questionId;
+      showAddQuestion = false;
+      newQuestion = "";
+      newAnswer = "";
+      openAfterAdd = false;
+      // "Add & open editor" jumps straight to the dedicated page so the user
+      // can iterate on the answer there rather than on this list.
+      if (wantOpen && qid) {
+        goto(`/applications/${app.id}/texts/questions/${qid}`);
       }
-    };
-  }
-
-  function handleAddSubmit() {
-    return async (
-      { result, update }: {
-        result: { type: string; data?: { questionId?: number } };
-        update: () => Promise<void>;
-      },
-    ) => {
-      const wantReview = addWithReview;
-      await update();
-      if (result.type === "success") {
-        const qid = result.data?.questionId;
-        showAddQuestion = false;
-        newQuestion = "";
-        newAnswer = "";
-        addWithReview = false;
-        // "Add & review" saves the question, then kicks off a review of the
-        // just-saved answer so the user doesn't have to find and expand the card.
-        if (wantReview && qid) {
-          reviewAnswer({ id: qid, itemType: "question" } as Item);
-        }
-      } else {
-        addWithReview = false;
-      }
-    };
-  }
-
-  async function generateAi(item: Item) {
-    const itemId = getItemId(item);
-    const url = `/api/ai/questions/${item.id}/generate`;
-
-    generatingIds.add(itemId);
-    generatingIds = new Set(generatingIds);
-    aiError = null;
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const result = await response.json();
-      if (!result.success) {
-        aiError = result.message || "Generation failed";
-        return;
-      }
-      await invalidateAll();
-    } catch {
-      aiError = "Network error. Please try again.";
-    } finally {
-      generatingIds.delete(itemId);
-      generatingIds = new Set(generatingIds);
+    } else {
+      openAfterAdd = false;
     }
-  }
+  };
+}
 
-  async function reviewAnswer(item: Item, expand = true) {
-    const itemId = getItemId(item);
-    generatingIds.delete(itemId);
-    reviewingIds.add(itemId);
-    reviewingIds = new Set(reviewingIds);
-    aiError = null;
-    if (expand) expandedId = itemId;
-
-    try {
-      const response = await fetch(`/api/ai/questions/${item.id}/review`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const result = await response.json();
-      if (!result.success) {
-        aiError = result.message || "Review failed";
-        return;
-      }
-      reviewResults = {
-        ...reviewResults,
-        [itemId]: { feedback: result.feedback, revisedText: result.revisedText },
-      };
-    } catch {
-      aiError = "Network error. Please try again.";
-    } finally {
-      reviewingIds.delete(itemId);
-      reviewingIds = new Set(reviewingIds);
-    }
+function handleClickOutside(e: MouseEvent) {
+  if (showAddMenu && !(e.target as HTMLElement).closest("[data-add-menu]")) {
+    showAddMenu = false;
   }
-
-  function dismissReview(itemId: string) {
-    const { [itemId]: _removed, ...rest } = reviewResults;
-    reviewResults = rest;
-  }
-
-  // Triage sweep: review every answered question sequentially. Each result
-  // lands in reviewResults[itemId]; expand a card to read it. Sequential (not
-  // parallel) keeps the cost/rate-limit predictable and the progress clear.
-  async function reviewAll() {
-    confirmReviewAll = false;
-    const targets = answeredQuestions;
-    if (targets.length === 0) return;
-    reviewingAll = true;
-    reviewAllDone = 0;
-    aiError = null;
-    for (const q of targets) {
-      await reviewAnswer({ ...q, itemType: "question" } as Item, false);
-      reviewAllDone += 1;
-    }
-    reviewingAll = false;
-  }
-
-  // Load the AI's revised text into the edit textarea so the user reviews and
-  // saves it themselves — never overwrite their answer without confirmation.
-  function applyRevision(item: Item, revised: string) {
-    startEdit(item);
-    editAnswer = revised;
-    dismissReview(getItemId(item));
-  }
-
-  function handleClickOutside(e: MouseEvent) {
-    if (showAddMenu && !(e.target as HTMLElement).closest("[data-add-menu]")) {
-      showAddMenu = false;
-    }
-  }
+}
 </script>
 
 <svelte:window onclick={handleClickOutside} />
 
 <div class="space-y-6">
-  {#if form?.error || aiError}
+  {#if form?.error}
     <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
-      <p class="text-[var(--dash-error)] text-sm">{form?.error || aiError}</p>
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -401,23 +300,6 @@
     </div>
     {#if letters.length > 0 || questions.length > 0}
       <div class="flex items-center gap-2">
-        {#if answeredQuestions.length >= 2}
-          <button
-            type="button"
-            onclick={() => (confirmReviewAll = true)}
-            disabled={reviewingAll}
-            class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Review every answered question with AI"
-          >
-            {#if reviewingAll}
-              <Spinner size="w-4 h-4" />
-              <span class="hidden sm:inline">Reviewing {reviewAllDone}/{answeredQuestions.length}…</span>
-            {:else}
-              <FontAwesomeIcon icon={faRobot} class="w-5 h-5 sm:w-4 sm:h-4" />
-              <span class="hidden sm:inline">Review all ({answeredQuestions.length})</span>
-            {/if}
-          </button>
-        {/if}
         <div class="relative" data-add-menu>
         <button
           type="button"
@@ -504,20 +386,18 @@
             </button>
             <button
               type="submit"
-              onclick={() => (addWithReview = false)}
+              onclick={() => (openAfterAdd = false)}
               class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
             >
               Add Question
             </button>
             <button
               type="submit"
-              onclick={() => (addWithReview = true)}
-              disabled={!newAnswer.trim()}
-              title={newAnswer.trim() ? "" : "Write an answer to review it with AI"}
-              class="px-4 py-2 border border-[var(--dash-primary)] text-[var(--dash-primary)] rounded-lg hover:bg-[var(--dash-primary-light)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              onclick={() => (openAfterAdd = true)}
+              class="px-4 py-2 border border-[var(--dash-primary)] text-[var(--dash-primary)] rounded-lg hover:bg-[var(--dash-primary-light)] transition-colors flex items-center gap-2"
             >
-              <FontAwesomeIcon icon={faRobot} class="w-4 h-4" />
-              Add &amp; review
+              <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+              Add &amp; open editor
             </button>
           </div>
         </div>
@@ -757,8 +637,6 @@
       {#each items as item (getItemId(item))}
         {@const itemId = getItemId(item)}
         {@const isLetter = item.itemType === "letter"}
-        {@const hasAiChat = !!(item as QuestionItem).ai_chat_id}
-        {@const hasContent = isLetter ? !!(item as LetterItem).content : !!(item as QuestionItem).answer}
 
         {#if isLetter}
           {@const letterItem = item as LetterItem}
@@ -870,12 +748,6 @@
                       <span class="mx-1">&middot;</span>
                       <span class="text-[var(--dash-success)]">Answered</span>
                     {/if}
-                    {#if reviewResults[itemId]}
-                      <span class="mx-1">&middot;</span>
-                      <span class="text-[var(--dash-primary)] inline-flex items-center gap-1">
-                        <FontAwesomeIcon icon={faRobot} class="w-3 h-3" /> reviewed
-                      </span>
-                    {/if}
                   </p>
                 </div>
               </div>
@@ -885,19 +757,19 @@
                   onclick={(e) => e.stopPropagation()}
                   class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
                   aria-label="Open answer editor"
-                  title="Open editor — iterate on this answer with AI"
+                  title="Open editor — write, review, and iterate on this answer with AI"
                 >
-                  <FontAwesomeIcon icon={faUpRightFromSquare} class="w-4 h-4" />
+                  <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
                 </a>
                 <span
                   role="button"
                   tabindex="0"
-                  onclick={(e) => { e.stopPropagation(); startEdit(item); }}
-                  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); startEdit(item); } }}
-                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
-                  aria-label="Quick edit"
+                  onclick={(e) => { e.stopPropagation(); deleteItem = { id: item.id, type: "question" }; }}
+                  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); deleteItem = { id: item.id, type: "question" }; } }}
+                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-red-500 transition-colors cursor-pointer"
+                  aria-label="Delete question"
                 >
-                  <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+                  <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
                 </span>
                 <span class="inline-block transition-transform duration-200 {expandedId === itemId ? 'rotate-90' : ''}">
                   <FontAwesomeIcon
@@ -908,129 +780,31 @@
               </div>
             </button>
 
-            <!-- Expanded Content -->
+            <!-- Expanded Content: read-only preview. Writing, AI generate,
+                 review and iteration all live on the dedicated editor page. -->
             {#if expandedId === itemId}
-              <div class="border-t border-[var(--dash-border)] p-4">
-                {#if editingId === itemId}
-                  <!-- Edit Mode -->
-                  <form method="POST" action="?/updateQuestion" use:enhance={handleEditSubmit}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <div class="space-y-4">
-                      <div>
-                        <p class="text-sm font-medium text-[var(--dash-text)] mb-2">Question</p>
-                        <p class="text-[var(--dash-text)] bg-[var(--dash-bg)] p-3 rounded-lg">{(item as QuestionItem).question}</p>
-                      </div>
-                      <div>
-                        <label for="edit-answer-{item.id}" class="block text-sm font-medium text-[var(--dash-text)] mb-1">Answer</label>
-                        <textarea
-                          id="edit-answer-{item.id}"
-                          name="answer"
-                          bind:value={editAnswer}
-                          rows={6}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                        ></textarea>
-                      </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-4">
-                      <button
-                        type="button"
-                        onclick={() => (deleteItem = { id: item.id, type: "question" })}
-                        class="px-3 py-1.5 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-600 transition-colors flex items-center gap-1.5"
-                      >
-                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                        Delete
-                      </button>
-                      <div class="flex gap-1.5">
-                        <button type="button" onclick={cancelEdit} class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-muted)] transition-colors flex items-center gap-1.5">
-                          <FontAwesomeIcon icon={faXmark} class="w-3 h-3" />
-                          Cancel
-                        </button>
-                        <button type="submit" class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors flex items-center gap-1.5">
-                          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-                          Save
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                {:else}
-                  <!-- View Mode -->
-                  <div class="space-y-4">
-                    <div>
-                      <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Question</p>
-                      <p class="text-[var(--dash-text)]">{(item as QuestionItem).question}</p>
-                    </div>
-                    {#if (item as QuestionItem).answer}
-                      <div>
-                        <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Answer</p>
-                        <p class="text-[var(--dash-text)] whitespace-pre-wrap">{(item as QuestionItem).answer}</p>
-                      </div>
-                    {:else}
-                      <p class="text-[var(--dash-text-secondary)] italic">No answer yet. Write it manually or generate with AI.</p>
-                    {/if}
-
-                    <!-- AI review feedback -->
-                    {#if reviewResults[itemId]}
-                      {@const rev = reviewResults[itemId]!}
-                      <div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-primary-light)] p-3">
-                        <div class="flex items-center justify-between mb-2">
-                          <span class="text-sm font-medium text-[var(--dash-primary)] flex items-center gap-1.5">
-                            <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" /> AI review
-                          </span>
-                          <button
-                            type="button"
-                            onclick={() => dismissReview(itemId)}
-                            aria-label="Dismiss review"
-                            class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                          >
-                            <FontAwesomeIcon icon={faXmark} class="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        <div class="ai-feedback text-sm text-[var(--dash-text)]">{@html renderSafeMarkdown(rev.feedback)}</div>
-                        {#if rev.revisedText}
-                          <button
-                            type="button"
-                            onclick={() => applyRevision(item, rev.revisedText!)}
-                            class="mt-3 px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5"
-                          >
-                            <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5" /> Apply suggestion
-                          </button>
-                        {/if}
-                      </div>
-                    {/if}
-
-                    <!-- Action Buttons -->
-                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]">
-                      {#if (item as QuestionItem).answer}
-                        <button
-                          type="button"
-                          onclick={() => reviewAnswer(item)}
-                          disabled={reviewingIds.has(itemId)}
-                          class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                        >
-                          {#if reviewingIds.has(itemId)}
-                            <Spinner size="w-3.5 h-3.5" />
-                          {:else}
-                            <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
-                          {/if}
-                          {reviewingIds.has(itemId) ? "Reviewing…" : "Review"}
-                        </button>
-                      {/if}
-                      <button
-                        type="button"
-                        onclick={() => generateAi(item)}
-                        disabled={generatingIds.has(itemId)}
-                        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                      >
-                        {#if generatingIds.has(itemId)}
-                          <Spinner size="w-3.5 h-3.5" />
-                        {:else}
-                          <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
-                        {/if}
-                        {generatingIds.has(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
-                      </button>
-                    </div>
+              <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
+                <div>
+                  <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Question</p>
+                  <p class="text-[var(--dash-text)]">{(item as QuestionItem).question}</p>
+                </div>
+                {#if (item as QuestionItem).answer}
+                  <div>
+                    <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Answer</p>
+                    <p class="text-[var(--dash-text)] whitespace-pre-wrap line-clamp-8">{(item as QuestionItem).answer}</p>
                   </div>
+                {:else}
+                  <p class="text-[var(--dash-text-secondary)] italic">No answer yet.</p>
                 {/if}
+                <div class="flex justify-end pt-2 border-t border-[var(--dash-border)]">
+                  <a
+                    href="/applications/{app.id}/texts/questions/{item.id}"
+                    class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center gap-1.5"
+                  >
+                    <FontAwesomeIcon icon={faPencil} class="w-3.5 h-3.5" />
+                    {(item as QuestionItem).answer ? "Open editor" : "Write / generate answer"}
+                  </a>
+                </div>
               </div>
             {/if}
           </Card>
