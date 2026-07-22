@@ -13,7 +13,7 @@
  * and covered by unit tests.
  */
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, desc, eq, gt, gte } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt } from "drizzle-orm";
 import { letter_versions, question_versions } from "$lib/server/db/schema";
 
 /** Provenance of a version. Plain varchar in the DB; enforced here in TS. */
@@ -161,6 +161,47 @@ export async function recordVersionIfChanged(
     aiChatId: v.aiChatId ?? null,
   });
   return true;
+}
+
+/**
+ * "Delete the AI response, keep the message": null out a turn's content and
+ * ai_feedback (keeping its user_request), and remove any later versions so this
+ * turn's message becomes the latest again. Returns the prior version's ai_chat
+ * so the caller can restore the entity's live thread pointer, so a later message
+ * chains from the right parent (not the discarded response). Used by the
+ * per-turn "delete response" affordance.
+ */
+export async function clearVersionContent(
+  vt: VersionBinding,
+  entityId: number,
+  versionId: number,
+): Promise<{ existed: boolean; priorAiChat: number | null }> {
+  const target = await db
+    .select({ id: vt.id })
+    .from(vt.table)
+    .where(and(eq(vt.fk, entityId), eq(vt.id, versionId)))
+    .limit(1);
+  if (target.length === 0) return { existed: false, priorAiChat: null };
+
+  // Rewind: drop everything recorded after this turn.
+  await db.delete(vt.table).where(
+    and(eq(vt.fk, entityId), gt(vt.id, versionId)),
+  );
+
+  // Drop the AI response, keep the user's message.
+  await db
+    .update(vt.table)
+    .set({ content: null, ai_feedback: null })
+    .where(and(eq(vt.fk, entityId), eq(vt.id, versionId)));
+
+  // The prior version's chat becomes the live thread again.
+  const prior = await db
+    .select({ ai_chat: vt.table.ai_chat })
+    .from(vt.table)
+    .where(and(eq(vt.fk, entityId), lt(vt.id, versionId)))
+    .orderBy(desc(vt.id))
+    .limit(1);
+  return { existed: true, priorAiChat: prior[0]?.ai_chat ?? null };
 }
 
 /** Delete versions strictly AFTER a given id (rollback-then-save trim). */

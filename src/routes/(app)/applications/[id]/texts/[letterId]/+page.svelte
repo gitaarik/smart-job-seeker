@@ -166,6 +166,18 @@ async function onSaveVersion(
   await invalidateAll();
 }
 
+// Delete a turn's AI response but keep the message (rewind to it).
+async function onClearResponse(versionId: number) {
+  if (isNew) return;
+  const fd = new FormData();
+  fd.set("versionId", String(versionId));
+  await fetch(`/applications/${appId}/texts/${letter.id}?/clearResponse`, {
+    method: "POST",
+    body: fd,
+  });
+  await invalidateAll();
+}
+
 function formatDate(date: Date | string | null): string {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;
@@ -238,6 +250,7 @@ function formatDate(date: Date | string | null): string {
     {onReview}
     {onSendFollowup}
     {onSaveVersion}
+    {onClearResponse}
   />
 </div>
 

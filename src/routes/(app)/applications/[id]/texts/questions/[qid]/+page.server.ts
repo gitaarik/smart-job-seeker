@@ -6,6 +6,7 @@ import { application_questions, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../../profile/utils";
 import {
   buildConversation,
+  clearVersionContent,
   type ConversationEntry,
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -169,6 +170,35 @@ export const actions: Actions = {
       answer: content,
       date_updated: new Date(),
     }).where(eq(application_questions.id, qid));
+
+    return { success: true };
+  },
+
+  // Delete a turn's AI response but keep the user's message, rewinding to that
+  // message so it can be edited/regenerated. Non-destructive to the message.
+  clearResponse: async ({ request, locals, cookies, params }) => {
+    const owned = await loadOwnedQuestion(
+      locals,
+      cookies,
+      params.id,
+      params.qid,
+    );
+    if ("fail" in owned) return owned.fail;
+    const { qid } = owned;
+
+    const formData = await request.formData();
+    const versionId = parseInt(formData.get("versionId") as string);
+    if (isNaN(versionId)) return fail(400, { error: "Invalid version" });
+
+    const { existed, priorAiChat } = await clearVersionContent(
+      QUESTION_VERSIONS,
+      qid,
+      versionId,
+    );
+    if (!existed) return fail(404, { error: "Version not found" });
+
+    await db.update(application_questions).set({ ai_chat_id: priorAiChat })
+      .where(eq(application_questions.id, qid));
 
     return { success: true };
   },

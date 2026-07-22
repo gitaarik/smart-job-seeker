@@ -21,6 +21,8 @@
     faEyeSlash,
     faPencil,
     faRobot,
+    faRotateRight,
+    faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
   import { computeDiff, isSmallDiff } from "$lib/utils/word-diff";
@@ -43,6 +45,7 @@
     onSendFollowup,
     onSaveVersion,
     onApplyVersion,
+    onClearResponse,
     currentContent = null,
     applyNoun = "answer",
   }: {
@@ -70,6 +73,12 @@
      * "use as answer" affordance is hidden (e.g. letters don't opt in).
      */
     onApplyVersion?: (content: string) => Promise<void>;
+    /**
+     * Optional: delete a turn's AI response but keep the user's message (rewind
+     * to it), so it can be edited/regenerated. Enables the per-turn trash +
+     * "regenerate" affordances.
+     */
+    onClearResponse?: (versionId: number) => Promise<void>;
     /** The entity's current committed content, used to mark the live version. */
     currentContent?: string | null;
     /** Noun for the apply affordance, e.g. "answer". */
@@ -89,6 +98,16 @@
       }
     }
     return nums;
+  });
+
+  // Index of the latest content-bearing version — the "delete response" trash
+  // lives on it so rewinding steps back one turn at a time.
+  let lastContentIndex = $derived.by(() => {
+    let idx = -1;
+    conversation.forEach((e, i) => {
+      if (e.content) idx = i;
+    });
+    return idx;
   });
 
   // Inline edit state: which version index is being edited, or -1 for the
@@ -261,14 +280,26 @@
           <p class="text-xs text-[var(--dash-text-muted)]">Your feedback</p>
         </div>
         {#if editingFeedbackIndex !== entryIndex && !busy}
-          <button
-            type="button"
-            onclick={() => { editingFeedbackIndex = entryIndex; editingFeedbackText = entry.userRequest!; }}
-            class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1"
-          >
-            <FontAwesomeIcon icon={faPencil} class="w-2 h-2" />
-            Edit
-          </button>
+          <div class="flex items-center gap-2">
+            {#if onClearResponse && !entry.content && !entry.aiFeedback}
+              <button
+                type="button"
+                onclick={() => run("followup", () => onSendFollowup(entry.userRequest!, { updateContent: true, replaceVersionId: entry.versionId }))}
+                class="text-xs text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={faRotateRight} class="w-2 h-2" />
+                Regenerate
+              </button>
+            {/if}
+            <button
+              type="button"
+              onclick={() => { editingFeedbackIndex = entryIndex; editingFeedbackText = entry.userRequest!; }}
+              class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-2 h-2" />
+              Edit
+            </button>
+          </div>
         {/if}
       </div>
       {#if editingFeedbackIndex === entryIndex}
@@ -521,6 +552,18 @@
                   <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
                 {/if}
                 AI review
+              </button>
+            {/if}
+            {#if onClearResponse && entry.userRequest && entryIndex === lastContentIndex}
+              <button
+                type="button"
+                onclick={() => run("followup", () => onClearResponse(entry.versionId))}
+                disabled={busy}
+                title="Delete this AI response and keep your message"
+                class="px-2 py-1 text-xs border border-red-500/30 rounded text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={faTrash} class="w-2.5 h-2.5" />
+                Delete response
               </button>
             {/if}
             {#if onApplyVersion && !isCurrentAnswer}

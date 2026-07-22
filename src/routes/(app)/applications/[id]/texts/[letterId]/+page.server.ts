@@ -6,6 +6,7 @@ import { application_letters, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../profile/utils";
 import {
   buildConversation,
+  clearVersionContent,
   type ConversationEntry,
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -180,6 +181,52 @@ export const actions: Actions = {
       previousContent: letter.content,
       source: source as VersionSource,
     });
+
+    return { success: true };
+  },
+
+  clearResponse: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const letterId = parseInt(params.letterId);
+    if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
+
+    const existing = await db.query.applications.findFirst({
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    const letter = await db.query.application_letters.findFirst({
+      where: and(
+        eq(application_letters.id, letterId),
+        eq(application_letters.application_id, appId),
+      ),
+    });
+    if (!letter) return fail(404, { error: "Letter not found" });
+
+    const formData = await request.formData();
+    const versionId = parseInt(formData.get("versionId") as string);
+    if (isNaN(versionId)) return fail(400, { error: "Invalid version" });
+
+    const { existed, priorAiChat } = await clearVersionContent(
+      LETTER_VERSIONS,
+      letterId,
+      versionId,
+    );
+    if (!existed) return fail(404, { error: "Version not found" });
+
+    await db.update(application_letters).set({ ai_chat_id: priorAiChat })
+      .where(eq(application_letters.id, letterId));
 
     return { success: true };
   },

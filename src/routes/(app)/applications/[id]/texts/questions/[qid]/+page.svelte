@@ -132,6 +132,20 @@ async function onApplyVersion(content: string) {
   await invalidateAll();
 }
 
+// Delete a turn's AI response but keep the message (rewind to it).
+async function onClearResponse(versionId: number) {
+  const fd = new FormData();
+  fd.set("versionId", String(versionId));
+  await fetch(
+    `/applications/${appId}/texts/questions/${questionId}?/clearResponse`,
+    {
+      method: "POST",
+      body: fd,
+    },
+  );
+  await invalidateAll();
+}
+
 function handleQuestionSave() {
   return async (
     { result, update }: {
@@ -195,6 +209,7 @@ function handleQuestionSave() {
     {onSendFollowup}
     {onSaveVersion}
     {onApplyVersion}
+    {onClearResponse}
     currentContent={question.answer}
   />
 </div>
