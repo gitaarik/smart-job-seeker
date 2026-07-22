@@ -336,7 +336,7 @@ function handleClickOutside(e: MouseEvent) {
               class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
             >
               <FontAwesomeIcon icon={faPaste} class="w-3.5 h-3.5 opacity-50" />
-              Paste answers
+              Paste questions (and answers)
             </button>
           </div>
         {/if}
@@ -412,16 +412,17 @@ function handleClickOutside(e: MouseEvent) {
         <!-- Step 1: paste the blob -->
         <div class="flex items-center gap-2 mb-3">
           <FontAwesomeIcon icon={faPaste} class="w-4 h-4 text-[var(--dash-primary)]" />
-          <h3 class="font-medium text-[var(--dash-text)]">Paste answers</h3>
+          <h3 class="font-medium text-[var(--dash-text)]">Paste questions</h3>
         </div>
         <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
-          Paste text that already contains your questions and answers. AI will split it into
-          separate question/answer pairs for you to review before they're added.
+          Paste your application questions — with or without the answers you've already
+          written. AI will split them into separate question/answer pairs for you to review
+          before they're added.
         </p>
         <textarea
           bind:value={pasteText}
           rows={10}
-          placeholder="Paste your questions and answers here…"
+          placeholder="Paste your questions here — include answers if you have them…"
           class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
         ></textarea>
         {#if extractError}
@@ -626,7 +627,7 @@ function handleClickOutside(e: MouseEvent) {
               class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
             >
               <FontAwesomeIcon icon={faPaste} class="w-3.5 h-3.5 opacity-50" />
-              Paste answers
+              Paste questions (and answers)
             </button>
           </div>
         {/if}
