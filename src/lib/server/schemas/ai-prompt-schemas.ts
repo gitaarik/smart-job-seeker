@@ -354,11 +354,14 @@ export const writeLetterSchema = z.preprocess(
 export const followupLetterSchema = z.preprocess(
   normalizeTextKey,
   z.object({
-    text: z.string().nullable().describe(
-      "The complete revised text, ready to use. Include ONLY when substantive changes are needed. Set to null when the text is good and only minor tweaks are needed. No preamble or commentary.",
+    // Nullable AND optional: the model returns text only when it writes/changes
+    // the answer. When the user just asked a question or wanted advice, it
+    // replies in `feedback` and leaves text null/absent (no new version).
+    text: z.string().nullable().optional().describe(
+      "The complete revised text, ready to use. Include ONLY when the user asked you to write or change the answer. Set to null when they asked a question or wanted advice/discussion — put your reply in feedback instead.",
     ),
     feedback: z.string().optional().describe(
-      "Brief, friendly feedback on the user's current text — what works well, what you improved, and any tips. 2-3 sentences max.",
+      "Your reply to the user's message. When you wrote/changed the text: a brief note of what you did. When they asked a question or wanted advice: your full, specific answer/advice.",
     ),
   }),
 );

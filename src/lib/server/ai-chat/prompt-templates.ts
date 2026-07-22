@@ -202,7 +202,10 @@ What specific experiences, skills, and achievements from their profile should th
 \${answerContent}
 
 ## Rules:
-- Respond with JSON containing "feedback" (brief, friendly feedback on the current answer: what works well, what you improved, and any tips — 2-3 sentences) and "text" (the complete revised answer as plain text, or null if only minor tweaks are needed)
+- The applicant sent you a message (below). First decide what they want:
+  - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "should I mention my rate?", "what tone is best?") → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the answer.
+  - If they want you to WRITE or CHANGE the answer (e.g. "make it more concise", "write it based on your advice") → put the complete new answer in "text", and a short note of what you did in "feedback".
+- Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - Keep the applicant's own voice; make the change they asked for — don't rewrite into a different persona
 - Only use information from the applicant's actual profile data; never invent facts the profile doesn't support
 - Consider the previous feedback to avoid repeating suggestions and to maintain continuity`,
@@ -851,7 +854,10 @@ Return JSON with:
 \${letterContent}
 
 ## Rules:
-- Respond with JSON containing "feedback" (brief, friendly feedback on the user's current letter: what works well, what you improved, and any tips — 2-3 sentences) and "letter" (the complete revised letter, or null if only minor tweaks are needed)
+- The user sent you a message (below). First decide what they want:
+  - If they are asking a QUESTION, seeking advice, or discussing the approach → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the letter.
+  - If they want you to WRITE or CHANGE the letter → put the complete revised letter in "text", and a short note of what you did in "feedback".
+- Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences
 - Consider the previous feedback history to avoid repeating suggestions and to maintain continuity`,
     user_prompt: `\${followupRequest}`,

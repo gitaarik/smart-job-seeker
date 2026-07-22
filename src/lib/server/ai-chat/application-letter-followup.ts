@@ -249,10 +249,22 @@ export async function createApplicationLetterFollowup(
           userRequest: followupRequest,
         });
       } else if (updateContent && letter) {
+        // The model wrote/changed the letter → a new version.
         await recordVersion(LETTER_VERSIONS, {
           entityId: id,
           content: letter,
           source: "ai_revision",
+          aiChatId,
+          aiFeedback: revisionFeedback,
+          userRequest: followupRequest,
+        });
+      } else if (updateContent && revisionFeedback) {
+        // No new letter — the user asked a question / wanted advice. Record the
+        // exchange (their message + the AI's reply) without a new version.
+        await recordVersion(LETTER_VERSIONS, {
+          entityId: id,
+          content: null,
+          source: "ai_advice",
           aiChatId,
           aiFeedback: revisionFeedback,
           userRequest: followupRequest,
