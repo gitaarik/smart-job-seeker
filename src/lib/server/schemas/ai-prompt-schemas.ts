@@ -426,6 +426,30 @@ export const extractQaPairsSchema = z.preprocess(
 );
 
 /**
+ * Schema for revise_application_question prompt
+ *
+ * The model returns just the revised answer text (no feedback). A bare string
+ * or `{ text }` is coerced into `{ revisedText }` to tolerate gpt-oss shape
+ * drift, mirroring the other structured prompts.
+ */
+export const reviseAnswerSchema = z.preprocess(
+  (value) => {
+    if (typeof value === "string") return { revisedText: value };
+    if (value && typeof value === "object" && !("revisedText" in value)) {
+      const v = value as Record<string, unknown>;
+      if (typeof v.text === "string") return { revisedText: v.text };
+      if (typeof v.answer === "string") return { revisedText: v.answer };
+    }
+    return value;
+  },
+  z.object({
+    revisedText: z.string().describe(
+      "The complete revised answer, plain text, ready to paste. No preamble or markdown headers.",
+    ),
+  }),
+);
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  */
@@ -446,6 +470,7 @@ export const aiPromptSchemas = {
   review_application_question: reviewLetterSchema,
   suggest_import_tasks: suggestImportTasksSchema,
   extract_qa_pairs: extractQaPairsSchema,
+  revise_application_question: reviseAnswerSchema,
 } as const;
 
 /**

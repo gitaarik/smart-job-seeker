@@ -54,10 +54,11 @@ function ownedQuestion(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createEvent(opts: { user?: any; id?: string } = {}) {
+function createEvent(opts: { user?: any; id?: string; body?: unknown } = {}) {
   return {
     params: { id: opts.id ?? "1" },
     locals: { user: opts.user === undefined ? { id: "user-1" } : opts.user },
+    request: opts.body !== undefined ? { json: async () => opts.body } : undefined,
   } as any;
 }
 
@@ -155,5 +156,15 @@ describe("POST /api/ai/questions/[id]/review", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.revisedText).toBeNull();
+  });
+
+  it("reviews a live draft from the body even when the saved answer is empty", async () => {
+    // The editor sends { draft } so it can review unsaved text non-destructively.
+    mockQFindFirst.mockResolvedValueOnce(ownedQuestion({ answer: "" }));
+    mockCreateAndGenerate.mockResolvedValueOnce(reviewResponse("Good draft.", null));
+    const res = await POST(createEvent({ body: { draft: "My live draft answer." } }));
+    expect(res.status).toBe(200);
+    const [, , vars] = mockCreateAndGenerate.mock.calls[0];
+    expect(vars).toMatchObject({ answer: "My live draft answer." });
   });
 });

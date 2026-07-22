@@ -18,6 +18,7 @@
     faRobot,
     faTimes,
     faTrash,
+    faUpRightFromSquare,
     faXmark,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
@@ -832,13 +833,22 @@
                 </div>
               </div>
               <div class="flex items-center gap-1 flex-shrink-0">
+                <a
+                  href="/applications/{app.id}/texts/questions/{item.id}"
+                  onclick={(e) => e.stopPropagation()}
+                  class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
+                  aria-label="Open answer editor"
+                  title="Open editor — iterate on this answer with AI"
+                >
+                  <FontAwesomeIcon icon={faUpRightFromSquare} class="w-4 h-4" />
+                </a>
                 <span
                   role="button"
                   tabindex="0"
                   onclick={(e) => { e.stopPropagation(); startEdit(item); }}
                   onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); startEdit(item); } }}
                   class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors cursor-pointer"
-                  aria-label="Edit"
+                  aria-label="Quick edit"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
                 </span>

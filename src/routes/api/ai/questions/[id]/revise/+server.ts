@@ -1,17 +1,15 @@
 /**
- * POST /api/ai/questions/[id]/review
+ * POST /api/ai/questions/[id]/revise
  *
- * Reviews the answer the applicant has ALREADY WRITTEN to an application
- * question and returns concise feedback plus an optional revised version.
- * Unlike /generate (which writes the AI answer straight into the row), this
- * is non-destructive: it returns { feedback, revisedText } for the client to
- * display. The user applies the revision themselves via the edit form, so
- * their original wording is never overwritten without consent.
+ * Revises a draft answer per an optional instruction and returns the revised
+ * text. Stateless and non-destructive: it takes the draft from the request
+ * body (not the saved answer), so it works on a hand-written draft that was
+ * never generated, and it never writes the `answer` column. The dedicated
+ * question editor uses this as its "Refine" verb; committing is an explicit,
+ * separate save.
  *
- * Requires the question to already have an answer — there's nothing to
- * review otherwise.
- *
- * Returns: { success: true, feedback: string, revisedText: string | null }
+ * Body: { draft: string, instruction?: string }
+ * Returns: { success: true, revisedText: string }
  */
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
@@ -21,15 +19,15 @@ import { application_questions } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
 import { QUESTION_PROFILE_FIELDS } from "$lib/server/ai-chat/application-question";
-import { reviewLetterSchema } from "$lib/server/schemas/ai-prompt-schemas";
+import { reviseAnswerSchema } from "$lib/server/schemas/ai-prompt-schemas";
 import { requireCredits } from "$lib/server/billing/require-credits";
+
+const MAX_DRAFT_LENGTH = 20000;
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
   const questionId = parseIntParam(params.id, "question");
 
-  // Verify ownership: question -> application -> profile -> user, and pull the
-  // job description for grounding.
   const question = await db.query.application_questions.findFirst({
     where: eq(application_questions.id, questionId),
     with: {
@@ -46,22 +44,26 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     return json({ success: false, message: "Question not found" }, { status: 404 });
   }
 
-  // Optional { draft } reviews live editor text without a forced save; absent
-  // or empty falls back to the saved answer (the list-page "Review" path).
-  let draftOverride: string | null = null;
+  let body: unknown;
   try {
-    const body = await request.json();
-    if (body && typeof body.draft === "string" && body.draft.trim()) {
-      draftOverride = body.draft;
-    }
+    body = await request.json();
   } catch {
-    // no body → review the saved answer
+    return json({ success: false, message: "Invalid JSON body" }, { status: 400 });
   }
 
-  const answerToReview = draftOverride ?? question.answer;
-  if (!answerToReview?.trim()) {
+  const draft = (body as { draft?: unknown })?.draft;
+  const instructionRaw = (body as { instruction?: unknown })?.instruction;
+  const instruction = typeof instructionRaw === "string" ? instructionRaw.trim() : "";
+
+  if (typeof draft !== "string" || !draft.trim()) {
     return json(
-      { success: false, message: "Write an answer before requesting a review" },
+      { success: false, message: "Write a draft to revise first" },
+      { status: 400 },
+    );
+  }
+  if (draft.length > MAX_DRAFT_LENGTH) {
+    return json(
+      { success: false, message: `Draft is too long (max ${MAX_DRAFT_LENGTH} characters)` },
       { status: 400 },
     );
   }
@@ -70,11 +72,12 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   const result = await createAndGenerateAiChat(
     question.application.profile_id,
-    "review_application_question",
+    "revise_application_question",
     {
       jobDescription: question.application.job?.job_description || "",
       question: question.question,
-      answer: answerToReview,
+      draft,
+      instruction: instruction || "(no specific instruction — improve clarity and impact)",
     },
     undefined,
     { profileDataFields: QUESTION_PROFILE_FIELDS },
@@ -82,7 +85,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   if (!result.success || !result.aiChat?.response) {
     return json(
-      { success: false, message: result.message || "Review failed" },
+      { success: false, message: result.message || "Revision failed" },
       { status: 422 },
     );
   }
@@ -97,7 +100,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     );
   }
 
-  const validated = reviewLetterSchema.safeParse(parsed);
+  const validated = reviseAnswerSchema.safeParse(parsed);
   if (!validated.success) {
     return json(
       { success: false, message: "AI response failed validation" },
@@ -105,9 +108,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     );
   }
 
-  return json({
-    success: true,
-    feedback: validated.data.feedback,
-    revisedText: validated.data.revisedText,
-  });
+  return json({ success: true, revisedText: validated.data.revisedText });
 };

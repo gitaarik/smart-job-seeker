@@ -28,10 +28,23 @@ export const QUESTION_PROFILE_FIELDS = [
  */
 export async function generateApplicationQuestionAnswer(
   questionId: number,
+  opts?: {
+    /**
+     * When false, persist the generated text to the ai_chat thread but NOT to
+     * `answer` — used by the dedicated question editor, which treats the
+     * generated text as a draft candidate and commits only on explicit save.
+     * Defaults to true so the list-page one-shot "Generate" keeps writing the
+     * answer straight away.
+     */
+    commitAnswer?: boolean;
+  },
 ): Promise<{
   success: boolean;
   message: string;
+  /** The generated answer text (present on success). */
+  text?: string;
 }> {
+  const commitAnswer = opts?.commitAnswer ?? true;
   // Fetch the question (try block for database query)
   let question;
   try {
@@ -99,12 +112,14 @@ export async function generateApplicationQuestionAnswer(
 
   const aiChat = aiChatResult.aiChat;
 
-  // Update the application_questions record (try block for database update)
+  // Update the application_questions record (try block for database update).
+  // The answer column is written only when committing; otherwise we keep the
+  // ai_chat thread up to date and hand the text back as a draft candidate.
   try {
     await db.update(application_questions).set({
       ai_chat_id: aiChat.id,
       ai_chat_response: aiChat.response,
-      answer: aiChat.response,
+      ...(commitAnswer ? { answer: aiChat.response } : {}),
     }).where(eq(application_questions.id, questionId));
   } catch (error) {
     const errorMessage = error instanceof Error
@@ -120,5 +135,6 @@ export async function generateApplicationQuestionAnswer(
   return {
     success: true,
     message: `Answer generated for question ID ${questionId}`,
+    text: aiChat.response ?? undefined,
   };
 }

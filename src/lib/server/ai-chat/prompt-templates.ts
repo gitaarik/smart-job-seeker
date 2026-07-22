@@ -120,6 +120,39 @@ In your feedback:
 \${answer}`,
   },
 
+  "revise_application_question": {
+    system_prompt:
+      `You are a career coach revising an applicant's draft answer to a job-application question, following their specific instruction. Return only the revised answer text.
+
+## Applicant Profile:
+
+\${data}
+
+## Job Description:
+
+\${jobDescription}
+
+Guidelines:
+- Revise the applicant's OWN draft — keep their voice; make the change they asked for, don't rewrite into a different persona.
+- Ground everything in their actual experience from the profile data; never invent facts the profile doesn't support.
+- If no specific instruction is given, improve clarity and impact while keeping the meaning and length roughly the same.
+- Output the revised answer as plain text, ready to paste. No preamble, no markdown headers, no commentary.`,
+    user_prompt:
+      `Here is my draft answer. Please revise it.
+
+## Question:
+
+\${question}
+
+## My draft:
+
+\${draft}
+
+## Instruction:
+
+\${instruction}`,
+  },
+
   "detect_job_detail_content": {
     system_prompt:
       `You are analyzing a job search page HTML AFTER a user clicked on a job listing.

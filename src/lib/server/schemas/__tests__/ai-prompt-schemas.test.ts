@@ -7,6 +7,7 @@ import {
   findNextPageButtonSchema,
   getSchemaForPrompt,
   reviewLetterSchema,
+  reviseAnswerSchema,
   scoreJobMatchSchema,
 } from "../ai-prompt-schemas";
 
@@ -46,6 +47,34 @@ describe("AI Prompt Schemas", () => {
 
     it("should reuse the letter-review schema for review_application_question", () => {
       expect(getSchemaForPrompt("review_application_question")).toBe(reviewLetterSchema);
+    });
+
+    it("should map revise_application_question to its schema", () => {
+      expect(aiPromptSchemas).toHaveProperty("revise_application_question");
+      expect(getSchemaForPrompt("revise_application_question")).toBe(reviseAnswerSchema);
+    });
+  });
+
+  describe("reviseAnswerSchema", () => {
+    it("should validate a normal { revisedText } object", () => {
+      const r = reviseAnswerSchema.parse({ revisedText: "A better answer." }) as { revisedText: string };
+      expect(r.revisedText).toBe("A better answer.");
+    });
+
+    it("should coerce a bare string into { revisedText }", () => {
+      const r = reviseAnswerSchema.parse("Just the text") as { revisedText: string };
+      expect(r.revisedText).toBe("Just the text");
+    });
+
+    it("should coerce { text } and { answer } shapes (gpt-oss drift)", () => {
+      expect((reviseAnswerSchema.parse({ text: "via text" }) as { revisedText: string }).revisedText)
+        .toBe("via text");
+      expect((reviseAnswerSchema.parse({ answer: "via answer" }) as { revisedText: string }).revisedText)
+        .toBe("via answer");
+    });
+
+    it("should reject when no usable text is present", () => {
+      expect(() => reviseAnswerSchema.parse({ foo: "bar" })).toThrow();
     });
   });
 

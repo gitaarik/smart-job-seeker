@@ -7,7 +7,7 @@ import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
 import { requireCredits } from "$lib/server/billing/require-credits";
 
-export const POST: RequestHandler = async ({ params, locals }) => {
+export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
   const questionId = parseIntParam(params.id, "question");
 
@@ -25,9 +25,20 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     return json({ success: false, message: "Question not found" }, { status: 404 });
   }
 
+  // Optional { commit: false } — the dedicated editor generates a draft
+  // candidate without writing the answer column. Absent/invalid body keeps the
+  // default (commit), so the list-page one-shot "Generate" is unchanged.
+  let commit = true;
+  try {
+    const body = await request.json();
+    if (body && typeof body.commit === "boolean") commit = body.commit;
+  } catch {
+    // no body → default commit
+  }
+
   await requireCredits(user.id, 5);
 
-  const result = await generateApplicationQuestionAnswer(questionId);
+  const result = await generateApplicationQuestionAnswer(questionId, { commitAnswer: commit });
 
   if (!result.success) {
     return json(result, { status: 422 });
