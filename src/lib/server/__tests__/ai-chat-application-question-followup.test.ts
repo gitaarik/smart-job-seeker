@@ -27,14 +27,34 @@ vi.mock("$lib/server/ai-chat/create-followup", () => ({
   createFollowupAiChat: vi.fn(),
 }));
 
+// The shared version engine builds table bindings at import (and writes via
+// dbDirect); stub it so the updateEntity callback's recordVersion is a no-op.
+// Its own behavior is covered by entity-versions.test.ts.
+vi.mock("$lib/server/ai-chat/entity-versions", () => ({
+  QUESTION_VERSIONS: { fkName: "question" },
+  recordVersion: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col: any, val: any) => val),
+  and: vi.fn((...args: any[]) => args),
+  or: vi.fn((...args: any[]) => args),
+  isNotNull: vi.fn(),
+  desc: vi.fn(),
+  asc: vi.fn(),
 }));
 
 vi.mock("$lib/server/db/schema", () => ({
   application_questions: {
     id: "application_questions.id",
     ai_chat_id: "application_questions.ai_chat_id",
+  },
+  question_versions: {
+    question: "question_versions.question",
+    id: "question_versions.id",
+    content: "question_versions.content",
+    user_request: "question_versions.user_request",
+    ai_feedback: "question_versions.ai_feedback",
   },
 }));
 
@@ -128,16 +148,17 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         5, // parent ai_chats id
         "Add specific examples",
-        { includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
+        expect.objectContaining({ includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: expect.any(Array) }),
       );
 
-      // Verify question was updated via Drizzle update chain
+      // Verify question was updated via Drizzle update chain. Followup turns
+      // append versions; the answer column is a checkpoint set on save, so it
+      // is NOT written here.
       expect(mockUpdateFn).toHaveBeenCalled();
       expect(mockUpdateSet).toHaveBeenCalledWith(
         expect.objectContaining({
           ai_chat_id: 6,
           ai_chat_response: "Refined answer with more details",
-          answer: "Refined answer with more details",
         }),
       );
     });
@@ -161,7 +182,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         5,
         "Make it shorter",
-        { includeOriginalContext: true, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
+        expect.objectContaining({ includeOriginalContext: true, promptType: undefined, customVariables: undefined, profileDataFields: expect.any(Array) }),
       );
     });
 
@@ -181,7 +202,6 @@ describe("createApplicationQuestionFollowup", () => {
         expect.objectContaining({
           ai_chat_id: 6,
           ai_chat_response: "Refined answer with more details",
-          answer: "Refined answer with more details",
         }),
       );
     });
@@ -311,7 +331,7 @@ describe("createApplicationQuestionFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         5,
         "",
-        { includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: undefined },
+        expect.objectContaining({ includeOriginalContext: undefined, promptType: undefined, customVariables: undefined, profileDataFields: expect.any(Array) }),
       );
     });
 

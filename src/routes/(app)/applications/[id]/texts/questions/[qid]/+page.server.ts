@@ -1,13 +1,15 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
-import { applications, application_questions } from "$lib/server/db/schema";
+import { and, eq } from "drizzle-orm";
+import { application_questions, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../../profile/utils";
 import {
   buildConversation,
+  type ConversationEntry,
   QUESTION_VERSIONS,
   recordVersionIfChanged,
+  trimVersionsAfter,
   type VersionSource,
 } from "$lib/server/ai-chat/entity-versions";
 
@@ -23,72 +25,146 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   );
   if (!question) error(404, "Question not found");
 
-  // The saved-answer version trail (oldest→newest) powers the history panel.
-  const conversation = await buildConversation(QUESTION_VERSIONS, qid);
+  // The version trail (oldest→newest) drives the timeline editor.
+  let conversation = await buildConversation(QUESTION_VERSIONS, qid);
+
+  // Answers created before the version trail existed (question_versions is new)
+  // have no rows — surface the saved answer as an initial manual version so the
+  // timeline isn't blank. Once any real version is recorded this no longer fires.
+  if (conversation.length === 0 && question.answer) {
+    const initial: ConversationEntry = {
+      versionId: -1,
+      type: "manual_edit",
+      content: question.answer,
+      aiFeedback: null,
+      userRequest: null,
+      date: question.date_updated ?? question.date_created ?? null,
+    };
+    conversation = [initial];
+  }
 
   return { question, appId: parseInt(params.id), conversation };
 };
 
+/** Verify the question belongs to a profile the user owns; returns it or a fail. */
+async function loadOwnedQuestion(
+  locals: App.Locals,
+  cookies: import("@sveltejs/kit").Cookies,
+  appIdRaw: string,
+  qidRaw: string,
+) {
+  const user = locals.user;
+  if (!user) {
+    return { fail: fail(401, { error: "Not authenticated" }) } as const;
+  }
+
+  const profileId = await getSelectedProfileId(cookies, user.id);
+  if (!profileId) {
+    return { fail: fail(400, { error: "No profile selected" }) } as const;
+  }
+
+  const appId = parseInt(appIdRaw);
+  if (isNaN(appId)) {
+    return { fail: fail(400, { error: "Invalid application ID" }) } as const;
+  }
+
+  const qid = parseInt(qidRaw);
+  if (isNaN(qid)) {
+    return { fail: fail(400, { error: "Invalid question ID" }) } as const;
+  }
+
+  const existing = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.id, appId),
+      eq(applications.profile_id, profileId),
+    ),
+  });
+  if (!existing) {
+    return { fail: fail(404, { error: "Application not found" }) } as const;
+  }
+
+  const question = await db.query.application_questions.findFirst({
+    where: and(
+      eq(application_questions.id, qid),
+      eq(application_questions.application_id, appId),
+    ),
+  });
+  if (!question) {
+    return { fail: fail(404, { error: "Question not found" }) } as const;
+  }
+
+  return { question, qid } as const;
+}
+
 export const actions: Actions = {
-  // Commit the working draft as the definitive answer. AI iteration on this
-  // page is non-committing; this action is the only writer of `answer`.
+  // Commit an answer as a new version. This is the timeline's version writer:
+  // it sets the `answer` checkpoint and appends a version when the content
+  // actually changed. AI turns append their own versions server-side.
   save: async ({ request, locals, cookies, params }) => {
-    const user = locals.user;
-    if (!user) return fail(401, { error: "Not authenticated" });
-
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) return fail(400, { error: "No profile selected" });
-
-    const appId = parseInt(params.id);
-    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
-
-    const qid = parseInt(params.qid);
-    if (isNaN(qid)) return fail(400, { error: "Invalid question ID" });
-
-    const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
-    });
-    if (!existing) return fail(404, { error: "Application not found" });
-
-    const question = await db.query.application_questions.findFirst({
-      where: and(
-        eq(application_questions.id, qid),
-        eq(application_questions.application_id, appId),
-      ),
-    });
-    if (!question) return fail(404, { error: "Question not found" });
+    const owned = await loadOwnedQuestion(
+      locals,
+      cookies,
+      params.id,
+      params.qid,
+    );
+    if ("fail" in owned) return owned.fail;
+    const { question, qid } = owned;
 
     const formData = await request.formData();
-    const answer = (formData.get("answer") as string | null)?.trim() || null;
-    const questionText = (formData.get("question") as string | null)?.trim();
+    const answer = (formData.get("content") as string | null)?.trim() || null;
+    const deleteAfterVersionId = formData.get("deleteAfterVersionId");
 
-    // Provenance hint from the editor: whether the committed draft came from AI.
+    // Provenance hint from the editor: whether the committed content came from AI.
     const sourceRaw = formData.get("source");
-    const source: VersionSource = sourceRaw === "ai_generation" || sourceRaw === "ai_revision"
-      ? sourceRaw
-      : "manual_edit";
+    const source: VersionSource =
+      sourceRaw === "ai_generation" || sourceRaw === "ai_revision"
+        ? sourceRaw
+        : "manual_edit";
 
-    // The question text is NOT NULL; only overwrite it when a non-empty value
-    // is provided, otherwise keep the existing one.
-    if (formData.has("question") && !questionText) {
-      return fail(400, { error: "Question text cannot be empty" });
+    // Saving a previous version removes everything recorded after it.
+    if (deleteAfterVersionId) {
+      const afterId = parseInt(deleteAfterVersionId as string);
+      if (!isNaN(afterId)) {
+        await trimVersionsAfter(QUESTION_VERSIONS, qid, afterId);
+      }
     }
 
     await db.update(application_questions).set({
       answer,
-      ...(questionText ? { question: questionText } : {}),
       date_updated: new Date(),
     }).where(eq(application_questions.id, qid));
 
-    // Append a version when the answer actually changed — this is the trail the
-    // history panel restores from. AI iteration on the page stays non-committing;
-    // versions are captured only at this explicit save.
     await recordVersionIfChanged(QUESTION_VERSIONS, {
       entityId: qid,
       newContent: answer,
       previousContent: question.answer,
       source,
     });
+
+    return { success: true };
+  },
+
+  // Persist the question text — a separate concern from answer versioning.
+  saveQuestionText: async ({ request, locals, cookies, params }) => {
+    const owned = await loadOwnedQuestion(
+      locals,
+      cookies,
+      params.id,
+      params.qid,
+    );
+    if ("fail" in owned) return owned.fail;
+    const { qid } = owned;
+
+    const formData = await request.formData();
+    const questionText = (formData.get("question") as string | null)?.trim();
+    if (!questionText) {
+      return fail(400, { error: "Question text cannot be empty" });
+    }
+
+    await db.update(application_questions).set({
+      question: questionText,
+      date_updated: new Date(),
+    }).where(eq(application_questions.id, qid));
 
     return { success: true };
   },

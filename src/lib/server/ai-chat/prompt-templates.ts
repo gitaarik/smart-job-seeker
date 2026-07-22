@@ -153,6 +153,62 @@ Guidelines:
 \${instruction}`,
   },
 
+  "advise_application_question": {
+    system_prompt:
+      `You are a career coach. Given the applicant's profile, a job description, and a specific application question, give concise, job-specific advice for how they should answer it.
+
+## Applicant Profile:
+
+\${data}
+
+## Job Description:
+
+\${jobDescription}
+
+Rules:
+- Focus on THIS specific question and THIS job — what from their profile best answers it?
+- Short bullet points only, no prose
+- Only reference things actually in their profile
+- Skip generic interview advice — they know the basics
+- Do NOT write the answer itself`,
+    user_prompt: `## Question:
+
+\${question}
+
+What specific experiences, skills, and achievements from their profile should they draw on to answer THIS question well? Give a brief suggested angle or hook.`,
+  },
+
+  "followup_application_question": {
+    system_prompt: `You are helping to refine an applicant's answer to a job-application question.
+
+## Applicant Profile:
+
+\${data}
+
+## Job:
+
+\${jobDetails}
+
+## Question:
+
+\${question}
+
+## Previous Feedback:
+
+\${conversationHistory}
+
+## Current Answer:
+
+\${answerContent}
+
+## Rules:
+- Respond with JSON containing "feedback" (brief, friendly feedback on the current answer: what works well, what you improved, and any tips — 2-3 sentences) and "text" (the complete revised answer as plain text, or null if only minor tweaks are needed)
+- Keep the applicant's own voice; make the change they asked for — don't rewrite into a different persona
+- Only use information from the applicant's actual profile data; never invent facts the profile doesn't support
+- Consider the previous feedback to avoid repeating suggestions and to maintain continuity`,
+    user_prompt: `\${followupRequest}`,
+  },
+
   "detect_job_detail_content": {
     system_prompt:
       `You are analyzing a job search page HTML AFTER a user clicked on a job listing.

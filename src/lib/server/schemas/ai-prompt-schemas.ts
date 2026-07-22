@@ -465,6 +465,7 @@ export const aiPromptSchemas = {
   write_cover_letter: writeLetterSchema,
   write_cheat_sheet: writeLetterSchema,
   followup_letter: followupLetterSchema,
+  followup_application_question: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,
   review_cheat_sheet: reviewLetterSchema,
   review_application_question: reviewLetterSchema,
