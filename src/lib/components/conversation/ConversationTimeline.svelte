@@ -42,6 +42,9 @@
     onReview,
     onSendFollowup,
     onSaveVersion,
+    onApplyVersion,
+    currentContent = null,
+    applyNoun = "answer",
   }: {
     conversation: ConversationEntry[];
     /** Gates the followup affordances — null means no AI thread exists yet. */
@@ -61,6 +64,16 @@
       content: string,
       opts: { deleteAfterVersionId?: number },
     ) => Promise<void>;
+    /**
+     * Optional: commit a specific version's content as the entity's live value
+     * (the question's answer) without trimming later versions. When omitted, the
+     * "use as answer" affordance is hidden (e.g. letters don't opt in).
+     */
+    onApplyVersion?: (content: string) => Promise<void>;
+    /** The entity's current committed content, used to mark the live version. */
+    currentContent?: string | null;
+    /** Noun for the apply affordance, e.g. "answer". */
+    applyNoun?: string;
   } = $props();
 
   // Compute version numbers: only entries with content get a version number
@@ -398,8 +411,9 @@
     {@const isEditingThis = editingIndex === entryIndex}
     {@const editingPrevious = isEditingPreviousVersion()}
     {@const hasPrevious = getPreviousContent(entryIndex) !== null}
+    {@const isCurrentAnswer = !!onApplyVersion && !!entry.content && entry.content.trim() === (currentContent ?? "").trim()}
     {@const showingDiff = !isEditingThis && hasPrevious && (diffShown.has(entryIndex) || (!diffHidden.has(entryIndex) && shouldAutoShowDiff(entryIndex)))}
-    <div class="{userEntry ? 'ml-6' : ''} rounded-lg border {borderColor} {versionBgColor}">
+    <div class="{userEntry ? 'ml-6' : ''} rounded-lg border {isCurrentAnswer ? 'border-[var(--dash-success)]' : borderColor} {versionBgColor}">
       <div class="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-secondary)]">
         {#if userEntry}
           <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5 {iconColor}" />
@@ -409,6 +423,11 @@
         Version {versionNum}{#if !userEntry} <span class="normal-case font-normal">({versionNum === 1 ? "AI assisted" : "AI revised"})</span>{/if}
         {#if entry.date}
           <span class="normal-case font-normal text-[var(--dash-text-muted)]">&middot; {formatDate(entry.date)}</span>
+        {/if}
+        {#if isCurrentAnswer}
+          <span class="ml-auto normal-case font-medium px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)] flex items-center gap-1">
+            <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" /> Current {applyNoun}
+          </span>
         {/if}
       </div>
       <div class="px-3 pb-3">
@@ -502,6 +521,17 @@
                   <FontAwesomeIcon icon={faRobot} class="w-2.5 h-2.5" />
                 {/if}
                 AI review
+              </button>
+            {/if}
+            {#if onApplyVersion && !isCurrentAnswer}
+              <button
+                type="button"
+                onclick={() => run("followup", () => onApplyVersion(entry.content!))}
+                disabled={busy}
+                class="ml-auto px-2 py-1 text-xs border border-[var(--dash-success)]/40 rounded text-[var(--dash-success)] hover:bg-[var(--dash-success-light)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                Use as {applyNoun}
               </button>
             {/if}
           </div>

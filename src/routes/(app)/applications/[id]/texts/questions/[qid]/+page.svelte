@@ -118,6 +118,20 @@ async function onSaveVersion(
   await invalidateAll();
 }
 
+// Non-destructive: make a chosen version the live answer without trimming.
+async function onApplyVersion(content: string) {
+  const fd = new FormData();
+  fd.set("content", content);
+  await fetch(
+    `/applications/${appId}/texts/questions/${questionId}?/applyVersion`,
+    {
+      method: "POST",
+      body: fd,
+    },
+  );
+  await invalidateAll();
+}
+
 function handleQuestionSave() {
   return async (
     { result, update }: {
@@ -180,5 +194,7 @@ function handleQuestionSave() {
     {onReview}
     {onSendFollowup}
     {onSaveVersion}
+    {onApplyVersion}
+    currentContent={question.answer}
   />
 </div>

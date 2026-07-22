@@ -148,6 +148,31 @@ export const actions: Actions = {
     return { success: true };
   },
 
+  // Apply a specific version's content as the live answer, without trimming any
+  // later versions — a non-destructive "use this version" pointer update. The
+  // content already exists as a version, so no new version is recorded.
+  applyVersion: async ({ request, locals, cookies, params }) => {
+    const owned = await loadOwnedQuestion(
+      locals,
+      cookies,
+      params.id,
+      params.qid,
+    );
+    if ("fail" in owned) return owned.fail;
+    const { qid } = owned;
+
+    const formData = await request.formData();
+    const content = (formData.get("content") as string | null)?.trim() || null;
+    if (!content) return fail(400, { error: "Nothing to apply" });
+
+    await db.update(application_questions).set({
+      answer: content,
+      date_updated: new Date(),
+    }).where(eq(application_questions.id, qid));
+
+    return { success: true };
+  },
+
   // Persist the question text — a separate concern from answer versioning.
   saveQuestionText: async ({ request, locals, cookies, params }) => {
     const owned = await loadOwnedQuestion(
