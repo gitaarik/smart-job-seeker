@@ -16,6 +16,8 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
+    faChevronDown,
+    faChevronUp,
     faComments,
     faEye,
     faEyeSlash,
@@ -109,6 +111,16 @@
     });
     return idx;
   });
+
+  // Collapse: once there are 2+ content versions the earlier turns are hidden by
+  // default and only the latest version (+ anything after it) shows. With 0-1
+  // versions there's nothing worth hiding, so the full thread always shows.
+  let contentVersionCount = $derived(
+    conversation.filter((e) => e.content).length,
+  );
+  let canCollapse = $derived(contentVersionCount >= 2);
+  let userExpanded = $state(false);
+  let collapsed = $derived(canCollapse && !userExpanded);
 
   // Inline edit state: which version index is being edited, or -1 for the
   // empty-state / advice-only editors.
@@ -614,13 +626,32 @@
 
 <!-- Timeline -->
 {#if conversation.length > 0}
-  <div class="space-y-3">
-    {#each conversation.slice(0, -1) as entry, i}
-      {@render conversationEntry(entry, entryVersionNums[i], false, i)}
-    {/each}
-    <div bind:this={lastEntryEl} class="scroll-mt-16">
-      {@render conversationEntry(conversation[conversation.length - 1], entryVersionNums[conversation.length - 1], true, conversation.length - 1)}
+  {#if canCollapse}
+    <div class="flex justify-center">
+      <button
+        type="button"
+        onclick={() => (userExpanded = !userExpanded)}
+        class="inline-flex items-center gap-1.5 px-3 py-1 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+      >
+        <FontAwesomeIcon icon={collapsed ? faChevronDown : faChevronUp} class="w-2.5 h-2.5" />
+        {collapsed
+          ? `Show full conversation · ${contentVersionCount} versions`
+          : "Collapse · show only the latest"}
+      </button>
     </div>
+  {/if}
+  <div class="space-y-3">
+    {#each conversation as entry, i}
+      {#if !collapsed || i >= lastContentIndex}
+        {#if i === conversation.length - 1}
+          <div bind:this={lastEntryEl} class="scroll-mt-16">
+            {@render conversationEntry(entry, entryVersionNums[i], true, i)}
+          </div>
+        {:else}
+          {@render conversationEntry(entry, entryVersionNums[i], false, i)}
+        {/if}
+      {/if}
+    {/each}
   </div>
 {/if}
 
