@@ -94,6 +94,7 @@ export const actionsByStep: Record<string, string[]> = {
     "Send application",
     "Tailor Resume/CV",
     "Write cover letter",
+    "Answer application questions",
     "Complete platform profile",
   ],
   "Applied through job platform": [
