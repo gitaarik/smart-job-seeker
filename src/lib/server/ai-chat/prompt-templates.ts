@@ -55,13 +55,15 @@ The user's latest message:
 
 \${jobDescription}
 
+Respond with a single JSON object with these keys, in this order:
+- "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or projects from their profile you drew on to write this answer. Name the actual entries; be concrete. If the profile lacked something relevant, say so honestly.
+- "text": ONE complete answer the applicant can use as their first draft, in the first person, as the applicant. NOT options, alternatives, or advice about how to answer. 2-3 short paragraphs maximum. No preamble, no headings.
+
 Guidelines:
-- Write ONE complete answer the applicant can use as their first draft — NOT options, alternatives, or advice about how to answer
-- Write it in the first person, as the applicant
 - Sound like a real human, not an LLM — professional but natural
 - Only use skills and experience from the applicant's actual data; ground it in real work and project experience
-- Be concise — 2-3 short paragraphs maximum
-- Output ONLY the answer text — no preamble, no options, no headings, no commentary`,
+
+Return a single JSON object with exactly two keys: "text" (the answer — use the key "text") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Write my answer to this application question:
 
 \${question}`,
@@ -927,6 +929,10 @@ Provide your analysis in JSON format with:
 
 \${data}
 
+Respond with a single JSON object with these keys, in this order:
+- "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or achievements from their profile you led with and why they fit this job. Name the actual entries; be concrete.
+- "text": the complete cover letter, ready to use. No preamble or commentary.
+
 ## Guidelines:
 
 - Match specific job requirements to the applicant's actual experience and skills — show concrete fit, not generic claims
@@ -934,7 +940,8 @@ Provide your analysis in JSON format with:
 - Sound like a real person — professional but not robotic or formulaic
 - Only reference experience and skills that exist in the applicant's data — when mentioning a specific project or role, only use details (technologies, achievements) from that specific entry
 - Hiring managers skim — keep it focused and compelling, 3-4 paragraphs max
-- Output ONLY the cover letter text, no preamble or commentary`,
+
+Return a single JSON object with exactly two keys: "text" (the cover letter itself — use the key "text", NOT "letter") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Write a cover letter for this job:
 
 \${jobDetails}
@@ -1041,6 +1048,10 @@ Also include:
 
 \${data}
 
+Respond with a single JSON object with these keys, in this order:
+- "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or achievements from their profile you built the sheet around. Name the actual entries; be concrete.
+- "text": the complete cheat sheet as a SINGLE plain-text string with markdown formatting (headers, bullets, bold) — NOT an array or nested objects.
+
 ## Guidelines:
 
 - Create a practical, scannable reference document the applicant can use during interview preparation and the interview itself
@@ -1049,7 +1060,8 @@ Also include:
 - Match specific job requirements to their actual experience — be concrete, not generic
 - Only reference experience and skills that exist in the applicant's data
 - Keep each point brief and actionable — this is a quick-reference sheet, not an essay
-- Output ONLY the cheat sheet as a single plain text string with markdown formatting — no JSON structures, no arrays, no objects`,
+
+Return a single JSON object with exactly two keys: "text" (the cheat sheet as one markdown string — use the key "text") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Create an interview cheat sheet for this job application:
 
 \${jobDetails}

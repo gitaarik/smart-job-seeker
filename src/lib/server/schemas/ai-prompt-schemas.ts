@@ -332,6 +332,15 @@ const normalizeTextKey = (val: unknown) => {
 export const writeLetterSchema = z.preprocess(
   normalizeTextKey,
   z.object({
+    // Feedback is declared FIRST on purpose: gpt-oss tends to drop a trailing
+    // short field after emitting a long one, so writing the short note before
+    // the long text makes it far more likely to be included.
+    // Optional so a response that still drops it (or uses the legacy `letter`
+    // key) validates — it degrades to no feedback bubble rather than failing
+    // the whole generation.
+    feedback: z.string().optional().describe(
+      "A brief note (1-2 sentences) to the applicant citing the SPECIFIC profile experiences, skills, or projects you drew on to write this. Name the actual entries; be concrete.",
+    ),
     text: z.string().describe(
       "The complete text, ready to use. No preamble or commentary.",
     ),
@@ -464,6 +473,7 @@ export const aiPromptSchemas = {
   estimate_salary_expectations: estimateSalaryExpectationsSchema,
   write_cover_letter: writeLetterSchema,
   write_cheat_sheet: writeLetterSchema,
+  answer_application_question: writeLetterSchema,
   followup_letter: followupLetterSchema,
   followup_application_question: followupLetterSchema,
   review_cover_letter: reviewLetterSchema,

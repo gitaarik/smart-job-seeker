@@ -199,19 +199,23 @@ export async function generateApplicationLetter(
 
   // Update the application_letter record (try block for database update)
   try {
-    // Extract text content and feedback from structured JSON response
+    // Extract text content and feedback from structured JSON response. Generate
+    // returns { text, feedback }; review returns { feedback, revisedText }.
     let letterContent = aiChat.response;
     let aiFeedback: string | null = null;
     if (letterContent) {
       try {
         const parsed = JSON.parse(letterContent);
+        if (parsed && typeof parsed.feedback === "string") {
+          aiFeedback = parsed.feedback;
+        }
         if (parsed && typeof parsed.text === "string") {
           letterContent = parsed.text;
         } else if (parsed && typeof parsed.letter === "string") {
           // Backwards compat: older prompts may still return "letter"
           letterContent = parsed.letter;
-        } else if (parsed && typeof parsed.feedback === "string") {
-          aiFeedback = parsed.feedback;
+        } else if (aiFeedback) {
+          // review-style: feedback + optional revised text, no plain text
           letterContent = typeof parsed.revisedText === "string"
             ? parsed.revisedText
             : typeof parsed.revisedLetter === "string"
@@ -263,6 +267,7 @@ export async function generateApplicationLetter(
         content: letterContent,
         source: "ai_generation",
         aiChatId: aiChat.id,
+        aiFeedback,
       });
     }
   } catch (error) {

@@ -148,12 +148,24 @@ export async function generateApplicationQuestionAnswer(
 
   const aiChat = aiChatResult.aiChat;
 
-  // Extract the answer text + feedback per mode. generate/advice are plain
-  // text; review returns structured { feedback, revisedText }.
+  // Extract the answer text + feedback per mode. generate returns structured
+  // { text, feedback }; advice is plain text; review returns structured
+  // { feedback, revisedText }.
   let answerText: string | null = null;
   let aiFeedback: string | null = null;
   if (mode === "generate") {
     answerText = aiChat.response;
+    if (aiChat.response) {
+      try {
+        const parsed = JSON.parse(aiChat.response);
+        if (parsed && typeof parsed.text === "string") answerText = parsed.text;
+        if (parsed && typeof parsed.feedback === "string") {
+          aiFeedback = parsed.feedback;
+        }
+      } catch {
+        // Not JSON, keep the raw response as the answer.
+      }
+    }
   } else if (mode === "advice") {
     aiFeedback = aiChat.response;
   } else if (mode === "review") {
@@ -209,6 +221,7 @@ export async function generateApplicationQuestionAnswer(
         content: answerText,
         source: "ai_generation",
         aiChatId: aiChat.id,
+        aiFeedback,
       });
     }
   } catch (error) {

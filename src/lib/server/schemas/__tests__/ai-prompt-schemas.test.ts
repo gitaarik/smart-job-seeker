@@ -9,6 +9,7 @@ import {
   reviewLetterSchema,
   reviseAnswerSchema,
   scoreJobMatchSchema,
+  writeLetterSchema,
 } from "../ai-prompt-schemas";
 
 describe("AI Prompt Schemas", () => {
@@ -32,8 +33,15 @@ describe("AI Prompt Schemas", () => {
     });
 
     it("should return undefined for text-only prompts without structured output", () => {
-      // These prompts return plain text, not structured JSON
-      expect(getSchemaForPrompt("answer_application_question")).toBeUndefined();
+      // advise_* prompts return plain markdown, not structured JSON
+      expect(getSchemaForPrompt("advise_application_question")).toBeUndefined();
+    });
+
+    it("should map answer_application_question to the write-letter schema", () => {
+      // Generation now returns { text, feedback } like cover letters.
+      expect(getSchemaForPrompt("answer_application_question")).toBe(
+        writeLetterSchema,
+      );
     });
 
     it("should return schema for write_cover_letter (structured output)", () => {
@@ -46,30 +54,46 @@ describe("AI Prompt Schemas", () => {
     });
 
     it("should reuse the letter-review schema for review_application_question", () => {
-      expect(getSchemaForPrompt("review_application_question")).toBe(reviewLetterSchema);
+      expect(getSchemaForPrompt("review_application_question")).toBe(
+        reviewLetterSchema,
+      );
     });
 
     it("should map revise_application_question to its schema", () => {
       expect(aiPromptSchemas).toHaveProperty("revise_application_question");
-      expect(getSchemaForPrompt("revise_application_question")).toBe(reviseAnswerSchema);
+      expect(getSchemaForPrompt("revise_application_question")).toBe(
+        reviseAnswerSchema,
+      );
     });
   });
 
   describe("reviseAnswerSchema", () => {
     it("should validate a normal { revisedText } object", () => {
-      const r = reviseAnswerSchema.parse({ revisedText: "A better answer." }) as { revisedText: string };
+      const r = reviseAnswerSchema.parse({
+        revisedText: "A better answer.",
+      }) as { revisedText: string };
       expect(r.revisedText).toBe("A better answer.");
     });
 
     it("should coerce a bare string into { revisedText }", () => {
-      const r = reviseAnswerSchema.parse("Just the text") as { revisedText: string };
+      const r = reviseAnswerSchema.parse("Just the text") as {
+        revisedText: string;
+      };
       expect(r.revisedText).toBe("Just the text");
     });
 
     it("should coerce { text } and { answer } shapes (gpt-oss drift)", () => {
-      expect((reviseAnswerSchema.parse({ text: "via text" }) as { revisedText: string }).revisedText)
+      expect(
+        (reviseAnswerSchema.parse({ text: "via text" }) as {
+          revisedText: string;
+        }).revisedText,
+      )
         .toBe("via text");
-      expect((reviseAnswerSchema.parse({ answer: "via answer" }) as { revisedText: string }).revisedText)
+      expect(
+        (reviseAnswerSchema.parse({ answer: "via answer" }) as {
+          revisedText: string;
+        }).revisedText,
+      )
         .toBe("via answer");
     });
 
@@ -146,7 +170,7 @@ describe("AI Prompt Schemas", () => {
         title: "Software Engineer",
         job_description: "Description",
         salary_min: "80000", // Numeric string — should coerce to 80000
-        salary_max: "null",  // String "null" — should coerce to null
+        salary_max: "null", // String "null" — should coerce to null
       };
       const result = extractJobDataSchema.parse(llmData);
       expect(result.salary_min).toBe(80000);
@@ -246,7 +270,11 @@ describe("AI Prompt Schemas", () => {
     it("should validate a normal question/answer pair", () => {
       const data = {
         pairs: [
-          { question: "Why do you want to work here?", answer: "Because...", confidence: "high" },
+          {
+            question: "Why do you want to work here?",
+            answer: "Because...",
+            confidence: "high",
+          },
         ],
       };
       expect(() => extractQaPairsSchema.parse(data)).not.toThrow();
@@ -256,14 +284,22 @@ describe("AI Prompt Schemas", () => {
       // The questions-only paste path: each question comes back with an empty
       // answer for the user to fill in later.
       const data = {
-        pairs: [{ question: "Describe a challenge you overcame.", answer: "", confidence: "high" }],
+        pairs: [{
+          question: "Describe a challenge you overcame.",
+          answer: "",
+          confidence: "high",
+        }],
       };
       expect(() => extractQaPairsSchema.parse(data)).not.toThrow();
     });
 
     it("should accept an answer-only pair (empty question) flagged low", () => {
       const data = {
-        pairs: [{ question: "", answer: "An orphaned answer chunk.", confidence: "low" }],
+        pairs: [{
+          question: "",
+          answer: "An orphaned answer chunk.",
+          confidence: "low",
+        }],
       };
       expect(() => extractQaPairsSchema.parse(data)).not.toThrow();
     });
@@ -275,7 +311,9 @@ describe("AI Prompt Schemas", () => {
     it("should coerce a bare top-level array into { pairs } (gpt-oss quirk)", () => {
       // The model sometimes returns [{...}] instead of { pairs: [{...}] }.
       const bareArray = [{ question: "Q", answer: "A", confidence: "high" }];
-      const result = extractQaPairsSchema.parse(bareArray) as { pairs: unknown[] };
+      const result = extractQaPairsSchema.parse(bareArray) as {
+        pairs: unknown[];
+      };
       expect(result.pairs).toHaveLength(1);
     });
 
@@ -285,7 +323,9 @@ describe("AI Prompt Schemas", () => {
     });
 
     it("should reject an invalid confidence enum value", () => {
-      const data = { pairs: [{ question: "Q", answer: "A", confidence: "medium" }] };
+      const data = {
+        pairs: [{ question: "Q", answer: "A", confidence: "medium" }],
+      };
       expect(() => extractQaPairsSchema.parse(data)).toThrow();
     });
 
