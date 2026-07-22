@@ -15,7 +15,11 @@ import {
   question_versions,
 } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
-import { QUESTION_VERSIONS, recordVersion } from "./entity-versions";
+import {
+  ensureBaselineVersion,
+  QUESTION_VERSIONS,
+  recordVersion,
+} from "./entity-versions";
 import { QUESTION_PROFILE_FIELDS } from "./application-question";
 
 /**
@@ -130,6 +134,14 @@ export async function createApplicationQuestionFollowup(
       },
     });
     if (questionRecord) {
+      // Preserve a pre-version-era answer as a baseline before this followup
+      // records its own version, so the user's original survives.
+      await ensureBaselineVersion(
+        QUESTION_VERSIONS,
+        questionId,
+        questionRecord.answer,
+      );
+
       const job = questionRecord.application?.job;
       const jobDetailsText = job ? formatJobDetails(job) : "";
 

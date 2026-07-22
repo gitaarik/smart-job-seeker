@@ -43,6 +43,7 @@ vi.mock("$lib/server/ai-chat/create-followup", () => ({
 vi.mock("$lib/server/ai-chat/entity-versions", () => ({
   LETTER_VERSIONS: { fkName: "letter" },
   recordVersion: vi.fn().mockResolvedValue(undefined),
+  ensureBaselineVersion: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("drizzle-orm", () => ({
@@ -99,7 +100,9 @@ describe("createApplicationLetterFollowup", () => {
 
   describe("validation", () => {
     it("should return error if application letter not found", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(null);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        null,
+      );
 
       const result = await createApplicationLetterFollowup(
         999,
@@ -132,7 +135,9 @@ describe("createApplicationLetterFollowup", () => {
 
   describe("successful followup creation", () => {
     it("should create followup and update letter reference", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -161,7 +166,10 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         1, // parent ai_chats id
         "Make it more concise",
-        expect.objectContaining({ includeOriginalContext: undefined, profileDataFields: expect.any(Array) }),
+        expect.objectContaining({
+          includeOriginalContext: undefined,
+          profileDataFields: expect.any(Array),
+        }),
       );
 
       // Verify letter was updated via Drizzle update chain
@@ -175,7 +183,9 @@ describe("createApplicationLetterFollowup", () => {
     });
 
     it("should pass includeOriginalContext option to createFollowupAiChat", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -193,12 +203,17 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         1,
         "Add more details",
-        expect.objectContaining({ includeOriginalContext: true, profileDataFields: expect.any(Array) }),
+        expect.objectContaining({
+          includeOriginalContext: true,
+          profileDataFields: expect.any(Array),
+        }),
       );
     });
 
     it("should update both ai_chats and ai_chat_response fields", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -220,7 +235,9 @@ describe("createApplicationLetterFollowup", () => {
 
   describe("error handling", () => {
     it("should handle createFollowupAiChat failure", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -241,7 +258,9 @@ describe("createApplicationLetterFollowup", () => {
     });
 
     it("should handle createFollowupAiChat returning no aiChat", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -273,7 +292,9 @@ describe("createApplicationLetterFollowup", () => {
     });
 
     it("should handle unknown errors", async () => {
-      (db.query.application_letters.findFirst as any).mockRejectedValueOnce("Unexpected error");
+      (db.query.application_letters.findFirst as any).mockRejectedValueOnce(
+        "Unexpected error",
+      );
 
       const result = await createApplicationLetterFollowup(100, "Refine");
 
@@ -282,7 +303,9 @@ describe("createApplicationLetterFollowup", () => {
     });
 
     it("should handle error during letter update", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -302,7 +325,9 @@ describe("createApplicationLetterFollowup", () => {
 
   describe("return values", () => {
     it("should return aiChat on success", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -319,7 +344,9 @@ describe("createApplicationLetterFollowup", () => {
     });
 
     it("should not return aiChat on failure", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(null);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        null,
+      );
 
       const result = await createApplicationLetterFollowup(999, "Refine");
 
@@ -329,7 +356,9 @@ describe("createApplicationLetterFollowup", () => {
 
   describe("edge cases", () => {
     it("should handle empty followup request", async () => {
-      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(mockLetter);
+      (db.query.application_letters.findFirst as any).mockResolvedValueOnce(
+        mockLetter,
+      );
 
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
@@ -344,7 +373,10 @@ describe("createApplicationLetterFollowup", () => {
       expect(mockCreateFollowup).toHaveBeenCalledWith(
         1,
         "",
-        expect.objectContaining({ includeOriginalContext: undefined, profileDataFields: expect.any(Array) }),
+        expect.objectContaining({
+          includeOriginalContext: undefined,
+          profileDataFields: expect.any(Array),
+        }),
       );
     });
 

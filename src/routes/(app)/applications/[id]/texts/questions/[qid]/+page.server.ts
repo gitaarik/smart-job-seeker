@@ -7,6 +7,7 @@ import { getSelectedProfileId } from "../../../../../profile/utils";
 import {
   buildConversation,
   type ConversationEntry,
+  ensureBaselineVersion,
   QUESTION_VERSIONS,
   recordVersionIfChanged,
   trimVersionsAfter,
@@ -128,6 +129,9 @@ export const actions: Actions = {
         await trimVersionsAfter(QUESTION_VERSIONS, qid, afterId);
       }
     }
+
+    // Preserve a pre-version-era answer as a baseline before recording this save.
+    await ensureBaselineVersion(QUESTION_VERSIONS, qid, question.answer);
 
     await db.update(application_questions).set({
       answer,

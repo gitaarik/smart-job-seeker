@@ -7,7 +7,11 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
-import { QUESTION_VERSIONS, recordVersion } from "./entity-versions";
+import {
+  ensureBaselineVersion,
+  QUESTION_VERSIONS,
+  recordVersion,
+} from "./entity-versions";
 
 /** Profile data fields relevant for answering application questions */
 export const QUESTION_PROFILE_FIELDS = [
@@ -171,6 +175,10 @@ export async function generateApplicationQuestionAnswer(
   // Update the application_questions record (try block for database update).
   // The answer column is written only for a committed generation.
   try {
+    // Preserve a pre-version-era answer as a baseline before this AI turn, so
+    // the original survives instead of the AI version becoming the only one.
+    await ensureBaselineVersion(QUESTION_VERSIONS, questionId, question.answer);
+
     await db.update(application_questions).set({
       ai_chat_id: aiChat.id,
       ai_chat_response: aiChat.response,

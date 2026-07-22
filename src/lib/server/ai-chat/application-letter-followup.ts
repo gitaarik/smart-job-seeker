@@ -3,17 +3,30 @@
  */
 
 import { db } from "$lib/server/db";
-import { eq, and, or, isNotNull, desc, asc } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, or } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
-import { LETTER_VERSIONS, recordVersion } from "./entity-versions";
+import {
+  ensureBaselineVersion,
+  LETTER_VERSIONS,
+  recordVersion,
+} from "./entity-versions";
 
 /** Profile data fields relevant for letter followups */
 const LETTER_PROFILE_FIELDS = [
-  "name", "title", "headline", "subtitle", "summary", "location",
-  "core_stack", "highlights",
-  "work_experiences", "side_projects", "education",
-  "tech_skill_categories", "languages",
+  "name",
+  "title",
+  "headline",
+  "subtitle",
+  "summary",
+  "location",
+  "core_stack",
+  "highlights",
+  "work_experiences",
+  "side_projects",
+  "education",
+  "tech_skill_categories",
+  "languages",
 ];
 
 /** Maps letter_type to the review_* prompt template name */
@@ -27,12 +40,16 @@ const LETTER_TYPE_TO_REVIEW_PROMPT: Record<string, string> = {
  * Expects { letter: string, feedback?: string } from structured output.
  * Falls back to treating the whole response as the letter if not JSON.
  */
-function parseLetterResponse(response: string | null): { letter: string | null; feedback: string | null } {
+function parseLetterResponse(
+  response: string | null,
+): { letter: string | null; feedback: string | null } {
   if (!response) return { letter: null, feedback: null };
   try {
     const parsed = JSON.parse(response);
-    const text = typeof parsed.text === "string" ? parsed.text
-      : typeof parsed.letter === "string" ? parsed.letter
+    const text = typeof parsed.text === "string"
+      ? parsed.text
+      : typeof parsed.letter === "string"
+      ? parsed.letter
       : null;
     if (text || typeof parsed.feedback === "string") {
       return {
@@ -71,11 +88,28 @@ async function buildConversationHistory(letterId: number): Promise<string> {
 }
 
 /** Format job data as readable text for prompts */
-function formatJobDetails(job: { title: string | null; job_description: string | null; company_description: string | null; job_poster: string | null }): string {
+function formatJobDetails(
+  job: {
+    title: string | null;
+    job_description: string | null;
+    company_description: string | null;
+    job_poster: string | null;
+  },
+): string {
   const lines: string[] = [`**Position:** ${job.title || "Not specified"}`];
-  if (job.job_poster) lines.push(`**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`);
-  if (job.company_description) lines.push(`**About the company:** ${job.company_description}`);
-  lines.push("", "**Job Description:**", job.job_description || "Not specified");
+  if (job.job_poster) {
+    lines.push(
+      `**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`,
+    );
+  }
+  if (job.company_description) {
+    lines.push(`**About the company:** ${job.company_description}`);
+  }
+  lines.push(
+    "",
+    "**Job Description:**",
+    job.job_description || "Not specified",
+  );
   return lines.join("\n");
 }
 
@@ -113,20 +147,33 @@ export async function createApplicationLetterFollowup(
       },
     });
     if (letterRecord) {
+      // Preserve a pre-version-era letter as a baseline before this followup
+      // records its own version, so the user's original survives.
+      await ensureBaselineVersion(
+        LETTER_VERSIONS,
+        letterId,
+        letterRecord.content,
+      );
+
       const job = letterRecord.application?.job;
       const jobDetailsText = job ? formatJobDetails(job) : "";
 
       // Get the latest letter content: check letter_versions first, fall back to application_letters.content
       const latestVersion = await db.query.letter_versions.findFirst({
-        where: and(eq(letter_versions.letter, letterId), isNotNull(letter_versions.content)),
+        where: and(
+          eq(letter_versions.letter, letterId),
+          isNotNull(letter_versions.content),
+        ),
         orderBy: desc(letter_versions.id),
         columns: { content: true },
       });
-      const currentLetterContent = latestVersion?.content || letterRecord.content || "";
+      const currentLetterContent = latestVersion?.content ||
+        letterRecord.content || "";
 
       if (mode === "review") {
         const conversationHistory = await buildConversationHistory(letterId);
-        promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] || undefined;
+        promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] ||
+          undefined;
         extraVariables = {
           generationMode: "review",
           letterContent: currentLetterContent,
@@ -183,8 +230,10 @@ export async function createApplicationLetterFollowup(
             const parsed = JSON.parse(aiChatResponse);
             if (parsed && typeof parsed.feedback === "string") {
               aiFeedback = parsed.feedback;
-              revisedText = typeof parsed.revisedText === "string" ? parsed.revisedText
-                : typeof parsed.revisedLetter === "string" ? parsed.revisedLetter
+              revisedText = typeof parsed.revisedText === "string"
+                ? parsed.revisedText
+                : typeof parsed.revisedLetter === "string"
+                ? parsed.revisedLetter
                 : null;
             }
           } catch {

@@ -89,6 +89,32 @@ export async function buildConversation(
   }));
 }
 
+/**
+ * Ensure an entity that already holds content — created before the version
+ * trail existed — has a baseline version row, so the first AI/save turn does
+ * not become the *only* version and hide the user's original text. No-op when
+ * there is no content, or when any version already exists (guarded by count).
+ * Call this before recording an AI/manual version on a pre-existing entity.
+ */
+export async function ensureBaselineVersion(
+  vt: VersionBinding,
+  entityId: number,
+  existingContent: string | null,
+): Promise<void> {
+  if (!existingContent) return;
+  const existing = await db
+    .select({ id: vt.id })
+    .from(vt.table)
+    .where(eq(vt.fk, entityId))
+    .limit(1);
+  if (existing.length > 0) return;
+  await recordVersion(vt, {
+    entityId,
+    content: existingContent,
+    source: "manual_edit",
+  });
+}
+
 /** Unconditional insert of a version row. */
 export async function recordVersion(
   vt: VersionBinding,

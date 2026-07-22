@@ -7,16 +7,29 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
-import { LETTER_VERSIONS, recordVersion } from "./entity-versions";
+import {
+  ensureBaselineVersion,
+  LETTER_VERSIONS,
+  recordVersion,
+} from "./entity-versions";
 /**
  * Map letter types to their corresponding AI chat prompt request types
  */
 /** Profile data fields relevant for letter generation — excludes salary, cheat sheets, etc. */
 const LETTER_PROFILE_FIELDS = [
-  "name", "title", "headline", "subtitle", "summary", "location",
-  "core_stack", "highlights",
-  "work_experiences", "side_projects", "education",
-  "tech_skill_categories", "languages",
+  "name",
+  "title",
+  "headline",
+  "subtitle",
+  "summary",
+  "location",
+  "core_stack",
+  "highlights",
+  "work_experiences",
+  "side_projects",
+  "education",
+  "tech_skill_categories",
+  "languages",
 ];
 
 const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
@@ -126,12 +139,18 @@ export async function generateApplicationLetter(
     `**Position:** ${job.title || "Not specified"}`,
   ];
   if (job.job_poster) {
-    jobDetailLines.push(`**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`);
+    jobDetailLines.push(
+      `**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`,
+    );
   }
   if (job.company_description) {
     jobDetailLines.push(`**About the company:** ${job.company_description}`);
   }
-  jobDetailLines.push("", "**Job Description:**", job.job_description || "Not specified");
+  jobDetailLines.push(
+    "",
+    "**Job Description:**",
+    job.job_description || "Not specified",
+  );
 
   const jobDetailsText = jobDetailLines.join("\n");
 
@@ -193,14 +212,20 @@ export async function generateApplicationLetter(
           letterContent = parsed.letter;
         } else if (parsed && typeof parsed.feedback === "string") {
           aiFeedback = parsed.feedback;
-          letterContent = typeof parsed.revisedText === "string" ? parsed.revisedText
-            : typeof parsed.revisedLetter === "string" ? parsed.revisedLetter
+          letterContent = typeof parsed.revisedText === "string"
+            ? parsed.revisedText
+            : typeof parsed.revisedLetter === "string"
+            ? parsed.revisedLetter
             : null;
         }
       } catch {
         // Not JSON, use raw response as-is
       }
     }
+
+    // Preserve a pre-version-era letter as a baseline before this AI turn, so
+    // the original survives instead of the AI version becoming the only one.
+    await ensureBaselineVersion(LETTER_VERSIONS, letterId, letter.content);
 
     const updateData: Record<string, unknown> = {
       ai_chat_id: aiChat.id,

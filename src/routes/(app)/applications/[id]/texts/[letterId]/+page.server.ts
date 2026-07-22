@@ -1,11 +1,13 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
-import { applications, application_letters } from "$lib/server/db/schema";
+import { and, eq } from "drizzle-orm";
+import { application_letters, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../../profile/utils";
 import {
   buildConversation,
+  type ConversationEntry,
+  ensureBaselineVersion,
   LETTER_VERSIONS,
   recordVersion,
   recordVersionIfChanged,
@@ -53,7 +55,22 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
     error(404, "Letter not found");
   }
 
-  const conversation = await buildConversation(LETTER_VERSIONS, letterId);
+  let conversation = await buildConversation(LETTER_VERSIONS, letterId);
+
+  // Letters written before the version trail existed have no rows — surface the
+  // saved content as an initial version so the timeline isn't blank. The first
+  // AI/save turn persists this baseline for real (ensureBaselineVersion).
+  if (conversation.length === 0 && letter.content) {
+    const initial: ConversationEntry = {
+      versionId: -1,
+      type: "manual_edit",
+      content: letter.content,
+      aiFeedback: null,
+      userRequest: null,
+      date: letter.date_updated ?? letter.date_created ?? null,
+    };
+    conversation = [initial];
+  }
 
   return { isNew: false, letter, conversation };
 };
@@ -70,7 +87,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -115,12 +135,18 @@ export const actions: Actions = {
     if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     const letter = await db.query.application_letters.findFirst({
-      where: and(eq(application_letters.id, letterId), eq(application_letters.application_id, appId)),
+      where: and(
+        eq(application_letters.id, letterId),
+        eq(application_letters.application_id, appId),
+      ),
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
@@ -137,6 +163,9 @@ export const actions: Actions = {
         await trimVersionsAfter(LETTER_VERSIONS, letterId, afterId);
       }
     }
+
+    // Preserve a pre-version-era letter as a baseline before recording this save.
+    await ensureBaselineVersion(LETTER_VERSIONS, letterId, letter.content);
 
     await db.update(application_letters).set({
       content: content || null,
@@ -169,16 +198,24 @@ export const actions: Actions = {
     if (isNaN(letterId)) return fail(400, { error: "Invalid letter ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     const letter = await db.query.application_letters.findFirst({
-      where: and(eq(application_letters.id, letterId), eq(application_letters.application_id, appId)),
+      where: and(
+        eq(application_letters.id, letterId),
+        eq(application_letters.application_id, appId),
+      ),
     });
     if (!letter) return fail(404, { error: "Letter not found" });
 
-    await db.delete(application_letters).where(eq(application_letters.id, letterId));
+    await db.delete(application_letters).where(
+      eq(application_letters.id, letterId),
+    );
 
     redirect(303, `/applications/${appId}/texts`);
   },
