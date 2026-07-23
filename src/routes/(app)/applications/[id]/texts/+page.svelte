@@ -784,18 +784,18 @@ function handleClickOutside(e: MouseEvent) {
             <!-- Expanded Content: read-only preview. Writing, AI generate,
                  review and iteration all live on the dedicated editor page. -->
             {#if expandedId === itemId}
-              <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
-                <div>
-                  <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Question</p>
-                  <p class="text-[var(--dash-text)]">{(item as QuestionItem).question}</p>
+              <div class="border-t border-[var(--dash-border)] p-4 space-y-3">
+                <div class="rounded-lg bg-[var(--dash-bg)] border-l-2 border-purple-500 px-3 py-2">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Question</p>
+                  <p class="text-[var(--dash-text)] font-medium">{(item as QuestionItem).question}</p>
                 </div>
                 {#if (item as QuestionItem).answer}
-                  <div>
-                    <p class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Answer</p>
+                  <div class="px-3 py-1">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Answer</p>
                     <p class="text-[var(--dash-text)] whitespace-pre-wrap line-clamp-8">{(item as QuestionItem).answer}</p>
                   </div>
                 {:else}
-                  <p class="text-[var(--dash-text-secondary)] italic">No answer yet.</p>
+                  <p class="text-[var(--dash-text-secondary)] italic px-3">No answer yet.</p>
                 {/if}
                 <div class="flex justify-end pt-2 border-t border-[var(--dash-border)]">
                   <a
