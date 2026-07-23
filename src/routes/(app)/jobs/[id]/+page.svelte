@@ -22,6 +22,7 @@
     faTimes,
     faTrash,
     faUser,
+    faWandMagicSparkles,
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import { track } from "$lib/tools/analytics";
@@ -50,6 +51,12 @@
   let rematchError = $state("");
   let showRematchConfirm = $state(false);
   let rematchFormEl: HTMLFormElement | undefined = $state();
+
+  // Staff re-parse (re-extract structured fields from stored content)
+  let isReparsing = $state(false);
+  let reparseError = $state("");
+  let showReparseConfirm = $state(false);
+  let reparseFormEl: HTMLFormElement | undefined = $state();
 
   // Staff archive / delete
   let isArchiving = $state(false);
@@ -520,6 +527,44 @@
               </button>
             {/if}
 
+            {#if job.job_description || job.source_html_stripped}
+              <form
+                bind:this={reparseFormEl}
+                method="POST"
+                action="?/reparseJob"
+                use:enhance={() => {
+                  isReparsing = true;
+                  reparseError = "";
+                  return async ({ result }) => {
+                    if (result.type === "failure") {
+                      reparseError =
+                        (result.data as { error?: string })?.error ||
+                        "Re-parse failed";
+                      isReparsing = false;
+                    } else {
+                      // Many fields changed — reload to show the fresh extraction.
+                      window.location.reload();
+                    }
+                  };
+                }}
+              >
+                <button
+                  type="button"
+                  onclick={() => (showReparseConfirm = true)}
+                  disabled={isReparsing}
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                  title="Re-extract fields (skills, salary, etc.) from the stored description — no re-fetch"
+                >
+                  {#if isReparsing}
+                    <Spinner size="w-4 h-4" />
+                  {:else}
+                    <FontAwesomeIcon icon={faWandMagicSparkles} class="w-4 h-4" />
+                  {/if}
+                  {isReparsing ? "Re-parsing..." : "Re-parse"}
+                </button>
+              </form>
+            {/if}
+
             <form
               bind:this={rematchFormEl}
               method="POST"
@@ -640,6 +685,17 @@
             >
               <p class="text-sm text-[var(--dash-error)]">
                 <strong>Scoring failed:</strong> {rematchError}
+              </p>
+            </div>
+          {/if}
+
+          <!-- Re-parse Error -->
+          {#if reparseError}
+            <div
+              class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg"
+            >
+              <p class="text-sm text-[var(--dash-error)]">
+                <strong>Re-parse failed:</strong> {reparseError}
               </p>
             </div>
           {/if}
@@ -790,6 +846,19 @@
   onConfirm={() => {
     showRematchConfirm = false;
     rematchFormEl?.requestSubmit();
+  }}
+/>
+
+<ConfirmModal
+  isOpen={showReparseConfirm}
+  title="Re-parse Job"
+  message="Re-extract skills, location, salary and other fields from the stored description, overwriting the current values for all users. Uses AI usage and re-scores the job afterwards."
+  confirmLabel="Re-parse"
+  variant="primary"
+  onCancel={() => (showReparseConfirm = false)}
+  onConfirm={() => {
+    showReparseConfirm = false;
+    reparseFormEl?.requestSubmit();
   }}
 />
 

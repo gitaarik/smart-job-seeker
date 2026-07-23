@@ -432,7 +432,13 @@ Extract the following fields:
   * Common locations: near the title, in metadata sections, at the bottom of the posting (but separate from similar jobs section)
   * If no date is visible anywhere for the main job, return null
 - location: Physical office location - extract EXACTLY as written in the posting, preserving the original text verbatim. Do NOT normalize, expand abbreviations, or reformat location names.
+  * Also capture office cities mentioned inline in the description, not just in a dedicated location field (e.g. "remote-first with the option to work from offices in Mannheim or Madrid" → "Mannheim or Madrid").
 - remote: Work location type - MUST be one of: "remote", "hybrid", or "onsite" (exactly as written)
+  * Classify by what is REQUIRED, not by what is merely mentioned:
+    - "remote" → fully remote OR "remote-first" (an office is optional/available but not required to attend)
+    - "hybrid" → regular on-site presence is expected or required (e.g. a set number of office days per week, "2 days in office")
+    - "onsite" → the work must be done at a physical location
+  * Optional access to an office does NOT make a remote-first role hybrid. If unsure between remote and hybrid, prefer "remote" when the posting says remote-first / remote with optional office.
 - experience_levels: Array of applicable experience levels from: "entry", "junior", "mid", "senior", "lead", "principal", "executive"
 
   EXCEPTION TO "DON'T INFER" RULE - experience levels CAN be determined from context:

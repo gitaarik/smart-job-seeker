@@ -4,6 +4,11 @@ import { dbDirect as db, queryRaw } from "$lib/server/db";
 import { eq, and, inArray, isNotNull, ne, desc, sql, ilike, or } from "drizzle-orm";
 import { applications, application_letters, application_status_log, job_importers, job_platforms, jobs } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
+import { parseJobDescription, type ParsedJobDescription } from "$lib/server/jobs/parse-job-description";
+import { triggerMatchForImport } from "$lib/server/job/match-trigger";
+import { classifyRegion } from "$lib/data/job-taxonomy";
+import { normalizeExperienceLevels, normalizeJobType, normalizeWorkLocation } from "$lib/data/job-normalize";
+import { normalizeSalaryPeriod } from "$lib/salary/conversion";
 
 /**
  * Best-effort lookup of a job_platforms row whose URL matches the host of the
@@ -175,19 +180,66 @@ export const actions: Actions = {
     let jobId: number | null = null;
     if (hasJobDetails) {
       const platformId = await detectPlatformId(sourceUrl);
+
+      // Enrich a pasted description the same way the scraper does: extract
+      // skills, responsibilities, work location, etc. Best-effort — on any
+      // failure (LLM error, no credits) `parsed` is null and we fall back to
+      // storing only what the user typed, so job creation is never blocked.
+      let parsed: ParsedJobDescription | null = null;
+      if (jobDescription) {
+        try {
+          parsed = await parseJobDescription(jobDescription, { profileId, sourceUrl });
+        } catch {
+          parsed = null;
+        }
+      }
+
+      // Gap-fill: fields the user typed win; the parser only fills blanks. The
+      // structured fields the form doesn't collect always come from the parser.
+      //
+      // The form has one location field and no work-arrangement field, so a
+      // bare "Remote"/"Hybrid" typed there is folded into work_location (rather
+      // than lost) — the parser's dedicated `remote` field takes precedence.
+      // Anything left in office_location is a real physical location, mirroring
+      // upsertJob's split.
+      const workLocation = normalizeWorkLocation(parsed?.remote ?? officeLocation ?? null);
+      const rawLocation = officeLocation ?? parsed?.location ?? null;
+      const effectiveLocation = rawLocation && normalizeWorkLocation(rawLocation)
+        ? null
+        : rawLocation;
+      const effectiveSalaryPeriod = salaryPeriod ?? parsed?.salary_period ?? null;
+
       const [job] = await db.insert(jobs).values({
-        title,
-        company,
-        office_location: officeLocation,
+        title: title ?? parsed?.title ?? null,
+        company: company ?? parsed?.company ?? null,
+        company_description: parsed?.company_description ?? null,
+        job_poster: parsed?.job_poster ?? null,
+        office_location: effectiveLocation,
+        region: classifyRegion(effectiveLocation),
         source_url: sourceUrl,
+        // Keep the user's original paste verbatim as the description.
         job_description: jobDescription,
-        salary_min: salaryMin,
-        salary_max: salaryMax,
-        salary_currency: salaryCurrency,
-        salary_period: salaryPeriod,
+        salary_min: salaryMin ?? parsed?.salary_min ?? null,
+        salary_max: salaryMax ?? parsed?.salary_max ?? null,
+        salary_currency: salaryCurrency ?? parsed?.salary_currency ?? null,
+        salary_period: normalizeSalaryPeriod(effectiveSalaryPeriod) || effectiveSalaryPeriod,
+        salary_duration_weeks: parsed?.salary_duration_weeks ?? null,
+        work_location: workLocation,
+        job_types: normalizeJobType(parsed?.job_type ?? null),
+        experience_levels: normalizeExperienceLevels(parsed?.experience_levels ?? null),
+        skills_required: parsed?.skills_required ?? null,
+        skills_preferred: parsed?.skills_preferred ?? null,
+        responsibilities: parsed?.responsibilities ?? null,
+        soft_skills: parsed?.soft_skills ?? null,
+        // date_posted is a Drizzle date() column (string mode).
+        date_posted: parsed?.date_posted
+          ? parsed.date_posted.toISOString().split("T")[0]
+          : null,
+        source_html_stripped: parsed?.source_html_stripped ?? null,
+        ai_chat_extraction: parsed?.ai_chat_extraction ?? null,
         job_platform_id: platformId,
         created_manually: true,
-        status: "hiring",
+        status: parsed?.status ?? "hiring",
         date_created: now,
         date_updated: now,
       }).returning({ id: jobs.id });
@@ -195,6 +247,9 @@ export const actions: Actions = {
       // Mirror the scraper import path so the job shows up in this profile's
       // /jobs list ("imported by me").
       await db.insert(job_importers).values({ job_id: jobId, profile_id: profileId });
+      // Enqueue matching just like the scraper — no-ops when the job has no
+      // skills yet (e.g. parse failed), scores it otherwise.
+      await triggerMatchForImport(profileId, jobId);
     }
 
     const [application] = await db.insert(applications).values({

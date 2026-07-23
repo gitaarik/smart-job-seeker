@@ -17,6 +17,36 @@ import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
 import { exportProfile } from "$lib/server/profile/export";
 
 /**
+ * User-facing writing prompts run on the writing provider/model
+ * (config.llmWriting*), typically a stronger/paid model (Gemini) chosen for
+ * prose quality. Everything else — extraction, scraping helpers, matching —
+ * runs on the app provider/model (config.llmProvider/llmModel), which the
+ * structured, transform-bearing schemas are tuned for (Groq gpt-oss).
+ *
+ * Gemini's structured-output mode rejects field-level Zod `.transform()`s
+ * (e.g. extract_job_data's salary coercion → "Transforms cannot be represented
+ * in JSON Schema"), so extraction MUST stay on the app provider. Any NEW
+ * user-facing writing prompt must be added here; everything else defaults to
+ * the extraction provider.
+ */
+const WRITING_PROMPT_KEYS = new Set<string>([
+  "personal_agent_chat",
+  "write_cover_letter",
+  "advise_cover_letter",
+  "review_cover_letter",
+  "write_cheat_sheet",
+  "advise_cheat_sheet",
+  "review_cheat_sheet",
+  "answer_application_question",
+  "advise_application_question",
+  "review_application_question",
+  "revise_application_question",
+  "followup_application_question",
+  "followup",
+  "followup_letter",
+]);
+
+/**
  * Interpolate variables in a prompt string
  * Replaces ${variableName} placeholders with provided values
  * Supports any number of variables passed as key-value pairs
@@ -294,6 +324,17 @@ export async function createAndGenerateAiChat(
       interpolationVariables,
     );
 
+    // Resolve provider/model by prompt type: user-facing writing runs on the
+    // writing provider/model, everything else on the app (extraction) provider.
+    // Used for the record stamp, generation, and cost accounting alike.
+    const isWritingPrompt = WRITING_PROMPT_KEYS.has(promptKey);
+    const activeProvider = isWritingPrompt
+      ? config.llmWritingProvider
+      : config.llmProvider;
+    const activeModel = isWritingPrompt
+      ? config.llmWritingModel
+      : config.llmModel;
+
     // Step 7: Create the ai_chats record with template prompts (not interpolated)
     const [aiChat] = await db.insert(ai_chats).values({
       profile_id: profileId,
@@ -302,8 +343,8 @@ export async function createAndGenerateAiChat(
       context: JSON.parse(JSON.stringify(context)),
       followup_to: followupTo,
       date_created: new Date(),
-      provider: config.llmProvider,
-      model: config.llmModel,
+      provider: activeProvider,
+      model: activeModel,
       request_type: "llm",
     }).returning();
     aiChatId = aiChat.id;
@@ -327,17 +368,12 @@ export async function createAndGenerateAiChat(
       }
       : undefined;
 
-    // User-facing writing (letters, application answers, chat) runs on the
-    // writing provider/model, which may differ from the extraction pipeline.
-    const writingProvider = config.llmWritingProvider;
-    const writingModel = config.llmWritingModel;
-
     const completionResult = await generateChatCompletionTracked(
       [
         { role: "system", content: interpolatedSystemPrompt },
         { role: "user", content: interpolatedUserPrompt },
       ],
-      { structuredOutput, provider: writingProvider, model: writingModel },
+      { structuredOutput, provider: activeProvider, model: activeModel },
     );
 
     // Step 8: Save response + token usage
@@ -366,7 +402,7 @@ export async function createAndGenerateAiChat(
       if (profileForCredits?.user_id) {
         const { chargeCredits } = await import("$lib/server/billing/credits");
         const providerCostUsd = estimateProviderCostUsd(
-          writingProvider, writingModel,
+          activeProvider, activeModel,
           usage.inputTokens, usage.outputTokens,
         );
         await chargeCredits(
@@ -376,7 +412,7 @@ export async function createAndGenerateAiChat(
           `${promptKey} (${usage.totalTokens} tokens)`,
           {
             aiChatId: aiChat.id, promptKey, tokens: usage,
-            provider: writingProvider, model: writingModel,
+            provider: activeProvider, model: activeModel,
             providerCostUsd,
           },
         );

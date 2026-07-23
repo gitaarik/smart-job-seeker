@@ -19,6 +19,11 @@ import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
+import { parseJobDescription } from "$lib/server/jobs/parse-job-description";
+import { triggerMatchForImport } from "$lib/server/job/match-trigger";
+import { classifyRegion } from "$lib/data/job-taxonomy";
+import { normalizeExperienceLevels, normalizeJobType, normalizeWorkLocation } from "$lib/data/job-normalize";
+import { normalizeSalaryPeriod } from "$lib/salary/conversion";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -514,6 +519,118 @@ export const actions: Actions = {
         }`,
       });
     }
+  },
+
+  reparseJob: async ({ locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    // Staff-only action
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
+    if (!isStaff) {
+      return fail(403, { error: "Staff access required" });
+    }
+
+    // Seeds the extraction prompt's profile context; matching is enqueued for
+    // this profile below.
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobsTable.id, jobId),
+      columns: {
+        source_html_stripped: true,
+        job_description: true,
+        source_url: true,
+        title: true,
+        company: true,
+      },
+    });
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    // Re-extract from already-stored content — captured HTML preferred, else the
+    // description text. No re-fetch (unlike Rescrape), so this also works for
+    // manual jobs that have no source_url.
+    const text = job.source_html_stripped ?? job.job_description;
+    if (!text || text.trim() === "") {
+      return fail(400, {
+        error: "No stored content to re-parse (no captured HTML or description)",
+      });
+    }
+
+    const parsed = await parseJobDescription(text, {
+      profileId,
+      sourceUrl: job.source_url,
+    });
+    if (!parsed) {
+      return fail(502, {
+        error: "Re-parse failed — the extraction LLM returned no result",
+      });
+    }
+
+    // Wholesale re-extraction: overwrite parser-owned fields. Title/company are
+    // coalesced to the existing values so a partial extraction can't wipe the
+    // job's identity. Description text and source_html_stripped stay as the
+    // stable parse input; status/source_url/platform are lifecycle fields a
+    // re-parse shouldn't touch.
+    const rawLocation = parsed.location ?? null;
+    const effectiveLocation = rawLocation && normalizeWorkLocation(rawLocation)
+      ? null
+      : rawLocation;
+
+    await db.update(jobsTable)
+      .set({
+        title: parsed.title ?? job.title,
+        company: parsed.company ?? job.company,
+        company_description: parsed.company_description,
+        job_poster: parsed.job_poster,
+        office_location: effectiveLocation,
+        region: classifyRegion(effectiveLocation),
+        salary_min: parsed.salary_min,
+        salary_max: parsed.salary_max,
+        salary_currency: parsed.salary_currency,
+        salary_period: normalizeSalaryPeriod(parsed.salary_period) || parsed.salary_period,
+        salary_duration_weeks: parsed.salary_duration_weeks,
+        work_location: normalizeWorkLocation(parsed.remote),
+        job_types: normalizeJobType(parsed.job_type),
+        experience_levels: normalizeExperienceLevels(parsed.experience_levels),
+        skills_required: parsed.skills_required,
+        skills_preferred: parsed.skills_preferred,
+        responsibilities: parsed.responsibilities,
+        soft_skills: parsed.soft_skills,
+        // date_posted is a Drizzle date() column (string mode).
+        date_posted: parsed.date_posted
+          ? parsed.date_posted.toISOString().split("T")[0]
+          : null,
+        ai_chat_extraction: parsed.ai_chat_extraction,
+        date_updated: new Date(),
+      })
+      .where(eq(jobsTable.id, jobId));
+
+    // Skills likely changed, so every profile's score for this job is stale.
+    // Mirror the scraper: clear all matches for the job, then enqueue a fresh
+    // score for the acting profile (non-blocking; other profiles recompute via
+    // the background matcher).
+    await db.delete(job_matches).where(eq(job_matches.job_id, jobId));
+    await triggerMatchForImport(profileId, jobId);
+
+    return {
+      success: true,
+      action: "reparsed",
+      title: parsed.title ?? job.title,
+    };
   },
 
   archiveJob: async ({ locals, params }) => {

@@ -585,6 +585,7 @@
           <label for="ca-desc" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Description <span class="font-normal">(optional)</span></label>
           <textarea id="ca-desc" name="job_description" rows="4" placeholder="Paste the job description…"
             class="w-full px-3 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] resize-y"></textarea>
+          <p class="text-[10px] text-[var(--dash-text-muted)] mt-1">Paste the full posting and we'll extract skills, location, salary and more — this may take a few seconds.</p>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
