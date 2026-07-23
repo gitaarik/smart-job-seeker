@@ -5,6 +5,7 @@ import { invalidateAll } from "$app/navigation";
 import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 import { faArrowLeft, faCheck } from "@fortawesome/free-solid-svg-icons";
 import Card from "../../../../../components/Card.svelte";
+import AutoGrowTextarea from "$lib/components/AutoGrowTextarea.svelte";
 import ConversationTimeline from "$lib/components/conversation/ConversationTimeline.svelte";
 import type { VersionSource } from "$lib/server/ai-chat/entity-versions";
 
@@ -177,10 +178,9 @@ function handleQuestionSave() {
     <form method="POST" action="?/saveQuestionText" use:enhance={handleQuestionSave}>
       <label for="q-text" class="block text-sm font-medium text-[var(--dash-text-secondary)] mb-1">Question</label>
       <div class="flex items-start gap-2">
-        <input
+        <AutoGrowTextarea
           id="q-text"
           name="question"
-          type="text"
           bind:value={questionText}
           class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
         />
