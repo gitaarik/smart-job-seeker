@@ -5,6 +5,7 @@
   import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
   import { timeAgo } from "$lib/format";
   import { agentChatState } from "./agent-chat-state.svelte";
+  import AutoGrowTextarea from "$lib/components/AutoGrowTextarea.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faChevronLeft,
@@ -448,15 +449,15 @@
       <div
         class="flex items-end gap-2 px-3 py-3 border-t border-[var(--dash-border)] shrink-0"
       >
-        <textarea
+        <AutoGrowTextarea
           bind:value={input}
           onkeydown={onKeydown}
           oninput={expandOnType}
           onblur={() => (suppressExpand = false)}
           placeholder="Ask your assistant…"
-          rows="1"
-          class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-none max-h-32"
-        ></textarea>
+          maxRows={5}
+          class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-lg text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        />
         <button
           type="button"
           onclick={send}
