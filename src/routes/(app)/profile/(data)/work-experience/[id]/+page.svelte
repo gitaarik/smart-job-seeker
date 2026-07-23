@@ -15,6 +15,7 @@
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
+  import WorkExperienceProjects from "../../../components/WorkExperienceProjects.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
   import VersionTagsPopup from "$lib/components/VersionTagsPopup.svelte";
   import ConfirmModal from "../../../components/ConfirmModal.svelte";
@@ -651,6 +652,18 @@
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />
     </div>
+  </Card>
+
+  <!-- Projects -->
+  <Card padding="lg">
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-1">Projects</h2>
+    <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+      Specific projects you worked on at {experience.name || "this company"}, each with its own details and technologies.
+    </p>
+    <WorkExperienceProjects
+      workExperienceId={experience.id}
+      projects={experience.work_experience_projects}
+    />
   </Card>
 
   <!-- Portfolio Images -->

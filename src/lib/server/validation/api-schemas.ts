@@ -315,6 +315,23 @@ export const workExperienceAchievementsSchema = z.object({
   })),
 });
 
+export const workExperienceProjectsSchema = z.object({
+  section: z.literal("projects"),
+  // The full ordered list of projects for this work experience. Existing rows
+  // carry their `id` so it survives a save (keeps the row — and its
+  // technologies — stable); newly-added ones omit it.
+  projects: z.array(z.object({
+    id: z.number().int().optional(),
+    name: z.string(),
+    url: optionalTrimmedString(2048),
+    start_date: z.string().optional().nullable(),
+    end_date: z.string().optional().nullable(),
+    description: optionalTrimmedString(10000),
+    outcome: optionalTrimmedString(10000),
+    technologies: z.array(z.string()).optional().default([]),
+  })),
+});
+
 // Side project update
 
 export const sideProjectBasicSchema = z.object({
