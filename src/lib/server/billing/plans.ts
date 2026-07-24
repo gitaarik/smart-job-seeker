@@ -10,6 +10,8 @@ export interface PlanLimits {
   resumeVersions: number; // -1 = unlimited
   creditsPerMonth: number;
   extraCredits: boolean;
+  maxDocumentProjects: number; // -1 = unlimited
+  maxDocumentBytes: number; // -1 = unlimited
 }
 
 export interface PlanDefinition {
@@ -28,24 +30,32 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     resumeVersions: -1,
     creditsPerMonth: 999999,
     extraCredits: false,
+    maxDocumentProjects: -1,
+    maxDocumentBytes: -1,
   },
   seeker: {
     profiles: -1,
     resumeVersions: -1,
     creditsPerMonth: 999999,
     extraCredits: false,
+    maxDocumentProjects: -1,
+    maxDocumentBytes: -1,
   },
   hunter: {
     profiles: -1,
     resumeVersions: -1,
     creditsPerMonth: 999999,
     extraCredits: false,
+    maxDocumentProjects: -1,
+    maxDocumentBytes: -1,
   },
   contractor: {
     profiles: -1,
     resumeVersions: -1,
     creditsPerMonth: 999999,
     extraCredits: false,
+    maxDocumentProjects: -1,
+    maxDocumentBytes: -1,
   },
 };
 
