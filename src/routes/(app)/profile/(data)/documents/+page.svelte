@@ -3,6 +3,7 @@ import type { ActionData, PageData } from "./$types";
 import { invalidateAll } from "$app/navigation";
 import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 import {
+  faArrowsRotate,
   faChevronDown,
   faChevronRight,
   faCloudArrowUp,
@@ -24,6 +25,7 @@ let uploadResult = $state<string | null>(null);
 let uploadError = $state<string | null>(null);
 let isDragging = $state(false);
 let deleteId = $state<number | null>(null);
+let reparsingId = $state<number | null>(null);
 let expanded = $state<Set<number>>(new Set());
 
 function formatSize(bytes: number): string {
@@ -98,6 +100,28 @@ function onDrop(e: DragEvent) {
   e.preventDefault();
   isDragging = false;
   if (e.dataTransfer?.files?.length) uploadFiles(e.dataTransfer.files);
+}
+
+async function reparse(id: number) {
+  if (reparsingId !== null) return;
+  reparsingId = id;
+  uploadError = null;
+  try {
+    const res = await fetch(
+      `/api/profile/${data.profileId}/documents/${id}/reparse`,
+      { method: "POST" },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      uploadError = body?.message ?? "Could not regenerate notes.";
+      return;
+    }
+    await invalidateAll();
+  } catch {
+    uploadError = "Could not regenerate notes.";
+  } finally {
+    reparsingId = null;
+  }
 }
 
 function confirmDelete() {
@@ -255,14 +279,30 @@ const skippedCount = (v: unknown): number => (Array.isArray(v) ? v.length : 0);
               {/if}
             </div>
 
-            <button
-              type="button"
-              onclick={() => (deleteId = doc.id)}
-              class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-              aria-label="Delete document"
-            >
-              <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-            </button>
+            <div class="flex items-center gap-0.5">
+              <button
+                type="button"
+                onclick={() => reparse(doc.id)}
+                disabled={reparsingId === doc.id}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors disabled:opacity-50"
+                aria-label="Regenerate notes"
+                title="Regenerate reference notes"
+              >
+                <FontAwesomeIcon
+                  icon={faArrowsRotate}
+                  spin={reparsingId === doc.id}
+                  class="w-4 h-4"
+                />
+              </button>
+              <button
+                type="button"
+                onclick={() => (deleteId = doc.id)}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                aria-label="Delete document"
+              >
+                <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </Card>
       {/each}

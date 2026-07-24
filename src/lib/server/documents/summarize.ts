@@ -10,11 +10,19 @@
  */
 
 import { runProfileAiChat } from "$lib/server/ai-chat/job-utils";
-import type { ExtractedFile } from "./extract";
 
 export interface ProjectSummary {
   summary: string;
   keywords: string[];
+}
+
+/**
+ * The minimal shape the summarizer needs — satisfied by both freshly-extracted
+ * files (ExtractedFile) and rows re-read from the DB for a reparse.
+ */
+export interface SummarizableFile {
+  path: string;
+  text: string;
 }
 
 // Budget for the concatenated blob handed to the summarizer. A project can be
@@ -30,9 +38,9 @@ function isDoc(path: string): boolean {
  * Build a bounded, readable document blob from the extracted files. Docs /
  * READMEs go first (they describe a project best), then the rest by path.
  */
-export function buildDocumentBlob(files: ExtractedFile[]): string {
+export function buildDocumentBlob(files: SummarizableFile[]): string {
   const ordered = [...files].sort((a, b) => {
-    const rank = (f: ExtractedFile) => (isDoc(f.path) ? 0 : 1);
+    const rank = (f: SummarizableFile) => (isDoc(f.path) ? 0 : 1);
     return rank(a) - rank(b) || a.path.localeCompare(b.path);
   });
 
@@ -50,7 +58,7 @@ export function buildDocumentBlob(files: ExtractedFile[]): string {
 
 export async function summarizeProject(
   profileId: number,
-  files: ExtractedFile[],
+  files: SummarizableFile[],
 ): Promise<ProjectSummary | null> {
   const document = buildDocumentBlob(files);
   if (!document) return null;
