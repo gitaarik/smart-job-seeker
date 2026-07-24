@@ -87,6 +87,42 @@ export function rankProjects(
 }
 
 /**
+ * Format ranked projects into a self-contained prompt block (its own header, so
+ * callers just interpolate it). Returns "" when there are no matches — no
+ * dangling header. Summaries are clipped to keep the prompt lean.
+ */
+export function formatRelevantProjects(ranked: RankedProject[]): string {
+  if (ranked.length === 0) return "";
+  const items = ranked.map((p, i) => {
+    const title = p.title.trim() || `Project ${p.id}`;
+    const summary = p.summary.length > 600
+      ? p.summary.slice(0, 600).trimEnd() + "…"
+      : p.summary;
+    return `${i + 1}. ${title}\n${summary}`;
+  });
+  return "## Relevant projects from the applicant's uploaded work\n\n" +
+    "These are the applicant's REAL projects (extracted from documents they " +
+    "uploaded). You MAY cite them alongside the profile above; ground any " +
+    "project claim only in the notes here — do not invent details.\n\n" +
+    items.join("\n\n");
+}
+
+/**
+ * One-call convenience for prompt call sites: load + rank + format the top-K
+ * projects relevant to a job, returning a ready-to-interpolate string ("" if
+ * none). `job.skills_required` may be passed straight from the (untyped json)
+ * jobs column — cast it to string[] | null at the call site.
+ */
+export async function relevantProjectsText(
+  profileId: number,
+  job: JobLike,
+  k = 3,
+): Promise<string> {
+  const ranked = await relevantProjects(profileId, job, k);
+  return formatRelevantProjects(ranked);
+}
+
+/**
  * Load a profile's summarized document projects and return the top-K relevant
  * to `job`. Only projects with a summary are eligible (that's what gets cited).
  */

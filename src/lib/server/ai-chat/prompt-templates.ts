@@ -51,6 +51,8 @@ The user's latest message:
 
 \${data}
 
+\${relevantProjects}
+
 ## Job Description:
 
 \${jobDescription}
@@ -952,6 +954,8 @@ Provide your analysis in JSON format with:
 ## Applicant Profile:
 
 \${data}
+
+\${relevantProjects}
 
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or achievements from their profile you led with and why they fit this job. Name the actual entries; be concrete.

@@ -7,6 +7,7 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
+import { relevantProjectsText } from "$lib/server/documents/retrieval";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -160,6 +161,12 @@ export async function generateApplicationLetter(
     jobDetails: jobDetailsText,
     generationMode: mode,
     additionalContext: additionalContext || "",
+    // Top-K uploaded projects relevant to this job (empty string if none).
+    relevantProjects: await relevantProjectsText(profileId, {
+      title: job.title,
+      job_description: job.job_description,
+      skills_required: job.skills_required as string[] | null,
+    }),
   };
 
   // For review mode, include the user's letter content

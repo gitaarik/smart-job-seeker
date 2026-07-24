@@ -7,6 +7,7 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
+import { relevantProjectsText } from "$lib/server/documents/retrieval";
 import {
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -107,11 +108,20 @@ export async function generateApplicationQuestionAnswer(
   }
 
   const profileId = question.application.profile_id;
-  const jobDescription = question.application.job?.job_description || "";
+  const job = question.application.job;
+  const jobDescription = job?.job_description || "";
 
   const variables: Record<string, unknown> = {
     jobDescription: jobDescription,
     question: question.question,
+    // Top-K uploaded projects relevant to this job (empty string if none/no job).
+    relevantProjects: job
+      ? await relevantProjectsText(profileId, {
+        title: job.title,
+        job_description: job.job_description,
+        skills_required: job.skills_required as string[] | null,
+      })
+      : "",
   };
   // Review critiques the answer the applicant already has.
   if (mode === "review") {

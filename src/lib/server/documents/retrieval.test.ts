@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatRelevantProjects,
   type ProjectForRanking,
+  type RankedProject,
   rankProjects,
   scoreProjectAgainstJob,
 } from "./retrieval";
@@ -74,5 +76,33 @@ describe("rankProjects", () => {
 
   it("returns empty when nothing is relevant", () => {
     expect(rankProjects([proj(1, ["Assembly"])], job)).toEqual([]);
+  });
+});
+
+describe("formatRelevantProjects", () => {
+  const ranked = (over: Partial<RankedProject> = {}): RankedProject => ({
+    id: 1,
+    title: "TaskFlow",
+    summary: "A real-time task board.",
+    keywords: ["Svelte"],
+    score: 3,
+    ...over,
+  });
+
+  it("returns empty string when there are no projects", () => {
+    expect(formatRelevantProjects([])).toBe("");
+  });
+
+  it("emits a self-contained block with title + summary", () => {
+    const out = formatRelevantProjects([ranked()]);
+    expect(out).toContain("Relevant projects");
+    expect(out).toContain("1. TaskFlow");
+    expect(out).toContain("A real-time task board.");
+  });
+
+  it("clips long summaries", () => {
+    const out = formatRelevantProjects([ranked({ summary: "x".repeat(1000) })]);
+    expect(out).toContain("…");
+    expect(out.length).toBeLessThan(1000);
   });
 });
