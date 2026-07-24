@@ -3243,7 +3243,83 @@ export const files = pgTable("files", {
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+// --- Document ingestion (see planning/DOCUMENT-INGESTION.md) ---
+// A user uploads files / a ZIP to their profile; we extract text and summarize
+// it for AI features. The ingestion UNIT is a "project" (one upload / archive),
+// grouping its extracted source files. The raw archive is NOT retained — only
+// extracted text — so junk (node_modules, binaries) never sits at rest.
+export const profile_document_projects = pgTable("profile_document_projects", {
+  id: serial().primaryKey().notNull(),
+  profile_id: integer().notNull(),
+  // Optional scoping links (nullable). Both null = profile-wide.
+  work_experience_id: integer(),
+  work_experience_project_id: integer(),
+  // Original blob for a loose single-file upload (e.g. a PDF); null for
+  // archives, whose raw bytes are discarded after extraction.
+  file_id: uuid(),
+  kind: varchar({ length: 16 }).default("file").notNull(), // "file" | "archive"
+  title: varchar({ length: 255 }),
+  original_filename: varchar({ length: 512 }),
+  // LLM project-level "reference notes" fed to AI features via collected_data.
+  summary: text(),
+  status: varchar({ length: 32 }).default("pending").notNull(),
+  // pending | extracting | extracted | partial | failed
+  extraction_error: text(),
+  // Manifest of skipped archive entries [{ path, reason }] for user visibility.
+  skipped: json(),
+  file_count: integer().default(0).notNull(),
+  total_chars: integer().default(0).notNull(),
+  total_bytes: integer().default(0).notNull(),
+  sort: integer(),
+  date_created: timestamp({ withTimezone: true, mode: "date" }),
+  date_updated: timestamp({ withTimezone: true, mode: "date" }),
+}, (table) => [
+  index("profile_document_projects_profile_idx").on(table.profile_id),
+  foreignKey({
+    columns: [table.profile_id],
+    foreignColumns: [profiles.id],
+    name: "profile_document_projects_profile_foreign",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.work_experience_id],
+    foreignColumns: [work_experiences.id],
+    name: "profile_document_projects_work_experience_foreign",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.work_experience_project_id],
+    foreignColumns: [work_experience_projects.id],
+    name: "profile_document_projects_work_experience_project_foreign",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.file_id],
+    foreignColumns: [files.id],
+    name: "profile_document_projects_file_foreign",
+  }).onDelete("set null"),
+]);
+
+export const profile_document_files = pgTable("profile_document_files", {
+  id: serial().primaryKey().notNull(),
+  project_id: integer().notNull(),
+  // Sanitized, archive-relative path (e.g. "src/lib/foo.ts").
+  path: varchar({ length: 1024 }),
+  ext: varchar({ length: 32 }),
+  extracted_text: text(),
+  chars: integer().default(0).notNull(),
+  sort: integer(),
+  date_created: timestamp({ withTimezone: true, mode: "date" }),
+}, (table) => [
+  index("profile_document_files_project_idx").on(table.project_id),
+  foreignKey({
+    columns: [table.project_id],
+    foreignColumns: [profile_document_projects.id],
+    name: "profile_document_files_project_foreign",
+  }).onDelete("cascade"),
+]);
+
 // Inferred select types for all application tables
+export type ProfileDocumentProjects =
+  typeof profile_document_projects.$inferSelect;
+export type ProfileDocumentFiles = typeof profile_document_files.$inferSelect;
 export type AiChatTemplates = typeof ai_chat_templates.$inferSelect;
 export type AiPrompts = typeof ai_prompts.$inferSelect;
 export type ApplicationActivityLog =

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { ai_prompts, applications, application_activity_log, applications_files, files, profiles, collected_data, config, education, highlights, match_config, ai_chats, job_matches, jobs, job_resources, search_tasks, search_task_runs, os_contributions, job_platforms, platform_profiles, platform_credentials, languages, search_task_run_items, project_stories, profile_exports, references, scraper_logs, salary_expectations, profile_versions, side_projects, side_project_technologies, work_experiences, work_experience_achievements, users, sessions, work_experience_projects, work_experience_technologies, tech_skill_categories, work_experience_project_technologies, tech_skills, tech_skill_types, accounts, cheat_sheets, profile_version_extensions, side_project_achievements, api_keys, ai_chat_templates, search_tasks_job_sites, scraper_agent_sessions, scraper_agent_iterations, job_statuses, application_letters, application_questions, application_status_log, letter_versions, question_versions, job_match_history, job_importers, user_feedback, user_feedback_files, billing_customers, subscriptions, credit_purchases, usage_counters, verification_email_addresses, credit_balances, credit_transactions, certificates, inbound_emails, contacts, credential_shares, device_shares, feedback_replies, user_feedback_subscribers } from "./schema";
+import { ai_prompts, applications, application_activity_log, applications_files, files, profiles, collected_data, config, education, highlights, match_config, ai_chats, job_matches, jobs, job_resources, search_tasks, search_task_runs, os_contributions, job_platforms, platform_profiles, platform_credentials, languages, search_task_run_items, project_stories, profile_exports, references, scraper_logs, salary_expectations, profile_versions, side_projects, side_project_technologies, work_experiences, work_experience_achievements, users, sessions, work_experience_projects, work_experience_technologies, tech_skill_categories, work_experience_project_technologies, tech_skills, tech_skill_types, accounts, cheat_sheets, profile_version_extensions, side_project_achievements, api_keys, ai_chat_templates, search_tasks_job_sites, scraper_agent_sessions, scraper_agent_iterations, job_statuses, application_letters, application_questions, application_status_log, letter_versions, question_versions, job_match_history, job_importers, user_feedback, user_feedback_files, billing_customers, subscriptions, credit_purchases, usage_counters, verification_email_addresses, credit_balances, credit_transactions, certificates, inbound_emails, contacts, credential_shares, device_shares, feedback_replies, user_feedback_subscribers, profile_document_projects, profile_document_files } from "./schema";
 
 
 export const ai_promptsRelations = relations(ai_prompts, ({one}) => ({
@@ -55,7 +55,8 @@ export const filesRelations = relations(files, ({one, many}) => ({
 	work_experiences: many(work_experiences),
 	applications: many(applications),
 	profiles: many(profiles),
-	user_feedback_files: many(user_feedback_files)
+	user_feedback_files: many(user_feedback_files),
+	profile_document_projects: many(profile_document_projects)
 }));
 
 
@@ -63,6 +64,35 @@ export const collected_dataRelations = relations(collected_data, ({one}) => ({
 	profile: one(profiles, {
 		fields: [collected_data.profile_id],
 		references: [profiles.id]
+	}),
+}));
+
+
+export const profile_document_projectsRelations = relations(profile_document_projects, ({one, many}) => ({
+	profile: one(profiles, {
+		fields: [profile_document_projects.profile_id],
+		references: [profiles.id]
+	}),
+	work_experience: one(work_experiences, {
+		fields: [profile_document_projects.work_experience_id],
+		references: [work_experiences.id]
+	}),
+	work_experience_project: one(work_experience_projects, {
+		fields: [profile_document_projects.work_experience_project_id],
+		references: [work_experience_projects.id]
+	}),
+	file: one(files, {
+		fields: [profile_document_projects.file_id],
+		references: [files.id]
+	}),
+	profile_document_files: many(profile_document_files),
+}));
+
+
+export const profile_document_filesRelations = relations(profile_document_files, ({one}) => ({
+	project: one(profile_document_projects, {
+		fields: [profile_document_files.project_id],
+		references: [profile_document_projects.id]
 	}),
 }));
 
@@ -87,6 +117,7 @@ export const profilesRelations = relations(profiles, ({one, many}) => ({
 	side_projects: many(side_projects),
 	tech_skill_categories: many(tech_skill_categories),
 	cheat_sheets: many(cheat_sheets),
+	profile_document_projects: many(profile_document_projects),
 	work_experiences: many(work_experiences),
 	applications: many(applications),
 	api_keys: many(api_keys),
