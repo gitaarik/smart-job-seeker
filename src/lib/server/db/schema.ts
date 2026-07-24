@@ -3260,8 +3260,12 @@ export const profile_document_projects = pgTable("profile_document_projects", {
   kind: varchar({ length: 16 }).default("file").notNull(), // "file" | "archive"
   title: varchar({ length: 255 }),
   original_filename: varchar({ length: 512 }),
-  // LLM project-level "reference notes" fed to AI features via collected_data.
+  // LLM project-level "reference notes" — the retrievable unit for job-aware
+  // prompts (NOT merged into collected_data; see DOCUMENT-INGESTION.md § AI).
   summary: text(),
+  // Key technologies/keywords the summarizer extracted, for deterministic
+  // project↔job relevance ranking.
+  keywords: json(),
   status: varchar({ length: 32 }).default("pending").notNull(),
   // pending | extracting | extracted | partial | failed
   extraction_error: text(),

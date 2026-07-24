@@ -8,6 +8,7 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
+import { eq } from "drizzle-orm";
 import {
   profile_document_files,
   profile_document_projects,
@@ -88,4 +89,20 @@ export async function saveExtractedProject(
     skippedCount: extracted.skipped.length,
     secretsRedacted: extracted.secretsRedacted,
   };
+}
+
+/** Attach the summarizer's output to a project row. */
+export async function setProjectSummary(
+  projectId: number,
+  summary: string,
+  keywords: string[],
+): Promise<void> {
+  await db
+    .update(profile_document_projects)
+    .set({
+      summary: summary.trim() || null,
+      keywords: keywords.length > 0 ? keywords : null,
+      date_updated: new Date(),
+    })
+    .where(eq(profile_document_projects.id, projectId));
 }

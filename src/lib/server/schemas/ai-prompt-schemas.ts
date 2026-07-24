@@ -465,8 +465,32 @@ export const reviseAnswerSchema = z.preprocess(
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  */
+/**
+ * Schema for extract_document prompt.
+ * Summarizes an uploaded document / source-code project into reference notes
+ * plus key technologies. gpt-oss sometimes returns the summary as a list of
+ * sentences or the keywords as a comma-joined string — coerce both.
+ */
+export const extractDocumentSchema = z.object({
+  summary: z.preprocess(
+    (v) => (Array.isArray(v) ? v.join("\n\n") : coerceNull(v)),
+    z.string().optional().nullable(),
+  ).describe("Short reference-notes summary of the document/project"),
+  keywords: z.preprocess(
+    (v) => {
+      const n = coerceNull(v);
+      if (typeof n === "string") {
+        return n.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+      return n ?? [];
+    },
+    z.array(z.string()).default([]),
+  ).describe("Key technologies/keywords, ordered by prominence"),
+}).passthrough();
+
 export const aiPromptSchemas = {
   extract_job_data: extractJobDataSchema,
+  extract_document: extractDocumentSchema,
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
   extract_matched_skills: extractMatchedSkillsSchema,

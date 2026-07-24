@@ -22,6 +22,7 @@ import {
   requireAuth,
   requireProfileAccess,
 } from "$lib/server/utils/api-helpers";
+import { requireCredits } from "$lib/server/billing/require-credits";
 import { requireDocumentQuota } from "$lib/server/billing/require-document-quota";
 import {
   DocumentExtractError,
@@ -31,7 +32,9 @@ import {
 import {
   type SaveDocumentProjectInput,
   saveExtractedProject,
+  setProjectSummary,
 } from "$lib/server/documents/store";
+import { summarizeProject } from "$lib/server/documents/summarize";
 
 // Raw-upload safety cap (per file). Per-plan limits apply to extracted text.
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
@@ -69,6 +72,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
   const profileId = parseIntParam(params.id, "profile");
   await requireProfileAccess(profileId, user.id);
+  // Pre-flight affordability floor for the per-project summarization LLM cost;
+  // the real per-token charge happens inside summarizeProject.
+  await requireCredits(user.id, 3);
 
   const form = await request.formData();
   const uploads: File[] = form
@@ -134,7 +140,19 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     const totalBytes = pending.reduce((s, p) => s + p.extracted.totalBytes, 0);
     await requireDocumentQuota(user.id, totalBytes, pending.length);
     for (const p of pending) {
-      created.push(await saveExtractedProject(p.input, p.extracted));
+      const saved = await saveExtractedProject(p.input, p.extracted);
+      // Summarize into reference notes + keywords (best-effort; the upload
+      // still succeeds if the LLM step fails).
+      let summary: string | null = null;
+      let keywords: string[] | null = null;
+      const result = await summarizeProject(profileId, p.extracted.files)
+        .catch(() => null);
+      if (result) {
+        await setProjectSummary(saved.id, result.summary, result.keywords);
+        summary = result.summary || null;
+        keywords = result.keywords.length > 0 ? result.keywords : null;
+      }
+      created.push({ ...saved, summary, keywords });
     }
   }
 
@@ -159,6 +177,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       original_filename: true,
       status: true,
       summary: true,
+      keywords: true,
       skipped: true,
       file_count: true,
       total_chars: true,
