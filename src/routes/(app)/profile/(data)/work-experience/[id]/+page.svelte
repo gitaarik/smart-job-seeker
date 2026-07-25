@@ -31,6 +31,16 @@
   let bannerUrl = $state(data.bannerUrl);
 
   let experience = $derived(data.experience);
+  // projectId → attached documents; rebuilt on reload so the docs section stays
+  // fresh after upload/delete (invalidateAll).
+  let documentsByProject = $derived(
+    Object.fromEntries(
+      experience.work_experience_projects.map((p) => [
+        p.id,
+        p.profile_document_projects,
+      ]),
+    ),
+  );
 
   let pageTitle = $derived(experience.position || experience.name || 'Experience');
 
@@ -663,6 +673,8 @@
     <WorkExperienceProjects
       workExperienceId={experience.id}
       projects={experience.work_experience_projects}
+      profileId={data.profileId}
+      documentsByProject={documentsByProject}
     />
   </Card>
 

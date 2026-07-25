@@ -14,6 +14,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { and, asc, desc, eq } from "drizzle-orm";
 import {
   profile_document_projects,
+  side_projects,
   work_experience_projects,
   work_experiences,
 } from "$lib/server/db/schema";
@@ -56,7 +57,7 @@ async function assertWorkExperienceOwned(id: number, profileId: number) {
   if (!row) error(400, "Linked work experience not found on this profile");
 }
 
-/** A linked project must roll up to a work-experience on this profile. */
+/** A linked work-experience project must roll up to this profile. */
 async function assertWorkExperienceProjectOwned(id: number, profileId: number) {
   const row = await db.query.work_experience_projects.findFirst({
     where: eq(work_experience_projects.id, id),
@@ -66,6 +67,18 @@ async function assertWorkExperienceProjectOwned(id: number, profileId: number) {
   if (!row || row.work_experience?.profile_id !== profileId) {
     error(400, "Linked project not found on this profile");
   }
+}
+
+/** A linked side project must belong to this profile. */
+async function assertSideProjectOwned(id: number, profileId: number) {
+  const row = await db.query.side_projects.findFirst({
+    where: and(
+      eq(side_projects.id, id),
+      eq(side_projects.profile_id, profileId),
+    ),
+    columns: { id: true },
+  });
+  if (!row) error(400, "Linked project not found on this profile");
 }
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -89,11 +102,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   const workExperienceProjectId = parseOptionalId(
     form.get("work_experience_project_id"),
   );
+  const sideProjectId = parseOptionalId(form.get("side_project_id"));
   if (workExperienceId !== null) {
     await assertWorkExperienceOwned(workExperienceId, profileId);
   }
   if (workExperienceProjectId !== null) {
     await assertWorkExperienceProjectOwned(workExperienceProjectId, profileId);
+  }
+  if (sideProjectId !== null) {
+    await assertSideProjectOwned(sideProjectId, profileId);
   }
 
   // Extract everything first so we can total the extracted bytes and gate on
@@ -123,6 +140,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
           title: uploads.length === 1 ? title : null,
           workExperienceId,
           workExperienceProjectId,
+          sideProjectId,
         },
         extracted,
       });

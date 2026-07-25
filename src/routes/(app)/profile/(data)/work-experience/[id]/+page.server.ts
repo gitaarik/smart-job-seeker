@@ -1,8 +1,9 @@
 import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import {
+  profile_document_projects,
   work_experience_achievements,
   work_experience_project_technologies,
   work_experience_projects,
@@ -40,6 +41,24 @@ export const load: PageServerLoad = async ({ params, parent }) => {
           work_experience_project_technologies: {
             orderBy: asc(work_experience_project_technologies.sort),
           },
+          profile_document_projects: {
+            orderBy: [
+              asc(profile_document_projects.sort),
+              desc(profile_document_projects.date_created),
+            ],
+            columns: {
+              id: true,
+              kind: true,
+              title: true,
+              original_filename: true,
+              status: true,
+              summary: true,
+              keywords: true,
+              skipped: true,
+              file_count: true,
+              total_bytes: true,
+            },
+          },
         },
       },
     },
@@ -61,5 +80,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     redirect(302, "/profile/work-experience");
   }
 
-  return { experience, logoUrl, bannerUrl };
+  return {
+    experience,
+    logoUrl,
+    bannerUrl,
+    profileId: layoutData.selectedProfile.id,
+  };
 };

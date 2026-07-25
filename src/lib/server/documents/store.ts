@@ -21,6 +21,7 @@ export interface SaveDocumentProjectInput {
   title?: string | null;
   workExperienceId?: number | null;
   workExperienceProjectId?: number | null;
+  sideProjectId?: number | null;
 }
 
 export interface SavedDocumentProject {
@@ -50,6 +51,7 @@ export async function saveExtractedProject(
       profile_id: input.profileId,
       work_experience_id: input.workExperienceId ?? null,
       work_experience_project_id: input.workExperienceProjectId ?? null,
+      side_project_id: input.sideProjectId ?? null,
       kind: extracted.kind,
       title,
       original_filename: input.filename,

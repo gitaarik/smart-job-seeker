@@ -3251,9 +3251,12 @@ export const files = pgTable("files", {
 export const profile_document_projects = pgTable("profile_document_projects", {
   id: serial().primaryKey().notNull(),
   profile_id: integer().notNull(),
-  // Optional scoping links (nullable). Both null = profile-wide.
+  // The project this upload belongs to — either a work-experience project or a
+  // side (personal) project. Nullable so a legacy/unattached row can exist, but
+  // the UI always attaches to one.
   work_experience_id: integer(),
   work_experience_project_id: integer(),
+  side_project_id: integer(),
   // Original blob for a loose single-file upload (e.g. a PDF); null for
   // archives, whose raw bytes are discarded after extraction.
   file_id: uuid(),
@@ -3293,7 +3296,12 @@ export const profile_document_projects = pgTable("profile_document_projects", {
     columns: [table.work_experience_project_id],
     foreignColumns: [work_experience_projects.id],
     name: "profile_document_projects_work_experience_project_foreign",
-  }).onDelete("set null"),
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.side_project_id],
+    foreignColumns: [side_projects.id],
+    name: "profile_document_projects_side_project_foreign",
+  }).onDelete("cascade"),
   foreignKey({
     columns: [table.file_id],
     foreignColumns: [files.id],

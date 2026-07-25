@@ -5,7 +5,6 @@ import {
   faBriefcase,
   faCertificate,
   faCode,
-  faFileLines,
   faGlobe,
   faGraduationCap,
   faUser,
@@ -25,7 +24,6 @@ const tabs = [
   { label: "Certificates", href: "/profile/certificates", icon: faCertificate },
   { label: "Languages", href: "/profile/languages", icon: faGlobe },
   { label: "References", href: "/profile/references", icon: faUserFriends },
-  { label: "Documents", href: "/profile/documents", icon: faFileLines },
 ];
 
 function isTabActive(href: string): boolean {

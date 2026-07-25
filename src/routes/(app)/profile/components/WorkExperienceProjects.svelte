@@ -9,6 +9,7 @@
     faUndo,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import ProjectDocuments from "./ProjectDocuments.svelte";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
 
@@ -28,10 +29,30 @@
     work_experience_project_technologies: InitialTech[];
   }
 
+  interface DocForList {
+    id: number;
+    kind: string;
+    title: string | null;
+    original_filename: string | null;
+    status: string;
+    summary: string | null;
+    keywords: unknown;
+    skipped: unknown;
+    file_count: number;
+    total_bytes: number;
+  }
+
   let {
     workExperienceId,
     projects: initial,
-  }: { workExperienceId: number; projects: InitialProject[] } = $props();
+    profileId,
+    documentsByProject = {},
+  }: {
+    workExperienceId: number;
+    projects: InitialProject[];
+    profileId: number;
+    documentsByProject?: Record<number, DocForList[]>;
+  } = $props();
 
   // `_key` is a stable client-side key so #each and drag-reorder can track a
   // project across moves and inserts; it's stripped before saving.
@@ -419,6 +440,24 @@
                     Add
                   </button>
                 </div>
+              </div>
+
+              <!-- Files & source code -->
+              <div>
+                <span class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+                  Files & source code
+                </span>
+                {#if project.id}
+                  <ProjectDocuments
+                    {profileId}
+                    workExperienceProjectId={project.id}
+                    documents={documentsByProject[project.id] ?? []}
+                  />
+                {:else}
+                  <p class="text-xs text-[var(--dash-text-muted)] italic">
+                    Save this project first, then you can attach files.
+                  </p>
+                {/if}
               </div>
             </div>
           {/if}

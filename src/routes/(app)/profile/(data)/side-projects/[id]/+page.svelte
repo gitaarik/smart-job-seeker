@@ -17,6 +17,7 @@ import AchievementsList, {
 import TechnologyTagsEditor from "$lib/components/TechnologyTagsEditor.svelte";
 import VersionTags from "$lib/components/VersionTags.svelte";
 import ConfirmModal from "../../../components/ConfirmModal.svelte";
+import ProjectDocuments from "../../../components/ProjectDocuments.svelte";
 import Card from "../../../../components/Card.svelte";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -423,6 +424,22 @@ function undoRemoveTechnology(index: number) {
       <SectionSaveButton state={achievementsSaveState}
         onClick={saveAchievements} />
     </div>
+  </Card>
+
+  <!-- Files & source code -->
+  <Card padding="lg">
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-1">
+      Files & source code
+    </h2>
+    <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+      Attach this project's source code or docs. We summarize them into reference
+      notes we can cite when a job matches this project.
+    </p>
+    <ProjectDocuments
+      profileId={data.profileId}
+      sideProjectId={project.id}
+      documents={data.documents}
+    />
   </Card>
 
   <!-- Portfolio Images -->
