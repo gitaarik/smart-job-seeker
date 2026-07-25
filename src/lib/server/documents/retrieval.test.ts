@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  formatRelevantProjects,
-  type ProjectForRanking,
-  type RankedProject,
+  formatProjectCitations,
+  type RankableProject,
   rankProjects,
   scoreProjectAgainstJob,
 } from "./retrieval";
@@ -10,8 +9,16 @@ import {
 const proj = (
   id: number,
   keywords: string[],
-  summary = "s",
-): ProjectForRanking => ({ id, title: `p${id}`, summary, keywords });
+  text = "",
+): RankableProject => ({
+  kind: "side_project",
+  id,
+  title: `p${id}`,
+  context: "",
+  keywords,
+  text,
+  citation: "",
+});
 
 describe("scoreProjectAgainstJob", () => {
   it("weights explicit required-skill matches highest", () => {
@@ -19,8 +26,9 @@ describe("scoreProjectAgainstJob", () => {
       title: "Backend Engineer",
       skills_required: ["PostgreSQL", "Redis"],
     };
-    const score = scoreProjectAgainstJob(proj(1, ["PostgreSQL", "Redis"]), job);
-    expect(score).toBe(6); // 3 + 3
+    expect(scoreProjectAgainstJob(proj(1, ["PostgreSQL", "Redis"]), job)).toBe(
+      6,
+    );
   });
 
   it("matches loosely (postgres ~ PostgreSQL) and counts text mentions", () => {
@@ -28,22 +36,22 @@ describe("scoreProjectAgainstJob", () => {
       title: "We use Kubernetes heavily",
       skills_required: ["postgres"],
     };
-    const score = scoreProjectAgainstJob(
-      proj(1, ["PostgreSQL", "Kubernetes"]),
-      job,
-    );
-    // PostgreSQL ↔ postgres = skill match (3); Kubernetes appears in title (1)
-    expect(score).toBe(4);
+    // PostgreSQL ↔ postgres skill match (3); Kubernetes in title (1)
+    expect(scoreProjectAgainstJob(proj(1, ["PostgreSQL", "Kubernetes"]), job))
+      .toBe(4);
+  });
+
+  it("credits a required skill mentioned only in the project's prose", () => {
+    const job = { skills_required: ["Kubernetes"] };
+    // No keywords, but the description mentions the skill → +1
+    expect(
+      scoreProjectAgainstJob(proj(1, [], "we deployed it on Kubernetes"), job),
+    ).toBe(1);
   });
 
   it("scores an unrelated project zero", () => {
     const job = { skills_required: ["COBOL", "Fortran"] };
     expect(scoreProjectAgainstJob(proj(1, ["React", "Tailwind"]), job)).toBe(0);
-  });
-
-  it("ignores empty keyword lists", () => {
-    expect(scoreProjectAgainstJob(proj(1, []), { skills_required: ["Go"] }))
-      .toBe(0);
   });
 });
 
@@ -54,24 +62,25 @@ describe("rankProjects", () => {
   };
 
   it("orders by score and drops irrelevant projects", () => {
-    const projects = [
-      proj(1, ["COBOL"]), // 0 → dropped
-      proj(2, ["TypeScript"]), // 3
-      proj(3, ["TypeScript", "PostgreSQL", "Docker"]), // 9
-    ];
-    const ranked = rankProjects(projects, job);
+    const ranked = rankProjects([
+      proj(1, ["COBOL"]),
+      proj(2, ["TypeScript"]),
+      proj(3, ["TypeScript", "PostgreSQL", "Docker"]),
+    ], job);
     expect(ranked.map((p) => p.id)).toEqual([3, 2]);
-    expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
   });
 
   it("caps at k", () => {
-    const projects = [
-      proj(1, ["TypeScript"]),
-      proj(2, ["PostgreSQL"]),
-      proj(3, ["Docker"]),
-      proj(4, ["TypeScript", "Docker"]),
-    ];
-    expect(rankProjects(projects, job, 2)).toHaveLength(2);
+    const ranked = rankProjects(
+      [
+        proj(1, ["TypeScript"]),
+        proj(2, ["PostgreSQL"]),
+        proj(3, ["Docker"]),
+      ],
+      job,
+      2,
+    );
+    expect(ranked).toHaveLength(2);
   });
 
   it("returns empty when nothing is relevant", () => {
@@ -79,30 +88,34 @@ describe("rankProjects", () => {
   });
 });
 
-describe("formatRelevantProjects", () => {
-  const ranked = (over: Partial<RankedProject> = {}): RankedProject => ({
+describe("formatProjectCitations", () => {
+  const ranked = (over: Partial<RankableProject> = {}): RankableProject => ({
+    kind: "work_experience_project",
     id: 1,
-    title: "TaskFlow",
-    summary: "A real-time task board.",
-    keywords: ["Svelte"],
-    score: 3,
+    title: "Payments Migration",
+    context: "at Acme Corp",
+    keywords: ["Kafka"],
+    text: "",
+    citation: "Migrated billing to microservices.",
     ...over,
   });
 
   it("returns empty string when there are no projects", () => {
-    expect(formatRelevantProjects([])).toBe("");
+    expect(formatProjectCitations([])).toBe("");
   });
 
-  it("emits a self-contained block with title + summary", () => {
-    const out = formatRelevantProjects([ranked()]);
-    expect(out).toContain("Relevant projects");
-    expect(out).toContain("1. TaskFlow");
-    expect(out).toContain("A real-time task board.");
+  it("emits a self-contained block with title, context, and citation", () => {
+    const out = formatProjectCitations([ranked()]);
+    expect(out).toContain("Relevant projects from the applicant");
+    expect(out).toContain("1. Payments Migration (at Acme Corp)");
+    expect(out).toContain("Migrated billing to microservices.");
   });
 
-  it("clips long summaries", () => {
-    const out = formatRelevantProjects([ranked({ summary: "x".repeat(1000) })]);
-    expect(out).toContain("…");
-    expect(out.length).toBeLessThan(1000);
+  it("omits the parenthetical when there is no context", () => {
+    const out = formatProjectCitations([
+      ranked({ context: "", title: "Solo App" }),
+    ]);
+    expect(out).toContain("1. Solo App\n");
+    expect(out).not.toContain("Solo App (");
   });
 });
