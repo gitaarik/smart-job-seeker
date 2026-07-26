@@ -7,13 +7,15 @@
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
   import VersionTags from "$lib/components/VersionTags.svelte";
   import ConfirmModal from "../../../components/ConfirmModal.svelte";
   import Card from "../../../../components/Card.svelte";
-
-  type SaveState = "idle" | "saving" | "saved" | "error";
 
   let { data }: { data: PageData } = $props();
 
@@ -23,9 +25,6 @@
   let education = $derived(data.education);
 
   let pageTitle = $derived(education.institution || 'Education');
-
-  // Section save state
-  let basicSaveState = $state<SaveState>("idle");
 
   // Form states
   let editInstitution = $state(education.institution || "");
@@ -46,37 +45,81 @@
     return d.toISOString().split("T")[0];
   }
 
-  async function saveBasicInfo() {
-    basicSaveState = "saving";
-    try {
+  // The whole card is one PATCH, so it's one auto-saved field with one undo
+  // window — same shape as the other profile detail pages.
+  type EducationBasics = {
+    institution: string;
+    area: string;
+    studyType: string;
+    location: string;
+    url: string;
+    graduationYear: string;
+    startDate: string;
+    endDate: string;
+    summary: string;
+  };
+  const basicsField = autoSaveField<EducationBasics>({
+    initial: {
+      institution: editInstitution,
+      area: editArea,
+      studyType: editStudyType,
+      location: editLocation,
+      url: editUrl,
+      graduationYear: editGraduationYear,
+      startDate: editStartDate,
+      endDate: editEndDate,
+      summary: editSummary,
+    },
+    save: async (v) => {
       const response = await fetch(`/api/education/${education.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          institution: editInstitution,
-          area: editArea,
-          study_type: editStudyType,
-          location: editLocation,
-          url: editUrl,
-          graduation_year: editGraduationYear || null,
-          start_date: editStartDate || null,
-          end_date: editEndDate || null,
-          summary: editSummary,
+          institution: v.institution,
+          area: v.area,
+          study_type: v.studyType,
+          location: v.location,
+          url: v.url,
+          graduation_year: v.graduationYear || null,
+          start_date: v.startDate || null,
+          end_date: v.endDate || null,
+          summary: v.summary,
         }),
       });
-
-      if (response.ok) {
-        basicSaveState = "saved";
-        setTimeout(() => (basicSaveState = "idle"), 2000);
-      } else {
-        basicSaveState = "error";
-        setTimeout(() => (basicSaveState = "idle"), 3000);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(
+          body.message || body.error || `Save failed (${response.status})`,
+        );
       }
-    } catch {
-      basicSaveState = "error";
-      setTimeout(() => (basicSaveState = "idle"), 3000);
-    }
-  }
+    },
+    onSaved: (v) => {
+      editInstitution = v.institution;
+      editArea = v.area;
+      editStudyType = v.studyType;
+      editLocation = v.location;
+      editUrl = v.url;
+      editGraduationYear = v.graduationYear;
+      editStartDate = v.startDate;
+      editEndDate = v.endDate;
+      editSummary = v.summary;
+    },
+    equal: recordsEqual,
+    debounceMs: 700,
+  });
+  $effect(() =>
+    basicsField.set({
+      institution: editInstitution,
+      area: editArea,
+      studyType: editStudyType,
+      location: editLocation,
+      url: editUrl,
+      graduationYear: editGraduationYear,
+      startDate: editStartDate,
+      endDate: editEndDate,
+      summary: editSummary,
+    })
+  );
 </script>
 
 <svelte:head>
@@ -246,7 +289,7 @@
       />
     </div>
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
+      <AutoSaveIndicator field={basicsField} />
     </div>
   </Card>
 

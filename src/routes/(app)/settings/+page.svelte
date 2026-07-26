@@ -7,6 +7,11 @@
   import Card from "../components/Card.svelte";
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import { TIMEZONE_OPTIONS, formatTzLabel } from "$lib/timezone";
   import { defaultTimeFormat, resolveTimeFormat, isHour12 } from "$lib/format-date";
   import type { TimeFormat } from "$lib/format-date";
@@ -44,22 +49,39 @@
     confirmPassword.length > 0 && newPassword !== confirmPassword
   );
 
-  // Timezone
+  // Timezone + time format — auto-saved as one PATCH with an undo window.
+  // (Email and password below stay on explicit save: both need the current
+  // credential and a verification round-trip, so "undo" means nothing there.)
+  type DisplaySettings = { timezone: string; timeFormat: string | null };
   let timezone = $state(data.timezone || "");
-  let tzSaving = $state(false);
-  let tzSaved = $state(false);
-  let tzError = $state("");
-
-  const originalTimezone = data.timezone || "";
-
   // Time format: null = auto, "12h", "24h"
   let timeFormat = $state<string | null>(data.timeFormatRaw);
 
-  const originalTimeFormat = data.timeFormatRaw;
-
-  const settingsChanged = $derived(
-    timezone !== originalTimezone || timeFormat !== originalTimeFormat,
-  );
+  const displayField = autoSaveField<DisplaySettings>({
+    initial: { timezone: data.timezone || "", timeFormat: data.timeFormatRaw },
+    save: async (v) => {
+      const res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timezone: v.timezone, time_format: v.timeFormat }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Save failed (${res.status})`);
+      }
+    },
+    onSaved: (v) => {
+      timezone = v.timezone;
+      timeFormat = v.timeFormat;
+    },
+    equal: recordsEqual,
+  });
+  $effect(() => {
+    // Never persist an empty timezone — the select starts blank on accounts
+    // that have never set one, and the auto-detect below fills it in.
+    if (!timezone) return;
+    displayField.set({ timezone, timeFormat });
+  });
 
   // Resolved format for display (never null)
   const resolvedFormat = $derived(
@@ -168,34 +190,6 @@
     }
   }
 
-  async function saveSettings() {
-    if (!settingsChanged || !timezone) return;
-
-    tzSaving = true;
-    tzError = "";
-    tzSaved = false;
-
-    try {
-      const res = await fetch("/api/account", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone, time_format: timeFormat }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ message: "Failed to save" }));
-        tzError = body.message || `Error ${res.status}`;
-        return;
-      }
-
-      tzSaved = true;
-      setTimeout(() => (tzSaved = false), 3000);
-    } catch {
-      tzError = "Network error, please try again";
-    } finally {
-      tzSaving = false;
-    }
-  }
 </script>
 
 <svelte:head>
@@ -478,26 +472,13 @@
         </p>
       </div>
 
-      {#if tzError}
-        <p class="text-sm" style="color: var(--dash-error);">{tzError}</p>
+      {#if !timezone}
+        <span class="text-xs text-[var(--dash-error)]">
+          Pick a timezone — nothing is saved while this is empty.
+        </span>
+      {:else if displayField.status !== "idle"}
+        <AutoSaveIndicator field={displayField} />
       {/if}
-
-      <button
-        type="button"
-        onclick={saveSettings}
-        disabled={tzSaving || !settingsChanged || !timezone}
-        class="px-4 py-2 text-sm text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-[var(--dash-primary)]"
-      >
-        {#if tzSaving}
-          <Spinner size="w-4 h-4" />
-          Saving...
-        {:else if tzSaved}
-          <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-          Saved
-        {:else}
-          Save
-        {/if}
-      </button>
     </div>
   </Card>
   </div>

@@ -1,4 +1,4 @@
-import { untrack } from "svelte";
+import { onDestroy, untrack } from "svelte";
 
 /**
  * Auto-save state machine for a single form field (or group of fields treated
@@ -24,6 +24,9 @@ import { untrack } from "svelte";
  *    available — undo posts the previous saved value through the same save fn.
  *  - On failure, the user's value stays put (no snap-back) and retry() re-runs
  *    the save. The next set() also clears the error.
+ *  - Pending debounced saves survive navigation: the dashboard layout flushes
+ *    every live field from `beforeNavigate` (see flushPendingSaves below), so
+ *    callers don't need their own guard.
  */
 
 export type AutoSaveStatus = "idle" | "saving" | "saved" | "error";
@@ -73,6 +76,54 @@ export interface AutoSaveField<T> {
   reset: (newInitial: T) => void;
   /** Tear down timers. Call from onDestroy if the field outlives its UI. */
   destroy: () => void;
+}
+
+/**
+ * Every live field, so a navigation guard can push pending debounced saves out
+ * before the component tree is torn down. Fields register on creation and
+ * deregister in destroy() (wired to onDestroy when created inside a component).
+ *
+ * Deliberately a plain Set, not a SvelteSet: nothing renders from it, and the
+ * two readers below are called from navigation handlers rather than an effect,
+ * so reactive membership would only add overhead.
+ */
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const liveFields = new Set<AutoSaveField<unknown>>();
+
+/**
+ * Run every pending debounced save now. Safe to call from `beforeNavigate`:
+ * the fetches are plain requests with no abort signal, so they outlive the
+ * component teardown that follows.
+ */
+export function flushPendingSaves(): void {
+  for (const field of liveFields) field.flush();
+}
+
+/** True when any live field has an unsaved change or a save in flight. */
+export function hasPendingSaves(): boolean {
+  for (const field of liveFields) {
+    if (field.dirty || field.status === "saving") return true;
+  }
+  return false;
+}
+
+/**
+ * `equal` for a record-shaped field (a section saved as one PATCH). The $effect
+ * that feeds such a field rebuilds the object every run, so identity comparison
+ * would report a change on every keystroke anywhere on the page.
+ */
+export function recordsEqual<T extends Record<string, unknown>>(
+  a: T,
+  b: T,
+): boolean {
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((k) => a[k] === b[k]);
+}
+
+/** `equal` for a list-shaped field. Compares element identity, in order. */
+export function arraysEqual<T>(a: readonly T[], b: readonly T[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
 export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
@@ -157,7 +208,7 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
     }
   }
 
-  return {
+  const field: AutoSaveField<T> = {
     get value() {
       return value;
     },
@@ -226,6 +277,25 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
       clearDebounce();
       clearFlash();
       latestSeq++;
+      liveFields.delete(field as AutoSaveField<unknown>);
     },
   };
+
+  liveFields.add(field as AutoSaveField<unknown>);
+
+  // Deregister when the calling component goes away. Flush first so a change
+  // still inside its debounce window isn't dropped by the teardown — the PATCH
+  // is already in flight by the time destroy() invalidates the commit step, so
+  // the server still gets it. Callers outside component init (tests, module
+  // scope) hit the catch and own destroy() themselves.
+  try {
+    onDestroy(() => {
+      field.flush();
+      field.destroy();
+    });
+  } catch {
+    // not in component init — no lifecycle to hook into
+  }
+
+  return field;
 }

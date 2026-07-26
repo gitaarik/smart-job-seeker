@@ -13,6 +13,11 @@
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
   import AchievementsList, { type AchievementItem } from "$lib/components/AchievementsList.svelte";
   import WorkExperienceProjects from "../../../components/WorkExperienceProjects.svelte";
@@ -44,8 +49,10 @@
 
   let pageTitle = $derived(experience.position || experience.name || 'Experience');
 
-  // Section save states
-  let basicSaveState = $state<SaveState>("idle");
+  // Section save states. Technologies and achievements stay on explicit save:
+  // both stage removals in a `deleted*` index set that only takes effect on
+  // commit, so auto-saving would change what the delete button means, not just
+  // when the PATCH fires.
   let techSaveState = $state<SaveState>("idle");
   let achievementsSaveState = $state<SaveState>("idle");
 
@@ -108,37 +115,75 @@
     return d.toISOString().split("T")[0];
   }
 
-  async function saveBasicInfo() {
-    basicSaveState = "saving";
-    try {
+  type ExperienceBasics = {
+    name: string;
+    position: string;
+    location: string;
+    website: string;
+    headline: string;
+    summary: string;
+    startDate: string;
+    endDate: string;
+  };
+  const basicsField = autoSaveField<ExperienceBasics>({
+    initial: {
+      name: editName,
+      position: editPosition,
+      location: editLocation,
+      website: editWebsite,
+      headline: editHeadline,
+      summary: editSummary,
+      startDate: editStartDate,
+      endDate: editEndDate,
+    },
+    save: async (v) => {
       const response = await fetch(`/api/work-experience/${experience.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "basic",
-          name: editName,
-          position: editPosition,
-          location: editLocation,
-          website: editWebsite,
-          headline: editHeadline,
-          summary: editSummary,
-          start_date: editStartDate || null,
-          end_date: editEndDate || null,
+          name: v.name,
+          position: v.position,
+          location: v.location,
+          website: v.website,
+          headline: v.headline,
+          summary: v.summary,
+          start_date: v.startDate || null,
+          end_date: v.endDate || null,
         }),
       });
-
-      if (response.ok) {
-        basicSaveState = "saved";
-        setTimeout(() => (basicSaveState = "idle"), 2000);
-      } else {
-        basicSaveState = "error";
-        setTimeout(() => (basicSaveState = "idle"), 3000);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(
+          body.message || body.error || `Save failed (${response.status})`,
+        );
       }
-    } catch {
-      basicSaveState = "error";
-      setTimeout(() => (basicSaveState = "idle"), 3000);
-    }
-  }
+    },
+    onSaved: (v) => {
+      editName = v.name;
+      editPosition = v.position;
+      editLocation = v.location;
+      editWebsite = v.website;
+      editHeadline = v.headline;
+      editSummary = v.summary;
+      editStartDate = v.startDate;
+      editEndDate = v.endDate;
+    },
+    equal: recordsEqual,
+    debounceMs: 700,
+  });
+  $effect(() =>
+    basicsField.set({
+      name: editName,
+      position: editPosition,
+      location: editLocation,
+      website: editWebsite,
+      headline: editHeadline,
+      summary: editSummary,
+      startDate: editStartDate,
+      endDate: editEndDate,
+    })
+  );
 
   async function saveTechnologies() {
     techSaveState = "saving";
@@ -503,7 +548,7 @@
       />
     </div>
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
+      <AutoSaveIndicator field={basicsField} />
     </div>
   </Card>
 

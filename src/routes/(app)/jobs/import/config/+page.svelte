@@ -7,6 +7,11 @@
   import Card from "../../../components/Card.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -18,34 +23,120 @@
       .filter((s): s is string => s !== undefined);
   }
 
-  function arraysEqual(a: string[], b: string[]): boolean {
+  // Order-insensitive: these are checkbox sets, so toggling an option off and
+  // back on isn't a change worth persisting.
+  function setsEqual(a: string[], b: string[]): boolean {
     if (a.length !== b.length) return false;
     const sortedA = [...a].sort();
     const sortedB = [...b].sort();
     return sortedA.every((v, i) => v === sortedB[i]);
   }
 
-  // === Saved state (what's on the server) ===
-  let savedJobTypes = $state<string[]>(
+  async function patchConfig(body: Record<string, unknown>) {
+    const res = await fetch("/api/job-preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile_id: data.profileId, ...body }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(
+        err.error || err.message || `Save failed (${res.status})`,
+      );
+    }
+  }
+
+  // Each section auto-saves with its own undo window, mirroring the task edit
+  // page. Job types and work location are required, so the $effect that feeds
+  // them skips an empty selection rather than persisting one — the card shows
+  // a hint instead of an indicator while that's the case.
+  let jobTypes = $state<string[]>(
     normalizeToOptions(data.config.job_types || [], data.options.jobTypes),
   );
-  let savedWorkLocation = $state<string[]>(
-    normalizeToOptions(data.config.work_location || [], data.options.workLocationOptions),
-  );
-  let savedExperienceLevels = $state<string[]>(
-    normalizeToOptions(data.config.experience_levels || [], data.options.experienceLevels),
-  );
-  let savedLocations = $state<string[]>(data.config.locations || []);
-  let savedMatchCommunityJobs = $state<boolean>(data.config.match_community_jobs ?? false);
-  let savedCommunityMaxAgeDays = $state<number | null>(data.config.community_max_age_days ?? 30);
+  const jobTypesField = autoSaveField<string[]>({
+    initial: [...jobTypes],
+    save: (v) => patchConfig({ job_types: v }),
+    onSaved: (v) => (jobTypes = [...v]),
+    equal: setsEqual,
+  });
+  $effect(() => {
+    if (jobTypes.length === 0) return;
+    jobTypesField.set([...jobTypes]);
+  });
 
-  // === Current (editable) state ===
-  let jobTypes = $state<string[]>([...savedJobTypes]);
-  let workLocation = $state<string[]>([...savedWorkLocation]);
-  let experienceLevels = $state<string[]>([...savedExperienceLevels]);
-  let locations = $state<string[]>([...savedLocations]);
-  let matchCommunityJobs = $state<boolean>(savedMatchCommunityJobs);
-  let communityMaxAgeDays = $state<number | null>(savedCommunityMaxAgeDays);
+  let workLocation = $state<string[]>(
+    normalizeToOptions(
+      data.config.work_location || [],
+      data.options.workLocationOptions,
+    ),
+  );
+  const workLocationField = autoSaveField<string[]>({
+    initial: [...workLocation],
+    save: (v) => patchConfig({ work_location: v }),
+    onSaved: (v) => (workLocation = [...v]),
+    equal: setsEqual,
+  });
+  $effect(() => {
+    if (workLocation.length === 0) return;
+    workLocationField.set([...workLocation]);
+  });
+
+  let experienceLevels = $state<string[]>(
+    normalizeToOptions(
+      data.config.experience_levels || [],
+      data.options.experienceLevels,
+    ),
+  );
+  const experienceLevelsField = autoSaveField<string[]>({
+    initial: [...experienceLevels],
+    save: (v) => patchConfig({ experience_levels: v }),
+    onSaved: (v) => (experienceLevels = [...v]),
+    equal: setsEqual,
+  });
+  $effect(() => experienceLevelsField.set([...experienceLevels]));
+
+  let locations = $state<string[]>(data.config.locations || []);
+  const locationsField = autoSaveField<string[]>({
+    initial: [...locations],
+    save: (v) => patchConfig({ locations: v }),
+    onSaved: (v) => (locations = [...v]),
+    equal: setsEqual,
+  });
+  $effect(() => locationsField.set([...locations]));
+
+  // Toggle + time window travel together: turning the toggle off clears the
+  // window server-side, so they have to be one PATCH.
+  type CommunityConfig = { enabled: boolean; maxAgeDays: number | null };
+  let matchCommunityJobs = $state<boolean>(
+    data.config.match_community_jobs ?? false,
+  );
+  let communityMaxAgeDays = $state<number | null>(
+    data.config.community_max_age_days ?? 30,
+  );
+  const communityField = autoSaveField<CommunityConfig>({
+    initial: {
+      enabled: data.config.match_community_jobs ?? false,
+      maxAgeDays: data.config.match_community_jobs
+        ? (data.config.community_max_age_days ?? 30)
+        : null,
+    },
+    save: (v) =>
+      patchConfig({
+        match_community_jobs: v.enabled,
+        community_max_age_days: v.maxAgeDays,
+      }),
+    onSaved: (v) => {
+      matchCommunityJobs = v.enabled;
+      if (v.enabled) communityMaxAgeDays = v.maxAgeDays;
+    },
+    equal: recordsEqual,
+  });
+  $effect(() =>
+    communityField.set({
+      enabled: matchCommunityJobs,
+      maxAgeDays: matchCommunityJobs ? communityMaxAgeDays : null,
+    })
+  );
 
   // String proxy for RadioGroup binding
   let communityMaxAgeDaysStr = $derived(communityMaxAgeDays === null ? "all" : String(communityMaxAgeDays));
@@ -84,23 +175,6 @@
   // Location input
   let locationInput = $state("");
 
-  // === Per-field saving state ===
-  let isSavingJobTypes = $state(false);
-  let isSavingWorkLocation = $state(false);
-  let isSavingExperienceLevels = $state(false);
-  let isSavingLocations = $state(false);
-  let isSavingCommunityJobs = $state(false);
-
-  // === Dirty detection ===
-  let jobTypesDirty = $derived(!arraysEqual(jobTypes, savedJobTypes));
-  let workLocationDirty = $derived(!arraysEqual(workLocation, savedWorkLocation));
-  let experienceLevelsDirty = $derived(!arraysEqual(experienceLevels, savedExperienceLevels));
-  let locationsDirty = $derived(!arraysEqual(locations, savedLocations));
-  let communityJobsDirty = $derived(
-    matchCommunityJobs !== savedMatchCommunityJobs ||
-    communityMaxAgeDays !== savedCommunityMaxAgeDays
-  );
-
   function toggleArrayValue(arr: string[], value: string): string[] {
     return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
   }
@@ -121,76 +195,6 @@
     if (e.key === "Enter") {
       e.preventDefault();
       addLocation();
-    }
-  }
-
-  // === Per-field save/cancel (PATCH) ===
-  async function patchField(field: string, value: unknown, setSaving: (v: boolean) => void) {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/job-preferences", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile_id: data.profileId, [field]: value }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        console.error(`Failed to save ${field}:`, err.error || err.message);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.error(`Failed to save ${field}:`, err);
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function saveJobTypes() {
-    if (jobTypes.length === 0) return;
-    if (await patchField("job_types", jobTypes, (v) => (isSavingJobTypes = v))) {
-      savedJobTypes = [...jobTypes];
-    }
-  }
-
-  async function saveWorkLocation() {
-    if (workLocation.length === 0) return;
-    if (await patchField("work_location", workLocation, (v) => (isSavingWorkLocation = v))) {
-      savedWorkLocation = [...workLocation];
-    }
-  }
-
-  async function saveExperienceLevels() {
-    if (await patchField("experience_levels", experienceLevels, (v) => (isSavingExperienceLevels = v))) {
-      savedExperienceLevels = [...experienceLevels];
-    }
-  }
-
-  async function saveLocations() {
-    if (await patchField("locations", locations, (v) => (isSavingLocations = v))) {
-      savedLocations = [...locations];
-    }
-  }
-
-  async function saveCommunityJobs() {
-    isSavingCommunityJobs = true;
-    try {
-      const res = await fetch("/api/job-preferences", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile_id: data.profileId,
-          match_community_jobs: matchCommunityJobs,
-          community_max_age_days: matchCommunityJobs ? communityMaxAgeDays : null,
-        }),
-      });
-      if (res.ok) {
-        savedMatchCommunityJobs = matchCommunityJobs;
-        savedCommunityMaxAgeDays = communityMaxAgeDays;
-      }
-    } finally {
-      isSavingCommunityJobs = false;
     }
   }
 
@@ -239,28 +243,15 @@
         </button>
       {/each}
     </div>
-    {#if jobTypesDirty}
-      <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
-        <button
-          type="button"
-          onclick={saveJobTypes}
-          disabled={isSavingJobTypes || jobTypes.length === 0}
-          class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-        >
-          {#if isSavingJobTypes}
-            <Spinner size="w-3 h-3" />
-          {:else}
-            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          {/if}
-          Save
-        </button>
-        <button
-          type="button"
-          onclick={() => (jobTypes = [...savedJobTypes])}
-          class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          Cancel
-        </button>
+    {#if jobTypes.length === 0}
+      <div class="mt-3">
+        <span class="text-xs text-[var(--dash-error)]">
+          Pick at least one — an empty selection isn't saved.
+        </span>
+      </div>
+    {:else if jobTypesField.status !== "idle"}
+      <div class="mt-3">
+        <AutoSaveIndicator field={jobTypesField} />
       </div>
     {/if}
   </Card>
@@ -297,28 +288,15 @@
         </button>
       {/each}
     </div>
-    {#if workLocationDirty}
-      <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
-        <button
-          type="button"
-          onclick={saveWorkLocation}
-          disabled={isSavingWorkLocation || workLocation.length === 0}
-          class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-        >
-          {#if isSavingWorkLocation}
-            <Spinner size="w-3 h-3" />
-          {:else}
-            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          {/if}
-          Save
-        </button>
-        <button
-          type="button"
-          onclick={() => (workLocation = [...savedWorkLocation])}
-          class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          Cancel
-        </button>
+    {#if workLocation.length === 0}
+      <div class="mt-3">
+        <span class="text-xs text-[var(--dash-error)]">
+          Pick at least one — an empty selection isn't saved.
+        </span>
+      </div>
+    {:else if workLocationField.status !== "idle"}
+      <div class="mt-3">
+        <AutoSaveIndicator field={workLocationField} />
       </div>
     {/if}
   </Card>
@@ -376,28 +354,9 @@
         </button>
       </div>
 
-      {#if locationsDirty}
-        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
-          <button
-            type="button"
-            onclick={saveLocations}
-            disabled={isSavingLocations}
-            class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-          >
-            {#if isSavingLocations}
-              <Spinner size="w-3 h-3" />
-            {:else}
-              <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-            {/if}
-            Save
-          </button>
-          <button
-            type="button"
-            onclick={() => (locations = [...savedLocations])}
-            class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-          >
-            Cancel
-          </button>
+      {#if locationsField.status !== "idle"}
+        <div class="mt-3">
+          <AutoSaveIndicator field={locationsField} />
         </div>
       {/if}
     </Card>
@@ -433,28 +392,9 @@
         </button>
       {/each}
     </div>
-    {#if experienceLevelsDirty}
-      <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
-        <button
-          type="button"
-          onclick={saveExperienceLevels}
-          disabled={isSavingExperienceLevels}
-          class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-        >
-          {#if isSavingExperienceLevels}
-            <Spinner size="w-3 h-3" />
-          {:else}
-            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          {/if}
-          Save
-        </button>
-        <button
-          type="button"
-          onclick={() => (experienceLevels = [...savedExperienceLevels])}
-          class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          Cancel
-        </button>
+    {#if experienceLevelsField.status !== "idle"}
+      <div class="mt-3">
+        <AutoSaveIndicator field={experienceLevelsField} />
       </div>
     {/if}
   </Card>
@@ -507,28 +447,9 @@
         {/if}
       </div>
     {/if}
-    {#if communityJobsDirty}
-      <div class="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--dash-border)]">
-        <button
-          type="button"
-          onclick={saveCommunityJobs}
-          disabled={isSavingCommunityJobs}
-          class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
-        >
-          {#if isSavingCommunityJobs}
-            <Spinner size="w-3 h-3" />
-          {:else}
-            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-          {/if}
-          Save
-        </button>
-        <button
-          type="button"
-          onclick={() => { matchCommunityJobs = savedMatchCommunityJobs; communityMaxAgeDays = savedCommunityMaxAgeDays; }}
-          class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          Cancel
-        </button>
+    {#if communityField.status !== "idle"}
+      <div class="mt-3">
+        <AutoSaveIndicator field={communityField} />
       </div>
     {/if}
   </Card>

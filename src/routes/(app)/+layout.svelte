@@ -2,6 +2,11 @@
   import type { LayoutData } from "./$types";
   import type { Snippet } from "svelte";
   import { onMount } from "svelte";
+  import { beforeNavigate } from "$app/navigation";
+  import {
+    flushPendingSaves,
+    hasPendingSaves,
+  } from "$lib/components/auto-save.svelte";
   import DashboardHeader from "./components/DashboardHeader.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import FeedbackWidget from "./components/FeedbackWidget.svelte";
@@ -32,6 +37,20 @@
     }).catch(() => {});
   });
 
+  // Auto-saved fields debounce their PATCH, so a click on the sidebar can land
+  // inside that window — client-side nav doesn't blur the input first, which is
+  // what normally flushes. Push everything out before the route tears down.
+  beforeNavigate(() => {
+    flushPendingSaves();
+  });
+
+  // Same window, but for a hard reload/close: the request can't be guaranteed
+  // to finish, so flush and then let the browser ask whether to stay.
+  function handleBeforeUnload(event: BeforeUnloadEvent) {
+    flushPendingSaves();
+    if (hasPendingSaves()) event.preventDefault();
+  }
+
   // Mirror --imp-offset onto <body> so modals portaled out of the route subtree
   // (via the portalToBody action) can still read it for chrome-offset padding.
   $effect(() => {
@@ -41,6 +60,8 @@
     );
   });
 </script>
+
+<svelte:window onbeforeunload={handleBeforeUnload} />
 
 <svelte:head>
   <title>Dashboard - Smart Job Seeker</title>

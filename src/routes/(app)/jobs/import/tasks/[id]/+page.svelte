@@ -7,6 +7,8 @@
   import ImportTaskBlockerList from "../../components/ImportTaskBlockerList.svelte";
   import { computeImportTaskBlockers } from "$lib/import-tasks/readiness";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { autoSaveField } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import { portalToBody } from "$lib/actions/portal";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
@@ -83,34 +85,41 @@
     return level === "weak" ? "weak" : "strong";
   }
 
-  // Header editing state (note)
+  // Header note — auto-saved with an undo window, matching the fields in
+  // <SearchTaskFields> further down the page. `isEditingNote` only controls
+  // whether the input is shown; it no longer gates the save.
   let isEditingNote = $state(false);
   let editNoteInput = $state(searchTask.note ?? "");
-  let isSavingHeader = $state(false);
-
-  async function saveHeader() {
-    isSavingHeader = true;
-    try {
-      const newNote = editNoteInput.trim();
-
-      if (newNote !== (searchTask.note ?? "")) {
-        await fetch(`/api/import-tasks/${searchTask.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note: newNote }),
-        });
-        searchTask.note = newNote || null;
+  const noteField = autoSaveField<string | null>({
+    initial: searchTask.note ?? null,
+    save: async (v) => {
+      const res = await fetch(`/api/import-tasks/${searchTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: v ?? "" }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(
+          body.message || body.error || `Save failed (${res.status})`,
+        );
       }
-      isEditingNote = false;
-    } catch (err) {
-      console.error("Failed to save header:", err);
-    } finally {
-      isSavingHeader = false;
-    }
-  }
+    },
+    onSaved: (v) => {
+      searchTask.note = v;
+      editNoteInput = v ?? "";
+    },
+    equal: (a, b) => (a ?? "") === (b ?? ""),
+    debounceMs: 700,
+  });
+  $effect(() => {
+    noteField.set(editNoteInput.trim() || null);
+  });
 
-  function cancelEditNote() {
-    editNoteInput = searchTask.note ?? "";
+  // Collapse back to the display view. Flushes first so a change still inside
+  // the debounce window goes out rather than waiting on a hidden timer.
+  function closeNoteEditor() {
+    noteField.flush();
     isEditingNote = false;
   }
 
@@ -392,6 +401,7 @@
     // Reset note input
     isEditingNote = false;
     editNoteInput = data.searchTask.note ?? "";
+    noteField.reset(data.searchTask.note ?? null);
     // Reset settings section
     settingsOpen = (() => {
       const v = (data.uiPreferences as Record<string, unknown>)[
@@ -2305,29 +2315,22 @@
           <input
             type="text"
             bind:value={editNoteInput}
+            onblur={noteField.flush}
             autocomplete="off"
             placeholder="e.g., Remote only, senior roles"
             class="flex-1 min-w-0 px-2 py-1 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded text-[var(--dash-text)] text-base focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             onkeydown={(e) => {
-              if (e.key === "Enter") saveHeader();
-              if (e.key === "Escape") cancelEditNote();
+              if (e.key === "Enter" || e.key === "Escape") closeNoteEditor();
             }}
           />
+          <AutoSaveIndicator field={noteField} />
           <button
-            onclick={saveHeader}
-            disabled={isSavingHeader}
-            class="flex items-center gap-1 px-2 py-1 bg-[var(--dash-primary)] text-white rounded text-sm hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 shrink-0"
+            onclick={closeNoteEditor}
+            class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors shrink-0"
+            title="Done"
+            aria-label="Done editing note"
           >
-            {#if isSavingHeader}
-              <Spinner size="w-3 h-3" />
-            {/if}
-            Save
-          </button>
-          <button
-            onclick={cancelEditNote}
-            class="px-2 py-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] text-sm transition-colors shrink-0"
-          >
-            Cancel
+            <FontAwesomeIcon icon={faCheck} class="w-3.5 h-3.5" />
           </button>
         </div>
       {:else if searchTask.note}

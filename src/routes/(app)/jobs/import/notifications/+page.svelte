@@ -2,11 +2,16 @@
   import type { PageData } from "./$types";
   import { page } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCheck, faEnvelope, faCalendarAlt, faPenToSquare, faPencil, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
+  import { faEnvelope, faCalendarAlt, faPenToSquare, faPencil, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import Checkbox from "../../../components/Checkbox.svelte";
   import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import { TIMEZONE_OPTIONS, formatTzLabel } from "$lib/timezone";
   import { formatTimeShort, formatDateShort as fmtDateShort, buildHourOptions } from "$lib/format-date";
   import type { TimeFormat } from "$lib/format-date";
@@ -25,8 +30,6 @@
   );
   let digestTimezone = $state(data.emailDigest.timezone || "");
   let sendToExpanded = $state(false);
-  let digestSaving = $state(false);
-  let digestSaved = $state(false);
   let digestError = $state("");
   let sendingNow = $state(false);
   let sendNowResult = $state<{ sent_to: string[]; job_count: number } | null>(null);
@@ -138,39 +141,64 @@
     }
   });
 
-  async function saveDigestSettings() {
-    digestSaving = true;
-    digestError = "";
-    digestSaved = false;
-
-    try {
+  // The whole digest config is one PATCH, so it's one auto-saved field with a
+  // single undo window rather than six racing indicators.
+  type DigestSettings = {
+    enabled: boolean;
+    frequencyDays: number;
+    minScore: number;
+    preferredHour: number;
+    sendTo: string;
+    timezone: string;
+  };
+  const digestField = autoSaveField<DigestSettings>({
+    initial: {
+      enabled: data.emailDigest.enabled,
+      frequencyDays: data.emailDigest.frequency_days,
+      minScore: data.emailDigest.min_score,
+      preferredHour: data.emailDigest.preferred_hour,
+      sendTo: data.emailDigest.send_to,
+      timezone: data.emailDigest.timezone || "",
+    },
+    save: async (v) => {
       const res = await fetch(`/api/profile/${data.profileId}/email-digest`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          enabled: digestEnabled,
-          frequency_days: digestFrequency,
-          min_score: digestMinScore,
-          preferred_hour: digestPreferredHour,
-          send_to: digestSendTo,
-          timezone: digestTimezone || undefined,
+          enabled: v.enabled,
+          frequency_days: v.frequencyDays,
+          min_score: v.minScore,
+          preferred_hour: v.preferredHour,
+          send_to: v.sendTo,
+          timezone: v.timezone || undefined,
         }),
       });
-
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ message: "Failed to save" }));
-        digestError = body.message || `Error ${res.status}`;
-        return;
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Error ${res.status}`);
       }
-
-      digestSaved = true;
-      setTimeout(() => (digestSaved = false), 3000);
-    } catch {
-      digestError = "Network error, please try again";
-    } finally {
-      digestSaving = false;
-    }
-  }
+    },
+    onSaved: (v) => {
+      digestEnabled = v.enabled;
+      digestFrequency = v.frequencyDays;
+      digestMinScore = v.minScore;
+      digestPreferredHour = v.preferredHour;
+      digestTimezone = v.timezone;
+      sendToProfile = v.sendTo === "profile" || v.sendTo === "both";
+      sendToAccount = v.sendTo === "account" || v.sendTo === "both";
+    },
+    equal: recordsEqual,
+  });
+  $effect(() =>
+    digestField.set({
+      enabled: digestEnabled,
+      frequencyDays: digestFrequency,
+      minScore: digestMinScore,
+      preferredHour: digestPreferredHour,
+      sendTo: digestSendTo,
+      timezone: digestTimezone,
+    })
+  );
 
   async function sendDigestNow() {
     if (!confirm("Send email digest now?")) return;
@@ -419,21 +447,8 @@
       <p class="text-sm" style="color: var(--dash-error);">{digestError}</p>
     {/if}
 
-    <!-- Save button -->
     <div class="flex items-center gap-3">
-      <button
-        type="button"
-        onclick={saveDigestSettings}
-        disabled={digestSaving}
-        class="px-4 py-2 text-sm text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-[var(--dash-primary)]"
-      >
-        {#if digestSaving}
-          <Spinner size="w-4 h-4" />
-        {:else if digestSaved}
-          <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-        {/if}
-        {digestSaved ? "Saved" : "Save"}
-      </button>
+      <AutoSaveIndicator field={digestField} />
 
       {#if digestEnabled}
         <button

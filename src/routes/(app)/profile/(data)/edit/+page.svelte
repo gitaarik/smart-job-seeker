@@ -19,7 +19,11 @@
   import SectionHeader from "../../components/SectionHeader.svelte";
   import Card from "../../../components/Card.svelte";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import TranslatableField from "$lib/components/TranslatableField.svelte";
   import AutoTranslateProfile from "$lib/components/AutoTranslateProfile.svelte";
   import CountrySelect from "../../../jobs/components/CountrySelect.svelte";
@@ -29,12 +33,6 @@
 
   const profile = $derived(data.profile);
   let photoUrl = $state(getProfilePhotoUrl(data.profile));
-
-  // Section states
-  type SaveState = "idle" | "saving" | "saved" | "error";
-  let personalInfoState = $state<SaveState>("idle");
-  let contactState = $state<SaveState>("idle");
-  let socialState = $state<SaveState>("idle");
 
   // Form values - Personal Information
   let name = $state(data.profile?.name || "");
@@ -60,70 +58,105 @@
   let npm_profile = $state(data.profile?.npm_profile || "");
   let pypi_profile = $state(data.profile?.pypi_profile || "");
 
-  async function saveSection(
-    fields: Record<string, string>,
-    setState: (state: SaveState) => void,
-  ) {
-    setState("saving");
-
-    try {
-      const response = await fetch(`/api/profile/${profile.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fields),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error("Save failed:", error);
-        setState("error");
-        setTimeout(() => setState("idle"), 2000);
-        return;
-      }
-
-      setState("saved");
-      setTimeout(() => setState("idle"), 2000);
-    } catch (error) {
-      console.error("Save failed:", error);
-      setState("error");
-      setTimeout(() => setState("idle"), 2000);
+  async function saveSection(fields: Record<string, string>) {
+    const response = await fetch(`/api/profile/${profile.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(
+        error.message || error.error || `Save failed (${response.status})`,
+      );
     }
   }
 
-  function savePersonalInfo() {
-    saveSection(
-      { name, slug, title, subtitle, headline, summary },
-      (s) => (personalInfoState = s),
-    );
-  }
+  // One auto-saved field per card rather than one per input: each card already
+  // PATCHes its fields as a group, and 15 separate indicator pills in a dense
+  // two-column grid would be unreadable. Undo therefore reverts the card's last
+  // burst of edits, not a single input.
+  const personalInfoField = autoSaveField<Record<string, string>>({
+    initial: { name, slug, title, subtitle, headline, summary },
+    save: saveSection,
+    onSaved: (v) => {
+      name = v.name;
+      slug = v.slug;
+      title = v.title;
+      subtitle = v.subtitle;
+      headline = v.headline;
+      summary = v.summary;
+    },
+    equal: recordsEqual,
+    debounceMs: 700,
+  });
+  $effect(() =>
+    personalInfoField.set({ name, slug, title, subtitle, headline, summary })
+  );
 
-  function saveContact() {
-    saveSection(
-      {
-        email_address,
-        phone_number,
-        location,
-        location_url,
-        location_timezone,
-        country_code,
-        personal_website,
-      },
-      (s) => (contactState = s),
-    );
-  }
+  const contactField = autoSaveField<Record<string, string>>({
+    initial: {
+      email_address,
+      phone_number,
+      location,
+      location_url,
+      location_timezone,
+      country_code,
+      personal_website,
+    },
+    save: saveSection,
+    onSaved: (v) => {
+      email_address = v.email_address;
+      phone_number = v.phone_number;
+      location = v.location;
+      location_url = v.location_url;
+      location_timezone = v.location_timezone;
+      country_code = v.country_code;
+      personal_website = v.personal_website;
+    },
+    equal: recordsEqual,
+    debounceMs: 700,
+  });
+  $effect(() =>
+    contactField.set({
+      email_address,
+      phone_number,
+      location,
+      location_url,
+      location_timezone,
+      country_code,
+      personal_website,
+    })
+  );
 
-  function saveSocial() {
-    saveSection(
-      {
-        linkedin_profile,
-        github_profile,
-        stackoverflow_profile,
-        npm_profile,
-        pypi_profile,
-      },
-      (s) => (socialState = s),
-    );
-  }
+  const socialField = autoSaveField<Record<string, string>>({
+    initial: {
+      linkedin_profile,
+      github_profile,
+      stackoverflow_profile,
+      npm_profile,
+      pypi_profile,
+    },
+    save: saveSection,
+    onSaved: (v) => {
+      linkedin_profile = v.linkedin_profile;
+      github_profile = v.github_profile;
+      stackoverflow_profile = v.stackoverflow_profile;
+      npm_profile = v.npm_profile;
+      pypi_profile = v.pypi_profile;
+    },
+    equal: recordsEqual,
+    debounceMs: 700,
+  });
+  $effect(() =>
+    socialField.set({
+      linkedin_profile,
+      github_profile,
+      stackoverflow_profile,
+      npm_profile,
+      pypi_profile,
+    })
+  );
 </script>
 
 <svelte:head>
@@ -262,7 +295,7 @@
     </div>
 
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={personalInfoState} onClick={savePersonalInfo} />
+      <AutoSaveIndicator field={personalInfoField} />
     </div>
   </Card>
 
@@ -424,7 +457,7 @@
     </div>
 
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={contactState} onClick={saveContact} />
+      <AutoSaveIndicator field={contactField} />
     </div>
   </Card>
 
@@ -540,7 +573,7 @@
     </div>
 
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={socialState} onClick={saveSocial} />
+      <AutoSaveIndicator field={socialField} />
     </div>
   </Card>
 </div>

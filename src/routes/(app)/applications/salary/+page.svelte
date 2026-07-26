@@ -11,7 +11,11 @@
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import {
+    autoSaveField,
+    recordsEqual,
+  } from "$lib/components/auto-save.svelte";
+  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
   import {
     DEFAULT_INCOME_ASSUMPTIONS,
     estimateIncome,
@@ -24,8 +28,6 @@
     type SalaryRegionOverrides,
   } from "$lib/salary/conversion";
   import { REGIONS } from "$lib/data/job-taxonomy";
-
-  type SaveState = "idle" | "saving" | "saved" | "error";
 
   let { data }: { data: PageData } = $props();
 
@@ -50,88 +52,69 @@
     ...(settings.incomeAssumptions ?? {}),
   });
 
-  // Save states per section
-  let regionRatesState = $state<SaveState>("idle");
-  let adjustmentsState = $state<SaveState>("idle");
-  let incomeState = $state<SaveState>("idle");
   let showAssumptions = $state(false);
 
-  async function saveRegionRates() {
-    regionRatesState = "saving";
-    try {
-      const formData = new FormData();
-      formData.set("base_rate", baseRate);
-      formData.set("currency", currency);
-      formData.set("region_overrides", JSON.stringify(regionOverrides));
-
-      const response = await fetch("?/saveRegionRates", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        regionRatesState = "error";
-        setTimeout(() => (regionRatesState = "idle"), 2000);
-        return;
-      }
-
-      regionRatesState = "saved";
-      setTimeout(() => (regionRatesState = "idle"), 2000);
-    } catch {
-      regionRatesState = "error";
-      setTimeout(() => (regionRatesState = "idle"), 2000);
-    }
+  async function postAction(action: string, fields: Record<string, string>) {
+    const formData = new FormData();
+    for (const [k, v] of Object.entries(fields)) formData.set(k, v);
+    const response = await fetch(`?/${action}`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) throw new Error(`Save failed (${response.status})`);
   }
 
-  async function saveAdjustments() {
-    adjustmentsState = "saving";
-    try {
-      const formData = new FormData();
-      formData.set("adjustments", JSON.stringify(adjustments));
+  // These sections persist nested objects. Carrying the serialized JSON as the
+  // field value does double duty: stringifying inside the $effect deep-tracks
+  // every nested property (so in-place mutations still trigger a save), and it
+  // reduces "did this change?" to a string compare.
+  const regionRatesField = autoSaveField<Record<string, string>>({
+    initial: {
+      baseRate,
+      currency,
+      regionOverrides: JSON.stringify(regionOverrides),
+    },
+    save: (v) =>
+      postAction("saveRegionRates", {
+        base_rate: v.baseRate,
+        currency: v.currency,
+        region_overrides: v.regionOverrides,
+      }),
+    onSaved: (v) => {
+      baseRate = v.baseRate;
+      currency = v.currency;
+      regionOverrides = JSON.parse(v.regionOverrides);
+    },
+    equal: recordsEqual,
+    debounceMs: 700,
+  });
+  const baseRateValid = $derived(!!baseRate && parseInt(baseRate) > 0);
+  $effect(() => {
+    // Mirrors the old Save button's disabled rule — a zero or blank base rate
+    // was never persistable, so don't persist it now either.
+    if (!baseRateValid) return;
+    regionRatesField.set({
+      baseRate,
+      currency,
+      regionOverrides: JSON.stringify(regionOverrides),
+    });
+  });
 
-      const response = await fetch("?/saveAdjustments", {
-        method: "POST",
-        body: formData,
-      });
+  const adjustmentsField = autoSaveField<string>({
+    initial: JSON.stringify(adjustments),
+    save: (v) => postAction("saveAdjustments", { adjustments: v }),
+    onSaved: (v) => (adjustments = JSON.parse(v)),
+    debounceMs: 700,
+  });
+  $effect(() => adjustmentsField.set(JSON.stringify(adjustments)));
 
-      if (!response.ok) {
-        adjustmentsState = "error";
-        setTimeout(() => (adjustmentsState = "idle"), 2000);
-        return;
-      }
-
-      adjustmentsState = "saved";
-      setTimeout(() => (adjustmentsState = "idle"), 2000);
-    } catch {
-      adjustmentsState = "error";
-      setTimeout(() => (adjustmentsState = "idle"), 2000);
-    }
-  }
-
-  async function saveIncomeAssumptions() {
-    incomeState = "saving";
-    try {
-      const formData = new FormData();
-      formData.set("income_assumptions", JSON.stringify(incomeAssumptions));
-
-      const response = await fetch("?/saveIncomeAssumptions", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        incomeState = "error";
-        setTimeout(() => (incomeState = "idle"), 2000);
-        return;
-      }
-
-      incomeState = "saved";
-      setTimeout(() => (incomeState = "idle"), 2000);
-    } catch {
-      incomeState = "error";
-      setTimeout(() => (incomeState = "idle"), 2000);
-    }
-  }
+  const incomeField = autoSaveField<string>({
+    initial: JSON.stringify(incomeAssumptions),
+    save: (v) => postAction("saveIncomeAssumptions", { income_assumptions: v }),
+    onSaved: (v) => (incomeAssumptions = JSON.parse(v)),
+    debounceMs: 700,
+  });
+  $effect(() => incomeField.set(JSON.stringify(incomeAssumptions)));
 
   const currencies = [
     { value: "EUR", label: "EUR", symbol: "\u20AC" },
@@ -528,11 +511,13 @@
     </div>
 
     <div class="flex justify-end mt-4">
-      <SectionSaveButton
-        state={regionRatesState}
-        onClick={saveRegionRates}
-        disabled={!baseRate || parseInt(baseRate) <= 0}
-      />
+      {#if !baseRateValid}
+        <span class="text-xs text-[var(--dash-error)]">
+          Set a base rate above 0 — nothing is saved until then.
+        </span>
+      {:else}
+        <AutoSaveIndicator field={regionRatesField} />
+      {/if}
     </div>
   </Card>
 
@@ -670,7 +655,7 @@
     {/if}
 
     <div class="flex justify-end mt-4">
-      <SectionSaveButton state={adjustmentsState} onClick={saveAdjustments} />
+      <AutoSaveIndicator field={adjustmentsField} />
     </div>
   </Card>
 
@@ -832,10 +817,7 @@
               </div>
             </label>
             <div class="flex justify-end">
-              <SectionSaveButton
-                state={incomeState}
-                onClick={saveIncomeAssumptions}
-              />
+              <AutoSaveIndicator field={incomeField} />
             </div>
           </div>
         {/if}
