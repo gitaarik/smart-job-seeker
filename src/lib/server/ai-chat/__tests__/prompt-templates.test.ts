@@ -41,6 +41,7 @@ const MATCHER_SUPPLIED_KEYS = new Set([
   "job.skills_preferred",
   "job.job_description",
   "job.company_description",
+  "supportingEvidence",
 ]);
 
 /** Extract every `${...}` and `{{...}}` placeholder name from a template string. */

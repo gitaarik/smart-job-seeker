@@ -22,7 +22,12 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { side_projects, work_experiences } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
-import { projectKey, semanticScoreProjects } from "./project-embeddings";
+import {
+  type EmbeddableUnit,
+  projectKey,
+  semanticScoreProjects,
+} from "./project-embeddings";
+import { profile_document_projects } from "$lib/server/db/schema";
 
 export interface JobLike {
   title?: string | null;
@@ -41,10 +46,14 @@ export interface RankableProject {
   keywords: string[];
   /** Description / outcome / achievements prose — for text matching. */
   text: string;
-  /** The rich blurb handed to the writer to cite. */
+  /** The rich blurb handed to the writer to cite (typed data + doc summaries). */
   citation: string;
-  /** Composed text embedded for semantic ranking (unused by the lexical path). */
-  embedText?: string;
+  /**
+   * ONLY the attachment-derived evidence (uploaded doc / repo summaries +
+   * keywords), for match scoring — the part the profile blob doesn't already
+   * carry. "" when the project has no attachments.
+   */
+  docEvidence?: string;
 }
 
 /** Normalize for loose token matching; keep tech chars like + # . */
@@ -142,26 +151,64 @@ function buildCitation(
   return clip(parts.join(" ").trim(), 800);
 }
 
+/** One attached document/repo, reduced to what retrieval needs. */
+interface DocRow {
+  id: number;
+  title: string | null;
+  original_filename: string | null;
+  summary: string | null;
+  keywords: unknown;
+}
+
 /**
- * Text embedded to represent a project semantically. Fuller than the citation
- * (title + context + prose + doc notes + keywords) so cosine sees the whole
- * project, not just the writer-facing blurb. Clipped generously — projects are
- * short and providers truncate long inputs anyway.
+ * Embed text for a project's OWN typed data (no attachment content — each
+ * attachment is embedded as its own unit). Clipped generously; providers
+ * truncate long inputs anyway.
  */
-function buildEmbedText(
+function buildTypedEmbedText(
   title: string,
   context: string,
   description: string,
-  docSummaries: string[],
-  keywords: string[],
+  techs: string[],
 ): string {
   return clip(
-    [title, context, description, docSummaries.join(" "), keywords.join(", ")]
+    [title, context, description, techs.join(", ")]
       .map((s) => s.trim())
       .filter(Boolean)
       .join("\n"),
     8000,
   );
+}
+
+/** Embed text for a single attachment (its label + summary + keywords). */
+function buildAttachmentEmbedText(projectTitle: string, doc: DocRow): string {
+  const label = doc.title?.trim() || doc.original_filename?.trim() || "";
+  return clip(
+    [projectTitle, label, doc.summary ?? "", asStrings(doc.keywords).join(", ")]
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join("\n"),
+    8000,
+  );
+}
+
+/**
+ * The attachment-only evidence for a project (summaries + keywords), for match
+ * scoring. Excludes typed project data, which the profile blob already carries.
+ * Returns "" when the project has no summarized attachments.
+ */
+function buildDocEvidence(docs: DocRow[]): string {
+  const lines = docs
+    .map((d) => {
+      const label = d.title?.trim() || d.original_filename?.trim() || "Source";
+      const summary = (d.summary ?? "").trim();
+      const kws = asStrings(d.keywords);
+      if (!summary && kws.length === 0) return "";
+      const kwPart = kws.length ? ` [${kws.join(", ")}]` : "";
+      return `- ${label}: ${summary}${kwPart}`.trim();
+    })
+    .filter(Boolean);
+  return lines.join("\n");
 }
 
 /**
@@ -173,6 +220,13 @@ export async function relevantProfileProjects(
   job: JobLike,
   k = 3,
 ): Promise<(RankableProject & { score: number })[]> {
+  const docCols = {
+    id: true,
+    title: true,
+    original_filename: true,
+    summary: true,
+    keywords: true,
+  } as const;
   const [sideRows, weRows] = await Promise.all([
     db.query.side_projects.findMany({
       where: eq(side_projects.profile_id, profileId),
@@ -180,9 +234,7 @@ export async function relevantProfileProjects(
       with: {
         side_project_technologies: { columns: { name: true } },
         side_project_achievements: { columns: { description: true } },
-        profile_document_projects: {
-          columns: { summary: true, keywords: true },
-        },
+        profile_document_projects: { columns: docCols },
       },
     }),
     db.query.work_experiences.findMany({
@@ -193,9 +245,7 @@ export async function relevantProfileProjects(
           columns: { id: true, name: true, description: true, outcome: true },
           with: {
             work_experience_project_technologies: { columns: { name: true } },
-            profile_document_projects: {
-              columns: { summary: true, keywords: true },
-            },
+            profile_document_projects: { columns: docCols },
           },
         },
       },
@@ -203,40 +253,69 @@ export async function relevantProfileProjects(
   ]);
 
   const projects: RankableProject[] = [];
+  // One embeddable unit per project (its typed data) + one per attachment.
+  const units: EmbeddableUnit[] = [];
+
+  const addProject = (
+    kind: RankableProject["kind"],
+    id: number,
+    title: string,
+    context: string,
+    description: string,
+    techs: string[],
+    docs: DocRow[],
+  ) => {
+    const docKeywords = docs.flatMap((d) => asStrings(d.keywords));
+    const docSummaries = docs.map((d) => d.summary ?? "").filter(Boolean);
+    projects.push({
+      kind,
+      id,
+      title,
+      context,
+      keywords: dedupe([...techs, ...docKeywords]),
+      text: description,
+      citation: buildCitation(description, docSummaries, techs),
+      docEvidence: buildDocEvidence(docs),
+    });
+    // Typed unit (attachment_id 0) + one unit per attachment, max-pooled later.
+    units.push({
+      projectKind: kind,
+      projectId: id,
+      attachmentId: 0,
+      embedText: buildTypedEmbedText(title, context, description, techs),
+    });
+    for (const d of docs) {
+      const embedText = buildAttachmentEmbedText(title, d);
+      if (embedText) {
+        units.push({
+          projectKind: kind,
+          projectId: id,
+          attachmentId: d.id,
+          embedText,
+        });
+      }
+    }
+  };
 
   for (const sp of sideRows) {
     if (!sp.name?.trim()) continue;
     const techs = sp.side_project_technologies
       .map((t) => t.name ?? "")
       .filter(Boolean);
-    const docKeywords = sp.profile_document_projects.flatMap((d) =>
-      asStrings(d.keywords)
-    );
-    const docSummaries = sp.profile_document_projects
-      .map((d) => d.summary ?? "")
-      .filter(Boolean);
     const achievements = sp.side_project_achievements
       .map((a) => a.description ?? "")
       .filter(Boolean);
     const description = [sp.summary ?? "", ...achievements].filter(Boolean)
       .join(" ");
-    const keywords = dedupe([...techs, ...docKeywords]);
-    projects.push({
-      kind: "side_project",
-      id: sp.id,
-      title: sp.name.trim(),
-      context: "",
-      keywords,
-      text: description,
-      citation: buildCitation(description, docSummaries, techs),
-      embedText: buildEmbedText(
-        sp.name.trim(),
-        "",
-        description,
-        docSummaries,
-        keywords,
-      ),
-    });
+    addProject(
+      "side_project",
+      sp.id,
+      sp.name.trim(),
+      "",
+      description,
+      techs,
+      sp.profile_document_projects,
+    );
   }
 
   for (const we of weRows) {
@@ -245,47 +324,24 @@ export async function relevantProfileProjects(
       const techs = wep.work_experience_project_technologies
         .map((t) => t.name ?? "")
         .filter(Boolean);
-      const docKeywords = wep.profile_document_projects.flatMap((d) =>
-        asStrings(d.keywords)
-      );
-      const docSummaries = wep.profile_document_projects
-        .map((d) => d.summary ?? "")
-        .filter(Boolean);
       const description = [wep.description ?? "", wep.outcome ?? ""]
         .filter(Boolean)
         .join(" ");
-      const keywords = dedupe([...techs, ...docKeywords]);
-      const context = we.name ? `at ${we.name}` : "";
-      projects.push({
-        kind: "work_experience_project",
-        id: wep.id,
-        title: wep.name.trim(),
-        context,
-        keywords,
-        text: description,
-        citation: buildCitation(description, docSummaries, techs),
-        embedText: buildEmbedText(
-          wep.name.trim(),
-          context,
-          description,
-          docSummaries,
-          keywords,
-        ),
-      });
+      addProject(
+        "work_experience_project",
+        wep.id,
+        wep.name.trim(),
+        we.name ? `at ${we.name}` : "",
+        description,
+        techs,
+        wep.profile_document_projects,
+      );
     }
   }
 
   // Prefer semantic (embedding) ranking; fall back to deterministic overlap when
   // embeddings are off or the provider fails (semanticScoreProjects → null).
-  const scores = await semanticScoreProjects(
-    profileId,
-    projects.map((p) => ({
-      kind: p.kind,
-      id: p.id,
-      embedText: p.embedText ?? "",
-    })),
-    job,
-  );
+  const scores = await semanticScoreProjects(profileId, units, job);
   if (scores) return rankBySemanticScores(projects, scores, k);
   return rankProjects(projects, job, k);
 }
@@ -338,4 +394,51 @@ export async function relevantProjectsText(
 ): Promise<string> {
   const ranked = await relevantProfileProjects(profileId, job, k);
   return formatProjectCitations(ranked);
+}
+
+/**
+ * Format the attachment-derived evidence of the top-ranked projects into a
+ * neutral, self-contained block for MATCH SCORING. Unlike the citation block,
+ * this emits ONLY the uploaded doc/repo evidence (not typed project data the
+ * profile blob already carries) and frames it for honest weighing, not
+ * advocacy. Returns "" when no ranked project has attachment evidence.
+ */
+export function formatSupportingEvidence(ranked: RankableProject[]): string {
+  const items = ranked
+    .filter((p) => (p.docEvidence ?? "").trim())
+    .map((p) => {
+      const head = p.context ? `${p.title} (${p.context})` : p.title;
+      return `### ${head}\n${p.docEvidence!.trim()}`;
+    });
+  if (items.length === 0) return "";
+  return "## Supporting evidence from the applicant's attached materials\n\n" +
+    "The applicant attached source code, documents, and/or repositories to " +
+    "some projects; below is what those materials revealed, for the projects " +
+    "most relevant to THIS job. Treat it as factual evidence to weigh for BOTH " +
+    "fit and gaps — it supplements the profile above and is not grounds to " +
+    "inflate the score. Base any claim only on what is stated here.\n\n" +
+    items.join("\n\n");
+}
+
+/**
+ * One-call convenience for the match-scoring prompt: the attachment-derived
+ * evidence for the top-K job-relevant projects, ready to interpolate ("" if the
+ * profile has no attachments or none are relevant).
+ *
+ * COST GATE: returns "" without ranking or embedding when the profile has no
+ * attachments at all — the common case — so scoring pays nothing extra unless
+ * there is genuinely new evidence to surface.
+ */
+export async function relevantSupportingEvidence(
+  profileId: number,
+  job: JobLike,
+  k = 3,
+): Promise<string> {
+  const hasDocs = await db.query.profile_document_projects.findFirst({
+    where: eq(profile_document_projects.profile_id, profileId),
+    columns: { id: true },
+  });
+  if (!hasDocs) return "";
+  const ranked = await relevantProfileProjects(profileId, job, k);
+  return formatSupportingEvidence(ranked);
 }

@@ -1,5 +1,5 @@
 {
-  "id": "0bc668c0-20fd-4ccc-ace0-7a74652908e7",
+  "id": "04162130-4aec-4bb0-a2e1-65f815724549",
   "prevId": "73b5a8ad-2353-4e18-a99d-e2fa2b4e11d9",
   "version": "7",
   "dialect": "postgresql",
@@ -5671,6 +5671,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "source": {
+          "name": "source",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "summary": {
           "name": "summary",
           "type": "text",
@@ -6890,8 +6896,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "kind": {
-          "name": "kind",
+        "source_type": {
+          "name": "source_type",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "project_kind": {
+          "name": "project_kind",
           "type": "varchar(32)",
           "primaryKey": false,
           "notNull": true
@@ -6901,6 +6913,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "attachment_id": {
+          "name": "attachment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "content_hash": {
           "name": "content_hash",
@@ -6936,17 +6955,23 @@
         }
       },
       "indexes": {
-        "project_embeddings_kind_project_key": {
-          "name": "project_embeddings_kind_project_key",
+        "project_embeddings_unit_key": {
+          "name": "project_embeddings_unit_key",
           "columns": [
             {
-              "expression": "kind",
+              "expression": "project_kind",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
               "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "attachment_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

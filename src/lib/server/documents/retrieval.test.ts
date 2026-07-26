@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatProjectCitations,
+  formatSupportingEvidence,
   type RankableProject,
   rankProjects,
   scoreProjectAgainstJob,
@@ -117,5 +118,41 @@ describe("formatProjectCitations", () => {
     ]);
     expect(out).toContain("1. Solo App\n");
     expect(out).not.toContain("Solo App (");
+  });
+});
+
+describe("formatSupportingEvidence", () => {
+  const ranked = (over: Partial<RankableProject> = {}): RankableProject => ({
+    kind: "work_experience_project",
+    id: 1,
+    title: "Payments Migration",
+    context: "at Acme Corp",
+    keywords: [],
+    text: "",
+    citation: "",
+    docEvidence: "- OrderService repo: distributed payments backend [Kafka]",
+    ...over,
+  });
+
+  it("returns empty when no project has attachment evidence", () => {
+    expect(formatSupportingEvidence([ranked({ docEvidence: "" })])).toBe("");
+    expect(formatSupportingEvidence([])).toBe("");
+  });
+
+  it("emits only attachment evidence, neutrally framed (not advocacy)", () => {
+    const out = formatSupportingEvidence([ranked()]);
+    expect(out).toContain("Supporting evidence from the applicant");
+    expect(out).toContain("weigh for BOTH fit and gaps");
+    expect(out).toContain("### Payments Migration (at Acme Corp)");
+    expect(out).toContain("OrderService repo");
+  });
+
+  it("skips projects without evidence but keeps those with it", () => {
+    const out = formatSupportingEvidence([
+      ranked({ id: 1, title: "Has Docs" }),
+      ranked({ id: 2, title: "No Docs", docEvidence: "" }),
+    ]);
+    expect(out).toContain("### Has Docs");
+    expect(out).not.toContain("### No Docs");
   });
 });

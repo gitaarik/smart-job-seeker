@@ -3260,9 +3260,14 @@ export const profile_document_projects = pgTable("profile_document_projects", {
   // Original blob for a loose single-file upload (e.g. a PDF); null for
   // archives, whose raw bytes are discarded after extraction.
   file_id: uuid(),
-  kind: varchar({ length: 16 }).default("file").notNull(), // "file" | "archive"
+  kind: varchar({ length: 16 }).default("file").notNull(), // "file" | "archive" | "github_repo" | ...
   title: varchar({ length: 255 }),
   original_filename: varchar({ length: 512 }),
+  // Provider-agnostic provenance for the attachment. Uploads:
+  // { type: "upload" | "archive", filename }. Future git sources:
+  // { type: "github_repo", owner, repo, ref, sha, visibility, url }. Generalizes
+  // original_filename so new source types need no new columns.
+  source: jsonb(),
   // LLM project-level "reference notes" — the retrievable unit for job-aware
   // prompts (NOT merged into collected_data; see DOCUMENT-INGESTION.md § AI).
   summary: text(),
@@ -3330,21 +3335,36 @@ export const profile_document_files = pgTable("profile_document_files", {
 
 // Cached embeddings for the applicant's OWN projects — the corpus for semantic
 // RAG retrieval (which of a user's projects fit a given job, cited in cover
-// letters / application answers). Polymorphic over side_projects and
-// work_experience_projects (kind + project_id), so there is no single FK to a
-// project; profile_id scopes queries and cascades on profile delete, and a
-// project-level delete leaves a harmless orphan that is overwritten if the id
-// recurs. `content_hash` gates re-embedding: a stored vector is reused only
-// while the project's composed text is byte-identical, so any typed edit or new
-// attached document transparently invalidates it on the next retrieval. Vector
+// letters / application answers, and fed to match scoring).
+//
+// One row per EMBEDDABLE UNIT, not per project, so a project with several
+// attachments (multiple uploads and/or git repos) keeps a distinct vector for
+// each source instead of averaging them into one blurry project vector:
+//   - source_type "project_typed" (attachment_id 0): the project's own typed
+//     data (name/description/technologies/achievements).
+//   - source_type "attachment" (attachment_id = profile_document_projects.id):
+//     one uploaded doc/archive/repo.
+// Retrieval max-pools a project's units → project relevance = its best-matching
+// source, so adding a repo can only help a project surface, never wash it out.
+//
+// Polymorphic over side_projects and work_experience_projects (project_kind +
+// project_id), so no single FK to a project; profile_id scopes queries and
+// cascades on profile delete. An attachment/project delete leaves a harmless
+// orphan row that retrieval never reads (it only scores units for currently
+// loaded projects). `content_hash` gates re-embedding: a stored vector is reused
+// only while that unit's composed text is byte-identical, so any typed edit,
+// re-summarized doc, or new commit invalidates it on the next retrieval. Vector
 // stored native as jsonb and truncated to the working dim on load; the corpus is
 // bounded per profile, so JS cosine — no pgvector. `model` invalidates rows when
 // the embedding model changes (vectors across models are incomparable).
 export const project_embeddings = pgTable("project_embeddings", {
   id: serial().primaryKey().notNull(),
   profile_id: integer().notNull(),
-  kind: varchar({ length: 32 }).notNull(), // side_project | work_experience_project
+  source_type: varchar({ length: 16 }).notNull(), // project_typed | attachment
+  project_kind: varchar({ length: 32 }).notNull(), // side_project | work_experience_project
   project_id: integer().notNull(),
+  // profile_document_projects.id for an attachment unit; 0 for project_typed.
+  attachment_id: integer().default(0).notNull(),
   content_hash: varchar({ length: 64 }).notNull(),
   embedding: jsonb().notNull(),
   model: varchar({ length: 100 }).notNull(),
@@ -3355,10 +3375,12 @@ export const project_embeddings = pgTable("project_embeddings", {
     .default(sql`now()`)
     .notNull(),
 }, (table) => [
-  // Upsert target: one cached vector per (kind, project) — see getProjectVectors.
-  uniqueIndex("project_embeddings_kind_project_key").on(
-    table.kind,
+  // Upsert target: one cached vector per unit. attachment_id 0 keeps the typed
+  // unit unique per project without a partial index (NULLs would not collide).
+  uniqueIndex("project_embeddings_unit_key").on(
+    table.project_kind,
     table.project_id,
+    table.attachment_id,
   ),
   index("project_embeddings_profile_idx").on(table.profile_id),
   foreignKey({

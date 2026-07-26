@@ -919,6 +919,8 @@ Be objective and constructive. Highlight both strengths and gaps clearly.`,
 - Remote preferences: \${preferences.work_location}
 - Preferred locations: \${preferences.locations}
 
+\${supportingEvidence}
+
 ## Job Opportunity
 
 **Title:** \${job.title}

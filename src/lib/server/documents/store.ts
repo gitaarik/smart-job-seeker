@@ -55,6 +55,8 @@ export async function saveExtractedProject(
       kind: extracted.kind,
       title,
       original_filename: input.filename,
+      // Provider-agnostic provenance; git sources will set a richer object here.
+      source: { type: extracted.kind, filename: input.filename },
       status,
       skipped: extracted.skipped.length > 0 ? extracted.skipped : null,
       file_count: extracted.files.length,
