@@ -3328,6 +3328,46 @@ export const profile_document_files = pgTable("profile_document_files", {
   }).onDelete("cascade"),
 ]);
 
+// Cached embeddings for the applicant's OWN projects — the corpus for semantic
+// RAG retrieval (which of a user's projects fit a given job, cited in cover
+// letters / application answers). Polymorphic over side_projects and
+// work_experience_projects (kind + project_id), so there is no single FK to a
+// project; profile_id scopes queries and cascades on profile delete, and a
+// project-level delete leaves a harmless orphan that is overwritten if the id
+// recurs. `content_hash` gates re-embedding: a stored vector is reused only
+// while the project's composed text is byte-identical, so any typed edit or new
+// attached document transparently invalidates it on the next retrieval. Vector
+// stored native as jsonb and truncated to the working dim on load; the corpus is
+// bounded per profile, so JS cosine — no pgvector. `model` invalidates rows when
+// the embedding model changes (vectors across models are incomparable).
+export const project_embeddings = pgTable("project_embeddings", {
+  id: serial().primaryKey().notNull(),
+  profile_id: integer().notNull(),
+  kind: varchar({ length: 32 }).notNull(), // side_project | work_experience_project
+  project_id: integer().notNull(),
+  content_hash: varchar({ length: 64 }).notNull(),
+  embedding: jsonb().notNull(),
+  model: varchar({ length: 100 }).notNull(),
+  date_created: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+  date_updated: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+}, (table) => [
+  // Upsert target: one cached vector per (kind, project) — see getProjectVectors.
+  uniqueIndex("project_embeddings_kind_project_key").on(
+    table.kind,
+    table.project_id,
+  ),
+  index("project_embeddings_profile_idx").on(table.profile_id),
+  foreignKey({
+    columns: [table.profile_id],
+    foreignColumns: [profiles.id],
+    name: "project_embeddings_profile_foreign",
+  }).onDelete("cascade"),
+]);
+
 // Inferred select types for all application tables
 export type ProfileDocumentProjects =
   typeof profile_document_projects.$inferSelect;

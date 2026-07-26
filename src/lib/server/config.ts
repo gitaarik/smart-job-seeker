@@ -66,6 +66,9 @@ export interface AppConfig {
   // Cosine threshold above which two skills count as a semantic match.
   // Needs empirical tuning per embedding model (see SEMANTIC-MATCHING plan).
   embeddingSkillThreshold: number;
+  // Floor cosine for semantic project↔job RAG retrieval (a different, higher-
+  // baseline distribution than the skill threshold — not comparable).
+  embeddingProjectThreshold: number;
 
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
@@ -245,6 +248,24 @@ function loadConfig(): AppConfig {
     // the working dimension changes.
     embeddingSkillThreshold: parseFloat(
       getEnv("SJS_EMBEDDING_SKILL_THRESHOLD", "0.68"),
+    ),
+    // Floor cosine for semantic project↔job retrieval (documents/retrieval.ts).
+    // This is job-description-vs-project-text, a DIFFERENT distribution from the
+    // skill-vs-skill threshold above — long-text embeddings have a much higher
+    // baseline similarity, so this is NOT comparable to 0.68. The corpus is the
+    // applicant's OWN handful of projects and we only take top-K, so the floor's
+    // job is to drop projects that fit nothing (applying outside your field),
+    // not to prune a large candidate set.
+    //
+    // 0.50 measured 2026-07-26 against gemini-embedding-001 (768 working dims),
+    // profile 1 real projects: an AI role scored the AI-assessments project 0.66
+    // and AI-adjacent side projects 0.53-0.58, while an unrelated gardening role
+    // topped out at 0.49 across every software project. 0.50 cleanly admits the
+    // former and rejects the latter. N=1 profile — a knob, not a tuned constant;
+    // re-measure if it hides relevant projects or lets off-field ones through.
+    // See planning/SEMANTIC-MATCHING-AND-RAG.md.
+    embeddingProjectThreshold: parseFloat(
+      getEnv("SJS_EMBEDDING_PROJECT_THRESHOLD", "0.50"),
     ),
 
     // Caching (1 hour default)

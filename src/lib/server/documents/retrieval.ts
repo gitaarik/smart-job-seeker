@@ -9,14 +9,20 @@
  * keywords). This unifies the two signals instead of ranking uploaded files as
  * a separate list.
  *
- * v1 is DETERMINISTIC — keyword/skill overlap. It needs no embedding layer
- * (gated off in every env). A semantic ranker is a drop-in upgrade behind
- * SJS_EMBEDDING_ENABLED; see planning/SEMANTIC-MATCHING-AND-RAG.md.
+ * Two rankers, one interface:
+ *  - SEMANTIC (embedding cosine) when SJS_EMBEDDING_ENABLED is on — genuine RAG,
+ *    catches paraphrase/synonym fit. See project-embeddings.ts.
+ *  - DETERMINISTIC (keyword/skill overlap) as the fallback when embeddings are
+ *    unconfigured or the provider fails, so retrieval always works.
+ * Both produce the same RankableProject shape, cited by name.
+ * See planning/SEMANTIC-MATCHING-AND-RAG.md.
  */
 
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { side_projects, work_experiences } from "$lib/server/db/schema";
+import { config } from "$lib/server/config";
+import { projectKey, semanticScoreProjects } from "./project-embeddings";
 
 export interface JobLike {
   title?: string | null;
@@ -37,6 +43,8 @@ export interface RankableProject {
   text: string;
   /** The rich blurb handed to the writer to cite. */
   citation: string;
+  /** Composed text embedded for semantic ranking (unused by the lexical path). */
+  embedText?: string;
 }
 
 /** Normalize for loose token matching; keep tech chars like + # . */
@@ -135,6 +143,28 @@ function buildCitation(
 }
 
 /**
+ * Text embedded to represent a project semantically. Fuller than the citation
+ * (title + context + prose + doc notes + keywords) so cosine sees the whole
+ * project, not just the writer-facing blurb. Clipped generously — projects are
+ * short and providers truncate long inputs anyway.
+ */
+function buildEmbedText(
+  title: string,
+  context: string,
+  description: string,
+  docSummaries: string[],
+  keywords: string[],
+): string {
+  return clip(
+    [title, context, description, docSummaries.join(" "), keywords.join(", ")]
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join("\n"),
+    8000,
+  );
+}
+
+/**
  * Load the applicant's projects (work-experience + side), fold in any attached
  * documents, and return the top-K relevant to `job`.
  */
@@ -190,14 +220,22 @@ export async function relevantProfileProjects(
       .filter(Boolean);
     const description = [sp.summary ?? "", ...achievements].filter(Boolean)
       .join(" ");
+    const keywords = dedupe([...techs, ...docKeywords]);
     projects.push({
       kind: "side_project",
       id: sp.id,
       title: sp.name.trim(),
       context: "",
-      keywords: dedupe([...techs, ...docKeywords]),
+      keywords,
       text: description,
       citation: buildCitation(description, docSummaries, techs),
+      embedText: buildEmbedText(
+        sp.name.trim(),
+        "",
+        description,
+        docSummaries,
+        keywords,
+      ),
     });
   }
 
@@ -216,19 +254,58 @@ export async function relevantProfileProjects(
       const description = [wep.description ?? "", wep.outcome ?? ""]
         .filter(Boolean)
         .join(" ");
+      const keywords = dedupe([...techs, ...docKeywords]);
+      const context = we.name ? `at ${we.name}` : "";
       projects.push({
         kind: "work_experience_project",
         id: wep.id,
         title: wep.name.trim(),
-        context: we.name ? `at ${we.name}` : "",
-        keywords: dedupe([...techs, ...docKeywords]),
+        context,
+        keywords,
         text: description,
         citation: buildCitation(description, docSummaries, techs),
+        embedText: buildEmbedText(
+          wep.name.trim(),
+          context,
+          description,
+          docSummaries,
+          keywords,
+        ),
       });
     }
   }
 
+  // Prefer semantic (embedding) ranking; fall back to deterministic overlap when
+  // embeddings are off or the provider fails (semanticScoreProjects → null).
+  const scores = await semanticScoreProjects(
+    profileId,
+    projects.map((p) => ({
+      kind: p.kind,
+      id: p.id,
+      embedText: p.embedText ?? "",
+    })),
+    job,
+  );
+  if (scores) return rankBySemanticScores(projects, scores, k);
   return rankProjects(projects, job, k);
+}
+
+/**
+ * Rank projects by their semantic cosine scores, dropping anything below the
+ * (config) relevance floor and taking the top K. Same output shape as the
+ * deterministic rankProjects, so downstream formatting is identical.
+ */
+function rankBySemanticScores(
+  projects: RankableProject[],
+  scores: Map<string, number>,
+  k: number,
+): (RankableProject & { score: number })[] {
+  const floor = config.embeddingProjectThreshold;
+  return projects
+    .map((p) => ({ ...p, score: scores.get(projectKey(p.kind, p.id)) ?? 0 }))
+    .filter((p) => p.score >= floor)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k);
 }
 
 /**
