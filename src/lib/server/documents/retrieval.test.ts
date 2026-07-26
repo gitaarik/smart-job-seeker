@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildDocEvidence,
+  type DocRow,
   formatProjectCitations,
   formatSupportingEvidence,
   type RankableProject,
@@ -154,5 +156,42 @@ describe("formatSupportingEvidence", () => {
     ]);
     expect(out).toContain("### Has Docs");
     expect(out).not.toContain("### No Docs");
+  });
+});
+
+describe("buildDocEvidence", () => {
+  const doc = (over: Partial<DocRow> = {}): DocRow => ({
+    id: 1,
+    title: "OrderService repo",
+    original_filename: "orderservice.zip",
+    summary: "Distributed payments backend.",
+    keywords: ["Kafka", "PostgreSQL"],
+    ...over,
+  });
+
+  it("emits one bullet per attachment with summary and bracketed keywords", () => {
+    expect(buildDocEvidence([doc()])).toBe(
+      "- OrderService repo: Distributed payments backend. [Kafka, PostgreSQL]",
+    );
+  });
+
+  it("falls back title → filename → 'Source' for the label", () => {
+    expect(buildDocEvidence([doc({ title: null })])).toContain(
+      "- orderservice.zip:",
+    );
+    expect(
+      buildDocEvidence([doc({ title: null, original_filename: null })]),
+    ).toContain("- Source:");
+  });
+
+  it("skips an attachment with neither summary nor keywords", () => {
+    expect(buildDocEvidence([doc({ summary: null, keywords: [] })])).toBe("");
+    expect(buildDocEvidence([])).toBe("");
+  });
+
+  it("omits the bracket when there are no keywords", () => {
+    const out = buildDocEvidence([doc({ keywords: null })]);
+    expect(out).toBe("- OrderService repo: Distributed payments backend.");
+    expect(out).not.toContain("[");
   });
 });

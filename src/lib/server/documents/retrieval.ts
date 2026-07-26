@@ -152,7 +152,7 @@ function buildCitation(
 }
 
 /** One attached document/repo, reduced to what retrieval needs. */
-interface DocRow {
+export interface DocRow {
   id: number;
   title: string | null;
   original_filename: string | null;
@@ -197,7 +197,7 @@ function buildAttachmentEmbedText(projectTitle: string, doc: DocRow): string {
  * scoring. Excludes typed project data, which the profile blob already carries.
  * Returns "" when the project has no summarized attachments.
  */
-function buildDocEvidence(docs: DocRow[]): string {
+export function buildDocEvidence(docs: DocRow[]): string {
   const lines = docs
     .map((d) => {
       const label = d.title?.trim() || d.original_filename?.trim() || "Source";
