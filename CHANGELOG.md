@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.6.5] - 2026-07-26
+
+96 commits since v0.6.4.
+
+### Added
+- Documents system: upload, extract, and summarize project documents; attach to projects and cite them in cover letters and AI answers
+- Semantic RAG project retrieval: AI matches your real projects to job requirements  
+- Application Q&A editor with version history, grounding feedback, and intent-aware AI assistance
+- Unified message composer: ask the AI or write your own with context retention for better suggestions
+- Semantic skill matching with optimized embeddings
+- Drag-reorder and version-specific visibility for achievements and technologies
+- AutoGrowTextarea for dynamic form fields
+- Paste-extract for application questions with AI review and duplicate detection
+- "Review all" triage sweep for answered questions
+- Document storage quotas enforced per plan
+
+### Changed
+- AI answer calibration now tailors response length to question scope
+- Question editor unified with cover-letter timeline interface
+- Texts list is browse-only; editing moved to dedicated item page
+- Manually-added jobs now support enrichment and re-parsing
+
+### Fixed
+- Revised answers now correctly become the live answer
+- Failed persist actions now surface to users instead of silently failing
+- AI letter feedback markdown sanitized to prevent XSS
+- Semantic skill matching threshold tuned to real embeddings
+- Resume PDF text width and margins preserved
+- Resume structured-template badge positioning
+- Transitive dependency security vulnerabilities
+
 ## [0.6.4] - 2026-07-14
 
 2 commits since v0.6.3.
