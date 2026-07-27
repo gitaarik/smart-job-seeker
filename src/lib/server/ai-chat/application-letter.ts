@@ -168,9 +168,13 @@ export async function generateApplicationLetter(
       job_description: job.job_description,
       skills_required: job.skills_required as string[] | null,
     }),
-    // Recaps/feedback from earlier rounds, so a cheat sheet for the next round
-    // builds on what already happened (empty string if none recorded).
-    interviewHistory: await interviewRecordsText(letter.application.id),
+    // Recaps/feedback from earlier rounds (empty string if none recorded). A
+    // cheat sheet is *about* the interviews so it gets the full set; a cover
+    // letter only needs the gist, so it gets the compact budget.
+    interviewHistory: await interviewRecordsText(
+      letter.application.id,
+      letterType === "cheat_sheet" ? "full" : "compact",
+    ),
   };
 
   // For review mode, include the user's letter content

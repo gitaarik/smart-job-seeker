@@ -57,6 +57,8 @@ The user's latest message:
 
 \${jobDescription}
 
+\${interviewHistory}
+
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or projects from their profile you drew on to write this answer. Name the actual entries; be concrete. If the profile lacked something relevant, say so honestly.
 - "text": ONE complete answer the applicant can use as their first draft, in the first person, as the applicant. NOT options, alternatives, or advice about how to answer. No preamble, no headings.
@@ -69,6 +71,7 @@ CRITICAL — match the length and depth to what the question actually asks:
 Guidelines:
 - Sound like a real human, not an LLM — professional but natural
 - Only use skills and experience from the applicant's actual data; ground it in real work and project experience
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 
 Return a single JSON object with exactly two keys: "text" (the answer — use the key "text") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Write my answer to this application question:
@@ -106,6 +109,8 @@ Respond with a JSON OBJECT with a single key "pairs" whose value is the array of
 ## Job Description:
 \${jobDescription}
 
+\${interviewHistory}
+
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions). This MUST be one cohesive markdown text, NOT an array or list of separate strings.
 - "revisedText": the complete revised answer as plain text incorporating your suggestions, OR null if the answer is already good. Always include this field — use null, never omit it.
@@ -115,6 +120,7 @@ In your feedback:
 - Ground your points in their actual experience from the profile data; flag any claim the profile doesn't support.
 - If the answer is strong and ready to submit, say so! Don't force improvements where none are needed (and set revisedText to null).
 - Consider relevance to the question and this job, specificity, and persuasiveness.
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Be concise — focus on what matters most.`,
     user_prompt: `Please review my answer to this application question.
 
@@ -139,9 +145,12 @@ In your feedback:
 
 \${jobDescription}
 
+\${interviewHistory}
+
 Guidelines:
 - Revise the applicant's OWN draft — keep their voice; make the change they asked for, don't rewrite into a different persona.
 - Ground everything in their actual experience from the profile data; never invent facts the profile doesn't support.
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - If no specific instruction is given, improve clarity and impact while keeping the meaning and length roughly the same.
 - Output the revised answer as plain text, ready to paste. No preamble, no markdown headers, no commentary.`,
     user_prompt: `Here is my draft answer. Please revise it.
@@ -171,11 +180,14 @@ Guidelines:
 
 \${jobDescription}
 
+\${interviewHistory}
+
 Rules:
 - Focus on THIS specific question and THIS job — what from their profile best answers it?
 - Short bullet points only, no prose
 - Only reference things actually in their profile
 - Skip generic interview advice — they know the basics
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Do NOT write the answer itself`,
     user_prompt: `## Question:
 
@@ -208,11 +220,14 @@ What specific experiences, skills, and achievements from their profile should th
 
 \${answerContent}
 
+\${interviewHistory}
+
 ## Rules:
 - The applicant sent you a message (below). First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "should I mention my rate?", "what tone is best?") → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the answer.
   - If they want you to WRITE or CHANGE the answer (e.g. "make it more concise", "write it based on your advice") → put the complete new answer in "text", and a short note of what you did in "feedback".
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Keep the applicant's own voice; make the change they asked for — don't rewrite into a different persona
 - When you change the answer, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop details, projects, or points the applicant already had.
 - The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
@@ -870,6 +885,8 @@ Return JSON with:
 
 \${letterContent}
 
+\${interviewHistory}
+
 ## Rules:
 - The user sent you a message (below). First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the letter.
@@ -879,7 +896,8 @@ Return JSON with:
 - The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
 - A specific request from the user always wins over your own sense of what to keep concise. If they ask you to include, mention, keep, or bring back something (e.g. a named project), DO include it — even if it makes the letter a little longer than you'd otherwise write. Never silently drop or omit something they explicitly asked for.
 - When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences
-- Consider the previous feedback history to avoid repeating suggestions and to maintain continuity`,
+- Consider the previous feedback history to avoid repeating suggestions and to maintain continuity
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.`,
     user_prompt: `\${followupRequest}`,
   },
 
@@ -970,11 +988,14 @@ Respond with a single JSON object with these keys, in this order:
 - Sound like a real person — professional but not robotic or formulaic
 - Only reference experience and skills that exist in the applicant's data — when mentioning a specific project or role, only use details (technologies, achievements) from that specific entry
 - Hiring managers skim — keep it focused and compelling, 3-4 paragraphs max
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 
 Return a single JSON object with exactly two keys: "text" (the cover letter itself — use the key "text", NOT "letter") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Write a cover letter for this job:
 
 \${jobDetails}
+
+\${interviewHistory}
 
 \${additionalContext}`,
   },
@@ -991,10 +1012,13 @@ Rules:
 - Short bullet points only, no prose
 - Only reference things actually in their profile
 - Skip generic cover letter advice — they know the basics
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Do NOT write the letter itself`,
     user_prompt: `## Job:
 
 \${jobDetails}
+
+\${interviewHistory}
 
 What specific experiences, skills, and achievements from their profile should they highlight for THIS role? Which job requirements can they address directly? Give a brief suggested angle or hook.
 
@@ -1017,10 +1041,13 @@ In your feedback:
 - Check completeness: proper greeting, intro, body, closing? Anything missing?
 - Does the letter match specific job requirements to their actual experience?
 - Consider structure, tone, relevance to the job, persuasiveness
+- If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Be concise — focus on what matters most`,
     user_prompt: `## Job:
 
 \${jobDetails}
+
+\${interviewHistory}
 
 ## Their cover letter:
 
@@ -1143,6 +1170,7 @@ In your feedback:
 - Are key job requirements covered with matching experience from their profile?
 - Are there important talking points or interview preparation areas missing?
 - Is it practical and scannable — easy to reference quickly during interview prep?
+- If records of earlier rounds are provided, judge the sheet against what ACTUALLY happened: does it still prepare them for what comes next, or is it stale — covering ground already settled while missing concerns the interviewers raised?
 - Be concise — focus on what matters most`,
     user_prompt: `## Job:
 

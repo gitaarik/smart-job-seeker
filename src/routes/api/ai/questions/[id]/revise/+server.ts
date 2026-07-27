@@ -18,6 +18,7 @@ import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
+import { interviewRecordsText } from "$lib/server/ai-chat/application-records";
 import { QUESTION_PROFILE_FIELDS } from "$lib/server/ai-chat/application-question";
 import { reviseAnswerSchema } from "$lib/server/schemas/ai-prompt-schemas";
 import { requireCredits } from "$lib/server/billing/require-credits";
@@ -76,6 +77,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     {
       jobDescription: question.application.job?.job_description || "",
       question: question.question,
+      // What has happened on this application so far (empty if none recorded).
+      interviewHistory: await interviewRecordsText(
+        question.application.id,
+        "compact",
+      ),
       draft,
       instruction: instruction || "(no specific instruction — improve clarity and impact)",
     },

@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
+import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -122,6 +123,12 @@ export async function generateApplicationQuestionAnswer(
         skills_required: job.skills_required as string[] | null,
       })
       : "",
+    // What has happened on this application so far — a question answered
+    // mid-process should reflect the calls already had (empty if none).
+    interviewHistory: await interviewRecordsText(
+      question.application.id,
+      "compact",
+    ),
   };
   // Review critiques the answer the applicant already has.
   if (mode === "review") {

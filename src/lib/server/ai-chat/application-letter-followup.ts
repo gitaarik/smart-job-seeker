@@ -6,6 +6,7 @@ import { db } from "$lib/server/db";
 import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
+import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -137,7 +138,8 @@ export async function createApplicationLetterFollowup(
       },
       with: {
         application: {
-          columns: {},
+          // id is needed to load this application's interview records.
+          columns: { id: true },
           with: {
             job: {
               columns: {
@@ -163,6 +165,16 @@ export async function createApplicationLetterFollowup(
       const job = letterRecord.application?.job;
       const jobDetailsText = job ? formatJobDetails(job) : "";
 
+      // A cheat sheet is about the interviews themselves; a letter revision
+      // only needs the gist of what has happened so far.
+      const applicationId = letterRecord.application?.id;
+      const interviewHistory = applicationId
+        ? await interviewRecordsText(
+          applicationId,
+          letterRecord.letter_type === "cheat_sheet" ? "full" : "compact",
+        )
+        : "";
+
       // Get the latest letter content: check letter_versions first, fall back to application_letters.content
       const latestVersion = await db.query.letter_versions.findFirst({
         where: and(
@@ -183,6 +195,7 @@ export async function createApplicationLetterFollowup(
           generationMode: "review",
           letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
+          interviewHistory,
           additionalContext: conversationHistory
             ? `## Previous conversation context:\n\nThe user has been iterating on this letter with AI assistance. Consider this history when reviewing — respect the direction they've taken and avoid re-suggesting things that were intentionally changed or omitted during the conversation.\n\n${conversationHistory}`
             : "",
@@ -195,6 +208,7 @@ export async function createApplicationLetterFollowup(
           letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
           conversationHistory,
+          interviewHistory,
         };
       }
     }
