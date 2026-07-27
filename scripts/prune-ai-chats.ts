@@ -35,6 +35,7 @@
  */
 import { sql } from "drizzle-orm";
 import { dbDirect as db, queryRawDirect } from "$lib/server/db";
+import { pruneAiChatPayloads } from "$lib/server/ai-chats/retention";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
@@ -101,14 +102,17 @@ async function main() {
     return;
   }
 
+  // Same code path the worker runs on a schedule, looped until drained — the
+  // manual run is expected to clear the whole backlog in one go.
   console.log("\nNulling full_prompt and context…");
-  const result = await db.execute(sql`
-    UPDATE ai_chats
-    SET full_prompt = NULL, context = NULL
-    WHERE date_created < ${cutoff}
-      AND (full_prompt IS NOT NULL OR context IS NOT NULL)
-  `);
-  console.log(`  updated ${result.rowCount ?? "?"} rows`);
+  let pruned = 0;
+  for (;;) {
+    const r = await pruneAiChatPayloads({ days });
+    pruned += r.rowsPruned;
+    if (!r.moreRemaining) break;
+    console.log(`  …${pruned} rows so far`);
+  }
+  console.log(`  updated ${pruned} rows`);
 
   if (doVacuum) {
     // VACUUM FULL cannot run inside a transaction block.
