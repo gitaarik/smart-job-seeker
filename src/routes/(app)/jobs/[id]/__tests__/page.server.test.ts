@@ -18,7 +18,7 @@ const mockDeleteWhere = vi.fn().mockResolvedValue(undefined);
 const mockDelete = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 const mockGetSelectedProfileId = vi.fn();
 const mockParseJobDescription = vi.fn();
-const mockTriggerMatchForImport = vi.fn().mockResolvedValue(undefined);
+const mockAddMatchJob = vi.fn().mockResolvedValue({ score: 77 });
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
@@ -61,16 +61,15 @@ vi.mock(
   "$lib/server/job/match-utils",
   () => ({ getProfileSkillLevels: vi.fn() }),
 );
-vi.mock("$lib/server/queue/match-queue", () => ({ addMatchJob: vi.fn() }));
+vi.mock("$lib/server/queue/match-queue", () => ({
+  addMatchJob: (...a: any[]) => mockAddMatchJob(...a),
+}));
 vi.mock("$lib/server/browser/geo-utils", () => ({ getGeoConfig: vi.fn() }));
 vi.mock("../../../profile/utils", () => ({
   getSelectedProfileId: (...a: any[]) => mockGetSelectedProfileId(...a),
 }));
 vi.mock("$lib/server/jobs/parse-job-description", () => ({
   parseJobDescription: (...a: any[]) => mockParseJobDescription(...a),
-}));
-vi.mock("$lib/server/job/match-trigger", () => ({
-  triggerMatchForImport: (...a: any[]) => mockTriggerMatchForImport(...a),
 }));
 
 import { actions } from "../+page.server";
@@ -129,7 +128,7 @@ describe("updateDescription action", () => {
     mockGetSelectedProfileId.mockResolvedValue(12);
     mockJobFindFirst.mockResolvedValue({ created_manually: true });
     mockImporterFindFirst.mockResolvedValue({ job_id: 3815 });
-    mockTriggerMatchForImport.mockResolvedValue(undefined);
+    mockAddMatchJob.mockResolvedValue({ score: 77 });
   });
 
   it("rejects unauthenticated", async () => {
@@ -229,13 +228,46 @@ describe("updateDescription action", () => {
       }),
     );
     // Stale scores are flagged for re-scoring, not deleted — the previous score
-    // stays visible until the matcher replaces it. Fresh score queued for the
-    // acting profile; other profiles pick the flag up in the background.
+    // stays visible until the matcher replaces it. Other profiles pick the flag
+    // up in the background.
     expect(mockUpdateSet).toHaveBeenCalledWith(
       expect.objectContaining({ rescore_requested_at: expect.any(Date) }),
     );
     expect(mockDelete).not.toHaveBeenCalled();
-    expect(mockTriggerMatchForImport).toHaveBeenCalledWith(12, 3815);
+    // The acting profile is scored inline, not merely enqueued: the page
+    // reloads straight after this and has to show the new number. Asserting on
+    // addMatchJob and not on a fire-and-forget trigger is the point — the
+    // trigger this replaced skipped any job that already had a match row,
+    // which since we flag instead of delete is all of them.
+    expect(mockAddMatchJob).toHaveBeenCalledWith(
+      expect.objectContaining({ profileId: 12, jobId: 3815 }),
+      expect.any(Number),
+    );
+    expect(res).toMatchObject({ success: true, action: "descriptionReparsed" });
+  });
+
+  it("still reports success when the inline re-score fails", async () => {
+    mockJobFindFirst
+      .mockResolvedValueOnce({ created_manually: true })
+      .mockResolvedValueOnce({
+        source_html_stripped: "New description",
+        job_description: "New description",
+        source_url: null,
+        title: "Old Title",
+        company: "Old Co",
+      });
+    mockParseJobDescription.mockResolvedValueOnce(parsedStub());
+    mockAddMatchJob.mockRejectedValueOnce(new Error("queue timeout"));
+
+    const res = await actions.updateDescription!(
+      createEvent({ description: "New description", reparse: "1" }),
+    );
+
+    // The flag is what makes this safe to swallow: the background matcher
+    // picks the job up on its next cycle, so the score is late, not lost.
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ rescore_requested_at: expect.any(Date) }),
+    );
     expect(res).toMatchObject({ success: true, action: "descriptionReparsed" });
   });
 

@@ -20,7 +20,6 @@ import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { parseJobDescription } from "$lib/server/jobs/parse-job-description";
-import { triggerMatchForImport } from "$lib/server/job/match-trigger";
 import { classifyRegion } from "$lib/data/job-taxonomy";
 import {
   normalizeExperienceLevels,
@@ -28,6 +27,14 @@ import {
   normalizeWorkLocation,
 } from "$lib/data/job-normalize";
 import { normalizeSalaryPeriod } from "$lib/salary/conversion";
+
+/**
+ * How long the inline re-score may block the form action. Shorter than
+ * addMatchJob's own 60s default: the re-parse LLM call has already run by this
+ * point, and a request that hangs for two minutes is worse for the user than a
+ * score that lands a cycle later.
+ */
+const RESCORE_TIMEOUT_MS = 45_000;
 
 /**
  * Re-extract parser-owned fields from a job's stored content and re-score it.
@@ -130,7 +137,27 @@ async function reparseAndRescore(
   await db.update(job_matches)
     .set({ rescore_requested_at: new Date() })
     .where(eq(job_matches.job_id, jobId));
-  await triggerMatchForImport(profileId, jobId);
+
+  // Score the acting profile inline, so the page reload that follows shows the
+  // new number — that is what the button promises. triggerMatchForImport is no
+  // use here: it skips jobs that already have a match row, which since we flag
+  // instead of delete is all of them.
+  //
+  // Failing is not fatal. The flag stays set either way, so the background
+  // matcher picks the job up on its next cycle and the score arrives late
+  // rather than never — the same path the other profiles' rows take.
+  try {
+    await addMatchJob(
+      { profileId, jobId, triggeredBy: "user" },
+      RESCORE_TIMEOUT_MS,
+    );
+  } catch (err) {
+    console.warn(
+      `[reparse] inline re-score failed for profile=${profileId} job=${jobId}, ` +
+        `leaving it to the background matcher:`,
+      err,
+    );
+  }
 
   return { ok: true, title: parsed.title ?? job.title };
 }
