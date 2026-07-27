@@ -2557,6 +2557,50 @@ export const application_status_log = pgTable("application_status_log", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * Long-form written record of what actually happened during an application:
+ * interview recaps and transcripts, recruiter/interviewer feedback, pasted
+ * email threads, assessment briefs, company research, loose notes.
+ *
+ * Deliberately text (not files — those live in `applications_files`) so the
+ * content is usable as AI context: prior rounds feed the cheat-sheet prompts
+ * for the next one.
+ *
+ * `status_log` optionally ties a record to the timeline event it belongs to,
+ * so a "Technical interview" entry and its debrief stay one thing rather than
+ * drifting apart in two lists.
+ */
+export const application_records = pgTable("application_records", {
+  id: serial().primaryKey().notNull(),
+  application_id: integer().notNull(),
+  record_type: varchar({ length: 50 }).default("interview_recap").notNull(),
+  title: varchar({ length: 255 }).notNull(),
+  content: text(),
+  /** When the interview/email/event happened — distinct from date_created. */
+  event_date: date(),
+  /** Stage label, from `stepsByPhase` in $lib/application-status. */
+  step: varchar({ length: 255 }),
+  status_log: integer(),
+  sort: integer(),
+  date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .defaultNow(),
+  date_updated: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
+}, (table) => [
+  index("application_records_application_idx").on(table.application_id),
+  index("application_records_status_log_idx").on(table.status_log),
+  foreignKey({
+    columns: [table.application_id],
+    foreignColumns: [applications.id],
+    name: "application_records_application_foreign",
+  }).onDelete("cascade"),
+  foreignKey({
+    columns: [table.status_log],
+    foreignColumns: [application_status_log.id],
+    name: "application_records_status_log_foreign",
+    // Losing the timeline entry shouldn't shred the debrief written about it.
+  }).onDelete("set null"),
+]);
+
 export const letter_versions = pgTable("letter_versions", {
   id: serial().primaryKey().notNull(),
   date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
@@ -3477,6 +3521,7 @@ export type Profiles = typeof profiles.$inferSelect;
 export type ApplicationLetters = typeof application_letters.$inferSelect;
 export type ApplicationQuestions = typeof application_questions.$inferSelect;
 export type ApplicationStatusLog = typeof application_status_log.$inferSelect;
+export type ApplicationRecords = typeof application_records.$inferSelect;
 export type LetterVersions = typeof letter_versions.$inferSelect;
 export type QuestionVersions = typeof question_versions.$inferSelect;
 export type JobMatchHistory = typeof job_match_history.$inferSelect;

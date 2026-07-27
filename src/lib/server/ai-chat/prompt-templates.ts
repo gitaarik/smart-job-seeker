@@ -1090,11 +1090,14 @@ Respond with a single JSON object with these keys, in this order:
 - Match specific job requirements to their actual experience — be concrete, not generic
 - Only reference experience and skills that exist in the applicant's data
 - Keep each point brief and actionable — this is a quick-reference sheet, not an essay
+- If records of earlier rounds are provided, this is NOT the first interview: prepare for what comes next. Build on what was already discussed, prepare answers to concerns the interviewers actually raised, and skip ground that is already covered.
 
 Return a single JSON object with exactly two keys: "text" (the cheat sheet as one markdown string — use the key "text") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Create an interview cheat sheet for this job application:
 
 \${jobDetails}
+
+\${interviewHistory}
 
 \${additionalContext}`,
   },
@@ -1111,10 +1114,13 @@ Rules:
 - Short bullet points only, no prose
 - Only reference things actually in their profile
 - Suggest specific talking points, questions to prepare for, and key strengths to highlight
+- If records of earlier rounds are provided, target the NEXT round — build on what was discussed and address concerns that were actually raised
 - Do NOT write the cheat sheet itself`,
     user_prompt: `## Job:
 
 \${jobDetails}
+
+\${interviewHistory}
 
 What key points should they prepare for THIS role's interview? What strengths to highlight, potential challenges to address, and questions to have ready?
 
@@ -1141,6 +1147,8 @@ In your feedback:
     user_prompt: `## Job:
 
 \${jobDetails}
+
+\${interviewHistory}
 
 ## Their interview cheat sheet:
 

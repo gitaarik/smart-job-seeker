@@ -5,6 +5,7 @@
   import {
     faCalendar,
     faCheck,
+    faComments,
     faEllipsisVertical,
     faHistory,
     faPencil,
@@ -24,7 +25,16 @@
 
   let app = $derived(data.application);
   let entries = $derived(app.application_status_logs || []);
+  let records = $derived(app.application_records || []);
   const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
+
+  const basePath = $derived(`/applications/${app.id}`);
+
+  // Records written about a given timeline event, so the entry can link
+  // through instead of duplicating long-form content in the feed.
+  function recordsFor(entryId: number) {
+    return records.filter((r) => r.status_log === entryId);
+  }
 
   let showAddForm = $state(false);
   let editingId = $state<number | null>(null);
@@ -221,6 +231,25 @@
                     {/if}
                     {#if entry.description}
                       <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{entry.description}</p>
+                    {/if}
+
+                    {#each recordsFor(entry.id) as record (record.id)}
+                      <a
+                        href="{basePath}/interviews#record-{record.id}"
+                        class="inline-flex items-center gap-1.5 mt-1.5 mr-2 px-2 py-0.5 rounded-full text-xs bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/20 transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faComments} class="w-3 h-3" />
+                        {record.title}
+                      </a>
+                    {/each}
+                    {#if recordsFor(entry.id).length === 0}
+                      <a
+                        href="{basePath}/interviews?from={entry.id}"
+                        class="inline-flex items-center gap-1.5 mt-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                        Add record
+                      </a>
                     {/if}
 
                     <p class="text-xs text-[var(--dash-text-muted)] mt-1 flex items-center gap-1">

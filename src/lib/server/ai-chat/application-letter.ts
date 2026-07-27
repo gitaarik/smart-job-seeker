@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
 import { createAndGenerateAiChat } from "./utils";
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
+import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -167,6 +168,9 @@ export async function generateApplicationLetter(
       job_description: job.job_description,
       skills_required: job.skills_required as string[] | null,
     }),
+    // Recaps/feedback from earlier rounds, so a cheat sheet for the next round
+    // builds on what already happened (empty string if none recorded).
+    interviewHistory: await interviewRecordsText(letter.application.id),
   };
 
   // For review mode, include the user's letter content

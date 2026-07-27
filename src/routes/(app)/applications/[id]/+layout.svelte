@@ -5,6 +5,7 @@
   import {
     faArrowLeft,
     faClipboardList,
+    faComments,
     faEnvelope,
     faFileAlt,
     faHistory,
@@ -22,6 +23,7 @@
   const tabs = $derived([
     { label: "Overview", href: basePath, icon: faClipboardList },
     { label: "Texts", href: `${basePath}/texts`, icon: faEnvelope },
+    { label: "Interviews", href: `${basePath}/interviews`, icon: faComments },
     { label: "Salary", href: `${basePath}/salary`, icon: faMoneyBillWave },
     { label: "Documents", href: `${basePath}/documents`, icon: faFileAlt },
     { label: "Timeline", href: `${basePath}/timeline`, icon: faHistory },

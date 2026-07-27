@@ -8,6 +8,7 @@ import {
   application_activity_log,
   application_letters,
   application_questions,
+  application_records,
   application_status_log,
   applications,
   applications_files,
@@ -110,6 +111,7 @@ export const applicationsRelations = relations(
     application_letters: many(application_letters),
     application_questions: many(application_questions),
     application_status_logs: many(application_status_log),
+    application_records: many(application_records),
   }),
 );
 
@@ -816,10 +818,25 @@ export const question_versionsRelations = relations(
 
 export const application_status_logRelations = relations(
   application_status_log,
-  ({ one }) => ({
+  ({ one, many }) => ({
     application: one(applications, {
       fields: [application_status_log.application],
       references: [applications.id],
+    }),
+    application_records: many(application_records),
+  }),
+);
+
+export const application_recordsRelations = relations(
+  application_records,
+  ({ one }) => ({
+    application: one(applications, {
+      fields: [application_records.application_id],
+      references: [applications.id],
+    }),
+    status_log_entry: one(application_status_log, {
+      fields: [application_records.status_log],
+      references: [application_status_log.id],
     }),
   }),
 );

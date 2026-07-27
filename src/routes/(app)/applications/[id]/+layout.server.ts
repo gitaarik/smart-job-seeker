@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, desc, asc } from "drizzle-orm";
-import { applications, application_letters, application_questions, application_activity_log, application_status_log, letter_versions, profile_versions } from "$lib/server/db/schema";
+import { applications, application_letters, application_questions, application_activity_log, application_records, application_status_log, letter_versions, profile_versions } from "$lib/server/db/schema";
 
 export const load: LayoutServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -43,6 +43,14 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
       },
       application_status_logs: {
         orderBy: desc(application_status_log.date_created),
+      },
+      // Newest first, falling back to creation order for records without a
+      // known event date (a pasted email, a note jotted down later).
+      application_records: {
+        orderBy: [
+          desc(application_records.event_date),
+          desc(application_records.date_created),
+        ],
       },
       applications_files: {
         with: {
