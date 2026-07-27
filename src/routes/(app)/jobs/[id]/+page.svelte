@@ -15,6 +15,7 @@
     faMapMarkerAlt,
     faMoneyBillWave,
     faPaperPlane,
+    faPenToSquare,
     faBoxArchive,
     faSearch,
     faStar as faStarSolid,
@@ -57,6 +58,22 @@
   let reparseError = $state("");
   let showReparseConfirm = $state(false);
   let reparseFormEl: HTMLFormElement | undefined = $state();
+
+  // Description editing (manually-created jobs only)
+  let isEditingDescription = $state(false);
+  let descriptionDraft = $state(data.job.job_description ?? "");
+  let isSavingDescription = $state(false);
+  let descriptionError = $state("");
+  let showSaveReparseConfirm = $state(false);
+  let descriptionFormEl: HTMLFormElement | undefined = $state();
+  // Set just before submit so one form serves both buttons.
+  let descriptionReparse = $state("0");
+
+  function startEditingDescription() {
+    descriptionDraft = job.job_description ?? "";
+    descriptionError = "";
+    isEditingDescription = true;
+  }
 
   // Staff archive / delete
   let isArchiving = $state(false);
@@ -402,16 +419,118 @@
       {/if}
 
       <!-- Job Description -->
-      {#if job.job_description}
+      {#if job.job_description || data.canEditDescription}
         <Card padding="lg">
-          <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
-            Job Description
-          </h2>
-          <div
-            class="prose prose-sm max-w-none text-[var(--dash-text)] whitespace-pre-wrap"
-          >
-            {job.job_description}
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <h2 class="text-lg font-semibold text-[var(--dash-text)]">
+              Job Description
+            </h2>
+            {#if data.canEditDescription && !isEditingDescription}
+              <button
+                type="button"
+                onclick={startEditingDescription}
+                class="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors shrink-0"
+              >
+                <FontAwesomeIcon icon={faPenToSquare} class="w-3.5 h-3.5" />
+                {job.job_description ? "Edit" : "Add description"}
+              </button>
+            {/if}
           </div>
+
+          {#if isEditingDescription}
+            <form
+              bind:this={descriptionFormEl}
+              method="POST"
+              action="?/updateDescription"
+              use:enhance={({ formData }) => {
+                // Set here rather than via a hidden input: the flag is decided
+                // by which button submitted, and a bound input wouldn't have
+                // flushed to the DOM before requestSubmit().
+                formData.set("reparse", descriptionReparse);
+                isSavingDescription = true;
+                descriptionError = "";
+                return async ({ result }) => {
+                  isSavingDescription = false;
+                  if (result.type === "failure") {
+                    descriptionError =
+                      (result.data as { error?: string })?.error ||
+                      "Save failed";
+                    return;
+                  }
+                  if (descriptionReparse === "1") {
+                    // Re-parse rewrote most fields — reload to show them.
+                    window.location.reload();
+                    return;
+                  }
+                  job.job_description = descriptionDraft.trim();
+                  isEditingDescription = false;
+                };
+              }}
+            >
+              <textarea
+                name="description"
+                bind:value={descriptionDraft}
+                rows="12"
+                disabled={isSavingDescription}
+                class="w-full px-3 py-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+              ></textarea>
+
+              {#if descriptionError}
+                <p class="mt-2 text-sm text-red-500">{descriptionError}</p>
+              {/if}
+
+              <div class="flex flex-wrap items-center gap-2 mt-3">
+                <button
+                  type="submit"
+                  disabled={isSavingDescription}
+                  onclick={() => (descriptionReparse = "0")}
+                  aria-label="Save description"
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
+                >
+                  {#if isSavingDescription && descriptionReparse === "0"}
+                    <Spinner size="w-4 h-4" />
+                  {/if}
+                  Save
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSavingDescription}
+                  onclick={() => (showSaveReparseConfirm = true)}
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                  title="Save, then re-extract skills, salary and other fields from the new text and re-score the job"
+                >
+                  {#if isSavingDescription && descriptionReparse === "1"}
+                    <Spinner size="w-4 h-4" />
+                  {:else}
+                    <FontAwesomeIcon icon={faWandMagicSparkles} class="w-4 h-4" />
+                  {/if}
+                  {isSavingDescription && descriptionReparse === "1"
+                    ? "Re-parsing..."
+                    : "Save & re-parse"}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSavingDescription}
+                  onclick={() => (isEditingDescription = false)}
+                  class="px-4 py-2 rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          {:else if job.job_description}
+            <div
+              class="prose prose-sm max-w-none text-[var(--dash-text)] whitespace-pre-wrap"
+            >
+              {job.job_description}
+            </div>
+          {:else}
+            <p class="text-sm text-[var(--dash-text-muted)]">
+              This job has no description yet.
+            </p>
+          {/if}
         </Card>
       {/if}
 
@@ -859,6 +978,20 @@
   onConfirm={() => {
     showReparseConfirm = false;
     reparseFormEl?.requestSubmit();
+  }}
+/>
+
+<ConfirmModal
+  isOpen={showSaveReparseConfirm}
+  title="Save & Re-parse"
+  message="Save the description, then re-extract the title, skills, location, salary and other fields from it — overwriting the current values, including any you set by hand. Uses AI usage and re-scores the job afterwards."
+  confirmLabel="Save & re-parse"
+  variant="primary"
+  onCancel={() => (showSaveReparseConfirm = false)}
+  onConfirm={() => {
+    showSaveReparseConfirm = false;
+    descriptionReparse = "1";
+    descriptionFormEl?.requestSubmit();
   }}
 />
 

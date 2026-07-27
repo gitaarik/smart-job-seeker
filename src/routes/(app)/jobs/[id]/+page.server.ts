@@ -22,8 +22,142 @@ import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { parseJobDescription } from "$lib/server/jobs/parse-job-description";
 import { triggerMatchForImport } from "$lib/server/job/match-trigger";
 import { classifyRegion } from "$lib/data/job-taxonomy";
-import { normalizeExperienceLevels, normalizeJobType, normalizeWorkLocation } from "$lib/data/job-normalize";
+import {
+  normalizeExperienceLevels,
+  normalizeJobType,
+  normalizeWorkLocation,
+} from "$lib/data/job-normalize";
 import { normalizeSalaryPeriod } from "$lib/salary/conversion";
+
+/**
+ * Re-extract parser-owned fields from a job's stored content and re-score it.
+ *
+ * Shared by the staff "Re-parse" action and the "Save & re-parse" description
+ * edit. Returns a discriminated result so callers can map failures onto the
+ * right HTTP status.
+ */
+async function reparseAndRescore(
+  jobId: number,
+  profileId: number,
+): Promise<
+  { ok: true; title: string | null } | {
+    ok: false;
+    status: number;
+    error: string;
+  }
+> {
+  const job = await db.query.jobs.findFirst({
+    where: eq(jobsTable.id, jobId),
+    columns: {
+      source_html_stripped: true,
+      job_description: true,
+      source_url: true,
+      title: true,
+      company: true,
+    },
+  });
+  if (!job) return { ok: false, status: 404, error: "Job not found" };
+
+  // Re-extract from already-stored content — captured HTML preferred, else the
+  // description text. No re-fetch (unlike Rescrape), so this also works for
+  // manual jobs that have no source_url.
+  const text = job.source_html_stripped ?? job.job_description;
+  if (!text || text.trim() === "") {
+    return {
+      ok: false,
+      status: 400,
+      error: "No stored content to re-parse (no captured HTML or description)",
+    };
+  }
+
+  const parsed = await parseJobDescription(text, {
+    profileId,
+    sourceUrl: job.source_url,
+  });
+  if (!parsed) {
+    return {
+      ok: false,
+      status: 502,
+      error: "Re-parse failed — the extraction LLM returned no result",
+    };
+  }
+
+  // Wholesale re-extraction: overwrite parser-owned fields. Title/company are
+  // coalesced to the existing values so a partial extraction can't wipe the
+  // job's identity. Description text and source_html_stripped stay as the
+  // stable parse input; status/source_url/platform are lifecycle fields a
+  // re-parse shouldn't touch.
+  const rawLocation = parsed.location ?? null;
+  const effectiveLocation = rawLocation && normalizeWorkLocation(rawLocation)
+    ? null
+    : rawLocation;
+
+  await db.update(jobsTable)
+    .set({
+      title: parsed.title ?? job.title,
+      company: parsed.company ?? job.company,
+      company_description: parsed.company_description,
+      job_poster: parsed.job_poster,
+      office_location: effectiveLocation,
+      region: classifyRegion(effectiveLocation),
+      salary_min: parsed.salary_min,
+      salary_max: parsed.salary_max,
+      salary_currency: parsed.salary_currency,
+      salary_period: normalizeSalaryPeriod(parsed.salary_period) ||
+        parsed.salary_period,
+      salary_duration_weeks: parsed.salary_duration_weeks,
+      work_location: normalizeWorkLocation(parsed.remote),
+      job_types: normalizeJobType(parsed.job_type),
+      experience_levels: normalizeExperienceLevels(parsed.experience_levels),
+      skills_required: parsed.skills_required,
+      skills_preferred: parsed.skills_preferred,
+      responsibilities: parsed.responsibilities,
+      soft_skills: parsed.soft_skills,
+      // date_posted is a Drizzle date() column (string mode).
+      date_posted: parsed.date_posted
+        ? parsed.date_posted.toISOString().split("T")[0]
+        : null,
+      ai_chat_extraction: parsed.ai_chat_extraction,
+      date_updated: new Date(),
+    })
+    .where(eq(jobsTable.id, jobId));
+
+  // Skills likely changed, so every profile's score for this job is stale.
+  // Mirror the scraper: clear all matches for the job, then enqueue a fresh
+  // score for the acting profile (non-blocking; other profiles recompute via
+  // the background matcher).
+  await db.delete(job_matches).where(eq(job_matches.job_id, jobId));
+  await triggerMatchForImport(profileId, jobId);
+
+  return { ok: true, title: parsed.title ?? job.title };
+}
+
+/**
+ * Whether `profileId` may hand-edit this job's description.
+ *
+ * Jobs are shared across profiles, so editing is limited to manually-created
+ * ones — a scraped job's description is a page capture that the next rescrape
+ * would overwrite anyway. Within those, only the profile that created the job
+ * (its importer) or staff can edit.
+ */
+async function canEditJobDescription(
+  jobId: number,
+  profileId: number,
+  createdManually: boolean,
+  isStaff: boolean,
+): Promise<boolean> {
+  if (!createdManually) return false;
+  if (isStaff) return true;
+
+  const importer = await db.query.job_importers.findFirst({
+    where: and(
+      eq(job_importers.job_id, jobId),
+      eq(job_importers.profile_id, profileId),
+    ),
+    columns: { job_id: true },
+  });
+  return !!importer;
+}
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -88,6 +222,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   const user = layoutData.user;
   const isStaff = !!(user as { is_staff?: boolean })?.is_staff ||
     !!(user as { is_admin?: boolean })?.is_admin;
+
+  const canEditDescription = await canEditJobDescription(
+    jobId,
+    profileId,
+    job.created_manually,
+    isStaff,
+  );
 
   // Load scrape history for staff (only if scraped more than once)
   let scrapeHistory: { processed_at: Date }[] = [];
@@ -321,6 +462,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     rescrapeConfig,
     existingApplication,
     chatContext,
+    canEditDescription,
   };
 };
 
@@ -546,90 +688,91 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
+    const result = await reparseAndRescore(jobId, profileId);
+    if (!result.ok) {
+      return fail(result.status, { error: result.error });
+    }
+
+    return { success: true, action: "reparsed", title: result.title };
+  },
+
+  /**
+   * Hand-edit a manually-created job's description, optionally re-running
+   * extraction + scoring on the new text.
+   */
+  updateDescription: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
     const job = await db.query.jobs.findFirst({
       where: eq(jobsTable.id, jobId),
-      columns: {
-        source_html_stripped: true,
-        job_description: true,
-        source_url: true,
-        title: true,
-        company: true,
-      },
+      columns: { created_manually: true },
     });
     if (!job) {
       return fail(404, { error: "Job not found" });
     }
 
-    // Re-extract from already-stored content — captured HTML preferred, else the
-    // description text. No re-fetch (unlike Rescrape), so this also works for
-    // manual jobs that have no source_url.
-    const text = job.source_html_stripped ?? job.job_description;
-    if (!text || text.trim() === "") {
-      return fail(400, {
-        error: "No stored content to re-parse (no captured HTML or description)",
-      });
-    }
-
-    const parsed = await parseJobDescription(text, {
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
+    const allowed = await canEditJobDescription(
+      jobId,
       profileId,
-      sourceUrl: job.source_url,
-    });
-    if (!parsed) {
-      return fail(502, {
-        error: "Re-parse failed — the extraction LLM returned no result",
-      });
+      job.created_manually,
+      isStaff,
+    );
+    if (!allowed) {
+      return fail(403, { error: "This job's description can't be edited" });
     }
 
-    // Wholesale re-extraction: overwrite parser-owned fields. Title/company are
-    // coalesced to the existing values so a partial extraction can't wipe the
-    // job's identity. Description text and source_html_stripped stay as the
-    // stable parse input; status/source_url/platform are lifecycle fields a
-    // re-parse shouldn't touch.
-    const rawLocation = parsed.location ?? null;
-    const effectiveLocation = rawLocation && normalizeWorkLocation(rawLocation)
-      ? null
-      : rawLocation;
+    const formData = await request.formData();
+    const description = ((formData.get("description") as string) ?? "").trim();
+    const reparse = formData.get("reparse") === "1";
 
+    if (!description) {
+      return fail(400, { error: "Description cannot be empty" });
+    }
+
+    // The edited text becomes the canonical content: mirror it into
+    // source_html_stripped, which re-parse reads in preference to the
+    // description. Without this the parser would re-read the stale capture and
+    // the edit would silently have no effect.
     await db.update(jobsTable)
       .set({
-        title: parsed.title ?? job.title,
-        company: parsed.company ?? job.company,
-        company_description: parsed.company_description,
-        job_poster: parsed.job_poster,
-        office_location: effectiveLocation,
-        region: classifyRegion(effectiveLocation),
-        salary_min: parsed.salary_min,
-        salary_max: parsed.salary_max,
-        salary_currency: parsed.salary_currency,
-        salary_period: normalizeSalaryPeriod(parsed.salary_period) || parsed.salary_period,
-        salary_duration_weeks: parsed.salary_duration_weeks,
-        work_location: normalizeWorkLocation(parsed.remote),
-        job_types: normalizeJobType(parsed.job_type),
-        experience_levels: normalizeExperienceLevels(parsed.experience_levels),
-        skills_required: parsed.skills_required,
-        skills_preferred: parsed.skills_preferred,
-        responsibilities: parsed.responsibilities,
-        soft_skills: parsed.soft_skills,
-        // date_posted is a Drizzle date() column (string mode).
-        date_posted: parsed.date_posted
-          ? parsed.date_posted.toISOString().split("T")[0]
-          : null,
-        ai_chat_extraction: parsed.ai_chat_extraction,
+        job_description: description,
+        source_html_stripped: description,
         date_updated: new Date(),
       })
       .where(eq(jobsTable.id, jobId));
 
-    // Skills likely changed, so every profile's score for this job is stale.
-    // Mirror the scraper: clear all matches for the job, then enqueue a fresh
-    // score for the acting profile (non-blocking; other profiles recompute via
-    // the background matcher).
-    await db.delete(job_matches).where(eq(job_matches.job_id, jobId));
-    await triggerMatchForImport(profileId, jobId);
+    if (!reparse) {
+      return { success: true, action: "descriptionSaved", description };
+    }
+
+    const result = await reparseAndRescore(jobId, profileId);
+    if (!result.ok) {
+      // The description edit is already committed — report the re-parse
+      // failure separately rather than pretending the save failed too.
+      return fail(result.status, {
+        error: `Description saved, but re-parse failed: ${result.error}`,
+      });
+    }
 
     return {
       success: true,
-      action: "reparsed",
-      title: parsed.title ?? job.title,
+      action: "descriptionReparsed",
+      title: result.title,
     };
   },
 
