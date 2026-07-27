@@ -9,6 +9,10 @@
 #    Excludes large tables that can be regenerated:
 #    - ai_chats: LLM conversation logs (keeps last 25)
 #    - jobs: Job postings (keeps last 25)
+#    - skill_embeddings: vector cache; refills itself on demand (see
+#      src/lib/server/job/skill-embeddings.ts — a miss embeds and inserts).
+#      Dropping it costs re-embedding calls after a restore, not correctness,
+#      and it was 91% of this file's size.
 #    - Tables with FK refs to jobs (keeps only rows for included jobs):
 #      job_matches, job_match_history, job_importers, job_resources,
 #      job_statuses, job_search_run_items
@@ -60,6 +64,7 @@ pg_dump \
   --exclude-table-data=job_importers \
   --exclude-table-data=job_resources \
   --exclude-table-data=job_statuses \
+  --exclude-table-data=skill_embeddings \
   > "$SMART_FILE"
 
 # Disable FK triggers during restore (we include partial ai_chats/jobs data,

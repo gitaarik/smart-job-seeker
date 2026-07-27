@@ -11,8 +11,8 @@
  * Run: npm run test:e2e
  */
 
-import { describe, it, expect } from "vitest";
-import { useBrowser, loginViaUI } from "./browser";
+import { describe, expect, it } from "vitest";
+import { loginViaUI, useBrowser } from "./browser";
 
 // ============================================================================
 // Login flow
@@ -62,7 +62,8 @@ describe("dashboard", () => {
     expect(heading?.trim()).toBe("Dashboard");
 
     // Sidebar has the main nav sections
-    const sidebarText = await b.page.locator("aside, nav").first().textContent();
+    const sidebarText = await b.page.locator("aside, nav").first()
+      .textContent();
     expect(sidebarText).toContain("Job Search");
     expect(sidebarText).toContain("Profile");
   });
@@ -107,7 +108,9 @@ describe("profile creation page", () => {
     const createBtn = b.page.getByRole("button", { name: /create profile/i });
     expect(await createBtn.isVisible()).toBe(true);
     // Should have form sections
-    const basicInfo = b.page.getByRole("button", { name: /basic information/i });
+    const basicInfo = b.page.getByRole("button", {
+      name: /basic information/i,
+    });
     expect(await basicInfo.isVisible()).toBe(true);
   });
 });
@@ -134,7 +137,9 @@ describe("profile creation flow", () => {
     await b.page.locator('input[type="text"]').first().fill(profileName);
 
     // Fill optional: Professional Title (second text input)
-    await b.page.locator('input[type="text"]').nth(1).fill("Senior QA Engineer");
+    await b.page.locator('input[type="text"]').nth(1).fill(
+      "Senior QA Engineer",
+    );
 
     // Submit and wait for redirect to /home?profile=<id>
     await b.page.getByRole("button", { name: /create profile/i }).click();
@@ -161,7 +166,8 @@ describe("profile creation flow", () => {
     expect(heading?.trim()).toBe("Basic Info");
 
     // Verify saved name (first text input on edit page)
-    const nameValue = await b.page.locator('input[type="text"]').first().inputValue();
+    const nameValue = await b.page.locator('input[type="text"]').first()
+      .inputValue();
     expect(nameValue).toBe(profileName);
   });
 
@@ -215,7 +221,9 @@ describe("profile creation flow", () => {
     await b.page.waitForLoadState("networkidle");
 
     // Type the profile name in the confirmation input
-    const confirmInput = b.page.locator('input[placeholder="Enter profile name to confirm"]');
+    const confirmInput = b.page.locator(
+      'input[placeholder="Enter profile name to confirm"]',
+    );
     await confirmInput.fill(profileName);
 
     // Click "Delete this profile" (enabled after name matches)
@@ -223,7 +231,9 @@ describe("profile creation flow", () => {
     await b.page.waitForTimeout(500);
 
     // Click "Yes, delete permanently" in the final confirmation
-    const finalDelete = b.page.getByRole("button", { name: /yes.*delete permanently/i });
+    const finalDelete = b.page.getByRole("button", {
+      name: /yes.*delete permanently/i,
+    });
     await finalDelete.click();
 
     // Should redirect to home after deletion
@@ -262,7 +272,9 @@ describe("jobs page", () => {
     await searchInput.fill("test query");
 
     // Clear button should appear
-    const clearBtn = b.page.locator('input[placeholder*="earch"] + button, input[placeholder*="earch"] ~ button').first();
+    const clearBtn = b.page.locator(
+      'input[placeholder*="earch"] + button, input[placeholder*="earch"] ~ button',
+    ).first();
     if (await clearBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
       await clearBtn.click();
       expect(await searchInput.inputValue()).toBe("");
@@ -289,7 +301,9 @@ describe("billing page", () => {
   it("displays current plan info", async () => {
     const pageText = await b.page.textContent("main");
     // Should show some plan-related content
-    expect(pageText?.toLowerCase()).toMatch(/explorer|seeker|hunter|contractor|free/);
+    expect(pageText?.toLowerCase()).toMatch(
+      /explorer|seeker|hunter|contractor|free/,
+    );
   });
 
   it("shows available plans", async () => {
@@ -364,11 +378,13 @@ describe("settings page", () => {
 
   it("shows settings heading", async () => {
     await loginViaUI(b.page);
+    // /export/settings is a 301 to /data/settings, which titles itself
+    // "Profile Settings".
     await b.page.goto("/export/settings");
     await b.page.waitForLoadState("networkidle");
 
     const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Settings");
+    expect(heading?.trim()).toBe("Profile Settings");
   });
 });
 
@@ -397,9 +413,12 @@ describe("sidebar navigation", () => {
 
   it("expands Job Search and navigates to sub-pages", async () => {
     // Ensure Job Search section is expanded (click if "All Jobs" link not visible)
-    const allJobsLink = b.page.locator("aside a").filter({ hasText: "All Jobs" });
+    const allJobsLink = b.page.locator("aside a").filter({
+      hasText: "All Jobs",
+    });
     if (!(await allJobsLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Job Search" }).click();
+      await b.page.locator("aside button").filter({ hasText: "Job Search" })
+        .click();
       await b.page.waitForTimeout(300);
     }
 
@@ -409,9 +428,12 @@ describe("sidebar navigation", () => {
   });
 
   it("expands Applying and navigates to applications", async () => {
-    const appLink = b.page.locator("aside a").filter({ hasText: "Applications" });
+    const appLink = b.page.locator("aside a").filter({
+      hasText: "Applications",
+    });
     if (!(await appLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Applying" }).click();
+      await b.page.locator("aside button").filter({ hasText: "Applying" })
+        .click();
       await b.page.waitForTimeout(300);
     }
 
@@ -421,9 +443,12 @@ describe("sidebar navigation", () => {
   });
 
   it("expands Profile and navigates to profile data", async () => {
-    const profileLink = b.page.locator("aside a").filter({ hasText: "Profile Data" });
+    const profileLink = b.page.locator("aside a").filter({
+      hasText: "Profile Data",
+    });
     if (!(await profileLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Profile" }).click();
+      await b.page.locator("aside button").filter({ hasText: "Profile" })
+        .click();
       await b.page.waitForTimeout(300);
     }
 
@@ -433,9 +458,13 @@ describe("sidebar navigation", () => {
   });
 
   it("expands Data & Settings and navigates to import", async () => {
-    const importLink = b.page.locator("aside a").filter({ hasText: "Import & Export" });
+    const importLink = b.page.locator("aside a").filter({
+      hasText: "Import & Export",
+    });
     if (!(await importLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Data & Settings" }).click();
+      await b.page.locator("aside button").filter({
+        hasText: "Data & Settings",
+      }).click();
       await b.page.waitForTimeout(300);
     }
 
@@ -473,7 +502,9 @@ describe("feedback form", () => {
 
   it("can select a category and type a message", async () => {
     await b.page.getByRole("button", { name: "Bug" }).click();
-    await b.page.locator('textarea[placeholder*="mind"]').fill("E2E test feedback");
+    await b.page.locator('textarea[placeholder*="mind"]').fill(
+      "E2E test feedback",
+    );
 
     // Send button should be visible
     const sendBtn = b.page.getByRole("button", { name: /^send$/i });
@@ -595,7 +626,9 @@ describe("job detail page", () => {
     await b.page.waitForURL(`**${href}`, { timeout: 5000 });
 
     const heading = await b.page.locator("h1").first().textContent();
-    expect(["Saved Job", "Job Match", "Job Details"]).toContain(heading?.trim());
+    expect(["Saved Job", "Job Match", "Job Details"]).toContain(
+      heading?.trim(),
+    );
   });
 
   it("shows save button and job content", async () => {
@@ -617,6 +650,25 @@ describe("profile edit and save", () => {
   const testTitle = `E2E Title ${Date.now()}`;
   let originalTitle = "";
 
+  // Professional Title renders via TranslatableField, which labels itself with a
+  // plain <span> (no `for`/`id`), so there is nothing to match by role or label.
+  // The placeholder is the only stable hook.
+  const titleInput = () =>
+    b.page.locator('input[placeholder="e.g., Senior Software Engineer"]');
+
+  /**
+   * Basic Info auto-saves on a 700ms debounce — there is no Save button. Blur to
+   * flush the pending save, then wait for the indicator to settle.
+   */
+  async function saveAndReload() {
+    await titleInput().blur();
+    await b.page.getByText("Saved", { exact: true }).first().waitFor({
+      timeout: 10000,
+    });
+    await b.page.reload();
+    await b.page.waitForLoadState("networkidle");
+  }
+
   it("loads the edit page with profile data", async () => {
     await loginViaUI(b.page);
     await b.page.goto("/profile/edit");
@@ -626,37 +678,24 @@ describe("profile edit and save", () => {
     expect(heading?.trim()).toBe("Basic Info");
 
     // Name should be filled
-    const nameValue = await b.page.locator('input[type="text"]').first().inputValue();
+    const nameValue = await b.page.locator("#name").inputValue();
     expect(nameValue).toBeTruthy();
   });
 
   it("can edit and save the professional title", async () => {
-    const titleInput = b.page.locator('input[type="text"]').nth(2);
-    originalTitle = await titleInput.inputValue();
+    originalTitle = await titleInput().inputValue();
 
-    await titleInput.fill(testTitle);
-    await b.page.getByRole("button", { name: /^save$/i }).first().click();
-    await b.page.waitForTimeout(2000);
+    await titleInput().fill(testTitle);
+    await saveAndReload();
 
-    // Reload and verify persistence
-    await b.page.reload();
-    await b.page.waitForLoadState("networkidle");
-
-    const savedValue = await b.page.locator('input[type="text"]').nth(2).inputValue();
-    expect(savedValue).toBe(testTitle);
+    expect(await titleInput().inputValue()).toBe(testTitle);
   });
 
   it("restores the original title", async () => {
-    const titleInput = b.page.locator('input[type="text"]').nth(2);
-    await titleInput.fill(originalTitle);
-    await b.page.getByRole("button", { name: /^save$/i }).first().click();
-    await b.page.waitForTimeout(2000);
+    await titleInput().fill(originalTitle);
+    await saveAndReload();
 
-    await b.page.reload();
-    await b.page.waitForLoadState("networkidle");
-
-    const restoredValue = await b.page.locator('input[type="text"]').nth(2).inputValue();
-    expect(restoredValue).toBe(originalTitle);
+    expect(await titleInput().inputValue()).toBe(originalTitle);
   });
 });
 
@@ -783,8 +822,9 @@ describe("export page", () => {
 
     // After export, should show the export in the list or success
     const mainText = await b.page.locator("main").textContent();
-    const hasResult = mainText.includes("Download") || mainText.includes("JSON")
-      || mainText.includes("Profile") || mainText.includes("ago");
+    const hasResult = mainText.includes("Download") ||
+      mainText.includes("JSON") ||
+      mainText.includes("Profile") || mainText.includes("ago");
     expect(hasResult).toBe(true);
   });
 });
@@ -817,8 +857,12 @@ describe("import page", () => {
   });
 
   it("has import/export tab navigation", async () => {
-    const importTab = b.page.locator("main a").filter({ hasText: "Profile Import" });
-    const exportTab = b.page.locator("main a").filter({ hasText: "Profile Export" });
+    const importTab = b.page.locator("main a").filter({
+      hasText: "Profile Import",
+    });
+    const exportTab = b.page.locator("main a").filter({
+      hasText: "Profile Export",
+    });
 
     expect(await importTab.isVisible()).toBe(true);
     expect(await exportTab.isVisible()).toBe(true);
@@ -830,7 +874,8 @@ describe("import page", () => {
     expect(b.page.url()).toContain("/data/profile-export");
 
     // Click import tab back
-    await b.page.locator("main a").filter({ hasText: "Profile Import" }).click();
+    await b.page.locator("main a").filter({ hasText: "Profile Import" })
+      .click();
     await b.page.waitForURL("**/data/profile-import", { timeout: 5000 });
     expect(b.page.url()).toContain("/data/profile-import");
   });
