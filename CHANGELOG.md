@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.7.0] - 2026-07-27
+
+34 commits since v0.6.5.
+
+### Added
+- Interviews tab to record and manage interview details for each application
+- Interview records are now incorporated as context when generating application materials
+- Ability to edit job descriptions with automatic re-parsing and score updates
+- Automated daily cleanup of old scraper telemetry and AI chat payloads
+
+### Changed
+- Jobs now score immediately upon re-parsing instead of requiring a separate trigger
+- Matches are flagged for re-scoring rather than deleted, preserving data for recovery
+
 ## [0.6.5] - 2026-07-26
 
 96 commits since v0.6.4.
