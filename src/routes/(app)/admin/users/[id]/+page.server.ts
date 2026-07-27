@@ -278,14 +278,18 @@ export const actions: Actions = {
 
     const profileIds = userProfiles.map((p) => p.id);
 
+    // Flag rather than delete — see job_matches.rescore_requested_at. The
+    // modal already promises a re-score on the next matcher cycle, which is
+    // exactly what the flag requests.
     const result = await queryRaw<{ cnt: bigint }>(sql`
-      WITH deleted AS (
-        DELETE FROM job_matches
+      WITH flagged AS (
+        UPDATE job_matches
+        SET rescore_requested_at = NOW()
         WHERE profile_id IN (${sqlJoin(profileIds)})
         AND recommendation IS NOT NULL
         RETURNING id
       )
-      SELECT COUNT(*) as cnt FROM deleted
+      SELECT COUNT(*) as cnt FROM flagged
     `);
 
     return { success: true, clearedCount: Number(result[0]?.cnt ?? 0) };

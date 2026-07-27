@@ -123,10 +123,13 @@ async function reparseAndRescore(
     .where(eq(jobsTable.id, jobId));
 
   // Skills likely changed, so every profile's score for this job is stale.
-  // Mirror the scraper: clear all matches for the job, then enqueue a fresh
-  // score for the acting profile (non-blocking; other profiles recompute via
-  // the background matcher).
-  await db.delete(job_matches).where(eq(job_matches.job_id, jobId));
+  // Mirror the scraper: flag all matches for the job as needing a re-score,
+  // then enqueue a fresh score for the acting profile (non-blocking; other
+  // profiles recompute via the background matcher). Flagging rather than
+  // deleting keeps the old score visible until the new one lands.
+  await db.update(job_matches)
+    .set({ rescore_requested_at: new Date() })
+    .where(eq(job_matches.job_id, jobId));
   await triggerMatchForImport(profileId, jobId);
 
   return { ok: true, title: parsed.title ?? job.title };

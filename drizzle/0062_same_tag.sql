@@ -1,0 +1,1 @@
+ALTER TABLE "job_matches" ADD COLUMN "rescore_requested_at" timestamp (6) with time zone;

@@ -303,9 +303,12 @@ export const actions: Actions = {
       }
     }
 
+    // Flag rather than delete — see job_matches.rescore_requested_at. The old
+    // score stays visible until the matcher replaces it.
     await queryRaw(sql`
-      DELETE FROM job_matches jm
-      USING jobs j ${statusJoin}
+      UPDATE job_matches jm
+      SET rescore_requested_at = NOW()
+      FROM jobs j ${statusJoin}
       WHERE j.id = jm.job_id
       AND jm.profile_id = ${profileId}
       AND jm.recommendation IS NOT NULL

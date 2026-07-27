@@ -770,6 +770,23 @@ export const job_matches = pgTable("job_matches", {
   ai_chat_scoring: integer(),
   matched_skills: json(),
   match_summary: text(),
+  /**
+   * Set when this score is deliberately invalidated (rescrape changed the
+   * job's skills, user hit re-match, staff re-parsed it). The matcher treats
+   * such a row as work; `upsertJobMatch` clears it after re-scoring.
+   *
+   * Invalidation used to DELETE the row, which made three states
+   * indistinguishable: never scored, deliberately invalidated, and lost to a
+   * bug. All three read as "no row", so the matcher could not tell a genuine
+   * re-match request from an accidental disappearance — and re-scoring costs
+   * an LLM call each time. Keeping the row also means the UI shows the
+   * previous score while the new one is computed, instead of blanking.
+   */
+  rescore_requested_at: timestamp({
+    precision: 6,
+    withTimezone: true,
+    mode: "date",
+  }),
 }, (table) => [
   index("job_matches_ai_chat_scoring_idx").on(table.ai_chat_scoring),
   index("job_matches_profile_score_idx").on(

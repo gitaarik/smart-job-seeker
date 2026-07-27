@@ -228,8 +228,13 @@ describe("updateDescription action", () => {
         title: "Parsed Title",
       }),
     );
-    // Stale scores cleared for every profile, fresh one queued for the actor.
-    expect(mockDelete).toHaveBeenCalled();
+    // Stale scores are flagged for re-scoring, not deleted — the previous score
+    // stays visible until the matcher replaces it. Fresh score queued for the
+    // acting profile; other profiles pick the flag up in the background.
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ rescore_requested_at: expect.any(Date) }),
+    );
+    expect(mockDelete).not.toHaveBeenCalled();
     expect(mockTriggerMatchForImport).toHaveBeenCalledWith(12, 3815);
     expect(res).toMatchObject({ success: true, action: "descriptionReparsed" });
   });
