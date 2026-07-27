@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.7.1] - 2026-07-27
+
+2 commits since v0.7.0.
+
+### Changed
+- Updated uuid to 14.0.0 and brace-expansion to 1.1.16
+
 ## [0.7.0] - 2026-07-27
 
 34 commits since v0.6.5.
