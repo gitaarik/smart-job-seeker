@@ -21,8 +21,57 @@ export const auth = betterAuth({
     .map((o) => o.trim())
     .filter(Boolean),
   advanced: {
-    useSecureCookies: getEnv("SJS_APP_URL_HOST", "").startsWith("https://")
-      && !getEnv("SJS_TRUSTED_ORIGINS", ""),
+    useSecureCookies: getEnv("SJS_APP_URL_HOST", "").startsWith("https://") &&
+      !getEnv("SJS_TRUSTED_ORIGINS", ""),
+    ipAddress: {
+      /**
+       * Rate limiting buckets per client IP, resolved from X-Forwarded-For.
+       * With no trustedProxies set, better-auth accepts the header ONLY when
+       * it holds exactly one entry (getIPFromHeader: `if (forwardedIps.length
+       * !== 1) return null`) — and Caddy *appends* to whatever the client
+       * sent. So anyone who supplies their own X-Forwarded-For produces two
+       * entries, the IP resolves to null, and every request on the server
+       * collapses into one shared bucket: the limit stops being per-attacker
+       * and one client can exhaust it for everybody.
+       *
+       * With trustedProxies set, better-auth walks the header right-to-left,
+       * skipping trusted hops and returning the first address it does not
+       * trust — the one Caddy actually observed. Spoofed entries sit to the
+       * LEFT of that and are ignored.
+       *
+       * Defaults cover a Caddy on the same host proxying into Docker. Override
+       * per environment when the topology differs (e.g. a CDN in front).
+       */
+      trustedProxies: getEnv(
+        "SJS_TRUSTED_PROXIES",
+        "127.0.0.1/32,::1/128,172.16.0.0/12",
+      )
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean),
+    },
+  },
+
+  /**
+   * Rate limiting is enabled by better-auth only when NODE_ENV=production
+   * (create-context: `enabled: options.rateLimit?.enabled ?? isProduction`),
+   * which the production compose sets. The global default of 100 requests per
+   * 10s is fine for session/token traffic but far too loose for the endpoints
+   * that accept a password or send mail, so those get their own buckets.
+   *
+   * Storage is in-process memory, so counters reset on deploy and are not
+   * shared between app instances — acceptable while production runs a single
+   * app node, and a thing to revisit alongside the other in-memory state when
+   * it does not.
+   */
+  rateLimit: {
+    customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-up/email": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 3 },
+      "/reset-password": { window: 60, max: 5 },
+      "/change-password": { window: 60, max: 5 },
+    },
   },
 
   user: {

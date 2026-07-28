@@ -11,6 +11,17 @@
   let error = $state("");
   let loading = $state(false);
 
+  // Sign-in runs entirely in the client (better-auth has no server action
+  // here), so before hydration the submit button has no handler. A click that
+  // landed in that window triggered the browser's own form submission — a
+  // plain POST to /login, a page route with no actions, which answers 405 and
+  // drops the user on an error page. Gate the button on hydration instead:
+  // $effect only runs client-side, so this stays false through SSR.
+  let hydrated = $state(false);
+  $effect(() => {
+    hydrated = true;
+  });
+
   async function handleSubmit(e: Event) {
     e.preventDefault();
     error = "";
@@ -53,7 +64,9 @@
       </h2>
     </div>
 
-    <form method="POST" class="mt-8 space-y-6" onsubmit={handleSubmit}>
+    <!-- No method="POST": submission is handled in JS, and a native POST here
+         would only ever 405. Without it a stray submit re-renders the page. -->
+    <form class="mt-8 space-y-6" onsubmit={handleSubmit}>
       {#if error}
         <div class="rounded-md bg-red-50 p-4">
           <p class="text-sm text-red-700">{error}</p>
@@ -101,7 +114,7 @@
       <div>
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !hydrated}
           class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[var(--dash-primary)] hover:bg-[var(--dash-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--dash-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {#if loading}
