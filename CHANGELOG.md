@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.7.2] - 2026-07-28
+
+10 commits since v0.7.1.
+
+### Added
+- Unified texts composer with interactive interview records
+
+### Fixed
+- Eliminated pre-hydration auth 405 errors with per-client rate limit bucketing
+- Resolved bootstrap restore and login flakiness in development environments
+
 ## [0.7.1] - 2026-07-27
 
 2 commits since v0.7.0.
