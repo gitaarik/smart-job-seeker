@@ -76,7 +76,9 @@ Guidelines:
 Return a single JSON object with exactly two keys: "text" (the answer — use the key "text") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Write my answer to this application question:
 
-\${question}`,
+\${question}
+
+\${additionalContext}`,
   },
 
   "extract_qa_pairs": {
@@ -193,7 +195,9 @@ Rules:
 
 \${question}
 
-What specific experiences, skills, and achievements from their profile should they draw on to answer THIS question well? Give a brief suggested angle or hook.`,
+What specific experiences, skills, and achievements from their profile should they draw on to answer THIS question well? Give a brief suggested angle or hook.
+
+\${additionalContext}`,
   },
 
   "followup_application_question": {
@@ -1105,6 +1109,8 @@ Also include:
 
 \${data}
 
+\${relevantProjects}
+
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or achievements from their profile you built the sheet around. Name the actual entries; be concrete.
 - "text": the complete cheat sheet as a SINGLE plain-text string with markdown formatting (headers, bullets, bold) — NOT an array or nested objects.
@@ -1113,11 +1119,32 @@ Respond with a single JSON object with these keys, in this order:
 
 - Create a practical, scannable reference document the applicant can use during interview preparation and the interview itself
 - Use markdown formatting: headers (##), bullet points (-), and bold (**) for emphasis
-- Include: key talking points that connect their experience to the job, important company/role facts to reference, smart questions to ask, potential tough questions and how to address them, specific achievements/numbers to mention
+- Include, in this order: FIRST the two record sections described below whenever records of earlier rounds are provided, THEN key talking points that connect their experience to the job, important company/role facts to reference, smart questions to ask, potential tough questions and how to address them, specific achievements/numbers to mention
 - Match specific job requirements to their actual experience — be concrete, not generic
 - Only reference experience and skills that exist in the applicant's data
 - Keep each point brief and actionable — this is a quick-reference sheet, not an essay
-- If records of earlier rounds are provided, this is NOT the first interview: prepare for what comes next. Build on what was already discussed, prepare answers to concerns the interviewers actually raised, and skip ground that is already covered.
+- See the section below for how to handle records of earlier rounds, when they are provided
+
+## When records of earlier rounds are provided
+
+They are the single most important input you have. They are what ACTUALLY happened, so they outrank generic profile-to-job matching: this is not the first interview, and the sheet must prepare for the next one specifically.
+
+The sheet MUST then open with these two sections, under these exact headings, before the pitch and before any talking points:
+
+## Corrections & carry-overs
+Anything the records flag as a misunderstanding, a wrong framing, or a weak answer the applicant gave. State the correction in full and ready to say out loud, not as a note to self. Also carry forward the points the applicant raised themselves that landed well, so they can build on those rather than repeat them cold.
+
+Name each correction AS a correction: what the applicant got wrong, and what to say instead. Silently using the corrected version is not enough — they will not know they had it wrong, and will say the wrong thing again. Never write "no corrections needed" when the records contain one; the records are often long and a single correction may sit among many other observations, so look for it.
+
+## Still open
+The questions the records leave unanswered, and any question the records explicitly say to put to this employer. Repeat these in the main questions section INSTEAD OF generic invented ones, not alongside them.
+
+Emit both headings verbatim. Do NOT dissolve their content into the pitch, the talking points or the questions instead: a correction the applicant cannot see labelled as a correction is one they will not know they need to make, which defeats the purpose. If the records contain nothing for one of the two, keep the heading and write one line saying so.
+
+Then, across the rest of the sheet:
+- If the records recommend specific preparation, or describe how the next conversation should differ from the last, that becomes the sheet's backbone — its structure and emphasis, not a closing footnote.
+- Do not re-prepare ground the records show is already covered, and do not contradict a correction the records make.
+- The records may be written in a different language than the sheet. Translate what you carry over; never drop a point because of the language it was written in.
 
 Return a single JSON object with exactly two keys: "text" (the cheat sheet as one markdown string — use the key "text") and "feedback" (the grounding note). Always include both.`,
     user_prompt: `Create an interview cheat sheet for this job application:

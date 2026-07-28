@@ -237,6 +237,42 @@ describe("formatRecordsContext", () => {
     expect(out).not.toContain("Never imply a conversation");
   });
 
+  // The records used to read as optional colour ("use them ONLY where they
+  // genuinely help"), and a real generation duly skimmed them: it kept the
+  // employer framing the records had explicitly corrected. Outward-facing text
+  // still must not invent a shared history, so the guard is now drawn between
+  // what was learned and the fact that it was learned in a conversation —
+  // which permits acting on the content without claiming the meeting.
+  it("tells writing prompts the records outrank the job posting", () => {
+    const out = formatRecordsContext([record()], "compact");
+    expect(out).toContain("the records win");
+    expect(out).toContain("the corrected version is the one to use");
+  });
+
+  it("still forbids referencing the interaction in writing prompts", () => {
+    const out = formatRecordsContext([record()], "compact");
+    expect(out).toContain("Never imply a conversation");
+    expect(out).toContain(
+      "Use what was learned, not the fact that it was learned",
+    );
+  });
+
+  it("tells interview-prep prompts to act on records, not nod at them", () => {
+    const out = formatRecordsContext([record()], "full");
+    expect(out).toContain("do not merely acknowledge them");
+    expect(out).toContain("surface them explicitly");
+  });
+
+  // The SURF records were Dutch and the sheet English; the points that went
+  // missing were the ones written in the other language.
+  it("tells both modes to translate rather than drop", () => {
+    for (const mode of ["compact", "full"] as const) {
+      const out = formatRecordsContext([record()], mode);
+      expect(out, mode).toContain("different language");
+      expect(out, mode).toContain("Translate what you use");
+    }
+  });
+
   it("survives a record with no title", () => {
     const out = formatRecordsContext([record({ title: null })]);
     expect(out).toContain("Untitled");

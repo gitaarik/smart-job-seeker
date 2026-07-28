@@ -6,7 +6,7 @@
 import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
-import { createAndGenerateAiChat } from "./utils";
+import { createAndGenerateAiChat, instructionsBlock } from "./utils";
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
 import { interviewRecordsText } from "./application-records";
 import {
@@ -67,6 +67,14 @@ export async function generateApplicationQuestionAnswer(
      * shared engine so the timeline editor can render the thread.
      */
     mode?: "generate" | "advice" | "review";
+    /**
+     * The applicant's own brief for this turn, typed in the editor's composer
+     * ("keep it to two sentences", "lean on the Acme migration"). Optional —
+     * blank means the prompt runs exactly as it did before instructions
+     * existed. Recorded on the version row so the timeline can show it as the
+     * turn's message and the applicant can edit it and regenerate.
+     */
+    instructions?: string;
   },
 ): Promise<{
   success: boolean;
@@ -77,6 +85,7 @@ export async function generateApplicationQuestionAnswer(
   const commitAnswer = opts?.commitAnswer ?? true;
   const mode = opts?.mode ?? "generate";
   const promptType = QUESTION_MODE_TO_PROMPT[mode];
+  const instructions = opts?.instructions?.trim() || null;
   // Fetch the question (try block for database query)
   let question;
   try {
@@ -115,14 +124,21 @@ export async function generateApplicationQuestionAnswer(
   const variables: Record<string, unknown> = {
     jobDescription: jobDescription,
     question: question.question,
-    // Top-K uploaded projects relevant to this job (empty string if none/no job).
-    relevantProjects: job
-      ? await relevantProjectsText(profileId, {
-        title: job.title,
-        job_description: job.job_description,
-        skills_required: job.skills_required as string[] | null,
-      })
-      : "",
+    // Top-K uploaded projects relevant to this job (empty string if none/no
+    // job). Only answer_application_question interpolates it — retrieval runs
+    // an embedding search, so advice/review would pay for a variable their
+    // templates never reference.
+    ...(mode === "generate"
+      ? {
+        relevantProjects: job
+          ? await relevantProjectsText(profileId, {
+            title: job.title,
+            job_description: job.job_description,
+            skills_required: job.skills_required as string[] | null,
+          })
+          : "",
+      }
+      : {}),
     // What has happened on this application so far — a question answered
     // mid-process should reflect the calls already had (empty if none).
     interviewHistory: await interviewRecordsText(
@@ -133,6 +149,11 @@ export async function generateApplicationQuestionAnswer(
   // Review critiques the answer the applicant already has.
   if (mode === "review") {
     variables.answer = question.answer || "";
+  } else {
+    // Only generate/advice reference ${additionalContext}. The review prompt
+    // is also reached through the followup path, which builds its own
+    // variables — supplying it only here keeps template and callers in step.
+    variables.additionalContext = instructionsBlock(instructions);
   }
 
   // Generate AI chat (try block for async operation)
@@ -231,6 +252,7 @@ export async function generateApplicationQuestionAnswer(
         source: "ai_advice",
         aiChatId: aiChat.id,
         aiFeedback,
+        userRequest: instructions,
       });
     } else if (mode === "generate" && answerText) {
       await recordVersion(QUESTION_VERSIONS, {
@@ -239,6 +261,7 @@ export async function generateApplicationQuestionAnswer(
         source: "ai_generation",
         aiChatId: aiChat.id,
         aiFeedback,
+        userRequest: instructions,
       });
     }
   } catch (error) {

@@ -9,6 +9,7 @@ import {
   parseBody,
 } from "$lib/server/validation/api-schemas";
 import { createApplicationQuestionFollowup } from "$lib/server/ai-chat/application-question-followup";
+import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
 import {
   QUESTION_VERSIONS,
   trimVersionsFrom,
@@ -48,8 +49,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   // If replacing a version, delete it and all subsequent versions first, then
   // restore the ai_chat pointer to the last remaining version — via the engine.
+  //
+  // Editing the message of the turn that STARTED the thread is a special case:
+  // the trim takes that turn's ai_chat with it, so there is nothing left to
+  // follow up on. Restart the same kind of turn instead, with the edited
+  // message as its brief, rather than failing with "does not have an ai_chats
+  // yet". Only generate/advice can start a thread with a message attached.
+  let restartMode: "generate" | "advice" | null = null;
   if (replaceVersionId) {
-    const { existed, last } = await trimVersionsFrom(
+    const { existed, removedSource, last } = await trimVersionsFrom(
       QUESTION_VERSIONS,
       questionId,
       replaceVersionId,
@@ -62,17 +70,25 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
     await db.update(application_questions).set({
       ai_chat_id: last?.ai_chat ?? null,
     }).where(eq(application_questions.id, questionId));
+    if (!last?.ai_chat) {
+      restartMode = removedSource === "ai_advice" ? "advice" : "generate";
+    }
   }
 
   await requireCredits(user.id, 5);
 
-  const result = await createApplicationQuestionFollowup(
-    questionId,
-    followupRequest,
-    includeOriginalContext,
-    updateContent,
-    mode,
-  );
+  const result = restartMode
+    ? await generateApplicationQuestionAnswer(questionId, {
+      mode: restartMode,
+      instructions: followupRequest,
+    })
+    : await createApplicationQuestionFollowup(
+      questionId,
+      followupRequest,
+      includeOriginalContext,
+      updateContent,
+      mode,
+    );
 
   if (!result.success) {
     return json(result, { status: 422 });

@@ -29,9 +29,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   await requireCredits(user.id, 5);
 
   const body = await request.json().catch(() => ({}));
-  const { additionalContext, mode } = parseBody(letterGenerateSchema, body);
+  const { instructions, mode } = parseBody(letterGenerateSchema, body);
 
-  const result = await generateApplicationLetter(letterId, additionalContext, mode);
+  const result = await generateApplicationLetter(letterId, instructions, mode);
 
   if (!result.success) {
     return json(result, { status: 422 });

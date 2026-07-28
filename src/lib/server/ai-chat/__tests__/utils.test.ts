@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { interpolatePrompt, makeFullPrompt } from "../utils";
+import { instructionsBlock, interpolatePrompt, makeFullPrompt } from "../utils";
 
 describe("interpolatePrompt", () => {
   it("replaces ${variable} syntax", () => {
@@ -78,5 +78,32 @@ describe("makeFullPrompt", () => {
   it("uses separator lines", () => {
     const result = makeFullPrompt("sys", "usr");
     expect(result).toContain("----------------");
+  });
+});
+
+describe("instructionsBlock", () => {
+  // The composer's brief is optional, and blank is the common case: the block
+  // has to vanish entirely rather than leave an empty header the model would
+  // read as a missing instruction.
+  it("is empty for no brief", () => {
+    expect(instructionsBlock(undefined)).toBe("");
+    expect(instructionsBlock(null)).toBe("");
+    expect(instructionsBlock("")).toBe("");
+    expect(instructionsBlock("   \n  ")).toBe("");
+  });
+
+  it("carries the brief under a header when present", () => {
+    const result = instructionsBlock("  keep it under 100 words  ");
+    expect(result).toContain("What the applicant asked for");
+    expect(result).toContain("keep it under 100 words");
+    // Trimmed, so leading whitespace can't push it out of the header's scope.
+    expect(result).not.toContain("  keep it");
+  });
+
+  it("tells the model the brief cannot override the output format", () => {
+    // Several of these prompts have a structured-JSON contract. A brief like
+    // "just give me bullet points" must not be read as licence to break it.
+    expect(instructionsBlock("just give me bullets"))
+      .toMatch(/does NOT override the output format/);
   });
 });

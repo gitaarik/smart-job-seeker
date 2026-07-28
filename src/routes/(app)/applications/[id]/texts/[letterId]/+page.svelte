@@ -61,11 +61,12 @@ async function ensureLetterExists(): Promise<number> {
 async function apiGenerate(
   letterId: number,
   mode: "generate" | "advice" | "review",
+  instructions?: string,
 ) {
   const res = await fetch(`/api/ai/letters/${letterId}/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mode }),
+    body: JSON.stringify({ mode, ...(instructions ? { instructions } : {}) }),
   });
   const result = await res.json();
   if (!result.success) throw new Error(result.message || "Generation failed");
@@ -123,9 +124,9 @@ async function apiSaveContent(
 
 // ---- Timeline callbacks (persist + invalidate; throw a message on failure) ----
 
-async function onGenerate(mode: "generate" | "advice") {
+async function onGenerate(mode: "generate" | "advice", instructions?: string) {
   const letterId = await ensureLetterExists();
-  await apiGenerate(letterId, mode);
+  await apiGenerate(letterId, mode, instructions);
   // Activation funnel: only count fresh "generate" runs, not advice/review.
   if (mode === "generate") track("ai_letter_generated");
   await invalidateAll();
@@ -250,7 +251,6 @@ function formatDate(date: Date | string | null): string {
   <ConversationTimeline
     {conversation}
     aiChatId={letter.ai_chat_id}
-    hasContent={!!letter.content}
     {placeholder}
     labels={LETTER_LABELS}
     {onGenerate}

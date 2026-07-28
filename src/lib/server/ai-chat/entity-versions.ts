@@ -218,6 +218,10 @@ export async function trimVersionsAfter(
  * Reports whether the target existed and returns the last remaining version's
  * ai_chat pointer + content, so the caller can restore the entity's ai_chat
  * reference. Used by the "replace this version" followup path.
+ *
+ * Also reports the removed row's `source`: when the trim leaves nothing behind
+ * there is no thread to follow up on, and the caller has to restart the same
+ * *kind* of turn from scratch (see the followup endpoints' restart path).
  */
 export async function trimVersionsFrom(
   vt: VersionBinding,
@@ -225,14 +229,17 @@ export async function trimVersionsFrom(
   fromId: number,
 ): Promise<{
   existed: boolean;
+  removedSource: VersionSource | null;
   last: { ai_chat: number | null; content: string | null } | null;
 }> {
   const target = await db
-    .select({ id: vt.id })
+    .select({ id: vt.id, source: vt.table.source })
     .from(vt.table)
     .where(and(eq(vt.fk, entityId), eq(vt.id, fromId)))
     .limit(1);
-  if (target.length === 0) return { existed: false, last: null };
+  if (target.length === 0) {
+    return { existed: false, removedSource: null, last: null };
+  }
 
   await db.delete(vt.table).where(and(eq(vt.fk, entityId), gte(vt.id, fromId)));
 
@@ -242,7 +249,11 @@ export async function trimVersionsFrom(
     .where(eq(vt.fk, entityId))
     .orderBy(desc(vt.id))
     .limit(1);
-  return { existed: true, last: last[0] ?? null };
+  return {
+    existed: true,
+    removedSource: (target[0].source as VersionSource) ?? null,
+    last: last[0] ?? null,
+  };
 }
 
 /**

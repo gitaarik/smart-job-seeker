@@ -189,3 +189,143 @@ describe("${interviewHistory} template ↔ caller wiring", () => {
     }
   });
 });
+
+/**
+ * `${additionalContext}` carries the applicant's own brief for a turn — what
+ * they typed in the editor's composer before pressing "AI advice" or "AI
+ * generate". Same two-way drift risk as `${interviewHistory}`, with one extra
+ * trap: `review_application_question` and the letter review prompts are ALSO
+ * reached through the followup builders, which assemble their own variables.
+ * A placeholder added to a template the followup path doesn't supply would
+ * ship the literal `${additionalContext}` to the model on every review.
+ */
+const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
+  // ai-chat/application-letter.ts — all letter types and modes share
+  // customVariables, and the review prompts get it from the followup builder
+  // too (application-letter-followup.ts, review branch).
+  write_cover_letter: "application-letter.ts",
+  advise_cover_letter: "application-letter.ts",
+  review_cover_letter: "application-letter.ts",
+  write_cheat_sheet: "application-letter.ts",
+  advise_cheat_sheet: "application-letter.ts",
+  review_cheat_sheet: "application-letter.ts",
+  // ai-chat/application-question.ts — generate/advice only. review is
+  // deliberately excluded: it also runs through the followup path, which
+  // builds its own variables and would leak the placeholder.
+  answer_application_question: "application-question.ts",
+  advise_application_question: "application-question.ts",
+};
+
+describe("${additionalContext} template ↔ caller wiring", () => {
+  const referencing = Object.entries(promptTemplates)
+    .filter(([, t]) =>
+      `${t.system_prompt}\n${t.user_prompt}`.includes("${additionalContext}")
+    )
+    .map(([key]) => key);
+
+  it("is referenced by every template a caller supplies it to", () => {
+    expect(referencing.sort()).toEqual(
+      Object.keys(ADDITIONAL_CONTEXT_SUPPLIED_BY).sort(),
+    );
+  });
+
+  it("is supplied by a caller for every template that references it", () => {
+    const unsupplied = referencing.filter(
+      (key) => !(key in ADDITIONAL_CONTEXT_SUPPLIED_BY),
+    );
+    expect(unsupplied).toEqual([]);
+  });
+
+  it("stays out of review_application_question (followup builds its own vars)", () => {
+    const t = promptTemplates["review_application_question"];
+    expect(`${t.system_prompt}\n${t.user_prompt}`)
+      .not.toContain("${additionalContext}");
+  });
+});
+
+/**
+ * `${relevantProjects}` is Top-K retrieval over the applicant's uploaded
+ * documents. Both drift directions cost something real here:
+ *
+ *   - template references it, caller doesn't supply it → literal
+ *     "${relevantProjects}" ships to the model;
+ *   - caller supplies it, template doesn't reference it → an embedding search
+ *     runs on every generation and the result is thrown away.
+ *
+ * The second half is not hypothetical: both callers used to compute it for
+ * every mode while only the two writing prompts interpolated it, so advice and
+ * review each paid for a discarded retrieval. Callers now compute it for
+ * `mode === "generate"` only, which is exactly the set below.
+ */
+const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
+  // ai-chat/application-letter.ts, generate mode only.
+  write_cover_letter: "application-letter.ts",
+  write_cheat_sheet: "application-letter.ts",
+  // ai-chat/application-question.ts, generate mode only.
+  answer_application_question: "application-question.ts",
+};
+
+describe("${relevantProjects} template ↔ caller wiring", () => {
+  const referencing = Object.entries(promptTemplates)
+    .filter(([, t]) =>
+      `${t.system_prompt}\n${t.user_prompt}`.includes("${relevantProjects}")
+    )
+    .map(([key]) => key);
+
+  it("is referenced by every template a caller supplies it to", () => {
+    expect(referencing.sort()).toEqual(
+      Object.keys(RELEVANT_PROJECTS_SUPPLIED_BY).sort(),
+    );
+  });
+
+  it("is supplied by a caller for every template that references it", () => {
+    const unsupplied = referencing.filter(
+      (key) => !(key in RELEVANT_PROJECTS_SUPPLIED_BY),
+    );
+    expect(unsupplied).toEqual([]);
+  });
+
+  it("reaches cheat sheets, not just cover letters", () => {
+    // Cheat sheets went without uploaded-document context for a long time
+    // purely because the slot was missing from the template.
+    expect(referencing).toContain("write_cheat_sheet");
+  });
+});
+
+/**
+ * The cheat-sheet prompt has to do more with interview records than merely be
+ * handed them. A real generation (SURF, 2026-07-27) had both records in full
+ * in its prompt and still dropped the one thing that mattered most: the
+ * records corrected the applicant's framing of the employer, and the sheet
+ * coached the *uncorrected* version back at them. It also ignored the records'
+ * list of still-open questions in favour of invented generic ones.
+ *
+ * These assertions pin the instructions that address that. They are cheap and
+ * they are the only automatic check — whether the model actually obeys is what
+ * `npm run llm:smoke` covers.
+ */
+describe("write_cheat_sheet records handling", () => {
+  const t = promptTemplates["write_cheat_sheet"];
+  const full = `${t.system_prompt}\n${t.user_prompt}`;
+
+  it("requires a corrections section", () => {
+    expect(full).toMatch(/Corrections & carry-overs/);
+    expect(full).toMatch(/misunderstanding|wrong framing/);
+  });
+
+  it("requires unanswered questions to be carried over", () => {
+    expect(full).toMatch(/Still open/);
+    expect(full).toMatch(/INSTEAD OF generic invented ones/);
+  });
+
+  it("ranks the records above generic profile-to-job matching", () => {
+    expect(full).toMatch(/outrank generic profile-to-job matching/);
+  });
+
+  it("tells the model to translate records written in another language", () => {
+    // The SURF records were Dutch and the sheet English; points written in
+    // the other language were the ones that went missing.
+    expect(full).toMatch(/different language/);
+    expect(full).toMatch(/Translate what you carry over/);
+  });
+});

@@ -39,7 +39,6 @@
   let {
     conversation,
     aiChatId,
-    hasContent,
     placeholder,
     labels,
     onGenerate,
@@ -52,14 +51,23 @@
     applyNoun = "answer",
   }: {
     conversation: ConversationEntry[];
-    /** Gates the followup affordances — null means no AI thread exists yet. */
+    /**
+     * Null means no AI thread exists yet: the composer offers the two
+     * thread-starting steps (advice / generate) instead of a followup message.
+     */
     aiChatId: number | null;
-    /** True when the entity already holds content outside the version trail. */
-    hasContent: boolean;
+    /** Placeholder for the "write my own version" editor. */
     placeholder: string;
     /** Human labels per version source (entity-specific wording). */
     labels: Record<VersionSource, string>;
-    onGenerate: (mode: "generate" | "advice") => Promise<void>;
+    /**
+     * Start an AI thread. `instructions` is the applicant's optional brief for
+     * that first turn, typed in the composer — blank runs the plain prompt.
+     */
+    onGenerate: (
+      mode: "generate" | "advice",
+      instructions?: string,
+    ) => Promise<void>;
     onReview: (content: string) => Promise<void>;
     onSendFollowup: (
       text: string,
@@ -86,6 +94,10 @@
     /** Noun for the apply affordance, e.g. "answer". */
     applyNoun?: string;
   } = $props();
+
+  // Whether an AI thread exists to follow up on. Drives the composer's button
+  // row: no thread → the two starting steps; thread → send a message.
+  let hasThread = $derived(aiChatId !== null);
 
   // Compute version numbers: only entries with content get a version number
   let entryVersionNums = $derived.by(() => {
@@ -121,8 +133,7 @@
   let userExpanded = $state(false);
   let collapsed = $derived(canCollapse && !userExpanded);
 
-  // Inline edit state: which version index is being edited, or -1 for the
-  // empty-state / advice-only editors.
+  // Inline edit state: which version index is being edited (null = none).
   let editingIndex = $state<number | null>(null);
   let editContent = $state("");
   let isEditing = $derived(editingIndex !== null);
@@ -207,9 +218,9 @@
     diffHidden = new Set(diffHidden);
   }
 
-  async function startEdit(content?: string, index?: number) {
-    editContent = content ?? "";
-    editingIndex = index ?? -1;
+  async function startEdit(content: string, index: number) {
+    editContent = content;
+    editingIndex = index;
     await tick();
     const textarea = document.querySelector<HTMLTextAreaElement>('textarea[name="content"]');
     if (textarea) {
@@ -225,7 +236,7 @@
   }
 
   function isEditingPreviousVersion(): boolean {
-    if (editingIndex === null || editingIndex === -1) return false;
+    if (editingIndex === null) return false;
     for (let i = editingIndex + 1; i < conversation.length; i++) {
       if (conversation[i].content || conversation[i].aiFeedback || conversation[i].userRequest) return true;
     }
@@ -486,7 +497,7 @@
           <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--dash-border)]/50">
             <button
               type="button"
-              onclick={() => startEdit(entry.content ?? undefined, entryIndex)}
+              onclick={() => startEdit(entry.content ?? "", entryIndex)}
               class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
             >
               <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
@@ -574,159 +585,138 @@
   </div>
 {/if}
 
-<!-- Composer: one place to either message the AI or write your own version.
-     Kept deliberately distinct so a message to the AI is never saved as an
-     answer. Shown during an ongoing conversation (not the empty state). -->
-{#if conversation.length > 0}
-  <div class="space-y-2">
-    {#if aiChatId}
-      <textarea
-        bind:value={feedbackText}
-        placeholder="Message the AI — e.g. “make it more concise”, or “write it based on your advice”…"
-        rows={3}
-        disabled={busy}
-        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
-      ></textarea>
-      <div class="flex items-center justify-between gap-2">
+<!-- Composer: the one place to either brief/message the AI or write your own
+     version. Deliberately the same shape before the thread starts and after
+     it — before, the box briefs the first AI turn (and may be left blank);
+     after, it's a message to the AI. Which AI step runs is chosen by the
+     button pressed, never by which part of the page you're in. The "my own
+     version" editor stays separate so a message to the AI is never saved as
+     content. -->
+{#snippet composer()}
+<div class="space-y-2">
+  <textarea
+    bind:value={feedbackText}
+    placeholder={hasThread
+      ? "Message the AI — e.g. “make it more concise”, or “write it based on your advice”…"
+      : "Optional — tell the AI what to focus on, e.g. “keep it under 100 words”. Leave blank to let it work from your profile and the job."}
+    rows={3}
+    disabled={busy}
+    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
+  ></textarea>
+  <div class="flex items-center justify-between gap-2 flex-wrap">
+    <!-- Writing it yourself is a peer of the AI steps, not a fallback. With no
+         thread yet there's nothing else on the page competing for attention,
+         so it gets a full button rather than the inline link it is mid-thread. -->
+    <button
+      type="button"
+      onclick={() => (composerOpen = !composerOpen)}
+      class={hasThread
+      ? "text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1.5"
+      : "px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1.5"}
+    >
+      <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+      Write / paste my own version
+    </button>
+    {#if hasThread}
+      <button
+        type="button"
+        onclick={() => run("followup", async () => { await onSendFollowup(feedbackText, { updateContent: true }); feedbackText = ""; })}
+        disabled={busy || !feedbackText.trim()}
+        class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+      >
+        {#if busy && busyMode === "followup"}
+          <Spinner size="w-3 h-3" />
+          Sending…
+        {:else}
+          <FontAwesomeIcon icon={faComments} class="w-3 h-3" />
+          Send to AI
+        {/if}
+      </button>
+    {:else}
+      <div class="flex items-center gap-2 flex-wrap">
         <button
           type="button"
-          onclick={() => (composerOpen = !composerOpen)}
-          class="text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1.5"
+          onclick={() => run("advice", async () => { await onGenerate("advice", feedbackText.trim() || undefined); feedbackText = ""; })}
+          disabled={busy}
+          class="px-3 py-1.5 text-xs border border-[var(--dash-primary)] rounded-lg text-[var(--dash-primary)] hover:bg-[var(--dash-primary-light)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
         >
-          <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-          Write / paste my own version
+          {#if busy && busyMode === "advice"}
+            <Spinner size="w-3 h-3" />
+            Generating…
+          {:else}
+            <FontAwesomeIcon icon={faComments} class="w-3 h-3" />
+            AI advice
+          {/if}
         </button>
         <button
           type="button"
-          onclick={() => run("followup", async () => { await onSendFollowup(feedbackText, { updateContent: true }); feedbackText = ""; })}
-          disabled={busy || !feedbackText.trim()}
+          onclick={() => run("generate", async () => { await onGenerate("generate", feedbackText.trim() || undefined); feedbackText = ""; })}
+          disabled={busy}
           class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
         >
-          {#if busy && busyMode === "followup"}
+          {#if busy && busyMode === "generate"}
             <Spinner size="w-3 h-3" />
-            Sending…
+            Generating…
           {:else}
-            <FontAwesomeIcon icon={faComments} class="w-3 h-3" />
-            Send to AI
+            <FontAwesomeIcon icon={faRobot} class="w-3 h-3" />
+            AI generate
           {/if}
         </button>
       </div>
-    {:else}
-      <!-- No AI thread yet (e.g. a self-written first version): offer writing
-           your own, and point to how to start chatting with the AI. -->
-      <div class="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onclick={() => (composerOpen = !composerOpen)}
-          class="text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1.5"
-        >
-          <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-          Write / paste my own version
-        </button>
-        <span class="text-xs text-[var(--dash-text-muted)]">Use “AI review” on a version to start chatting with the AI.</span>
-      </div>
-    {/if}
-
-    {#if composerOpen}
-      <div class="rounded-lg border border-[var(--dash-border)] p-3 space-y-2">
-        <p class="text-xs font-medium text-[var(--dash-text-secondary)]">Your own version</p>
-        <SimpleEditor
-          bind:content={composerContent}
-          markdown={true}
-          placeholder="Write or paste your own version here…"
-        />
-        <div class="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onclick={() => { composerOpen = false; composerContent = ""; }}
-            class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onclick={() => run("followup", async () => { await onSaveVersion(composerContent, {}); composerContent = ""; composerOpen = false; })}
-            disabled={busy || !composerContent.trim()}
-            class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-          >
-            <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-            Save my version
-          </button>
-        </div>
-      </div>
     {/if}
   </div>
-{/if}
 
-{#if !hasContent && conversation.length === 0}
-  <!-- Empty State: no content, no history -->
-  <Card padding="md">
-    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Start with AI</h3>
-    <div class="flex flex-wrap gap-2">
-      <button
-        type="button"
-        onclick={() => run("advice", () => onGenerate("advice"))}
-        disabled={busy}
-        class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-      >
-        {#if busy && busyMode === "advice"}
-          <Spinner size="w-3.5 h-3.5" />
-          Generating...
-        {:else}
-          <FontAwesomeIcon icon={faComments} class="w-3.5 h-3.5" />
-          AI advice
-        {/if}
-      </button>
-      <button
-        type="button"
-        onclick={() => run("generate", () => onGenerate("generate"))}
-        disabled={busy}
-        class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-      >
-        {#if busy && busyMode === "generate"}
-          <Spinner size="w-3.5 h-3.5" />
-          Generating...
-        {:else}
-          <FontAwesomeIcon icon={faRobot} class="w-3.5 h-3.5" />
-          AI generate
-        {/if}
-      </button>
+  {#if composerOpen}
+    <div class="rounded-lg border border-[var(--dash-border)] p-3 space-y-2">
+      <p class="text-xs font-medium text-[var(--dash-text-secondary)]">Your own version</p>
+      <SimpleEditor
+        bind:content={composerContent}
+        markdown={true}
+        {placeholder}
+      />
+      <div class="flex items-center justify-end gap-2 flex-wrap">
+        <button
+          type="button"
+          onclick={() => { composerOpen = false; composerContent = ""; }}
+          class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onclick={() => run("review", async () => { await onReview(composerContent); composerContent = ""; composerOpen = false; })}
+          disabled={busy || !composerContent.trim()}
+          class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+        >
+          {#if busy && busyMode === "review"}
+            <Spinner size="w-3 h-3" />
+            Reviewing…
+          {:else}
+            <FontAwesomeIcon icon={faRobot} class="w-3 h-3" />
+            Save &amp; AI review
+          {/if}
+        </button>
+        <button
+          type="button"
+          onclick={() => run("followup", async () => { await onSaveVersion(composerContent, {}); composerContent = ""; composerOpen = false; })}
+          disabled={busy || !composerContent.trim()}
+          class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+        >
+          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+          Save my version
+        </button>
+      </div>
     </div>
-  </Card>
+  {/if}
+</div>
+{/snippet}
 
-  <Card padding="md">
-    <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Or write it yourself</h3>
-    <SimpleEditor
-      bind:content={editContent}
-      markdown={true}
-      {placeholder}
-    />
-    <div class="flex items-center justify-end gap-2 mt-4">
-      <button
-        type="button"
-        onclick={() => run("review", () => onReview(editContent))}
-        disabled={busy || !editContent.trim()}
-        class="px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-      >
-        {#if busy && busyMode === "review"}
-          <Spinner size="w-3 h-3" />
-          Reviewing...
-        {:else}
-          <FontAwesomeIcon icon={faRobot} class="w-3 h-3" />
-          AI review
-        {/if}
-      </button>
-      <button
-        type="button"
-        onclick={() => run("followup", () => onSaveVersion(editContent, {}))}
-        disabled={busy || !editContent.trim()}
-        class="px-3 py-1.5 text-xs bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-      >
-        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
-        Save
-      </button>
-    </div>
-  </Card>
+<!-- Before the first turn the composer IS the page, so it gets a card to sit
+     in; once the timeline is above it, it reads as the thread's input line. -->
+{#if conversation.length === 0}
+  <Card padding="md">{@render composer()}</Card>
+{:else}
+  {@render composer()}
 {/if}
 
 <!-- Overwrite Previous Version Confirmation Modal -->

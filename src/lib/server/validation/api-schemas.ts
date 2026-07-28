@@ -376,9 +376,21 @@ export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown): T {
 
 // --- AI generation schemas ---
 
+/**
+ * Body of the two "start an AI turn" endpoints. `instructions` is the
+ * applicant's own brief for this turn, typed in the editor's composer; absent
+ * or blank runs the prompt exactly as it did before briefs existed.
+ */
 export const letterGenerateSchema = z.object({
-  additionalContext: z.string().trim().max(5000).optional(),
+  instructions: z.string().trim().max(5000).optional(),
   mode: z.enum(["generate", "advice", "review"]).optional().default("generate"),
+});
+
+export const questionGenerateSchema = z.object({
+  instructions: z.string().trim().max(5000).optional(),
+  mode: z.enum(["generate", "advice", "review"]).optional().default("generate"),
+  /** Draft flow: generate into the thread without writing the answer column. */
+  commit: z.boolean().optional().default(true),
 });
 
 export const followupRequestSchema = z.object({

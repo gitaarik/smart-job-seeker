@@ -47,6 +47,28 @@ const WRITING_PROMPT_KEYS = new Set<string>([
 ]);
 
 /**
+ * Format the applicant's own free-text brief for a prompt's
+ * `${additionalContext}` slot — what they typed in the editor's composer
+ * before asking for advice or a draft.
+ *
+ * Returns "" when blank so the slot collapses to nothing (the no-brief case is
+ * the common one, and an empty header would read as a missing instruction).
+ * When present it gets a header, so the model reads it as the applicant
+ * speaking rather than as a continuation of the job or profile data above it,
+ * and an explicit note that it does not override the output format — a brief
+ * like "just give me bullet points" must not break a structured-JSON contract.
+ */
+export function instructionsBlock(text?: string | null): string {
+  const trimmed = text?.trim();
+  if (!trimmed) return "";
+  return `## What the applicant asked for
+
+Follow this as far as it makes sense. It does NOT override the output format required above.
+
+${trimmed}`;
+}
+
+/**
  * Interpolate variables in a prompt string
  * Replaces ${variableName} placeholders with provided values
  * Supports any number of variables passed as key-value pairs

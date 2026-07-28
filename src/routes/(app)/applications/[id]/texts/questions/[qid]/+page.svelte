@@ -31,13 +31,16 @@ const QUESTION_LABELS: Record<VersionSource, string> = {
   ai_revision: "AI revised answer",
 };
 
-const placeholder = "Write your answer here, or start with AI below.";
+const placeholder = "Write or paste your answer here…";
 
-async function apiGenerate(mode: "generate" | "advice" | "review") {
+async function apiGenerate(
+  mode: "generate" | "advice" | "review",
+  instructions?: string,
+) {
   const res = await fetch(`/api/ai/questions/${questionId}/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mode }),
+    body: JSON.stringify({ mode, ...(instructions ? { instructions } : {}) }),
   });
   const result = await res.json();
   if (!result.success) throw new Error(result.message || "Generation failed");
@@ -89,8 +92,8 @@ async function apiSaveContent(content: string, deleteAfterVersionId?: number) {
 
 // ---- Timeline callbacks (persist + invalidate; throw a message on failure) ----
 
-async function onGenerate(mode: "generate" | "advice") {
-  await apiGenerate(mode);
+async function onGenerate(mode: "generate" | "advice", instructions?: string) {
+  await apiGenerate(mode, instructions);
   await invalidateAll();
 }
 
@@ -199,7 +202,6 @@ function handleQuestionSave() {
   <ConversationTimeline
     {conversation}
     aiChatId={question.ai_chat_id}
-    hasContent={!!question.answer}
     {placeholder}
     labels={QUESTION_LABELS}
     {onGenerate}

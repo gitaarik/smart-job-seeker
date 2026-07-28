@@ -133,18 +133,45 @@ export function formatRecordsContext(
     dropped++;
   }
 
+  // Two audiences, two different risks. Outward-facing text (letters, answers)
+  // can invent a shared history that never happened, so its guidance separates
+  // *what was learned* from *the fact that it was learned in a conversation* —
+  // which is a sharper fabrication guard than "use them only where they help",
+  // and simultaneously stops the records being skimmed as optional colour.
+  // Cheat sheets are private prep notes: referencing the conversation is the
+  // whole point, so there the pressure is all on acting rather than nodding.
   const guidance = mode === "compact"
     ? [
       "These are the applicant's own records of what has happened on this",
-      "application so far. Use them ONLY where they genuinely help: refer to",
-      "what was actually discussed, and address concerns that were actually",
-      "raised. Never imply a conversation, meeting or relationship that is not",
-      "recorded below — the text you are writing may well predate any of it.",
+      "application so far. Treat them as the most reliable information you",
+      "have about this employer and this role: where they contradict the job",
+      "posting or an assumption the applicant made earlier, the records win,",
+      "and the corrected version is the one to use.",
+      "",
+      "They do NOT license you to reference the interaction itself.",
+      "Never imply a conversation, meeting or relationship that is not",
+      "recorded below — the text you are writing may well predate all of it.",
+      "Use what was learned, not the fact that it was learned.",
+      "",
+      "The records may be written in a different language than the text you",
+      "are producing. Translate what you use; never drop a point because of",
+      "the language it happens to be written in.",
     ]
     : [
       "These are the applicant's own records of earlier rounds, feedback and",
-      "correspondence. Use them: build on what was already discussed, address",
-      "concerns that were raised, and do not re-prepare ground already covered.",
+      "correspondence. They are the most important input you have: act on",
+      "them, do not merely acknowledge them. Build on what was already",
+      "discussed, address the concerns that were raised, and",
+      "do not re-prepare ground already covered.",
+      "",
+      "Where the records correct something the applicant got wrong, or",
+      "recommend specific preparation, that correction and that",
+      "recommendation are the point — surface them explicitly rather than",
+      "quietly working around them.",
+      "",
+      "The records may be written in a different language than the text you",
+      "are producing. Translate what you use; never drop a point because of",
+      "the language it happens to be written in.",
     ];
 
   const omission = dropped > 0

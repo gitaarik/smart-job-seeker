@@ -6,7 +6,7 @@
 import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
-import { createAndGenerateAiChat } from "./utils";
+import { createAndGenerateAiChat, instructionsBlock } from "./utils";
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
 import { interviewRecordsText } from "./application-records";
 import {
@@ -63,12 +63,19 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
  */
 export async function generateApplicationLetter(
   letterId: number,
+  /**
+   * The applicant's own brief for this turn, typed in the editor's composer.
+   * Optional — blank runs the prompt exactly as it did before. Recorded on the
+   * version row so the timeline shows it as the turn's message and it can be
+   * edited and regenerated.
+   */
   additionalContext?: string,
   mode: "generate" | "advice" | "review" = "generate",
 ): Promise<{
   success: boolean;
   message: string;
 }> {
+  const instructions = additionalContext?.trim() || null;
   // Fetch the application_letter (try block for database query)
   let letter;
   try {
@@ -161,13 +168,20 @@ export async function generateApplicationLetter(
     jobDescription: job.job_description || "",
     jobDetails: jobDetailsText,
     generationMode: mode,
-    additionalContext: additionalContext || "",
+    additionalContext: instructionsBlock(instructions),
     // Top-K uploaded projects relevant to this job (empty string if none).
-    relevantProjects: await relevantProjectsText(profileId, {
-      title: job.title,
-      job_description: job.job_description,
-      skills_required: job.skills_required as string[] | null,
-    }),
+    // Only the writing prompts reference it — retrieval runs an embedding
+    // search, so computing it for advice/review would spend a query and a
+    // chunk of context on a variable those templates never interpolate.
+    ...(mode === "generate"
+      ? {
+        relevantProjects: await relevantProjectsText(profileId, {
+          title: job.title,
+          job_description: job.job_description,
+          skills_required: job.skills_required as string[] | null,
+        }),
+      }
+      : {}),
     // Recaps/feedback from earlier rounds (empty string if none recorded). A
     // cheat sheet is *about* the interviews so it gets the full set; a cover
     // letter only needs the gist, so it gets the compact budget.
@@ -275,6 +289,7 @@ export async function generateApplicationLetter(
         source: "ai_advice",
         aiChatId: aiChat.id,
         aiFeedback: aiChat.response,
+        userRequest: instructions,
       });
     } else if (mode === "generate" && letterContent) {
       await recordVersion(LETTER_VERSIONS, {
@@ -283,6 +298,7 @@ export async function generateApplicationLetter(
         source: "ai_generation",
         aiChatId: aiChat.id,
         aiFeedback,
+        userRequest: instructions,
       });
     }
   } catch (error) {
