@@ -167,13 +167,14 @@ done
 SMART_SIZE=$(du -h "$SMART_FILE" | cut -f1)
 echo "        ✓ Smart backup: db-dumps/smart.sql ($SMART_SIZE)"
 
-# Copy smart.sql to git-tracked OSS location (if running in cloud Docker setup)
-# The app container mounts cloud/ at /cloud, so /cloud/oss/db-dumps/ is the
-# git-tracked path, while /app/db-dumps/ maps to cloud/db-dumps/ (not tracked).
-if [ -d /cloud/oss/db-dumps ]; then
-  cp "$SMART_FILE" /cloud/oss/db-dumps/smart.sql
-  echo "        ✓ Copied to oss/db-dumps/smart.sql (git-tracked)"
-fi
+# NOTE: this used to also copy smart.sql to /cloud/oss/db-dumps/, because the
+# cloud stack mounted that directory at /db-dumps and start-app.sh restores
+# from there. The comment justifying it had the tracking backwards: oss is
+# public and tracks no dump at all (only .gitkeep), while cloud/db-dumps is the
+# private, tracked one. The cloud compose now points /db-dumps at cloud/db-dumps
+# directly, so the copy is unnecessary — and having a second, untracked dump
+# lying around was its own hazard, since start-app.sh prefers full.sql and a
+# stale one there would silently win over a fresh smart.sql.
 
 # Summary
 echo ""
