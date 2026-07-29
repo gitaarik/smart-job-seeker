@@ -87,6 +87,9 @@ export const extractJobDataSchema = z.object({
   status: optionalNullableString().describe(
     "Whether the job is currently accepting applications",
   ),
+  source_url: optionalNullableString().describe(
+    "Direct URL to this specific job posting, if one appears in the content",
+  ),
 }).passthrough(); // Allow extra keys LLMs may add like $schema, definitions
 
 /**

@@ -186,6 +186,26 @@ describe("AI Prompt Schemas", () => {
       };
       expect(() => extractJobDataSchema.parse(invalidData)).toThrow();
     });
+
+    // The prompt has always asked for source_url, but without a key here it
+    // was missing from the structured-output schema sent to the provider, so
+    // the model never emitted it. The manual-create flow uses it to fill in a
+    // job URL the user didn't type.
+    it("should carry source_url through", () => {
+      const result = extractJobDataSchema.parse({
+        title: "Software Engineer",
+        source_url: "https://jobs.example.com/postings/42",
+      });
+      expect(result.source_url).toBe("https://jobs.example.com/postings/42");
+    });
+
+    it("should coerce a 'null' string source_url to null", () => {
+      const result = extractJobDataSchema.parse({
+        title: "Software Engineer",
+        source_url: "null",
+      });
+      expect(result.source_url).toBeNull();
+    });
   });
 
   describe("scoreJobMatchSchema", () => {

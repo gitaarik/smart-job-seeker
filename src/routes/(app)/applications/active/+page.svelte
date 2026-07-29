@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
-  import { portalToBody } from "$lib/actions/portal";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,
@@ -36,8 +34,6 @@
 
   let applications = $derived(data.applications);
   let openDropdown = $state<string | null>(null);
-  let showCreateModal = $state(false);
-  let creating = $state(false);
 
   // Filter state synced from server data
   let groupFilter = $state(data.currentGroup);
@@ -319,14 +315,13 @@
         </button>
       {/if}
 
-      <button
-        type="button"
-        onclick={() => (showCreateModal = true)}
+      <a
+        href="/applications/new"
         class="flex items-center gap-2 px-2.5 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors"
       >
         <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
         New
-      </button>
+      </a>
     </div>
 
     <!-- Search -->
@@ -491,122 +486,3 @@
     </div>
   {/if}
 </div>
-
-{#if showCreateModal}
-  <div
-    use:portalToBody={{ onClose: () => (showCreateModal = false) }}
-    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
-    role="dialog"
-    onclick={(e) => { if (e.target === e.currentTarget) showCreateModal = false; }}
-  >
-    <div class="bg-[var(--dash-card)] rounded-xl shadow-lg max-w-lg w-full p-6 my-8">
-      <div class="flex items-start justify-between mb-1">
-        <h3 class="text-lg font-semibold text-[var(--dash-text)]">New application</h3>
-        <button
-          type="button"
-          onclick={() => (showCreateModal = false)}
-          class="p-1 -mr-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
-          aria-label="Close"
-        >
-          <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-        </button>
-      </div>
-      <p class="text-xs text-[var(--dash-text-muted)] mb-4">
-        Add a job you're applying to that isn't in your list yet. Leave everything blank
-        to create an empty application you can fill in later.
-      </p>
-
-      <form
-        method="POST"
-        action="?/createApplication"
-        use:enhance={() => {
-          creating = true;
-          return async ({ update }) => {
-            // Action redirects on success; only reached on failure.
-            await update();
-            creating = false;
-          };
-        }}
-        class="space-y-3"
-      >
-        <div>
-          <label for="ca-title" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Job title</label>
-          <input id="ca-title" name="title" type="text" placeholder="e.g. Senior Frontend Engineer"
-            class="w-full px-3 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label for="ca-company" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Company</label>
-            <input id="ca-company" name="company" type="text" placeholder="e.g. Acme Inc."
-              class="w-full px-3 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-          </div>
-          <div>
-            <label for="ca-location" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Location</label>
-            <input id="ca-location" name="office_location" type="text" placeholder="e.g. Amsterdam / Remote"
-              class="w-full px-3 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-          </div>
-        </div>
-        <div>
-          <label for="ca-url" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Job URL</label>
-          <input id="ca-url" name="source_url" type="url" placeholder="https://…"
-            class="w-full px-3 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-          <p class="text-[10px] text-[var(--dash-text-muted)] mt-1">If it's from a known job platform, we'll link it automatically.</p>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div>
-            <label for="ca-salmin" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Salary min</label>
-            <input id="ca-salmin" name="salary_min" type="number" inputmode="numeric" placeholder="0"
-              class="w-full px-2 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-          </div>
-          <div>
-            <label for="ca-salmax" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Salary max</label>
-            <input id="ca-salmax" name="salary_max" type="number" inputmode="numeric" placeholder="0"
-              class="w-full px-2 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-          </div>
-          <div>
-            <label for="ca-cur" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Currency</label>
-            <input id="ca-cur" name="salary_currency" type="text" value="EUR"
-              class="w-full px-2 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]" />
-          </div>
-          <div>
-            <label for="ca-per" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Period</label>
-            <select id="ca-per" name="salary_period"
-              class="w-full px-2 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]">
-              <option value="">—</option>
-              <option value="year">year</option>
-              <option value="month">month</option>
-              <option value="week">week</option>
-              <option value="day">day</option>
-              <option value="hour">hour</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label for="ca-desc" class="block text-xs font-medium text-[var(--dash-text-muted)] mb-1">Description <span class="font-normal">(optional)</span></label>
-          <textarea id="ca-desc" name="job_description" rows="4" placeholder="Paste the job description…"
-            class="w-full px-3 py-1.5 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] resize-y"></textarea>
-          <p class="text-[10px] text-[var(--dash-text-muted)] mt-1">Paste the full posting and we'll extract skills, location, salary and more — this may take a few seconds.</p>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onclick={() => (showCreateModal = false)}
-            class="px-3 py-1.5 text-sm rounded-md border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={creating}
-            class="flex items-center gap-2 px-4 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-60"
-          >
-            <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-            {creating ? "Creating…" : "Create application"}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-{/if}
-
