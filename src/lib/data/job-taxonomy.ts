@@ -28,10 +28,18 @@ interface Alias {
 }
 
 interface Pattern {
-  /** The substring or prefix to match against */
+  /** The substring, prefix, or (for mode "regex") source pattern to match */
   pattern: string;
-  /** "includes" for substring match, "startsWith" for prefix match */
-  mode: "includes" | "startsWith";
+  /**
+   * "includes" for substring match, "startsWith" for prefix match, "regex" for
+   * a full regular expression.
+   *
+   * Reach for "regex" when a short pattern would otherwise match inside a
+   * longer word — two-letter US state codes are the motivating case, where a
+   * plain `includes` of ", ne" also matches ", netherlands". Only the region
+   * classifier evaluates this mode; `buildNormalizer` skips it.
+   */
+  mode: "includes" | "startsWith" | "regex";
 }
 
 interface CanonicalValue {
@@ -348,37 +356,22 @@ export const REGIONS: TaxonomyCategory = {
       canonical: "us",
       label: "US",
       aliases: [
-        { text: "us" }, { text: "usa" }, { text: "united states" },
+        { text: "us" },
+        { text: "usa" },
+        { text: "united states" },
         { text: "united states of america" },
       ],
       patterns: [
-        // US state abbreviations after comma (e.g. "Austin, TX", "Boston, MA 02101")
-        { pattern: ", al", mode: "includes" }, { pattern: ", ak", mode: "includes" },
-        { pattern: ", az", mode: "includes" }, { pattern: ", ar", mode: "includes" },
-        { pattern: ", ca", mode: "includes" }, { pattern: ", co", mode: "includes" },
-        { pattern: ", ct", mode: "includes" }, { pattern: ", de", mode: "includes" },
-        { pattern: ", fl", mode: "includes" }, { pattern: ", ga", mode: "includes" },
-        { pattern: ", hi", mode: "includes" }, { pattern: ", id", mode: "includes" },
-        { pattern: ", il", mode: "includes" }, { pattern: ", in", mode: "includes" },
-        { pattern: ", ia", mode: "includes" }, { pattern: ", ks", mode: "includes" },
-        { pattern: ", ky", mode: "includes" }, { pattern: ", la", mode: "includes" },
-        { pattern: ", me", mode: "includes" }, { pattern: ", md", mode: "includes" },
-        { pattern: ", ma", mode: "includes" }, { pattern: ", mi", mode: "includes" },
-        { pattern: ", mn", mode: "includes" }, { pattern: ", ms", mode: "includes" },
-        { pattern: ", mo", mode: "includes" }, { pattern: ", mt", mode: "includes" },
-        { pattern: ", ne", mode: "includes" }, { pattern: ", nv", mode: "includes" },
-        { pattern: ", nh", mode: "includes" }, { pattern: ", nj", mode: "includes" },
-        { pattern: ", nm", mode: "includes" }, { pattern: ", ny", mode: "includes" },
-        { pattern: ", nc", mode: "includes" }, { pattern: ", nd", mode: "includes" },
-        { pattern: ", oh", mode: "includes" }, { pattern: ", ok", mode: "includes" },
-        { pattern: ", or", mode: "includes" }, { pattern: ", pa", mode: "includes" },
-        { pattern: ", ri", mode: "includes" }, { pattern: ", sc", mode: "includes" },
-        { pattern: ", sd", mode: "includes" }, { pattern: ", tn", mode: "includes" },
-        { pattern: ", tx", mode: "includes" }, { pattern: ", ut", mode: "includes" },
-        { pattern: ", vt", mode: "includes" }, { pattern: ", va", mode: "includes" },
-        { pattern: ", wa", mode: "includes" }, { pattern: ", wv", mode: "includes" },
-        { pattern: ", wi", mode: "includes" }, { pattern: ", wy", mode: "includes" },
-        { pattern: ", dc", mode: "includes" },
+        // US state/territory codes after a comma, as a WHOLE token:
+        // "Austin, TX", "Boston, MA 02101", "Portland, OR". The trailing \\b is
+        // what keeps ", ne" from matching ", netherlands" and ", de" from
+        // matching ", denmark" — a plain substring match classified every
+        // country whose name starts with a state code as US.
+        {
+          pattern:
+            ",\\s*(?:a[klrz]|c[aot]|d[ce]|fl|ga|hi|i[adln]|k[sy]|la|m[adeinost]|n[cdehjmvy]|o[hkr]|pa|ri|s[cd]|t[nx]|ut|v[at]|w[aivy])\\b",
+          mode: "regex",
+        },
         { pattern: ", usa", mode: "includes" },
         // Full state names and major cities without state abbrev
         { pattern: "texas", mode: "includes" },
@@ -398,8 +391,12 @@ export const REGIONS: TaxonomyCategory = {
       canonical: "uk",
       label: "UK",
       aliases: [
-        { text: "uk" }, { text: "united kingdom" }, { text: "great britain" },
-        { text: "england" }, { text: "scotland" }, { text: "wales" },
+        { text: "uk" },
+        { text: "united kingdom" },
+        { text: "great britain" },
+        { text: "england" },
+        { text: "scotland" },
+        { text: "wales" },
         { text: "northern ireland" },
       ],
       patterns: [
@@ -420,22 +417,46 @@ export const REGIONS: TaxonomyCategory = {
       canonical: "western_europe",
       label: "Western Europe",
       aliases: [
-        { text: "western europe" }, { text: "europe" }, { text: "european union" },
-        { text: "eu" }, { text: "eea" }, { text: "emea" },
+        { text: "western europe" },
+        { text: "europe" },
+        { text: "european union" },
+        { text: "eu" },
+        { text: "eea" },
+        { text: "emea" },
         // Countries
-        { text: "netherlands" }, { text: "nederland" },
-        { text: "germany" }, { text: "deutschland" },
+        { text: "netherlands" },
+        { text: "nederland" },
+        { text: "germany" },
+        { text: "deutschland" },
         { text: "france" },
-        { text: "belgium" }, { text: "belgië" }, { text: "belgique" },
-        { text: "austria" }, { text: "österreich" },
-        { text: "switzerland" }, { text: "schweiz" }, { text: "suisse" },
+        { text: "belgium" },
+        { text: "belgië" },
+        { text: "belgique" },
+        { text: "austria" },
+        { text: "österreich" },
+        { text: "switzerland" },
+        { text: "schweiz" },
+        { text: "suisse" },
         { text: "ireland" },
         { text: "luxembourg" },
-        { text: "denmark" }, { text: "dnk" },
-        { text: "sweden" }, { text: "norway" }, { text: "finland" },
-        { text: "spain" }, { text: "españa" },
+        { text: "denmark" },
+        { text: "dnk" },
+        { text: "danmark" },
+        { text: "sweden" },
+        { text: "sverige" },
+        { text: "norway" },
+        { text: "norge" },
+        { text: "finland" },
+        { text: "suomi" },
+        { text: "iceland" },
+        { text: "ísland" },
+        { text: "nordics" },
+        { text: "scandinavia" },
+        { text: "spain" },
+        { text: "españa" },
         { text: "portugal" },
-        { text: "italy" }, { text: "italia" },
+        { text: "italy" },
+        { text: "italia" },
         { text: "greece" },
       ],
       patterns: [
@@ -520,6 +541,35 @@ export const REGIONS: TaxonomyCategory = {
         { pattern: "velsen", mode: "includes" },
         { pattern: "bunschoten", mode: "includes" },
         { pattern: "breukelen", mode: "includes" },
+        // Nordic, remaining Western European, and additional German/French/
+        // Spanish cities.
+        //
+        // Matched with word boundaries rather than plain `includes`: several
+        // of these are short enough to appear inside unrelated place names —
+        // "gent" inside "Argentina", "roma" inside "Romania", "nice" inside
+        // "Venice", "bern" inside "Bernburg" — which would misclassify them
+        // into this region. Same trap as the US state codes above.
+        {
+          pattern:
+            "\\b(?:copenhagen|k(?:ø|o)benhavn|aarhus|odense|stockholm|gothenburg|g(?:ö|o)teborg|malmo|uppsala|oslo|bergen|trondheim|stavanger|helsinki|espoo|tampere|reykjav(?:í|i)k)\\b",
+          mode: "regex",
+        },
+        {
+          pattern:
+            "\\b(?:dublin|cork|galway|brussels?|bruxelles|antwerp(?:en)?|ghent|gent|leuven|vienna|wien|graz|salzburg|z(?:ü|u)rich|geneva|gen(?:è|e)ve|basel|bern|lausanne|lisbon|lisboa|braga|milan|milano|rome|roma|turin|torino|bologna|naples|napoli|florence|firenze|athens|thessaloniki|luxembourg)\\b",
+          mode: "regex",
+        },
+        // "malmö" ends in a non-ASCII letter, and \\b only sees ASCII word
+        // chars, so a trailing boundary would never match. Distinctive enough
+        // to match plainly.
+        { pattern: "malmö", mode: "includes" },
+        // Porto (Portugal) — but not Porto Alegre, which is Brazil.
+        { pattern: "\\bporto\\b(?!\\s+alegre)", mode: "regex" },
+        {
+          pattern:
+            "\\b(?:leipzig|dresden|hannover|n(?:ü|u)rnberg|nuremberg|karlsruhe|mannheim|bremen|essen|dortmund|toulouse|bordeaux|nantes|lille|nice|grenoble|bilbao|zaragoza|palma)\\b",
+          mode: "regex",
+        },
         // European meta
         { pattern: "european", mode: "includes" },
         { pattern: ", netherlands", mode: "includes" },
@@ -536,6 +586,9 @@ export const REGIONS: TaxonomyCategory = {
         { pattern: ", portugal", mode: "includes" },
         { pattern: ", austria", mode: "includes" },
         { pattern: ", switzerland", mode: "includes" },
+        { pattern: ", greece", mode: "includes" },
+        { pattern: ", luxembourg", mode: "includes" },
+        { pattern: ", iceland", mode: "includes" },
       ],
     },
     {
@@ -543,13 +596,21 @@ export const REGIONS: TaxonomyCategory = {
       label: "Eastern Europe",
       aliases: [
         { text: "eastern europe" },
-        { text: "poland" }, { text: "polska" },
-        { text: "czech republic" }, { text: "czechia" },
-        { text: "romania" }, { text: "hungary" },
-        { text: "bulgaria" }, { text: "croatia" },
-        { text: "slovakia" }, { text: "slovenia" },
-        { text: "serbia" }, { text: "ukraine" },
-        { text: "lithuania" }, { text: "latvia" }, { text: "estonia" },
+        { text: "poland" },
+        { text: "polska" },
+        { text: "czech republic" },
+        { text: "czechia" },
+        { text: "romania" },
+        { text: "hungary" },
+        { text: "bulgaria" },
+        { text: "croatia" },
+        { text: "slovakia" },
+        { text: "slovenia" },
+        { text: "serbia" },
+        { text: "ukraine" },
+        { text: "lithuania" },
+        { text: "latvia" },
+        { text: "estonia" },
       ],
       patterns: [
         { pattern: "warsaw", mode: "includes" },
@@ -580,11 +641,18 @@ export const REGIONS: TaxonomyCategory = {
       label: "Middle East",
       aliases: [
         { text: "middle east" },
-        { text: "uae" }, { text: "united arab emirates" },
-        { text: "saudi arabia" }, { text: "israel" },
-        { text: "qatar" }, { text: "bahrain" }, { text: "kuwait" },
-        { text: "oman" }, { text: "jordan" }, { text: "lebanon" },
-        { text: "turkey" }, { text: "türkiye" },
+        { text: "uae" },
+        { text: "united arab emirates" },
+        { text: "saudi arabia" },
+        { text: "israel" },
+        { text: "qatar" },
+        { text: "bahrain" },
+        { text: "kuwait" },
+        { text: "oman" },
+        { text: "jordan" },
+        { text: "lebanon" },
+        { text: "turkey" },
+        { text: "türkiye" },
       ],
       patterns: [
         { pattern: "dubai", mode: "includes" },
@@ -600,14 +668,24 @@ export const REGIONS: TaxonomyCategory = {
       canonical: "asia_pacific",
       label: "Asia Pacific",
       aliases: [
-        { text: "asia pacific" }, { text: "apac" }, { text: "asia" },
-        { text: "india" }, { text: "china" }, { text: "japan" },
-        { text: "south korea" }, { text: "korea" },
-        { text: "singapore" }, { text: "australia" },
-        { text: "new zealand" }, { text: "taiwan" },
-        { text: "malaysia" }, { text: "indonesia" },
-        { text: "philippines" }, { text: "vietnam" },
-        { text: "thailand" }, { text: "pakistan" },
+        { text: "asia pacific" },
+        { text: "apac" },
+        { text: "asia" },
+        { text: "india" },
+        { text: "china" },
+        { text: "japan" },
+        { text: "south korea" },
+        { text: "korea" },
+        { text: "singapore" },
+        { text: "australia" },
+        { text: "new zealand" },
+        { text: "taiwan" },
+        { text: "malaysia" },
+        { text: "indonesia" },
+        { text: "philippines" },
+        { text: "vietnam" },
+        { text: "thailand" },
+        { text: "pakistan" },
         { text: "bangladesh" },
       ],
       patterns: [
@@ -634,12 +712,19 @@ export const REGIONS: TaxonomyCategory = {
       canonical: "latin_america",
       label: "Latin America",
       aliases: [
-        { text: "latin america" }, { text: "latam" },
-        { text: "brazil" }, { text: "brasil" },
-        { text: "mexico" }, { text: "méxico" },
-        { text: "argentina" }, { text: "colombia" },
-        { text: "chile" }, { text: "peru" }, { text: "perú" },
-        { text: "costa rica" }, { text: "uruguay" },
+        { text: "latin america" },
+        { text: "latam" },
+        { text: "brazil" },
+        { text: "brasil" },
+        { text: "mexico" },
+        { text: "méxico" },
+        { text: "argentina" },
+        { text: "colombia" },
+        { text: "chile" },
+        { text: "peru" },
+        { text: "perú" },
+        { text: "costa rica" },
+        { text: "uruguay" },
       ],
       patterns: [
         { pattern: "são paulo", mode: "includes" },
@@ -661,10 +746,14 @@ export const REGIONS: TaxonomyCategory = {
       label: "Africa",
       aliases: [
         { text: "africa" },
-        { text: "south africa" }, { text: "nigeria" },
-        { text: "kenya" }, { text: "egypt" },
-        { text: "ghana" }, { text: "ethiopia" },
-        { text: "tanzania" }, { text: "morocco" },
+        { text: "south africa" },
+        { text: "nigeria" },
+        { text: "kenya" },
+        { text: "egypt" },
+        { text: "ghana" },
+        { text: "ethiopia" },
+        { text: "tanzania" },
+        { text: "morocco" },
       ],
       patterns: [
         { pattern: "cape town", mode: "includes" },
@@ -688,6 +777,12 @@ export const REGIONS: TaxonomyCategory = {
 
 const _regionNormalizeMap = buildNormalizeMap(REGIONS);
 const _regionPatterns = getPatterns(REGIONS);
+/** Compiled once at module load — classifyRegion runs per job row. */
+const _regionRegexes = new Map(
+  _regionPatterns
+    .filter((p) => p.mode === "regex")
+    .map((p) => [p.pattern, new RegExp(p.pattern)]),
+);
 
 /**
  * Classify a job's office_location string into a canonical region.
@@ -701,7 +796,9 @@ const _regionPatterns = getPatterns(REGIONS);
  * Region priority: more specific regions (US, UK) are checked before
  * broader ones (Western Europe) via pattern definition order.
  */
-export function classifyRegion(location: string | null | undefined): string | null {
+export function classifyRegion(
+  location: string | null | undefined,
+): string | null {
   if (!location) return null;
 
   // Strip work arrangement suffixes
@@ -719,8 +816,15 @@ export function classifyRegion(location: string | null | undefined): string | nu
   // Pattern match — order matters: US state patterns are checked first,
   // then UK, then Western Europe, etc.
   for (const p of _regionPatterns) {
-    if (p.mode === "includes" && cleaned.includes(p.pattern)) return p.canonical;
-    if (p.mode === "startsWith" && cleaned.startsWith(p.pattern)) return p.canonical;
+    if (p.mode === "includes" && cleaned.includes(p.pattern)) {
+      return p.canonical;
+    }
+    if (p.mode === "startsWith" && cleaned.startsWith(p.pattern)) {
+      return p.canonical;
+    }
+    if (p.mode === "regex" && _regionRegexes.get(p.pattern)!.test(cleaned)) {
+      return p.canonical;
+    }
   }
 
   return null;
@@ -739,7 +843,9 @@ function strip(s: string): string {
  * Build a display label map: lowercased alias → display string.
  * Used by format.ts for UI rendering.
  */
-export function buildDisplayMap(category: TaxonomyCategory): Map<string, string> {
+export function buildDisplayMap(
+  category: TaxonomyCategory,
+): Map<string, string> {
   const map = new Map<string, string>();
   for (const val of category.values) {
     for (const alias of val.aliases) {
@@ -753,7 +859,9 @@ export function buildDisplayMap(category: TaxonomyCategory): Map<string, string>
  * Build a normalization map: lowercased alias → canonical value.
  * Used by matcher.ts for in-memory matching.
  */
-export function buildNormalizeMap(category: TaxonomyCategory): Map<string, string> {
+export function buildNormalizeMap(
+  category: TaxonomyCategory,
+): Map<string, string> {
   const map = new Map<string, string>();
   for (const val of category.values) {
     for (const alias of val.aliases) {
@@ -769,8 +877,8 @@ export function buildNormalizeMap(category: TaxonomyCategory): Map<string, strin
  */
 export function getPatterns(
   category: TaxonomyCategory,
-): { pattern: string; mode: "includes" | "startsWith"; canonical: string }[] {
-  const result: { pattern: string; mode: "includes" | "startsWith"; canonical: string }[] = [];
+): (Pattern & { canonical: string })[] {
+  const result: (Pattern & { canonical: string })[] = [];
   for (const val of category.values) {
     for (const p of val.patterns ?? []) {
       result.push({ ...p, canonical: val.canonical });
@@ -824,7 +932,9 @@ export function matchPatternDisplay(
   for (const val of category.values) {
     for (const p of val.patterns ?? []) {
       if (p.mode === "includes" && lower.includes(p.pattern)) return val.label;
-      if (p.mode === "startsWith" && lower.startsWith(p.pattern)) return val.label;
+      if (p.mode === "startsWith" && lower.startsWith(p.pattern)) {
+        return val.label;
+      }
     }
   }
   return null;

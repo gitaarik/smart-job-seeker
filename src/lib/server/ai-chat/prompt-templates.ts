@@ -471,7 +471,7 @@ Extract the following fields:
 - job_type: Employment type - MUST be one of: "full_time", "part_time", "contract", "temporary", "internship", or "freelance" (exactly as written, use underscores)
 - salary_min: Minimum salary as integer (numeric value only, e.g., 80000)
 - salary_max: Maximum salary as integer (numeric value only, e.g., 120000)
-- salary_currency: Currency code - MUST be one of: "EUR", "USD", or "GBP" (exactly as written)
+- salary_currency: The ISO 4217 currency code, uppercase, exactly 3 letters (e.g. "EUR", "USD", "GBP", "DKK", "SEK", "NOK", "CHF", "PLN", "CZK", "INR", "CAD", "AUD", "JPY"). Use the currency the posting actually states — do NOT convert to another currency, and do NOT return null just because it isn't a common one.
 - salary_period: Pay period - MUST be one of: "hour", "day", "week", "month", "year", or "project" (exactly as written). Use "project" for fixed-price/one-time amounts.
 - salary_duration_weeks: For project/fixed-price jobs ONLY — the estimated project duration in weeks (as a number). null for periodic salaries. Convert months to weeks (1 month ≈ 4.3 weeks). If the posting says "6 week project" → 6, "3 month contract" → 13, "2 weeks" → 2. null if duration is not mentioned.
 
@@ -479,9 +479,23 @@ SALARY PARSING:
 Extract ALL salary components (min, max, currency, period) - do not leave any null if the information is present.
 
 Currency symbol to code mapping:
-- $ → "USD"
 - € → "EUR"
 - £ → "GBP"
+- ₹ → "INR"
+- ₺ → "TRY"
+- ₪ → "ILS"
+- zł → "PLN"
+- Kč → "CZK"
+- Ft → "HUF"
+- CHF / Fr. → "CHF"
+- R$ → "BRL"
+
+Ambiguous symbols — disambiguate from the job's country/location, and fall back
+to the listed default when there is no other signal:
+- "kr" or ",-" → "DKK" in Denmark, "SEK" in Sweden, "NOK" in Norway, "ISK" in Iceland
+- "$" → "USD" by default, but "CAD" in Canada, "AUD" in Australia, "NZD" in New Zealand, "SGD" in Singapore, "HKD" in Hong Kong
+- "¥" → "JPY" in Japan, "CNY" in China
+- "R" → "ZAR" in South Africa
 
 Period format normalization (output MUST be: "hour", "day", "week", "month", "year", or "project"):
 - Compact formats: /hr, /hour, /h, p/h → "hour"
@@ -665,9 +679,23 @@ SALARY PARSING:
 Extract ALL salary components (min, max, currency, period) when visible - do not leave any null if the information is present.
 
 Currency symbol to code mapping:
-- $ → "USD"
 - € → "EUR"
 - £ → "GBP"
+- ₹ → "INR"
+- ₺ → "TRY"
+- ₪ → "ILS"
+- zł → "PLN"
+- Kč → "CZK"
+- Ft → "HUF"
+- CHF / Fr. → "CHF"
+- R$ → "BRL"
+
+Ambiguous symbols — disambiguate from the job's country/location, and fall back
+to the listed default when there is no other signal:
+- "kr" or ",-" → "DKK" in Denmark, "SEK" in Sweden, "NOK" in Norway, "ISK" in Iceland
+- "$" → "USD" by default, but "CAD" in Canada, "AUD" in Australia, "NZD" in New Zealand, "SGD" in Singapore, "HKD" in Hong Kong
+- "¥" → "JPY" in Japan, "CNY" in China
+- "R" → "ZAR" in South Africa
 
 Period format normalization (output MUST be: "hour", "day", "month", or "year"):
 - Compact formats: /hr, /hour, /h, p/h → "hour"

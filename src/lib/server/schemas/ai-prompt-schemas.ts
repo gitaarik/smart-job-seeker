@@ -38,6 +38,27 @@ const optionalNullableNumber = () =>
 const optionalNullableArray = () =>
   z.preprocess(coerceNull, z.array(z.string()).optional().nullable());
 
+/**
+ * ISO 4217 currency code, uppercased. Anything that isn't three letters — a
+ * symbol, a name like "euros", a stray range — becomes null rather than being
+ * stored as a bogus code.
+ *
+ * Deliberately not restricted to a fixed list: `fx_rates` carries ~30
+ * currencies and a code outside it still displays correctly, it just can't be
+ * converted (`convertCurrency` returns null and comparisons degrade to
+ * "unknown"). That's strictly better than dropping the salary entirely, which
+ * is what the old EUR/USD/GBP-only prompt did to every other currency.
+ */
+const coerceCurrency = (v: unknown) => {
+  const c = coerceNull(v);
+  if (typeof c !== "string") return c;
+  const upper = c.trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(upper) ? upper : null;
+};
+
+const optionalNullableCurrency = () =>
+  z.preprocess(coerceCurrency, z.string().optional().nullable());
+
 export const extractJobDataSchema = z.object({
   title: optionalNullableString().describe("Job title"),
   job_description: optionalNullableString().describe("Full job description"),
@@ -63,8 +84,8 @@ export const extractJobDataSchema = z.object({
   job_type: optionalNullableString().describe("Employment type"),
   salary_min: optionalNullableNumber().describe("Minimum salary amount"),
   salary_max: optionalNullableNumber().describe("Maximum salary amount"),
-  salary_currency: optionalNullableString().describe(
-    "Currency code (EUR, USD, GBP)",
+  salary_currency: optionalNullableCurrency().describe(
+    "ISO 4217 currency code as stated in the posting (EUR, USD, GBP, DKK, SEK, CHF, …)",
   ),
   salary_period: optionalNullableString().describe(
     "Pay period (hour, day, week, month, year, project)",
@@ -218,9 +239,8 @@ export const extractJobsFromSearchPageSchema = z.object({
         },
         z.number().nullable(),
       ).describe("Maximum salary as numeric value only"),
-      salary_currency: z.string().nullable().describe(
-        "Currency code (USD, EUR, GBP, etc.)",
-      ),
+      salary_currency: z.preprocess(coerceCurrency, z.string().nullable())
+        .describe("ISO 4217 currency code as stated (USD, EUR, DKK, etc.)"),
       salary_period: z.string().nullable().describe(
         "Salary period (year, month, week, hour, day, project)",
       ),

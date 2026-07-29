@@ -206,6 +206,34 @@ describe("AI Prompt Schemas", () => {
       });
       expect(result.source_url).toBeNull();
     });
+
+    // The prompt used to restrict currency to EUR/USD/GBP, so the model
+    // returned null for everything else — and because the salary fields are
+    // extracted together, a DKK or SEK posting lost its whole salary.
+    describe("salary_currency", () => {
+      it.each(["DKK", "SEK", "NOK", "CHF", "PLN", "INR", "JPY"])(
+        "accepts %s",
+        (code) => {
+          const result = extractJobDataSchema.parse({ salary_currency: code });
+          expect(result.salary_currency).toBe(code);
+        },
+      );
+
+      it("uppercases and trims", () => {
+        const result = extractJobDataSchema.parse({
+          salary_currency: " dkk ",
+        });
+        expect(result.salary_currency).toBe("DKK");
+      });
+
+      it.each(["€", "kr", "euros", "EU", "EURO", ""])(
+        "nulls out %o rather than storing a bogus code",
+        (raw) => {
+          const result = extractJobDataSchema.parse({ salary_currency: raw });
+          expect(result.salary_currency).toBeNull();
+        },
+      );
+    });
   });
 
   describe("scoreJobMatchSchema", () => {
