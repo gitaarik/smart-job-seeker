@@ -9,6 +9,7 @@ import {
   questionGenerateSchema,
 } from "$lib/server/validation/api-schemas";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
+import { trackGeneration } from "$lib/server/ai-chat/ai-generation-status";
 import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -45,11 +46,17 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   await requireCredits(user.id, 5);
 
-  const result = await generateApplicationQuestionAnswer(questionId, {
-    commitAnswer: commit,
+  const result = await trackGeneration(
+    "question",
+    questionId,
     mode,
-    instructions,
-  });
+    () =>
+      generateApplicationQuestionAnswer(questionId, {
+        commitAnswer: commit,
+        mode,
+        instructions,
+      }),
+  );
 
   if (!result.success) {
     return json(result, { status: 422 });

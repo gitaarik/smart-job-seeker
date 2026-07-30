@@ -15,6 +15,7 @@ import {
   trimVersionsAfter,
   type VersionSource,
 } from "$lib/server/ai-chat/entity-versions";
+import { isGenerating } from "$lib/server/ai-chat/ai-generation-status";
 
 // Version `source` values and the ConversationEntry shape live in the shared
 // engine; re-export the type so +page.svelte keeps importing it from here.
@@ -40,6 +41,7 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
         date_updated: null,
       },
       conversation: [],
+      generating: false,
     };
   }
 
@@ -73,7 +75,12 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
     conversation = [initial];
   }
 
-  return { isNew: false, letter, conversation };
+  return {
+    isNew: false,
+    letter,
+    conversation,
+    generating: await isGenerating("letter", letterId),
+  };
 };
 
 export const actions: Actions = {

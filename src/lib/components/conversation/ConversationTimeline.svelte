@@ -30,6 +30,7 @@
   import { computeDiff, isSmallDiff } from "$lib/utils/word-diff";
   import Card from "../../../routes/(app)/components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
+  import GenerationStatus from "$lib/components/GenerationStatus.svelte";
   import SimpleEditor from "$lib/components/SimpleEditor.svelte";
   import ConfirmModal from "../../../routes/(app)/profile/components/ConfirmModal.svelte";
   import type { ConversationEntry, VersionSource } from "$lib/server/ai-chat/entity-versions";
@@ -50,6 +51,7 @@
     currentContent = null,
     applyNoun = "answer",
     ownVersionEditor = true,
+    generating = false,
   }: {
     conversation: ConversationEntry[];
     /**
@@ -103,6 +105,13 @@
      * letters and questions are unaffected.
      */
     ownVersionEditor?: boolean;
+    /**
+     * Whether a generation is currently in flight for this entity, tracked
+     * server-side so it survives a refresh. Shows a resumable "AI is working…"
+     * banner that polls for the result. Independent of the ephemeral `busy`
+     * spinner (which only covers a generation started in THIS tab).
+     */
+    generating?: boolean;
   } = $props();
 
   // Whether an AI thread exists to follow up on. Drives the composer's button
@@ -292,6 +301,12 @@
     return entry.type === "manual_edit";
   }
 </script>
+
+{#if generating}
+  <div class="mb-3">
+    <GenerationStatus active={generating} />
+  </div>
+{/if}
 
 {#if aiError}
   <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">

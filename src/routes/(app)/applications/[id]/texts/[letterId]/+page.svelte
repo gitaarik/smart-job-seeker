@@ -258,6 +258,7 @@ function formatDate(date: Date | string | null): string {
     {onSendFollowup}
     {onSaveVersion}
     {onClearResponse}
+    generating={data.generating}
   />
 </div>
 

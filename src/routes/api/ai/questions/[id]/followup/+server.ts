@@ -10,6 +10,7 @@ import {
 } from "$lib/server/validation/api-schemas";
 import { createApplicationQuestionFollowup } from "$lib/server/ai-chat/application-question-followup";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
+import { trackGeneration } from "$lib/server/ai-chat/ai-generation-status";
 import {
   QUESTION_VERSIONS,
   trimVersionsFrom,
@@ -77,18 +78,24 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   await requireCredits(user.id, 5);
 
-  const result = restartMode
-    ? await generateApplicationQuestionAnswer(questionId, {
-      mode: restartMode,
-      instructions: followupRequest,
-    })
-    : await createApplicationQuestionFollowup(
-      questionId,
-      followupRequest,
-      includeOriginalContext,
-      updateContent,
-      mode,
-    );
+  const result = await trackGeneration(
+    "question",
+    questionId,
+    mode ?? "followup",
+    () =>
+      restartMode
+        ? generateApplicationQuestionAnswer(questionId, {
+          mode: restartMode,
+          instructions: followupRequest,
+        })
+        : createApplicationQuestionFollowup(
+          questionId,
+          followupRequest,
+          includeOriginalContext,
+          updateContent,
+          mode,
+        ),
+  );
 
   if (!result.success) {
     return json(result, { status: 422 });

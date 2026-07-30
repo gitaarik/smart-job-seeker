@@ -456,6 +456,13 @@
       "when": 1785419185618,
       "tag": "0064_story_versions",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1785423437930,
+      "tag": "0065_ai_generations",
+      "breakpoints": true
     }
   ]
 }

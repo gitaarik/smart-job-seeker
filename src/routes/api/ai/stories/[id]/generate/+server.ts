@@ -9,6 +9,7 @@ import {
   storyGenerateSchema,
 } from "$lib/server/validation/api-schemas";
 import { generateProfileStory } from "$lib/server/ai-chat/profile-story";
+import { trackGeneration } from "$lib/server/ai-chat/ai-generation-status";
 import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -39,7 +40,12 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   await requireCredits(user.id, 5);
 
-  const result = await generateProfileStory(storyId, { mode, instructions });
+  const result = await trackGeneration(
+    "story",
+    storyId,
+    mode,
+    () => generateProfileStory(storyId, { mode, instructions }),
+  );
   if (!result.success) return json(result, { status: 422 });
   return json(result);
 };

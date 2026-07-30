@@ -380,6 +380,7 @@ const fieldClass =
       placeholder="Write your story in the fields above…"
       labels={STORY_LABELS}
       ownVersionEditor={false}
+      generating={data.generating}
       {onGenerate}
       {onReview}
       {onSendFollowup}

@@ -3,11 +3,18 @@ import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { parseBody, followupRequestSchema } from "$lib/server/validation/api-schemas";
+import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
+import {
+  followupRequestSchema,
+  parseBody,
+} from "$lib/server/validation/api-schemas";
 import { createApplicationLetterFollowup } from "$lib/server/ai-chat/application-letter-followup";
 import { generateApplicationLetter } from "$lib/server/ai-chat/application-letter";
-import { LETTER_VERSIONS, trimVersionsFrom } from "$lib/server/ai-chat/entity-versions";
+import {
+  LETTER_VERSIONS,
+  trimVersionsFrom,
+} from "$lib/server/ai-chat/entity-versions";
+import { trackGeneration } from "$lib/server/ai-chat/ai-generation-status";
 import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -25,10 +32,18 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   });
 
   if (!letter || letter.application.profile.user_id !== user.id) {
-    return json({ success: false, message: "Letter not found" }, { status: 404 });
+    return json({ success: false, message: "Letter not found" }, {
+      status: 404,
+    });
   }
 
-  const { followupRequest, includeOriginalContext, updateContent, mode, replaceVersionId } = parseBody(
+  const {
+    followupRequest,
+    includeOriginalContext,
+    updateContent,
+    mode,
+    replaceVersionId,
+  } = parseBody(
     followupRequestSchema,
     await request.json(),
   );
@@ -43,9 +58,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   // yet". Only generate/advice can start a thread with a message attached.
   let restartMode: "generate" | "advice" | null = null;
   if (replaceVersionId) {
-    const { existed, removedSource, last } = await trimVersionsFrom(LETTER_VERSIONS, letterId, replaceVersionId);
+    const { existed, removedSource, last } = await trimVersionsFrom(
+      LETTER_VERSIONS,
+      letterId,
+      replaceVersionId,
+    );
     if (!existed) {
-      return json({ success: false, message: "Version not found" }, { status: 404 });
+      return json({ success: false, message: "Version not found" }, {
+        status: 404,
+      });
     }
     await db.update(application_letters).set({
       ai_chat_id: last?.ai_chat ?? null,
@@ -57,15 +78,21 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   await requireCredits(user.id, 5);
 
-  const result = restartMode
-    ? await generateApplicationLetter(letterId, followupRequest, restartMode)
-    : await createApplicationLetterFollowup(
-      letterId,
-      followupRequest,
-      includeOriginalContext,
-      updateContent,
-      mode,
-    );
+  const result = await trackGeneration(
+    "letter",
+    letterId,
+    mode ?? "followup",
+    () =>
+      restartMode
+        ? generateApplicationLetter(letterId, followupRequest, restartMode)
+        : createApplicationLetterFollowup(
+          letterId,
+          followupRequest,
+          includeOriginalContext,
+          updateContent,
+          mode,
+        ),
+  );
 
   if (!result.success) {
     return json(result, { status: 422 });

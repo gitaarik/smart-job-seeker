@@ -14,6 +14,7 @@ import {
   STORY_VERSIONS,
   trimVersionsFrom,
 } from "$lib/server/ai-chat/entity-versions";
+import { trackGeneration } from "$lib/server/ai-chat/ai-generation-status";
 import { requireCredits } from "$lib/server/billing/require-credits";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -71,18 +72,24 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   await requireCredits(user.id, 5);
 
-  const result = restartMode
-    ? await generateProfileStory(storyId, {
-      mode: restartMode,
-      instructions: followupRequest,
-    })
-    : await createProfileStoryFollowup(
-      storyId,
-      followupRequest,
-      includeOriginalContext,
-      updateContent,
-      mode,
-    );
+  const result = await trackGeneration(
+    "story",
+    storyId,
+    mode ?? "followup",
+    () =>
+      restartMode
+        ? generateProfileStory(storyId, {
+          mode: restartMode,
+          instructions: followupRequest,
+        })
+        : createProfileStoryFollowup(
+          storyId,
+          followupRequest,
+          includeOriginalContext,
+          updateContent,
+          mode,
+        ),
+  );
 
   if (!result.success) return json(result, { status: 422 });
   return json(result);

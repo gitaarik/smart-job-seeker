@@ -14,6 +14,7 @@ import {
   trimVersionsAfter,
   type VersionSource,
 } from "$lib/server/ai-chat/entity-versions";
+import { isGenerating } from "$lib/server/ai-chat/ai-generation-status";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -45,7 +46,12 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     conversation = [initial];
   }
 
-  return { question, appId: parseInt(params.id), conversation };
+  return {
+    question,
+    appId: parseInt(params.id),
+    conversation,
+    generating: await isGenerating("question", qid),
+  };
 };
 
 /** Verify the question belongs to a profile the user owns; returns it or a fail. */

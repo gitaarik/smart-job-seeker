@@ -16,6 +16,7 @@ import {
   type VersionSource,
 } from "$lib/server/ai-chat/entity-versions";
 import { parseStarMarkdown, serializeStarMarkdown } from "$lib/interview/star";
+import { isGenerating } from "$lib/server/ai-chat/ai-generation-status";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const { selectedProfile } = await parent();
@@ -51,7 +52,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     conversation = [initial];
   }
 
-  return { story, conversation, currentStar, profileId: selectedProfile.id };
+  return {
+    story,
+    conversation,
+    currentStar,
+    profileId: selectedProfile.id,
+    generating: await isGenerating("story", storyId),
+  };
 };
 
 /** STAR columns of a project_stories row for a DB update. */

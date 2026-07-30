@@ -211,5 +211,6 @@ function handleQuestionSave() {
     {onApplyVersion}
     {onClearResponse}
     currentContent={question.answer}
+    generating={data.generating}
   />
 </div>

@@ -2209,6 +2209,30 @@ export const ai_chats = pgTable("ai_chats", {
 ]);
 
 /**
+ * "A generation is currently running for this entity." A row exists only while
+ * an LLM generation/followup is in flight (inserted when it starts, deleted in a
+ * finally when it ends), so an editor reloaded mid-generation can show a
+ * resumable "AI is working…" state instead of losing the spinner. Keyed by
+ * (entity_type, entity_id) — entity_type is "story" | "letter" | "question".
+ * `started_at` bounds a crashed generation via a staleness TTL (see
+ * ai-generation-status.ts); the row is not a foreign key so it can't wedge
+ * deletes and works for any future AI surface.
+ */
+export const ai_generations = pgTable("ai_generations", {
+  id: serial().primaryKey().notNull(),
+  entity_type: varchar({ length: 50 }).notNull(),
+  entity_id: integer().notNull(),
+  mode: varchar({ length: 50 }),
+  started_at: timestamp({ withTimezone: true, mode: "date" })
+    .defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("ai_generations_entity_unique").on(
+    table.entity_type,
+    table.entity_id,
+  ),
+]);
+
+/**
  * A personal-assistant chat thread. Scoped to a user (not a profile) so the
  * thread can keep going across profile switches; the profile that was active
  * when it started is recorded for reference, and each message records its own.
@@ -3550,6 +3574,7 @@ export type Applications = typeof applications.$inferSelect;
 export type ApiKeys = typeof api_keys.$inferSelect;
 export type SearchTasks = typeof search_tasks.$inferSelect;
 export type AiChats = typeof ai_chats.$inferSelect;
+export type AiGenerations = typeof ai_generations.$inferSelect;
 export type SearchTasksJobSites = typeof search_tasks_job_sites.$inferSelect;
 export type ScraperAgentIterations =
   typeof scraper_agent_iterations.$inferSelect;
