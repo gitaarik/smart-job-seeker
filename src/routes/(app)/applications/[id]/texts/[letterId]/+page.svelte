@@ -60,7 +60,7 @@ async function ensureLetterExists(): Promise<number> {
 
 async function apiGenerate(
   letterId: number,
-  mode: "generate" | "advice" | "review",
+  mode: "generate" | "advice" | "review" | "auto",
   instructions?: string,
 ) {
   const res = await fetch(`/api/ai/letters/${letterId}/generate`, {
@@ -124,11 +124,15 @@ async function apiSaveContent(
 
 // ---- Timeline callbacks (persist + invalidate; throw a message on failure) ----
 
-async function onGenerate(mode: "generate" | "advice", instructions?: string) {
+async function onGenerate(
+  mode: "generate" | "advice" | "auto",
+  instructions?: string,
+) {
   const letterId = await ensureLetterExists();
   await apiGenerate(letterId, mode, instructions);
-  // Activation funnel: only count fresh "generate" runs, not advice/review.
-  if (mode === "generate") track("ai_letter_generated");
+  // Activation funnel: count fresh drafts — explicit "generate" and any "auto"
+  // turn (which may draft or just advise; close enough for activation).
+  if (mode === "generate" || mode === "auto") track("ai_letter_generated");
   await invalidateAll();
 }
 
@@ -258,6 +262,7 @@ function formatDate(date: Date | string | null): string {
     {onSendFollowup}
     {onSaveVersion}
     {onClearResponse}
+    autoMode={letter.letter_type === "cover_letter"}
     generating={data.generating}
   />
 </div>

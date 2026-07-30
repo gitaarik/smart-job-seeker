@@ -32,6 +32,7 @@ import { exportProfile } from "$lib/server/profile/export";
 const WRITING_PROMPT_KEYS = new Set<string>([
   "personal_agent_chat",
   "write_cover_letter",
+  "write_or_advise_cover_letter",
   "advise_cover_letter",
   "review_cover_letter",
   "write_cheat_sheet",

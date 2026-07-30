@@ -35,7 +35,7 @@
   import ConfirmModal from "../../../routes/(app)/profile/components/ConfirmModal.svelte";
   import type { ConversationEntry, VersionSource } from "$lib/server/ai-chat/entity-versions";
 
-  type BusyMode = "generate" | "advice" | "followup" | "review";
+  type BusyMode = "generate" | "advice" | "auto" | "followup" | "review";
 
   let {
     conversation,
@@ -51,6 +51,7 @@
     currentContent = null,
     applyNoun = "answer",
     ownVersionEditor = true,
+    autoMode = false,
     generating = false,
   }: {
     conversation: ConversationEntry[];
@@ -68,7 +69,7 @@
      * that first turn, typed in the composer — blank runs the plain prompt.
      */
     onGenerate: (
-      mode: "generate" | "advice",
+      mode: "generate" | "advice" | "auto",
       instructions?: string,
     ) => Promise<void>;
     onReview: (content: string) => Promise<void>;
@@ -105,6 +106,14 @@
      * letters and questions are unaffected.
      */
     ownVersionEditor?: boolean;
+    /**
+     * When true, the pre-thread composer collapses the separate "AI advice" and
+     * "AI generate" buttons into one "Send to AI" that runs the model-decides
+     * `auto` turn (draft vs. advice, per message), plus quick "Write a draft" /
+     * "Get advice" starter chips. When false, the two explicit buttons show (the
+     * pre-pilot behaviour). Defaults false; only cover letters opt in for now.
+     */
+    autoMode?: boolean;
     /**
      * Whether a generation is currently in flight for this entity, tracked
      * server-side so it survives a refresh. Shows a resumable "AI is working…"
@@ -625,11 +634,48 @@
     bind:value={feedbackText}
     placeholder={hasThread
       ? "Message the AI — e.g. “make it more concise”, or “write it based on your advice”…"
+      : autoMode
+      ? "Ask for a draft or ask a question — e.g. “write it, keep it under 150 words”, or “what should I emphasize?” Leave blank for a first draft."
       : "Optional — tell the AI what to focus on, e.g. “keep it under 100 words”. Leave blank to let it work from your profile and the job."}
     rows={3}
     disabled={busy}
     class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
   ></textarea>
+  {#if autoMode && !hasThread}
+    <!-- Starter chips: the old advice/generate kept as one-tap, discoverable
+         shortcuts over the single Send (which lets the model decide). -->
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <span class="text-xs text-[var(--dash-text-muted)]">Try:</span>
+      <button
+        type="button"
+        onclick={() => run("generate", async () => { await onGenerate("generate", feedbackText.trim() || undefined); feedbackText = ""; })}
+        disabled={busy}
+        class="px-2.5 py-1 text-xs border border-[var(--dash-border)] rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+      >
+        {#if busy && busyMode === "generate"}
+          <Spinner size="w-2.5 h-2.5" />
+          Writing…
+        {:else}
+          <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
+          Write a draft
+        {/if}
+      </button>
+      <button
+        type="button"
+        onclick={() => run("advice", async () => { await onGenerate("advice", feedbackText.trim() || undefined); feedbackText = ""; })}
+        disabled={busy}
+        class="px-2.5 py-1 text-xs border border-[var(--dash-border)] rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+      >
+        {#if busy && busyMode === "advice"}
+          <Spinner size="w-2.5 h-2.5" />
+          Thinking…
+        {:else}
+          <FontAwesomeIcon icon={faComments} class="w-2.5 h-2.5" />
+          Get advice
+        {/if}
+      </button>
+    </div>
+  {/if}
   <div class="flex items-center justify-between gap-2 flex-wrap">
     <!-- Writing it yourself is a peer of the AI steps, not a fallback. With no
          thread yet there's nothing else on the page competing for attention,
@@ -657,6 +703,21 @@
         class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
       >
         {#if busy && busyMode === "followup"}
+          <Spinner size="w-3 h-3" />
+          Sending…
+        {:else}
+          <FontAwesomeIcon icon={faComments} class="w-3 h-3" />
+          Send to AI
+        {/if}
+      </button>
+    {:else if autoMode}
+      <button
+        type="button"
+        onclick={() => run("auto", async () => { await onGenerate("auto", feedbackText.trim() || undefined); feedbackText = ""; })}
+        disabled={busy}
+        class="px-3 py-1.5 text-xs bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+      >
+        {#if busy && busyMode === "auto"}
           <Spinner size="w-3 h-3" />
           Sending…
         {:else}

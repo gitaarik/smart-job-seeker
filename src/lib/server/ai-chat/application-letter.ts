@@ -39,6 +39,8 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
     generate: "write_cover_letter",
     advice: "advise_cover_letter",
     review: "review_cover_letter",
+    // One entry point that lets the model choose draft-vs-advice per message.
+    auto: "write_or_advise_cover_letter",
   },
   cheat_sheet: {
     generate: "write_cheat_sheet",
@@ -70,7 +72,7 @@ export async function generateApplicationLetter(
    * edited and regenerated.
    */
   additionalContext?: string,
-  mode: "generate" | "advice" | "review" = "generate",
+  mode: "generate" | "advice" | "review" | "auto" = "generate",
 ): Promise<{
   success: boolean;
   message: string;
@@ -172,8 +174,9 @@ export async function generateApplicationLetter(
     // Top-K uploaded projects relevant to this job (empty string if none).
     // Only the writing prompts reference it — retrieval runs an embedding
     // search, so computing it for advice/review would spend a query and a
-    // chunk of context on a variable those templates never interpolate.
-    ...(mode === "generate"
+    // chunk of context on a variable those templates never interpolate. "auto"
+    // may write a draft, so it gets it too (spent even when it ends up advising).
+    ...(mode === "generate" || mode === "auto"
       ? {
         relevantProjects: await relevantProjectsText(profileId, {
           title: job.title,
@@ -265,8 +268,9 @@ export async function generateApplicationLetter(
       ai_chat_response: aiChat.response,
     };
 
-    // For "generate" mode, also set the content to the letter text
-    if (mode === "generate") {
+    // "generate" always writes a draft; "auto" writes one only when the model
+    // produced text (it returns null when it chose to advise instead).
+    if (mode === "generate" || (mode === "auto" && letterContent)) {
       updateData.content = letterContent;
     }
 
@@ -282,16 +286,19 @@ export async function generateApplicationLetter(
         aiChatId: aiChat.id,
         aiFeedback,
       });
-    } else if (mode === "advice") {
+    } else if (mode === "advice" || (mode === "auto" && !letterContent)) {
+      // No draft — just the AI's reply. Explicit "advice" returns raw markdown
+      // (its whole response); "auto" chose to advise, and its reply was parsed
+      // out of the JSON into aiFeedback above.
       await recordVersion(LETTER_VERSIONS, {
         entityId: letterId,
         content: null,
         source: "ai_advice",
         aiChatId: aiChat.id,
-        aiFeedback: aiChat.response,
+        aiFeedback: mode === "advice" ? aiChat.response : aiFeedback,
         userRequest: instructions,
       });
-    } else if (mode === "generate" && letterContent) {
+    } else if ((mode === "generate" || mode === "auto") && letterContent) {
       await recordVersion(LETTER_VERSIONS, {
         entityId: letterId,
         content: letterContent,

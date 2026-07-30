@@ -105,6 +105,7 @@ describe("score_job_match template", () => {
 const INTERVIEW_HISTORY_SUPPLIED_BY: Record<string, string> = {
   // ai-chat/application-letter.ts — all letter types share customVariables.
   write_cover_letter: "application-letter.ts",
+  write_or_advise_cover_letter: "application-letter.ts",
   advise_cover_letter: "application-letter.ts",
   review_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
@@ -204,6 +205,7 @@ const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
   // customVariables, and the review prompts get it from the followup builder
   // too (application-letter-followup.ts, review branch).
   write_cover_letter: "application-letter.ts",
+  write_or_advise_cover_letter: "application-letter.ts",
   advise_cover_letter: "application-letter.ts",
   review_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
@@ -259,12 +261,15 @@ describe("${additionalContext} template ↔ caller wiring", () => {
  *
  * The second half is not hypothetical: both callers used to compute it for
  * every mode while only the two writing prompts interpolated it, so advice and
- * review each paid for a discarded retrieval. Callers now compute it for
- * `mode === "generate"` only, which is exactly the set below.
+ * review each paid for a discarded retrieval. Callers now compute it for the
+ * draft-writing modes only (`generate`, plus the cover-letter `auto` mode which
+ * may write one), which is exactly the set below.
  */
 const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
-  // ai-chat/application-letter.ts, generate mode only.
+  // ai-chat/application-letter.ts — generate mode (both letter types) plus the
+  // cover-letter auto mode, which may also write a draft.
   write_cover_letter: "application-letter.ts",
+  write_or_advise_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
   // ai-chat/application-question.ts, generate mode only.
   answer_application_question: "application-question.ts",

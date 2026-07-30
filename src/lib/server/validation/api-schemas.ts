@@ -383,7 +383,9 @@ export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown): T {
  */
 export const letterGenerateSchema = z.object({
   instructions: z.string().trim().max(5000).optional(),
-  mode: z.enum(["generate", "advice", "review"]).optional().default("generate"),
+  mode: z.enum(["generate", "advice", "review", "auto"]).optional().default(
+    "generate",
+  ),
 });
 
 export const questionGenerateSchema = z.object({

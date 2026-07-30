@@ -549,6 +549,8 @@ export const aiPromptSchemas = {
   check_login_state: checkLoginStateSchema,
   estimate_salary_expectations: estimateSalaryExpectationsSchema,
   write_cover_letter: writeLetterSchema,
+  // Model decides per-message: a full draft (text set) or advice (text null).
+  write_or_advise_cover_letter: followupLetterSchema,
   write_cheat_sheet: writeLetterSchema,
   answer_application_question: writeLetterSchema,
   followup_letter: followupLetterSchema,
