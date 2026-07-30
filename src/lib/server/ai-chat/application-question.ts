@@ -11,6 +11,7 @@ import {
   assembleGenerationContext,
   type RelevanceQuery,
 } from "./generation-context";
+import { CORE_PROFILE_FIELDS } from "./profile-fields";
 import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
@@ -20,18 +21,8 @@ import {
 
 /** Profile data fields relevant for answering application questions */
 export const QUESTION_PROFILE_FIELDS = [
-  "name",
-  "title",
-  "headline",
-  "subtitle",
-  "summary",
+  ...CORE_PROFILE_FIELDS,
   "location",
-  "core_stack",
-  "highlights",
-  "work_experiences",
-  "side_projects",
-  "education",
-  "tech_skill_categories",
   "languages",
   "project_stories",
   "references",

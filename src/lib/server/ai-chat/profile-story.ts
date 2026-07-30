@@ -28,22 +28,10 @@ import {
   assembleGenerationContext,
   type RelevanceQuery,
 } from "./generation-context";
+import { CORE_PROFILE_FIELDS } from "./profile-fields";
 
 /** Profile data fields relevant for building a behavioural STAR story. */
-export const STORY_PROFILE_FIELDS = [
-  "name",
-  "title",
-  "headline",
-  "subtitle",
-  "summary",
-  "core_stack",
-  "highlights",
-  "work_experiences",
-  "side_projects",
-  "education",
-  "tech_skill_categories",
-  "project_stories",
-];
+export const STORY_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, "project_stories"];
 
 /** Maps generation mode to the prompt template name. */
 const STORY_MODE_TO_PROMPT: Record<string, string> = {

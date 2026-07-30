@@ -7,28 +7,12 @@ import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 import { interviewRecordsText } from "./application-records";
+import { LETTER_PROFILE_FIELDS } from "./profile-fields";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
   recordVersion,
 } from "./entity-versions";
-
-/** Profile data fields relevant for letter followups */
-const LETTER_PROFILE_FIELDS = [
-  "name",
-  "title",
-  "headline",
-  "subtitle",
-  "summary",
-  "location",
-  "core_stack",
-  "highlights",
-  "work_experiences",
-  "side_projects",
-  "education",
-  "tech_skill_categories",
-  "languages",
-];
 
 /** Maps letter_type to the review_* prompt template name */
 const LETTER_TYPE_TO_REVIEW_PROMPT: Record<string, string> = {

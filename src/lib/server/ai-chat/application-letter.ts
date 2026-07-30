@@ -11,6 +11,7 @@ import {
   assembleGenerationContext,
   type RelevanceQuery,
 } from "./generation-context";
+import { LETTER_PROFILE_FIELDS } from "./profile-fields";
 import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
@@ -20,23 +21,6 @@ import {
 /**
  * Map letter types to their corresponding AI chat prompt request types
  */
-/** Profile data fields relevant for letter generation — excludes salary, cheat sheets, etc. */
-const LETTER_PROFILE_FIELDS = [
-  "name",
-  "title",
-  "headline",
-  "subtitle",
-  "summary",
-  "location",
-  "core_stack",
-  "highlights",
-  "work_experiences",
-  "side_projects",
-  "education",
-  "tech_skill_categories",
-  "languages",
-];
-
 const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
   cover_letter: {
     generate: "write_cover_letter",

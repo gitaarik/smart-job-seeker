@@ -28,22 +28,10 @@ import {
   assembleGenerationContext,
   type RelevanceQuery,
 } from "./generation-context";
+import { CORE_PROFILE_FIELDS } from "./profile-fields";
 
 /** Profile data fields relevant for building an interview cheat sheet. */
-export const CHEATSHEET_PROFILE_FIELDS = [
-  "name",
-  "title",
-  "headline",
-  "subtitle",
-  "summary",
-  "core_stack",
-  "highlights",
-  "work_experiences",
-  "side_projects",
-  "education",
-  "tech_skill_categories",
-  "languages",
-];
+export const CHEATSHEET_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, "languages"];
 
 /** Maps generation mode to the prompt template name. */
 const CHEATSHEET_MODE_TO_PROMPT: Record<string, string> = {
