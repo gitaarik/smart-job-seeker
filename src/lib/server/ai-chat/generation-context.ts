@@ -26,6 +26,7 @@
  */
 
 import { type JobLike, relevantProjectsText } from "$lib/server/documents/retrieval";
+import { relevantStoriesText } from "$lib/server/documents/content-retrieval";
 
 /**
  * What a generation is about, ranked against the applicant's material. Freeform
@@ -43,10 +44,10 @@ export interface RelevanceQuery {
  * blob is NOT a source here — it is always present, selected by the caller's
  * `profileDataFields`. These are the *extra* evidence blocks layered on top.
  *
- * Phase 2 will extend this union: "stories" | "letters" | "repo_recaps" |
- * "interview_history". Each is one new SOURCES entry, available everywhere.
+ * Extending it is one new SOURCES entry, available to every generator: coming
+ * next are "letters" | "repo_recaps" | "interview_history".
  */
-export type ContextSource = "projects";
+export type ContextSource = "projects" | "stories";
 
 export interface ContextRequest {
   profileId: number;
@@ -102,7 +103,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
     render: async (req) => {
       // No query → nothing to rank against; skip the retrieval (and its
       // embedding search) entirely rather than rank against noise.
-      if (!req.query?.text.trim() && !req.query?.skills?.length) return "";
+      if (!hasQuery(req)) return "";
       return relevantProjectsText(
         req.profileId,
         queryToJobLike(req.query!),
@@ -110,7 +111,20 @@ const SOURCES: Record<ContextSource, SourceDef> = {
       );
     },
   },
+  stories: {
+    variable: "relevantStories",
+    priority: 8,
+    render: async (req) => {
+      if (!hasQuery(req)) return "";
+      return relevantStoriesText(req.profileId, req.query!, req.perSourceK ?? 3);
+    },
+  },
 };
+
+/** Whether the request carries a usable relevance query (text or skills). */
+function hasQuery(req: ContextRequest): boolean {
+  return !!(req.query?.text.trim() || req.query?.skills?.length);
+}
 
 /**
  * Adapt a generic relevance query to the shipped project↔job retriever's

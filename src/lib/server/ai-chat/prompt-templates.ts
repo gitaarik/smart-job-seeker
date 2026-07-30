@@ -452,6 +452,8 @@ This is PROFILE-LEVEL prep, not tied to a specific job. Draw on the applicant's 
 
 \${relevantProjects}
 
+\${relevantStories}
+
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant naming the SPECIFIC roles, projects, skills, or achievements from their profile you built this around. Be concrete.
 - "text": the complete cheat sheet as a SINGLE markdown string — headers (##), bullets (-), and bold (**) for emphasis. NOT an array or nested objects.
@@ -484,6 +486,8 @@ This is PROFILE-LEVEL prep, not tied to a specific job — draw on the applicant
 \${sheetContext}
 
 \${relevantProjects}
+
+\${relevantStories}
 
 - The applicant sent you a message (below). Decide what they want BEFORE writing anything:
   - Questions and advice-seeking → "text" MUST be null; put your reply in "feedback". This includes asking WHAT to include, HOW to structure it, WHICH topics or experiences to cover, or WHETHER something belongs (e.g. "what should go on a system-design sheet?", "which strengths should I list?", "is this too much?"). Answer the question — do NOT write the sheet.

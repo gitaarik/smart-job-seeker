@@ -484,6 +484,13 @@
       "when": 1785439627342,
       "tag": "0068_abnormal_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1785443732423,
+      "tag": "0069_content_embeddings",
+      "breakpoints": true
     }
   ]
 }

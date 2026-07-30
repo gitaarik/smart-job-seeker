@@ -3549,6 +3549,51 @@ export const project_embeddings = pgTable("project_embeddings", {
   }).onDelete("cascade"),
 ]);
 
+/**
+ * Generic per-profile embedding cache for ANY content unit — the unit-type-
+ * agnostic sibling of project_embeddings (Feature 5 / scale foundation). One
+ * native vector per (unit_type, unit_id, sub_id) so STAR stories, cheat sheets,
+ * application texts, etc. are all semantically retrievable by the unified
+ * generation-context provider through the same embed/cosine/truncate/hash-cache
+ * machinery. sub_id 0 is the unit itself; a positive value is a sub-unit (e.g.
+ * an attachment), mirroring project_embeddings.attachment_id. Bounded per
+ * profile → jsonb + JS cosine, no pgvector. Hash-gated lazy re-embed. See
+ * documents/content-embeddings.ts and planning/SEMANTIC-MATCHING-AND-RAG.md.
+ */
+export const content_embeddings = pgTable("content_embeddings", {
+  id: serial().primaryKey().notNull(),
+  profile_id: integer().notNull(),
+  unit_type: varchar({ length: 32 }).notNull(),
+  unit_id: integer().notNull(),
+  sub_id: integer().default(0).notNull(),
+  content_hash: varchar({ length: 64 }).notNull(),
+  embedding: jsonb().notNull(),
+  model: varchar({ length: 100 }).notNull(),
+  date_created: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+  date_updated: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+}, (table) => [
+  // Upsert target: one cached vector per unit. sub_id 0 keeps the unit itself
+  // unique per type without a partial index (NULLs would not collide). unit_type
+  // is part of the key because ids only disambiguate within a type.
+  uniqueIndex("content_embeddings_unit_key").on(
+    table.unit_type,
+    table.unit_id,
+    table.sub_id,
+  ),
+  index("content_embeddings_profile_idx").on(table.profile_id),
+  foreignKey({
+    columns: [table.profile_id],
+    foreignColumns: [profiles.id],
+    name: "content_embeddings_profile_foreign",
+  }).onDelete("cascade"),
+]);
+
+export type ContentEmbeddings = typeof content_embeddings.$inferSelect;
+
 // Inferred select types for all application tables
 export type ProfileDocumentProjects =
   typeof profile_document_projects.$inferSelect;

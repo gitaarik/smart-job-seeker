@@ -6,8 +6,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("$lib/server/documents/retrieval", () => ({
   relevantProjectsText: vi.fn(),
 }));
+vi.mock("$lib/server/documents/content-retrieval", () => ({
+  relevantStoriesText: vi.fn(),
+}));
 
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
+import { relevantStoriesText } from "$lib/server/documents/content-retrieval";
 import {
   assembleGenerationContext,
   fitToBudget,
@@ -15,9 +19,11 @@ import {
 } from "../generation-context";
 
 const mockRelevantProjects = vi.mocked(relevantProjectsText);
+const mockRelevantStories = vi.mocked(relevantStoriesText);
 
 beforeEach(() => {
   mockRelevantProjects.mockReset();
+  mockRelevantStories.mockReset();
 });
 
 describe("fitToBudget", () => {
@@ -125,5 +131,36 @@ describe("assembleGenerationContext", () => {
       perSourceK: 5,
     });
     expect(mockRelevantProjects).toHaveBeenCalledWith(7, expect.anything(), 5);
+  });
+
+  it("assembles multiple sources, each into its own variable", async () => {
+    mockRelevantProjects.mockResolvedValue("## Relevant projects\n1. Foo");
+    mockRelevantStories.mockResolvedValue("## Relevant interview stories\n1. Bar");
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "leadership under deadline" },
+      sources: ["projects", "stories"],
+    });
+    expect(ctx.variables.relevantProjects).toContain("Relevant projects");
+    expect(ctx.variables.relevantStories).toContain("interview stories");
+    expect(ctx.usedSources.sort()).toEqual(["projects", "stories"]);
+    // The stories source is keyed on the plain relevance query (no JobLike).
+    expect(mockRelevantStories).toHaveBeenCalledWith(
+      1,
+      { text: "leadership under deadline" },
+      3,
+    );
+  });
+
+  it("skips retrieval for every source on an empty query (cost gate)", async () => {
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "  " },
+      sources: ["projects", "stories"],
+    });
+    expect(mockRelevantProjects).not.toHaveBeenCalled();
+    expect(mockRelevantStories).not.toHaveBeenCalled();
+    expect(ctx.variables.relevantStories).toBe("");
+    expect(ctx.usedSources).toEqual([]);
   });
 });

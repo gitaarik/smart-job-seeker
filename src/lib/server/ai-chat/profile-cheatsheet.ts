@@ -151,7 +151,7 @@ export async function generateProfileCheatSheet(
     const ctx = await assembleGenerationContext({
       profileId,
       query,
-      sources: ["projects"],
+      sources: ["projects", "stories"],
     });
     Object.assign(variables, ctx.variables);
   }

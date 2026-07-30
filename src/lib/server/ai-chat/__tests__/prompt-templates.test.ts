@@ -320,6 +320,41 @@ describe("${relevantProjects} template ↔ caller wiring", () => {
 });
 
 /**
+ * `${relevantStories}` is Top-K retrieval over the applicant's OWN prepared STAR
+ * stories via the generic content-retrieval layer (Feature 5). Same drift risk
+ * as ${relevantProjects}: a referencing template must be supplied it (else a
+ * literal placeholder ships), and a supplying caller must have a template that
+ * interpolates it (else an embedding search runs and is thrown away).
+ */
+const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
+  // ai-chat/profile-cheatsheet.ts — generate + auto, via the generation-context
+  // provider (sources include "stories").
+  write_prep_sheet: "profile-cheatsheet.ts",
+  write_or_advise_prep_sheet: "profile-cheatsheet.ts",
+};
+
+describe("${relevantStories} template ↔ caller wiring", () => {
+  const referencing = Object.entries(promptTemplates)
+    .filter(([, t]) =>
+      `${t.system_prompt}\n${t.user_prompt}`.includes("${relevantStories}")
+    )
+    .map(([key]) => key);
+
+  it("is referenced by every template a caller supplies it to", () => {
+    expect(referencing.sort()).toEqual(
+      Object.keys(RELEVANT_STORIES_SUPPLIED_BY).sort(),
+    );
+  });
+
+  it("is supplied by a caller for every template that references it", () => {
+    const unsupplied = referencing.filter(
+      (key) => !(key in RELEVANT_STORIES_SUPPLIED_BY),
+    );
+    expect(unsupplied).toEqual([]);
+  });
+});
+
+/**
  * The cheat-sheet prompt has to do more with interview records than merely be
  * handed them. A real generation (SURF, 2026-07-27) had both records in full
  * in its prompt and still dropped the one thing that mattered most: the
