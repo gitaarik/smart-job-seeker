@@ -1,60 +1,61 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faExternalLink,
-    faLightbulb,
-    faPencil,
-    faStar,
-    faTrash,
-  } from "@fortawesome/free-solid-svg-icons";
-  import SectionHeader from "../../components/SectionHeader.svelte";
-  import EmptyState from "../../components/EmptyState.svelte";
-  import ConfirmModal from "../../components/ConfirmModal.svelte";
-  import ItemCard from "../../components/ItemCard.svelte";
-  import ReorderableList from "../../components/ReorderableList.svelte";
-  import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
+import type { ActionData, PageData } from "./$types";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faExternalLink,
+  faLightbulb,
+  faPencil,
+  faStar,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import SectionHeader from "../../components/SectionHeader.svelte";
+import EmptyState from "../../components/EmptyState.svelte";
+import ConfirmModal from "../../components/ConfirmModal.svelte";
+import ItemCard from "../../components/ItemCard.svelte";
+import ReorderableList from "../../components/ReorderableList.svelte";
+import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
+import { formatProjectUrl } from "$lib/tools/url-utils";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let projects = $derived(data.projects);
-  let expandedId = $state<number | null>(null);
-  let showAddForm = $state(false);
-  let deleteId = $state<number | null>(null);
-  let reorderMode = $state(false);
+let projects = $derived(data.projects);
+let expandedId = $state<number | null>(null);
+let showAddForm = $state(false);
+let deleteId = $state<number | null>(null);
+let reorderMode = $state(false);
 
-  // Form states for new entry
-  let newName = $state("");
-  let newUrl = $state("");
-  let newUrlLabel = $state("");
-  let newSummary = $state("");
-  let newStars = $state("");
-  let newStartDate = $state("");
-  let newEndDate = $state("");
+// Form states for new entry
+let newName = $state("");
+let newUrl = $state("");
+let newRepoUrl = $state("");
+let newSummary = $state("");
+let newStars = $state("");
+let newStartDate = $state("");
+let newEndDate = $state("");
 
-  function formatDisplayDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      year: "numeric",
-    });
-  }
+function formatDisplayDate(date: Date | string | null): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
 
-  function toggleExpand(id: number) {
-    expandedId = expandedId === id ? null : id;
-  }
+function toggleExpand(id: number) {
+  expandedId = expandedId === id ? null : id;
+}
 
-  function resetAddForm() {
-    showAddForm = false;
-    newName = "";
-    newUrl = "";
-    newUrlLabel = "";
-    newSummary = "";
-    newStars = "";
-    newStartDate = "";
-    newEndDate = "";
-  }
+function resetAddForm() {
+  showAddForm = false;
+  newName = "";
+  newUrl = "";
+  newRepoUrl = "";
+  newSummary = "";
+  newStars = "";
+  newStartDate = "";
+  newEndDate = "";
+}
 </script>
 
 <svelte:head>
@@ -123,17 +124,17 @@
 
           <div>
             <label
-              for="new-url-label"
+              for="new-repo-url"
               class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              URL Label
+              Repo URL
             </label>
             <input
-              type="text"
-              id="new-url-label"
-              name="url_label"
-              bind:value={newUrlLabel}
-              placeholder="e.g., View on GitHub"
+              type="url"
+              id="new-repo-url"
+              name="repo_url"
+              bind:value={newRepoUrl}
+              placeholder="e.g., https://github.com/you/project"
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
@@ -300,7 +301,7 @@
                 rel="noopener"
                 class="absolute top-3 right-3 px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
               >
-                {project.url_label || "View"}
+                {formatProjectUrl(project.url).displayLabel}
                 <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
               </a>
             {/if}

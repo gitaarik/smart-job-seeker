@@ -43,7 +43,7 @@ export const actions: Actions = {
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const url = formData.get("url") as string;
-    const url_label = formData.get("url_label") as string;
+    const repo_url = formData.get("repo_url") as string;
     const summary = formData.get("summary") as string;
     const stars = formData.get("stars") as string;
     const start_date = formData.get("start_date") as string;
@@ -56,7 +56,7 @@ export const actions: Actions = {
     const [created] = await db.insert(side_projects).values({
       name: name.trim(),
       url: url?.trim() || null,
-      url_label: url_label?.trim() || null,
+      repo_url: repo_url?.trim() || null,
       summary: summary?.trim() || null,
       stars: stars ? parseInt(stars) : null,
       start_date: start_date || null,

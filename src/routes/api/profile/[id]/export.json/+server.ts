@@ -174,7 +174,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
           url: true,
           stars: true,
           summary: true,
-          url_label: true,
+          repo_url: true,
           tags: true,
         },
         with: {
@@ -323,7 +323,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
         url: proj.url || undefined,
         stars: proj.stars,
         summary: proj.summary || undefined,
-        url_label: proj.url_label || undefined,
+        repo_url: proj.repo_url || undefined,
         tags: proj.tags,
         achievements: proj.side_project_achievements,
         technologies: proj.side_project_technologies,

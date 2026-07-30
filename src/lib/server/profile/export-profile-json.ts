@@ -112,7 +112,7 @@ export interface ExportedProfile {
       url?: string;
       stars?: number | null;
       summary?: string;
-      url_label?: string;
+      repo_url?: string;
       tags?: any;
       achievements: Array<{
         description?: string;
@@ -247,7 +247,7 @@ export async function buildProfileJsonExport(
         orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
       },
       side_projects: {
-        columns: { id: true, status: true, sort: true, name: true, start_date: true, end_date: true, url: true, stars: true, summary: true, url_label: true, tags: true },
+        columns: { id: true, status: true, sort: true, name: true, start_date: true, end_date: true, url: true, stars: true, summary: true, repo_url: true, tags: true },
         with: {
           side_project_achievements: { columns: { description: true, sort: true }, orderBy: (t: any, { asc }: any) => asc(t.sort) },
           side_project_technologies: { columns: { sort: true, name: true }, orderBy: (t: any, { asc }: any) => asc(t.sort) },
@@ -377,7 +377,7 @@ export async function buildProfileJsonExport(
         url: proj.url || undefined,
         stars: proj.stars,
         summary: proj.summary || undefined,
-        url_label: proj.url_label || undefined,
+        repo_url: proj.repo_url || undefined,
         tags: proj.tags,
         achievements: proj.side_project_achievements,
         technologies: proj.side_project_technologies,

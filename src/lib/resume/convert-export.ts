@@ -98,7 +98,7 @@ export function convertExportToResumeData(exported: ExportedProfile): ResumeData
     projects: p.side_projects?.map((proj) => ({
       name: proj.name || "",
       url: proj.url,
-      urlLabel: proj.url_label,
+      repoUrl: proj.repo_url,
       summary: proj.summary,
       startDate: dateToString(proj.start_date),
       endDate: dateToString(proj.end_date),

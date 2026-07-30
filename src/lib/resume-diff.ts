@@ -470,7 +470,7 @@ function diffProjectItem(current: SideProject, incoming: SideProject): ItemDiff<
   const fieldDiffs = [
     diffField("name", "Name", current.name, incoming.name),
     diffField("url", "URL", current.url, incoming.url),
-    diffField("urlLabel", "URL Label", current.urlLabel, incoming.urlLabel),
+    diffField("repoUrl", "Repo URL", current.repoUrl, incoming.repoUrl),
     diffField("summary", "Summary", current.summary, incoming.summary),
     diffField("startDate", "Start Date", current.startDate, incoming.startDate),
     diffField("endDate", "End Date", current.endDate, incoming.endDate),

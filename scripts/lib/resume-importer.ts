@@ -315,7 +315,7 @@ async function createSideProject(
     data: {
       name: project.name,
       url: project.url || null,
-      url_label: project.urlLabel || null,
+      repo_url: project.repoUrl || null,
       summary: project.summary || null,
       start_date: project.startDate ? new Date(project.startDate) : null,
       end_date: project.endDate ? new Date(project.endDate) : null,

@@ -90,7 +90,7 @@ export interface Language {
 export interface SideProject {
   name: string;
   url?: string;
-  urlLabel?: string;
+  repoUrl?: string;
   summary?: string;
   startDate?: string;
   endDate?: string;

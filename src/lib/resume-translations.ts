@@ -79,7 +79,6 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 
   { entity: "side_project", field: "name", label: "Name" },
   { entity: "side_project", field: "summary", label: "Summary" },
-  { entity: "side_project", field: "url_label", label: "Link label" },
 
   {
     entity: "side_project_achievement",

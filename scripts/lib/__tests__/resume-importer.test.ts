@@ -373,7 +373,7 @@ describe("createProfileFromResume", () => {
         {
           name: "Open Source Library",
           url: "https://github.com/johndoe/library",
-          urlLabel: "GitHub",
+          repoUrl: "https://github.com/johndoe/library",
           summary: "A popular library",
           startDate: "2021-01-01",
           endDate: "2023-12-31",
@@ -400,7 +400,7 @@ describe("createProfileFromResume", () => {
       data: expect.objectContaining({
         name: "Open Source Library",
         url: "https://github.com/johndoe/library",
-        url_label: "GitHub",
+        repo_url: "https://github.com/johndoe/library",
         summary: "A popular library",
         stars: 1500,
         status: "draft",

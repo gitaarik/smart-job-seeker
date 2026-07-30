@@ -597,7 +597,6 @@
         "url": "https://github.com/alexmorgan-dev/devtools-dashboard",
         "stars": 1200,
         "summary": "Open-source developer productivity dashboard with customizable widgets. Integrates with GitHub, Jira, and other developer tools via APIs. Gained significant traction in the developer community.",
-        "url_label": "View on GitHub",
         "tags": null,
         "achievements": [
           {
@@ -649,7 +648,6 @@
         "url": "https://github.com/alexmorgan-dev/task-timer",
         "stars": null,
         "summary": "Command-line time tracking tool for developers. Written in Node.js with TypeScript. Supports multiple projects and generates detailed reports. Downloaded 5,000+ times from npm.",
-        "url_label": "View on GitHub",
         "tags": null,
         "achievements": [
           {
@@ -697,7 +695,7 @@
         "url": "https://recipefinder.alexmorgan.dev",
         "stars": null,
         "summary": "Mobile-friendly web app for finding recipes based on available ingredients. Built with Next.js and React, implements server-side rendering for SEO. Uses Spoonacular API for recipe data.",
-        "url_label": "Visit Live Site",
+        "repo_url": "https://github.com/alexmorgan-dev/recipe-finder",
         "tags": null,
         "achievements": [
           {

@@ -131,7 +131,7 @@ export async function buildProfileExport(
           url: true,
           stars: true,
           summary: true,
-          url_label: true,
+          repo_url: true,
           image_path: true,
           tags: true,
         },
@@ -386,7 +386,7 @@ export async function buildProfileExport(
       url: proj.url || undefined,
       stars: proj.stars,
       summary: proj.summary || undefined,
-      url_label: proj.url_label || undefined,
+      repo_url: proj.repo_url || undefined,
       image_path: proj.image_path || undefined,
       tags: proj.tags,
       achievements: proj.side_project_achievements.map((a) => ({

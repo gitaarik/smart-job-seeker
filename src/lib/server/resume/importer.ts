@@ -328,7 +328,7 @@ async function createSideProject(profileId: number, project: SideProject): Promi
     profile_id: profileId,
     name: project.name,
     url: project.url || null,
-    url_label: project.urlLabel || null,
+    repo_url: project.repoUrl || null,
     summary: project.summary || null,
     start_date: parseDate(project.startDate),
     end_date: parseDate(project.endDate),

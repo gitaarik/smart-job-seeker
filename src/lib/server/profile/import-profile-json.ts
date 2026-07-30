@@ -305,7 +305,7 @@ export async function importProfileFromJson(
 
   // Side projects + children
   for (const sp of p.side_projects ?? []) {
-    const [createdSp] = await dbDirect.insert(side_projects).values({ profile_id: profileId, status: sp.status || "draft", sort: sp.sort ?? null, name: sp.name || null, start_date: toDateString(sp.start_date), end_date: toDateString(sp.end_date), url: sp.url || null, stars: sp.stars ?? null, summary: sp.summary || null, url_label: sp.url_label || null, tags: sp.tags ?? null }).returning();
+    const [createdSp] = await dbDirect.insert(side_projects).values({ profile_id: profileId, status: sp.status || "draft", sort: sp.sort ?? null, name: sp.name || null, start_date: toDateString(sp.start_date), end_date: toDateString(sp.end_date), url: sp.url || null, stars: sp.stars ?? null, summary: sp.summary || null, repo_url: sp.repo_url || null, tags: sp.tags ?? null }).returning();
 
     for (const a of sp.achievements ?? []) {
       await dbDirect.insert(side_project_achievements).values({ side_project_id: createdSp.id, description: a.description || null, sort: a.sort ?? null });

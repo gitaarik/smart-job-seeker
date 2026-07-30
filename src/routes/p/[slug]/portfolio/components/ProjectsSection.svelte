@@ -1,21 +1,21 @@
 <script lang="ts">
-  import InfoSection from "./InfoSection.svelte";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faGithub } from "@fortawesome/free-brands-svg-icons";
-  import {
-    faCalendar,
-    faCode,
-    faExternalLinkAlt,
-    faStar,
-  } from "@fortawesome/free-solid-svg-icons";
-  import { resume } from "$lib/data/resume";
-  import { formatDateRangeVerbose } from "$lib/tools/date-utils";
-  import { formatProjectUrl } from "$lib/tools/url-utils";
-  import InfoBoxes from "../components/InfoBoxes.svelte";
-  import TechTag from "../components/TechTag.svelte";
+import InfoSection from "./InfoSection.svelte";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import {
+  faCalendar,
+  faCode,
+  faExternalLinkAlt,
+  faStar,
+} from "@fortawesome/free-solid-svg-icons";
+import { resume } from "$lib/data/resume";
+import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+import { formatProjectUrl } from "$lib/tools/url-utils";
+import InfoBoxes from "../components/InfoBoxes.svelte";
+import TechTag from "../components/TechTag.svelte";
 
-  let props = $props();
-  const profile = props.profile;
+let props = $props();
+const profile = props.profile;
 </script>
 
 <InfoSection title="Side Projects" icon={faCode}>
@@ -30,38 +30,64 @@
 
         <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
-        {#if project.url}
-          {@const         { isGithub, displayLabel } = formatProjectUrl(
-          project.url,
-          project.url_label,
-        )}
-          <div class="flex justify-start mt-6">
-            <a
-              href={project.url}
-              target="_blank"
-              class="inline-flex items-center gap-2 px-5 py-3 bg-ocean text-white rounded-lg hover:bg-ocean/85 transition-all"
-            >
-              <FontAwesomeIcon
-                icon={isGithub ? faGithub : faExternalLinkAlt}
-                size="lg"
-              />
+        {#if project.url || project.repo_url}
+          <div class="flex flex-wrap items-center gap-3 justify-start mt-6">
+            {#if project.url}
+              {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
+              <a
+                href={project.url}
+                target="_blank"
+                class="inline-flex items-center gap-2 px-5 py-3 bg-ocean text-white rounded-lg hover:bg-ocean/85 transition-all"
+              >
+                <FontAwesomeIcon
+                  icon={isGithub ? faGithub : faExternalLinkAlt}
+                  size="lg"
+                />
 
-              <span class="font-medium nowrap">
-                {displayLabel}
-              </span>
-
-              {#if project.stars && isGithub}
-                <span
-                  class="flex items-center gap-1 ml-2 pl-2 border-l border-white/30"
-                >
-                  <FontAwesomeIcon
-                    icon={faStar}
-                    class="text-yellow-500"
-                  />
-                  <span>{project.stars}</span>
+                <span class="font-medium nowrap">
+                  {displayLabel}
                 </span>
-              {/if}
-            </a>
+
+                {#if project.stars && isGithub && !project.repo_url}
+                  <span
+                    class="flex items-center gap-1 ml-2 pl-2 border-l border-white/30"
+                  >
+                    <FontAwesomeIcon
+                      icon={faStar}
+                      class="text-yellow-500"
+                    />
+                    <span>{project.stars}</span>
+                  </span>
+                {/if}
+              </a>
+            {/if}
+
+            {#if project.repo_url}
+              {@const repo = formatProjectUrl(project.repo_url)}
+              <a
+                href={project.repo_url}
+                target="_blank"
+                class="inline-flex items-center gap-2 px-5 py-3 border border-ocean text-ocean rounded-lg hover:bg-ocean/10 transition-all"
+              >
+                <FontAwesomeIcon icon={faGithub} size="lg" />
+
+                <span class="font-medium nowrap">
+                  {repo.displayLabel}
+                </span>
+
+                {#if project.stars}
+                  <span
+                    class="flex items-center gap-1 ml-2 pl-2 border-l border-ocean/30"
+                  >
+                    <FontAwesomeIcon
+                      icon={faStar}
+                      class="text-yellow-500"
+                    />
+                    <span>{project.stars}</span>
+                  </span>
+                {/if}
+              </a>
+            {/if}
           </div>
         {/if}
 

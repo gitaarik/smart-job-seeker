@@ -122,7 +122,7 @@ interface ImportedProfile {
       url?: string;
       stars?: number | null;
       summary?: string;
-      url_label?: string;
+      repo_url?: string;
       tags?: any;
       achievements: Array<{
         title?: string;
@@ -626,7 +626,7 @@ async function importProfile(
             url: project.url,
             stars: project.stars,
             summary: project.summary,
-            url_label: project.url_label,
+            repo_url: project.repo_url,
             tags: project.tags,
             profile: profile.id,
           },

@@ -73,7 +73,7 @@
     side_projects: Array<{
       name: string | null;
       url: string | null;
-      url_label: string | null;
+      repo_url: string | null;
       stars: number | null;
       start_date: string | null;
       end_date?: string | null;

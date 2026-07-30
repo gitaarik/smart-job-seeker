@@ -338,7 +338,7 @@ export const sideProjectBasicSchema = z.object({
   section: z.literal("basic").optional(),
   name: requiredTrimmedString("Project name").optional(),
   url: optionalTrimmedString(2048),
-  url_label: optionalTrimmedString(),
+  repo_url: optionalTrimmedString(),
   summary: optionalTrimmedString(10000),
   stars: z.number().int().optional().nullable(),
   start_date: z.string().optional().nullable(),

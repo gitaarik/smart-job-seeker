@@ -357,7 +357,7 @@ export async function applyDiffToProfile(
   // --- Apply project changes ---
   if (payload.projects) {
     for (const p of payload.projects.added ?? []) {
-      const [created] = await dbDirect.insert(side_projects).values({ profile_id: profileId, status: "draft", name: p.name || null, url: p.url || null, url_label: p.urlLabel || null, summary: p.summary || null, start_date: parseDate(p.startDate), end_date: parseDate(p.endDate), stars: p.stars ?? null }).returning();
+      const [created] = await dbDirect.insert(side_projects).values({ profile_id: profileId, status: "draft", name: p.name || null, url: p.url || null, repo_url: p.repoUrl || null, summary: p.summary || null, start_date: parseDate(p.startDate), end_date: parseDate(p.endDate), stars: p.stars ?? null }).returning();
       let sort = 1;
       for (const ach of p.achievements ?? []) {
         await dbDirect.insert(side_project_achievements).values({ side_project_id: created.id, description: ach, sort: sort++ });
@@ -374,7 +374,7 @@ export async function applyDiffToProfile(
       const updateData: Record<string, unknown> = {};
       if (mod.fields.name !== undefined) updateData.name = mod.fields.name || null;
       if (mod.fields.url !== undefined) updateData.url = mod.fields.url || null;
-      if (mod.fields.urlLabel !== undefined) updateData.url_label = mod.fields.urlLabel || null;
+      if (mod.fields.repoUrl !== undefined) updateData.repo_url = mod.fields.repoUrl || null;
       if (mod.fields.summary !== undefined) updateData.summary = mod.fields.summary || null;
       if (mod.fields.startDate !== undefined) updateData.start_date = parseDate(mod.fields.startDate);
       if (mod.fields.endDate !== undefined) updateData.end_date = parseDate(mod.fields.endDate);

@@ -107,7 +107,9 @@ export function applyTranslations(
   if (tr.isBase || !profile) return profile;
 
   // Profile-level fields key on the profile id itself.
-  for (const f of ["summary", "headline", "subtitle", "title", "about_me_text"]) {
+  for (
+    const f of ["summary", "headline", "subtitle", "title", "about_me_text"]
+  ) {
     profile[f] = tr.t("profile", profile.id, f, profile[f] ?? null);
   }
 
@@ -131,7 +133,7 @@ export function applyTranslations(
   }
 
   for (const sp of profile.side_projects ?? []) {
-    for (const f of ["name", "summary", "url_label"]) {
+    for (const f of ["name", "summary"]) {
       overlay(tr, "side_project", sp, f);
     }
     for (const a of sp.side_project_achievements ?? []) {
@@ -161,13 +163,23 @@ export async function isEntityOwned(
       return (await db
         .select({ id: work_experiences.id })
         .from(work_experiences)
-        .where(and(eq(work_experiences.id, id), eq(work_experiences.profile_id, profileId)))
+        .where(
+          and(
+            eq(work_experiences.id, id),
+            eq(work_experiences.profile_id, profileId),
+          ),
+        )
         .limit(1)).length > 0;
     case "tech_skill_category":
       return (await db
         .select({ id: tech_skill_categories.id })
         .from(tech_skill_categories)
-        .where(and(eq(tech_skill_categories.id, id), eq(tech_skill_categories.profile_id, profileId)))
+        .where(
+          and(
+            eq(tech_skill_categories.id, id),
+            eq(tech_skill_categories.profile_id, profileId),
+          ),
+        )
         .limit(1)).length > 0;
     case "education":
       return (await db
@@ -179,7 +191,12 @@ export async function isEntityOwned(
       return (await db
         .select({ id: side_projects.id })
         .from(side_projects)
-        .where(and(eq(side_projects.id, id), eq(side_projects.profile_id, profileId)))
+        .where(
+          and(
+            eq(side_projects.id, id),
+            eq(side_projects.profile_id, profileId),
+          ),
+        )
         .limit(1)).length > 0;
     case "work_experience_achievement":
       return (await db
@@ -187,9 +204,17 @@ export async function isEntityOwned(
         .from(work_experience_achievements)
         .innerJoin(
           work_experiences,
-          eq(work_experience_achievements.work_experience_id, work_experiences.id),
+          eq(
+            work_experience_achievements.work_experience_id,
+            work_experiences.id,
+          ),
         )
-        .where(and(eq(work_experience_achievements.id, id), eq(work_experiences.profile_id, profileId)))
+        .where(
+          and(
+            eq(work_experience_achievements.id, id),
+            eq(work_experiences.profile_id, profileId),
+          ),
+        )
         .limit(1)).length > 0;
     case "side_project_achievement":
       return (await db
@@ -199,7 +224,12 @@ export async function isEntityOwned(
           side_projects,
           eq(side_project_achievements.side_project_id, side_projects.id),
         )
-        .where(and(eq(side_project_achievements.id, id), eq(side_projects.profile_id, profileId)))
+        .where(
+          and(
+            eq(side_project_achievements.id, id),
+            eq(side_projects.profile_id, profileId),
+          ),
+        )
         .limit(1)).length > 0;
     default:
       return false;
@@ -219,7 +249,13 @@ export async function loadOwnedEntityIds(
       .where(eq(work_experiences.profile_id, profileId)),
     db.select({ id: work_experience_achievements.id })
       .from(work_experience_achievements)
-      .innerJoin(work_experiences, eq(work_experience_achievements.work_experience_id, work_experiences.id))
+      .innerJoin(
+        work_experiences,
+        eq(
+          work_experience_achievements.work_experience_id,
+          work_experiences.id,
+        ),
+      )
       .where(eq(work_experiences.profile_id, profileId)),
     db.select({ id: tech_skill_categories.id }).from(tech_skill_categories)
       .where(eq(tech_skill_categories.profile_id, profileId)),
@@ -229,7 +265,10 @@ export async function loadOwnedEntityIds(
       .where(eq(side_projects.profile_id, profileId)),
     db.select({ id: side_project_achievements.id })
       .from(side_project_achievements)
-      .innerJoin(side_projects, eq(side_project_achievements.side_project_id, side_projects.id))
+      .innerJoin(
+        side_projects,
+        eq(side_project_achievements.side_project_id, side_projects.id),
+      )
       .where(eq(side_projects.profile_id, profileId)),
   ]);
   return {
@@ -316,7 +355,13 @@ export function collectTranslatable(
 
   const skillRows: TranslatableRow[] = [];
   for (const cat of profile.tech_skill_categories ?? []) {
-    pushRows(skillRows, "tech_skill_category", cat.id, cat, cat.name || "Category");
+    pushRows(
+      skillRows,
+      "tech_skill_category",
+      cat.id,
+      cat,
+      cat.name || "Category",
+    );
   }
   if (skillRows.length) {
     groups.push({ key: "skills", title: "Skill categories", rows: skillRows });

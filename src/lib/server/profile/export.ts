@@ -91,7 +91,7 @@ const PROFILE_SCHEMA_MAPPING = {
           "url",
           "stars",
           "summary",
-          "url_label",
+          "repo_url",
         ],
         relations: {
           side_project_achievements: {
@@ -277,7 +277,7 @@ async function fetchProfileData(profileId: number) {
           url: true,
           stars: true,
           summary: true,
-          url_label: true,
+          repo_url: true,
         },
         with: {
           side_project_achievements: {

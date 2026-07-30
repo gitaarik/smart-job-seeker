@@ -196,7 +196,7 @@ export interface ExportedSideProject {
   url?: string;
   stars?: number | null;
   summary?: string;
-  url_label?: string;
+  repo_url?: string;
   image_path?: string;
   tags?: unknown;
   achievements: ExportedSideProjectAchievement[];

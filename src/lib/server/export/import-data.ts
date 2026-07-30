@@ -465,7 +465,7 @@ async function importProfileEntities(
       url: sp.url || null,
       stars: sp.stars ?? null,
       summary: sp.summary || null,
-      url_label: sp.url_label || null,
+      repo_url: sp.repo_url || null,
       tags: toJsonValue(sp.tags),
       // image_path will be set via media import
     }).returning();

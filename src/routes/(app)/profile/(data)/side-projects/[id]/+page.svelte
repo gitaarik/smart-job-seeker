@@ -10,7 +10,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import MediaUpload from "$lib/components/MediaUpload.svelte";
 import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
-import { autoSaveField, recordsEqual } from "$lib/components/auto-save.svelte";
+import {
+  autoSaveField,
+  diffPayload,
+  recordsEqual,
+} from "$lib/components/auto-save.svelte";
 import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
 import TranslatableField from "$lib/components/TranslatableField.svelte";
 import AchievementsList, {
@@ -43,7 +47,7 @@ let achievementsSaveState = $state<SaveState>("idle");
 // Form states
 let editName = $state(project.name || "");
 let editUrl = $state(project.url || "");
-let editUrlLabel = $state(project.url_label || "");
+let editRepoUrl = $state(project.repo_url || "");
 let editSummary = $state(project.summary || "");
 let editStars = $state(project.stars?.toString() || "");
 let editStartDate = $state(formatDate(project.start_date));
@@ -75,36 +79,43 @@ function formatDate(date: Date | string | null): string {
 type ProjectBasics = {
   name: string;
   url: string;
-  urlLabel: string;
+  repoUrl: string;
   summary: string;
   stars: string;
   startDate: string;
   endDate: string;
 };
+
+/** Form state as the API expects it. Both sides of the diff go through here. */
+function basicsBody(v: ProjectBasics) {
+  return {
+    name: v.name,
+    url: v.url,
+    repo_url: v.repoUrl,
+    summary: v.summary,
+    stars: v.stars || null,
+    start_date: v.startDate || null,
+    end_date: v.endDate || null,
+  };
+}
 const basicsField = autoSaveField<ProjectBasics>({
   initial: {
     name: editName,
     url: editUrl,
-    urlLabel: editUrlLabel,
+    repoUrl: editRepoUrl,
     summary: editSummary,
     stars: editStars,
     startDate: editStartDate,
     endDate: editEndDate,
   },
-  save: async (v) => {
+  save: async (v, prev) => {
+    const changed = diffPayload(basicsBody(v), basicsBody(prev));
+    if (Object.keys(changed).length === 0) return;
+
     const response = await fetch(`/api/side-project/${project.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        section: "basic",
-        name: v.name,
-        url: v.url,
-        url_label: v.urlLabel,
-        summary: v.summary,
-        stars: v.stars || null,
-        start_date: v.startDate || null,
-        end_date: v.endDate || null,
-      }),
+      body: JSON.stringify({ section: "basic", ...changed }),
     });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
@@ -116,7 +127,7 @@ const basicsField = autoSaveField<ProjectBasics>({
   onSaved: (v) => {
     editName = v.name;
     editUrl = v.url;
-    editUrlLabel = v.urlLabel;
+    editRepoUrl = v.repoUrl;
     editSummary = v.summary;
     editStars = v.stars;
     editStartDate = v.startDate;
@@ -129,7 +140,7 @@ $effect(() =>
   basicsField.set({
     name: editName,
     url: editUrl,
-    urlLabel: editUrlLabel,
+    repoUrl: editRepoUrl,
     summary: editSummary,
     stars: editStars,
     startDate: editStartDate,
@@ -353,9 +364,9 @@ function undoRemoveTechnology(index: number) {
         <TranslatableField
           entity="side_project"
           id={project.id}
-          field="url_label"
-          label="URL Label"
-          bind:value={editUrlLabel}
+          field="repo_url"
+          label="Repo URL"
+          bind:value={editRepoUrl}
           placeholder="e.g., View on GitHub"
         />
 
