@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Card from "../../../../components/Card.svelte";
 import ConversationTimeline from "$lib/components/conversation/ConversationTimeline.svelte";
+import AutoGrowTextarea from "$lib/components/AutoGrowTextarea.svelte";
 import type { VersionSource } from "$lib/server/ai-chat/entity-versions";
 import { serializeStarMarkdown } from "$lib/interview/star";
 
@@ -247,8 +248,9 @@ function handleMetaSave() {
   };
 }
 
+// Height is managed by AutoGrowTextarea (resize:none) — no resize-y / min-h here.
 const fieldClass =
-  "w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y";
+  "w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent";
 </script>
 
 <svelte:head>
@@ -343,23 +345,23 @@ const fieldClass =
     <div class="space-y-4">
       <div>
         <label for="f-situation" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Situation</label>
-        <textarea id="f-situation" bind:value={situation} rows={3} placeholder="The context and background…" class="{fieldClass} min-h-[110px] sm:min-h-0"></textarea>
+        <AutoGrowTextarea id="f-situation" bind:value={situation} minRows={3} placeholder="The context and background…" class={fieldClass} />
       </div>
       <div>
         <label for="f-task" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Task</label>
-        <textarea id="f-task" bind:value={task} rows={2} placeholder="Your responsibility or goal…" class="{fieldClass} min-h-[90px] sm:min-h-0"></textarea>
+        <AutoGrowTextarea id="f-task" bind:value={task} minRows={2} placeholder="Your responsibility or goal…" class={fieldClass} />
       </div>
       <div>
         <label for="f-action" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Action</label>
-        <textarea id="f-action" bind:value={action} rows={4} placeholder="What you specifically did…" class="{fieldClass} min-h-[140px] sm:min-h-0"></textarea>
+        <AutoGrowTextarea id="f-action" bind:value={action} minRows={4} placeholder="What you specifically did…" class={fieldClass} />
       </div>
       <div>
         <label for="f-result" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Result</label>
-        <textarea id="f-result" bind:value={result} rows={3} placeholder="The outcome — with metrics if you have them…" class="{fieldClass} min-h-[110px] sm:min-h-0"></textarea>
+        <AutoGrowTextarea id="f-result" bind:value={result} minRows={3} placeholder="The outcome — with metrics if you have them…" class={fieldClass} />
       </div>
       <div>
         <label for="f-reflection" class="block text-sm font-semibold text-[var(--dash-text)] mb-1">Reflection <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span></label>
-        <textarea id="f-reflection" bind:value={reflection} rows={2} placeholder="What you learned…" class="{fieldClass} min-h-[90px] sm:min-h-0"></textarea>
+        <AutoGrowTextarea id="f-reflection" bind:value={reflection} minRows={2} placeholder="What you learned…" class={fieldClass} />
       </div>
     </div>
   </Card>
