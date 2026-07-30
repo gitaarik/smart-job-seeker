@@ -295,6 +295,10 @@ This is PROFILE-LEVEL prep, not tied to a specific job — the story should be a
 
 \${storyContext}
 
+\${relevantProjects}
+
+\${relevantApplicationTexts}
+
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant naming the SPECIFIC roles, projects, or achievements from their profile you built this story from. Be concrete. If the profile was thin on material for this, say so honestly.
 - "text": the complete STAR story as MARKDOWN, using EXACTLY these section headings, each on its own line: "## Situation", "## Task", "## Action", "## Result", and optionally "## Reflection". Under each heading, write the applicant's answer in the first person. No preamble, no other headings, no bullet-point-only sections — write it as they would actually say it out loud.
@@ -325,6 +329,10 @@ This is PROFILE-LEVEL prep, not tied to a specific job — draw entirely on the 
 ## This story:
 
 \${storyContext}
+
+\${relevantProjects}
+
+\${relevantApplicationTexts}
 
 - The applicant sent you a message (below). Decide what they want BEFORE writing anything:
   - Questions and advice-seeking → "text" MUST be null; put your reply in "feedback". This includes asking WHICH experience to use, HOW to shape or strengthen it, WHETHER something works, or what to focus on (e.g. "which of my experiences fits best?", "how do I make the Result stronger?", "is this too long?"). Answer the question — do NOT write the story.

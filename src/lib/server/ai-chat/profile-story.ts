@@ -24,6 +24,10 @@ import {
   serializeStarMarkdown,
   type StarFields,
 } from "$lib/interview/star";
+import {
+  assembleGenerationContext,
+  type RelevanceQuery,
+} from "./generation-context";
 
 /** Profile data fields relevant for building a behavioural STAR story. */
 export const STORY_PROFILE_FIELDS = [
@@ -136,6 +140,28 @@ export async function generateProfileStory(
       "(The applicant hasn't written anything yet.)";
   } else {
     variables.additionalContext = instructionsBlock(instructions);
+  }
+
+  // Ground the story in the applicant's most relevant real projects and their
+  // own past application writing, for the draft-writing modes only (advice/review
+  // templates don't interpolate these slots — retrieving there would discard the
+  // result; see the drift-guard test). The relevance query is what this story is
+  // *about*: its working title, theme, the applicant's brief, and the current
+  // draft. The `stories` source is deliberately NOT requested — it would retrieve
+  // this very story and feed it back into its own prompt.
+  if (mode === "generate" || mode === "auto") {
+    const topic = story.title && !isUnnamed(story.title) ? story.title : "";
+    const query: RelevanceQuery = {
+      text: [topic, story.category ?? "", instructions ?? "", currentStar ?? ""]
+        .filter(Boolean)
+        .join("\n"),
+    };
+    const ctx = await assembleGenerationContext({
+      profileId,
+      query,
+      sources: ["projects", "application_texts"],
+    });
+    Object.assign(variables, ctx.variables);
   }
 
   let aiChatResult;

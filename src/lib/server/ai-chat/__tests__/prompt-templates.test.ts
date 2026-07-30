@@ -290,6 +290,9 @@ const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
   // reference it and don't pay for retrieval.
   write_prep_sheet: "profile-cheatsheet.ts",
   write_or_advise_prep_sheet: "profile-cheatsheet.ts",
+  // ai-chat/profile-story.ts — generate + auto, via the provider.
+  write_star_story: "profile-story.ts",
+  write_or_advise_star_story: "profile-story.ts",
 };
 
 describe("${relevantProjects} template ↔ caller wiring", () => {
@@ -362,6 +365,8 @@ describe("${relevantStories} template ↔ caller wiring", () => {
 const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
   write_prep_sheet: "profile-cheatsheet.ts",
   write_or_advise_prep_sheet: "profile-cheatsheet.ts",
+  write_star_story: "profile-story.ts",
+  write_or_advise_star_story: "profile-story.ts",
 };
 
 describe("${relevantApplicationTexts} template ↔ caller wiring", () => {
