@@ -1,162 +1,169 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faCamera,
-    faEnvelope,
-    faGlobe,
-    faMapMarkerAlt,
-    faPhone,
-    faUser,
-  } from "@fortawesome/free-solid-svg-icons";
-  import {
-    faGithub,
-    faLinkedin,
-    faNpm,
-    faPython,
-    faStackOverflow,
-  } from "@fortawesome/free-brands-svg-icons";
-  import SectionHeader from "../../components/SectionHeader.svelte";
-  import Card from "../../../components/Card.svelte";
-  import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import {
-    autoSaveField,
-    recordsEqual,
-  } from "$lib/components/auto-save.svelte";
-  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
-  import TranslatableField from "$lib/components/TranslatableField.svelte";
-  import AutoTranslateProfile from "$lib/components/AutoTranslateProfile.svelte";
-  import CountrySelect from "../../../jobs/components/CountrySelect.svelte";
-  import { getProfilePhotoUrl } from "$lib/utils/profile-photo-url";
+import type { PageData } from "./$types";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faCamera,
+  faEnvelope,
+  faGlobe,
+  faMapMarkerAlt,
+  faPhone,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import {
+  faGithub,
+  faLinkedin,
+  faNpm,
+  faPython,
+  faStackOverflow,
+} from "@fortawesome/free-brands-svg-icons";
+import SectionHeader from "../../components/SectionHeader.svelte";
+import Card from "../../../components/Card.svelte";
+import MediaUpload from "$lib/components/MediaUpload.svelte";
+import {
+  autoSaveField,
+  diffPayload,
+  recordsEqual,
+} from "$lib/components/auto-save.svelte";
+import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
+import TranslatableField from "$lib/components/TranslatableField.svelte";
+import AutoTranslateProfile from "$lib/components/AutoTranslateProfile.svelte";
+import CountrySelect from "../../../jobs/components/CountrySelect.svelte";
+import { getProfilePhotoUrl } from "$lib/utils/profile-photo-url";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  const profile = $derived(data.profile);
-  let photoUrl = $state(getProfilePhotoUrl(data.profile));
+const profile = $derived(data.profile);
+let photoUrl = $state(getProfilePhotoUrl(data.profile));
 
-  // Form values - Personal Information
-  let name = $state(data.profile?.name || "");
-  let slug = $state(data.profile?.slug || "");
-  let title = $state(data.profile?.title || "");
-  let subtitle = $state(data.profile?.subtitle || "");
-  let headline = $state(data.profile?.headline || "");
-  let summary = $state(data.profile?.summary || "");
+// Form values - Personal Information
+let name = $state(data.profile?.name || "");
+let slug = $state(data.profile?.slug || "");
+let title = $state(data.profile?.title || "");
+let subtitle = $state(data.profile?.subtitle || "");
+let headline = $state(data.profile?.headline || "");
+let summary = $state(data.profile?.summary || "");
 
-  // Form values - Contact Information
-  let email_address = $state(data.profile?.email_address || "");
-  let phone_number = $state(data.profile?.phone_number || "");
-  let location = $state(data.profile?.location || "");
-  let location_url = $state(data.profile?.location_url || "");
-  let location_timezone = $state(data.profile?.location_timezone || "");
-  let country_code = $state(data.profile?.country_code || "");
-  let personal_website = $state(data.profile?.personal_website || "");
+// Form values - Contact Information
+let email_address = $state(data.profile?.email_address || "");
+let phone_number = $state(data.profile?.phone_number || "");
+let location = $state(data.profile?.location || "");
+let location_url = $state(data.profile?.location_url || "");
+let location_timezone = $state(data.profile?.location_timezone || "");
+let country_code = $state(data.profile?.country_code || "");
+let personal_website = $state(data.profile?.personal_website || "");
 
-  // Form values - Social Profiles
-  let linkedin_profile = $state(data.profile?.linkedin_profile || "");
-  let github_profile = $state(data.profile?.github_profile || "");
-  let stackoverflow_profile = $state(data.profile?.stackoverflow_profile || "");
-  let npm_profile = $state(data.profile?.npm_profile || "");
-  let pypi_profile = $state(data.profile?.pypi_profile || "");
+// Form values - Social Profiles
+let linkedin_profile = $state(data.profile?.linkedin_profile || "");
+let github_profile = $state(data.profile?.github_profile || "");
+let stackoverflow_profile = $state(data.profile?.stackoverflow_profile || "");
+let npm_profile = $state(data.profile?.npm_profile || "");
+let pypi_profile = $state(data.profile?.pypi_profile || "");
 
-  async function saveSection(fields: Record<string, string>) {
-    const response = await fetch(`/api/profile/${profile.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(fields),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(
-        error.message || error.error || `Save failed (${response.status})`,
-      );
-    }
+async function saveSection(
+  fields: Record<string, string>,
+  prev: Record<string, string>,
+) {
+  const changed = diffPayload(fields, prev);
+  if (Object.keys(changed).length === 0) return;
+
+  const response = await fetch(`/api/profile/${profile.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changed),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      error.message || error.error || `Save failed (${response.status})`,
+    );
   }
+}
 
-  // One auto-saved field per card rather than one per input: each card already
-  // PATCHes its fields as a group, and 15 separate indicator pills in a dense
-  // two-column grid would be unreadable. Undo therefore reverts the card's last
-  // burst of edits, not a single input.
-  const personalInfoField = autoSaveField<Record<string, string>>({
-    initial: { name, slug, title, subtitle, headline, summary },
-    save: saveSection,
-    onSaved: (v) => {
-      name = v.name;
-      slug = v.slug;
-      title = v.title;
-      subtitle = v.subtitle;
-      headline = v.headline;
-      summary = v.summary;
-    },
-    equal: recordsEqual,
-    debounceMs: 700,
-  });
-  $effect(() =>
-    personalInfoField.set({ name, slug, title, subtitle, headline, summary })
-  );
+// One auto-saved field per card rather than one per input: each card already
+// PATCHes its fields as a group, and 15 separate indicator pills in a dense
+// two-column grid would be unreadable. Undo therefore reverts the card's last
+// burst of edits, not a single input.
+const personalInfoField = autoSaveField<Record<string, string>>({
+  initial: { name, slug, title, subtitle, headline, summary },
+  save: saveSection,
+  onSaved: (v) => {
+    name = v.name;
+    slug = v.slug;
+    title = v.title;
+    subtitle = v.subtitle;
+    headline = v.headline;
+    summary = v.summary;
+  },
+  equal: recordsEqual,
+  debounceMs: 700,
+});
+$effect(() =>
+  personalInfoField.set({ name, slug, title, subtitle, headline, summary })
+);
 
-  const contactField = autoSaveField<Record<string, string>>({
-    initial: {
-      email_address,
-      phone_number,
-      location,
-      location_url,
-      location_timezone,
-      country_code,
-      personal_website,
-    },
-    save: saveSection,
-    onSaved: (v) => {
-      email_address = v.email_address;
-      phone_number = v.phone_number;
-      location = v.location;
-      location_url = v.location_url;
-      location_timezone = v.location_timezone;
-      country_code = v.country_code;
-      personal_website = v.personal_website;
-    },
-    equal: recordsEqual,
-    debounceMs: 700,
-  });
-  $effect(() =>
-    contactField.set({
-      email_address,
-      phone_number,
-      location,
-      location_url,
-      location_timezone,
-      country_code,
-      personal_website,
-    })
-  );
+const contactField = autoSaveField<Record<string, string>>({
+  initial: {
+    email_address,
+    phone_number,
+    location,
+    location_url,
+    location_timezone,
+    country_code,
+    personal_website,
+  },
+  save: saveSection,
+  onSaved: (v) => {
+    email_address = v.email_address;
+    phone_number = v.phone_number;
+    location = v.location;
+    location_url = v.location_url;
+    location_timezone = v.location_timezone;
+    country_code = v.country_code;
+    personal_website = v.personal_website;
+  },
+  equal: recordsEqual,
+  debounceMs: 700,
+});
+$effect(() =>
+  contactField.set({
+    email_address,
+    phone_number,
+    location,
+    location_url,
+    location_timezone,
+    country_code,
+    personal_website,
+  })
+);
 
-  const socialField = autoSaveField<Record<string, string>>({
-    initial: {
-      linkedin_profile,
-      github_profile,
-      stackoverflow_profile,
-      npm_profile,
-      pypi_profile,
-    },
-    save: saveSection,
-    onSaved: (v) => {
-      linkedin_profile = v.linkedin_profile;
-      github_profile = v.github_profile;
-      stackoverflow_profile = v.stackoverflow_profile;
-      npm_profile = v.npm_profile;
-      pypi_profile = v.pypi_profile;
-    },
-    equal: recordsEqual,
-    debounceMs: 700,
-  });
-  $effect(() =>
-    socialField.set({
-      linkedin_profile,
-      github_profile,
-      stackoverflow_profile,
-      npm_profile,
-      pypi_profile,
-    })
-  );
+const socialField = autoSaveField<Record<string, string>>({
+  initial: {
+    linkedin_profile,
+    github_profile,
+    stackoverflow_profile,
+    npm_profile,
+    pypi_profile,
+  },
+  save: saveSection,
+  onSaved: (v) => {
+    linkedin_profile = v.linkedin_profile;
+    github_profile = v.github_profile;
+    stackoverflow_profile = v.stackoverflow_profile;
+    npm_profile = v.npm_profile;
+    pypi_profile = v.pypi_profile;
+  },
+  equal: recordsEqual,
+  debounceMs: 700,
+});
+$effect(() =>
+  socialField.set({
+    linkedin_profile,
+    github_profile,
+    stackoverflow_profile,
+    npm_profile,
+    pypi_profile,
+  })
+);
 </script>
 
 <svelte:head>

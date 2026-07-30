@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   autoSaveField,
+  diffPayload,
   flushPendingSaves,
   hasPendingSaves,
 } from "./auto-save.svelte";
@@ -41,7 +42,7 @@ describe("autoSaveField", () => {
 
     await vi.advanceTimersByTimeAsync(700);
     expect(save).toHaveBeenCalledTimes(1);
-    expect(save).toHaveBeenCalledWith("abc");
+    expect(save).toHaveBeenCalledWith("abc", "a");
     expect(field.saved).toBe("abc");
     expect(field.status).toBe("saved");
 
@@ -56,7 +57,7 @@ describe("autoSaveField", () => {
     field.flush();
     await settle();
 
-    expect(save).toHaveBeenCalledWith("b");
+    expect(save).toHaveBeenCalledWith("b", "a");
     field.destroy();
   });
 
@@ -90,7 +91,7 @@ describe("autoSaveField", () => {
 
     field.undo();
     await settle();
-    expect(save).toHaveBeenLastCalledWith("a");
+    expect(save).toHaveBeenLastCalledWith("a", "b");
     expect(field.saved).toBe("a");
     expect(onSaved).toHaveBeenLastCalledWith("a");
 
@@ -175,7 +176,7 @@ describe("autoSaveField", () => {
     field.set("c");
     await settle();
 
-    expect(save).toHaveBeenLastCalledWith("c");
+    expect(save).toHaveBeenLastCalledWith("c", "b");
     expect(field.saved).toBe("c");
 
     field.destroy();
@@ -236,8 +237,8 @@ describe("navigation guard helpers", () => {
     flushPendingSaves();
     await settle();
 
-    expect(saveA).toHaveBeenCalledWith("a2");
-    expect(saveB).toHaveBeenCalledWith("b2");
+    expect(saveA).toHaveBeenCalledWith("a2", "a");
+    expect(saveB).toHaveBeenCalledWith("b2", "b");
     expect(hasPendingSaves()).toBe(false);
 
     a.destroy();
@@ -256,5 +257,36 @@ describe("navigation guard helpers", () => {
 
     expect(save).not.toHaveBeenCalled();
     expect(hasPendingSaves()).toBe(false);
+  });
+});
+
+describe("diffPayload", () => {
+  it("emits only the entries that changed", () => {
+    const prev = { name: "a", url: "u", summary: "s" };
+    const next = { name: "a", url: "CHANGED", summary: "s" };
+
+    expect(diffPayload(next, prev)).toEqual({ url: "CHANGED" });
+  });
+
+  it("returns nothing when a record is untouched", () => {
+    const same = { name: "a", stars: null };
+
+    expect(diffPayload({ ...same }, { ...same })).toEqual({});
+  });
+
+  it("treats a coerced no-op as unchanged", () => {
+    // "" -> null in the caller's body mapping, on both sides of the diff.
+    expect(diffPayload({ stars: null }, { stars: null })).toEqual({});
+  });
+
+  it("emits a cleared field so the server can null it", () => {
+    expect(diffPayload({ url: null }, { url: "u" })).toEqual({ url: null });
+  });
+
+  it("ignores keys missing from the incoming body", () => {
+    // Both sides come from the same mapping, so this shouldn't arise — but a
+    // guessed deletion would be worse than leaving the field alone.
+    expect(diffPayload({ a: 1 } as Record<string, unknown>, { a: 1, b: 2 }))
+      .toEqual({});
   });
 });

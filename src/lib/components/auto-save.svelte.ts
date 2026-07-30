@@ -34,8 +34,16 @@ export type AutoSaveStatus = "idle" | "saving" | "saved" | "error";
 export interface AutoSaveOptions<T> {
   /** Value that's currently persisted on the server. */
   initial: T;
-  /** Persists a value. Must throw on failure (message is shown to the user). */
-  save: (value: T) => Promise<void>;
+  /**
+   * Persists a value. Must throw on failure (message is shown to the user).
+   *
+   * `saved` is the value this field last confirmed with the server. For a
+   * record-shaped field it lets the caller send only what changed — see
+   * {@link diffPayload}. Sending the whole record instead means an idle tab
+   * ships its page-load copy of every sibling field on the next save, silently
+   * reverting anything edited elsewhere in the meantime.
+   */
+  save: (value: T, saved: T) => Promise<void>;
   /** Called after every successful save (including undo) so the caller can
    *  sync mirrors like `searchTask.note = v`. */
   onSaved?: (value: T) => void;
@@ -126,6 +134,30 @@ export function arraysEqual<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
+/**
+ * The entries of `next` that differ from `prev` — the PATCH body for a
+ * record-shaped field that should only write what the user actually touched.
+ *
+ * Diff the *request bodies* rather than the form state: the caller's mapping
+ * from form fields to API keys usually coerces (`v.stars || null`), and running
+ * both sides through the same mapping keeps a coerced no-op (`"" -> null` when
+ * the server already holds `null`) out of the payload.
+ *
+ * A key present in `prev` but absent from `next` is not emitted — callers build
+ * both sides with the same function, so that can't happen, and guessing at a
+ * deletion would be worse than leaving the field alone.
+ */
+export function diffPayload<T extends Record<string, unknown>>(
+  next: T,
+  prev: T,
+): Partial<T> {
+  const out: Partial<T> = {};
+  for (const key of Object.keys(next) as (keyof T)[]) {
+    if (!Object.is(next[key], prev[key])) out[key] = next[key];
+  }
+  return out;
+}
+
 export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
   const equal = opts.equal ?? Object.is;
   const debounceMs = opts.debounceMs ?? 0;
@@ -187,7 +219,7 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
     const sending = untrack(() => value);
     const rollback = untrack(() => saved);
     try {
-      await opts.save(sending);
+      await opts.save(sending, rollback);
       if (seq !== latestSeq) return; // a newer save superseded us
       previousSaved = rollback;
       saved = sending;

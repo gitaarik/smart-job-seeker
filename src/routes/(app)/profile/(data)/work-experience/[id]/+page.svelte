@@ -15,6 +15,7 @@
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
   import {
     autoSaveField,
+    diffPayload,
     recordsEqual,
   } from "$lib/components/auto-save.svelte";
   import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
@@ -125,6 +126,19 @@
     startDate: string;
     endDate: string;
   };
+  /** Form state as the API expects it. Both sides of the diff go through here. */
+  function basicsBody(v: ExperienceBasics) {
+    return {
+      name: v.name,
+      position: v.position,
+      location: v.location,
+      website: v.website,
+      headline: v.headline,
+      summary: v.summary,
+      start_date: v.startDate || null,
+      end_date: v.endDate || null,
+    };
+  }
   const basicsField = autoSaveField<ExperienceBasics>({
     initial: {
       name: editName,
@@ -136,21 +150,14 @@
       startDate: editStartDate,
       endDate: editEndDate,
     },
-    save: async (v) => {
+    save: async (v, prev) => {
+      const changed = diffPayload(basicsBody(v), basicsBody(prev));
+      if (Object.keys(changed).length === 0) return;
+
       const response = await fetch(`/api/work-experience/${experience.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          section: "basic",
-          name: v.name,
-          position: v.position,
-          location: v.location,
-          website: v.website,
-          headline: v.headline,
-          summary: v.summary,
-          start_date: v.startDate || null,
-          end_date: v.endDate || null,
-        }),
+        body: JSON.stringify({ section: "basic", ...changed }),
       });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));

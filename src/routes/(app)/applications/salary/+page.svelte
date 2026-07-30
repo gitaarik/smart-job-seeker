@@ -1,344 +1,355 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faChevronDown,
-    faChevronUp,
-    faGlobe,
-    faMoneyBillWave,
-    faPlus,
-    faTrash,
-  } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../components/Card.svelte";
-  import SectionHeader from "../../profile/components/SectionHeader.svelte";
-  import {
-    autoSaveField,
-    recordsEqual,
-  } from "$lib/components/auto-save.svelte";
-  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
-  import {
-    DEFAULT_INCOME_ASSUMPTIONS,
-    estimateIncome,
-    formatCurrency,
-    getEffectiveRate,
-    hourlyToRate,
-    type IncomeAssumptions,
-    REGION_CURRENCIES,
-    type SalaryAdjustments,
-    type SalaryRegionOverrides,
-  } from "$lib/salary/conversion";
-  import { REGIONS } from "$lib/data/job-taxonomy";
+import type { PageData } from "./$types";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faChevronDown,
+  faChevronUp,
+  faGlobe,
+  faMoneyBillWave,
+  faPlus,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import Card from "../../components/Card.svelte";
+import SectionHeader from "../../profile/components/SectionHeader.svelte";
+import {
+  autoSaveField,
+  diffPayload,
+  recordsEqual,
+} from "$lib/components/auto-save.svelte";
+import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
+import {
+  DEFAULT_INCOME_ASSUMPTIONS,
+  estimateIncome,
+  formatCurrency,
+  getEffectiveRate,
+  hourlyToRate,
+  type IncomeAssumptions,
+  REGION_CURRENCIES,
+  type SalaryAdjustments,
+  type SalaryRegionOverrides,
+} from "$lib/salary/conversion";
+import { REGIONS } from "$lib/data/job-taxonomy";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  let settings = $derived(data.salarySettings);
+let settings = $derived(data.salarySettings);
 
-  // Editable state — initialize from server data
-  let baseRate = $state(settings.baseRate?.toString() ?? "");
-  let currency = $state(settings.currency ?? "EUR");
-  let adjustments = $state<SalaryAdjustments>(
-    settings.adjustments && Object.keys(settings.adjustments).length > 0
-      ? settings.adjustments as SalaryAdjustments
-      : { employment_type: {}, work_arrangement: {}, company_type: {} },
-  );
-  let regionOverrides = $state<SalaryRegionOverrides>(
-    settings.regionOverrides && Object.keys(settings.regionOverrides).length > 0
-      ? settings.regionOverrides as SalaryRegionOverrides
-      : {},
-  );
+// Editable state — initialize from server data
+let baseRate = $state(settings.baseRate?.toString() ?? "");
+let currency = $state(settings.currency ?? "EUR");
+let adjustments = $state<SalaryAdjustments>(
+  settings.adjustments && Object.keys(settings.adjustments).length > 0
+    ? settings.adjustments as SalaryAdjustments
+    : { employment_type: {}, work_arrangement: {}, company_type: {} },
+);
+let regionOverrides = $state<SalaryRegionOverrides>(
+  settings.regionOverrides && Object.keys(settings.regionOverrides).length > 0
+    ? settings.regionOverrides as SalaryRegionOverrides
+    : {},
+);
 
-  let incomeAssumptions = $state<IncomeAssumptions>({
-    ...DEFAULT_INCOME_ASSUMPTIONS,
-    ...(settings.incomeAssumptions ?? {}),
+let incomeAssumptions = $state<IncomeAssumptions>({
+  ...DEFAULT_INCOME_ASSUMPTIONS,
+  ...(settings.incomeAssumptions ?? {}),
+});
+
+let showAssumptions = $state(false);
+
+async function postAction(action: string, fields: Record<string, string>) {
+  const formData = new FormData();
+  for (const [k, v] of Object.entries(fields)) formData.set(k, v);
+  const response = await fetch(`?/${action}`, {
+    method: "POST",
+    body: formData,
   });
+  if (!response.ok) throw new Error(`Save failed (${response.status})`);
+}
 
-  let showAssumptions = $state(false);
-
-  async function postAction(action: string, fields: Record<string, string>) {
-    const formData = new FormData();
-    for (const [k, v] of Object.entries(fields)) formData.set(k, v);
-    const response = await fetch(`?/${action}`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!response.ok) throw new Error(`Save failed (${response.status})`);
-  }
-
-  // These sections persist nested objects. Carrying the serialized JSON as the
-  // field value does double duty: stringifying inside the $effect deep-tracks
-  // every nested property (so in-place mutations still trigger a save), and it
-  // reduces "did this change?" to a string compare.
-  const regionRatesField = autoSaveField<Record<string, string>>({
-    initial: {
-      baseRate,
-      currency,
-      regionOverrides: JSON.stringify(regionOverrides),
-    },
-    save: (v) =>
-      postAction("saveRegionRates", {
+// These sections persist nested objects. Carrying the serialized JSON as the
+// field value does double duty: stringifying inside the $effect deep-tracks
+// every nested property (so in-place mutations still trigger a save), and it
+// reduces "did this change?" to a string compare.
+const regionRatesField = autoSaveField<Record<string, string>>({
+  initial: {
+    baseRate,
+    currency,
+    regionOverrides: JSON.stringify(regionOverrides),
+  },
+  save: (v, prev) => {
+    const changed = diffPayload(
+      {
         base_rate: v.baseRate,
         currency: v.currency,
         region_overrides: v.regionOverrides,
-      }),
-    onSaved: (v) => {
-      baseRate = v.baseRate;
-      currency = v.currency;
-      regionOverrides = JSON.parse(v.regionOverrides);
-    },
-    equal: recordsEqual,
-    debounceMs: 700,
-  });
-  const baseRateValid = $derived(!!baseRate && parseInt(baseRate) > 0);
-  $effect(() => {
-    // Mirrors the old Save button's disabled rule — a zero or blank base rate
-    // was never persistable, so don't persist it now either.
-    if (!baseRateValid) return;
-    regionRatesField.set({
-      baseRate,
-      currency,
-      regionOverrides: JSON.stringify(regionOverrides),
-    });
-  });
-
-  const adjustmentsField = autoSaveField<string>({
-    initial: JSON.stringify(adjustments),
-    save: (v) => postAction("saveAdjustments", { adjustments: v }),
-    onSaved: (v) => (adjustments = JSON.parse(v)),
-    debounceMs: 700,
-  });
-  $effect(() => adjustmentsField.set(JSON.stringify(adjustments)));
-
-  const incomeField = autoSaveField<string>({
-    initial: JSON.stringify(incomeAssumptions),
-    save: (v) => postAction("saveIncomeAssumptions", { income_assumptions: v }),
-    onSaved: (v) => (incomeAssumptions = JSON.parse(v)),
-    debounceMs: 700,
-  });
-  $effect(() => incomeField.set(JSON.stringify(incomeAssumptions)));
-
-  const currencies = [
-    { value: "EUR", label: "EUR", symbol: "\u20AC" },
-    { value: "USD", label: "USD", symbol: "$" },
-    { value: "GBP", label: "GBP", symbol: "\u00A3" },
-  ];
-
-  const predefinedRegions = REGIONS.values.map((v) => ({
-    value: v.canonical,
-    label: v.label,
-  }));
-
-  // Common adjustments shown by default
-  const commonAdjustments: {
-    key: keyof SalaryAdjustments;
-    value: string;
-    label: string;
-  }[] = [
-    {
-      key: "employment_type",
-      value: "contract",
-      label: "Contract / Freelance",
-    },
-    { key: "work_arrangement", value: "onsite", label: "On-site" },
-    { key: "work_arrangement", value: "hybrid", label: "Hybrid" },
-  ];
-
-  // Advanced adjustments behind toggle
-  const advancedAdjustments: {
-    key: keyof SalaryAdjustments;
-    value: string;
-    label: string;
-  }[] = [
-    { key: "employment_type", value: "part_time", label: "Part-time" },
-    { key: "employment_type", value: "temporary", label: "Temporary" },
-    { key: "employment_type", value: "internship", label: "Internship" },
-    { key: "company_type", value: "startup", label: "Startup" },
-    { key: "company_type", value: "corporate", label: "Corporate" },
-    { key: "company_type", value: "agency", label: "Agency / Consultancy" },
-  ];
-
-  let showAdvanced = $state(false);
-
-  // Auto-expand if any advanced adjustment has a value
-  $effect(() => {
-    const hasAdvancedValues = advancedAdjustments.some(
-      (a) => adjustments[a.key]?.[a.value] != null,
+      },
+      {
+        base_rate: prev.baseRate,
+        currency: prev.currency,
+        region_overrides: prev.regionOverrides,
+      },
     );
-    if (hasAdvancedValues) showAdvanced = true;
+    if (Object.keys(changed).length === 0) return Promise.resolve();
+    return postAction("saveRegionRates", changed);
+  },
+  onSaved: (v) => {
+    baseRate = v.baseRate;
+    currency = v.currency;
+    regionOverrides = JSON.parse(v.regionOverrides);
+  },
+  equal: recordsEqual,
+  debounceMs: 700,
+});
+const baseRateValid = $derived(!!baseRate && parseInt(baseRate) > 0);
+$effect(() => {
+  // Mirrors the old Save button's disabled rule — a zero or blank base rate
+  // was never persistable, so don't persist it now either.
+  if (!baseRateValid) return;
+  regionRatesField.set({
+    baseRate,
+    currency,
+    regionOverrides: JSON.stringify(regionOverrides),
   });
+});
 
-  let newRegionKey = $state("");
+const adjustmentsField = autoSaveField<string>({
+  initial: JSON.stringify(adjustments),
+  save: (v) => postAction("saveAdjustments", { adjustments: v }),
+  onSaved: (v) => (adjustments = JSON.parse(v)),
+  debounceMs: 700,
+});
+$effect(() => adjustmentsField.set(JSON.stringify(adjustments)));
 
-  function addRegionOverride() {
-    if (!newRegionKey) return;
-    const defaultCurrency = REGION_CURRENCIES[newRegionKey] || "EUR";
-    regionOverrides = {
-      ...regionOverrides,
-      [newRegionKey]: { rate: 0, currency: defaultCurrency },
-    };
-    newRegionKey = "";
-  }
+const incomeField = autoSaveField<string>({
+  initial: JSON.stringify(incomeAssumptions),
+  save: (v) => postAction("saveIncomeAssumptions", { income_assumptions: v }),
+  onSaved: (v) => (incomeAssumptions = JSON.parse(v)),
+  debounceMs: 700,
+});
+$effect(() => incomeField.set(JSON.stringify(incomeAssumptions)));
 
-  function removeRegionOverride(region: string) {
-    const { [region]: _, ...rest } = regionOverrides;
-    regionOverrides = rest;
-  }
+const currencies = [
+  { value: "EUR", label: "EUR", symbol: "\u20AC" },
+  { value: "USD", label: "USD", symbol: "$" },
+  { value: "GBP", label: "GBP", symbol: "\u00A3" },
+];
 
-  function updateRegionRate(region: string, value: string) {
-    const rate = parseInt(value) || 0;
-    regionOverrides = {
-      ...regionOverrides,
-      [region]: { ...regionOverrides[region], rate },
-    };
-  }
+const predefinedRegions = REGIONS.values.map((v) => ({
+  value: v.canonical,
+  label: v.label,
+}));
 
-  function updateRegionCurrency(region: string, curr: string) {
-    regionOverrides = {
-      ...regionOverrides,
-      [region]: { ...regionOverrides[region], currency: curr },
-    };
-  }
+// Common adjustments shown by default
+const commonAdjustments: {
+  key: keyof SalaryAdjustments;
+  value: string;
+  label: string;
+}[] = [
+  {
+    key: "employment_type",
+    value: "contract",
+    label: "Contract / Freelance",
+  },
+  { key: "work_arrangement", value: "onsite", label: "On-site" },
+  { key: "work_arrangement", value: "hybrid", label: "Hybrid" },
+];
 
-  // Linked options: setting one sets the others too
-  const linkedOptions: Record<
-    string,
-    { key: keyof SalaryAdjustments; values: string[] }
-  > = {
-    "employment_type:contract": {
-      key: "employment_type",
-      values: ["contract", "freelance"],
-    },
+// Advanced adjustments behind toggle
+const advancedAdjustments: {
+  key: keyof SalaryAdjustments;
+  value: string;
+  label: string;
+}[] = [
+  { key: "employment_type", value: "part_time", label: "Part-time" },
+  { key: "employment_type", value: "temporary", label: "Temporary" },
+  { key: "employment_type", value: "internship", label: "Internship" },
+  { key: "company_type", value: "startup", label: "Startup" },
+  { key: "company_type", value: "corporate", label: "Corporate" },
+  { key: "company_type", value: "agency", label: "Agency / Consultancy" },
+];
+
+let showAdvanced = $state(false);
+
+// Auto-expand if any advanced adjustment has a value
+$effect(() => {
+  const hasAdvancedValues = advancedAdjustments.some(
+    (a) => adjustments[a.key]?.[a.value] != null,
+  );
+  if (hasAdvancedValues) showAdvanced = true;
+});
+
+let newRegionKey = $state("");
+
+function addRegionOverride() {
+  if (!newRegionKey) return;
+  const defaultCurrency = REGION_CURRENCIES[newRegionKey] || "EUR";
+  regionOverrides = {
+    ...regionOverrides,
+    [newRegionKey]: { rate: 0, currency: defaultCurrency },
   };
+  newRegionKey = "";
+}
 
-  function setAdjustment(
-    category: keyof SalaryAdjustments,
-    option: string,
-    value: string,
-  ) {
-    const numVal = parseInt(value);
-    const cat = { ...(adjustments[category] ?? {}) };
+function removeRegionOverride(region: string) {
+  const { [region]: _, ...rest } = regionOverrides;
+  regionOverrides = rest;
+}
 
-    // Check for linked options
-    const linked = linkedOptions[`${category}:${option}`];
-    const targets = linked ? linked.values : [option];
+function updateRegionRate(region: string, value: string) {
+  const rate = parseInt(value) || 0;
+  regionOverrides = {
+    ...regionOverrides,
+    [region]: { ...regionOverrides[region], rate },
+  };
+}
 
-    for (const target of targets) {
-      if (value === "" || isNaN(numVal)) {
-        delete cat[target];
-      } else {
-        cat[target] = numVal;
-      }
-    }
-    adjustments = { ...adjustments, [category]: cat };
-  }
+function updateRegionCurrency(region: string, curr: string) {
+  regionOverrides = {
+    ...regionOverrides,
+    [region]: { ...regionOverrides[region], currency: curr },
+  };
+}
 
-  // Also link agency ↔ consultancy
-  function setAgencyAdjustment(value: string) {
-    const numVal = parseInt(value);
-    const cat = { ...(adjustments.company_type ?? {}) };
+// Linked options: setting one sets the others too
+const linkedOptions: Record<
+  string,
+  { key: keyof SalaryAdjustments; values: string[] }
+> = {
+  "employment_type:contract": {
+    key: "employment_type",
+    values: ["contract", "freelance"],
+  },
+};
+
+function setAdjustment(
+  category: keyof SalaryAdjustments,
+  option: string,
+  value: string,
+) {
+  const numVal = parseInt(value);
+  const cat = { ...(adjustments[category] ?? {}) };
+
+  // Check for linked options
+  const linked = linkedOptions[`${category}:${option}`];
+  const targets = linked ? linked.values : [option];
+
+  for (const target of targets) {
     if (value === "" || isNaN(numVal)) {
-      delete cat["agency"];
-      delete cat["consultancy"];
+      delete cat[target];
     } else {
-      cat["agency"] = numVal;
-      cat["consultancy"] = numVal;
+      cat[target] = numVal;
     }
-    adjustments = { ...adjustments, company_type: cat };
   }
+  adjustments = { ...adjustments, [category]: cat };
+}
 
-  function getAdjustmentValue(
-    category: keyof SalaryAdjustments,
-    option: string,
-  ): string {
-    const val = adjustments[category]?.[option];
-    return val != null ? String(val) : "";
+// Also link agency ↔ consultancy
+function setAgencyAdjustment(value: string) {
+  const numVal = parseInt(value);
+  const cat = { ...(adjustments.company_type ?? {}) };
+  if (value === "" || isNaN(numVal)) {
+    delete cat["agency"];
+    delete cat["consultancy"];
+  } else {
+    cat["agency"] = numVal;
+    cat["consultancy"] = numVal;
   }
+  adjustments = { ...adjustments, company_type: cat };
+}
 
-  // Preview calculation
-  let baseRateNum = $derived(parseInt(baseRate) || 0);
+function getAdjustmentValue(
+  category: keyof SalaryAdjustments,
+  option: string,
+): string {
+  const val = adjustments[category]?.[option];
+  return val != null ? String(val) : "";
+}
 
-  // Income estimate from the single base rate (freelance vs employment lenses)
-  let income = $derived(
-    baseRateNum > 0
-      ? estimateIncome(baseRateNum, currency, incomeAssumptions)
-      : null,
-  );
+// Preview calculation
+let baseRateNum = $derived(parseInt(baseRate) || 0);
 
-  // Available regions not yet added
-  let availableRegions = $derived(
-    predefinedRegions.filter((r) => !(r.value in regionOverrides)),
-  );
+// Income estimate from the single base rate (freelance vs employment lenses)
+let income = $derived(
+  baseRateNum > 0
+    ? estimateIncome(baseRateNum, currency, incomeAssumptions)
+    : null,
+);
 
-  // Example scenarios for preview
-  let exampleScenarios = $derived.by(() => {
-    if (baseRateNum <= 0) return [];
-    const scenarios: {
-      label: string;
-      rate: number;
-      currency: string;
-      detail: string;
-    }[] = [];
+// Available regions not yet added
+let availableRegions = $derived(
+  predefinedRegions.filter((r) => !(r.value in regionOverrides)),
+);
 
-    // Global default
-    scenarios.push({
-      label: "Global (default)",
-      rate: baseRateNum,
-      currency,
-      detail: "Base rate",
-    });
+// Example scenarios for preview
+let exampleScenarios = $derived.by(() => {
+  if (baseRateNum <= 0) return [];
+  const scenarios: {
+    label: string;
+    rate: number;
+    currency: string;
+    detail: string;
+  }[] = [];
 
-    // Region overrides
-    for (const [region, override] of Object.entries(regionOverrides)) {
-      if (override.rate > 0) {
-        const regionLabel = predefinedRegions.find((r) =>
-          r.value === region
-        )?.label ?? region;
-        scenarios.push({
-          label: regionLabel,
-          rate: override.rate,
-          currency: override.currency,
-          detail: `${formatCurrency(override.rate, override.currency)}/hr`,
-        });
-      }
-    }
-
-    // Contract/Freelance if adjustment exists
-    const contractAdj = adjustments.employment_type?.contract;
-    if (contractAdj != null) {
-      const effective = getEffectiveRate(
-        baseRateNum,
-        currency,
-        adjustments,
-        regionOverrides,
-        { employment_type: "contract" },
-      );
-      scenarios.push({
-        label: "Contract / Freelance",
-        rate: effective.rate,
-        currency: effective.currency,
-        detail: `${contractAdj >= 0 ? "+" : ""}${contractAdj}% adjustment`,
-      });
-    }
-
-    // Onsite if adjustment exists
-    const onsiteAdj = adjustments.work_arrangement?.onsite;
-    if (onsiteAdj != null) {
-      const effective = getEffectiveRate(
-        baseRateNum,
-        currency,
-        adjustments,
-        regionOverrides,
-        { work_arrangement: "onsite" },
-      );
-      scenarios.push({
-        label: "On-site",
-        rate: effective.rate,
-        currency: effective.currency,
-        detail: `${onsiteAdj >= 0 ? "+" : ""}${onsiteAdj}% adjustment`,
-      });
-    }
-
-    return scenarios;
+  // Global default
+  scenarios.push({
+    label: "Global (default)",
+    rate: baseRateNum,
+    currency,
+    detail: "Base rate",
   });
+
+  // Region overrides
+  for (const [region, override] of Object.entries(regionOverrides)) {
+    if (override.rate > 0) {
+      const regionLabel = predefinedRegions.find((r) =>
+        r.value === region
+      )?.label ?? region;
+      scenarios.push({
+        label: regionLabel,
+        rate: override.rate,
+        currency: override.currency,
+        detail: `${formatCurrency(override.rate, override.currency)}/hr`,
+      });
+    }
+  }
+
+  // Contract/Freelance if adjustment exists
+  const contractAdj = adjustments.employment_type?.contract;
+  if (contractAdj != null) {
+    const effective = getEffectiveRate(
+      baseRateNum,
+      currency,
+      adjustments,
+      regionOverrides,
+      { employment_type: "contract" },
+    );
+    scenarios.push({
+      label: "Contract / Freelance",
+      rate: effective.rate,
+      currency: effective.currency,
+      detail: `${contractAdj >= 0 ? "+" : ""}${contractAdj}% adjustment`,
+    });
+  }
+
+  // Onsite if adjustment exists
+  const onsiteAdj = adjustments.work_arrangement?.onsite;
+  if (onsiteAdj != null) {
+    const effective = getEffectiveRate(
+      baseRateNum,
+      currency,
+      adjustments,
+      regionOverrides,
+      { work_arrangement: "onsite" },
+    );
+    scenarios.push({
+      label: "On-site",
+      rate: effective.rate,
+      currency: effective.currency,
+      detail: `${onsiteAdj >= 0 ? "+" : ""}${onsiteAdj}% adjustment`,
+    });
+  }
+
+  return scenarios;
+});
 </script>
 
 <svelte:head>

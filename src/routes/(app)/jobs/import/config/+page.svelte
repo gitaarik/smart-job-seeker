@@ -1,203 +1,232 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faCheck,
-  } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../../components/Card.svelte";
-  import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
-  import Spinner from "$lib/components/Spinner.svelte";
-  import {
-    autoSaveField,
-    recordsEqual,
-  } from "$lib/components/auto-save.svelte";
-  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
+import type { PageData } from "./$types";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import Card from "../../../components/Card.svelte";
+import ToggleSwitch from "../../../components/ToggleSwitch.svelte";
+import Spinner from "$lib/components/Spinner.svelte";
+import {
+  autoSaveField,
+  diffPayload,
+  recordsEqual,
+} from "$lib/components/auto-save.svelte";
+import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  // Helper to normalize saved values to match our option labels (case-insensitive)
-  function normalizeToOptions(saved: string[], options: string[]): string[] {
-    const lowerToOption = new Map(options.map((o) => [o.toLowerCase(), o]));
-    return saved
-      .map((s) => lowerToOption.get(s.toLowerCase()))
-      .filter((s): s is string => s !== undefined);
+// Helper to normalize saved values to match our option labels (case-insensitive)
+function normalizeToOptions(saved: string[], options: string[]): string[] {
+  const lowerToOption = new Map(options.map((o) => [o.toLowerCase(), o]));
+  return saved
+    .map((s) => lowerToOption.get(s.toLowerCase()))
+    .filter((s): s is string => s !== undefined);
+}
+
+// Order-insensitive: these are checkbox sets, so toggling an option off and
+// back on isn't a change worth persisting.
+function setsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((v, i) => v === sortedB[i]);
+}
+
+async function patchConfig(body: Record<string, unknown>) {
+  const res = await fetch("/api/job-preferences", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile_id: data.profileId, ...body }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      err.error || err.message || `Save failed (${res.status})`,
+    );
   }
+}
 
-  // Order-insensitive: these are checkbox sets, so toggling an option off and
-  // back on isn't a change worth persisting.
-  function setsEqual(a: string[], b: string[]): boolean {
-    if (a.length !== b.length) return false;
-    const sortedA = [...a].sort();
-    const sortedB = [...b].sort();
-    return sortedA.every((v, i) => v === sortedB[i]);
-  }
+// Each section auto-saves with its own undo window, mirroring the task edit
+// page. Job types and work location are required, so the $effect that feeds
+// them skips an empty selection rather than persisting one — the card shows
+// a hint instead of an indicator while that's the case.
+let jobTypes = $state<string[]>(
+  normalizeToOptions(data.config.job_types || [], data.options.jobTypes),
+);
+const jobTypesField = autoSaveField<string[]>({
+  initial: [...jobTypes],
+  save: (v) => patchConfig({ job_types: v }),
+  onSaved: (v) => (jobTypes = [...v]),
+  equal: setsEqual,
+});
+$effect(() => {
+  if (jobTypes.length === 0) return;
+  jobTypesField.set([...jobTypes]);
+});
 
-  async function patchConfig(body: Record<string, unknown>) {
-    const res = await fetch("/api/job-preferences", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile_id: data.profileId, ...body }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(
-        err.error || err.message || `Save failed (${res.status})`,
-      );
-    }
-  }
+let workLocation = $state<string[]>(
+  normalizeToOptions(
+    data.config.work_location || [],
+    data.options.workLocationOptions,
+  ),
+);
+const workLocationField = autoSaveField<string[]>({
+  initial: [...workLocation],
+  save: (v) => patchConfig({ work_location: v }),
+  onSaved: (v) => (workLocation = [...v]),
+  equal: setsEqual,
+});
+$effect(() => {
+  if (workLocation.length === 0) return;
+  workLocationField.set([...workLocation]);
+});
 
-  // Each section auto-saves with its own undo window, mirroring the task edit
-  // page. Job types and work location are required, so the $effect that feeds
-  // them skips an empty selection rather than persisting one — the card shows
-  // a hint instead of an indicator while that's the case.
-  let jobTypes = $state<string[]>(
-    normalizeToOptions(data.config.job_types || [], data.options.jobTypes),
-  );
-  const jobTypesField = autoSaveField<string[]>({
-    initial: [...jobTypes],
-    save: (v) => patchConfig({ job_types: v }),
-    onSaved: (v) => (jobTypes = [...v]),
-    equal: setsEqual,
-  });
-  $effect(() => {
-    if (jobTypes.length === 0) return;
-    jobTypesField.set([...jobTypes]);
-  });
+let experienceLevels = $state<string[]>(
+  normalizeToOptions(
+    data.config.experience_levels || [],
+    data.options.experienceLevels,
+  ),
+);
+const experienceLevelsField = autoSaveField<string[]>({
+  initial: [...experienceLevels],
+  save: (v) => patchConfig({ experience_levels: v }),
+  onSaved: (v) => (experienceLevels = [...v]),
+  equal: setsEqual,
+});
+$effect(() => experienceLevelsField.set([...experienceLevels]));
 
-  let workLocation = $state<string[]>(
-    normalizeToOptions(
-      data.config.work_location || [],
-      data.options.workLocationOptions,
-    ),
-  );
-  const workLocationField = autoSaveField<string[]>({
-    initial: [...workLocation],
-    save: (v) => patchConfig({ work_location: v }),
-    onSaved: (v) => (workLocation = [...v]),
-    equal: setsEqual,
-  });
-  $effect(() => {
-    if (workLocation.length === 0) return;
-    workLocationField.set([...workLocation]);
-  });
+let locations = $state<string[]>(data.config.locations || []);
+const locationsField = autoSaveField<string[]>({
+  initial: [...locations],
+  save: (v) => patchConfig({ locations: v }),
+  onSaved: (v) => (locations = [...v]),
+  equal: setsEqual,
+});
+$effect(() => locationsField.set([...locations]));
 
-  let experienceLevels = $state<string[]>(
-    normalizeToOptions(
-      data.config.experience_levels || [],
-      data.options.experienceLevels,
-    ),
-  );
-  const experienceLevelsField = autoSaveField<string[]>({
-    initial: [...experienceLevels],
-    save: (v) => patchConfig({ experience_levels: v }),
-    onSaved: (v) => (experienceLevels = [...v]),
-    equal: setsEqual,
-  });
-  $effect(() => experienceLevelsField.set([...experienceLevels]));
-
-  let locations = $state<string[]>(data.config.locations || []);
-  const locationsField = autoSaveField<string[]>({
-    initial: [...locations],
-    save: (v) => patchConfig({ locations: v }),
-    onSaved: (v) => (locations = [...v]),
-    equal: setsEqual,
-  });
-  $effect(() => locationsField.set([...locations]));
-
-  // Toggle + time window travel together: turning the toggle off clears the
-  // window server-side, so they have to be one PATCH.
-  type CommunityConfig = { enabled: boolean; maxAgeDays: number | null };
-  let matchCommunityJobs = $state<boolean>(
-    data.config.match_community_jobs ?? false,
-  );
-  let communityMaxAgeDays = $state<number | null>(
-    data.config.community_max_age_days ?? 30,
-  );
-  const communityField = autoSaveField<CommunityConfig>({
-    initial: {
-      enabled: data.config.match_community_jobs ?? false,
-      maxAgeDays: data.config.match_community_jobs
-        ? (data.config.community_max_age_days ?? 30)
-        : null,
-    },
-    save: (v) =>
-      patchConfig({
+// Toggle + time window travel together: turning the toggle off clears the
+// window server-side, so they have to be one PATCH.
+type CommunityConfig = { enabled: boolean; maxAgeDays: number | null };
+let matchCommunityJobs = $state<boolean>(
+  data.config.match_community_jobs ?? false,
+);
+let communityMaxAgeDays = $state<number | null>(
+  data.config.community_max_age_days ?? 30,
+);
+const communityField = autoSaveField<CommunityConfig>({
+  initial: {
+    enabled: data.config.match_community_jobs ?? false,
+    maxAgeDays: data.config.match_community_jobs
+      ? (data.config.community_max_age_days ?? 30)
+      : null,
+  },
+  save: (v, prev) => {
+    const changed = diffPayload(
+      {
         match_community_jobs: v.enabled,
         community_max_age_days: v.maxAgeDays,
-      }),
-    onSaved: (v) => {
-      matchCommunityJobs = v.enabled;
-      if (v.enabled) communityMaxAgeDays = v.maxAgeDays;
-    },
-    equal: recordsEqual,
-  });
-  $effect(() =>
-    communityField.set({
-      enabled: matchCommunityJobs,
-      maxAgeDays: matchCommunityJobs ? communityMaxAgeDays : null,
-    })
-  );
+      },
+      {
+        match_community_jobs: prev.enabled,
+        community_max_age_days: prev.maxAgeDays,
+      },
+    );
+    if (Object.keys(changed).length === 0) return Promise.resolve();
+    return patchConfig(changed);
+  },
+  onSaved: (v) => {
+    matchCommunityJobs = v.enabled;
+    if (v.enabled) communityMaxAgeDays = v.maxAgeDays;
+  },
+  equal: recordsEqual,
+});
+$effect(() =>
+  communityField.set({
+    enabled: matchCommunityJobs,
+    maxAgeDays: matchCommunityJobs ? communityMaxAgeDays : null,
+  })
+);
 
-  // String proxy for RadioGroup binding
-  let communityMaxAgeDaysStr = $derived(communityMaxAgeDays === null ? "all" : String(communityMaxAgeDays));
+// String proxy for RadioGroup binding
+let communityMaxAgeDaysStr = $derived(
+  communityMaxAgeDays === null ? "all" : String(communityMaxAgeDays),
+);
 
-  // Community job counts per time window
-  let communityCounts = $state<Record<string, number> | null>(null);
-  let communityCountsLoading = $state(false);
+// Community job counts per time window
+let communityCounts = $state<Record<string, number> | null>(null);
+let communityCountsLoading = $state(false);
 
-  // Community time window options
-  let communityTimeOptions = $derived([
-    { value: "7", label: communityCounts ? `7 days (${communityCounts["7"] ?? 0})` : "7 days" },
-    { value: "30", label: communityCounts ? `30 days (${communityCounts["30"] ?? 0})` : "30 days" },
-    { value: "90", label: communityCounts ? `90 days (${communityCounts["90"] ?? 0})` : "90 days" },
-    { value: "all", label: communityCounts ? `All time (${communityCounts["all"] ?? 0})` : "All time" },
-  ]);
+// Community time window options
+let communityTimeOptions = $derived([
+  {
+    value: "7",
+    label: communityCounts ? `7 days (${communityCounts["7"] ?? 0})` : "7 days",
+  },
+  {
+    value: "30",
+    label: communityCounts
+      ? `30 days (${communityCounts["30"] ?? 0})`
+      : "30 days",
+  },
+  {
+    value: "90",
+    label: communityCounts
+      ? `90 days (${communityCounts["90"] ?? 0})`
+      : "90 days",
+  },
+  {
+    value: "all",
+    label: communityCounts
+      ? `All time (${communityCounts["all"] ?? 0})`
+      : "All time",
+  },
+]);
 
-  async function fetchCommunityCounts() {
-    communityCountsLoading = true;
-    try {
-      const res = await fetch(`/api/matcher/community-counts?profileId=${data.profileId}`);
-      if (res.ok) {
-        communityCounts = await res.json();
-      }
-    } finally {
-      communityCountsLoading = false;
+async function fetchCommunityCounts() {
+  communityCountsLoading = true;
+  try {
+    const res = await fetch(
+      `/api/matcher/community-counts?profileId=${data.profileId}`,
+    );
+    if (res.ok) {
+      communityCounts = await res.json();
     }
+  } finally {
+    communityCountsLoading = false;
   }
+}
 
-  // Fetch counts when community toggle is turned on
-  $effect(() => {
-    if (matchCommunityJobs && !communityCounts && !communityCountsLoading) {
-      fetchCommunityCounts();
-    }
-  });
-
-  // Location input
-  let locationInput = $state("");
-
-  function toggleArrayValue(arr: string[], value: string): string[] {
-    return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+// Fetch counts when community toggle is turned on
+$effect(() => {
+  if (matchCommunityJobs && !communityCounts && !communityCountsLoading) {
+    fetchCommunityCounts();
   }
+});
 
-  function addLocation() {
-    const trimmed = locationInput.trim();
-    if (trimmed && !locations.includes(trimmed)) {
-      locations = [...locations, trimmed];
-      locationInput = "";
-    }
+// Location input
+let locationInput = $state("");
+
+function toggleArrayValue(arr: string[], value: string): string[] {
+  return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+}
+
+function addLocation() {
+  const trimmed = locationInput.trim();
+  if (trimmed && !locations.includes(trimmed)) {
+    locations = [...locations, trimmed];
+    locationInput = "";
   }
+}
 
-  function removeLocation(loc: string) {
-    locations = locations.filter((l) => l !== loc);
+function removeLocation(loc: string) {
+  locations = locations.filter((l) => l !== loc);
+}
+
+function handleLocationKeydown(e: KeyboardEvent) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    addLocation();
   }
-
-  function handleLocationKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addLocation();
-    }
-  }
-
+}
 </script>
 
 <svelte:head>

@@ -1,195 +1,211 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
-  import { page } from "$app/stores";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCog, faCheck, faEye, faEyeSlash, faPencil } from "@fortawesome/free-solid-svg-icons";
-  import { authClient } from "$lib/auth-client";
-  import Card from "../components/Card.svelte";
-  import SectionHeader from "../profile/components/SectionHeader.svelte";
-  import Spinner from "$lib/components/Spinner.svelte";
-  import {
-    autoSaveField,
-    recordsEqual,
-  } from "$lib/components/auto-save.svelte";
-  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
-  import { TIMEZONE_OPTIONS, formatTzLabel } from "$lib/timezone";
-  import { defaultTimeFormat, resolveTimeFormat, isHour12 } from "$lib/format-date";
-  import type { TimeFormat } from "$lib/format-date";
+import type { PageData } from "./$types";
+import { page } from "$app/stores";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faCheck,
+  faCog,
+  faEye,
+  faEyeSlash,
+  faPencil,
+} from "@fortawesome/free-solid-svg-icons";
+import { authClient } from "$lib/auth-client";
+import Card from "../components/Card.svelte";
+import SectionHeader from "../profile/components/SectionHeader.svelte";
+import Spinner from "$lib/components/Spinner.svelte";
+import {
+  autoSaveField,
+  diffPayload,
+  recordsEqual,
+} from "$lib/components/auto-save.svelte";
+import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
+import { formatTzLabel, TIMEZONE_OPTIONS } from "$lib/timezone";
+import {
+  defaultTimeFormat,
+  isHour12,
+  resolveTimeFormat,
+} from "$lib/format-date";
+import type { TimeFormat } from "$lib/format-date";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  // Email
-  let email = $state($page.data.user.email);
-  let emailSaving = $state(false);
-  let emailSaved = $state(false);
-  let emailError = $state("");
-  let emailOpen = $state(false);
+// Email
+let email = $state($page.data.user.email);
+let emailSaving = $state(false);
+let emailSaved = $state(false);
+let emailError = $state("");
+let emailOpen = $state(false);
 
-  const originalEmail = $page.data.user.email;
-  const emailChanged = $derived(email !== originalEmail);
+const originalEmail = $page.data.user.email;
+const emailChanged = $derived(email !== originalEmail);
 
-  // Password
-  let currentPassword = $state("");
-  let newPassword = $state("");
-  let confirmPassword = $state("");
-  let pwSaving = $state(false);
-  let pwSaved = $state(false);
-  let pwError = $state("");
-  let pwOpen = $state(false);
-  let showCurrentPassword = $state(false);
-  let showNewPassword = $state(false);
+// Password
+let currentPassword = $state("");
+let newPassword = $state("");
+let confirmPassword = $state("");
+let pwSaving = $state(false);
+let pwSaved = $state(false);
+let pwError = $state("");
+let pwOpen = $state(false);
+let showCurrentPassword = $state(false);
+let showNewPassword = $state(false);
 
-  const MIN_PASSWORD_LENGTH = 8;
-  const pwValid = $derived(
-    currentPassword.length > 0 &&
+const MIN_PASSWORD_LENGTH = 8;
+const pwValid = $derived(
+  currentPassword.length > 0 &&
     newPassword.length >= MIN_PASSWORD_LENGTH &&
-    newPassword === confirmPassword
-  );
-  const pwMismatch = $derived(
-    confirmPassword.length > 0 && newPassword !== confirmPassword
-  );
+    newPassword === confirmPassword,
+);
+const pwMismatch = $derived(
+  confirmPassword.length > 0 && newPassword !== confirmPassword,
+);
 
-  // Timezone + time format — auto-saved as one PATCH with an undo window.
-  // (Email and password below stay on explicit save: both need the current
-  // credential and a verification round-trip, so "undo" means nothing there.)
-  type DisplaySettings = { timezone: string; timeFormat: string | null };
-  let timezone = $state(data.timezone || "");
-  // Time format: null = auto, "12h", "24h"
-  let timeFormat = $state<string | null>(data.timeFormatRaw);
+// Timezone + time format — auto-saved as one PATCH with an undo window.
+// (Email and password below stay on explicit save: both need the current
+// credential and a verification round-trip, so "undo" means nothing there.)
+type DisplaySettings = { timezone: string; timeFormat: string | null };
+let timezone = $state(data.timezone || "");
+// Time format: null = auto, "12h", "24h"
+let timeFormat = $state<string | null>(data.timeFormatRaw);
 
-  const displayField = autoSaveField<DisplaySettings>({
-    initial: { timezone: data.timezone || "", timeFormat: data.timeFormatRaw },
-    save: async (v) => {
-      const res = await fetch("/api/account", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone: v.timezone, time_format: v.timeFormat }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || `Save failed (${res.status})`);
-      }
-    },
-    onSaved: (v) => {
-      timezone = v.timezone;
-      timeFormat = v.timeFormat;
-    },
-    equal: recordsEqual,
-  });
-  $effect(() => {
-    // Never persist an empty timezone — the select starts blank on accounts
-    // that have never set one, and the auto-detect below fills it in.
-    if (!timezone) return;
-    displayField.set({ timezone, timeFormat });
-  });
+const displayField = autoSaveField<DisplaySettings>({
+  initial: { timezone: data.timezone || "", timeFormat: data.timeFormatRaw },
+  save: async (v, prev) => {
+    const changed = diffPayload(
+      { timezone: v.timezone, time_format: v.timeFormat },
+      { timezone: prev.timezone, time_format: prev.timeFormat },
+    );
+    if (Object.keys(changed).length === 0) return;
 
-  // Resolved format for display (never null)
-  const resolvedFormat = $derived(
-    resolveTimeFormat(timeFormat, timezone),
-  );
+    const res = await fetch("/api/account", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(changed),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message || `Save failed (${res.status})`);
+    }
+  },
+  onSaved: (v) => {
+    timezone = v.timezone;
+    timeFormat = v.timeFormat;
+  },
+  equal: recordsEqual,
+});
+$effect(() => {
+  // Never persist an empty timezone — the select starts blank on accounts
+  // that have never set one, and the auto-detect below fills it in.
+  if (!timezone) return;
+  displayField.set({ timezone, timeFormat });
+});
 
-  const autoLabel = $derived(
-    `Auto (${defaultTimeFormat(timezone) === "12h" ? "12-hour" : "24-hour"})`,
-  );
+// Resolved format for display (never null)
+const resolvedFormat = $derived(
+  resolveTimeFormat(timeFormat, timezone),
+);
 
-  // Live clock for selected timezone
-  let currentTime = $state("");
+const autoLabel = $derived(
+  `Auto (${defaultTimeFormat(timezone) === "12h" ? "12-hour" : "24-hour"})`,
+);
 
-  $effect(() => {
-    if (!timezone) {
+// Live clock for selected timezone
+let currentTime = $state("");
+
+$effect(() => {
+  if (!timezone) {
+    currentTime = "";
+    return;
+  }
+  const fmt = resolvedFormat;
+  function updateTime() {
+    try {
+      currentTime = new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        weekday: "short",
+        hour12: isHour12(fmt),
+      }).format(new Date());
+    } catch {
       currentTime = "";
+    }
+  }
+  updateTime();
+  const interval = setInterval(updateTime, 1000);
+  return () => clearInterval(interval);
+});
+
+// Auto-detect timezone from browser if none is saved
+$effect(() => {
+  if (!timezone) {
+    try {
+      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (detected) timezone = detected;
+    } catch {
+      // ignore
+    }
+  }
+});
+
+async function saveEmail() {
+  if (!emailChanged || !email.trim()) return;
+
+  emailSaving = true;
+  emailError = "";
+  emailSaved = false;
+
+  try {
+    const result = await authClient.changeEmail({
+      newEmail: email.trim(),
+      callbackURL: "/settings",
+    });
+
+    if (result.error) {
+      emailError = result.error.message || "Failed to update email";
       return;
     }
-    const fmt = resolvedFormat;
-    function updateTime() {
-      try {
-        currentTime = new Intl.DateTimeFormat("en-US", {
-          timeZone: timezone,
-          hour: "numeric",
-          minute: "2-digit",
-          second: "2-digit",
-          weekday: "short",
-          hour12: isHour12(fmt),
-        }).format(new Date());
-      } catch {
-        currentTime = "";
-      }
-    }
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  });
 
-  // Auto-detect timezone from browser if none is saved
-  $effect(() => {
-    if (!timezone) {
-      try {
-        const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (detected) timezone = detected;
-      } catch {
-        // ignore
-      }
-    }
-  });
-
-  async function saveEmail() {
-    if (!emailChanged || !email.trim()) return;
-
-    emailSaving = true;
-    emailError = "";
-    emailSaved = false;
-
-    try {
-      const result = await authClient.changeEmail({
-        newEmail: email.trim(),
-        callbackURL: "/settings",
-      });
-
-      if (result.error) {
-        emailError = result.error.message || "Failed to update email";
-        return;
-      }
-
-      emailSaved = true;
-      setTimeout(() => (emailSaved = false), 5000);
-    } catch {
-      emailError = "Network error, please try again";
-    } finally {
-      emailSaving = false;
-    }
+    emailSaved = true;
+    setTimeout(() => (emailSaved = false), 5000);
+  } catch {
+    emailError = "Network error, please try again";
+  } finally {
+    emailSaving = false;
   }
+}
 
-  async function changePassword() {
-    if (!pwValid) return;
+async function changePassword() {
+  if (!pwValid) return;
 
-    pwSaving = true;
-    pwError = "";
-    pwSaved = false;
+  pwSaving = true;
+  pwError = "";
+  pwSaved = false;
 
-    try {
-      const result = await authClient.changePassword({
-        currentPassword,
-        newPassword,
-        revokeOtherSessions: false,
-      });
+  try {
+    const result = await authClient.changePassword({
+      currentPassword,
+      newPassword,
+      revokeOtherSessions: false,
+    });
 
-      if (result.error) {
-        pwError = result.error.message || "Failed to change password";
-        return;
-      }
-
-      pwSaved = true;
-      currentPassword = "";
-      newPassword = "";
-      confirmPassword = "";
-      setTimeout(() => (pwSaved = false), 5000);
-    } catch {
-      pwError = "Network error, please try again";
-    } finally {
-      pwSaving = false;
+    if (result.error) {
+      pwError = result.error.message || "Failed to change password";
+      return;
     }
-  }
 
+    pwSaved = true;
+    currentPassword = "";
+    newPassword = "";
+    confirmPassword = "";
+    setTimeout(() => (pwSaved = false), 5000);
+  } catch {
+    pwError = "Network error, please try again";
+  } finally {
+    pwSaving = false;
+  }
+}
 </script>
 
 <svelte:head>
@@ -403,8 +419,8 @@
   </Card>
 
   <div id="timezone">
-  <Card padding="lg">
-    <div class="space-y-5">
+    <Card padding="lg">
+      <div class="space-y-5">
       <div>
         <label for="account-timezone" class="block text-sm font-medium text-[var(--dash-text)] mb-1.5">
           Timezone
@@ -480,6 +496,6 @@
         <AutoSaveIndicator field={displayField} />
       {/if}
     </div>
-  </Card>
+    </Card>
   </div>
 </div>

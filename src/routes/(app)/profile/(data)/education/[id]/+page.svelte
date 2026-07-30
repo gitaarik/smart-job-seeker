@@ -1,125 +1,135 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faArrowLeft,
-    faGraduationCap,
-    faTrash,
-  } from "@fortawesome/free-solid-svg-icons";
-  import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import {
-    autoSaveField,
-    recordsEqual,
-  } from "$lib/components/auto-save.svelte";
-  import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
-  import TranslatableField from "$lib/components/TranslatableField.svelte";
-  import VersionTags from "$lib/components/VersionTags.svelte";
-  import ConfirmModal from "../../../components/ConfirmModal.svelte";
-  import Card from "../../../../components/Card.svelte";
+import type { PageData } from "./$types";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faArrowLeft,
+  faGraduationCap,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import MediaUpload from "$lib/components/MediaUpload.svelte";
+import {
+  autoSaveField,
+  diffPayload,
+  recordsEqual,
+} from "$lib/components/auto-save.svelte";
+import AutoSaveIndicator from "$lib/components/AutoSaveIndicator.svelte";
+import TranslatableField from "$lib/components/TranslatableField.svelte";
+import VersionTags from "$lib/components/VersionTags.svelte";
+import ConfirmModal from "../../../components/ConfirmModal.svelte";
+import Card from "../../../../components/Card.svelte";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  let logoUrl = $state(data.logoUrl);
-  let bannerUrl = $state(data.bannerUrl);
+let logoUrl = $state(data.logoUrl);
+let bannerUrl = $state(data.bannerUrl);
 
-  let education = $derived(data.education);
+let education = $derived(data.education);
 
-  let pageTitle = $derived(education.institution || 'Education');
+let pageTitle = $derived(education.institution || "Education");
 
-  // Form states
-  let editInstitution = $state(education.institution || "");
-  let editArea = $state(education.area || "");
-  let editStudyType = $state(education.study_type || "");
-  let editLocation = $state(education.location || "");
-  let editUrl = $state(education.url || "");
-  let editGraduationYear = $state(education.graduation_year?.toString() || "");
-  let editStartDate = $state(formatDate(education.start_date));
-  let editEndDate = $state(formatDate(education.end_date));
-  let editSummary = $state(education.summary || "");
-  let editTags = $state<string[]>(Array.isArray(education.tags) ? education.tags as string[] : []);
-  let showDeleteConfirm = $state(false);
+// Form states
+let editInstitution = $state(education.institution || "");
+let editArea = $state(education.area || "");
+let editStudyType = $state(education.study_type || "");
+let editLocation = $state(education.location || "");
+let editUrl = $state(education.url || "");
+let editGraduationYear = $state(education.graduation_year?.toString() || "");
+let editStartDate = $state(formatDate(education.start_date));
+let editEndDate = $state(formatDate(education.end_date));
+let editSummary = $state(education.summary || "");
+let editTags = $state<string[]>(
+  Array.isArray(education.tags) ? education.tags as string[] : [],
+);
+let showDeleteConfirm = $state(false);
 
-  function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toISOString().split("T")[0];
-  }
+function formatDate(date: Date | string | null): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toISOString().split("T")[0];
+}
 
-  // The whole card is one PATCH, so it's one auto-saved field with one undo
-  // window — same shape as the other profile detail pages.
-  type EducationBasics = {
-    institution: string;
-    area: string;
-    studyType: string;
-    location: string;
-    url: string;
-    graduationYear: string;
-    startDate: string;
-    endDate: string;
-    summary: string;
+// The whole card is one PATCH, so it's one auto-saved field with one undo
+// window — same shape as the other profile detail pages.
+type EducationBasics = {
+  institution: string;
+  area: string;
+  studyType: string;
+  location: string;
+  url: string;
+  graduationYear: string;
+  startDate: string;
+  endDate: string;
+  summary: string;
+};
+/** Form state as the API expects it. Both sides of the diff go through here. */
+function basicsBody(v: EducationBasics) {
+  return {
+    institution: v.institution,
+    area: v.area,
+    study_type: v.studyType,
+    location: v.location,
+    url: v.url,
+    graduation_year: v.graduationYear || null,
+    start_date: v.startDate || null,
+    end_date: v.endDate || null,
+    summary: v.summary,
   };
-  const basicsField = autoSaveField<EducationBasics>({
-    initial: {
-      institution: editInstitution,
-      area: editArea,
-      studyType: editStudyType,
-      location: editLocation,
-      url: editUrl,
-      graduationYear: editGraduationYear,
-      startDate: editStartDate,
-      endDate: editEndDate,
-      summary: editSummary,
-    },
-    save: async (v) => {
-      const response = await fetch(`/api/education/${education.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          institution: v.institution,
-          area: v.area,
-          study_type: v.studyType,
-          location: v.location,
-          url: v.url,
-          graduation_year: v.graduationYear || null,
-          start_date: v.startDate || null,
-          end_date: v.endDate || null,
-          summary: v.summary,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(
-          body.message || body.error || `Save failed (${response.status})`,
-        );
-      }
-    },
-    onSaved: (v) => {
-      editInstitution = v.institution;
-      editArea = v.area;
-      editStudyType = v.studyType;
-      editLocation = v.location;
-      editUrl = v.url;
-      editGraduationYear = v.graduationYear;
-      editStartDate = v.startDate;
-      editEndDate = v.endDate;
-      editSummary = v.summary;
-    },
-    equal: recordsEqual,
-    debounceMs: 700,
-  });
-  $effect(() =>
-    basicsField.set({
-      institution: editInstitution,
-      area: editArea,
-      studyType: editStudyType,
-      location: editLocation,
-      url: editUrl,
-      graduationYear: editGraduationYear,
-      startDate: editStartDate,
-      endDate: editEndDate,
-      summary: editSummary,
-    })
-  );
+}
+const basicsField = autoSaveField<EducationBasics>({
+  initial: {
+    institution: editInstitution,
+    area: editArea,
+    studyType: editStudyType,
+    location: editLocation,
+    url: editUrl,
+    graduationYear: editGraduationYear,
+    startDate: editStartDate,
+    endDate: editEndDate,
+    summary: editSummary,
+  },
+  save: async (v, prev) => {
+    const changed = diffPayload(basicsBody(v), basicsBody(prev));
+    if (Object.keys(changed).length === 0) return;
+
+    const response = await fetch(`/api/education/${education.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(changed),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(
+        body.message || body.error || `Save failed (${response.status})`,
+      );
+    }
+  },
+  onSaved: (v) => {
+    editInstitution = v.institution;
+    editArea = v.area;
+    editStudyType = v.studyType;
+    editLocation = v.location;
+    editUrl = v.url;
+    editGraduationYear = v.graduationYear;
+    editStartDate = v.startDate;
+    editEndDate = v.endDate;
+    editSummary = v.summary;
+  },
+  equal: recordsEqual,
+  debounceMs: 700,
+});
+$effect(() =>
+  basicsField.set({
+    institution: editInstitution,
+    area: editArea,
+    studyType: editStudyType,
+    location: editLocation,
+    url: editUrl,
+    graduationYear: editGraduationYear,
+    startDate: editStartDate,
+    endDate: editEndDate,
+    summary: editSummary,
+  })
+);
 </script>
 
 <svelte:head>
@@ -163,7 +173,8 @@
 
   <!-- Basic Info -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -295,7 +306,8 @@
 
   <!-- Portfolio Images -->
   <Card padding="lg">
-    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
+    <h2
+      class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
     <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
       These images are used for your portfolio display. They are not required for job search or scoring.
     </p>
