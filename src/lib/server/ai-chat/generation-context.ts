@@ -26,7 +26,10 @@
  */
 
 import { type JobLike, relevantProjectsText } from "$lib/server/documents/retrieval";
-import { relevantStoriesText } from "$lib/server/documents/content-retrieval";
+import {
+  relevantApplicationTextsText,
+  relevantStoriesText,
+} from "$lib/server/documents/content-retrieval";
 
 /**
  * What a generation is about, ranked against the applicant's material. Freeform
@@ -45,9 +48,9 @@ export interface RelevanceQuery {
  * `profileDataFields`. These are the *extra* evidence blocks layered on top.
  *
  * Extending it is one new SOURCES entry, available to every generator: coming
- * next are "letters" | "repo_recaps" | "interview_history".
+ * next are "repo_recaps" | "interview_history".
  */
-export type ContextSource = "projects" | "stories";
+export type ContextSource = "projects" | "stories" | "application_texts";
 
 export interface ContextRequest {
   profileId: number;
@@ -117,6 +120,18 @@ const SOURCES: Record<ContextSource, SourceDef> = {
     render: async (req) => {
       if (!hasQuery(req)) return "";
       return relevantStoriesText(req.profileId, req.query!, req.perSourceK ?? 3);
+    },
+  },
+  application_texts: {
+    variable: "relevantApplicationTexts",
+    priority: 6,
+    render: async (req) => {
+      if (!hasQuery(req)) return "";
+      return relevantApplicationTextsText(
+        req.profileId,
+        req.query!,
+        req.perSourceK ?? 3,
+      );
     },
   },
 };

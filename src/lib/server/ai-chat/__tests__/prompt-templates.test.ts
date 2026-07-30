@@ -355,6 +355,39 @@ describe("${relevantStories} template ↔ caller wiring", () => {
 });
 
 /**
+ * `${relevantApplicationTexts}` is Top-K retrieval over the applicant's past
+ * cover letters + application answers (generic content-retrieval layer). Same
+ * drift contract as the other retrieval slots.
+ */
+const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
+  write_prep_sheet: "profile-cheatsheet.ts",
+  write_or_advise_prep_sheet: "profile-cheatsheet.ts",
+};
+
+describe("${relevantApplicationTexts} template ↔ caller wiring", () => {
+  const referencing = Object.entries(promptTemplates)
+    .filter(([, t]) =>
+      `${t.system_prompt}\n${t.user_prompt}`.includes(
+        "${relevantApplicationTexts}",
+      )
+    )
+    .map(([key]) => key);
+
+  it("is referenced by every template a caller supplies it to", () => {
+    expect(referencing.sort()).toEqual(
+      Object.keys(RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY).sort(),
+    );
+  });
+
+  it("is supplied by a caller for every template that references it", () => {
+    const unsupplied = referencing.filter(
+      (key) => !(key in RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY),
+    );
+    expect(unsupplied).toEqual([]);
+  });
+});
+
+/**
  * The cheat-sheet prompt has to do more with interview records than merely be
  * handed them. A real generation (SURF, 2026-07-27) had both records in full
  * in its prompt and still dropped the one thing that mattered most: the

@@ -19,7 +19,7 @@
 
 import { eq } from "drizzle-orm";
 import { dbDirect as db } from "$lib/server/db";
-import { project_stories } from "$lib/server/db/schema";
+import { applications, project_stories } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import {
   type ContentUnit,
@@ -302,5 +302,114 @@ export async function relevantStoriesText(
       "These are the applicant's OWN prepared STAR stories (situation / task / " +
       "action / result). Draw on the ones that fit this topic; ground every " +
       "claim only in the notes here, do not invent.",
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Source: past application texts (cover letters + application answers). A
+// job-tied, multi-table source — proof the generic layer handles more than
+// profile-scoped units. The applicant's own writing about their experience,
+// useful as a voice/phrasing reference.
+// ---------------------------------------------------------------------------
+
+/** Build a rankable unit from a free-text application artifact. */
+function buildTextUnit(
+  type: string,
+  id: number,
+  title: string,
+  context: string,
+  text: string,
+): RankableUnit {
+  return {
+    type,
+    id,
+    title,
+    context,
+    keywords: [],
+    text,
+    citation: clip(text, 800),
+    embedText: clip([title, text].filter(Boolean).join("\n"), 8000),
+  };
+}
+
+/**
+ * Load a profile's past application writing as rankable units: cover letters and
+ * answered application questions across all the profile's applications, each
+ * tagged with the role it was written for. The job-tied cheat-sheet letter type
+ * is excluded — that's interview prep, not application writing (see the
+ * two-cheat-sheet distinction). Titles are unique per unit so title-dedup is
+ * safe (an answer's title is its question).
+ */
+async function loadApplicationTextUnits(
+  profileId: number,
+): Promise<RankableUnit[]> {
+  const apps = await db.query.applications.findMany({
+    where: eq(applications.profile_id, profileId),
+    columns: { id: true },
+    with: {
+      job: { columns: { title: true, company: true } },
+      application_letters: {
+        columns: { id: true, letter_type: true, content: true },
+      },
+      application_questions: {
+        columns: { id: true, question: true, answer: true },
+      },
+    },
+  });
+
+  const units: RankableUnit[] = [];
+  for (const app of apps) {
+    const role = [app.job?.title, app.job?.company]
+      .map((s) => s?.trim())
+      .filter(Boolean)
+      .join(" — ");
+
+    for (const l of app.application_letters ?? []) {
+      const content = l.content?.trim();
+      if (!content || l.letter_type === "cheat_sheet") continue;
+      units.push(buildTextUnit(
+        "app_letter",
+        l.id,
+        role ? `Cover letter — ${role}` : "Cover letter",
+        role ? `application for ${role}` : "past cover letter",
+        content,
+      ));
+    }
+
+    for (const q of app.application_questions ?? []) {
+      const answer = q.answer?.trim();
+      const question = q.question?.trim();
+      if (!answer || !question) continue;
+      units.push(buildTextUnit(
+        "app_answer",
+        q.id,
+        clip(question, 90), // the question itself is a naturally-unique title
+        role ? `application answer — ${role}` : "application answer",
+        `Q: ${question}\nA: ${answer}`,
+      ));
+    }
+  }
+  return dedupeUnits(units);
+}
+
+/**
+ * One-call convenience: the applicant's top-K past application texts relevant to
+ * `query`, ready to interpolate ("" if none). The intro frames them as a
+ * voice/phrasing reference, NOT claims to copy across jobs.
+ */
+export async function relevantApplicationTextsText(
+  profileId: number,
+  query: UnitQuery,
+  k = 3,
+): Promise<string> {
+  const units = await loadApplicationTextUnits(profileId);
+  const ranked = await relevantUnits(profileId, query, units, k);
+  return formatUnitCitations(ranked, {
+    header: "The applicant's own past application writing",
+    intro:
+      "Excerpts the applicant previously wrote for job applications (cover " +
+      "letters, application answers). Use them as a reference for how they " +
+      "describe their experience in their OWN voice — draw on relevant phrasing " +
+      "and facts, but do NOT copy claims tied to a different job.",
   });
 }
