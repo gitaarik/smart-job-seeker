@@ -194,6 +194,86 @@ describe("${interviewHistory} template ↔ caller wiring", () => {
 });
 
 /**
+ * `${applicationDocuments}` carries the extracted text of the files on an
+ * application's Documents tab (JD PDF, take-home brief, offer letter). It is
+ * per-application context supplied by the same callers, to the same prompts,
+ * as `${interviewHistory}` — so the same two-way drift guard applies, plus a
+ * lockstep check that the two never diverge across the prompt set.
+ */
+const APPLICATION_DOCUMENTS_SUPPLIED_BY: Record<string, string> = {
+  // ai-chat/application-letter.ts — all letter types share customVariables.
+  write_cover_letter: "application-letter.ts",
+  write_or_advise_cover_letter: "application-letter.ts",
+  advise_cover_letter: "application-letter.ts",
+  review_cover_letter: "application-letter.ts",
+  write_cheat_sheet: "application-letter.ts",
+  write_or_advise_cheat_sheet: "application-letter.ts",
+  advise_cheat_sheet: "application-letter.ts",
+  review_cheat_sheet: "application-letter.ts",
+  // ai-chat/application-question.ts — generate/advice/review + auto modes.
+  answer_application_question: "application-question.ts",
+  write_or_advise_application_question: "application-question.ts",
+  advise_application_question: "application-question.ts",
+  review_application_question: "application-question.ts",
+  // Its own endpoint, not the mode map.
+  revise_application_question: "routes/api/ai/questions/[id]/revise",
+  // The two followup builders.
+  followup_letter: "application-letter-followup.ts",
+  followup_application_question: "application-question-followup.ts",
+};
+
+describe("${applicationDocuments} template ↔ caller wiring", () => {
+  const referencing = Object.entries(promptTemplates)
+    .filter(([, t]) =>
+      `${t.system_prompt}\n${t.user_prompt}`.includes("${applicationDocuments}")
+    )
+    .map(([key]) => key);
+
+  it("is referenced by every template a caller supplies it to", () => {
+    expect(referencing.sort()).toEqual(
+      Object.keys(APPLICATION_DOCUMENTS_SUPPLIED_BY).sort(),
+    );
+  });
+
+  it("is supplied by a caller for every template that references it", () => {
+    const unsupplied = referencing.filter(
+      (key) => !(key in APPLICATION_DOCUMENTS_SUPPLIED_BY),
+    );
+    // Non-empty means the placeholder would ship as literal text to the model.
+    expect(unsupplied).toEqual([]);
+  });
+
+  it("stays out of extraction prompts, which run on tight token budgets", () => {
+    const extractionPrompts = [
+      "extract_qa_pairs",
+      "extract_job_data",
+      "extract_resume_data",
+      "extract_matched_skills",
+      "score_job_match",
+      "find_next_page_button",
+    ];
+    for (const key of extractionPrompts) {
+      if (!promptTemplates[key]) continue;
+      expect(referencing, `${key} must not carry application documents`)
+        .not.toContain(key);
+    }
+  });
+
+  it("rides exactly the same prompts as ${interviewHistory}", () => {
+    // Both are per-application context from the same callers. If one set of
+    // templates gains documents but not interview history (or vice versa), a
+    // caller has drifted — they are meant to move together.
+    const withHistory = Object.entries(promptTemplates)
+      .filter(([, t]) =>
+        `${t.system_prompt}\n${t.user_prompt}`.includes("${interviewHistory}")
+      )
+      .map(([key]) => key)
+      .sort();
+    expect(referencing.sort()).toEqual(withHistory);
+  });
+});
+
+/**
  * `${additionalContext}` carries the applicant's own brief for a turn — what
  * they typed in the editor's composer before pressing "AI advice" or "AI
  * generate". Same two-way drift risk as `${interviewHistory}`, with one extra

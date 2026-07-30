@@ -7,6 +7,7 @@ import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 import { interviewRecordsText } from "./application-records";
+import { applicationDocumentsText } from "./application-documents";
 import { LETTER_PROFILE_FIELDS } from "./profile-fields";
 import {
   ensureBaselineVersion,
@@ -158,6 +159,12 @@ export async function createApplicationLetterFollowup(
           letterRecord.letter_type === "cheat_sheet" ? "full" : "compact",
         )
         : "";
+      const applicationDocuments = applicationId
+        ? await applicationDocumentsText(
+          applicationId,
+          letterRecord.letter_type === "cheat_sheet" ? "full" : "compact",
+        )
+        : "";
 
       // Get the latest letter content: check letter_versions first, fall back to application_letters.content
       const latestVersion = await db.query.letter_versions.findFirst({
@@ -180,6 +187,7 @@ export async function createApplicationLetterFollowup(
           letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
           interviewHistory,
+          applicationDocuments,
           additionalContext: conversationHistory
             ? `## Previous conversation context:\n\nThe user has been iterating on this letter with AI assistance. Consider this history when reviewing — respect the direction they've taken and avoid re-suggesting things that were intentionally changed or omitted during the conversation.\n\n${conversationHistory}`
             : "",
@@ -193,6 +201,7 @@ export async function createApplicationLetterFollowup(
           jobDetails: jobDetailsText,
           conversationHistory,
           interviewHistory,
+          applicationDocuments,
         };
       }
     }

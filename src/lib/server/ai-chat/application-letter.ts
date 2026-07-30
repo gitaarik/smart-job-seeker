@@ -13,6 +13,7 @@ import {
 } from "./generation-context";
 import { LETTER_PROFILE_FIELDS } from "./profile-fields";
 import { interviewRecordsText } from "./application-records";
+import { applicationDocumentsText } from "./application-documents";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -186,6 +187,12 @@ export async function generateApplicationLetter(
     // cheat sheet is *about* the interviews so it gets the full set; a cover
     // letter only needs the gist, so it gets the compact budget.
     interviewHistory: await interviewRecordsText(
+      letter.application.id,
+      letterType === "cheat_sheet" ? "full" : "compact",
+    ),
+    // Text of the files on the application's Documents tab (JD PDF, brief,
+    // offer letter), extracted lazily and cached. Same full/compact split.
+    applicationDocuments: await applicationDocumentsText(
       letter.application.id,
       letterType === "cheat_sheet" ? "full" : "compact",
     ),

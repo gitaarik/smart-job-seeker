@@ -13,6 +13,7 @@ import {
 } from "./generation-context";
 import { CORE_PROFILE_FIELDS } from "./profile-fields";
 import { interviewRecordsText } from "./application-records";
+import { applicationDocumentsText } from "./application-documents";
 import {
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -152,6 +153,12 @@ export async function generateApplicationQuestionAnswer(
     // What has happened on this application so far — a question answered
     // mid-process should reflect the calls already had (empty if none).
     interviewHistory: await interviewRecordsText(
+      question.application.id,
+      "compact",
+    ),
+    // Text of the files on the application's Documents tab (JD PDF, brief),
+    // extracted lazily and cached.
+    applicationDocuments: await applicationDocumentsText(
       question.application.id,
       "compact",
     ),

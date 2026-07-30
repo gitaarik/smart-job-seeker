@@ -605,6 +605,16 @@ export const applications_files = pgTable("applications_files", {
   id: serial().primaryKey().notNull(),
   applications_id: integer(),
   file_id: uuid(),
+  // Cached extracted text of the attached file, for AI-generation context (the
+  // "Documents" tab). Extraction is lazy — done on first use by a generator via
+  // the shared extractUpload orchestrator; see ai-chat/application-documents.ts.
+  // The raw bytes are retained (the tab is a download feature), so file_id is
+  // immutable: a "pending" status means "never extracted", and "skipped" (an
+  // unsupported type or a file with no extractable text) is terminal.
+  extracted_text: text(),
+  extraction_status: varchar({ length: 32 }).default("pending").notNull(),
+  extraction_error: text(),
+  date_extracted: timestamp({ withTimezone: true, mode: "date" }),
 }, (table) => [
   foreignKey({
     columns: [table.applications_id],

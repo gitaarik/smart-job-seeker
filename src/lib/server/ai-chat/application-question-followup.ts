@@ -16,6 +16,7 @@ import {
 } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 import { interviewRecordsText } from "./application-records";
+import { applicationDocumentsText } from "./application-documents";
 import {
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -157,6 +158,9 @@ export async function createApplicationQuestionFollowup(
       const interviewHistory = applicationId
         ? await interviewRecordsText(applicationId, "compact")
         : "";
+      const applicationDocuments = applicationId
+        ? await applicationDocumentsText(applicationId, "compact")
+        : "";
 
       // Latest answer content: prefer the newest version, fall back to answer.
       const latestVersion = await db.query.question_versions.findFirst({
@@ -177,6 +181,7 @@ export async function createApplicationQuestionFollowup(
           question: questionRecord.question,
           answer: currentAnswer,
           interviewHistory,
+          applicationDocuments,
         };
       } else {
         // Answer revision — needs job + current answer + conversation history.
@@ -188,6 +193,7 @@ export async function createApplicationQuestionFollowup(
           jobDetails: jobDetailsText,
           conversationHistory,
           interviewHistory,
+          applicationDocuments,
         };
       }
     }
