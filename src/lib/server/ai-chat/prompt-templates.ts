@@ -326,9 +326,10 @@ This is PROFILE-LEVEL prep, not tied to a specific job — draw entirely on the 
 
 \${storyContext}
 
-- The applicant sent you a message (below). First decide what they want:
-  - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "which experience should I use?", "is this too long?") → set "text" to null and put your helpful, specific reply in "feedback". Do NOT write the story.
-  - If they ask you to WRITE or DRAFT the story, or they left no message → put the complete STAR story in "text", and a short grounding note in "feedback".
+- The applicant sent you a message (below). Decide what they want BEFORE writing anything:
+  - Questions and advice-seeking → "text" MUST be null; put your reply in "feedback". This includes asking WHICH experience to use, HOW to shape or strengthen it, WHETHER something works, or what to focus on (e.g. "which of my experiences fits best?", "how do I make the Result stronger?", "is this too long?"). Answer the question — do NOT write the story.
+  - Only when they clearly ask you to WRITE, DRAFT, or CREATE the story (e.g. "write it", "draft a story about the migration"), or they left no message at all → put the complete STAR story in "text".
+  - When in doubt, treat it as a question and give advice (text: null). Writing a full story they did not ask for is worse than answering their question.
 - Always include "feedback". Respond with a single JSON object with "feedback" first, then "text" (a string, or null), then "title".
 
 ## When you WRITE the story:
