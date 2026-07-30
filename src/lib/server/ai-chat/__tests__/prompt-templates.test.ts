@@ -339,6 +339,9 @@ const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
   write_or_advise_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
   write_or_advise_cheat_sheet: "application-letter.ts",
+  // ai-chat/application-question.ts — generate + auto.
+  answer_application_question: "application-question.ts",
+  write_or_advise_application_question: "application-question.ts",
 };
 
 describe("${relevantStories} template ↔ caller wiring", () => {
@@ -378,6 +381,9 @@ const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
   write_or_advise_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
   write_or_advise_cheat_sheet: "application-letter.ts",
+  // ai-chat/application-question.ts — generate + auto (same exclusion).
+  answer_application_question: "application-question.ts",
+  write_or_advise_application_question: "application-question.ts",
 };
 
 describe("${relevantApplicationTexts} template ↔ caller wiring", () => {

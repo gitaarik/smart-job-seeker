@@ -53,6 +53,10 @@ The user's latest message:
 
 \${relevantProjects}
 
+\${relevantStories}
+
+\${relevantApplicationTexts}
+
 ## Job Description:
 
 \${jobDescription}
@@ -90,6 +94,10 @@ Return a single JSON object with exactly two keys: "text" (the answer — use th
 \${data}
 
 \${relevantProjects}
+
+\${relevantStories}
+
+\${relevantApplicationTexts}
 
 ## Job Description:
 

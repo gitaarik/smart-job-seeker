@@ -7,7 +7,10 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat, instructionsBlock } from "./utils";
-import { relevantProjectsText } from "$lib/server/documents/retrieval";
+import {
+  assembleGenerationContext,
+  type RelevanceQuery,
+} from "./generation-context";
 import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
@@ -124,24 +127,37 @@ export async function generateApplicationQuestionAnswer(
   const job = question.application.job;
   const jobDescription = job?.job_description || "";
 
+  // Retrieved applicant context — projects, prepared STAR stories, and past
+  // application writing — ranked against BOTH the job and the question being
+  // answered (a "leadership" question should surface leadership material), via
+  // the unified provider. Replaces the hand-rolled relevantProjectsText call.
+  // Writing modes only, since advice/review don't interpolate these slots.
+  // Exclude this application's own texts so an answer isn't fed its siblings.
+  let retrievalVars: Record<string, string> = {};
+  if (mode === "generate" || mode === "auto") {
+    // The QUESTION is the primary signal (it decides what to draw on), with the
+    // role title + required skills as secondary context. The full job_description
+    // is deliberately left out of the *query*: its length swamps the one-line
+    // question under token-overlap ranking, so every question on an application
+    // would otherwise retrieve the same job-driven set. (The model still sees the
+    // full JD via ${jobDescription}.)
+    const query: RelevanceQuery = {
+      text: [question.question, job?.title].filter(Boolean).join("\n"),
+      skills: (job?.skills_required as string[] | null) ?? undefined,
+    };
+    const ctx = await assembleGenerationContext({
+      profileId,
+      query,
+      sources: ["projects", "stories", "application_texts"],
+      excludeApplicationId: question.application.id,
+    });
+    retrievalVars = ctx.variables;
+  }
+
   const variables: Record<string, unknown> = {
     jobDescription: jobDescription,
     question: question.question,
-    // Top-K uploaded projects relevant to this job (empty string if none/no
-    // job). Only answer_application_question interpolates it — retrieval runs
-    // an embedding search, so advice/review would pay for a variable their
-    // templates never reference.
-    ...(mode === "generate" || mode === "auto"
-      ? {
-        relevantProjects: job
-          ? await relevantProjectsText(profileId, {
-            title: job.title,
-            job_description: job.job_description,
-            skills_required: job.skills_required as string[] | null,
-          })
-          : "",
-      }
-      : {}),
+    ...retrievalVars,
     // What has happened on this application so far — a question answered
     // mid-process should reflect the calls already had (empty if none).
     interviewHistory: await interviewRecordsText(
