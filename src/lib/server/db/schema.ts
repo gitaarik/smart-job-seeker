@@ -1207,7 +1207,17 @@ export const project_stories = pgTable("project_stories", {
   reflection: text(),
   category: varchar({ length: 255 }),
   profile_id: integer().notNull(),
+  // Live AI thread pointer for the conversational story editor (see
+  // story_versions). Null until the applicant starts an AI thread on the story.
+  ai_chat_id: integer(),
+  ai_chat_response: text(),
 }, (table) => [
+  index("project_stories_ai_chat_id_idx").on(table.ai_chat_id),
+  foreignKey({
+    columns: [table.ai_chat_id],
+    foreignColumns: [ai_chats.id],
+    name: "project_stories_ai_chat_foreign",
+  }).onDelete("set null"),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
@@ -2649,6 +2659,35 @@ export const question_versions = pgTable("question_versions", {
   }).onUpdate("cascade").onDelete("cascade"),
 ]);
 
+// Append-only version trail for the conversational project-story editor.
+// Mirrors question_versions (identical shape, `story` FK instead of `question`);
+// see entity-versions.ts for the shared record/build/trim engine. `content`
+// holds one canonical STAR markdown document per version (see $lib/interview/star).
+export const story_versions = pgTable("story_versions", {
+  id: serial().primaryKey().notNull(),
+  date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .defaultNow(),
+  story: integer().notNull(),
+  content: text(),
+  source: varchar({ length: 255 }).notNull(),
+  ai_chat: integer(),
+  ai_feedback: text(),
+  user_request: text(),
+}, (table) => [
+  index("story_versions_ai_chat_idx").on(table.ai_chat),
+  index("story_versions_story_idx").on(table.story),
+  foreignKey({
+    columns: [table.ai_chat],
+    foreignColumns: [ai_chats.id],
+    name: "story_versions_ai_chat_foreign",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.story],
+    foreignColumns: [project_stories.id],
+    name: "story_versions_story_foreign",
+  }).onUpdate("cascade").onDelete("cascade"),
+]);
+
 export const job_match_history = pgTable("job_match_history", {
   id: serial().primaryKey().notNull(),
   job_id: integer().notNull(),
@@ -3524,6 +3563,7 @@ export type ApplicationStatusLog = typeof application_status_log.$inferSelect;
 export type ApplicationRecords = typeof application_records.$inferSelect;
 export type LetterVersions = typeof letter_versions.$inferSelect;
 export type QuestionVersions = typeof question_versions.$inferSelect;
+export type StoryVersions = typeof story_versions.$inferSelect;
 export type JobMatchHistory = typeof job_match_history.$inferSelect;
 export type JobImporters = typeof job_importers.$inferSelect;
 export type UserFeedbackFiles = typeof user_feedback_files.$inferSelect;

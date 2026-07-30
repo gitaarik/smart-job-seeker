@@ -214,6 +214,11 @@ const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
   // builds its own variables and would leak the placeholder.
   answer_application_question: "application-question.ts",
   advise_application_question: "application-question.ts",
+  // ai-chat/profile-story.ts — generate/advice only. review_star_story is
+  // excluded for the same reason as the question review: it also runs through
+  // the followup path, which assembles its own variables.
+  write_star_story: "profile-story.ts",
+  advise_star_story: "profile-story.ts",
 };
 
 describe("${additionalContext} template ↔ caller wiring", () => {

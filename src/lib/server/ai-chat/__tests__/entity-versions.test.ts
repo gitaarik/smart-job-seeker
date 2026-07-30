@@ -52,6 +52,15 @@ vi.mock("$lib/server/db/schema", () => ({
     ai_feedback: "qv.aif",
     user_request: "qv.ur",
   },
+  story_versions: {
+    story: "sv.story",
+    id: "sv.id",
+    date_created: "sv.dc",
+    content: "sv.content",
+    source: "sv.source",
+    ai_feedback: "sv.aif",
+    user_request: "sv.ur",
+  },
 }));
 
 import {

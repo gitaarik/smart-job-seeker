@@ -403,6 +403,33 @@ export const reviewLetterSchema = z.object({
 });
 
 /**
+ * Schema for write_star_story prompt.
+ *
+ * The story narrative comes back as ONE markdown document in `text` (## Situation
+ * / ## Task / ## Action / ## Result / optional ## Reflection) — the editor splits
+ * it into the STAR columns via $lib/interview/star. `title` is only applied when
+ * the story doesn't have one yet. Reuses normalizeTextKey so a stray `content`/
+ * `story` key or an accidentally-arrayed body still validates.
+ */
+export const writeStarStorySchema = z.preprocess(
+  normalizeTextKey,
+  z.object({
+    // Declared first: gpt-oss tends to drop a trailing short field after a long
+    // one, so the short note precedes the long narrative. Optional → a dropped
+    // note degrades to no feedback bubble rather than failing the generation.
+    feedback: z.string().optional().describe(
+      "A brief note (1-2 sentences) to the applicant citing the SPECIFIC profile experiences, projects, or roles you drew on. Name the actual entries; be concrete.",
+    ),
+    text: z.string().describe(
+      "The complete STAR story as markdown with '## Situation', '## Task', '## Action', '## Result' headings and an optional '## Reflection'. First person, ready to use. No preamble, no other headings.",
+    ),
+    title: z.string().optional().nullable().describe(
+      "A short, specific title for this story (≤60 chars), e.g. 'Led the migration off a jammed job queue'. Only used when the story has no title yet.",
+    ),
+  }),
+);
+
+/**
  * Schema for suggest_import_tasks prompt
  *
  * The LLM returns ONE entry per suggestable platform, ranked high→low,
@@ -529,6 +556,9 @@ export const aiPromptSchemas = {
   review_cover_letter: reviewLetterSchema,
   review_cheat_sheet: reviewLetterSchema,
   review_application_question: reviewLetterSchema,
+  write_star_story: writeStarStorySchema,
+  followup_star_story: followupLetterSchema,
+  review_star_story: reviewLetterSchema,
   suggest_import_tasks: suggestImportTasksSchema,
   extract_qa_pairs: extractQaPairsSchema,
   revise_application_question: reviseAnswerSchema,

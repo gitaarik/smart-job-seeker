@@ -49,6 +49,7 @@
     onClearResponse,
     currentContent = null,
     applyNoun = "answer",
+    ownVersionEditor = true,
   }: {
     conversation: ConversationEntry[];
     /**
@@ -93,6 +94,15 @@
     currentContent?: string | null;
     /** Noun for the apply affordance, e.g. "answer". */
     applyNoun?: string;
+    /**
+     * Whether the timeline owns the "write / paste my own version" surface. When
+     * false, the host supplies its own manual editor (e.g. the STAR fields on
+     * the story editor) and this component hides its markdown composer + the
+     * per-version inline Edit, so there's one manual surface, not two. AI actions
+     * (advice/generate/send/review) and version history stay. Defaults true —
+     * letters and questions are unaffected.
+     */
+    ownVersionEditor?: boolean;
   } = $props();
 
   // Whether an AI thread exists to follow up on. Drives the composer's button
@@ -495,14 +505,16 @@
             </div>
           {/if}
           <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--dash-border)]/50">
-            <button
-              type="button"
-              onclick={() => startEdit(entry.content ?? "", entryIndex)}
-              class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
-            >
-              <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
-              Edit
-            </button>
+            {#if ownVersionEditor}
+              <button
+                type="button"
+                onclick={() => startEdit(entry.content ?? "", entryIndex)}
+                class="px-2 py-1 text-xs border border-[var(--dash-border)] rounded text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-2.5 h-2.5" />
+                Edit
+              </button>
+            {/if}
             {#if isLast}
               <button
                 type="button"
@@ -606,17 +618,22 @@
   <div class="flex items-center justify-between gap-2 flex-wrap">
     <!-- Writing it yourself is a peer of the AI steps, not a fallback. With no
          thread yet there's nothing else on the page competing for attention,
-         so it gets a full button rather than the inline link it is mid-thread. -->
-    <button
-      type="button"
-      onclick={() => (composerOpen = !composerOpen)}
-      class={hasThread
-      ? "text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1.5"
-      : "px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1.5"}
-    >
-      <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-      Write / paste my own version
-    </button>
+         so it gets a full button rather than the inline link it is mid-thread.
+         Hidden when the host owns the manual surface (ownVersionEditor=false). -->
+    {#if ownVersionEditor}
+      <button
+        type="button"
+        onclick={() => (composerOpen = !composerOpen)}
+        class={hasThread
+        ? "text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex items-center gap-1.5"
+        : "px-3 py-1.5 text-xs border border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] transition-colors flex items-center gap-1.5"}
+      >
+        <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+        Write / paste my own version
+      </button>
+    {:else}
+      <span></span>
+    {/if}
     {#if hasThread}
       <button
         type="button"

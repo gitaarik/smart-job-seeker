@@ -393,6 +393,12 @@ export const questionGenerateSchema = z.object({
   commit: z.boolean().optional().default(true),
 });
 
+/** Body of the STAR-story "start an AI turn" endpoint (see questionGenerateSchema). */
+export const storyGenerateSchema = z.object({
+  instructions: z.string().trim().max(5000).optional(),
+  mode: z.enum(["generate", "advice", "review"]).optional().default("generate"),
+});
+
 export const followupRequestSchema = z.object({
   followupRequest: requiredTrimmedString("Follow-up request", 5000),
   includeOriginalContext: z.boolean().optional().default(false),

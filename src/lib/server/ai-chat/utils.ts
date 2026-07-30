@@ -42,6 +42,10 @@ const WRITING_PROMPT_KEYS = new Set<string>([
   "review_application_question",
   "revise_application_question",
   "followup_application_question",
+  "write_star_story",
+  "advise_star_story",
+  "review_star_story",
+  "followup_star_story",
   "followup",
   "followup_letter",
 ]);
@@ -238,7 +242,8 @@ export async function createAndGenerateAiChat(
       if (balance.available <= 0) {
         return {
           success: false,
-          message: "Out of credits. Please upgrade your plan or buy extra credits.",
+          message:
+            "Out of credits. Please upgrade your plan or buy extra credits.",
         };
       }
     }
@@ -276,7 +281,9 @@ export async function createAndGenerateAiChat(
     let schemaJson = collectedDataRecord?.schema
       ? JSON.parse(collectedDataRecord.schema)
       : {};
-    let dataJson = collectedDataRecord?.data ? JSON.parse(collectedDataRecord.data) : {};
+    let dataJson = collectedDataRecord?.data
+      ? JSON.parse(collectedDataRecord.data)
+      : {};
 
     // Step 3b: Filter to requested profile data fields if specified
     const profileDataFields = options?.profileDataFields;
@@ -302,12 +309,16 @@ export async function createAndGenerateAiChat(
           const filteredSchema: Record<string, unknown> = { ...schemaJson };
           if (schemaJson.fields) {
             filteredSchema.fields = Object.fromEntries(
-              Object.entries(schemaJson.fields).filter(([k]) => fieldSet.has(k)),
+              Object.entries(schemaJson.fields).filter(([k]) =>
+                fieldSet.has(k)
+              ),
             );
           }
           if (schemaJson.relations) {
             filteredSchema.relations = Object.fromEntries(
-              Object.entries(schemaJson.relations).filter(([k]) => fieldSet.has(k)),
+              Object.entries(schemaJson.relations).filter(([k]) =>
+                fieldSet.has(k)
+              ),
             );
           }
           schemaJson = filteredSchema;
@@ -401,7 +412,13 @@ export async function createAndGenerateAiChat(
     // Step 8: Save response + token usage
     const responseContent = completionResult.content;
     const responseToSave = structuredOutput
-      ? (() => { try { return JSON.stringify(JSON.parse(responseContent)); } catch { return responseContent; } })()
+      ? (() => {
+        try {
+          return JSON.stringify(JSON.parse(responseContent));
+        } catch {
+          return responseContent;
+        }
+      })()
       : responseContent;
 
     const usage = completionResult.usage;
@@ -424,8 +441,10 @@ export async function createAndGenerateAiChat(
       if (profileForCredits?.user_id) {
         const { chargeCredits } = await import("$lib/server/billing/credits");
         const providerCostUsd = estimateProviderCostUsd(
-          activeProvider, activeModel,
-          usage.inputTokens, usage.outputTokens,
+          activeProvider,
+          activeModel,
+          usage.inputTokens,
+          usage.outputTokens,
         );
         await chargeCredits(
           profileForCredits.user_id,
@@ -433,8 +452,11 @@ export async function createAndGenerateAiChat(
           "ai_generation",
           `${promptKey} (${usage.totalTokens} tokens)`,
           {
-            aiChatId: aiChat.id, promptKey, tokens: usage,
-            provider: activeProvider, model: activeModel,
+            aiChatId: aiChat.id,
+            promptKey,
+            tokens: usage,
+            provider: activeProvider,
+            model: activeModel,
             providerCostUsd,
           },
         );

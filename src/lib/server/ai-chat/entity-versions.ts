@@ -14,7 +14,11 @@
  */
 import { dbDirect as db } from "$lib/server/db";
 import { and, asc, desc, eq, gt, gte, lt } from "drizzle-orm";
-import { letter_versions, question_versions } from "$lib/server/db/schema";
+import {
+  letter_versions,
+  question_versions,
+  story_versions,
+} from "$lib/server/db/schema";
 
 /** Provenance of a version. Plain varchar in the DB; enforced here in TS. */
 export type VersionSource =
@@ -43,7 +47,7 @@ type VersionBinding = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   id: any;
   /** FK column property name, used to key the insert values object. */
-  fkName: "letter" | "question";
+  fkName: "letter" | "question" | "story";
 };
 
 export const LETTER_VERSIONS: VersionBinding = {
@@ -58,6 +62,13 @@ export const QUESTION_VERSIONS: VersionBinding = {
   fk: question_versions.question,
   id: question_versions.id,
   fkName: "question",
+};
+
+export const STORY_VERSIONS: VersionBinding = {
+  table: story_versions,
+  fk: story_versions.story,
+  id: story_versions.id,
+  fkName: "story",
 };
 
 /** Reconstruct the ordered (oldest→newest) thread from the versions table. */
