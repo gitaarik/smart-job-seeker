@@ -1,0 +1,192 @@
+/**
+ * Unified profile-context provider for AI generation.
+ *
+ * One entry point every generator (cover letters, application answers, STAR
+ * stories, interview cheat sheets, …) calls to assemble the *evidence* a prompt
+ * needs about the applicant, beyond the always-present `${data}` profile blob:
+ * their most relevant projects today, and — as the corpus grows — other stories,
+ * past letters, uploaded files, GitHub repo recaps, interview history.
+ *
+ * Callers declare INTENT — which sources, what the generation is about, how big
+ * a budget — and the provider owns the MECHANISM (which ranker, budgeting,
+ * rendering). So adding a data source or improving retrieval happens in ONE
+ * place and every generator benefits, instead of each generator hand-wiring its
+ * own `relevantProjectsText(...)` / `interviewRecordsText(...)` calls.
+ *
+ * Scale story: on a sparse profile the whole corpus fits in a prompt, so a
+ * source just renders everything it has; on a fully-loaded profile it won't, so
+ * the budgeter trims to the highest-signal subset. The same call covers both —
+ * a generator never changes as a profile fills up.
+ *
+ * Phase 1 registers a single source, `projects`, reusing the shipped project↔job
+ * retriever (documents/retrieval.ts) as-is, keyed on a generic RelevanceQuery
+ * instead of a job. New embeddable unit types (stories, letters, repo recaps,
+ * interview history) register in SOURCES below without touching any caller.
+ * See planning/SEMANTIC-MATCHING-AND-RAG.md § Feature 5.
+ */
+
+import { type JobLike, relevantProjectsText } from "$lib/server/documents/retrieval";
+
+/**
+ * What a generation is about, ranked against the applicant's material. Freeform
+ * so any caller can build one: a cheat sheet's topic, a job description, a STAR
+ * competency, an interview question. `skills` are optional terms to weight
+ * (e.g. a job's required skills) over the prose in `text`.
+ */
+export interface RelevanceQuery {
+  text: string;
+  skills?: string[];
+}
+
+/**
+ * An evidence source the provider knows how to assemble. The `${data}` profile
+ * blob is NOT a source here — it is always present, selected by the caller's
+ * `profileDataFields`. These are the *extra* evidence blocks layered on top.
+ *
+ * Phase 2 will extend this union: "stories" | "letters" | "repo_recaps" |
+ * "interview_history". Each is one new SOURCES entry, available everywhere.
+ */
+export type ContextSource = "projects";
+
+export interface ContextRequest {
+  profileId: number;
+  /** Required by any source that ranks by relevance (all of them, today). */
+  query?: RelevanceQuery;
+  /** Which evidence sources to assemble. Order is irrelevant. */
+  sources: ContextSource[];
+  /**
+   * Char budget for ALL assembled evidence blocks combined (chars, not tokens —
+   * matches the house convention in application-records.ts). Blocks are dropped
+   * lowest-priority-first to fit. Defaults to DEFAULT_BUDGET_CHARS.
+   */
+  budgetChars?: number;
+  /** How many items each ranked source may cite. Source-specific default if unset. */
+  perSourceK?: number;
+}
+
+export interface AssembledContext {
+  /**
+   * customVariables to merge into the createAndGenerateAiChat call. Keyed by the
+   * prompt placeholder each source fills (e.g. `relevantProjects`). EVERY
+   * requested source gets a key — its rendered text, or "" when it found nothing
+   * or was trimmed for budget — so a template that references the placeholder
+   * never ships a literal `${…}` to the model.
+   */
+  variables: Record<string, string>;
+  /** Sources that contributed non-empty content (for logging / tests). */
+  usedSources: ContextSource[];
+}
+
+/** Generous default: ~6k tokens of evidence. Tunable per call via budgetChars. */
+export const DEFAULT_BUDGET_CHARS = 24000;
+
+/** How the provider assembles one source. */
+interface SourceDef {
+  /** Prompt-variable key this source fills. */
+  variable: string;
+  /** Lower = sacrificed first when the combined budget is exceeded. */
+  priority: number;
+  /** Render this source to a self-contained prompt block ("" when nothing fits). */
+  render(req: ContextRequest): Promise<string>;
+}
+
+/**
+ * The source registry — the one place a data source is taught to the whole
+ * system. Add an entry here and every generator that lists it in `sources` can
+ * draw on it.
+ */
+const SOURCES: Record<ContextSource, SourceDef> = {
+  projects: {
+    variable: "relevantProjects",
+    priority: 10,
+    render: async (req) => {
+      // No query → nothing to rank against; skip the retrieval (and its
+      // embedding search) entirely rather than rank against noise.
+      if (!req.query?.text.trim() && !req.query?.skills?.length) return "";
+      return relevantProjectsText(
+        req.profileId,
+        queryToJobLike(req.query!),
+        req.perSourceK ?? 3,
+      );
+    },
+  },
+};
+
+/**
+ * Adapt a generic relevance query to the shipped project↔job retriever's
+ * `JobLike` shape, so Phase 1 reuses that retriever with zero changes. The
+ * retriever ranks on title + description + required skills, so a topic /
+ * competency maps cleanly onto a synthetic "job": the text is both the title
+ * (clipped) and the description; explicit skills pass straight through.
+ */
+export function queryToJobLike(q: RelevanceQuery): JobLike {
+  return {
+    title: q.text.slice(0, 200),
+    job_description: q.text,
+    skills_required: q.skills ?? null,
+  };
+}
+
+/** A rendered source block, before budget packing. */
+interface RenderedBlock {
+  source: ContextSource;
+  priority: number;
+  text: string;
+}
+
+/**
+ * Pack rendered blocks into a char budget, dropping lowest-priority-first. Pure
+ * — the budget behaviour is directly unit-testable, no DB.
+ *
+ * Empty blocks are filtered out. Highest-priority blocks are added while they
+ * fit; the single highest-priority block is always kept even if it alone
+ * exceeds the budget (dropping everything is worse, and each source is already
+ * internally clipped), so an over-budget request degrades to "the most important
+ * source only" rather than to nothing.
+ */
+export function fitToBudget(
+  blocks: RenderedBlock[],
+  budgetChars: number,
+): RenderedBlock[] {
+  const ranked = blocks
+    .filter((b) => b.text.trim())
+    .sort((a, z) => z.priority - a.priority);
+
+  const kept: RenderedBlock[] = [];
+  let used = 0;
+  for (const b of ranked) {
+    if (kept.length > 0 && used + b.text.length > budgetChars) continue;
+    kept.push(b);
+    used += b.text.length;
+  }
+  return kept;
+}
+
+/**
+ * Assemble the evidence context for a generation. Renders every requested source
+ * (in parallel — each may hit the DB or an embedding search), trims to budget,
+ * and returns the customVariables to hand to createAndGenerateAiChat.
+ */
+export async function assembleGenerationContext(
+  req: ContextRequest,
+): Promise<AssembledContext> {
+  const budget = req.budgetChars ?? DEFAULT_BUDGET_CHARS;
+
+  const rendered: RenderedBlock[] = await Promise.all(
+    req.sources.map(async (source) => {
+      const def = SOURCES[source];
+      return { source, priority: def.priority, text: (await def.render(req)).trim() };
+    }),
+  );
+
+  const kept = new Map(fitToBudget(rendered, budget).map((b) => [b.source, b.text]));
+
+  const variables: Record<string, string> = {};
+  const usedSources: ContextSource[] = [];
+  for (const source of req.sources) {
+    const text = kept.get(source) ?? "";
+    variables[SOURCES[source].variable] = text;
+    if (text) usedSources.push(source);
+  }
+  return { variables, usedSources };
+}

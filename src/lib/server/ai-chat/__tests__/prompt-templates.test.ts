@@ -285,6 +285,11 @@ const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
   // ai-chat/application-question.ts — generate and auto modes.
   answer_application_question: "application-question.ts",
   write_or_advise_application_question: "application-question.ts",
+  // ai-chat/profile-cheatsheet.ts — generate and auto modes, via the unified
+  // generation-context provider (sources: ["projects"]). advice/review don't
+  // reference it and don't pay for retrieval.
+  write_prep_sheet: "profile-cheatsheet.ts",
+  write_or_advise_prep_sheet: "profile-cheatsheet.ts",
 };
 
 describe("${relevantProjects} template ↔ caller wiring", () => {

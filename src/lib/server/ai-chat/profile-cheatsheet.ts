@@ -24,6 +24,10 @@ import {
   recordVersion,
 } from "./entity-versions";
 import { htmlToMarkdown } from "$lib/utils/html-to-markdown";
+import {
+  assembleGenerationContext,
+  type RelevanceQuery,
+} from "./generation-context";
 
 /** Profile data fields relevant for building an interview cheat sheet. */
 export const CHEATSHEET_PROFILE_FIELDS = [
@@ -127,6 +131,29 @@ export async function generateProfileCheatSheet(
       "(The applicant hasn't written anything yet.)";
   } else {
     variables.additionalContext = instructionsBlock(instructions);
+  }
+
+  // Ground the sheet in the applicant's most relevant REAL projects, but only
+  // for the draft-writing modes: advice/review templates never interpolate
+  // ${relevantProjects}, so retrieving there would spend an embedding search on
+  // a discarded result (see the drift-guard test). The relevance query is what
+  // this sheet is *about* — its topic (title), the applicant's brief this turn,
+  // and whatever is already on the sheet. The provider owns the retrieval and
+  // budgeting, so new evidence sources (other stories, past letters, repo
+  // recaps) will feed cheat sheets by extending the SOURCES registry, not here.
+  if (mode === "generate" || mode === "auto") {
+    const topic = sheet.title && !isUnnamed(sheet.title) ? sheet.title : "";
+    const query: RelevanceQuery = {
+      text: [topic, instructions ?? "", currentContent ?? ""]
+        .filter(Boolean)
+        .join("\n"),
+    };
+    const ctx = await assembleGenerationContext({
+      profileId,
+      query,
+      sources: ["projects"],
+    });
+    Object.assign(variables, ctx.variables);
   }
 
   let aiChatResult;
