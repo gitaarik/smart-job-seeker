@@ -10,7 +10,7 @@
 
 import { DEFAULT_EXTRACT_EXTENSIONS } from "./safe-unzip";
 
-export type UploadKind = "zip" | "pdf" | "docx" | "text" | "unknown";
+export type UploadKind = "zip" | "pdf" | "docx" | "text" | "email" | "unknown";
 
 const TEXT_EXTS = new Set(DEFAULT_EXTRACT_EXTENSIONS);
 
@@ -64,6 +64,8 @@ export function sniffUploadKind(bytes: Uint8Array, filename: string): UploadKind
   // No binary container signature: an ext claiming one is a mismatch.
   if (ext === "pdf" || ext === "docx" || ext === "zip") return "unknown";
 
+  // An .eml is RFC822 text; the MIME parser turns it into readable text.
+  if (ext === "eml" && looksLikeText(bytes)) return "email";
   if (TEXT_EXTS.has(ext) && looksLikeText(bytes)) return "text";
   return "unknown";
 }

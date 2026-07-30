@@ -18,6 +18,7 @@ import {
   type SafeUnzipLimits,
 } from "./safe-unzip";
 import { extractTextFromFile } from "../resume/text-extractor";
+import { parseEmailToText } from "./extract-email";
 import { redactSecrets } from "./scan-secrets";
 import { extOf, sniffUploadKind } from "./sniff";
 
@@ -108,7 +109,13 @@ async function extractLooseFile(
 ): Promise<ExtractedProject> {
   const ext = extOf(filename);
   let raw: string;
-  if (RICH_DOC_MIME[ext]) {
+  if (ext === "eml") {
+    try {
+      raw = await parseEmailToText(bytes);
+    } catch (err) {
+      throw new DocumentExtractError((err as Error).message);
+    }
+  } else if (RICH_DOC_MIME[ext]) {
     try {
       raw = await extractTextFromFile(Buffer.from(bytes), RICH_DOC_MIME[ext]);
     } catch (err) {
