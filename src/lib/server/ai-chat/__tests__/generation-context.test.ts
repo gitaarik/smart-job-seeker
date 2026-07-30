@@ -8,10 +8,14 @@ vi.mock("$lib/server/documents/retrieval", () => ({
 }));
 vi.mock("$lib/server/documents/content-retrieval", () => ({
   relevantStoriesText: vi.fn(),
+  relevantApplicationTextsText: vi.fn(),
 }));
 
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
-import { relevantStoriesText } from "$lib/server/documents/content-retrieval";
+import {
+  relevantApplicationTextsText,
+  relevantStoriesText,
+} from "$lib/server/documents/content-retrieval";
 import {
   assembleGenerationContext,
   fitToBudget,
@@ -20,10 +24,12 @@ import {
 
 const mockRelevantProjects = vi.mocked(relevantProjectsText);
 const mockRelevantStories = vi.mocked(relevantStoriesText);
+const mockRelevantAppTexts = vi.mocked(relevantApplicationTextsText);
 
 beforeEach(() => {
   mockRelevantProjects.mockReset();
   mockRelevantStories.mockReset();
+  mockRelevantAppTexts.mockReset();
 });
 
 describe("fitToBudget", () => {
@@ -162,5 +168,23 @@ describe("assembleGenerationContext", () => {
     expect(mockRelevantStories).not.toHaveBeenCalled();
     expect(ctx.variables.relevantStories).toBe("");
     expect(ctx.usedSources).toEqual([]);
+  });
+
+  it("threads excludeApplicationId to the application_texts source", async () => {
+    mockRelevantAppTexts.mockResolvedValue("## past writing\n1. Cover letter");
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "senior backend role" },
+      sources: ["application_texts"],
+      excludeApplicationId: 42,
+    });
+    expect(ctx.variables.relevantApplicationTexts).toContain("past writing");
+    // The current application (42) is excluded so a letter can't retrieve itself.
+    expect(mockRelevantAppTexts).toHaveBeenCalledWith(
+      1,
+      { text: "senior backend role" },
+      3,
+      42,
+    );
   });
 });

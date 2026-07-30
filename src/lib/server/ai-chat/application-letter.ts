@@ -7,7 +7,10 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
 import { createAndGenerateAiChat, instructionsBlock } from "./utils";
-import { relevantProjectsText } from "$lib/server/documents/retrieval";
+import {
+  assembleGenerationContext,
+  type RelevanceQuery,
+} from "./generation-context";
 import { interviewRecordsText } from "./application-records";
 import {
   ensureBaselineVersion,
@@ -166,26 +169,35 @@ export async function generateApplicationLetter(
 
   const jobDetailsText = jobDetailLines.join("\n");
 
+  // Retrieved applicant context — relevant projects, prepared STAR stories, and
+  // the applicant's own past application writing — ranked against this job by the
+  // unified provider (this replaces the previous hand-rolled relevantProjectsText
+  // call: the generator now declares intent like every other one). Only the
+  // writing prompts interpolate these slots and each runs a retrieval search, so
+  // compute them for generate/auto only ("auto" may write a draft). Exclude this
+  // application's own texts so a cover letter isn't fed back into its own prompt.
+  let retrievalVars: Record<string, string> = {};
+  if (mode === "generate" || mode === "auto") {
+    const query: RelevanceQuery = {
+      text: [job.title, job.job_description].filter(Boolean).join("\n"),
+      skills: (job.skills_required as string[] | null) ?? undefined,
+    };
+    const ctx = await assembleGenerationContext({
+      profileId,
+      query,
+      sources: ["projects", "stories", "application_texts"],
+      excludeApplicationId: letter.application.id,
+    });
+    retrievalVars = ctx.variables;
+  }
+
   // Create custom variables (object construction outside try block)
   const customVariables: Record<string, unknown> = {
     jobDescription: job.job_description || "",
     jobDetails: jobDetailsText,
     generationMode: mode,
     additionalContext: instructionsBlock(instructions),
-    // Top-K uploaded projects relevant to this job (empty string if none).
-    // Only the writing prompts reference it — retrieval runs an embedding
-    // search, so computing it for advice/review would spend a query and a
-    // chunk of context on a variable those templates never interpolate. "auto"
-    // may write a draft, so it gets it too (spent even when it ends up advising).
-    ...(mode === "generate" || mode === "auto"
-      ? {
-        relevantProjects: await relevantProjectsText(profileId, {
-          title: job.title,
-          job_description: job.job_description,
-          skills_required: job.skills_required as string[] | null,
-        }),
-      }
-      : {}),
+    ...retrievalVars,
     // Recaps/feedback from earlier rounds (empty string if none recorded). A
     // cheat sheet is *about* the interviews so it gets the full set; a cover
     // letter only needs the gist, so it gets the compact budget.

@@ -1370,6 +1370,10 @@ Provide your analysis in JSON format with:
 
 \${relevantProjects}
 
+\${relevantStories}
+
+\${relevantApplicationTexts}
+
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or achievements from their profile you led with and why they fit this job. Name the actual entries; be concrete.
 - "text": the complete cover letter, ready to use. No preamble or commentary.
@@ -1459,6 +1463,10 @@ In your feedback:
 
 \${relevantProjects}
 
+\${relevantStories}
+
+\${relevantApplicationTexts}
+
 - The applicant sent you a message (in the job section below). First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "what should I emphasize?", "is this too formal?") → set "text" to null and put your helpful, specific, job-grounded reply in "feedback". Do NOT write the letter.
   - If they ask you to WRITE or DRAFT the letter, or they left no message → put the complete cover letter in "text", and a short grounding note in "feedback".
@@ -1541,6 +1549,10 @@ Also include:
 
 \${relevantProjects}
 
+\${relevantStories}
+
+\${relevantApplicationTexts}
+
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or achievements from their profile you built the sheet around. Name the actual entries; be concrete.
 - "text": the complete cheat sheet as a SINGLE plain-text string with markdown formatting (headers, bullets, bold) — NOT an array or nested objects.
@@ -1595,6 +1607,10 @@ Return a single JSON object with exactly two keys: "text" (the cheat sheet as on
 \${data}
 
 \${relevantProjects}
+
+\${relevantStories}
+
+\${relevantApplicationTexts}
 
 - The applicant sent you a message (in the job section below). First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach → set "text" to null and put your helpful, specific reply in "feedback". Do NOT write the sheet.

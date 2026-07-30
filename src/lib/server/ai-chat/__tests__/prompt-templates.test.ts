@@ -334,6 +334,11 @@ const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
   // provider (sources include "stories").
   write_prep_sheet: "profile-cheatsheet.ts",
   write_or_advise_prep_sheet: "profile-cheatsheet.ts",
+  // ai-chat/application-letter.ts — both letter types, generate + auto.
+  write_cover_letter: "application-letter.ts",
+  write_or_advise_cover_letter: "application-letter.ts",
+  write_cheat_sheet: "application-letter.ts",
+  write_or_advise_cheat_sheet: "application-letter.ts",
 };
 
 describe("${relevantStories} template ↔ caller wiring", () => {
@@ -367,6 +372,12 @@ const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
   write_or_advise_prep_sheet: "profile-cheatsheet.ts",
   write_star_story: "profile-story.ts",
   write_or_advise_star_story: "profile-story.ts",
+  // ai-chat/application-letter.ts — both letter types, generate + auto. The
+  // current application's own texts are excluded via excludeApplicationId.
+  write_cover_letter: "application-letter.ts",
+  write_or_advise_cover_letter: "application-letter.ts",
+  write_cheat_sheet: "application-letter.ts",
+  write_or_advise_cheat_sheet: "application-letter.ts",
 };
 
 describe("${relevantApplicationTexts} template ↔ caller wiring", () => {

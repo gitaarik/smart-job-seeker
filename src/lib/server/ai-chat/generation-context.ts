@@ -66,6 +66,13 @@ export interface ContextRequest {
   budgetChars?: number;
   /** How many items each ranked source may cite. Source-specific default if unset. */
   perSourceK?: number;
+  /**
+   * When the `application_texts` source is requested, skip texts belonging to
+   * this application — so generating a cover letter for it doesn't retrieve the
+   * very letter being written (or its siblings) as the applicant's "past
+   * writing". Ignored by other sources.
+   */
+  excludeApplicationId?: number;
 }
 
 export interface AssembledContext {
@@ -131,6 +138,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
         req.profileId,
         req.query!,
         req.perSourceK ?? 3,
+        req.excludeApplicationId,
       );
     },
   },

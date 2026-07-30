@@ -342,6 +342,7 @@ function buildTextUnit(
  */
 async function loadApplicationTextUnits(
   profileId: number,
+  excludeApplicationId?: number,
 ): Promise<RankableUnit[]> {
   const apps = await db.query.applications.findMany({
     where: eq(applications.profile_id, profileId),
@@ -359,6 +360,9 @@ async function loadApplicationTextUnits(
 
   const units: RankableUnit[] = [];
   for (const app of apps) {
+    // Skip the application being written for, so a cover letter doesn't retrieve
+    // itself (or its siblings) as the applicant's past writing.
+    if (excludeApplicationId && app.id === excludeApplicationId) continue;
     const role = [app.job?.title, app.job?.company]
       .map((s) => s?.trim())
       .filter(Boolean)
@@ -401,8 +405,9 @@ export async function relevantApplicationTextsText(
   profileId: number,
   query: UnitQuery,
   k = 3,
+  excludeApplicationId?: number,
 ): Promise<string> {
-  const units = await loadApplicationTextUnits(profileId);
+  const units = await loadApplicationTextUnits(profileId, excludeApplicationId);
   const ranked = await relevantUnits(profileId, query, units, k);
   return formatUnitCitations(ranked, {
     header: "The applicant's own past application writing",
