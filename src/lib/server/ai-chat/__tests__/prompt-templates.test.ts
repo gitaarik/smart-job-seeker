@@ -109,10 +109,12 @@ const INTERVIEW_HISTORY_SUPPLIED_BY: Record<string, string> = {
   advise_cover_letter: "application-letter.ts",
   review_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
+  write_or_advise_cheat_sheet: "application-letter.ts",
   advise_cheat_sheet: "application-letter.ts",
   review_cheat_sheet: "application-letter.ts",
-  // ai-chat/application-question.ts — generate/advice/review modes.
+  // ai-chat/application-question.ts — generate/advice/review + auto modes.
   answer_application_question: "application-question.ts",
+  write_or_advise_application_question: "application-question.ts",
   advise_application_question: "application-question.ts",
   review_application_question: "application-question.ts",
   // Its own endpoint, not the mode map.
@@ -209,17 +211,20 @@ const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
   advise_cover_letter: "application-letter.ts",
   review_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
+  write_or_advise_cheat_sheet: "application-letter.ts",
   advise_cheat_sheet: "application-letter.ts",
   review_cheat_sheet: "application-letter.ts",
-  // ai-chat/application-question.ts — generate/advice only. review is
+  // ai-chat/application-question.ts — generate/advice + auto. review is
   // deliberately excluded: it also runs through the followup path, which
   // builds its own variables and would leak the placeholder.
   answer_application_question: "application-question.ts",
+  write_or_advise_application_question: "application-question.ts",
   advise_application_question: "application-question.ts",
-  // ai-chat/profile-story.ts — generate/advice only. review_star_story is
+  // ai-chat/profile-story.ts — generate/advice + auto. review_star_story is
   // excluded for the same reason as the question review: it also runs through
   // the followup path, which assembles its own variables.
   write_star_story: "profile-story.ts",
+  write_or_advise_star_story: "profile-story.ts",
   advise_star_story: "profile-story.ts",
 };
 
@@ -266,13 +271,15 @@ describe("${additionalContext} template ↔ caller wiring", () => {
  * may write one), which is exactly the set below.
  */
 const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
-  // ai-chat/application-letter.ts — generate mode (both letter types) plus the
-  // cover-letter auto mode, which may also write a draft.
+  // ai-chat/application-letter.ts — generate and auto modes (both letter types);
+  // auto may write a draft, which needs the retrieval.
   write_cover_letter: "application-letter.ts",
   write_or_advise_cover_letter: "application-letter.ts",
   write_cheat_sheet: "application-letter.ts",
-  // ai-chat/application-question.ts, generate mode only.
+  write_or_advise_cheat_sheet: "application-letter.ts",
+  // ai-chat/application-question.ts — generate and auto modes.
   answer_application_question: "application-question.ts",
+  write_or_advise_application_question: "application-question.ts",
 };
 
 describe("${relevantProjects} template ↔ caller wiring", () => {
@@ -337,5 +344,17 @@ describe("write_cheat_sheet records handling", () => {
     // the other language were the ones that went missing.
     expect(full).toMatch(/different language/);
     expect(full).toMatch(/Translate what you carry over/);
+  });
+
+  it("write_or_advise_cheat_sheet carries the same records handling", () => {
+    // The unified entry point writes cheat sheets too, so it must not drift
+    // from the guarantees above — the SURF regression would recur silently.
+    const a = promptTemplates["write_or_advise_cheat_sheet"];
+    const full2 = `${a.system_prompt}\n${a.user_prompt}`;
+    expect(full2).toMatch(/Corrections & carry-overs/);
+    expect(full2).toMatch(/Still open/);
+    expect(full2).toMatch(/INSTEAD OF generic invented ones/);
+    expect(full2).toMatch(/outrank generic profile-to-job matching/);
+    expect(full2).toMatch(/Translate what you carry over/);
   });
 });

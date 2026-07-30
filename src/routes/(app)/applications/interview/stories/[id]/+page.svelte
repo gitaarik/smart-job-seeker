@@ -106,7 +106,7 @@ const STORY_LABELS: Record<VersionSource, string> = {
 };
 
 async function apiGenerate(
-  mode: "generate" | "advice" | "review",
+  mode: "generate" | "advice" | "review" | "auto",
   instructions?: string,
 ) {
   const res = await fetch(`/api/ai/stories/${storyId}/generate`, {
@@ -164,7 +164,10 @@ async function apiSaveContent(content: string, deleteAfterVersionId?: number) {
 
 // ---- Timeline callbacks (persist + invalidate; throw a message on failure) ----
 
-async function onGenerate(mode: "generate" | "advice", instructions?: string) {
+async function onGenerate(
+  mode: "generate" | "advice" | "auto",
+  instructions?: string,
+) {
   await apiGenerate(mode, instructions);
   await invalidateAll();
 }
@@ -380,6 +383,7 @@ const fieldClass =
       placeholder="Write your story in the fields above…"
       labels={STORY_LABELS}
       ownVersionEditor={false}
+      autoMode={true}
       generating={data.generating}
       {onGenerate}
       {onReview}

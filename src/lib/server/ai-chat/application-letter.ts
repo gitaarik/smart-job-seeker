@@ -46,6 +46,7 @@ const LETTER_TYPE_TO_PROMPT: Record<string, Record<string, string>> = {
     generate: "write_cheat_sheet",
     advice: "advise_cheat_sheet",
     review: "review_cheat_sheet",
+    auto: "write_or_advise_cheat_sheet",
   },
 };
 

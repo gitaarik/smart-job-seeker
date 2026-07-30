@@ -262,7 +262,7 @@ function formatDate(date: Date | string | null): string {
     {onSendFollowup}
     {onSaveVersion}
     {onClearResponse}
-    autoMode={letter.letter_type === "cover_letter"}
+    autoMode={true}
     generating={data.generating}
   />
 </div>

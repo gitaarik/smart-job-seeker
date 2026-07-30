@@ -430,6 +430,27 @@ export const writeStarStorySchema = z.preprocess(
 );
 
 /**
+ * Schema for write_or_advise_star_story — the unified STAR entry point. Nullable
+ * text (null when the model advised instead of writing), a feedback reply, and
+ * an optional title used only when writing a story that has none yet. Reuses
+ * normalizeTextKey so a stray `story`/`content` key still validates.
+ */
+export const writeOrAdviseStorySchema = z.preprocess(
+  normalizeTextKey,
+  z.object({
+    text: z.string().nullable().optional().describe(
+      "The complete STAR story as markdown (## Situation / ## Task / ## Action / ## Result, optional ## Reflection). Include ONLY when writing the story. Set to null when the applicant asked a question or wanted advice — put your reply in feedback instead.",
+    ),
+    feedback: z.string().optional().describe(
+      "Your reply. When you wrote the story: a brief grounding note naming the profile experiences you drew on. When they asked a question or wanted advice: your full, specific answer.",
+    ),
+    title: z.string().optional().nullable().describe(
+      "A short, specific title (≤60 chars). Only when you wrote the story and it has no title yet.",
+    ),
+  }),
+);
+
+/**
  * Schema for suggest_import_tasks prompt
  *
  * The LLM returns ONE entry per suggestable platform, ranked high→low,
@@ -551,6 +572,9 @@ export const aiPromptSchemas = {
   write_cover_letter: writeLetterSchema,
   // Model decides per-message: a full draft (text set) or advice (text null).
   write_or_advise_cover_letter: followupLetterSchema,
+  write_or_advise_cheat_sheet: followupLetterSchema,
+  write_or_advise_application_question: followupLetterSchema,
+  write_or_advise_star_story: writeOrAdviseStorySchema,
   write_cheat_sheet: writeLetterSchema,
   answer_application_question: writeLetterSchema,
   followup_letter: followupLetterSchema,

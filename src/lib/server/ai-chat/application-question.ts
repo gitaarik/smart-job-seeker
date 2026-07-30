@@ -39,6 +39,8 @@ const QUESTION_MODE_TO_PROMPT: Record<string, string> = {
   generate: "answer_application_question",
   advice: "advise_application_question",
   review: "review_application_question",
+  // One entry point; the model picks draft-vs-advice per message.
+  auto: "write_or_advise_application_question",
 };
 
 /**
@@ -63,10 +65,11 @@ export async function generateApplicationQuestionAnswer(
     /**
      * Which AI step to run. "generate" writes an answer, "advice" returns
      * job-specific pointers (no content), "review" critiques the current
-     * answer and may propose a revision. Each records a version through the
-     * shared engine so the timeline editor can render the thread.
+     * answer and may propose a revision, "auto" lets the model pick write-or-
+     * advice per message. Each records a version through the shared engine so
+     * the timeline editor can render the thread.
      */
-    mode?: "generate" | "advice" | "review";
+    mode?: "generate" | "advice" | "review" | "auto";
     /**
      * The applicant's own brief for this turn, typed in the editor's composer
      * ("keep it to two sentences", "lean on the Acme migration"). Optional —
@@ -128,7 +131,7 @@ export async function generateApplicationQuestionAnswer(
     // job). Only answer_application_question interpolates it — retrieval runs
     // an embedding search, so advice/review would pay for a variable their
     // templates never reference.
-    ...(mode === "generate"
+    ...(mode === "generate" || mode === "auto"
       ? {
         relevantProjects: job
           ? await relevantProjectsText(profileId, {
@@ -191,15 +194,17 @@ export async function generateApplicationQuestionAnswer(
   // { feedback, revisedText }.
   let answerText: string | null = null;
   let aiFeedback: string | null = null;
-  if (mode === "generate") {
+  if (mode === "generate" || mode === "auto") {
     answerText = aiChat.response;
     if (aiChat.response) {
       try {
         const parsed = JSON.parse(aiChat.response);
-        if (parsed && typeof parsed.text === "string") answerText = parsed.text;
         if (parsed && typeof parsed.feedback === "string") {
           aiFeedback = parsed.feedback;
         }
+        // A string `text` is the draft; an explicit null (auto chose to advise)
+        // means no answer was written this turn.
+        answerText = typeof parsed?.text === "string" ? parsed.text : null;
       } catch {
         // Not JSON, keep the raw response as the answer.
       }
@@ -232,7 +237,10 @@ export async function generateApplicationQuestionAnswer(
     await db.update(application_questions).set({
       ai_chat_id: aiChat.id,
       ai_chat_response: aiChat.response,
-      ...(mode === "generate" && commitAnswer ? { answer: answerText } : {}),
+      ...((mode === "generate" || (mode === "auto" && answerText)) &&
+          commitAnswer
+        ? { answer: answerText }
+        : {}),
     }).where(eq(application_questions.id, questionId));
 
     // Record a version through the shared engine so the timeline editor can
@@ -245,7 +253,7 @@ export async function generateApplicationQuestionAnswer(
         aiChatId: aiChat.id,
         aiFeedback,
       });
-    } else if (mode === "advice") {
+    } else if (mode === "advice" || (mode === "auto" && !answerText)) {
       await recordVersion(QUESTION_VERSIONS, {
         entityId: questionId,
         content: null,
@@ -254,7 +262,7 @@ export async function generateApplicationQuestionAnswer(
         aiFeedback,
         userRequest: instructions,
       });
-    } else if (mode === "generate" && answerText) {
+    } else if ((mode === "generate" || mode === "auto") && answerText) {
       await recordVersion(QUESTION_VERSIONS, {
         entityId: questionId,
         content: answerText,

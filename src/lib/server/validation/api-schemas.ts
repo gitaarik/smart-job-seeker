@@ -390,7 +390,9 @@ export const letterGenerateSchema = z.object({
 
 export const questionGenerateSchema = z.object({
   instructions: z.string().trim().max(5000).optional(),
-  mode: z.enum(["generate", "advice", "review"]).optional().default("generate"),
+  mode: z.enum(["generate", "advice", "review", "auto"]).optional().default(
+    "generate",
+  ),
   /** Draft flow: generate into the thread without writing the answer column. */
   commit: z.boolean().optional().default(true),
 });
@@ -398,7 +400,9 @@ export const questionGenerateSchema = z.object({
 /** Body of the STAR-story "start an AI turn" endpoint (see questionGenerateSchema). */
 export const storyGenerateSchema = z.object({
   instructions: z.string().trim().max(5000).optional(),
-  mode: z.enum(["generate", "advice", "review"]).optional().default("generate"),
+  mode: z.enum(["generate", "advice", "review", "auto"]).optional().default(
+    "generate",
+  ),
 });
 
 export const followupRequestSchema = z.object({

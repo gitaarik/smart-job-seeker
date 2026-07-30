@@ -46,6 +46,8 @@ const STORY_MODE_TO_PROMPT: Record<string, string> = {
   generate: "write_star_story",
   advice: "advise_star_story",
   review: "review_star_story",
+  // One entry point; the model picks draft-vs-advice per message.
+  auto: "write_or_advise_star_story",
 };
 
 /**
@@ -101,7 +103,7 @@ export function buildStoryContext(
 export async function generateProfileStory(
   storyId: number,
   opts?: {
-    mode?: "generate" | "advice" | "review";
+    mode?: "generate" | "advice" | "review" | "auto";
     instructions?: string;
   },
 ): Promise<{ success: boolean; message: string; text?: string }> {
@@ -171,7 +173,10 @@ export async function generateProfileStory(
       if (typeof raw === "string" && raw.trim()) {
         storyMarkdown = serializeStarMarkdown(parseStarMarkdown(raw));
       }
-      if (mode === "generate" && typeof parsed.title === "string") {
+      if (
+        (mode === "generate" || mode === "auto") &&
+        typeof parsed.title === "string"
+      ) {
         suggestedTitle = parsed.title.trim() || null;
       }
     } catch {
@@ -191,7 +196,8 @@ export async function generateProfileStory(
     // Preserve any pre-AI manual STAR content as a baseline version first.
     await ensureBaselineVersion(STORY_VERSIONS, storyId, currentStar || null);
 
-    const commitColumns = mode === "generate" && storyMarkdown;
+    const commitColumns = (mode === "generate" || mode === "auto") &&
+      storyMarkdown;
     await db.update(project_stories).set({
       ai_chat_id: aiChat.id,
       ai_chat_response: aiChat.response,
@@ -215,7 +221,7 @@ export async function generateProfileStory(
         aiChatId: aiChat.id,
         aiFeedback,
       });
-    } else if (mode === "advice") {
+    } else if (mode === "advice" || (mode === "auto" && !storyMarkdown)) {
       await recordVersion(STORY_VERSIONS, {
         entityId: storyId,
         content: null,
@@ -224,7 +230,7 @@ export async function generateProfileStory(
         aiFeedback,
         userRequest: instructions,
       });
-    } else if (mode === "generate" && storyMarkdown) {
+    } else if ((mode === "generate" || mode === "auto") && storyMarkdown) {
       await recordVersion(STORY_VERSIONS, {
         entityId: storyId,
         content: storyMarkdown,
