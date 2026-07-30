@@ -61,6 +61,15 @@ vi.mock("$lib/server/db/schema", () => ({
     ai_feedback: "sv.aif",
     user_request: "sv.ur",
   },
+  cheat_sheet_versions: {
+    cheat_sheet: "csv.cheat_sheet",
+    id: "csv.id",
+    date_created: "csv.dc",
+    content: "csv.content",
+    source: "csv.source",
+    ai_feedback: "csv.aif",
+    user_request: "csv.ur",
+  },
 }));
 
 import {

@@ -15,6 +15,7 @@
 import { dbDirect as db } from "$lib/server/db";
 import { and, asc, desc, eq, gt, gte, lt } from "drizzle-orm";
 import {
+  cheat_sheet_versions,
   letter_versions,
   question_versions,
   story_versions,
@@ -47,7 +48,7 @@ type VersionBinding = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   id: any;
   /** FK column property name, used to key the insert values object. */
-  fkName: "letter" | "question" | "story";
+  fkName: "letter" | "question" | "story" | "cheat_sheet";
 };
 
 export const LETTER_VERSIONS: VersionBinding = {
@@ -69,6 +70,13 @@ export const STORY_VERSIONS: VersionBinding = {
   fk: story_versions.story,
   id: story_versions.id,
   fkName: "story",
+};
+
+export const CHEATSHEET_VERSIONS: VersionBinding = {
+  table: cheat_sheet_versions,
+  fk: cheat_sheet_versions.cheat_sheet,
+  id: cheat_sheet_versions.id,
+  fkName: "cheat_sheet",
 };
 
 /** Reconstruct the ordered (oldest→newest) thread from the versions table. */

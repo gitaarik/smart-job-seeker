@@ -50,6 +50,11 @@ const WRITING_PROMPT_KEYS = new Set<string>([
   "advise_star_story",
   "review_star_story",
   "followup_star_story",
+  "write_prep_sheet",
+  "write_or_advise_prep_sheet",
+  "advise_prep_sheet",
+  "review_prep_sheet",
+  "followup_prep_sheet",
   "followup",
   "followup_letter",
 ]);

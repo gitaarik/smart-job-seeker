@@ -1854,7 +1854,17 @@ export const cheat_sheets = pgTable("cheat_sheets", {
   title: varchar({ length: 255 }),
   content: text(),
   profile_id: integer().notNull(),
+  // Live AI thread pointer for the conversational cheat-sheet editor (see
+  // cheat_sheet_versions). Null until the applicant starts an AI thread.
+  ai_chat_id: integer(),
+  ai_chat_response: text(),
 }, (table) => [
+  index("cheat_sheets_ai_chat_id_idx").on(table.ai_chat_id),
+  foreignKey({
+    columns: [table.ai_chat_id],
+    foreignColumns: [ai_chats.id],
+    name: "cheat_sheets_ai_chat_foreign",
+  }).onDelete("set null"),
   foreignKey({
     columns: [table.profile_id],
     foreignColumns: [profiles.id],
@@ -2709,6 +2719,31 @@ export const story_versions = pgTable("story_versions", {
     columns: [table.story],
     foreignColumns: [project_stories.id],
     name: "story_versions_story_foreign",
+  }).onUpdate("cascade").onDelete("cascade"),
+]);
+
+export const cheat_sheet_versions = pgTable("cheat_sheet_versions", {
+  id: serial().primaryKey().notNull(),
+  date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
+    .defaultNow(),
+  cheat_sheet: integer().notNull(),
+  content: text(),
+  source: varchar({ length: 255 }).notNull(),
+  ai_chat: integer(),
+  ai_feedback: text(),
+  user_request: text(),
+}, (table) => [
+  index("cheat_sheet_versions_ai_chat_idx").on(table.ai_chat),
+  index("cheat_sheet_versions_cheat_sheet_idx").on(table.cheat_sheet),
+  foreignKey({
+    columns: [table.ai_chat],
+    foreignColumns: [ai_chats.id],
+    name: "cheat_sheet_versions_ai_chat_foreign",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.cheat_sheet],
+    foreignColumns: [cheat_sheets.id],
+    name: "cheat_sheet_versions_cheat_sheet_foreign",
   }).onUpdate("cascade").onDelete("cascade"),
 ]);
 
@@ -3589,6 +3624,7 @@ export type ApplicationRecords = typeof application_records.$inferSelect;
 export type LetterVersions = typeof letter_versions.$inferSelect;
 export type QuestionVersions = typeof question_versions.$inferSelect;
 export type StoryVersions = typeof story_versions.$inferSelect;
+export type CheatSheetVersions = typeof cheat_sheet_versions.$inferSelect;
 export type JobMatchHistory = typeof job_match_history.$inferSelect;
 export type JobImporters = typeof job_importers.$inferSelect;
 export type UserFeedbackFiles = typeof user_feedback_files.$inferSelect;

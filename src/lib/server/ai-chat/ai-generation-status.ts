@@ -20,7 +20,7 @@ import { and, eq, lt } from "drizzle-orm";
 import { ai_generations } from "$lib/server/db/schema";
 
 /** Entities that run tracked generations. Plain strings in the DB. */
-export type GenerationEntity = "story" | "letter" | "question";
+export type GenerationEntity = "story" | "letter" | "question" | "cheatsheet";
 
 /** A generation older than this is treated as dead (crashed) and ignored. */
 const STALE_MS = 5 * 60 * 1000;

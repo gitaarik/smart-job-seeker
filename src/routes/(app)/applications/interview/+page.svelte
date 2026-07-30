@@ -21,8 +21,8 @@
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
   import FilterTabs from "../../components/FilterTabs.svelte";
-  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
-  import SimpleEditor from "$lib/components/SimpleEditor.svelte";
+  import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
+  import { htmlToMarkdown } from "$lib/utils/html-to-markdown";
   import { goto, invalidateAll } from "$app/navigation";
 
   let { data }: { data: PageData } = $props();
@@ -40,31 +40,16 @@
 
   // Shared state
   let expandedKey = $state<string | null>(null);
-  let editingKey = $state<string | null>(null);
   let showAddMenu = $state(false);
-  let showAddCheatSheet = $state(false);
 
   // Delete state
   let deleteKey = $state<string | null>(null);
   let deleteType = $state<"cheatsheet" | "story">("cheatsheet");
 
-  // Discard edits confirmation
-  let showDiscardConfirm = $state(false);
-
-  // Original values for dirty checking
-  let originalValues = $state<Record<string, string>>({});
-
-  // Save states
+  // Save + error state (used by the add / delete flows)
   type SaveState = "idle" | "saving" | "saved" | "error";
   let addSaveState = $state<SaveState>("idle");
-  let editSaveState = $state<SaveState>("idle");
   let errorMessage = $state("");
-
-  // Cheat sheet form states
-  let newSheetTitle = $state("");
-  let newSheetContent = $state("");
-  let editSheetTitle = $state("");
-  let editSheetContent = $state("");
 
   const categories = [
     { value: "leadership", label: "Leadership" },
@@ -93,61 +78,19 @@
 
   let hasAnyItems = $derived(cheatsheets.length > 0 || stories.length > 0);
 
-  // Toggle expand/collapse. Only cheat sheets edit inline now — stories open in
-  // the unified editor (/applications/interview/stories/[id]).
-  function isEditDirty(): boolean {
-    if (!editingKey) return false;
-    return editSheetTitle !== originalValues.title || editSheetContent !== originalValues.content;
-  }
-
+  // Stories and cheat sheets both open in their own unified editor now, so the
+  // list only expands/collapses a card's read-only preview.
   function toggleExpand(key: string) {
-    if (editingKey === key) {
-      if (isEditDirty()) {
-        showDiscardConfirm = true;
-      } else {
-        editingKey = null;
-        editSaveState = "idle";
-        expandedKey = null;
-      }
-      return;
-    }
     expandedKey = expandedKey === key ? null : key;
   }
 
-  function confirmDiscard() {
-    editingKey = null;
-    editSaveState = "idle";
-    expandedKey = null;
-    showDiscardConfirm = false;
-  }
-
   // --- Cheat sheet CRUD ---
-  function startEditSheet(sheet: (typeof cheatsheets)[0]) {
-    const key = `cs-${sheet.id}`;
-    editingKey = key;
-    expandedKey = key;
-    editSheetTitle = sheet.title || "";
-    editSheetContent = sheet.content || "";
-    editSaveState = "idle";
-    originalValues = { title: editSheetTitle, content: editSheetContent };
-  }
-
-  function resetAddSheetForm() {
-    showAddCheatSheet = false;
-    newSheetTitle = "";
-    newSheetContent = "";
-    addSaveState = "idle";
-    errorMessage = "";
-  }
-
-  async function saveNewSheet() {
-    if (!newSheetTitle.trim()) {
-      errorMessage = "Title is required";
-      addSaveState = "error";
-      setTimeout(() => (addSaveState = "idle"), 2000);
-      return;
-    }
-    addSaveState = "saving";
+  // Cheat sheets are authored in the unified conversational editor (manual
+  // content + AI in one place). Adding creates a placeholder row and opens it.
+  let creatingSheet = $state(false);
+  async function addCheatSheet() {
+    if (creatingSheet) return;
+    creatingSheet = true;
     errorMessage = "";
     try {
       const response = await fetch("/api/cheat-sheets", {
@@ -155,64 +98,24 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profile_id: data.profileId,
-          title: newSheetTitle,
-          content: newSheetContent,
+          title: "New cheat sheet",
+          content: "",
         }),
       });
-      if (!response.ok) {
-        const err = await response.json();
-        errorMessage = err.message || err.error || "Failed to create cheat sheet";
+      const result = await response.json();
+      if (response.ok && result.sheet?.id) {
+        await goto(`/applications/interview/cheatsheets/${result.sheet.id}`);
+      } else {
+        errorMessage = result.message || result.error || "Couldn't start a cheat sheet";
         addSaveState = "error";
         setTimeout(() => (addSaveState = "idle"), 2000);
-        return;
       }
-      addSaveState = "saved";
-      await invalidateAll();
-      setTimeout(() => resetAddSheetForm(), 500);
     } catch {
-      errorMessage = "Failed to create cheat sheet";
+      errorMessage = "Couldn't start a cheat sheet";
       addSaveState = "error";
       setTimeout(() => (addSaveState = "idle"), 2000);
-    }
-  }
-
-  async function saveEditedSheet(id: number) {
-    if (!editSheetTitle.trim()) {
-      errorMessage = "Title is required";
-      editSaveState = "error";
-      setTimeout(() => (editSaveState = "idle"), 2000);
-      return;
-    }
-    editSaveState = "saving";
-    errorMessage = "";
-    try {
-      const response = await fetch("/api/cheat-sheets", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile_id: data.profileId,
-          id,
-          title: editSheetTitle,
-          content: editSheetContent,
-        }),
-      });
-      if (!response.ok) {
-        const err = await response.json();
-        errorMessage = err.message || err.error || "Failed to update cheat sheet";
-        editSaveState = "error";
-        setTimeout(() => (editSaveState = "idle"), 2000);
-        return;
-      }
-      editSaveState = "saved";
-      await invalidateAll();
-      setTimeout(() => {
-        editingKey = null;
-        editSaveState = "idle";
-      }, 500);
-    } catch {
-      errorMessage = "Failed to update cheat sheet";
-      editSaveState = "error";
-      setTimeout(() => (editSaveState = "idle"), 2000);
+    } finally {
+      creatingSheet = false;
     }
   }
 
@@ -286,11 +189,6 @@
   }
 
   // Shared helpers
-  function cancelEdit() {
-    editingKey = null;
-    editSaveState = "idle";
-  }
-
   function handleDelete() {
     if (!deleteKey) return;
     if (deleteType === "cheatsheet") {
@@ -419,7 +317,7 @@
         </button>
         <button
           type="button"
-          onclick={() => { showAddCheatSheet = true; showAddMenu = false; }}
+          onclick={() => { showAddMenu = false; addCheatSheet(); }}
           class="w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-[var(--dash-bg)] transition-colors text-[var(--dash-text)]"
         >
           <FontAwesomeIcon icon={faStickyNote} class="w-3.5 h-3.5 opacity-50" />
@@ -460,47 +358,14 @@
     </div>
   {/if}
 
-  {#if errorMessage && (addSaveState === "error" || editSaveState === "error")}
+  {#if errorMessage && addSaveState === "error"}
     <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
       <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
     </div>
   {/if}
 
-  <!-- Add Interview Cheat Sheet Form -->
-  {#if showAddCheatSheet}
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4">
-      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Interview Cheat Sheet</h3>
-      <div class="space-y-4">
-        <div>
-          <label for="new-sheet-title" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-            Title <span class="text-[var(--dash-error)]">*</span>
-          </label>
-          <input
-            type="text"
-            id="new-sheet-title"
-            bind:value={newSheetTitle}
-            placeholder="e.g., System Design Interview Topics"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-[var(--dash-text)] mb-1">Content</label>
-          <input type="hidden" name="content" value={newSheetContent} />
-          <SimpleEditor bind:content={newSheetContent} placeholder="Add your notes, key points, or reference material..." />
-        </div>
-      </div>
-      <div class="flex justify-end gap-2 mt-4">
-        <button type="button" onclick={resetAddSheetForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">
-          Cancel
-        </button>
-        <SectionSaveButton state={addSaveState} onClick={saveNewSheet} />
-      </div>
-    </div>
-  {/if}
-
   <!-- Items List -->
-  {#if !hasAnyItems && !showAddCheatSheet}
+  {#if !hasAnyItems}
     <div class="flex flex-col items-center gap-4">
       <EmptyState
         icon={faBook}
@@ -575,7 +440,6 @@
           <!-- Cheat Sheet Card -->
           {@const sheet = item}
           {@const isExpanded = expandedKey === item.key}
-          {@const isEditing = editingKey === item.key}
           <Card class="overflow-hidden relative transition-all">
             <button
               type="button"
@@ -611,58 +475,36 @@
               </div>
             </button>
 
-            {#if !isEditing}
-              <button
-                type="button"
-                onclick={(e) => { e.stopPropagation(); startEditSheet(sheet); }}
-                class="absolute top-3 right-10 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10 cursor-pointer"
-                aria-label="Edit"
-              >
-                <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
-              </button>
-            {/if}
+            <a
+              href="/applications/interview/cheatsheets/{sheet.id}"
+              onclick={(e) => e.stopPropagation()}
+              class="absolute top-3 right-10 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10 cursor-pointer"
+              aria-label="Edit cheat sheet"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+            </a>
 
             {#if isExpanded}
               <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
-                {#if isEditing}
-                  <div class="space-y-4">
-                    <div>
-                      <label for="edit-sheet-title-{sheet.id}" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-                        Title <span class="text-[var(--dash-error)]">*</span>
-                      </label>
-                      <input type="text" id="edit-sheet-title-{sheet.id}" bind:value={editSheetTitle}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent" />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-[var(--dash-text)] mb-1">Content</label>
-                      <input type="hidden" name="content" value={editSheetContent} />
-                      <SimpleEditor bind:content={editSheetContent} placeholder="Add your notes..." />
-                    </div>
-                  </div>
-                  <div class="flex items-center mt-4">
-                    <button type="button" onclick={() => { deleteKey = item.key; deleteType = "cheatsheet"; }}
-                      class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5">
-                      <FontAwesomeIcon icon={faTrash} class="w-3 h-3" /> Delete
-                    </button>
-                    <div class="flex gap-2 ml-auto">
-                      <button type="button" onclick={cancelEdit}
-                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors">
-                        Cancel
-                      </button>
-                      <SectionSaveButton state={editSaveState} onClick={() => saveEditedSheet(sheet.id)} />
-                    </div>
+                {#if sheet.content}
+                  <div class="cheatsheet-content text-sm text-[var(--dash-text)]">
+                    {@html renderSafeMarkdown(htmlToMarkdown(sheet.content))}
                   </div>
                 {:else}
-                  <div class="space-y-3 sm:space-y-4">
-                    {#if sheet.content}
-                      <div class="cheatsheet-content text-sm text-[var(--dash-text)]">
-                        {@html sheet.content}
-                      </div>
-                    {:else}
-                      <p class="text-[var(--dash-text-secondary)] italic">No content yet</p>
-                    {/if}
-                  </div>
+                  <p class="text-sm text-[var(--dash-text-secondary)] italic">Nothing written yet — open the editor to draft it yourself or with AI.</p>
                 {/if}
+                <div class="mt-4 pt-3 border-t border-[var(--dash-border)]/50 flex items-center">
+                  <button type="button" onclick={() => { deleteKey = item.key; deleteType = "cheatsheet"; }}
+                    class="px-3 py-2 text-xs bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition-colors flex items-center gap-1.5">
+                    <FontAwesomeIcon icon={faTrash} class="w-3 h-3" /> Delete
+                  </button>
+                  <a
+                    href="/applications/interview/cheatsheets/{sheet.id}"
+                    class="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-[var(--dash-primary)] rounded-lg text-[var(--dash-primary)] hover:bg-[var(--dash-primary-light)] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faPencil} class="w-3 h-3" /> Edit cheat sheet
+                  </a>
+                </div>
               </div>
             {/if}
 
@@ -792,14 +634,6 @@
     : "Are you sure you want to delete this project story? This action cannot be undone."}
   onCancel={() => (deleteKey = null)}
   onConfirm={handleDelete}
-/>
-
-<ConfirmModal
-  isOpen={showDiscardConfirm}
-  title="Discard Changes"
-  message="You have unsaved changes. Are you sure you want to discard them?"
-  onCancel={() => (showDiscardConfirm = false)}
-  onConfirm={confirmDiscard}
 />
 
 <style>

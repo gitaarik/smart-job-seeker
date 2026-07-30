@@ -226,6 +226,11 @@ const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
   write_star_story: "profile-story.ts",
   write_or_advise_star_story: "profile-story.ts",
   advise_star_story: "profile-story.ts",
+  // ai-chat/profile-cheatsheet.ts — generate/advice + auto. review_prep_sheet
+  // is excluded (it runs through the followup path, which builds its own vars).
+  write_prep_sheet: "profile-cheatsheet.ts",
+  write_or_advise_prep_sheet: "profile-cheatsheet.ts",
+  advise_prep_sheet: "profile-cheatsheet.ts",
 };
 
 describe("${additionalContext} template ↔ caller wiring", () => {

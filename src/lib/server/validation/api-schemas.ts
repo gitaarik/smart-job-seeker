@@ -405,6 +405,14 @@ export const storyGenerateSchema = z.object({
   ),
 });
 
+/** Body of the cheat-sheet "start an AI turn" endpoint (see storyGenerateSchema). */
+export const cheatSheetGenerateSchema = z.object({
+  instructions: z.string().trim().max(5000).optional(),
+  mode: z.enum(["generate", "advice", "review", "auto"]).optional().default(
+    "generate",
+  ),
+});
+
 export const followupRequestSchema = z.object({
   followupRequest: requiredTrimmedString("Follow-up request", 5000),
   includeOriginalContext: z.boolean().optional().default(false),

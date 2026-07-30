@@ -451,6 +451,47 @@ export const writeOrAdviseStorySchema = z.preprocess(
 );
 
 /**
+ * Schema for write_prep_sheet — a profile-level interview cheat sheet. One
+ * markdown document in `text`, a grounding note in `feedback`, and a `title`
+ * applied only when the sheet has none yet. Reuses normalizeTextKey so a stray
+ * `content`/`sheet` key or an accidentally-arrayed body still validates.
+ */
+export const writePrepSheetSchema = z.preprocess(
+  normalizeTextKey,
+  z.object({
+    feedback: z.string().optional().describe(
+      "A brief note (1-2 sentences) citing the SPECIFIC profile experiences, skills, or projects you built the sheet around. Name the actual entries; be concrete.",
+    ),
+    text: z.string().describe(
+      "The complete cheat sheet as a single markdown string — headers, bullets, bold. Scannable quick-reference, not prose. No preamble.",
+    ),
+    title: z.string().optional().nullable().describe(
+      "A short, specific title for this cheat sheet (≤60 chars). Only used when the sheet has no title yet.",
+    ),
+  }),
+);
+
+/**
+ * Schema for write_or_advise_prep_sheet — the unified cheat-sheet entry point.
+ * Nullable text (null when the model advised instead of writing), a feedback
+ * reply, and an optional title used only when writing a sheet that has none yet.
+ */
+export const writeOrAdvisePrepSheetSchema = z.preprocess(
+  normalizeTextKey,
+  z.object({
+    text: z.string().nullable().optional().describe(
+      "The complete cheat sheet as a single markdown string. Include ONLY when writing the sheet. Set to null when the applicant asked a question or wanted advice — put your reply in feedback instead.",
+    ),
+    feedback: z.string().optional().describe(
+      "Your reply. When you wrote the sheet: a brief grounding note naming the profile experiences you drew on. When they asked a question or wanted advice: your full, specific answer.",
+    ),
+    title: z.string().optional().nullable().describe(
+      "A short, specific title (≤60 chars). Only when you wrote the sheet and it has no title yet.",
+    ),
+  }),
+);
+
+/**
  * Schema for suggest_import_tasks prompt
  *
  * The LLM returns ONE entry per suggestable platform, ranked high→low,
@@ -585,6 +626,12 @@ export const aiPromptSchemas = {
   write_star_story: writeStarStorySchema,
   followup_star_story: followupLetterSchema,
   review_star_story: reviewLetterSchema,
+  // Profile-level interview cheat sheets ("prep sheets"). advise_prep_sheet
+  // returns plain markdown (no schema), like the other advise_* prompts.
+  write_prep_sheet: writePrepSheetSchema,
+  write_or_advise_prep_sheet: writeOrAdvisePrepSheetSchema,
+  followup_prep_sheet: followupLetterSchema,
+  review_prep_sheet: reviewLetterSchema,
   suggest_import_tasks: suggestImportTasksSchema,
   extract_qa_pairs: extractQaPairsSchema,
   revise_application_question: reviseAnswerSchema,
