@@ -1,11 +1,12 @@
 /**
- * Tests for the `updateDescription` form action.
+ * Tests for the `updateTitle` and `updateDescription` form actions.
  *
- * Covers the edit permission gate (manual jobs, owned or staff), the empty
- * guard, and — the point of the feature — that the edited text is mirrored
- * into `source_html_stripped`, which re-parse reads in preference to
- * `job_description`. Without that mirror a "Save & re-parse" would re-read the
- * stale capture and silently ignore the edit.
+ * Both share an edit permission gate (manual jobs, owned or staff) and an empty
+ * guard. The description's extra concern — and the point of that feature — is
+ * that the edited text is mirrored into `source_html_stripped`, which re-parse
+ * reads in preference to `job_description`. Without that mirror a
+ * "Save & re-parse" would re-read the stale capture and silently ignore the
+ * edit.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -76,12 +77,14 @@ import { actions } from "../+page.server";
 
 function createEvent(opts: {
   description?: string;
+  title?: string;
   reparse?: string;
   user?: any;
   params?: Record<string, string>;
 } = {}) {
   const fd = new FormData();
   if (opts.description !== undefined) fd.set("description", opts.description);
+  if (opts.title !== undefined) fd.set("title", opts.title);
   if (opts.reparse !== undefined) fd.set("reparse", opts.reparse);
   return {
     params: opts.params ?? { id: "3815" },
@@ -117,19 +120,96 @@ function parsedStub(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe("updateDescription action", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockUpdateWhere.mockResolvedValue(undefined);
-    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
-    mockUpdate.mockReturnValue({ set: mockUpdateSet });
-    mockDeleteWhere.mockResolvedValue(undefined);
-    mockDelete.mockReturnValue({ where: mockDeleteWhere });
-    mockGetSelectedProfileId.mockResolvedValue(12);
-    mockJobFindFirst.mockResolvedValue({ created_manually: true });
-    mockImporterFindFirst.mockResolvedValue({ job_id: 3815 });
-    mockAddMatchJob.mockResolvedValue({ score: 77 });
+/** Default happy path: a manual job this profile imported. */
+function resetMocks() {
+  vi.clearAllMocks();
+  mockUpdateWhere.mockResolvedValue(undefined);
+  mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
+  mockUpdate.mockReturnValue({ set: mockUpdateSet });
+  mockDeleteWhere.mockResolvedValue(undefined);
+  mockDelete.mockReturnValue({ where: mockDeleteWhere });
+  mockGetSelectedProfileId.mockResolvedValue(12);
+  mockJobFindFirst.mockResolvedValue({ created_manually: true });
+  mockImporterFindFirst.mockResolvedValue({ job_id: 3815 });
+  mockAddMatchJob.mockResolvedValue({ score: 77 });
+}
+
+describe("updateTitle action", () => {
+  beforeEach(resetMocks);
+
+  it("rejects unauthenticated", async () => {
+    const res = await actions.updateTitle!(
+      createEvent({ title: "New Title", user: null }),
+    );
+    expect(res).toMatchObject({ status: 401 });
   });
+
+  it("rejects a scraped job", async () => {
+    mockJobFindFirst.mockResolvedValueOnce({ created_manually: false });
+    const res = await actions.updateTitle!(createEvent({ title: "New Title" }));
+    expect(res).toMatchObject({ status: 403 });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a manual job this profile did not import", async () => {
+    mockImporterFindFirst.mockResolvedValueOnce(undefined);
+    const res = await actions.updateTitle!(createEvent({ title: "New Title" }));
+    expect(res).toMatchObject({ status: 403 });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("lets staff edit a manual job they did not import", async () => {
+    mockImporterFindFirst.mockResolvedValue(undefined);
+    const res = await actions.updateTitle!(
+      createEvent({
+        title: "New Title",
+        user: { id: "user-1", is_staff: true },
+      }),
+    );
+    expect(res).toMatchObject({ success: true, action: "titleSaved" });
+    expect(mockImporterFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("rejects a blank title", async () => {
+    const res = await actions.updateTitle!(createEvent({ title: "   " }));
+    expect(res).toMatchObject({ status: 400 });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a title past the column width", async () => {
+    // The browser caps this with maxlength; a direct POST would otherwise
+    // reach the varchar(255) column and fail at the DB instead.
+    const res = await actions.updateTitle!(
+      createEvent({ title: "x".repeat(256) }),
+    );
+    expect(res).toMatchObject({ status: 400 });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("saves the trimmed title without touching the parse input", async () => {
+    const res = await actions.updateTitle!(
+      createEvent({ title: "  Senior Svelte Engineer  " }),
+    );
+    expect(res).toMatchObject({
+      success: true,
+      action: "titleSaved",
+      title: "Senior Svelte Engineer",
+    });
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Senior Svelte Engineer" }),
+    );
+    // A title edit is not parse input — the stored content and the score are
+    // left exactly as they were.
+    expect(mockUpdateSet).not.toHaveBeenCalledWith(
+      expect.objectContaining({ source_html_stripped: expect.anything() }),
+    );
+    expect(mockParseJobDescription).not.toHaveBeenCalled();
+    expect(mockAddMatchJob).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateDescription action", () => {
+  beforeEach(resetMocks);
 
   it("rejects unauthenticated", async () => {
     const res = await actions.updateDescription!(

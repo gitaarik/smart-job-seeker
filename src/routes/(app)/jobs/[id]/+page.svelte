@@ -59,6 +59,18 @@
   let showReparseConfirm = $state(false);
   let reparseFormEl: HTMLFormElement | undefined = $state();
 
+  // Title editing (manually-created jobs only)
+  let isEditingTitle = $state(false);
+  let titleDraft = $state(data.job.title ?? "");
+  let isSavingTitle = $state(false);
+  let titleError = $state("");
+
+  function startEditingTitle() {
+    titleDraft = job.title ?? "";
+    titleError = "";
+    isEditingTitle = true;
+  }
+
   // Description editing (manually-created jobs only)
   let isEditingDescription = $state(false);
   let descriptionDraft = $state(data.job.job_description ?? "");
@@ -181,9 +193,77 @@
         </div>
 
         <!-- Title -->
-        <h1 class="text-2xl font-bold text-[var(--dash-text)]">
-          {job.title || "Untitled Job"}
-        </h1>
+        {#if isEditingTitle}
+          <form
+            method="POST"
+            action="?/updateTitle"
+            use:enhance={() => {
+              isSavingTitle = true;
+              titleError = "";
+              return async ({ result }) => {
+                isSavingTitle = false;
+                if (result.type === "failure") {
+                  titleError = (result.data as { error?: string })?.error ||
+                    "Save failed";
+                  return;
+                }
+                job.title = titleDraft.trim();
+                isEditingTitle = false;
+              };
+            }}
+          >
+            <input
+              name="title"
+              bind:value={titleDraft}
+              maxlength="255"
+              disabled={isSavingTitle}
+              aria-label="Job title"
+              class="w-full px-3 py-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+            />
+
+            {#if titleError}
+              <p class="mt-2 text-sm text-red-500">{titleError}</p>
+            {/if}
+
+            <div class="flex flex-wrap items-center gap-2 mt-3">
+              <button
+                type="submit"
+                disabled={isSavingTitle}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
+              >
+                {#if isSavingTitle}
+                  <Spinner size="w-4 h-4" />
+                {/if}
+                Save
+              </button>
+
+              <button
+                type="button"
+                disabled={isSavingTitle}
+                onclick={() => (isEditingTitle = false)}
+                class="px-4 py-2 rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        {:else}
+          <div class="flex items-start justify-between gap-4">
+            <h1 class="text-2xl font-bold text-[var(--dash-text)]">
+              {job.title || "Untitled Job"}
+            </h1>
+            {#if data.canEditContent}
+              <button
+                type="button"
+                onclick={startEditingTitle}
+                class="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors shrink-0"
+              >
+                <FontAwesomeIcon icon={faPenToSquare} class="w-3.5 h-3.5" />
+                {job.title ? "Edit" : "Add title"}
+              </button>
+            {/if}
+          </div>
+        {/if}
 
         <!-- Tags (status, job types, work location) -->
         <div class="flex flex-wrap gap-2 mt-3">
@@ -419,13 +499,13 @@
       {/if}
 
       <!-- Job Description -->
-      {#if job.job_description || data.canEditDescription}
+      {#if job.job_description || data.canEditContent}
         <Card padding="lg">
           <div class="flex items-start justify-between gap-4 mb-4">
             <h2 class="text-lg font-semibold text-[var(--dash-text)]">
               Job Description
             </h2>
-            {#if data.canEditDescription && !isEditingDescription}
+            {#if data.canEditContent && !isEditingDescription}
               <button
                 type="button"
                 onclick={startEditingDescription}

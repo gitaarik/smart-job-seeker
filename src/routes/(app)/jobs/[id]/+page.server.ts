@@ -36,6 +36,9 @@ import { normalizeSalaryPeriod } from "$lib/salary/conversion";
  */
 const RESCORE_TIMEOUT_MS = 45_000;
 
+/** Matches the `jobs.title` varchar width — a longer value errors at the DB. */
+const TITLE_MAX_LENGTH = 255;
+
 /**
  * Re-extract parser-owned fields from a job's stored content and re-score it.
  *
@@ -163,14 +166,14 @@ async function reparseAndRescore(
 }
 
 /**
- * Whether `profileId` may hand-edit this job's description.
+ * Whether `profileId` may hand-edit this job's title and description.
  *
  * Jobs are shared across profiles, so editing is limited to manually-created
- * ones — a scraped job's description is a page capture that the next rescrape
+ * ones — a scraped job's content is a page capture that the next rescrape
  * would overwrite anyway. Within those, only the profile that created the job
  * (its importer) or staff can edit.
  */
-async function canEditJobDescription(
+async function canEditJobContent(
   jobId: number,
   profileId: number,
   createdManually: boolean,
@@ -253,7 +256,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   const isStaff = !!(user as { is_staff?: boolean })?.is_staff ||
     !!(user as { is_admin?: boolean })?.is_admin;
 
-  const canEditDescription = await canEditJobDescription(
+  const canEditContent = await canEditJobContent(
     jobId,
     profileId,
     job.created_manually,
@@ -466,7 +469,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     rescrapeConfig,
     existingApplication,
     chatContext,
-    canEditDescription,
+    canEditContent,
   };
 };
 
@@ -701,6 +704,68 @@ export const actions: Actions = {
   },
 
   /**
+   * Hand-edit a manually-created job's title.
+   *
+   * No re-parse variant, unlike the description: the title is parser *output*,
+   * not input, so a hand-set title stands until the next "Save & re-parse"
+   * overwrites it from the description text.
+   */
+  updateTitle: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobsTable.id, jobId),
+      columns: { created_manually: true },
+    });
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
+    const allowed = await canEditJobContent(
+      jobId,
+      profileId,
+      job.created_manually,
+      isStaff,
+    );
+    if (!allowed) {
+      return fail(403, { error: "This job's title can't be edited" });
+    }
+
+    const formData = await request.formData();
+    const title = ((formData.get("title") as string) ?? "").trim();
+
+    if (!title) {
+      return fail(400, { error: "Title cannot be empty" });
+    }
+    if (title.length > TITLE_MAX_LENGTH) {
+      return fail(400, {
+        error: `Title cannot be longer than ${TITLE_MAX_LENGTH} characters`,
+      });
+    }
+
+    await db.update(jobsTable)
+      .set({ title, date_updated: new Date() })
+      .where(eq(jobsTable.id, jobId));
+
+    return { success: true, action: "titleSaved", title };
+  },
+
+  /**
    * Hand-edit a manually-created job's description, optionally re-running
    * extraction + scoring on the new text.
    */
@@ -730,7 +795,7 @@ export const actions: Actions = {
 
     const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
       !!(user as { is_admin?: boolean }).is_admin;
-    const allowed = await canEditJobDescription(
+    const allowed = await canEditJobContent(
       jobId,
       profileId,
       job.created_manually,
