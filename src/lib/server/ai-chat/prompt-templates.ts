@@ -110,8 +110,8 @@ Return a single JSON object with exactly two keys: "text" (the answer — use th
 \${applicationDocuments}
 
 - The applicant sent you a message (below). First decide what they want:
-  - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "how should I frame this?", "is this too long?") → set "text" to null and put your helpful, specific, job-grounded reply in "feedback". Do NOT write the answer.
-  - If they ask you to WRITE or DRAFT the answer, or they left no message → put the complete answer in "text", and a short grounding note in "feedback".
+  - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "how should I frame this?", "how should I approach answering this?", "is this too long?", "what should I emphasize?") → set "text" to null and put your helpful, specific, job-grounded reply in "feedback". Do NOT write the answer. A message about HOW to answer is advice even when it is short, and even when it contains the word "answer" — asking how to answer is not the same as asking you to write one.
+  - If they ask you to WRITE or DRAFT the answer itself (e.g. "write my answer", "draft this for me", "just do it"), or they left no message → put the complete answer in "text", and a short grounding note in "feedback".
 - Always include "feedback". Respond with a single JSON object with "feedback" first, then "text" (a string, or null).
 
 ## When you WRITE the answer:
