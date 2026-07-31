@@ -13,6 +13,7 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { cheat_sheets } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
+import type { GenerationContextOption } from "./generation-context";
 import { buildConversationMessages } from "./conversation-messages";
 import {
   CHEATSHEET_VERSIONS,
@@ -54,6 +55,7 @@ export async function createProfileCheatSheetFollowup(
 ): Promise<FollowupResult> {
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let context: GenerationContextOption | undefined;
   let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
     [];
 
@@ -87,6 +89,21 @@ export async function createProfileCheatSheetFollowup(
       promptType = mode === "review"
         ? "review_prep_sheet"
         : "followup_prep_sheet";
+
+      // Revision turns get the same evidence the initial draft had — otherwise
+      // turn 2 onward works from the conversation alone. Ranked against the
+      // applicant's request PLUS what the sheet is about, so a thin instruction
+      // ("add a section on caching") still retrieves against the topic.
+      if (mode !== "review") {
+        context = {
+          query: {
+            text: [followupRequest, sheetContext, currentContent]
+              .filter(Boolean)
+              .join("\n"),
+          },
+          sources: ["projects", "stories", "application_texts"],
+        };
+      }
     }
   }
 
@@ -98,6 +115,7 @@ export async function createProfileCheatSheetFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    context,
     historyMessages,
     profileDataFields: CHEATSHEET_PROFILE_FIELDS,
     fetchEntity: (id) =>

@@ -18,9 +18,11 @@ vi.mock(
   () => ({ applicationDocumentsText: vi.fn() }),
 );
 vi.mock("../job-context", () => ({ jobDetailsText: vi.fn() }));
-vi.mock("../profile-data", () => ({
+// Only the DB read is mocked — the trimmer and renderer are pure, so the tests
+// exercise the real ones.
+vi.mock("../profile-data", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../profile-data")>()),
   loadProfileData: vi.fn(),
-  renderProfileData: (data: unknown) => JSON.stringify(data),
 }));
 
 import { relevantProjectsText } from "$lib/server/documents/retrieval";

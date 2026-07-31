@@ -12,6 +12,7 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { project_stories } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
+import type { GenerationContextOption } from "./generation-context";
 import { buildConversationMessages } from "./conversation-messages";
 import {
   ensureBaselineVersion,
@@ -65,6 +66,7 @@ export async function createProfileStoryFollowup(
 ): Promise<FollowupResult> {
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let context: GenerationContextOption | undefined;
   let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
     [];
 
@@ -94,6 +96,23 @@ export async function createProfileStoryFollowup(
       promptType = mode === "review"
         ? "review_star_story"
         : "followup_star_story";
+
+      // Revision turns get the same evidence the initial draft had — otherwise
+      // turn 2 onward is working from the conversation alone. Ranked against
+      // what the applicant just asked for PLUS what the story is about, so a
+      // thin instruction ("tighten this") still retrieves against the subject
+      // rather than against itself. `stories` stays out: it would retrieve the
+      // very story being revised.
+      if (mode !== "review") {
+        context = {
+          query: {
+            text: [followupRequest, storyContext, currentStar]
+              .filter(Boolean)
+              .join("\n"),
+          },
+          sources: ["projects", "application_texts"],
+        };
+      }
     }
   }
 
@@ -105,6 +124,7 @@ export async function createProfileStoryFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    context,
     historyMessages,
     profileDataFields: STORY_PROFILE_FIELDS,
     fetchEntity: (id) =>

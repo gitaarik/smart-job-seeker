@@ -270,6 +270,12 @@ What specific experiences, skills, and achievements from their profile should th
 
 \${data}
 
+\${relevantProjects}
+
+\${relevantStories}
+
+\${relevantApplicationTexts}
+
 ## Job:
 
 \${jobDetails}
@@ -441,6 +447,10 @@ In your feedback:
 
 \${data}
 
+\${relevantProjects}
+
+\${relevantApplicationTexts}
+
 ## This story:
 
 \${storyContext}
@@ -605,6 +615,12 @@ In your feedback:
 ## Applicant Profile:
 
 \${data}
+
+\${relevantProjects}
+
+\${relevantStories}
+
+\${relevantApplicationTexts}
 
 ## This cheat sheet:
 
@@ -1290,6 +1306,12 @@ Return JSON with:
 ## Applicant Profile:
 
 \${data}
+
+\${relevantProjects}
+
+\${relevantStories}
+
+\${relevantApplicationTexts}
 
 ## Job:
 

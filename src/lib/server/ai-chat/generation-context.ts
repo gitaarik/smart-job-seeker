@@ -37,6 +37,8 @@ import { interviewRecordsText } from "./application-records";
 import { applicationDocumentsText } from "./application-documents";
 import { jobDetailsText } from "./job-context";
 import {
+  fitProfileToBudget,
+  formatTrimNote,
   loadProfileData,
   type ProfileData,
   renderProfileData,
@@ -109,6 +111,13 @@ export interface ContextRequest {
   /** Per-source overrides — see SourceOptions. */
   sourceOptions?: SourceOptions;
   /**
+   * Cap on the rendered profile blob, trimmed by dropping list entries (see
+   * fitProfileToBudget). Separate from `budgetChars` because the profile isn't
+   * evidence competing for space — it's the floor every prompt stands on.
+   * Defaults to DEFAULT_PROFILE_BUDGET_CHARS.
+   */
+  profileBudgetChars?: number;
+  /**
    * Char budget for the assembled evidence blocks combined (chars, not tokens —
    * matches the house convention in application-records.ts). Blocks are dropped
    * lowest-priority-first to fit. Defaults to DEFAULT_BUDGET_CHARS.
@@ -167,6 +176,15 @@ export interface AssembledContext {
 /** Generous default: ~6k tokens of evidence. Tunable per call via budgetChars. */
 export const DEFAULT_BUDGET_CHARS = 24000;
 
+/**
+ * Ceiling on the profile blob. Set ABOVE what real profiles produce today (dev
+ * measures 34k compact on the widest field list) so this bounds the pathological
+ * case without silently rewriting the prompts that work now. Tighten it
+ * deliberately, behind `npm run llm:smoke` — every drop is real experience the
+ * model stops seeing.
+ */
+export const DEFAULT_PROFILE_BUDGET_CHARS = 60000;
+
 /** How the provider assembles one source. */
 interface SourceDef {
   /** Prompt-variable key this source fills. */
@@ -192,7 +210,11 @@ const SOURCES: Record<ContextSource, SourceDef> = {
     render: async (req) => {
       const profile = req.preloadedProfile ??
         await loadProfileData(req.profileId, req.profileFields);
-      return renderProfileData(profile.data);
+      const { data, dropped } = fitProfileToBudget(
+        profile.data,
+        req.profileBudgetChars ?? DEFAULT_PROFILE_BUDGET_CHARS,
+      );
+      return renderProfileData(data) + formatTrimNote(dropped);
     },
   },
   job: {

@@ -83,6 +83,77 @@ export async function loadProfileData(
   return { data: dataJson, schema: schemaJson };
 }
 
+/** What a trim pass removed, for the note appended to the rendered blob. */
+export interface ProfileTrim {
+  data: Record<string, unknown>;
+  /** field → how many entries survived out of how many there were. */
+  dropped: Record<string, { kept: number; total: number }>;
+}
+
+/**
+ * Trim a profile blob to a char budget by dropping ENTRIES from its largest
+ * list fields — you cannot clip JSON mid-string, so this is the only safe axis.
+ *
+ * Lists come out of exportProfile ordered `asc(sort), desc(start_date)`: manual
+ * drag-order first, then most recent. So the front is what matters and trimming
+ * takes from the END — the oldest job goes before the current one.
+ *
+ * Scalars (name, title, summary) are never touched: they are tiny and they are
+ * the applicant's identity. The blow-up is always the lists — on dev,
+ * work_experiences alone is 22k of a 34k blob.
+ */
+export function fitProfileToBudget(
+  data: Record<string, unknown>,
+  budgetChars: number,
+): ProfileTrim {
+  const trimmed: Record<string, unknown> = { ...data };
+  const totals = new Map<string, number>();
+  for (const [key, value] of Object.entries(trimmed)) {
+    if (Array.isArray(value)) totals.set(key, value.length);
+  }
+
+  while (JSON.stringify(trimmed).length > budgetChars) {
+    // The biggest list with something left to give.
+    let victim: string | null = null;
+    let victimSize = 0;
+    for (const [key, value] of Object.entries(trimmed)) {
+      if (!Array.isArray(value) || value.length <= 1) continue;
+      const size = JSON.stringify(value).length;
+      if (size > victimSize) {
+        victim = key;
+        victimSize = size;
+      }
+    }
+    // Nothing left to drop — the scalars alone exceed the budget. Better an
+    // over-budget prompt than a profile with no identity in it.
+    if (!victim) break;
+    trimmed[victim] = (trimmed[victim] as unknown[]).slice(0, -1);
+  }
+
+  const dropped: Record<string, { kept: number; total: number }> = {};
+  for (const [key, total] of totals) {
+    const kept = (trimmed[key] as unknown[]).length;
+    if (kept < total) dropped[key] = { kept, total };
+  }
+  return { data: trimmed, dropped };
+}
+
+/**
+ * Tell the model the profile it just read is partial, so it doesn't conclude
+ * the applicant simply has no earlier jobs. Mirrors the "NOTE: N further
+ * record(s) exist" wording in application-records.ts.
+ */
+export function formatTrimNote(dropped: ProfileTrim["dropped"]): string {
+  const parts = Object.entries(dropped).map(
+    ([field, { kept, total }]) =>
+      `${field}: showing ${kept} of ${total} (most relevant first)`,
+  );
+  if (!parts.length) return "";
+  return `\n\nNOTE: this profile was trimmed to fit — ${
+    parts.join("; ")
+  }. Treat it as partial rather than complete.`;
+}
+
 /**
  * Render a profile blob for interpolation.
  *

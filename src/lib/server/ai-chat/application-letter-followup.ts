@@ -113,6 +113,26 @@ export async function createApplicationLetterFollowup(
       const currentLetterContent = latestVersion?.content ||
         letterRecord.content || "";
 
+      // A revision turn gets the same retrieved evidence the initial draft had;
+      // without it turn 2 onward writes from the conversation alone. Ranked
+      // against the applicant's request PLUS the letter itself, so "make it
+      // shorter" still retrieves against the subject rather than against the
+      // instruction. Review has no retrieval slots — critiquing a letter needs
+      // the letter, not fresh material.
+      if (context && mode !== "review") {
+        context.query = {
+          text: [followupRequest, currentLetterContent].filter(Boolean).join(
+            "\n",
+          ),
+        };
+        context.sources = [
+          ...context.sources,
+          "projects",
+          "stories",
+          "application_texts",
+        ];
+      }
+
       // The thread so far, replayed as real turns. Both the revision and the
       // review path get it: a review that ignores what was already discussed
       // re-suggests things the applicant deliberately changed.

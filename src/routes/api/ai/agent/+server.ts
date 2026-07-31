@@ -73,7 +73,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     );
 
   await requireProfileAccess(profile_id, user.id);
-  await requireCredits(user.id, 1);
+  // Same as every other generation endpoint. The chat was priced at 1 when it
+  // was a profile blob and a question; it now assembles the same evidence and
+  // calls the same writing model as a cover letter, so it costs the same.
+  await requireCredits(user.id, 5);
 
   // Resolve the target conversation up front (ownership-checked). A new thread
   // is created lazily only after a successful reply, below.

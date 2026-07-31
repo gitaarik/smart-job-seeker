@@ -96,6 +96,25 @@ export async function createApplicationQuestionFollowup(
           entity: { type: "application", id: applicationId },
           sources: ["job", "application_records", "application_documents"],
         };
+        // A revision turn gets the same retrieved evidence the initial answer
+        // had; without it turn 2 onward writes from the conversation alone.
+        // Ranked against what the applicant just asked for PLUS the question
+        // itself, so "make it punchier" still retrieves against the subject.
+        // Review deliberately doesn't — its template has no retrieval slots,
+        // and critiquing an answer needs the answer, not fresh material.
+        if (mode !== "review") {
+          context.query = {
+            text: [followupRequest, questionRecord.question]
+              .filter(Boolean)
+              .join("\n"),
+          };
+          context.sources = [
+            ...context.sources,
+            "projects",
+            "stories",
+            "application_texts",
+          ];
+        }
       }
 
       // Latest answer content: prefer the newest version, fall back to answer.

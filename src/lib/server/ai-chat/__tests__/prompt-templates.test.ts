@@ -364,6 +364,12 @@ describe("${additionalContext} template ↔ caller wiring", () => {
  * may write one), which is exactly the set below.
  */
 const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
+  // Revision turns retrieve the same evidence the initial draft had.
+  // followup_star_story omits `stories` — it would retrieve itself.
+  followup_letter: "application-letter-followup.ts",
+  followup_application_question: "application-question-followup.ts",
+  followup_star_story: "profile-story-followup.ts",
+  followup_prep_sheet: "profile-cheatsheet-followup.ts",
   // routes/api/ai/agent — the personal assistant resolves its context from
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
@@ -422,6 +428,11 @@ describe("${relevantProjects} template ↔ caller wiring", () => {
  * interpolates it (else an embedding search runs and is thrown away).
  */
 const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
+  // Revision turns retrieve the same evidence the initial draft had.
+  // followup_star_story omits `stories` — it would retrieve itself.
+  followup_letter: "application-letter-followup.ts",
+  followup_application_question: "application-question-followup.ts",
+  followup_prep_sheet: "profile-cheatsheet-followup.ts",
   // routes/api/ai/agent — the personal assistant resolves its context from
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
@@ -467,6 +478,12 @@ describe("${relevantStories} template ↔ caller wiring", () => {
  * drift contract as the other retrieval slots.
  */
 const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
+  // Revision turns retrieve the same evidence the initial draft had.
+  // followup_star_story omits `stories` — it would retrieve itself.
+  followup_letter: "application-letter-followup.ts",
+  followup_application_question: "application-question-followup.ts",
+  followup_star_story: "profile-story-followup.ts",
+  followup_prep_sheet: "profile-cheatsheet-followup.ts",
   // routes/api/ai/agent — the personal assistant resolves its context from
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
