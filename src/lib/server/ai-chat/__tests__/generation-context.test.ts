@@ -10,12 +10,28 @@ vi.mock("$lib/server/documents/content-retrieval", () => ({
   relevantStoriesText: vi.fn(),
   relevantApplicationTextsText: vi.fn(),
 }));
+// The scoped sources each load their own entity; mock the loaders so these
+// tests exercise the registry and budgeting, not the DB.
+vi.mock("../application-records", () => ({ interviewRecordsText: vi.fn() }));
+vi.mock(
+  "../application-documents",
+  () => ({ applicationDocumentsText: vi.fn() }),
+);
+vi.mock("../job-context", () => ({ jobDetailsText: vi.fn() }));
+vi.mock("../profile-data", () => ({
+  loadProfileData: vi.fn(),
+  renderProfileData: (data: unknown) => JSON.stringify(data),
+}));
 
 import { relevantProjectsText } from "$lib/server/documents/retrieval";
 import {
   relevantApplicationTextsText,
   relevantStoriesText,
 } from "$lib/server/documents/content-retrieval";
+import { interviewRecordsText } from "../application-records";
+import { applicationDocumentsText } from "../application-documents";
+import { jobDetailsText } from "../job-context";
+import { loadProfileData } from "../profile-data";
 import {
   assembleGenerationContext,
   fitToBudget,
@@ -25,11 +41,19 @@ import {
 const mockRelevantProjects = vi.mocked(relevantProjectsText);
 const mockRelevantStories = vi.mocked(relevantStoriesText);
 const mockRelevantAppTexts = vi.mocked(relevantApplicationTextsText);
+const mockRecords = vi.mocked(interviewRecordsText);
+const mockDocuments = vi.mocked(applicationDocumentsText);
+const mockJobDetails = vi.mocked(jobDetailsText);
+const mockLoadProfile = vi.mocked(loadProfileData);
 
 beforeEach(() => {
   mockRelevantProjects.mockReset();
   mockRelevantStories.mockReset();
   mockRelevantAppTexts.mockReset();
+  mockRecords.mockReset().mockResolvedValue("");
+  mockDocuments.mockReset().mockResolvedValue("");
+  mockJobDetails.mockReset().mockResolvedValue("");
+  mockLoadProfile.mockReset().mockResolvedValue({ data: {}, schema: {} });
 });
 
 describe("fitToBudget", () => {
@@ -70,7 +94,10 @@ describe("fitToBudget", () => {
 
 describe("queryToJobLike", () => {
   it("maps text onto title (clipped) and description, skills onto skills_required", () => {
-    const job = queryToJobLike({ text: "distributed systems", skills: ["Kafka"] });
+    const job = queryToJobLike({
+      text: "distributed systems",
+      skills: ["Kafka"],
+    });
     expect(job.title).toBe("distributed systems");
     expect(job.job_description).toBe("distributed systems");
     expect(job.skills_required).toEqual(["Kafka"]);
@@ -112,7 +139,10 @@ describe("assembleGenerationContext", () => {
     // The query was adapted to the retriever's JobLike shape.
     expect(mockRelevantProjects).toHaveBeenCalledWith(
       1,
-      expect.objectContaining({ job_description: "backend scaling", skills_required: ["Go"] }),
+      expect.objectContaining({
+        job_description: "backend scaling",
+        skills_required: ["Go"],
+      }),
       3,
     );
   });
@@ -141,7 +171,9 @@ describe("assembleGenerationContext", () => {
 
   it("assembles multiple sources, each into its own variable", async () => {
     mockRelevantProjects.mockResolvedValue("## Relevant projects\n1. Foo");
-    mockRelevantStories.mockResolvedValue("## Relevant interview stories\n1. Bar");
+    mockRelevantStories.mockResolvedValue(
+      "## Relevant interview stories\n1. Bar",
+    );
     const ctx = await assembleGenerationContext({
       profileId: 1,
       query: { text: "leadership under deadline" },
@@ -186,5 +218,151 @@ describe("assembleGenerationContext", () => {
       3,
       42,
     );
+  });
+});
+
+describe("scoped sources", () => {
+  const applicationRequest = {
+    profileId: 1,
+    entity: { type: "application" as const, id: 42 },
+    sources: [
+      "job",
+      "application_records",
+      "application_documents",
+    ] as const,
+  };
+
+  it("loads the job, records and documents from the entity", async () => {
+    mockJobDetails.mockResolvedValue("**Position:** Staff Engineer");
+    mockRecords.mockResolvedValue("## What has already happened");
+    mockDocuments.mockResolvedValue("## Attached documents");
+
+    const ctx = await assembleGenerationContext({
+      ...applicationRequest,
+      sources: [...applicationRequest.sources],
+    });
+
+    expect(ctx.variables.jobDetails).toContain("Staff Engineer");
+    expect(ctx.variables.interviewHistory).toContain("already happened");
+    expect(ctx.variables.applicationDocuments).toContain("Attached documents");
+    expect(mockJobDetails).toHaveBeenCalledWith({ applicationId: 42 });
+  });
+
+  it("needs no query — scoped sources render the entity, not a ranking", async () => {
+    mockRecords.mockResolvedValue("## records");
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      entity: { type: "application", id: 42 },
+      sources: ["application_records"],
+    });
+    expect(ctx.usedSources).toEqual(["application_records"]);
+  });
+
+  it("renders nothing for application sources when the entity is a job", async () => {
+    // A job page has no application, so there is nothing recorded or attached.
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      entity: { type: "job", id: 5 },
+      sources: ["job", "application_records", "application_documents"],
+    });
+    expect(mockRecords).not.toHaveBeenCalled();
+    expect(mockDocuments).not.toHaveBeenCalled();
+    expect(mockJobDetails).toHaveBeenCalledWith({ jobId: 5 });
+    expect(ctx.variables.interviewHistory).toBe("");
+  });
+
+  it("passes the per-source detail knob through", async () => {
+    await assembleGenerationContext({
+      profileId: 1,
+      entity: { type: "application", id: 42 },
+      sources: ["application_records", "application_documents"],
+      sourceOptions: {
+        application_records: { detail: "full" },
+        application_documents: { detail: "full" },
+      },
+    });
+    expect(mockRecords).toHaveBeenCalledWith(42, "full");
+    expect(mockDocuments).toHaveBeenCalledWith(42, "full");
+  });
+
+  it("defaults exclusion to the application in scope", async () => {
+    mockRelevantAppTexts.mockResolvedValue("past writing");
+    await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "why do you want to work here" },
+      entity: { type: "application", id: 42 },
+      sources: ["application_texts"],
+    });
+    // You are never your own prior art — no explicit excludeApplicationId needed.
+    expect(mockRelevantAppTexts).toHaveBeenCalledWith(
+      1,
+      expect.anything(),
+      3,
+      42,
+    );
+  });
+
+  it("renders the profile blob as the `data` variable, under the budget", async () => {
+    mockLoadProfile.mockResolvedValue({ data: { name: "Alex" }, schema: {} });
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      sources: ["profile"],
+      profileFields: ["name"],
+    });
+    expect(ctx.variables.data).toBe('{"name":"Alex"}');
+    expect(mockLoadProfile).toHaveBeenCalledWith(1, ["name"]);
+  });
+
+  it("reuses a preloaded profile instead of querying again", async () => {
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      sources: ["profile"],
+      preloadedProfile: { data: { name: "Sam" }, schema: {} },
+    });
+    expect(mockLoadProfile).not.toHaveBeenCalled();
+    expect(ctx.variables.data).toBe('{"name":"Sam"}');
+  });
+
+  it("does not charge the profile blob against the evidence budget", async () => {
+    // Measured on dev, the blob runs 48–106k chars — several times any sane
+    // evidence budget. If it competed, it would always win and every other
+    // source would be dropped on exactly the profiles worth retrieving from.
+    mockLoadProfile.mockResolvedValue({
+      data: { bio: "x".repeat(5000) },
+      schema: {},
+    });
+    mockRelevantProjects.mockResolvedValue("y".repeat(500));
+
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "anything" },
+      sources: ["profile", "projects"],
+      budgetChars: 600,
+    });
+
+    expect(ctx.usedSources.sort()).toEqual(["profile", "projects"]);
+    expect(ctx.variables.relevantProjects).toHaveLength(500);
+    expect(ctx.profileChars).toBeGreaterThan(5000);
+  });
+
+  it("still rations the evidence sources against each other", async () => {
+    mockLoadProfile.mockResolvedValue({
+      data: { bio: "x".repeat(5000) },
+      schema: {},
+    });
+    mockJobDetails.mockResolvedValue("j".repeat(500));
+    mockRelevantProjects.mockResolvedValue("y".repeat(500));
+
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "anything" },
+      entity: { type: "application", id: 42 },
+      sources: ["profile", "job", "projects"],
+      budgetChars: 600,
+    });
+
+    // Only one 500-char evidence block fits; the job outranks retrieval.
+    expect(ctx.usedSources.sort()).toEqual(["job", "profile"]);
+    expect(ctx.variables.relevantProjects).toBe("");
   });
 });

@@ -24,26 +24,9 @@ export const load: PageServerLoad = async ({ parent }) => {
     }),
   ]);
 
-  // Snapshot for the personal AI assistant — the user's STAR stories and
-  // cheat sheets, so they can ask it to sharpen a specific story or note.
-  const chatContext = {
-    label: "Interview prep",
-    data: {
-      stories: stories.map((s) => ({
-        title: s.title,
-        category: s.category,
-        situation: s.situation,
-        task: s.task,
-        action: s.action,
-        result: s.result,
-        reflection: s.reflection,
-      })),
-      cheatsheets: cheatsheets.map((c) => ({
-        title: c.title,
-        content: c.content,
-      })),
-    },
-  };
+  // Label for the assistant's "I can see this page" chip. The context itself is
+  // resolved server-side from the route — see ai-chat/chat-context.ts.
+  const chatContext = { label: "Interview prep" };
 
   return {
     cheatsheets,

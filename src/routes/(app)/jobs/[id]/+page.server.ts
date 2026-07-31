@@ -444,38 +444,12 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     columns: { id: true, status: true },
   });
 
-  // Curated snapshot for the personal AI assistant — only safe, relevant
-  // fields (no credentials/fingerprints from rescrapeConfig).
+  // Label for the assistant's "I can see this page" chip. The job itself is
+  // resolved server-side from the route — see ai-chat/chat-context.ts.
   const chatContext = {
     label: `Job: ${job.title ?? "Untitled"}${
       job.company ? ` at ${job.company}` : ""
     }`,
-    data: {
-      title: job.title,
-      company: job.company,
-      job_poster: job.job_poster,
-      office_location: job.office_location,
-      work_location: job.work_location,
-      job_types: job.job_types,
-      experience_levels: job.experience_levels,
-      salary_min: job.salary_min,
-      salary_max: job.salary_max,
-      salary_currency: job.salary_currency,
-      salary_period: job.salary_period,
-      skills_required: job.skills_required,
-      skills_preferred: job.skills_preferred,
-      description: job.job_description,
-      company_description: job.company_description,
-      match: match
-        ? {
-          score: match.score,
-          skill_match_percentage: match.skill_match_percentage,
-          recommendation: match.recommendation,
-          summary: match.match_summary,
-        }
-        : null,
-      user_status: jobStatus?.status ?? "new",
-    },
   };
 
   return {

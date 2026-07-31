@@ -5,6 +5,7 @@
 
 import { getErrorMessage } from "$lib/server/utils/errors";
 import type { ChatMessage } from "$lib/server/llm";
+import type { GenerationContextOption } from "./generation-context";
 import { createFollowupAiChat } from "./create-followup";
 
 export type FollowupResult = {
@@ -34,6 +35,8 @@ export async function createEntityFollowup(opts: {
   promptType?: string;
   customVariables?: Record<string, unknown>;
   profileDataFields?: string[];
+  /** Evidence to assemble for this turn — see generation-context.ts. */
+  context?: GenerationContextOption;
   /** Prior turns of this thread, replayed as real messages. */
   historyMessages?: ChatMessage[];
   fetchEntity: (
@@ -96,6 +99,7 @@ export async function createEntityFollowup(opts: {
         promptType,
         customVariables,
         profileDataFields: opts.profileDataFields,
+        context: opts.context,
         historyMessages: opts.historyMessages,
       },
     );

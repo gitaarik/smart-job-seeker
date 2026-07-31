@@ -7,13 +7,8 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_questions } from "$lib/server/db/schema";
 import { createAndGenerateAiChat, instructionsBlock } from "./utils";
-import {
-  assembleGenerationContext,
-  type RelevanceQuery,
-} from "./generation-context";
+import { type ContextSource, type RelevanceQuery } from "./generation-context";
 import { CORE_PROFILE_FIELDS } from "./profile-fields";
-import { interviewRecordsText } from "./application-records";
-import { applicationDocumentsText } from "./application-documents";
 import {
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -117,51 +112,33 @@ export async function generateApplicationQuestionAnswer(
 
   const profileId = question.application.profile_id;
   const job = question.application.job;
-  const jobDescription = job?.job_description || "";
 
-  // Retrieved applicant context — projects, prepared STAR stories, and past
-  // application writing — ranked against BOTH the job and the question being
-  // answered (a "leadership" question should surface leadership material), via
-  // the unified provider. Replaces the hand-rolled relevantProjectsText call.
-  // Writing modes only, since advice/review don't interpolate these slots.
-  // Exclude this application's own texts so an answer isn't fed its siblings.
-  let retrievalVars: Record<string, string> = {};
-  if (mode === "generate" || mode === "auto") {
-    // The QUESTION is the primary signal (it decides what to draw on), with the
-    // role title + required skills as secondary context. The full job_description
-    // is deliberately left out of the *query*: its length swamps the one-line
-    // question under token-overlap ranking, so every question on an application
-    // would otherwise retrieve the same job-driven set. (The model still sees the
-    // full JD via ${jobDescription}.)
-    const query: RelevanceQuery = {
-      text: [question.question, job?.title].filter(Boolean).join("\n"),
-      skills: (job?.skills_required as string[] | null) ?? undefined,
-    };
-    const ctx = await assembleGenerationContext({
-      profileId,
-      query,
-      sources: ["projects", "stories", "application_texts"],
-      excludeApplicationId: question.application.id,
-    });
-    retrievalVars = ctx.variables;
-  }
+  // What this generation draws on. Scoped sources (the job, what has already
+  // happened on the application, the files on its Documents tab) come from the
+  // entity; ranked sources are retrieved against the query below. Ranked
+  // sources are writing-mode only, since advice/review don't interpolate those
+  // slots — the scoped ones are useful in every mode.
+  //
+  // The QUESTION is the primary ranking signal (it decides what to draw on),
+  // with the role title + required skills as secondary context. The full
+  // job_description is deliberately left out of the *query*: its length swamps
+  // the one-line question under token-overlap ranking, so every question on an
+  // application would otherwise retrieve the same job-driven set. (The model
+  // still sees the full JD via ${jobDetails}.)
+  const isWriting = mode === "generate" || mode === "auto";
+  const query: RelevanceQuery = {
+    text: [question.question, job?.title].filter(Boolean).join("\n"),
+    skills: (job?.skills_required as string[] | null) ?? undefined,
+  };
+  const sources: ContextSource[] = [
+    "job",
+    "application_records",
+    "application_documents",
+  ];
+  if (isWriting) sources.push("projects", "stories", "application_texts");
 
   const variables: Record<string, unknown> = {
-    jobDescription: jobDescription,
     question: question.question,
-    ...retrievalVars,
-    // What has happened on this application so far — a question answered
-    // mid-process should reflect the calls already had (empty if none).
-    interviewHistory: await interviewRecordsText(
-      question.application.id,
-      "compact",
-    ),
-    // Text of the files on the application's Documents tab (JD PDF, brief),
-    // extracted lazily and cached.
-    applicationDocuments: await applicationDocumentsText(
-      question.application.id,
-      "compact",
-    ),
   };
   // Review critiques the answer the applicant already has.
   if (mode === "review") {
@@ -181,7 +158,14 @@ export async function generateApplicationQuestionAnswer(
       promptType,
       variables,
       undefined,
-      { profileDataFields: QUESTION_PROFILE_FIELDS },
+      {
+        profileDataFields: QUESTION_PROFILE_FIELDS,
+        context: {
+          query,
+          entity: { type: "application", id: question.application.id },
+          sources,
+        },
+      },
     );
   } catch (error) {
     const errorMessage = error instanceof Error

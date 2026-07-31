@@ -24,10 +24,7 @@ import {
   serializeStarMarkdown,
   type StarFields,
 } from "$lib/interview/star";
-import {
-  assembleGenerationContext,
-  type RelevanceQuery,
-} from "./generation-context";
+import type { GenerationContextOption } from "./generation-context";
 import { CORE_PROFILE_FIELDS } from "./profile-fields";
 
 /** Profile data fields relevant for building a behavioural STAR story. */
@@ -137,19 +134,22 @@ export async function generateProfileStory(
   // *about*: its working title, theme, the applicant's brief, and the current
   // draft. The `stories` source is deliberately NOT requested — it would retrieve
   // this very story and feed it back into its own prompt.
+  let context: GenerationContextOption | undefined;
   if (mode === "generate" || mode === "auto") {
     const topic = story.title && !isUnnamed(story.title) ? story.title : "";
-    const query: RelevanceQuery = {
-      text: [topic, story.category ?? "", instructions ?? "", currentStar ?? ""]
-        .filter(Boolean)
-        .join("\n"),
-    };
-    const ctx = await assembleGenerationContext({
-      profileId,
-      query,
+    context = {
+      query: {
+        text: [
+          topic,
+          story.category ?? "",
+          instructions ?? "",
+          currentStar ?? "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      },
       sources: ["projects", "application_texts"],
-    });
-    Object.assign(variables, ctx.variables);
+    };
   }
 
   let aiChatResult;
@@ -159,7 +159,7 @@ export async function generateProfileStory(
       promptType,
       variables,
       undefined,
-      { profileDataFields: STORY_PROFILE_FIELDS },
+      { profileDataFields: STORY_PROFILE_FIELDS, context },
     );
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";

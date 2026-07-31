@@ -6,8 +6,7 @@ import { db } from "$lib/server/db";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
-import { interviewRecordsText } from "./application-records";
-import { applicationDocumentsText } from "./application-documents";
+import type { GenerationContextOption } from "./generation-context";
 import { LETTER_PROFILE_FIELDS } from "./profile-fields";
 import { buildConversationMessages } from "./conversation-messages";
 import {
@@ -50,32 +49,6 @@ function parseLetterResponse(
   return { letter: response, feedback: null };
 }
 
-/** Format job data as readable text for prompts */
-function formatJobDetails(
-  job: {
-    title: string | null;
-    job_description: string | null;
-    company_description: string | null;
-    job_poster: string | null;
-  },
-): string {
-  const lines: string[] = [`**Position:** ${job.title || "Not specified"}`];
-  if (job.job_poster) {
-    lines.push(
-      `**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`,
-    );
-  }
-  if (job.company_description) {
-    lines.push(`**About the company:** ${job.company_description}`);
-  }
-  lines.push(
-    "",
-    "**Job Description:**",
-    job.job_description || "Not specified",
-  );
-  return lines.join("\n");
-}
-
 export async function createApplicationLetterFollowup(
   letterId: number,
   followupRequest: string,
@@ -86,6 +59,7 @@ export async function createApplicationLetterFollowup(
   // For review or followup_letter mode, look up letter and job context
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let context: GenerationContextOption | undefined;
   let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
     [];
   if (mode === "review" || updateContent) {
@@ -96,20 +70,9 @@ export async function createApplicationLetterFollowup(
         content: true,
       },
       with: {
-        application: {
-          // id is needed to load this application's interview records.
-          columns: { id: true },
-          with: {
-            job: {
-              columns: {
-                title: true,
-                job_description: true,
-                company_description: true,
-                job_poster: true,
-              },
-            },
-          },
-        },
+        // id is all that's needed — the job, records and documents are loaded
+        // by the context provider from this application id.
+        application: { columns: { id: true } },
       },
     });
     if (letterRecord) {
@@ -121,24 +84,22 @@ export async function createApplicationLetterFollowup(
         letterRecord.content,
       );
 
-      const job = letterRecord.application?.job;
-      const jobDetailsText = job ? formatJobDetails(job) : "";
-
       // A cheat sheet is about the interviews themselves; a letter revision
       // only needs the gist of what has happened so far.
       const applicationId = letterRecord.application?.id;
-      const interviewHistory = applicationId
-        ? await interviewRecordsText(
-          applicationId,
-          letterRecord.letter_type === "cheat_sheet" ? "full" : "compact",
-        )
-        : "";
-      const applicationDocuments = applicationId
-        ? await applicationDocumentsText(
-          applicationId,
-          letterRecord.letter_type === "cheat_sheet" ? "full" : "compact",
-        )
-        : "";
+      if (applicationId != null) {
+        const detail = letterRecord.letter_type === "cheat_sheet"
+          ? "full" as const
+          : "compact" as const;
+        context = {
+          entity: { type: "application", id: applicationId },
+          sources: ["job", "application_records", "application_documents"],
+          sourceOptions: {
+            application_records: { detail },
+            application_documents: { detail },
+          },
+        };
+      }
 
       // Get the latest letter content: check letter_versions first, fall back to application_letters.content
       const latestVersion = await db.query.letter_versions.findFirst({
@@ -172,20 +133,12 @@ export async function createApplicationLetterFollowup(
         extraVariables = {
           generationMode: "review",
           letterContent: currentLetterContent,
-          jobDetails: jobDetailsText,
-          interviewHistory,
-          applicationDocuments,
         };
       } else {
         // followup_letter — needs job + latest letter; the conversation itself
         // arrives as messages rather than as a recap inside the prompt.
         promptType = "followup_letter";
-        extraVariables = {
-          letterContent: currentLetterContent,
-          jobDetails: jobDetailsText,
-          interviewHistory,
-          applicationDocuments,
-        };
+        extraVariables = { letterContent: currentLetterContent };
       }
     }
   }
@@ -198,6 +151,7 @@ export async function createApplicationLetterFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    context,
     historyMessages,
     profileDataFields: LETTER_PROFILE_FIELDS,
     fetchEntity: (id) =>

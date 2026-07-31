@@ -9,7 +9,9 @@ import {
 } from "$lib/server/utils/api-helpers";
 import { agentChatSchema, parseBody } from "$lib/server/validation/api-schemas";
 import { requireCredits } from "$lib/server/billing/require-credits";
+import type { ChatMessage } from "$lib/server/llm";
 import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
+import { resolveChatContext } from "$lib/server/ai-chat/chat-context";
 
 // Profile fields the agent is allowed to reason over. Mirrors the cover-letter
 // feature's set — enough to give grounded, personal advice without leaking
@@ -30,42 +32,30 @@ const PROFILE_DATA_FIELDS = [
   "languages",
 ];
 
-const MAX_PAGE_CONTEXT_CHARS = 6000;
-
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
 const MAX_CONTEXT_MESSAGES = 40;
 
-/** Render the page snapshot into a compact, LLM-friendly block. */
-function formatPageContext(
-  pageContext: { label?: string; data?: unknown } | null | undefined,
-): string {
-  if (!pageContext || (!pageContext.label && pageContext.data === undefined)) {
-    return "The user is on a general dashboard page; nothing specific is open.";
-  }
+/**
+ * Every evidence placeholder the personal_agent_chat template references.
+ *
+ * The provider only returns keys for the sources a route actually requests, but
+ * the template references all of them — and an un-supplied placeholder ships to
+ * the model as the literal text "${jobDetails}". Pre-filling with "" makes the
+ * absent ones silently absent, which is what the prompt's own wording assumes.
+ */
+const CHAT_CONTEXT_PLACEHOLDERS = [
+  "jobDetails",
+  "interviewHistory",
+  "applicationDocuments",
+  "relevantProjects",
+  "relevantStories",
+  "relevantApplicationTexts",
+] as const;
 
-  const parts: string[] = [];
-  if (pageContext.label) parts.push(pageContext.label);
-  if (pageContext.data !== undefined) {
-    let serialized = JSON.stringify(pageContext.data, null, 2);
-    if (serialized.length > MAX_PAGE_CONTEXT_CHARS) {
-      serialized = serialized.slice(0, MAX_PAGE_CONTEXT_CHARS) +
-        "\n… (truncated)";
-    }
-    parts.push("```json\n" + serialized + "\n```");
-  }
-  return parts.join("\n\n");
-}
-
-/** Turn prior turns into a readable transcript for the prompt. */
-function formatConversation(
-  messages: { role: string; content: string }[],
-): string {
-  if (messages.length === 0) return "(this is the first message)";
-  return messages
-    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
-    .join("\n\n");
-}
+const EMPTY_CONTEXT_VARIABLES: Record<string, string> = Object.fromEntries(
+  CHAT_CONTEXT_PLACEHOLDERS.map((key) => [key, ""]),
+);
 
 /** First line of the opening message, trimmed to a sane title length. */
 function deriveTitle(message: string): string {
@@ -76,10 +66,11 @@ function deriveTitle(message: string): string {
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const { profile_id, conversation_id, message, pageContext } = parseBody(
-    agentChatSchema,
-    await request.json(),
-  );
+  const { profile_id, conversation_id, message, route, routeParams } =
+    parseBody(
+      agentChatSchema,
+      await request.json(),
+    );
 
   await requireProfileAccess(profile_id, user.id);
   await requireCredits(user.id, 1);
@@ -109,7 +100,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Prior turns (oldest → newest), capped to the recent window. The new message
   // isn't persisted yet, so it isn't included here.
-  const history = conversation
+  const history: ChatMessage[] = conversation
     ? (
       await db
         .select({
@@ -120,19 +111,35 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         .where(eq(agent_messages.conversation_id, conversation.id))
         .orderBy(desc(agent_messages.id))
         .limit(MAX_CONTEXT_MESSAGES)
-    ).reverse()
+    )
+      .reverse()
+      .map((m) => ({
+        role: m.role === "assistant" ? "assistant" as const : "user" as const,
+        content: m.content,
+      }))
     : [];
+
+  // What the user is looking at, resolved server-side from the route and
+  // authorized against this profile.
+  const context = await resolveChatContext({
+    routeId: route,
+    params: routeParams ?? {},
+    profileId: profile_id,
+    message,
+  });
 
   const result = await createAndGenerateAiChat(
     profile_id,
     "personal_agent_chat",
-    {
-      conversation: formatConversation(history),
-      message,
-      pageContext: formatPageContext(pageContext),
-    },
+    { ...EMPTY_CONTEXT_VARIABLES, message },
     undefined,
-    { profileDataFields: PROFILE_DATA_FIELDS },
+    {
+      profileDataFields: PROFILE_DATA_FIELDS,
+      context,
+      // Prior turns replayed as real messages rather than recapped as a
+      // transcript inside the prompt — same as the four editors.
+      historyMessages: history,
+    },
   );
 
   if (!result.success || !result.aiChat?.response) {

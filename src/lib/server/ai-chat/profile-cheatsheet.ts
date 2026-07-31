@@ -24,10 +24,7 @@ import {
   recordVersion,
 } from "./entity-versions";
 import { htmlToMarkdown } from "$lib/utils/html-to-markdown";
-import {
-  assembleGenerationContext,
-  type RelevanceQuery,
-} from "./generation-context";
+import type { GenerationContextOption } from "./generation-context";
 import { CORE_PROFILE_FIELDS } from "./profile-fields";
 
 /** Profile data fields relevant for building an interview cheat sheet. */
@@ -129,19 +126,17 @@ export async function generateProfileCheatSheet(
   // and whatever is already on the sheet. The provider owns the retrieval and
   // budgeting, so new evidence sources (other stories, past letters, repo
   // recaps) will feed cheat sheets by extending the SOURCES registry, not here.
+  let context: GenerationContextOption | undefined;
   if (mode === "generate" || mode === "auto") {
     const topic = sheet.title && !isUnnamed(sheet.title) ? sheet.title : "";
-    const query: RelevanceQuery = {
-      text: [topic, instructions ?? "", currentContent ?? ""]
-        .filter(Boolean)
-        .join("\n"),
-    };
-    const ctx = await assembleGenerationContext({
-      profileId,
-      query,
+    context = {
+      query: {
+        text: [topic, instructions ?? "", currentContent ?? ""]
+          .filter(Boolean)
+          .join("\n"),
+      },
       sources: ["projects", "stories", "application_texts"],
-    });
-    Object.assign(variables, ctx.variables);
+    };
   }
 
   let aiChatResult;
@@ -151,7 +146,7 @@ export async function generateProfileCheatSheet(
       promptType,
       variables,
       undefined,
-      { profileDataFields: CHEATSHEET_PROFILE_FIELDS },
+      { profileDataFields: CHEATSHEET_PROFILE_FIELDS, context },
     );
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";

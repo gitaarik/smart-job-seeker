@@ -9,22 +9,9 @@ import { recordTypeValues } from "$lib/application-records";
 export const load: PageServerLoad = async ({ parent }) => {
   const { application } = await parent();
 
-  // Snapshot for the personal AI assistant, so the user can ask it about how
-  // the rounds actually went without pasting anything back in.
-  const chatContext = {
-    label: "Interview records",
-    data: {
-      records: (application.application_records || []).map((r) => ({
-        type: r.record_type,
-        title: r.title,
-        step: r.step,
-        event_date: r.event_date,
-        content: r.content,
-      })),
-    },
-  };
-
-  return { chatContext };
+  // Label for the assistant's "I can see this page" chip. The records
+  // themselves are resolved server-side — see ai-chat/chat-context.ts.
+  return { chatContext: { label: "Interview records" } };
 };
 
 /**

@@ -62,10 +62,10 @@
   let expanded = $state(false);
   let suppressExpand = false;
 
-  // What the current page chose to expose to the assistant, if anything.
+  // Label for the "the assistant can see this page" chip. Purely cosmetic — the
+  // context itself is resolved server-side from the route.
   let pageContext = $derived(
-    ($page.data as { chatContext?: { label?: string; data?: unknown } })
-      .chatContext,
+    ($page.data as { chatContext?: { label?: string } }).chatContext,
   );
   let profileId = $derived(
     ($page.data as { selectedProfile?: { id?: number } }).selectedProfile?.id,
@@ -196,10 +196,10 @@
           profile_id: profileId,
           conversation_id: conversationId,
           message: text,
-          // Snapshot of the page the user is on as they send this message.
-          pageContext: pageContext
-            ? { label: pageContext.label, data: pageContext.data }
-            : undefined,
+          // Where the user is as they send this — the server resolves what
+          // that means (and what they're allowed to see) from the route.
+          route: $page.route.id,
+          routeParams: $page.params,
         }),
       });
       const data = await res.json().catch(() => null);

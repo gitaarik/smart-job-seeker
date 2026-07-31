@@ -10,6 +10,7 @@ import {
   application_questions,
 } from "$lib/server/db/schema";
 import type { ChatMessage } from "$lib/server/llm";
+import type { GenerationContextOption } from "./generation-context";
 import { createAndGenerateAiChat, interpolatePrompt } from "./utils";
 
 /**
@@ -42,6 +43,8 @@ export async function createFollowupAiChat(
     promptType?: string;
     customVariables?: Record<string, unknown>;
     profileDataFields?: string[];
+    /** Evidence to assemble for this turn — see generation-context.ts. */
+    context?: GenerationContextOption;
     /** Prior turns of this thread, replayed as real messages. */
     historyMessages?: ChatMessage[];
   },
@@ -196,6 +199,7 @@ export async function createFollowupAiChat(
       parentAiChatId,
       {
         profileDataFields: options?.profileDataFields ?? [],
+        context: options?.context,
         historyMessages: options?.historyMessages,
       },
     );

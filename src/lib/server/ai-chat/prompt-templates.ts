@@ -23,24 +23,27 @@ You have access to their full profile below. Use it to make every answer specifi
 
 \${data}
 
-## What the user is currently looking at:
+\${jobDetails}
 
-\${pageContext}
+\${interviewHistory}
+
+\${applicationDocuments}
+
+\${relevantProjects}
+
+\${relevantStories}
+
+\${relevantApplicationTexts}
 
 Guidelines:
 - Be genuinely helpful and concrete. Prefer specific, actionable advice over platitudes.
-- When the user asks about the thing on their current page (a job, an interview story, their CV), use that context directly.
+- The sections above describe what the user is currently looking at — a job, an application in progress and what has happened on it, plus their most relevant material. Sections that are absent simply don't apply to this page; never mention their absence.
+- When the user asks about the thing on their current page, use that context directly. Never imply a conversation, meeting or relationship that isn't in the records above.
 - Ground everything in their actual profile data. If they're missing something relevant (a skill, an achievement), say so honestly.
 - Sound like a real person, not an LLM. Warm but professional. No filler, no "As an AI".
 - Keep replies focused — usually a few short paragraphs. Use markdown (lists, bold) when it aids clarity.
 - If you genuinely don't have enough information to answer well, ask one clarifying question instead of guessing.`,
-    user_prompt: `Conversation so far:
-
-\${conversation}
-
-The user's latest message:
-
-\${message}`,
+    user_prompt: `\${message}`,
   },
 
   "answer_application_question": {
@@ -57,9 +60,9 @@ The user's latest message:
 
 \${relevantApplicationTexts}
 
-## Job Description:
+## Job:
 
-\${jobDescription}
+\${jobDetails}
 
 \${interviewHistory}
 
@@ -101,9 +104,9 @@ Return a single JSON object with exactly two keys: "text" (the answer — use th
 
 \${relevantApplicationTexts}
 
-## Job Description:
+## Job:
 
-\${jobDescription}
+\${jobDetails}
 
 \${interviewHistory}
 
@@ -159,8 +162,9 @@ Respond with a JSON OBJECT with a single key "pairs" whose value is the array of
 ## Applicant Profile:
 \${data}
 
-## Job Description:
-\${jobDescription}
+## Job:
+
+\${jobDetails}
 
 \${interviewHistory}
 
@@ -197,9 +201,9 @@ In your feedback:
 
 \${data}
 
-## Job Description:
+## Job:
 
-\${jobDescription}
+\${jobDetails}
 
 \${interviewHistory}
 
@@ -234,9 +238,9 @@ Guidelines:
 
 \${data}
 
-## Job Description:
+## Job:
 
-\${jobDescription}
+\${jobDetails}
 
 \${interviewHistory}
 
@@ -1671,7 +1675,8 @@ The records may be written in a different language than the sheet. Translate wha
 - Focus on THIS job — what from their profile is most relevant? Suggest specific talking points, questions to prepare for, and key strengths. If records of earlier rounds are provided, target the NEXT round. Set "text" to null — do not write the sheet itself.
 
 Use the key "text" for the cheat sheet.`,
-    user_prompt: `The applicant wants help with the interview cheat sheet for this job application:
+    user_prompt:
+      `The applicant wants help with the interview cheat sheet for this job application:
 
 \${jobDetails}
 

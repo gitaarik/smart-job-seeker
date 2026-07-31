@@ -7,13 +7,11 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { application_letters } from "$lib/server/db/schema";
 import { createAndGenerateAiChat, instructionsBlock } from "./utils";
-import {
-  assembleGenerationContext,
-  type RelevanceQuery,
+import type {
+  ContextSource,
+  GenerationContextOption,
 } from "./generation-context";
 import { LETTER_PROFILE_FIELDS } from "./profile-fields";
-import { interviewRecordsText } from "./application-records";
-import { applicationDocumentsText } from "./application-documents";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -134,68 +132,42 @@ export async function generateApplicationLetter(
     };
   }
 
-  // Build job context as readable text
-  const jobDetailLines: string[] = [
-    `**Position:** ${job.title || "Not specified"}`,
+  // What this generation draws on. The job, the recaps/feedback from earlier
+  // rounds and the files on the Documents tab come from the application; the
+  // ranked sources are retrieved against the job.
+  //
+  // Ranked sources are writing-mode only: each runs a retrieval search and only
+  // the writing prompts interpolate those slots ("auto" may write a draft).
+  // A cheat sheet is *about* the interviews so it gets the full record set; a
+  // cover letter only needs the gist, so it gets the compact budget.
+  const detail = letterType === "cheat_sheet"
+    ? "full" as const
+    : "compact" as const;
+  const sources: ContextSource[] = [
+    "job",
+    "application_records",
+    "application_documents",
   ];
-  if (job.job_poster) {
-    jobDetailLines.push(
-      `**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`,
-    );
-  }
-  if (job.company_description) {
-    jobDetailLines.push(`**About the company:** ${job.company_description}`);
-  }
-  jobDetailLines.push(
-    "",
-    "**Job Description:**",
-    job.job_description || "Not specified",
-  );
-
-  const jobDetailsText = jobDetailLines.join("\n");
-
-  // Retrieved applicant context — relevant projects, prepared STAR stories, and
-  // the applicant's own past application writing — ranked against this job by the
-  // unified provider (this replaces the previous hand-rolled relevantProjectsText
-  // call: the generator now declares intent like every other one). Only the
-  // writing prompts interpolate these slots and each runs a retrieval search, so
-  // compute them for generate/auto only ("auto" may write a draft). Exclude this
-  // application's own texts so a cover letter isn't fed back into its own prompt.
-  let retrievalVars: Record<string, string> = {};
   if (mode === "generate" || mode === "auto") {
-    const query: RelevanceQuery = {
+    sources.push("projects", "stories", "application_texts");
+  }
+  const context: GenerationContextOption = {
+    query: {
       text: [job.title, job.job_description].filter(Boolean).join("\n"),
       skills: (job.skills_required as string[] | null) ?? undefined,
-    };
-    const ctx = await assembleGenerationContext({
-      profileId,
-      query,
-      sources: ["projects", "stories", "application_texts"],
-      excludeApplicationId: letter.application.id,
-    });
-    retrievalVars = ctx.variables;
-  }
+    },
+    entity: { type: "application", id: letter.application.id },
+    sources,
+    sourceOptions: {
+      application_records: { detail },
+      application_documents: { detail },
+    },
+  };
 
   // Create custom variables (object construction outside try block)
   const customVariables: Record<string, unknown> = {
-    jobDescription: job.job_description || "",
-    jobDetails: jobDetailsText,
     generationMode: mode,
     additionalContext: instructionsBlock(instructions),
-    ...retrievalVars,
-    // Recaps/feedback from earlier rounds (empty string if none recorded). A
-    // cheat sheet is *about* the interviews so it gets the full set; a cover
-    // letter only needs the gist, so it gets the compact budget.
-    interviewHistory: await interviewRecordsText(
-      letter.application.id,
-      letterType === "cheat_sheet" ? "full" : "compact",
-    ),
-    // Text of the files on the application's Documents tab (JD PDF, brief,
-    // offer letter), extracted lazily and cached. Same full/compact split.
-    applicationDocuments: await applicationDocumentsText(
-      letter.application.id,
-      letterType === "cheat_sheet" ? "full" : "compact",
-    ),
   };
 
   // For review mode, include the user's letter content
@@ -211,7 +183,7 @@ export async function generateApplicationLetter(
       promptType,
       customVariables,
       undefined,
-      { profileDataFields: LETTER_PROFILE_FIELDS },
+      { profileDataFields: LETTER_PROFILE_FIELDS, context },
     );
   } catch (error) {
     const errorMessage = error instanceof Error

@@ -103,6 +103,10 @@ describe("score_job_match template", () => {
  * /api/ai/questions/[id]/revise, which had to be wired separately.
  */
 const INTERVIEW_HISTORY_SUPPLIED_BY: Record<string, string> = {
+  // routes/api/ai/agent — the personal assistant resolves its context from
+  // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
+  // with "" on routes whose scope doesn't include the source.
+  personal_agent_chat: "routes/api/ai/agent",
   // ai-chat/application-letter.ts — all letter types share customVariables.
   write_cover_letter: "application-letter.ts",
   write_or_advise_cover_letter: "application-letter.ts",
@@ -201,6 +205,10 @@ describe("${interviewHistory} template ↔ caller wiring", () => {
  * lockstep check that the two never diverge across the prompt set.
  */
 const APPLICATION_DOCUMENTS_SUPPLIED_BY: Record<string, string> = {
+  // routes/api/ai/agent — the personal assistant resolves its context from
+  // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
+  // with "" on routes whose scope doesn't include the source.
+  personal_agent_chat: "routes/api/ai/agent",
   // ai-chat/application-letter.ts — all letter types share customVariables.
   write_cover_letter: "application-letter.ts",
   write_or_advise_cover_letter: "application-letter.ts",
@@ -356,6 +364,10 @@ describe("${additionalContext} template ↔ caller wiring", () => {
  * may write one), which is exactly the set below.
  */
 const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
+  // routes/api/ai/agent — the personal assistant resolves its context from
+  // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
+  // with "" on routes whose scope doesn't include the source.
+  personal_agent_chat: "routes/api/ai/agent",
   // ai-chat/application-letter.ts — generate and auto modes (both letter types);
   // auto may write a draft, which needs the retrieval.
   write_cover_letter: "application-letter.ts",
@@ -410,6 +422,10 @@ describe("${relevantProjects} template ↔ caller wiring", () => {
  * interpolates it (else an embedding search runs and is thrown away).
  */
 const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
+  // routes/api/ai/agent — the personal assistant resolves its context from
+  // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
+  // with "" on routes whose scope doesn't include the source.
+  personal_agent_chat: "routes/api/ai/agent",
   // ai-chat/profile-cheatsheet.ts — generate + auto, via the generation-context
   // provider (sources include "stories").
   write_prep_sheet: "profile-cheatsheet.ts",
@@ -451,6 +467,10 @@ describe("${relevantStories} template ↔ caller wiring", () => {
  * drift contract as the other retrieval slots.
  */
 const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
+  // routes/api/ai/agent — the personal assistant resolves its context from
+  // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
+  // with "" on routes whose scope doesn't include the source.
+  personal_agent_chat: "routes/api/ai/agent",
   write_prep_sheet: "profile-cheatsheet.ts",
   write_or_advise_prep_sheet: "profile-cheatsheet.ts",
   write_star_story: "profile-story.ts",

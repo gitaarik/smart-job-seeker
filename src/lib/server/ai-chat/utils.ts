@@ -15,7 +15,11 @@ import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
 import { promptTemplates } from "./prompt-templates.js";
 import { tokensToCost } from "$lib/server/billing/credits";
 import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
-import { exportProfile } from "$lib/server/profile/export";
+import {
+  assembleGenerationContext,
+  type ContextRequest,
+} from "./generation-context";
+import { loadProfileData, renderProfileData } from "./profile-data";
 
 /**
  * User-facing writing prompts run on the writing provider/model
@@ -244,6 +248,17 @@ export async function createAndGenerateAiChat(
     /** Top-level profile data keys to include. If omitted, all data is included. */
     profileDataFields?: string[];
     /**
+     * Evidence to assemble for this generation — which sources, what it's
+     * about, how big a budget. Assembled here and merged into the interpolation
+     * variables, so a call site declares intent instead of hand-wiring
+     * retrieval and then spreading the result. See generation-context.ts.
+     *
+     * `profileId` comes from the argument above; `profileFields` defaults to
+     * `profileDataFields` so there is one profile field list, not two.
+     * Explicit `customVariables` still win, as an escape hatch.
+     */
+    context?: Omit<ContextRequest, "profileId" | "preloadedProfile">;
+    /**
      * Prior turns of this thread, replayed between the system prompt and the
      * new user message so the model sees an actual conversation rather than a
      * recap of one. Built by conversation-messages.ts from the version trail.
@@ -296,84 +311,44 @@ export async function createAndGenerateAiChat(
       };
     }
 
-    // Step 2: Fetch collected_data for the profile. Manually-created profiles
-    // don't have a record until something explicitly calls exportProfile, so
-    // backfill on first use here — better than every AI feature getting `{}`
-    // and silently hallucinating.
-    let collectedDataRecord = await db.query.collected_data.findFirst({
-      where: eq(collected_data.profile_id, profileId),
-      columns: { schema: true, data: true },
-    });
+    // Step 2/3: Fetch and field-filter the collected_data blob. Shared with the
+    // context provider's `profile` source, which renders this same object.
+    const profileDataFields = options?.context?.profileFields ??
+      options?.profileDataFields;
+    const profileBlob = await loadProfileData(profileId, profileDataFields);
+    const schemaJson = profileBlob.schema;
+    const dataJson = profileBlob.data;
 
-    if (!collectedDataRecord) {
-      await exportProfile(profileId);
-      collectedDataRecord = await db.query.collected_data.findFirst({
-        where: eq(collected_data.profile_id, profileId),
-        columns: { schema: true, data: true },
+    // Step 3b: Assemble the declared evidence. Every requested source gets a
+    // key (empty string when it found nothing), so a template referencing a
+    // placeholder never ships a literal `${…}` to the model.
+    let assembled: Record<string, string> = {};
+    if (options?.context) {
+      const ctx = await assembleGenerationContext({
+        ...options.context,
+        profileId,
+        profileFields: profileDataFields,
+        // Already loaded above for ${schema} — don't pay for it twice.
+        preloadedProfile: profileBlob,
       });
-    }
-
-    // Step 3: Parse schema and data from JSON strings to objects
-    // These will be stored as raw JSON in context, but stringified for interpolation
-    let schemaJson = collectedDataRecord?.schema
-      ? JSON.parse(collectedDataRecord.schema)
-      : {};
-    let dataJson = collectedDataRecord?.data
-      ? JSON.parse(collectedDataRecord.data)
-      : {};
-
-    // Step 3b: Filter to requested profile data fields if specified
-    const profileDataFields = options?.profileDataFields;
-    if (profileDataFields) {
-      if (profileDataFields.length === 0) {
-        // Empty array = include no profile data
-        dataJson = {};
-        schemaJson = {};
-      } else {
-        const fieldSet = new Set(profileDataFields);
-
-        // Filter data: keep only requested top-level keys
-        const filteredData: Record<string, unknown> = {};
-        for (const key of profileDataFields) {
-          if (key in dataJson) {
-            filteredData[key] = dataJson[key];
-          }
-        }
-        dataJson = filteredData;
-
-        // Filter schema: keep only matching fields and relations
-        if (schemaJson.fields || schemaJson.relations) {
-          const filteredSchema: Record<string, unknown> = { ...schemaJson };
-          if (schemaJson.fields) {
-            filteredSchema.fields = Object.fromEntries(
-              Object.entries(schemaJson.fields).filter(([k]) =>
-                fieldSet.has(k)
-              ),
-            );
-          }
-          if (schemaJson.relations) {
-            filteredSchema.relations = Object.fromEntries(
-              Object.entries(schemaJson.relations).filter(([k]) =>
-                fieldSet.has(k)
-              ),
-            );
-          }
-          schemaJson = filteredSchema;
-        }
-      }
+      assembled = ctx.variables;
     }
 
     // Step 4: Prepare context (raw variables as JSON objects)
     const context = {
       schema: schemaJson,
       data: dataJson,
+      ...assembled,
       ...(customVariables || {}),
     } as Record<string, unknown>;
 
-    // Step 5: Prepare variables for interpolation (stringified for prompts)
+    // Step 5: Prepare variables for interpolation (stringified for prompts).
+    // Assembled evidence overrides the base blob (the `profile` source renders
+    // `data` under the budget); explicit customVariables override both.
     const interpolationVariables: Record<string, string> = {
       schema: JSON.stringify(schemaJson, null, 2),
-      data: JSON.stringify(dataJson, null, 2),
+      data: renderProfileData(dataJson),
+      ...assembled,
       ...(customVariables
         ? Object.fromEntries(
           Object.entries(customVariables).map(([key, value]) => [

@@ -430,14 +430,11 @@ export const agentChatSchema = z.object({
   // The user's newest message. Prior turns are loaded server-side from the
   // conversation, so the client only sends what's new.
   message: z.string().trim().min(1).max(8000),
-  // Optional snapshot of what the user is looking at, supplied by the page.
-  pageContext: z
-    .object({
-      label: trimmedString(200).optional(),
-      data: z.unknown().optional(),
-    })
-    .optional()
-    .nullable(),
+  // Where the user is, so the server can assemble the context for that page.
+  // Only the route id and its params — the page's *data* is resolved server-side
+  // from these, never taken from the client.
+  route: trimmedString(200).optional().nullable(),
+  routeParams: z.record(z.string(), z.string()).optional().nullable(),
 });
 
 /**

@@ -15,8 +15,7 @@ import {
   question_versions,
 } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
-import { interviewRecordsText } from "./application-records";
-import { applicationDocumentsText } from "./application-documents";
+import type { GenerationContextOption } from "./generation-context";
 import { buildConversationMessages } from "./conversation-messages";
 import {
   ensureBaselineVersion,
@@ -53,32 +52,6 @@ function parseAnswerResponse(
   return { text: response, feedback: null };
 }
 
-/** Format job data as readable text for prompts */
-function formatJobDetails(
-  job: {
-    title: string | null;
-    job_description: string | null;
-    company_description: string | null;
-    job_poster: string | null;
-  },
-): string {
-  const lines: string[] = [`**Position:** ${job.title || "Not specified"}`];
-  if (job.job_poster) {
-    lines.push(
-      `**Company/Organization:** ${job.job_poster} (this is who the applicant is applying to)`,
-    );
-  }
-  if (job.company_description) {
-    lines.push(`**About the company:** ${job.company_description}`);
-  }
-  lines.push(
-    "",
-    "**Job Description:**",
-    job.job_description || "Not specified",
-  );
-  return lines.join("\n");
-}
-
 export async function createApplicationQuestionFollowup(
   questionId: number,
   followupRequest: string,
@@ -89,6 +62,7 @@ export async function createApplicationQuestionFollowup(
   // For review or answer-revision mode, look up the question + job context.
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let context: GenerationContextOption | undefined;
   let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
     [];
   if (mode === "review" || updateContent) {
@@ -99,20 +73,9 @@ export async function createApplicationQuestionFollowup(
         answer: true,
       },
       with: {
-        application: {
-          // id is needed to load this application's interview records.
-          columns: { id: true },
-          with: {
-            job: {
-              columns: {
-                title: true,
-                job_description: true,
-                company_description: true,
-                job_poster: true,
-              },
-            },
-          },
-        },
+        // id is all that's needed — the job, records and documents are loaded
+        // by the context provider from this application id.
+        application: { columns: { id: true } },
       },
     });
     if (questionRecord) {
@@ -124,17 +87,16 @@ export async function createApplicationQuestionFollowup(
         questionRecord.answer,
       );
 
-      const job = questionRecord.application?.job;
-      const jobDetailsText = job ? formatJobDetails(job) : "";
-
-      // An answer written mid-process should reflect the calls already had.
+      // The job, what has already happened on the application, and the files on
+      // its Documents tab all come from the entity via the context provider —
+      // same sources, same budget, as the initial generation.
       const applicationId = questionRecord.application?.id;
-      const interviewHistory = applicationId
-        ? await interviewRecordsText(applicationId, "compact")
-        : "";
-      const applicationDocuments = applicationId
-        ? await applicationDocumentsText(applicationId, "compact")
-        : "";
+      if (applicationId != null) {
+        context = {
+          entity: { type: "application", id: applicationId },
+          sources: ["job", "application_records", "application_documents"],
+        };
+      }
 
       // Latest answer content: prefer the newest version, fall back to answer.
       const latestVersion = await db.query.question_versions.findFirst({
@@ -159,11 +121,8 @@ export async function createApplicationQuestionFollowup(
       if (mode === "review") {
         promptType = "review_application_question";
         extraVariables = {
-          jobDescription: job?.job_description || "",
           question: questionRecord.question,
           answer: currentAnswer,
-          interviewHistory,
-          applicationDocuments,
         };
       } else {
         // Answer revision — needs job + current answer; the conversation itself
@@ -172,9 +131,6 @@ export async function createApplicationQuestionFollowup(
         extraVariables = {
           question: questionRecord.question,
           answerContent: currentAnswer,
-          jobDetails: jobDetailsText,
-          interviewHistory,
-          applicationDocuments,
         };
       }
     }
@@ -188,6 +144,7 @@ export async function createApplicationQuestionFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    context,
     historyMessages,
     profileDataFields: QUESTION_PROFILE_FIELDS,
     fetchEntity: (id) =>
