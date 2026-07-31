@@ -22,9 +22,21 @@ vi.mock("../config", () => ({
 }));
 
 // Create hoisted mocks for LangChain
-const { mockInvoke, mockWithStructuredOutput } = vi.hoisted(() => ({
-  mockInvoke: vi.fn(),
-  mockWithStructuredOutput: vi.fn(),
+const { mockInvoke, mockWithStructuredOutput, mockGeminiInvoke } = vi.hoisted(
+  () => ({
+    mockInvoke: vi.fn(),
+    mockWithStructuredOutput: vi.fn(),
+    mockGeminiInvoke: vi.fn(),
+  }),
+);
+
+vi.mock("@langchain/google-genai", () => ({
+  ChatGoogleGenerativeAI: class ChatGoogleGenerativeAI {
+    constructor(config: any) {}
+    async invoke(messages: any, options?: any) {
+      return mockGeminiInvoke(messages);
+    }
+  },
 }));
 
 // Mock LangChain Groq
@@ -163,6 +175,40 @@ describe("generateChatCompletion", () => {
         expect.objectContaining({ content: "What's 3+3?" }),
       ]),
     );
+  });
+
+  // A large system prompt used to be deleted and glued onto the FIRST user
+  // message on Gemini, on the belief that systemInstruction was capped at 1000
+  // characters. Every writing prompt we send is far larger than that, so Gemini
+  // was receiving no system message at all — and once threads became real
+  // conversations, "first user message" was the oldest turn, which would have
+  // buried the whole context block mid-thread.
+  describe("Gemini system messages", () => {
+    it("keeps a large system message intact instead of merging it", async () => {
+      const systemPrompt = "S".repeat(5000);
+      const messages: ChatMessage[] = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "Oldest turn" },
+        { role: "assistant", content: "A reply" },
+        { role: "user", content: "Newest turn" },
+      ];
+
+      mockGeminiInvoke.mockResolvedValueOnce(new AIMessage("ok"));
+
+      const result = await generateChatCompletion(messages, {
+        provider: "gemini",
+        model: "gemini-2.5-pro",
+      });
+
+      expect(result).toBe("ok");
+      const sent = mockGeminiInvoke.mock.calls[0][0];
+      expect(sent).toHaveLength(4);
+      expect(sent[0].getType()).toBe("system");
+      expect(sent[0].content).toBe(systemPrompt);
+      // The oldest turn must stay exactly what the applicant said.
+      expect(sent[1].content).toBe("Oldest turn");
+      expect(sent[3].content).toBe("Newest turn");
+    });
   });
 
   it("should propagate API errors", async () => {

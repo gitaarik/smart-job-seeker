@@ -402,44 +402,21 @@ function generateCacheKey(
 }
 
 /**
- * Handle Gemini system instruction limit
- * Gemini has a ~1000 character limit on systemInstruction
+ * NOTE — there used to be a `handleGeminiSystemMessageLimit()` here that, for
+ * Gemini only, dropped the system message when it exceeded 1000 characters and
+ * glued its text onto the FIRST user message instead.
+ *
+ * It was wrong twice over. Gemini 1.5+ takes a `systemInstruction` as large as
+ * the context window, so the 1000-char threshold fired on essentially every
+ * call we make (our interpolated writing prompts run to ~100 KB) — meaning
+ * Gemini effectively never received a system message at all. And once threads
+ * became real multi-turn conversations, "first user message" stopped being the
+ * current instruction and became the OLDEST turn, so the whole context block
+ * would have been buried mid-conversation.
+ *
+ * Do not reintroduce a size-based collapse. If a provider ever genuinely needs
+ * one, it must merge into the LAST human message, not the first.
  */
-function handleGeminiSystemMessageLimit(
-  messages: ChatMessage[],
-): ChatMessage[] {
-  const SYSTEM_INSTRUCTION_LIMIT = 1000;
-  const systemMessage = messages.find((m) => m.role === "system");
-
-  if (!systemMessage) return messages;
-
-  // If system message is short enough, keep as is
-  if (systemMessage.content.length <= SYSTEM_INSTRUCTION_LIMIT) {
-    return messages;
-  }
-
-  // Otherwise, prepend system message to first user message
-  const otherMessages = messages.filter((m) => m.role !== "system");
-  const firstUserMessageIndex = otherMessages.findIndex((m) =>
-    m.role === "user"
-  );
-
-  if (firstUserMessageIndex === -1) {
-    // No user message found, keep system message as is
-    return messages;
-  }
-
-  // Prepend system message to first user message
-  const modifiedMessages = [...otherMessages];
-  modifiedMessages[firstUserMessageIndex] = {
-    role: "user",
-    content: `${systemMessage.content}\n\n${
-      otherMessages[firstUserMessageIndex].content
-    }`,
-  };
-
-  return modifiedMessages;
-}
 
 /**
  * Token usage from an LLM call
@@ -498,12 +475,6 @@ async function generateWithLangChain(
   const provider = providerOverride || config.llmProvider;
 
   try {
-    // Handle Gemini system message limit
-    let finalMessages = messages;
-    if (provider === "gemini") {
-      finalMessages = handleGeminiSystemMessageLimit(messages);
-    }
-
     // Create the appropriate LangChain model
     const chatModel = createLangChainModel(
       provider,
@@ -513,7 +484,7 @@ async function generateWithLangChain(
     );
 
     // Convert messages to LangChain format
-    const langChainMessages = convertMessages(finalMessages);
+    const langChainMessages = convertMessages(messages);
 
     // Handle structured output if structuredOutput is provided
     if (structuredOutput) {
@@ -531,7 +502,8 @@ async function generateWithLangChain(
         const lastMessage = langChainMessages[langChainMessages.length - 1];
         if (lastMessage instanceof HumanMessage) {
           // For letter prompts, include the expected field names
-          const isLetterPrompt = structuredOutput.name.includes("write_") || structuredOutput.name.includes("followup_letter");
+          const isLetterPrompt = structuredOutput.name.includes("write_") ||
+            structuredOutput.name.includes("followup_letter");
           const fieldHint = isLetterPrompt
             ? (structuredOutput.name === "followup_letter"
               ? ' Use exactly these JSON keys: "letter" (the complete letter text) and "summary" (brief summary of changes).'
@@ -547,9 +519,12 @@ async function generateWithLangChain(
         // Invoke with JSON mode enabled to ensure valid JSON output.
         // `response_format` is an OpenAI-compatible passthrough that LangChain
         // forwards to providers (Groq, OpenAI) but isn't in its base option type.
-        const result = await chatModel.invoke(langChainMessages, {
-          response_format: { type: "json_object" },
-        } as Parameters<typeof chatModel.invoke>[1]);
+        const result = await chatModel.invoke(
+          langChainMessages,
+          {
+            response_format: { type: "json_object" },
+          } as Parameters<typeof chatModel.invoke>[1],
+        );
         const responseContent = typeof result.content === "string"
           ? result.content
           : String(result.content);
@@ -585,23 +560,33 @@ async function generateWithLangChain(
             // Try to close it
             const lastQuoteIndex = repairedJson.lastIndexOf('"');
             const afterLastQuote = repairedJson.substring(lastQuoteIndex + 1);
-            if (lastQuoteIndex > 0 && !afterLastQuote.includes('"') && !afterLastQuote.match(/[}\],:]/)) {
+            if (
+              lastQuoteIndex > 0 && !afterLastQuote.includes('"') &&
+              !afterLastQuote.match(/[}\],:]/)
+            ) {
               // We're likely inside an unclosed string - close it with null
               // Find the last complete key-value and truncate there
-              const lastCompleteMatch = repairedJson.match(/^([\s\S]*[}\],])\s*"[^"]*"?\s*:?\s*"?[^"]*$/);
+              const lastCompleteMatch = repairedJson.match(
+                /^([\s\S]*[}\],])\s*"[^"]*"?\s*:?\s*"?[^"]*$/,
+              );
               if (lastCompleteMatch) {
                 repairedJson = lastCompleteMatch[1];
               }
             }
 
             // Add missing closing brackets and braces
-            const missingBrackets = openBrackets - (repairedJson.match(/]/g) || []).length;
-            const missingBraces = openBraces - (repairedJson.match(/}/g) || []).length;
-            repairedJson += "]".repeat(missingBrackets) + "}".repeat(missingBraces);
+            const missingBrackets = openBrackets -
+              (repairedJson.match(/]/g) || []).length;
+            const missingBraces = openBraces -
+              (repairedJson.match(/}/g) || []).length;
+            repairedJson += "]".repeat(missingBrackets) +
+              "}".repeat(missingBraces);
 
             try {
               parsed = JSON.parse(repairedJson);
-              console.log(`      ⚠️ Repaired truncated JSON (closed ${missingBrackets} brackets, ${missingBraces} braces)`);
+              console.log(
+                `      ⚠️ Repaired truncated JSON (closed ${missingBrackets} brackets, ${missingBraces} braces)`,
+              );
             } catch {
               // Repair failed, throw original error with truncation details
               throw new Error(
@@ -634,13 +619,17 @@ async function generateWithLangChain(
           if (Array.isArray(parsed)) {
             // LLM returned bare array - wrap it
             normalizedParsed = { jobs: parsed };
-          } else if (parsed && typeof parsed === "object" && !("jobs" in parsed)) {
+          } else if (
+            parsed && typeof parsed === "object" && !("jobs" in parsed)
+          ) {
             // Check if LLM returned object with numeric keys (e.g. { "25": {...}, "27": {...} })
             const values = Object.values(parsed);
             if (
               values.length > 0 &&
               values.every(
-                (v) => v && typeof v === "object" && ("clickableId" in v || "title" in v),
+                (v) =>
+                  v && typeof v === "object" &&
+                  ("clickableId" in v || "title" in v),
               )
             ) {
               normalizedParsed = { jobs: values };
@@ -671,16 +660,30 @@ async function generateWithLangChain(
               const jobSchema = (zodSchema as any).shape?.jobs?._def?.element;
               if (jobSchema && allJobs.length > 0) {
                 const validJobs = allJobs.filter((job) => {
-                  try { jobSchema.parse(job); return true; } catch { return false; }
+                  try {
+                    jobSchema.parse(job);
+                    return true;
+                  } catch {
+                    return false;
+                  }
                 });
                 if (validJobs.length > 0) {
-                  console.log(`      ⚠️ ${allJobs.length - validJobs.length}/${allJobs.length} job objects failed validation, keeping ${validJobs.length} valid`);
-                  const partial = { ...normalizedParsed as any, jobs: validJobs };
+                  console.log(
+                    `      ⚠️ ${
+                      allJobs.length - validJobs.length
+                    }/${allJobs.length} job objects failed validation, keeping ${validJobs.length} valid`,
+                  );
+                  const partial = {
+                    ...normalizedParsed as any,
+                    jobs: validJobs,
+                  };
                   const validated = zodSchema.parse(partial);
                   return { content: JSON.stringify(validated), usage };
                 }
               }
-            } catch { /* per-item fallback failed, fall through to original error */ }
+            } catch {
+              /* per-item fallback failed, fall through to original error */
+            }
           }
 
           const errorMsg = zodError instanceof Error
@@ -700,7 +703,9 @@ async function generateWithLangChain(
         includeRaw: true,
       });
 
-      const { raw, parsed: result } = await structuredModel.invoke(langChainMessages);
+      const { raw, parsed: result } = await structuredModel.invoke(
+        langChainMessages,
+      );
       const usage = extractTokenUsage(raw);
       try {
         return { content: JSON.stringify(result), usage };

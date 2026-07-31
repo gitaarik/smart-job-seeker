@@ -9,9 +9,10 @@
  */
 
 import { db } from "$lib/server/db";
-import { asc, eq } from "drizzle-orm";
-import { project_stories, story_versions } from "$lib/server/db/schema";
+import { eq } from "drizzle-orm";
+import { project_stories } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
+import { buildConversationMessages } from "./conversation-messages";
 import {
   ensureBaselineVersion,
   recordVersion,
@@ -55,28 +56,6 @@ function storyColumns(fields: StarFields) {
   };
 }
 
-/** Recent turns as readable text, with a capped window of drafts. */
-const DRAFT_WINDOW = 6;
-async function buildConversationHistory(storyId: number): Promise<string> {
-  const versions = await db.query.story_versions.findMany({
-    where: eq(story_versions.story, storyId),
-    orderBy: asc(story_versions.id),
-    columns: { user_request: true, ai_feedback: true, content: true },
-  });
-  if (versions.length === 0) return "";
-  const firstDraftIdx = Math.max(0, versions.length - DRAFT_WINDOW);
-
-  const lines: string[] = [];
-  versions.forEach((v, i) => {
-    if (v.user_request) lines.push(`**You:** ${v.user_request}`);
-    if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
-    if (v.content && i >= firstDraftIdx) {
-      lines.push(`_The story read, after this turn:_\n${v.content}`);
-    }
-  });
-  return lines.join("\n\n");
-}
-
 export async function createProfileStoryFollowup(
   storyId: number,
   followupRequest: string,
@@ -86,6 +65,8 @@ export async function createProfileStoryFollowup(
 ): Promise<FollowupResult> {
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
+    [];
 
   if (mode === "review" || updateContent) {
     const story = await db.query.project_stories.findFirst({
@@ -97,22 +78,22 @@ export async function createProfileStoryFollowup(
       await ensureBaselineVersion(STORY_VERSIONS, storyId, currentStar || null);
       const storyContext = buildStoryContext(story.title, story.category);
 
-      if (mode === "review") {
-        promptType = "review_star_story";
-        extraVariables = {
-          storyContext,
-          currentStar: currentStar ||
-            "(The applicant hasn't written anything yet.)",
-        };
-      } else {
-        promptType = "followup_star_story";
-        extraVariables = {
-          storyContext,
-          currentStar: currentStar ||
-            "(The applicant hasn't written anything yet.)",
-          conversationHistory: await buildConversationHistory(storyId),
-        };
-      }
+      // The thread so far, replayed as real turns — for review as well as
+      // revision, so a review doesn't re-suggest what was already settled.
+      historyMessages = await buildConversationMessages(
+        STORY_VERSIONS,
+        storyId,
+        { noun: "story", currentContent: currentStar },
+      );
+
+      extraVariables = {
+        storyContext,
+        currentStar: currentStar ||
+          "(The applicant hasn't written anything yet.)",
+      };
+      promptType = mode === "review"
+        ? "review_star_story"
+        : "followup_star_story";
     }
   }
 
@@ -124,6 +105,7 @@ export async function createProfileStoryFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    historyMessages,
     profileDataFields: STORY_PROFILE_FIELDS,
     fetchEntity: (id) =>
       db.query.project_stories.findFirst({

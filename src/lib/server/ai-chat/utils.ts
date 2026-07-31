@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { ai_chats, collected_data, profiles } from "$lib/server/db/schema";
 import { config } from "$lib/server/config";
 import {
+  type ChatMessage,
   generateChatCompletionTracked,
   isFatalLLMError,
 } from "$lib/server/llm";
@@ -102,13 +103,34 @@ export function interpolatePrompt(
 }
 
 /**
- * Combine system and user prompts into a full prompt with distinctive headers
- * Uses special separators that won't conflict with typical markdown sections
+ * Combine system prompt, replayed conversation turns and user prompt into a
+ * full prompt with distinctive headers. This is the debugging record of what
+ * the model actually received (`ai_chats.full_prompt`) — the turns are sent as
+ * separate messages, not as this concatenation, so the headers exist to make
+ * the message boundaries legible when reading a stored prompt back.
  */
 export function makeFullPrompt(
   systemPrompt: string,
   userPrompt: string,
+  historyMessages: ChatMessage[] = [],
 ): string {
+  const history = historyMessages.length > 0
+    ? `
+
+----------------
+
+# CONVERSATION SO FAR (sent as separate messages):
+
+----------------
+
+${
+      historyMessages
+        .map((m) => `## ${m.role.toUpperCase()}:\n\n${m.content}`)
+        .join("\n\n")
+    }
+`
+    : "";
+
   return `----------------
 
 # SYSTEM PROMPT:
@@ -117,7 +139,7 @@ export function makeFullPrompt(
 
 ${systemPrompt}
 
-
+${history}
 ----------------
 
 # USER PROMPT:
@@ -221,6 +243,12 @@ export async function createAndGenerateAiChat(
   options?: {
     /** Top-level profile data keys to include. If omitted, all data is included. */
     profileDataFields?: string[];
+    /**
+     * Prior turns of this thread, replayed between the system prompt and the
+     * new user message so the model sees an actual conversation rather than a
+     * recap of one. Built by conversation-messages.ts from the version trail.
+     */
+    historyMessages?: ChatMessage[];
   },
 ): Promise<{
   success: boolean;
@@ -392,9 +420,11 @@ export async function createAndGenerateAiChat(
     aiChatId = aiChat.id;
 
     // Step 6: Generate and save full_prompt (interpolated combination)
+    const historyMessages = options?.historyMessages ?? [];
     const fullPrompt = makeFullPrompt(
       interpolatedSystemPrompt,
       interpolatedUserPrompt,
+      historyMessages,
     );
 
     await db.update(ai_chats).set({ full_prompt: fullPrompt })
@@ -413,6 +443,7 @@ export async function createAndGenerateAiChat(
     const completionResult = await generateChatCompletionTracked(
       [
         { role: "system", content: interpolatedSystemPrompt },
+        ...historyMessages,
         { role: "user", content: interpolatedUserPrompt },
       ],
       { structuredOutput, provider: activeProvider, model: activeModel },

@@ -40,7 +40,7 @@ export type ConversationEntry = {
 };
 
 /** Binds the engine to one entity's versions table. */
-type VersionBinding = {
+export type VersionBinding = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   table: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

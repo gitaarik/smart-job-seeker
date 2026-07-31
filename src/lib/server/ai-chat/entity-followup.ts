@@ -4,6 +4,7 @@
  */
 
 import { getErrorMessage } from "$lib/server/utils/errors";
+import type { ChatMessage } from "$lib/server/llm";
 import { createFollowupAiChat } from "./create-followup";
 
 export type FollowupResult = {
@@ -33,11 +34,29 @@ export async function createEntityFollowup(opts: {
   promptType?: string;
   customVariables?: Record<string, unknown>;
   profileDataFields?: string[];
-  fetchEntity: (id: number) => Promise<{ id: number; ai_chat_id: number | null } | null>;
-  updateEntity: (id: number, aiChatId: number, aiChatResponse: string | null) => Promise<void>;
+  /** Prior turns of this thread, replayed as real messages. */
+  historyMessages?: ChatMessage[];
+  fetchEntity: (
+    id: number,
+  ) => Promise<{ id: number; ai_chat_id: number | null } | null>;
+  updateEntity: (
+    id: number,
+    aiChatId: number,
+    aiChatResponse: string | null,
+  ) => Promise<void>;
 }): Promise<FollowupResult> {
-  const { entityId, entityLabel, followupRequest, includeOriginalContext, promptType, customVariables, fetchEntity, updateEntity } = opts;
-  const noAiChatHint = opts.noAiChatHint ?? "Generate the initial content first.";
+  const {
+    entityId,
+    entityLabel,
+    followupRequest,
+    includeOriginalContext,
+    promptType,
+    customVariables,
+    fetchEntity,
+    updateEntity,
+  } = opts;
+  const noAiChatHint = opts.noAiChatHint ??
+    "Generate the initial content first.";
   const capLabel = entityLabel.charAt(0).toUpperCase() + entityLabel.slice(1);
 
   let entity;
@@ -46,7 +65,9 @@ export async function createEntityFollowup(opts: {
   } catch (error) {
     return {
       success: false,
-      message: `Error creating ${entityLabel} follow-up: ${getErrorMessage(error)}`,
+      message: `Error creating ${entityLabel} follow-up: ${
+        getErrorMessage(error)
+      }`,
     };
   }
 
@@ -60,7 +81,8 @@ export async function createEntityFollowup(opts: {
   if (!entity.ai_chat_id) {
     return {
       success: false,
-      message: `${capLabel} ${entityId} does not have an ai_chats yet. ${noAiChatHint}`,
+      message:
+        `${capLabel} ${entityId} does not have an ai_chats yet. ${noAiChatHint}`,
     };
   }
 
@@ -69,7 +91,13 @@ export async function createEntityFollowup(opts: {
     result = await createFollowupAiChat(
       entity.ai_chat_id,
       followupRequest,
-      { includeOriginalContext, promptType, customVariables, profileDataFields: opts.profileDataFields },
+      {
+        includeOriginalContext,
+        promptType,
+        customVariables,
+        profileDataFields: opts.profileDataFields,
+        historyMessages: opts.historyMessages,
+      },
     );
   } catch (error) {
     return {
@@ -87,13 +115,16 @@ export async function createEntityFollowup(opts: {
   } catch (error) {
     return {
       success: false,
-      message: `Error updating ${entityLabel} record: ${getErrorMessage(error)}`,
+      message: `Error updating ${entityLabel} record: ${
+        getErrorMessage(error)
+      }`,
     };
   }
 
   return {
     success: true,
-    message: `Follow-up AI chat created successfully (ID: ${result.aiChat.id}). ${capLabel} ${entityId} has been updated.`,
+    message:
+      `Follow-up AI chat created successfully (ID: ${result.aiChat.id}). ${capLabel} ${entityId} has been updated.`,
     aiChat: result.aiChat,
   };
 }

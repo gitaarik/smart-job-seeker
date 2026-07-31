@@ -3,12 +3,13 @@
  */
 
 import { db } from "$lib/server/db";
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { application_letters, letter_versions } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 import { interviewRecordsText } from "./application-records";
 import { applicationDocumentsText } from "./application-documents";
 import { LETTER_PROFILE_FIELDS } from "./profile-fields";
+import { buildConversationMessages } from "./conversation-messages";
 import {
   ensureBaselineVersion,
   LETTER_VERSIONS,
@@ -49,35 +50,6 @@ function parseLetterResponse(
   return { letter: response, feedback: null };
 }
 
-/**
- * Build the conversation history from previous letter versions: each turn's
- * message + the AI's note, and — for the most recent turns — the actual draft
- * the letter was at after that turn, so the AI can reference or restore content
- * an earlier version had but the current one dropped. Capped so a long thread
- * doesn't bloat the prompt.
- */
-const DRAFT_WINDOW = 6;
-async function buildConversationHistory(letterId: number): Promise<string> {
-  const versions = await db.query.letter_versions.findMany({
-    where: eq(letter_versions.letter, letterId),
-    orderBy: asc(letter_versions.id),
-    columns: { user_request: true, ai_feedback: true, content: true },
-  });
-
-  if (versions.length === 0) return "";
-  const firstDraftIdx = Math.max(0, versions.length - DRAFT_WINDOW);
-
-  const lines: string[] = [];
-  versions.forEach((v, i) => {
-    if (v.user_request) lines.push(`**You:** ${v.user_request}`);
-    if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
-    if (v.content && i >= firstDraftIdx) {
-      lines.push(`_The letter read, after this turn:_\n${v.content}`);
-    }
-  });
-  return lines.join("\n\n");
-}
-
 /** Format job data as readable text for prompts */
 function formatJobDetails(
   job: {
@@ -114,6 +86,8 @@ export async function createApplicationLetterFollowup(
   // For review or followup_letter mode, look up letter and job context
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
+    [];
   if (mode === "review" || updateContent) {
     const letterRecord = await db.query.application_letters.findFirst({
       where: eq(application_letters.id, letterId),
@@ -178,8 +152,21 @@ export async function createApplicationLetterFollowup(
       const currentLetterContent = latestVersion?.content ||
         letterRecord.content || "";
 
+      // The thread so far, replayed as real turns. Both the revision and the
+      // review path get it: a review that ignores what was already discussed
+      // re-suggests things the applicant deliberately changed.
+      historyMessages = await buildConversationMessages(
+        LETTER_VERSIONS,
+        letterId,
+        {
+          noun: letterRecord.letter_type === "cheat_sheet"
+            ? "cheat sheet"
+            : "letter",
+          currentContent: currentLetterContent,
+        },
+      );
+
       if (mode === "review") {
-        const conversationHistory = await buildConversationHistory(letterId);
         promptType = LETTER_TYPE_TO_REVIEW_PROMPT[letterRecord.letter_type] ||
           undefined;
         extraVariables = {
@@ -188,18 +175,14 @@ export async function createApplicationLetterFollowup(
           jobDetails: jobDetailsText,
           interviewHistory,
           applicationDocuments,
-          additionalContext: conversationHistory
-            ? `## Previous conversation context:\n\nThe user has been iterating on this letter with AI assistance. Consider this history when reviewing — respect the direction they've taken and avoid re-suggesting things that were intentionally changed or omitted during the conversation.\n\n${conversationHistory}`
-            : "",
         };
       } else {
-        // followup_letter — needs job + latest letter + conversation history
-        const conversationHistory = await buildConversationHistory(letterId);
+        // followup_letter — needs job + latest letter; the conversation itself
+        // arrives as messages rather than as a recap inside the prompt.
         promptType = "followup_letter";
         extraVariables = {
           letterContent: currentLetterContent,
           jobDetails: jobDetailsText,
-          conversationHistory,
           interviewHistory,
           applicationDocuments,
         };
@@ -215,6 +198,7 @@ export async function createApplicationLetterFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    historyMessages,
     profileDataFields: LETTER_PROFILE_FIELDS,
     fetchEntity: (id) =>
       db.query.application_letters.findFirst({

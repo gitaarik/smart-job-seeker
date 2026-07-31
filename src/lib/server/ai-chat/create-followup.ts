@@ -4,7 +4,12 @@
 
 import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { ai_chats, application_letters, application_questions } from "$lib/server/db/schema";
+import {
+  ai_chats,
+  application_letters,
+  application_questions,
+} from "$lib/server/db/schema";
+import type { ChatMessage } from "$lib/server/llm";
 import { createAndGenerateAiChat, interpolatePrompt } from "./utils";
 
 /**
@@ -37,6 +42,8 @@ export async function createFollowupAiChat(
     promptType?: string;
     customVariables?: Record<string, unknown>;
     profileDataFields?: string[];
+    /** Prior turns of this thread, replayed as real messages. */
+    historyMessages?: ChatMessage[];
   },
 ): Promise<{
   success: boolean;
@@ -113,7 +120,12 @@ export async function createFollowupAiChat(
         },
       });
       if (!ancestor) break;
-      root = { ...root, context: ancestor.context, system_prompt: ancestor.system_prompt, user_prompt: ancestor.user_prompt };
+      root = {
+        ...root,
+        context: ancestor.context,
+        system_prompt: ancestor.system_prompt,
+        user_prompt: ancestor.user_prompt,
+      };
       currentId = ancestor.followup_to;
     }
   }
@@ -182,7 +194,10 @@ export async function createFollowupAiChat(
       promptType,
       customVariables,
       parentAiChatId,
-      { profileDataFields: options?.profileDataFields ?? [] }
+      {
+        profileDataFields: options?.profileDataFields ?? [],
+        historyMessages: options?.historyMessages,
+      },
     );
   } catch (error) {
     const errorMessage = error instanceof Error

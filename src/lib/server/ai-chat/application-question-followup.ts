@@ -9,7 +9,7 @@
  */
 
 import { db } from "$lib/server/db";
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import {
   application_questions,
   question_versions,
@@ -17,6 +17,7 @@ import {
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
 import { interviewRecordsText } from "./application-records";
 import { applicationDocumentsText } from "./application-documents";
+import { buildConversationMessages } from "./conversation-messages";
 import {
   ensureBaselineVersion,
   QUESTION_VERSIONS,
@@ -50,35 +51,6 @@ function parseAnswerResponse(
     // Not JSON, use raw response
   }
   return { text: response, feedback: null };
-}
-
-/**
- * Build the conversation history from previous question versions: each turn's
- * message + the AI's note, and — for the most recent turns — the actual draft
- * the answer was at after that turn, so the AI can reference or restore content
- * that an earlier version had but the current one dropped. The draft window is
- * capped so a long thread doesn't bloat the prompt.
- */
-const DRAFT_WINDOW = 6;
-async function buildConversationHistory(questionId: number): Promise<string> {
-  const versions = await db.query.question_versions.findMany({
-    where: eq(question_versions.question, questionId),
-    orderBy: asc(question_versions.id),
-    columns: { user_request: true, ai_feedback: true, content: true },
-  });
-
-  if (versions.length === 0) return "";
-  const firstDraftIdx = Math.max(0, versions.length - DRAFT_WINDOW);
-
-  const lines: string[] = [];
-  versions.forEach((v, i) => {
-    if (v.user_request) lines.push(`**You:** ${v.user_request}`);
-    if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
-    if (v.content && i >= firstDraftIdx) {
-      lines.push(`_The answer read, after this turn:_\n${v.content}`);
-    }
-  });
-  return lines.join("\n\n");
 }
 
 /** Format job data as readable text for prompts */
@@ -117,6 +89,8 @@ export async function createApplicationQuestionFollowup(
   // For review or answer-revision mode, look up the question + job context.
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
+    [];
   if (mode === "review" || updateContent) {
     const questionRecord = await db.query.application_questions.findFirst({
       where: eq(application_questions.id, questionId),
@@ -174,6 +148,14 @@ export async function createApplicationQuestionFollowup(
       const currentAnswer = latestVersion?.content || questionRecord.answer ||
         "";
 
+      // The thread so far, replayed as real turns — for review as well as
+      // revision, so a review doesn't re-suggest what was already settled.
+      historyMessages = await buildConversationMessages(
+        QUESTION_VERSIONS,
+        questionId,
+        { noun: "answer", currentContent: currentAnswer },
+      );
+
       if (mode === "review") {
         promptType = "review_application_question";
         extraVariables = {
@@ -184,14 +166,13 @@ export async function createApplicationQuestionFollowup(
           applicationDocuments,
         };
       } else {
-        // Answer revision — needs job + current answer + conversation history.
-        const conversationHistory = await buildConversationHistory(questionId);
+        // Answer revision — needs job + current answer; the conversation itself
+        // arrives as messages rather than as a recap inside the prompt.
         promptType = "followup_application_question";
         extraVariables = {
           question: questionRecord.question,
           answerContent: currentAnswer,
           jobDetails: jobDetailsText,
-          conversationHistory,
           interviewHistory,
           applicationDocuments,
         };
@@ -207,6 +188,7 @@ export async function createApplicationQuestionFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    historyMessages,
     profileDataFields: QUESTION_PROFILE_FIELDS,
     fetchEntity: (id) =>
       db.query.application_questions.findFirst({

@@ -176,6 +176,7 @@ In your feedback:
 - If the answer is strong and ready to submit, say so! Don't force improvements where none are needed (and set revisedText to null).
 - Consider relevance to the question and this job, specificity, and persuasiveness.
 - If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
+- If this conversation already has earlier turns, respect the direction taken in them: don't re-suggest things that were deliberately changed or dropped, and don't reopen decisions already settled.
 - Be concise — focus on what matters most.`,
     user_prompt: `Please review my answer to this application question.
 
@@ -273,10 +274,6 @@ What specific experiences, skills, and achievements from their profile should th
 
 \${question}
 
-## Previous Feedback:
-
-\${conversationHistory}
-
 ## Current Answer:
 
 \${answerContent}
@@ -286,18 +283,21 @@ What specific experiences, skills, and achievements from their profile should th
 \${applicationDocuments}
 
 ## Rules:
-- The applicant sent you a message (below). First decide what they want:
+- Your earlier turns with this applicant are part of this conversation. Read them as commitments, not as background: anything you and they agreed to include, change, emphasise or drop is STILL IN FORCE unless a later message overrode it.
+- A turn marked "Advice only" changed nothing — whatever was agreed in it has NOT been applied to the answer yet. When you next write the answer, apply it.
+- Before you finish a revision, check it against every request the applicant has made so far in this conversation, not just their latest message.
+- The applicant's latest message follows. First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "should I mention my rate?", "what tone is best?") → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the answer.
   - If they want you to WRITE or CHANGE the answer (e.g. "make it more concise", "write it based on your advice") → put the complete new answer in "text", and a short note of what you did in "feedback".
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Keep the applicant's own voice; make the change they asked for — don't rewrite into a different persona
 - When you change the answer, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop details, projects, or points the applicant already had.
-- The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
+- Earlier turns quote the answer as it read at the time. If the applicant asks to bring back, restore, or re-mention something from an earlier draft, take that content/wording from the relevant turn — don't paraphrase it from scratch.
 - Match the answer's length to what the question asks: keep simple/factual questions to 1-2 direct sentences; write more only when the question invites depth. Don't pad or turn a field into a cover letter — recruiters skim many answers.
 - A specific request from the applicant always wins over that brevity default. If they ask you to include, mention, keep, or bring back something (e.g. a named project), DO include it — even if it makes the answer a little longer than you'd otherwise write. Brevity governs what YOU choose to add, never what the applicant told you to include; never silently drop or omit something they explicitly asked for.
 - Only use information from the applicant's actual profile data; never invent facts the profile doesn't support
-- Consider the previous feedback to avoid repeating suggestions and to maintain continuity`,
+- Don't repeat suggestions you have already made in this conversation.`,
     user_prompt: `\${followupRequest}`,
   },
 
@@ -423,6 +423,7 @@ Respond with JSON containing:
 In your feedback:
 - Review THEIR story in THEIR voice — sharpen it, don't rewrite it into a different persona or a different anecdote.
 - Ground every point in their actual profile; flag any claim the profile doesn't support rather than polishing it.
+- If this conversation already has earlier turns, respect the direction taken in them: don't re-suggest things that were deliberately changed or dropped, and don't reopen decisions already settled.
 - If it's already strong and ready, say so and set revisedText to null. Don't force changes.`,
     user_prompt:
       `Please review my STAR interview story above and tell me how to make it stronger.`,
@@ -444,16 +445,15 @@ In your feedback:
 
 \${currentStar}
 
-## Conversation so far:
-
-\${conversationHistory}
-
 ## Rules:
-- The applicant sent you a message (below). First decide what they want:
+- Your earlier turns with this applicant are part of this conversation. Read them as commitments, not as background: anything you and they agreed to include, change, emphasise or drop is STILL IN FORCE unless a later message overrode it.
+- A turn marked "Advice only" changed nothing — whatever was agreed in it has NOT been applied to the story yet. When you next write the story, apply it.
+- Before you finish a revision, check it against every request the applicant has made so far in this conversation, not just their latest message.
+- The applicant's latest message follows. First decide what they want:
   - If they are ASKING A QUESTION or discussing the approach (e.g. "which project should I use?", "is the result strong enough?") → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the story.
   - If they want you to WRITE or CHANGE the story (e.g. "make the action punchier", "add a reflection", "shorten it") → put the complete new story in "text", and a short note of what you changed in "feedback".
 - When you return "text", it MUST be the full STAR story as markdown with "## Situation"/"## Task"/"## Action"/"## Result"/optional "## Reflection" headings — never a fragment. KEEP everything the story already had and only add/adjust what they asked; don't silently drop sections or details.
-- The history above shows the story after recent turns. If they ask to bring back or restore something from an earlier draft, take it from there rather than paraphrasing from scratch.
+- Earlier turns quote the story as it read at the time. If they ask to bring back or restore something from an earlier draft, take it from that turn rather than paraphrasing from scratch.
 - Keep the applicant's own voice; ground everything in their real profile — never invent experience, metrics, or outcomes the profile doesn't support.
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).`,
     user_prompt: `\${followupRequest}`,
@@ -588,6 +588,7 @@ Respond with JSON containing:
 In your feedback:
 - Keep it THEIR sheet in THEIR voice — sharpen and fill gaps, don't replace it with a generic template.
 - Flag any claim the profile doesn't support rather than polishing it.
+- If this conversation already has earlier turns, respect the direction taken in them: don't re-suggest things that were deliberately changed or dropped, and don't reopen decisions already settled.
 - If it's already a good quick reference, say so and set revisedText to null.`,
     user_prompt:
       `Please review my interview cheat sheet above and tell me how to make it a better quick reference.`,
@@ -609,15 +610,15 @@ In your feedback:
 
 \${currentSheet}
 
-## Conversation so far:
-
-\${conversationHistory}
-
 ## Rules:
-- The applicant sent you a message (below). First decide what they want:
+- Your earlier turns with this applicant are part of this conversation. Read them as commitments, not as background: anything you and they agreed to include, change, emphasise or drop is STILL IN FORCE unless a later message overrode it.
+- A turn marked "Advice only" changed nothing — whatever was agreed in it has NOT been applied to the sheet yet. When you next write the sheet, apply it.
+- Before you finish a revision, check it against every request the applicant has made so far in this conversation, not just their latest message.
+- The applicant's latest message follows. First decide what they want:
   - If they are ASKING A QUESTION or discussing what to include (e.g. "what else should I add?", "is this section useful?") → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the sheet.
   - If they want you to WRITE or CHANGE the sheet (e.g. "add a section on caching", "make it shorter", "turn these into bullet points") → put the complete new sheet in "text", and a short note of what you changed in "feedback".
 - When you return "text", it MUST be the FULL cheat sheet as a single markdown string — never a fragment. KEEP everything the sheet already had and only add/adjust what they asked; don't silently drop sections.
+- Earlier turns quote the sheet as it read at the time. If they ask to bring back or restore something from an earlier draft, take it from that turn rather than paraphrasing from scratch.
 - Keep it practical and scannable; ground concrete claims in their real profile — never invent experience or metrics.
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).`,
     user_prompt: `\${followupRequest}`,
@@ -1290,10 +1291,6 @@ Return JSON with:
 
 \${jobDetails}
 
-## Previous Feedback:
-
-\${conversationHistory}
-
 ## Current Letter:
 
 \${letterContent}
@@ -1303,15 +1300,18 @@ Return JSON with:
 \${applicationDocuments}
 
 ## Rules:
-- The user sent you a message (below). First decide what they want:
+- Your earlier turns with this user are part of this conversation. Read them as commitments, not as background: anything you and the user agreed to include, change, emphasise or drop is STILL IN FORCE unless a later message overrode it.
+- A turn marked "Advice only" changed nothing — whatever was agreed in it has NOT been applied to the letter yet. When you next write the letter, apply it.
+- Before you finish a revision, check it against every request the user has made so far in this conversation, not just their latest message.
+- The user's latest message follows. First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach → set "text" to null and put your helpful, specific reply in "feedback". Do NOT rewrite the letter.
   - If they want you to WRITE or CHANGE the letter → put the complete revised letter in "text", and a short note of what you did in "feedback".
 - Always include "feedback". Respond with JSON containing "feedback" and "text" (a string, or null).
 - When you change the letter, KEEP everything it already contains and only add/adjust what the user asked. Don't silently drop paragraphs, projects, or points the user already had.
-- The history below shows the actual draft after recent turns. If the user asks to bring back, restore, or re-mention something that was in an earlier draft, take that content/wording from the relevant draft — don't paraphrase it from scratch.
+- Earlier turns quote the letter as it read at the time. If the user asks to bring back, restore, or re-mention something from an earlier draft, take that content/wording from the relevant turn — don't paraphrase it from scratch.
 - A specific request from the user always wins over your own sense of what to keep concise. If they ask you to include, mention, keep, or bring back something (e.g. a named project), DO include it — even if it makes the letter a little longer than you'd otherwise write. Never silently drop or omit something they explicitly asked for.
 - When the user references a specific project, company, or role, only use information from that specific entry in their profile — do not mix in data from other experiences
-- Consider the previous feedback history to avoid repeating suggestions and to maintain continuity
+- Don't repeat suggestions you have already made in this conversation.
 - If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.`,
     user_prompt: `\${followupRequest}`,
   },
@@ -1464,6 +1464,7 @@ In your feedback:
 - Check completeness: proper greeting, intro, body, closing? Anything missing?
 - Does the letter match specific job requirements to their actual experience?
 - Consider structure, tone, relevance to the job, persuasiveness
+- If this conversation already has earlier turns, respect the direction taken in them: don't re-suggest things that were deliberately changed or dropped, and don't reopen decisions already settled.
 - If records of what has already happened on this application are supplied, use them only where they genuinely help. Never imply a conversation, meeting or relationship that is not recorded in them — what you are writing may well predate any of it.
 - Be concise — focus on what matters most`,
     user_prompt: `## Job:
@@ -1725,6 +1726,7 @@ In your feedback:
 - Are there important talking points or interview preparation areas missing?
 - Is it practical and scannable — easy to reference quickly during interview prep?
 - If records of earlier rounds are provided, judge the sheet against what ACTUALLY happened: does it still prepare them for what comes next, or is it stale — covering ground already settled while missing concerns the interviewers raised?
+- If this conversation already has earlier turns, respect the direction taken in them: don't re-suggest things that were deliberately changed or dropped, and don't reopen decisions already settled.
 - Be concise — focus on what matters most`,
     user_prompt: `## Job:
 

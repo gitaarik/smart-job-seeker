@@ -79,6 +79,28 @@ describe("makeFullPrompt", () => {
     const result = makeFullPrompt("sys", "usr");
     expect(result).toContain("----------------");
   });
+
+  // full_prompt is the debugging record of a request. The turns go to the
+  // provider as separate messages, so this has to show where they sat.
+  it("records replayed turns between the system and user prompts", () => {
+    const result = makeFullPrompt("sys", "latest message", [
+      { role: "user", content: "earlier ask" },
+      { role: "assistant", content: "earlier reply" },
+    ]);
+
+    expect(result).toContain("CONVERSATION SO FAR");
+    expect(result.indexOf("sys")).toBeLessThan(result.indexOf("earlier ask"));
+    expect(result.indexOf("earlier ask")).toBeLessThan(
+      result.indexOf("earlier reply"),
+    );
+    expect(result.indexOf("earlier reply")).toBeLessThan(
+      result.indexOf("latest message"),
+    );
+  });
+
+  it("omits the conversation section when there are no earlier turns", () => {
+    expect(makeFullPrompt("sys", "usr")).not.toContain("CONVERSATION SO FAR");
+  });
 });
 
 describe("instructionsBlock", () => {

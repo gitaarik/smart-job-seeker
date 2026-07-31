@@ -10,15 +10,19 @@
  */
 
 import { db } from "$lib/server/db";
-import { asc, eq } from "drizzle-orm";
-import { cheat_sheet_versions, cheat_sheets } from "$lib/server/db/schema";
+import { eq } from "drizzle-orm";
+import { cheat_sheets } from "$lib/server/db/schema";
 import { createEntityFollowup, type FollowupResult } from "./entity-followup";
+import { buildConversationMessages } from "./conversation-messages";
 import {
   CHEATSHEET_VERSIONS,
   ensureBaselineVersion,
   recordVersion,
 } from "./entity-versions";
-import { buildSheetContext, CHEATSHEET_PROFILE_FIELDS } from "./profile-cheatsheet";
+import {
+  buildSheetContext,
+  CHEATSHEET_PROFILE_FIELDS,
+} from "./profile-cheatsheet";
 import { htmlToMarkdown } from "$lib/utils/html-to-markdown";
 
 /** Parse a structured `{ text, feedback }` revision response. */
@@ -41,28 +45,6 @@ function parseSheetResponse(
   return { text: response, feedback: null };
 }
 
-/** Recent turns as readable text, with a capped window of drafts. */
-const DRAFT_WINDOW = 6;
-async function buildConversationHistory(cheatSheetId: number): Promise<string> {
-  const versions = await db.query.cheat_sheet_versions.findMany({
-    where: eq(cheat_sheet_versions.cheat_sheet, cheatSheetId),
-    orderBy: asc(cheat_sheet_versions.id),
-    columns: { user_request: true, ai_feedback: true, content: true },
-  });
-  if (versions.length === 0) return "";
-  const firstDraftIdx = Math.max(0, versions.length - DRAFT_WINDOW);
-
-  const lines: string[] = [];
-  versions.forEach((v, i) => {
-    if (v.user_request) lines.push(`**You:** ${v.user_request}`);
-    if (v.ai_feedback) lines.push(`**AI:** ${v.ai_feedback}`);
-    if (v.content && i >= firstDraftIdx) {
-      lines.push(`_The sheet read, after this turn:_\n${v.content}`);
-    }
-  });
-  return lines.join("\n\n");
-}
-
 export async function createProfileCheatSheetFollowup(
   cheatSheetId: number,
   followupRequest: string,
@@ -72,6 +54,8 @@ export async function createProfileCheatSheetFollowup(
 ): Promise<FollowupResult> {
   let promptType: string | undefined;
   let extraVariables: Record<string, unknown> | undefined;
+  let historyMessages: Awaited<ReturnType<typeof buildConversationMessages>> =
+    [];
 
   if (mode === "review" || updateContent) {
     const sheet = await db.query.cheat_sheets.findFirst({
@@ -87,22 +71,22 @@ export async function createProfileCheatSheetFollowup(
       );
       const sheetContext = buildSheetContext(sheet.title);
 
-      if (mode === "review") {
-        promptType = "review_prep_sheet";
-        extraVariables = {
-          sheetContext,
-          currentSheet: currentContent ||
-            "(The applicant hasn't written anything yet.)",
-        };
-      } else {
-        promptType = "followup_prep_sheet";
-        extraVariables = {
-          sheetContext,
-          currentSheet: currentContent ||
-            "(The applicant hasn't written anything yet.)",
-          conversationHistory: await buildConversationHistory(cheatSheetId),
-        };
-      }
+      // The thread so far, replayed as real turns — for review as well as
+      // revision, so a review doesn't re-suggest what was already settled.
+      historyMessages = await buildConversationMessages(
+        CHEATSHEET_VERSIONS,
+        cheatSheetId,
+        { noun: "sheet", currentContent },
+      );
+
+      extraVariables = {
+        sheetContext,
+        currentSheet: currentContent ||
+          "(The applicant hasn't written anything yet.)",
+      };
+      promptType = mode === "review"
+        ? "review_prep_sheet"
+        : "followup_prep_sheet";
     }
   }
 
@@ -114,6 +98,7 @@ export async function createProfileCheatSheetFollowup(
     includeOriginalContext,
     promptType,
     customVariables: extraVariables,
+    historyMessages,
     profileDataFields: CHEATSHEET_PROFILE_FIELDS,
     fetchEntity: (id) =>
       db.query.cheat_sheets.findFirst({
