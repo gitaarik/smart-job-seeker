@@ -236,6 +236,12 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     );
   }
 
+  // Aliased past the `if (!searchTask) return` guard above: TS doesn't carry
+  // that narrowing into the closure below (a captured binding could in theory
+  // outlive the guard), so the closure would see `searchTask` as possibly
+  // undefined. `searchTask` is const and already proven non-null here.
+  const task = searchTask;
+
   // Resolve the search_task.platform_profile_id (per-profile runtime row)
   // from the platform_credential the client picked or the inline new-creds
   // payload. The picker speaks in platform_credentials.id (user-wide); we
@@ -245,15 +251,15 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   ): Promise<number> {
     const existing = await db.query.platform_profiles.findFirst({
       where: and(
-        eq(platform_profiles.profile_id, searchTask.profile_id),
+        eq(platform_profiles.profile_id, task.profile_id),
         eq(platform_profiles.platform_credential_id, credentialId),
       ),
       columns: { id: true },
     });
     if (existing) return existing.id;
     const [created] = await db.insert(platform_profiles).values({
-      profile_id: searchTask.profile_id,
-      platform_id: searchTask.platform_id,
+      profile_id: task.profile_id,
+      platform_id: task.platform_id,
       platform_credential_id: credentialId,
       status: "active",
       date_created: new Date(),
