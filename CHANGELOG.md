@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.8.0] - 2026-07-31
+
+44 commits since v0.7.2.
+
+### Added
+- Upload multiple files on the documents tab
+- AI-assisted STAR story builder for interview preparation
+- Conversational AI editor in profile cheat sheets
+- Paste job postings to auto-extract and review fields
+- Extract .eml email attachments for AI context
+- Unified AI Send across cover letters, questions, and stories (draft or advise mode)
+- "AI is working…" status indicator on text editors
+- Replay conversation turns in AI chat
+
+### Changed
+- Profile side-project link now displays repository URL
+- Consolidated profile field definitions
+- Autosave sends only changed fields
+- AI uses unified context provider across all generations
+
+### Fixed
+- AI answer assistant advises rather than drafts on "how do I" questions
+- STAR auto-drafting no longer triggers for advice questions
+- Job region misclassification and currency extraction
+- File upload size limit increased for larger documents
+- Gemini model configuration on preview environment
+- OCI manifest support in container registry
+
 ## [0.7.2] - 2026-07-28
 
 10 commits since v0.7.1.
