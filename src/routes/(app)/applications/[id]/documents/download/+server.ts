@@ -1,10 +1,18 @@
+/**
+ * File download for an application's attached documents.
+ *
+ * Deliberately on its own route rather than alongside +page.svelte: where a
+ * page and an endpoint share a route, SvelteKit prefers the page for any
+ * request that accepts text/html — which is every browser navigation, so a
+ * plain download link rendered the page instead of serving the file.
+ */
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { applications, applications_files, files } from "$lib/server/db/schema";
 import { getFile } from "$lib/server/files";
-import { getSelectedProfileId } from "../../../profile/utils";
+import { getSelectedProfileId } from "../../../../profile/utils";
 
 export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   const user = locals.user;
@@ -17,7 +25,10 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   if (isNaN(appId)) error(400, "Invalid application ID");
 
   const application = await db.query.applications.findFirst({
-    where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+    where: and(
+      eq(applications.id, appId),
+      eq(applications.profile_id, profileId),
+    ),
   });
   if (!application) error(404, "Application not found");
 
@@ -26,10 +37,15 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
 
   // Verify file belongs to this application (either as attached file or CV sent)
   const isAttached = await db.query.applications_files.findFirst({
-    where: and(eq(applications_files.applications_id, appId), eq(applications_files.file_id, fileId)),
+    where: and(
+      eq(applications_files.applications_id, appId),
+      eq(applications_files.file_id, fileId),
+    ),
   });
   const isCvFile = application.cv_file_sent_id === fileId;
-  if (!isAttached && !isCvFile) error(403, "File not associated with this application");
+  if (!isAttached && !isCvFile) {
+    error(403, "File not associated with this application");
+  }
 
   const fileMeta = await db.query.files.findFirst({
     where: eq(files.id, fileId),
@@ -41,7 +57,9 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": fileMeta?.type || "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${fileMeta?.filename_download || "file"}"`,
+      "Content-Disposition": `attachment; filename="${
+        fileMeta?.filename_download || "file"
+      }"`,
     },
   });
 };

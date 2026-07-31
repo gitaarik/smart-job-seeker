@@ -1,8 +1,12 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, asc } from "drizzle-orm";
-import { applications, applications_files, profile_versions } from "$lib/server/db/schema";
+import { and, asc, eq } from "drizzle-orm";
+import {
+  applications,
+  applications_files,
+  profile_versions,
+} from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import { Buffer } from "buffer";
@@ -15,17 +19,31 @@ export const load: PageServerLoad = async ({ parent }) => {
   }
 
   const profileVersions = await db.query.profile_versions.findMany({
-    where: and(eq(profile_versions.profile_id, layoutData.selectedProfile.id), eq(profile_versions.status, "published")),
+    where: and(
+      eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+      eq(profile_versions.status, "published"),
+    ),
     columns: { slug: true, name: true },
     orderBy: asc(profile_versions.sort),
   });
 
   return {
-    versions: profileVersions.filter((v) => v.slug && v.name) as { slug: string; name: string }[],
+    versions: profileVersions.filter((v) => v.slug && v.name) as {
+      slug: string;
+      name: string;
+    }[],
   };
 };
 
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
 export const actions: Actions = {
+  /**
+   * Accepts one or more files under the `file` key. The client uploads a batch
+   * one request at a time (BODY_SIZE_LIMIT applies per request, so a batch
+   * would be rejected wholesale rather than per-file), but the action stays
+   * multi-file so a single request carrying several is handled correctly too.
+   */
   uploadFile: async ({ request, locals, cookies, params }) => {
     const user = locals.user;
     if (!user) return fail(401, { error: "Not authenticated" });
@@ -37,36 +55,58 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    const uploads = formData.getAll("file").filter(
+      (f): f is File => f instanceof File && f.size > 0,
+    );
 
-    if (!file || file.size === 0) {
+    if (uploads.length === 0) {
       return fail(400, { error: "No file selected" });
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      return fail(400, { error: "File size exceeds 10MB limit" });
+    // Partial success: one rejected file must not discard the rest of a batch.
+    const errors: { filename: string; error: string }[] = [];
+    let uploaded = 0;
+
+    for (const file of uploads) {
+      if (file.size > MAX_FILE_BYTES) {
+        errors.push({ filename: file.name, error: "Exceeds the 10MB limit" });
+        continue;
+      }
+      try {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const stored = await uploadFile({
+          filename: file.name,
+          buffer,
+          title: file.name,
+        });
+        await db.insert(applications_files).values({
+          applications_id: appId,
+          file_id: stored.id,
+        });
+        uploaded++;
+      } catch (err) {
+        errors.push({ filename: file.name, error: (err as Error).message });
+      }
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Nothing landed — report it as a failure so a plain form post surfaces it
+    // as `form.error` rather than looking like a success.
+    if (uploaded === 0) {
+      return fail(400, {
+        error: errors.map((e) => `${e.filename}: ${e.error}`).join("; ") ||
+          "Upload failed",
+      });
+    }
 
-    const uploaded = await uploadFile({
-      filename: file.name,
-      buffer,
-      title: file.name,
-    });
-
-    await db.insert(applications_files).values({
-      applications_id: appId,
-      file_id: uploaded.id,
-    });
-
-    return { success: true };
+    return { success: true, uploaded, errors };
   },
 
   deleteFile: async ({ request, locals, cookies, params }) => {
@@ -80,7 +120,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -89,7 +132,10 @@ export const actions: Actions = {
     if (isNaN(id)) return fail(400, { error: "Invalid file record ID" });
 
     const fileRecord = await db.query.applications_files.findFirst({
-      where: and(eq(applications_files.id, id), eq(applications_files.applications_id, appId)),
+      where: and(
+        eq(applications_files.id, id),
+        eq(applications_files.applications_id, appId),
+      ),
     });
     if (!fileRecord) return fail(404, { error: "File record not found" });
 
@@ -119,7 +165,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 

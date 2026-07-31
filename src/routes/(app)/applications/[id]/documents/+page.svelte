@@ -1,78 +1,160 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faCheck,
-    faCloudUploadAlt,
-    faDownload,
-    faExternalLinkAlt,
-    faFile,
-    faFileAlt,
-    faFilePdf,
-    faFileImage,
-    faFileWord,
-    faSave,
-    faTrash,
-  } from "@fortawesome/free-solid-svg-icons";
-  import Card from "../../../components/Card.svelte";
-  import EmptyState from "../../../profile/components/EmptyState.svelte";
-  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
-  import { profileDocUrl } from "$lib/utils/profile-doc-url";
-  import type { DocType } from "$lib/utils/profile-doc-url";
+import type { ActionData, PageData } from "./$types";
+import { deserialize, enhance } from "$app/forms";
+import { invalidateAll } from "$app/navigation";
+import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import {
+  faCheck,
+  faCloudUploadAlt,
+  faDownload,
+  faExternalLinkAlt,
+  faFile,
+  faFileAlt,
+  faFileImage,
+  faFilePdf,
+  faFileWord,
+  faSave,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import Card from "../../../components/Card.svelte";
+import EmptyState from "../../../profile/components/EmptyState.svelte";
+import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+import { profileDocUrl } from "$lib/utils/profile-doc-url";
+import type { DocType } from "$lib/utils/profile-doc-url";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let app = $derived(data.application);
-  let files = $derived(app.applications_files || []);
-  let versions = $derived((data as any).versions as { slug: string; name: string }[] || []);
+let app = $derived(data.application);
+let files = $derived(app.applications_files || []);
+let versions = $derived(
+  (data as any).versions as { slug: string; name: string }[] || [],
+);
 
-  let deleteFileId = $state<number | null>(null);
-  let uploading = $state(false);
-  let cvSaved = $state(false);
-  let docType = $state<string>(app.cv_sent_through || "resume");
-  let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-  function formatFileSize(bytes: number | null): string {
-    if (!bytes) return "Unknown size";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+let deleteFileId = $state<number | null>(null);
+let uploading = $state(false);
+let uploadDone = $state(0);
+let uploadTotal = $state(0);
+let uploadErrors = $state<string[]>([]);
+let isDragging = $state(false);
+let cvSaved = $state(false);
+let docType = $state<string>(app.cv_sent_through || "resume");
+let profileSlug = $derived(
+  (data as any).selectedProfile?.slug as string | undefined,
+);
+
+function formatFileSize(bytes: number | null): string {
+  if (!bytes) return "Unknown size";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileIcon(mimeType: string | null) {
+  if (!mimeType) return faFile;
+  if (mimeType.includes("pdf")) return faFilePdf;
+  if (mimeType.includes("image")) return faFileImage;
+  if (mimeType.includes("word") || mimeType.includes("document")) {
+    return faFileWord;
   }
+  return faFile;
+}
 
-  function getFileIcon(mimeType: string | null) {
-    if (!mimeType) return faFile;
-    if (mimeType.includes("pdf")) return faFilePdf;
-    if (mimeType.includes("image")) return faFileImage;
-    if (mimeType.includes("word") || mimeType.includes("document")) return faFileWord;
-    return faFile;
+function getFileIconColor(mimeType: string | null): string {
+  if (!mimeType) return "text-[var(--dash-text-muted)]";
+  if (mimeType.includes("pdf")) return "text-red-500";
+  if (mimeType.includes("image")) return "text-blue-500";
+  if (mimeType.includes("word")) return "text-blue-600";
+  return "text-[var(--dash-text-muted)]";
+}
+
+type UploadResult =
+  | {
+    type: "success";
+    data?: { errors?: { filename: string; error: string }[] };
   }
+  | { type: "failure"; data?: { error?: string } }
+  | { type: "redirect"; location: string }
+  | { type: "error"; error?: { message?: string } };
 
-  function getFileIconColor(mimeType: string | null): string {
-    if (!mimeType) return "text-[var(--dash-text-muted)]";
-    if (mimeType.includes("pdf")) return "text-red-500";
-    if (mimeType.includes("image")) return "text-blue-500";
-    if (mimeType.includes("word")) return "text-blue-600";
-    return "text-[var(--dash-text-muted)]";
-  }
+/**
+ * Upload a selection one request at a time. BODY_SIZE_LIMIT (10M in
+ * production) caps the whole request, so posting a batch would reject every
+ * file in it as soon as the total crossed the line — and the failure would
+ * come from the adapter, before the action's own per-file check could name
+ * the offender. One file per request keeps each failure attributable.
+ */
+async function uploadFiles(selection: FileList | File[]) {
+  const list = Array.from(selection);
+  if (list.length === 0 || uploading) return;
 
-  function handleUploadSubmit() {
-    uploading = true;
-    return async ({ update }: { update: () => Promise<void> }) => {
-      await update();
-      uploading = false;
-    };
-  }
+  uploading = true;
+  uploadErrors = [];
+  uploadDone = 0;
+  uploadTotal = list.length;
 
-  function handleCvSubmit() {
-    return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
-      await update();
+  for (const file of list) {
+    // Checked here as well as server-side so an oversized file is named
+    // rather than dying as a transport-level 413.
+    if (file.size > MAX_FILE_BYTES) {
+      uploadErrors.push(`${file.name}: exceeds the 10MB limit`);
+      uploadDone++;
+      continue;
+    }
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      // The header is what use:enhance sends to mark a POST as a form action
+      // rather than an endpoint request, and it gets us the devalue-encoded
+      // action result back. Set it explicitly: without it SvelteKit resolves
+      // any non-text/html POST to a sibling +server.ts if one ever exists at
+      // this route, which answers 405 for an action it does not export.
+      const res = await fetch("?/uploadFile", {
+        method: "POST",
+        body: fd,
+        headers: { "x-sveltekit-action": "true" },
+      });
+      const result = deserialize(await res.text()) as UploadResult;
       if (result.type === "success") {
-        cvSaved = true;
-        setTimeout(() => { cvSaved = false; }, 2000);
+        for (const e of result.data?.errors ?? []) {
+          uploadErrors.push(`${e.filename}: ${e.error}`);
+        }
+      } else if (result.type === "failure") {
+        uploadErrors.push(
+          `${file.name}: ${result.data?.error ?? "upload failed"}`,
+        );
+      } else if (result.type === "error") {
+        uploadErrors.push(
+          `${file.name}: ${result.error?.message ?? "upload failed"}`,
+        );
       }
-    };
+    } catch {
+      uploadErrors.push(`${file.name}: upload failed`);
+    }
+    uploadDone++;
   }
+
+  uploading = false;
+  await invalidateAll();
+}
+
+function handleCvSubmit() {
+  return async (
+    { result, update }: {
+      result: { type: string };
+      update: () => Promise<void>;
+    },
+  ) => {
+    await update();
+    if (result.type === "success") {
+      cvSaved = true;
+      setTimeout(() => {
+        cvSaved = false;
+      }, 2000);
+    }
+  };
+}
 </script>
 
 <div class="space-y-6">
@@ -169,39 +251,54 @@
       <h2 class="text-lg font-semibold text-[var(--dash-text)]">Attached Files</h2>
     </div>
 
-    <!-- Upload Form -->
+    <!-- Upload -->
     <Card padding="md">
-      <form
-        method="POST"
-        action="?/uploadFile"
-        enctype="multipart/form-data"
-        use:enhance={handleUploadSubmit}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        role="button"
+        tabindex="0"
+        ondrop={(e) => {
+          e.preventDefault();
+          isDragging = false;
+          if (e.dataTransfer?.files?.length) uploadFiles(e.dataTransfer.files);
+        }}
+        ondragover={(e) => {
+          e.preventDefault();
+          isDragging = true;
+        }}
+        ondragleave={() => (isDragging = false)}
+        class="relative flex items-center justify-center gap-3 px-4 py-6 border-2 border-dashed rounded-lg transition-colors {isDragging
+          ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5'
+          : 'border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)]'}"
       >
-        <div class="flex items-center gap-3">
-          <label
-            class="flex-1 flex items-center justify-center gap-3 px-4 py-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg cursor-pointer hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors"
-          >
-            <FontAwesomeIcon icon={faCloudUploadAlt} class="w-5 h-5 text-[var(--dash-text-muted)]" />
-            <span class="text-sm text-[var(--dash-text-secondary)]">
-              Choose a file or drag it here (max 10MB)
-            </span>
-            <input
-              type="file"
-              name="file"
-              class="hidden"
-              onchange={(e) => {
-                const input = e.currentTarget as HTMLInputElement;
-                if (input.files?.length) {
-                  input.closest("form")?.requestSubmit();
-                }
-              }}
-            />
-          </label>
-        </div>
-        {#if uploading}
-          <p class="text-sm text-[var(--dash-text-secondary)] mt-2">Uploading...</p>
-        {/if}
-      </form>
+        <FontAwesomeIcon icon={faCloudUploadAlt} class="w-5 h-5 text-[var(--dash-text-muted)]" />
+        <span class="text-sm text-[var(--dash-text-secondary)]">
+          {uploading
+            ? `Uploading ${uploadDone + 1} of ${uploadTotal}…`
+            : "Choose files or drag them here (max 10MB each)"}
+        </span>
+        <input
+          type="file"
+          name="file"
+          multiple
+          disabled={uploading}
+          onchange={(e) => {
+            const input = e.currentTarget as HTMLInputElement;
+            if (input.files?.length) uploadFiles(input.files);
+            // Reset so re-picking the same file fires change again.
+            input.value = "";
+          }}
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-default"
+        />
+      </div>
+
+      {#if uploadErrors.length > 0}
+        <ul class="mt-3 space-y-1">
+          {#each uploadErrors as message}
+            <li class="text-sm text-[var(--dash-error)]">{message}</li>
+          {/each}
+        </ul>
+      {/if}
     </Card>
 
     <!-- File List -->
@@ -233,8 +330,12 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
+                  <!-- data-sveltekit-reload: the target is a server endpoint
+                       with no page, so it must be a real browser navigation,
+                       not a client-side route lookup. -->
                   <a
-                    href="?fileId={file.id}"
+                    href="/applications/{app.id}/documents/download?fileId={file.id}"
+                    data-sveltekit-reload
                     class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                     aria-label="Download"
                   >
