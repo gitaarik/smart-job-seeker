@@ -70,3 +70,18 @@ jobs:
             printf '::error::Merge of %s into feature branch detected — rebase instead:\n%s\n' "$BASE_REF" "$MERGES" >&2
             exit 1
           fi
+
+  # Dockerfile and Dockerfile.production used to be linted only by sjs-ops's
+  # recursive hadolint, which pulled every submodule in just to reach them.
+  # The check belongs to the repo that owns the files, and this one is public
+  # so it costs no Actions minutes.
+  hadolint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hadolint/hadolint-action@v3.3.0
+        with:
+          recursive: true
+          # Lenient on first adoption — fail only on hadolint errors (DL3000-tier),
+          # not on warnings/info. Tighten later by removing this line.
+          failure-threshold: error
