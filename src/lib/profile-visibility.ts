@@ -20,6 +20,22 @@
 /** Tags naming a base template rather than a user-defined version. */
 export const BASE_TEMPLATE_TAGS = ["resume", "cv"];
 
+/**
+ * What a profile holds for one skill, in the terms this module defines. Lives
+ * here rather than beside the query that builds it so components can name the
+ * type without importing a server-only module.
+ */
+export interface ProfileSkillRef {
+  id: number;
+  name: string;
+  level: string | null;
+  categoryId: number;
+  /** Held back from every base template — kept for matching, off documents. */
+  profileOnly: boolean;
+  /** Versions it is re-admitted on despite that. */
+  versions: string[];
+}
+
 /** The version/template slug of a tag, ignoring a leading "!" negation marker. */
 export function tagSlug(tag: string): string {
   return tag.trim().replace(/^!/, "").trim().toLowerCase();
@@ -65,6 +81,31 @@ export function setProfileOnly(
     ...BASE_TEMPLATE_TAGS.map((t) => `!${t}`),
     ...list.filter((t) => !isBase(t)),
   ];
+}
+
+/**
+ * The versions an item is whitelisted onto — the positive tags that name a
+ * user-defined version rather than a base template.
+ */
+export function versionsOf(tags: string[] | null | undefined): string[] {
+  return asTagList(tags)
+    .filter((t) => !isNegated(t) && !BASE_TEMPLATE_TAGS.includes(tagSlug(t)))
+    .map((t) => t.trim());
+}
+
+/**
+ * Replace that whitelist wholesale, leaving base-template state and explicit
+ * `!version` exclusions alone — those answer a different question and an editor
+ * changing which versions an item appears on shouldn't silently drop them.
+ */
+export function setVersions(
+  tags: string[] | null | undefined,
+  versions: string[],
+): string[] {
+  const kept = asTagList(tags).filter(
+    (t) => isNegated(t) || BASE_TEMPLATE_TAGS.includes(tagSlug(t)),
+  );
+  return [...kept, ...versions.map((v) => v.trim()).filter(Boolean)];
 }
 
 /** Where a held-back item is being lifted to: every document, or one version. */

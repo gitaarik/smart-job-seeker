@@ -34,8 +34,8 @@ const JOB_WITH_STALE_MATCH = 3666;
 /** Only unmatched pills carry this title, which is what makes them clickable. */
 const ADD_PILL = 'button[title*="add it to my profile"]';
 
-/** A skill the profile has, which the match hasn't caught up with. */
-const KNOWN_PILL = '[title*="Already in your profile"]';
+/** Any pill for a skill the profile has — these open the editor, not the add form. */
+const KNOWN_PILL = 'button[title^="In your profile"]';
 
 describe("profile-only skills popover", () => {
   const b = useBrowser();
@@ -145,6 +145,47 @@ describe("profile-only skills popover", () => {
       known.some((k) => k.trim() === o.trim())
     );
     expect(overlap).toEqual([]);
+  });
+
+  it("opens a skill the profile already has for editing, prefilled", async () => {
+    // "Add it" and "change it" are the same thought a moment apart, so the
+    // pill for an owned skill opens the same form showing what is true.
+    let patched: string | null = null;
+    await b.page.route("**/api/profile-skills", async (route) => {
+      if (route.request().method() !== "PATCH") return route.continue();
+      patched = route.request().postData();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, tags: null }),
+      });
+    });
+
+    await b.page.goto(`/jobs/${JOB_WITH_STALE_MATCH}`);
+    await b.page.waitForLoadState("networkidle");
+    const pill = b.page.locator(KNOWN_PILL).first();
+    await pill.waitFor({ state: "visible", timeout: 15000 });
+    await pill.click();
+
+    // Prefilled from the profile row, not from a blank form's defaults.
+    const category = b.page.getByLabel("Category", { exact: true });
+    await category.waitFor({ state: "visible", timeout: 10000 });
+    expect(await category.inputValue()).not.toBe("new");
+    expect(
+      await b.page.getByRole("button", { name: "Show on CV" }).getAttribute(
+        "aria-pressed",
+      ),
+    ).toBe("true");
+
+    // It saves, rather than adding a second copy of a skill you already have.
+    // Scoped to the popover — the page has its own "Save job" button.
+    await b.page.locator("div.z-50").getByRole("button", { name: "Save" })
+      .click();
+    await b.page.waitForTimeout(800);
+    expect(patched).toContain('"id":');
+    expect(patched).toContain('"profile_only":false');
+
+    await b.page.unroute("**/api/profile-skills");
   });
 
   it("closes on an outside click without having added anything", async () => {

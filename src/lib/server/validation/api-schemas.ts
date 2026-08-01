@@ -95,16 +95,27 @@ export const techSkillQuickAddSchema = z.object({
   category_name: optionalTrimmedString(),
   /** Keep it for matching but off every resume/CV (the default here). */
   profile_only: z.boolean().default(true),
+  /** Versions to show a held-back skill on anyway, from the outset. */
+  versions: z.array(z.string().trim().max(255)).optional(),
 });
 
 /**
- * Lift a profile-only skill onto documents: either everywhere ("all") or on a
- * single named resume/CV version, which adds that version's slug as a positive
- * tag alongside the exclusion pair.
+ * Change a skill the profile already has.
+ *
+ * `show_on` is the one-click lift the documents tab sends — "all", or a single
+ * version slug to whitelist. The remaining fields are the fuller edit offered
+ * from a job page; they're all optional, so a caller sends only what changed.
  */
-export const techSkillShowOnSchema = z.object({
+export const techSkillUpdateSchema = z.object({
   id: positiveInt(),
-  show_on: requiredTrimmedString("Target", 255),
+  show_on: optionalTrimmedString(),
+  level: optionalTrimmedString(50),
+  category_id: positiveInt().optional().nullable(),
+  category_name: optionalTrimmedString(),
+  /** Hold it back from every resume/CV, or stop doing so. */
+  profile_only: z.boolean().optional(),
+  /** The versions a held-back skill is shown on anyway, as a whole set. */
+  versions: z.array(z.string().trim().max(255)).optional(),
 });
 
 // References

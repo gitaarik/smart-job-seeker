@@ -12,6 +12,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockCategoriesFindMany = vi.fn();
 const mockSkillsFindFirst = vi.fn();
+const mockVersionsFindMany = vi.fn();
+
+const mockUpdateWhere = vi.fn();
+const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
+const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
 const mockInsertReturning = vi.fn();
 const mockInsertValues = vi.fn().mockReturnValue({
@@ -26,8 +31,12 @@ vi.mock("$lib/server/db", () => ({
         findMany: (...a: any[]) => mockCategoriesFindMany(...a),
       },
       tech_skills: { findFirst: (...a: any[]) => mockSkillsFindFirst(...a) },
+      profile_versions: {
+        findMany: (...a: any[]) => mockVersionsFindMany(...a),
+      },
     },
     insert: (...a: any[]) => mockInsertFn(...a),
+    update: (...a: any[]) => mockUpdateFn(...a),
   },
 }));
 
@@ -49,19 +58,19 @@ vi.mock("../../../profile/utils", () => ({
   touchProfile: vi.fn(async () => {}),
 }));
 
-import { POST } from "../+server";
+import { PATCH, POST } from "../+server";
 
 const CATEGORIES = [
   { id: 10, name: "Frontend", sort: 0, tech_skills: [] },
   { id: 11, name: "Backend", sort: 4, tech_skills: [] },
 ];
 
-function createEvent(body: any) {
+function createEvent(body: any, method = "POST") {
   return {
     locals: { user: { id: "user-1" }, session: null },
     cookies: { get: () => undefined },
     request: new Request("http://localhost/api/profile-skills", {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
@@ -81,6 +90,7 @@ describe("POST /api/profile-skills — category choice", () => {
     vi.clearAllMocks();
     mockCategoriesFindMany.mockResolvedValue(CATEGORIES);
     mockSkillsFindFirst.mockResolvedValue(undefined);
+    mockVersionsFindMany.mockResolvedValue([{ slug: "backend" }]);
     // Category insert first (id 99), then the skill.
     mockInsertReturning.mockResolvedValueOnce([{ id: 99 }]).mockResolvedValue([
       { id: 500 },
@@ -144,5 +154,115 @@ describe("POST /api/profile-skills — category choice", () => {
 
     expect(await res.json()).toMatchObject({ category_id: 99 });
     expect(insertedCategory()).toMatchObject({ name: "Other", sort: 0 });
+  });
+});
+
+describe("PATCH /api/profile-skills — editing a skill in place", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCategoriesFindMany.mockResolvedValue(CATEGORIES);
+    mockVersionsFindMany.mockResolvedValue([{ slug: "backend" }]);
+    mockInsertReturning.mockResolvedValue([{ id: 99 }]);
+    mockSkillsFindFirst.mockResolvedValue({
+      id: 5,
+      category_id: 10,
+      tags: ["!resume", "!cv"],
+      tech_skill_category: { profile_id: 7 },
+    });
+  });
+
+  /** The columns the update would write. */
+  function updated() {
+    return mockUpdateSet.mock.calls[0]?.[0];
+  }
+
+  function edit(body: any) {
+    return PATCH(createEvent({ id: 5, ...body }, "PATCH"));
+  }
+
+  it("refuses a skill on another profile", async () => {
+    mockSkillsFindFirst.mockResolvedValue({
+      id: 5,
+      tech_skill_category: { profile_id: 999 },
+    });
+    expect((await edit({ level: "expert" })).status).toBe(404);
+  });
+
+  it("writes only what was sent", async () => {
+    await edit({ level: "Expert" });
+
+    expect(updated()).toMatchObject({ level: "expert" });
+    expect(updated()).not.toHaveProperty("tags");
+    expect(updated()).not.toHaveProperty("category_id");
+  });
+
+  it("rejects an unknown level", async () => {
+    expect((await edit({ level: "wizard" })).status).toBe(400);
+    expect(mockUpdateSet).not.toHaveBeenCalled();
+  });
+
+  it("moves the skill to another category", async () => {
+    await edit({ category_id: 11 });
+    expect(updated()).toMatchObject({ category_id: 11 });
+  });
+
+  it("creates a category from a typed name here too", async () => {
+    await edit({ category_id: null, category_name: "Data & ML" });
+
+    expect(updated()).toMatchObject({ category_id: 99 });
+    expect(insertedCategory()).toMatchObject({ name: "Data & ML", sort: 5 });
+  });
+
+  it("lifts a held-back skill onto every document", async () => {
+    const res = await edit({ profile_only: false });
+
+    expect(updated()).toMatchObject({ tags: null });
+    // Reported as cleared, not as unchanged — a client that trusts the
+    // response would otherwise think the lift did nothing.
+    expect(await res.json()).toMatchObject({ tags: null });
+  });
+
+  it("drops the version whitelist when lifting", async () => {
+    // Keeping it would quietly mean "only on backend" rather than everywhere.
+    mockSkillsFindFirst.mockResolvedValue({
+      id: 5,
+      category_id: 10,
+      tags: ["!resume", "!cv", "backend"],
+      tech_skill_category: { profile_id: 7 },
+    });
+
+    await edit({ profile_only: false, versions: [] });
+    expect(updated()).toMatchObject({ tags: null });
+  });
+
+  it("holds a skill back but keeps it on the named versions", async () => {
+    mockSkillsFindFirst.mockResolvedValue({
+      id: 5,
+      category_id: 10,
+      tags: null,
+      tech_skill_category: { profile_id: 7 },
+    });
+
+    await edit({ profile_only: true, versions: ["backend"] });
+    expect(updated()?.tags).toEqual(["!resume", "!cv", "backend"]);
+  });
+
+  it("refuses a version the profile doesn't have", async () => {
+    const res = await edit({ profile_only: true, versions: ["nope"] });
+
+    expect(res.status).toBe(404);
+    // Nothing written: a tag no document activates is worse than an error,
+    // because it looks like it worked.
+    expect(mockUpdateSet).not.toHaveBeenCalled();
+  });
+
+  it("still honours the documents tab's lift shorthand", async () => {
+    await edit({ show_on: "backend" });
+    expect(updated()?.tags).toEqual(["!resume", "!cv", "backend"]);
+  });
+
+  it("does nothing when nothing changed", async () => {
+    await edit({});
+    expect(mockUpdateSet).not.toHaveBeenCalled();
   });
 });

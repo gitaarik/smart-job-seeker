@@ -136,23 +136,18 @@
     return "strong";
   }
 
+  let profileSkillIndex = $derived(data.profileSkillIndex);
+
   /**
-   * Whether the profile lists this skill at all — which is not the same
-   * question as whether the match counted it. `matched_skills` is the matcher's
-   * output for one job at one moment, so a skill added since (or one the LLM
-   * simply didn't pick up) reads as missing here while the profile has it all
-   * along. Knowing that up front keeps the pill from offering to add a
-   * duplicate.
+   * What the profile holds for this skill, which is not the same question as
+   * whether the match counted it. `matched_skills` is the matcher's output for
+   * one job at one moment, so a skill added since (or one the LLM simply didn't
+   * pick up) reads as missing here while the profile has it all along. Knowing
+   * up front keeps the pill from offering to add a duplicate, and gives it the
+   * row to edit.
    */
-  function isInProfile(skill: string): boolean {
-    return profileSkillLevels[skill.trim().toLowerCase()] !== undefined;
-  }
-
-  let profileOnlySkillIds = $derived(data.profileOnlySkillIds);
-
-  /** Id of the matching skill when it's in the profile but off documents. */
-  function getProfileOnlyId(skill: string): number | null {
-    return profileOnlySkillIds[skill.trim().toLowerCase()] ?? null;
+  function getProfileSkill(skill: string) {
+    return profileSkillIndex[skill.trim().toLowerCase()] ?? null;
   }
 
   const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
@@ -497,8 +492,7 @@
                   <AddSkillToProfile
                     {skill}
                     strength={getSkillMatchStrength(skill)}
-                    profileOnlyId={getProfileOnlyId(skill)}
-                    inProfile={isInProfile(skill)}
+                    profileSkill={getProfileSkill(skill)}
                     variant="required"
                   />
                 {/each}
@@ -518,8 +512,7 @@
                   <AddSkillToProfile
                     {skill}
                     strength={getSkillMatchStrength(skill)}
-                    profileOnlyId={getProfileOnlyId(skill)}
-                    inProfile={isInProfile(skill)}
+                    profileSkill={getProfileSkill(skill)}
                     variant="preferred"
                   />
                 {/each}

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isProfileOnly, setProfileOnly } from "./profile-visibility";
+import {
+  isProfileOnly,
+  setProfileOnly,
+  setVersions,
+  versionsOf,
+} from "./profile-visibility";
 
 describe("isProfileOnly", () => {
   it("needs both base templates excluded", () => {
@@ -44,5 +49,46 @@ describe("setProfileOnly", () => {
     const on = setProfileOnly(["backend"], true);
     expect(isProfileOnly(on)).toBe(true);
     expect(isProfileOnly(setProfileOnly(on, false))).toBe(false);
+  });
+});
+
+describe("versionsOf / setVersions", () => {
+  it("reads the whitelist, ignoring base templates and exclusions", () => {
+    expect(versionsOf(["!resume", "!cv", "backend", "senior"])).toEqual([
+      "backend",
+      "senior",
+    ]);
+    expect(versionsOf(["cv", "!senior"])).toEqual([]);
+    expect(versionsOf(null)).toEqual([]);
+  });
+
+  it("replaces the whitelist wholesale", () => {
+    expect(setVersions(["!resume", "!cv", "backend"], ["senior"])).toEqual([
+      "!resume",
+      "!cv",
+      "senior",
+    ]);
+    expect(setVersions(["!resume", "!cv", "backend"], [])).toEqual([
+      "!resume",
+      "!cv",
+    ]);
+  });
+
+  it("keeps explicit version exclusions, which say something else", () => {
+    // "never on senior" survives an edit that only picks where to appear.
+    expect(setVersions(["!senior", "backend"], ["staff"])).toEqual([
+      "!senior",
+      "staff",
+    ]);
+  });
+
+  it("drops blanks rather than writing an empty tag", () => {
+    expect(setVersions(null, ["  backend  ", "", "   "])).toEqual(["backend"]);
+  });
+
+  it("round-trips", () => {
+    const tags = setVersions(["!resume", "!cv"], ["backend", "senior"]);
+    expect(versionsOf(tags)).toEqual(["backend", "senior"]);
+    expect(isProfileOnly(tags)).toBe(true);
   });
 });
