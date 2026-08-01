@@ -6,10 +6,17 @@
  * switches on the right signal and that writing your own version stays
  * reachable in both states.
  *
- * Nothing here triggers a real generation: clicking "AI advice" or "AI
- * generate" would spend credits and real tokens on every run, and the model's
- * behaviour is covered by `npm run llm:smoke` instead. This asserts the UI
- * states around those buttons, which is what a browser can check cheaply.
+ * Questions run the composer with `autoMode` on, so the pre-thread state is
+ * one unified "Send to AI" (the model decides draft vs. advice) alongside
+ * "Write a draft" / "Get advice" starter chips. Those chips are the pre-thread
+ * signal: once a thread exists they disappear and only "Send to AI" remains.
+ * The older split "AI advice" / "AI generate" pair is the `autoMode=false`
+ * path, which nothing in applications uses any more.
+ *
+ * Nothing here triggers a real generation: clicking a starter chip or Send
+ * would spend credits and real tokens on every run, and the model's behaviour
+ * is covered by `npm run llm:smoke` instead. This asserts the UI states around
+ * those buttons, which is what a browser can check cheaply.
  *
  * Prerequisites: dev stack up, test user seeded (see browser.test.ts).
  *
@@ -46,19 +53,20 @@ describe("texts composer — no AI thread yet", () => {
     expect(questionUrl).toContain("/texts/questions/");
   });
 
-  it("offers the two thread-starting steps, not a followup", async () => {
+  it("offers the starter chips alongside the unified send", async () => {
     expect(questionUrl).toBeTruthy();
     await b.page.goto(questionUrl!);
     await b.page.waitForLoadState("networkidle");
 
-    expect(await b.page.getByRole("button", { name: "AI advice" }).isVisible())
-      .toBe(true);
+    // Pre-thread only: these are what disappear once a conversation exists.
     expect(
-      await b.page.getByRole("button", { name: "AI generate" }).isVisible(),
+      await b.page.getByRole("button", { name: "Write a draft" }).isVisible(),
     ).toBe(true);
-    // There is no thread to follow up on yet.
-    expect(await b.page.getByRole("button", { name: "Send to AI" }).count())
-      .toBe(0);
+    expect(await b.page.getByRole("button", { name: "Get advice" }).isVisible())
+      .toBe(true);
+    // In autoMode the same Send drives the first turn as well as followups.
+    expect(await b.page.getByRole("button", { name: "Send to AI" }).isVisible())
+      .toBe(true);
   });
 
   it("invites an optional brief for that first turn", async () => {
@@ -67,14 +75,16 @@ describe("texts composer — no AI thread yet", () => {
 
     const placeholder = await composer.getAttribute("placeholder");
     // Optional is the point: leaving it blank must stay an obvious path.
-    expect(placeholder).toMatch(/optional/i);
     expect(placeholder).toMatch(/leave blank/i);
+    expect(placeholder).toMatch(/ask for a draft|ask a question/i);
 
-    // A brief is accepted, and typing one must not send anything on its own.
+    // A brief is accepted, and typing one must not send anything on its own —
+    // the turn is still unstarted, which the starter chips prove.
     await composer.fill("Keep it under 100 words.");
     expect(await composer.inputValue()).toBe("Keep it under 100 words.");
-    expect(await b.page.getByRole("button", { name: "Send to AI" }).count())
-      .toBe(0);
+    expect(
+      await b.page.getByRole("button", { name: "Write a draft" }).isVisible(),
+    ).toBe(true);
   });
 
   it("keeps writing your own version one click away", async () => {
@@ -121,14 +131,28 @@ describe("texts composer — thread in progress", () => {
     // other branch of the same composer.
     await b.page.goto(`/applications/${APP_ID}/texts`);
     await b.page.waitForLoadState("networkidle");
-    await b.page.getByRole("link", { name: "Edit" }).first().click();
+    // Target a letter specifically rather than the first Edit link on the
+    // page. Letters live at /texts/<id> and questions at /texts/questions/<id>,
+    // and only the seeded letter is guaranteed to carry an ai_chat_id — one
+    // stray thread-less question sorting first is enough to open the
+    // pre-thread composer and fail this for the wrong reason.
+    await b.page
+      .locator(
+        'a[aria-label="Edit"][href*="/texts/"]:not([href*="/questions/"])',
+      )
+      .first()
+      .click();
     await b.page.waitForURL("**/texts/**", { timeout: 10000 });
     await b.page.waitForLoadState("networkidle");
 
     expect(await b.page.getByRole("button", { name: "Send to AI" }).isVisible())
       .toBe(true);
-    // The starting steps belong to the empty state only.
-    expect(await b.page.getByRole("button", { name: "AI advice" }).count())
+    // The starter chips belong to the empty state only. Asserting on these
+    // rather than the retired "AI advice" label matters: a name nothing
+    // renders any more passes this check no matter what the UI does.
+    expect(await b.page.getByRole("button", { name: "Write a draft" }).count())
+      .toBe(0);
+    expect(await b.page.getByRole("button", { name: "Get advice" }).count())
       .toBe(0);
 
     const composer = b.page.locator("textarea").last();
