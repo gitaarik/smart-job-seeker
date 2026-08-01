@@ -5,9 +5,9 @@
 
 import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
-import { profiles, collected_data } from "$lib/server/db/schema";
+import { collected_data, profiles } from "$lib/server/db/schema";
 import removeMd from "remove-markdown";
-import { isProfileOnly } from "$lib/profile-visibility";
+import { isProfileOnly, PROFILE_ONLY_FLAG } from "$lib/profile-visibility";
 
 interface SchemaNode {
   note?: string;
@@ -191,12 +191,13 @@ function buildSchemaNode(
  * Fetch complete profile data with all relations
  * Internal helper function used by exportProfile
  *
- * Profile-only skills are dropped here. They exist so jobs keep matching on a
- * skill the applicant would rather not put on paper (see $lib/profile-visibility)
- * — and this snapshot is what every AI prompt writes *from*, so leaving them in
- * would let a generated cover letter claim exactly what the applicant chose to
- * leave off their CV. Matching is unaffected: it queries `tech_skills` directly
- * (server/job/match-utils.ts), not `collected_data`.
+ * Profile-only skills are marked here, not dropped. They exist so jobs keep
+ * matching on a skill the applicant would rather not put on paper (see
+ * $lib/profile-visibility), and this one snapshot feeds *every* prompt — both
+ * the cover letter that must not claim them and the `score_job_match` call that
+ * must. Dropping them at this layer silently cost them the second: a job would
+ * list a skill the applicant had just added and the analysis would report it as
+ * a gap. Consumers resolve the distinction (ai-chat/profile-data.ts).
  */
 async function fetchProfileData(profileId: number) {
   const profile = await db.query.profiles.findFirst({
@@ -276,7 +277,10 @@ async function fetchProfileData(profileId: number) {
             orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
+        orderBy: (
+          t: any,
+          { asc, desc }: any,
+        ) => [asc(t.sort), desc(t.start_date)],
       },
       side_projects: {
         columns: {
@@ -298,7 +302,10 @@ async function fetchProfileData(profileId: number) {
             orderBy: (t: any, { asc }: any) => asc(t.sort),
           },
         },
-        orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)],
+        orderBy: (
+          t: any,
+          { asc, desc }: any,
+        ) => [asc(t.sort), desc(t.start_date)],
       },
       educations: {
         columns: {
@@ -373,11 +380,19 @@ async function fetchProfileData(profileId: number) {
     ...profile,
     tech_skill_categories: profile.tech_skill_categories.map((category) => ({
       ...category,
-      tech_skills: category.tech_skills
-        .filter((skill) => !isProfileOnly(skill.tags as string[] | null))
-        // `tags` is a visibility mechanism, not profile content — the prompts
-        // shouldn't see it.
-        .map(({ tags: _tags, ...skill }) => skill),
+      // Held back from documents is not the same as absent. This snapshot is
+      // shared by every prompt, including the one that scores job matches, and
+      // dropping these here made a profile-only skill invisible to matching —
+      // the single thing it exists to do. So mark, and let each consumer
+      // decide: see applySkillVisibility in ai-chat/profile-data.ts.
+      //
+      // `tags` itself is a visibility mechanism, not profile content, so the
+      // prompts never see it either way.
+      tech_skills: category.tech_skills.map(({ tags, ...skill }) =>
+        isProfileOnly(tags as string[] | null)
+          ? { ...skill, [PROFILE_ONLY_FLAG]: true }
+          : skill
+      ),
     })),
   };
 }

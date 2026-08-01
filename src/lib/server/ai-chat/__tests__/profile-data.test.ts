@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { fitProfileToBudget, formatTrimNote } from "../profile-data";
+import {
+  applySkillVisibility,
+  fitProfileToBudget,
+  formatTrimNote,
+} from "../profile-data";
 
 const entry = (n: number, size = 200) => ({ id: n, text: "x".repeat(size) });
 
@@ -74,5 +78,68 @@ describe("formatTrimNote", () => {
     const note = formatTrimNote({ work_experiences: { kept: 3, total: 8 } });
     expect(note).toContain("3 of 8");
     expect(note.toLowerCase()).toContain("partial");
+  });
+});
+
+describe("applySkillVisibility", () => {
+  const blob = () => ({
+    name: "Alex",
+    tech_skill_categories: [
+      {
+        name: "Backend",
+        tech_skills: [
+          { name: "Go", level: "expert" },
+          { name: "Kubernetes", level: "beginner", profile_only: true },
+        ],
+      },
+      { name: "Empty", tech_skills: [] },
+    ],
+  });
+
+  function names(data: Record<string, unknown>, category = 0): string[] {
+    const cats = data.tech_skill_categories as Array<
+      { tech_skills: { name: string }[] }
+    >;
+    return cats[category].tech_skills.map((s) => s.name);
+  }
+
+  it("keeps every skill for analysis — matching's whole premise", () => {
+    // A profile-only skill exists precisely so jobs keep matching on it. This
+    // is the assertion that broke when the export dropped them: a skill added
+    // from a job came back reported as a gap.
+    const out = applySkillVisibility(blob(), false);
+    expect(names(out)).toEqual(["Go", "Kubernetes"]);
+  });
+
+  it("drops held-back skills from anything document-facing", () => {
+    const out = applySkillVisibility(blob(), true);
+    expect(names(out)).toEqual(["Go"]);
+  });
+
+  it("strips the marker either way — no prompt reasons about visibility", () => {
+    for (const documentSafe of [true, false]) {
+      const out = applySkillVisibility(blob(), documentSafe);
+      const cats = out.tech_skill_categories as Array<
+        { tech_skills: Record<string, unknown>[] }
+      >;
+      for (const skill of cats[0].tech_skills) {
+        expect(skill).not.toHaveProperty("profile_only");
+      }
+    }
+  });
+
+  it("leaves the rest of the profile untouched", () => {
+    const out = applySkillVisibility(blob(), true);
+    expect(out.name).toBe("Alex");
+    expect(names(out, 1)).toEqual([]);
+  });
+
+  it("survives a blob without skills", () => {
+    expect(applySkillVisibility({ name: "Alex" }, true)).toEqual({
+      name: "Alex",
+    });
+    expect(
+      applySkillVisibility({ tech_skill_categories: "nonsense" }, true),
+    ).toEqual({ tech_skill_categories: "nonsense" });
   });
 });

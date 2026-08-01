@@ -21,6 +21,16 @@
 export const BASE_TEMPLATE_TAGS = ["resume", "cv"];
 
 /**
+ * Field marking a held-back skill inside the `collected_data` AI snapshot.
+ *
+ * The snapshot is one blob shared by every prompt, so it has to carry the
+ * distinction rather than resolve it: dropping held-back skills at export time
+ * also hid them from job matching, which is the one thing they exist to do.
+ * Consumers strip the flag — or the whole entry — on the way into a prompt.
+ */
+export const PROFILE_ONLY_FLAG = "profile_only";
+
+/**
  * What a profile holds for one skill, in the terms this module defines. Lives
  * here rather than beside the query that builds it so components can name the
  * type without importing a server-only module.

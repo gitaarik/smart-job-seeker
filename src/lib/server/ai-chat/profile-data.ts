@@ -13,10 +13,59 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { collected_data } from "$lib/server/db/schema";
 import { exportProfile } from "$lib/server/profile/export";
+import { PROFILE_ONLY_FLAG } from "$lib/profile-visibility";
 
 export interface ProfileData {
   data: Record<string, unknown>;
   schema: Record<string, unknown>;
+}
+
+/**
+ * Resolve the held-back-skill marker the export leaves in the blob.
+ *
+ * Two prompts want opposite things from the same snapshot. Anything that writes
+ * for the applicant — a cover letter, a STAR story — must not claim a skill
+ * they deliberately kept off their documents. Anything that *analyses* them,
+ * above all `score_job_match`, has to see every skill they have, or adding one
+ * from a job and re-scoring reports it back as a gap.
+ *
+ * So the flag is stripped either way — no prompt should be reasoning about
+ * document visibility — and `documentSafe` decides whether the skill goes with
+ * it.
+ */
+export function applySkillVisibility(
+  data: Record<string, unknown>,
+  documentSafe: boolean,
+): Record<string, unknown> {
+  const categories = data.tech_skill_categories;
+  if (!Array.isArray(categories)) return data;
+
+  return {
+    ...data,
+    tech_skill_categories: categories.map((category) => {
+      const skills = (category as Record<string, unknown>)?.tech_skills;
+      if (!Array.isArray(skills)) return category;
+
+      const kept = documentSafe
+        ? skills.filter((s) =>
+          !(s as Record<string, unknown>)?.[
+            PROFILE_ONLY_FLAG
+          ]
+        )
+        : skills;
+
+      return {
+        ...(category as Record<string, unknown>),
+        tech_skills: kept.map((skill) => {
+          const { [PROFILE_ONLY_FLAG]: _flag, ...rest } = skill as Record<
+            string,
+            unknown
+          >;
+          return rest;
+        }),
+      };
+    }),
+  };
 }
 
 /**
@@ -28,10 +77,15 @@ export interface ProfileData {
  *
  * `fields` filters both data and schema to the requested top-level keys. An
  * empty array means "no profile data at all"; `undefined` means "everything".
+ *
+ * `documentSafe` drops skills the applicant keeps off their documents. Callers
+ * that generate user-facing text set it; anything analysing the applicant must
+ * not, or it reasons about a profile smaller than the real one.
  */
 export async function loadProfileData(
   profileId: number,
   fields?: string[],
+  options?: { documentSafe?: boolean },
 ): Promise<ProfileData> {
   let record = await db.query.collected_data.findFirst({
     where: eq(collected_data.profile_id, profileId),
@@ -47,7 +101,10 @@ export async function loadProfileData(
   }
 
   let schemaJson = record?.schema ? JSON.parse(record.schema) : {};
-  let dataJson = record?.data ? JSON.parse(record.data) : {};
+  let dataJson = applySkillVisibility(
+    record?.data ? JSON.parse(record.data) : {},
+    options?.documentSafe ?? false,
+  );
 
   if (fields) {
     if (fields.length === 0) {

@@ -47,7 +47,7 @@ describe("exportProfile", () => {
     expect(result.message).toContain("not found");
   });
 
-  it("keeps profile-only skills out of the AI snapshot", async () => {
+  it("marks profile-only skills in the AI snapshot rather than dropping them", async () => {
     (db.query.profiles.findFirst as any)
       .mockResolvedValueOnce({ id: 1 }) // existence check
       .mockResolvedValueOnce({
@@ -56,7 +56,8 @@ describe("exportProfile", () => {
           name: "Backend",
           tech_skills: [
             { name: "Go", level: "expert", years_experience: 5, tags: null },
-            // Held back from every document — must not reach the prompts.
+            // Held back from documents — but still the applicant's skill, so
+            // it stays in the snapshot for the prompts that analyse them.
             {
               name: "Kubernetes",
               level: "beginner",
@@ -83,8 +84,19 @@ describe("exportProfile", () => {
 
     const written = JSON.parse(values.mock.calls[0][0].data);
     const skills = written.tech_skill_categories[0].tech_skills;
-    expect(skills.map((s: { name: string }) => s.name)).toEqual(["Go", "Rust"]);
+    expect(skills.map((s: { name: string }) => s.name)).toEqual([
+      "Go",
+      "Kubernetes",
+      "Rust",
+    ]);
+    // Dropping it here cost it job matching, which is the one thing a
+    // profile-only skill exists to do.
+    expect(skills[1]).toMatchObject({ name: "Kubernetes", profile_only: true });
+    // Only the held-back one is marked; the rest look exactly as before.
+    expect(skills[0]).not.toHaveProperty("profile_only");
+    expect(skills[2]).not.toHaveProperty("profile_only");
     // `tags` is a visibility mechanism, not profile content.
     expect(skills[0]).not.toHaveProperty("tags");
+    expect(skills[1]).not.toHaveProperty("tags");
   });
 });

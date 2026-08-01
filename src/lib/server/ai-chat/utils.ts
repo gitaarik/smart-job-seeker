@@ -19,7 +19,11 @@ import {
   assembleGenerationContext,
   type ContextRequest,
 } from "./generation-context";
-import { loadProfileData, renderProfileData } from "./profile-data";
+import {
+  applySkillVisibility,
+  loadProfileData,
+  renderProfileData,
+} from "./profile-data";
 
 /**
  * User-facing writing prompts run on the writing provider/model
@@ -180,6 +184,28 @@ function fetchPromptTemplate(
 }
 
 /**
+ * The stored profile blob with document-facing visibility applied.
+ *
+ * Hands back the original string untouched when there was nothing to resolve,
+ * so re-interpolating a chat doesn't gratuitously reformat its own prompt — and
+ * likewise if it won't parse, since a prompt built from an odd blob beats one
+ * that throws on the way out.
+ */
+function documentSafeData(stored: string | null | undefined): string {
+  if (!stored) return "{}";
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stored);
+  } catch {
+    return stored;
+  }
+  if (typeof parsed !== "object" || parsed === null) return stored;
+
+  const visible = applySkillVisibility(parsed as Record<string, unknown>, true);
+  return visible === parsed ? stored : JSON.stringify(visible, null, 2);
+}
+
+/**
  * Fetch and interpolate prompts for an AI chat
  * Returns system_prompt and user_prompt with ${schema} and ${data} replaced
  */
@@ -205,10 +231,16 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
     columns: { schema: true, data: true },
   });
 
-  // Prepare replacements (use empty objects as defaults)
+  // Prepare replacements (use empty objects as defaults).
+  //
+  // This path re-interpolates a stored chat and has no idea which template it
+  // came from — `ai_chats.ai_chat_template` is null on effectively every row
+  // since templates moved into code. So it takes the conservative reading:
+  // withholding a held-back skill from an analysis is recoverable, putting one
+  // into a document the applicant sends is not.
   const variables = {
     schema: collectedDataRecord?.schema || "{}",
-    data: collectedDataRecord?.data || "{}",
+    data: documentSafeData(collectedDataRecord?.data),
   };
 
   // Interpolate variables in both prompts
@@ -315,7 +347,12 @@ export async function createAndGenerateAiChat(
     // context provider's `profile` source, which renders this same object.
     const profileDataFields = options?.context?.profileFields ??
       options?.profileDataFields;
-    const profileBlob = await loadProfileData(profileId, profileDataFields);
+    // Writing prompts speak for the applicant, so they don't get skills kept
+    // off documents. Everything else — scoring above all — needs the whole
+    // profile, or it reports a skill the applicant just added as a gap.
+    const profileBlob = await loadProfileData(profileId, profileDataFields, {
+      documentSafe: WRITING_PROMPT_KEYS.has(promptKey),
+    });
     const schemaJson = profileBlob.schema;
     const dataJson = profileBlob.data;
 
