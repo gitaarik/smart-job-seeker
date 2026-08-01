@@ -111,7 +111,12 @@
      * "AI generate" buttons into one "Send to AI" that runs the model-decides
      * `auto` turn (draft vs. advice, per message), plus quick "Write a draft" /
      * "Get advice" starter chips. When false, the two explicit buttons show (the
-     * pre-pilot behaviour). Defaults false; only cover letters opt in for now.
+     * pre-pilot behaviour).
+     *
+     * Defaults false, but every caller now passes true — cover letters,
+     * application questions, interview stories and cheat sheets — so the
+     * `false` branch is unreached in the app and only survives as the fallback
+     * for a caller that omits the prop.
      */
     autoMode?: boolean;
     /**
