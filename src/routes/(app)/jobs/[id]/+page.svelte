@@ -136,6 +136,18 @@
     return "strong";
   }
 
+  /**
+   * Whether the profile lists this skill at all — which is not the same
+   * question as whether the match counted it. `matched_skills` is the matcher's
+   * output for one job at one moment, so a skill added since (or one the LLM
+   * simply didn't pick up) reads as missing here while the profile has it all
+   * along. Knowing that up front keeps the pill from offering to add a
+   * duplicate.
+   */
+  function isInProfile(skill: string): boolean {
+    return profileSkillLevels[skill.trim().toLowerCase()] !== undefined;
+  }
+
   let profileOnlySkillIds = $derived(data.profileOnlySkillIds);
 
   /** Id of the matching skill when it's in the profile but off documents. */
@@ -486,6 +498,7 @@
                     {skill}
                     strength={getSkillMatchStrength(skill)}
                     profileOnlyId={getProfileOnlyId(skill)}
+                    inProfile={isInProfile(skill)}
                     variant="required"
                   />
                 {/each}
@@ -506,6 +519,7 @@
                     {skill}
                     strength={getSkillMatchStrength(skill)}
                     profileOnlyId={getProfileOnlyId(skill)}
+                    inProfile={isInProfile(skill)}
                     variant="preferred"
                   />
                 {/each}

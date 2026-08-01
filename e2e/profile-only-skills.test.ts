@@ -24,8 +24,18 @@ import { loginViaUI, useBrowser } from "./browser";
  */
 const JOB_WITH_UNMATCHED_SKILLS = 2574;
 
+/**
+ * A job requiring skills the profile *has* but whose stored match doesn't list
+ * — the two disagree, which is ordinary: the matcher ran once, at a moment, and
+ * it is an LLM.
+ */
+const JOB_WITH_STALE_MATCH = 3666;
+
 /** Only unmatched pills carry this title, which is what makes them clickable. */
 const ADD_PILL = 'button[title*="add it to my profile"]';
+
+/** A skill the profile has, which the match hasn't caught up with. */
+const KNOWN_PILL = '[title*="Already in your profile"]';
 
 describe("profile-only skills popover", () => {
   const b = useBrowser();
@@ -66,6 +76,30 @@ describe("profile-only skills popover", () => {
     expect(await toggle.getAttribute("aria-pressed")).toBe("false");
     expect(await b.page.getByText(/Stays off your resume/i).first().isVisible())
       .toBe(true);
+
+    // Still there a beat later. The popover used to open and then vanish on
+    // its own, because a request fired on click could resolve into a state
+    // that swapped the whole pill out — taking the open popover with it.
+    await b.page.waitForTimeout(1500);
+    expect(await toggle.isVisible()).toBe(true);
+  });
+
+  it("never offers to add a skill the profile already has", async () => {
+    // The pill has to decide from data the page already holds. Asking the
+    // server only once the popover is open means the answer lands mid-click,
+    // which is what made the popover appear to close itself.
+    await b.page.goto(`/jobs/${JOB_WITH_STALE_MATCH}`);
+    await b.page.waitForLoadState("networkidle");
+    await b.page.locator(KNOWN_PILL).first().waitFor({ timeout: 15000 });
+
+    const known = await b.page.locator(KNOWN_PILL).allTextContents();
+    expect(known.length).toBeGreaterThan(0);
+
+    const offered = await b.page.locator(ADD_PILL).allTextContents();
+    const overlap = offered.filter((o) =>
+      known.some((k) => k.trim() === o.trim())
+    );
+    expect(overlap).toEqual([]);
   });
 
   it("closes on an outside click without having added anything", async () => {
