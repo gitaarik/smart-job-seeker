@@ -16,6 +16,7 @@ import {
   search_tasks,
 } from "$lib/server/db/schema";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
+import { getProfileOnlySkillIds } from "$lib/server/profile/skill-visibility";
 import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
@@ -248,8 +249,12 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     ? "matches"
     : "all";
 
-  // Load user's skill proficiency levels for highlighting
-  const profileSkillLevels = await getProfileSkillLevels(profileId);
+  // Load user's skill proficiency levels for highlighting, plus the skills
+  // that match but are held back from documents (so a pill can say so).
+  const [profileSkillLevels, profileOnlySkillIds] = await Promise.all([
+    getProfileSkillLevels(profileId),
+    getProfileOnlySkillIds(profileId),
+  ]);
 
   // Check staff status
   const user = layoutData.user;
@@ -462,6 +467,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     profileId,
     jobCategory,
     profileSkillLevels,
+    profileOnlySkillIds,
     isStaff,
     scrapeHistory,
     importers,

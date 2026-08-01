@@ -9,6 +9,7 @@ import {
 } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { deleteFile, uploadFile } from "$lib/server/files";
+import { getHiddenRequiredSkills } from "$lib/server/profile/hidden-required-skills";
 import { Buffer } from "buffer";
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -18,20 +19,32 @@ export const load: PageServerLoad = async ({ parent }) => {
     redirect(302, "/home");
   }
 
-  const profileVersions = await db.query.profile_versions.findMany({
-    where: and(
-      eq(profile_versions.profile_id, layoutData.selectedProfile.id),
-      eq(profile_versions.status, "published"),
+  const requiredSkills = layoutData.application?.job?.skills_required;
+
+  const [profileVersions, hiddenRequiredSkills] = await Promise.all([
+    db.query.profile_versions.findMany({
+      where: and(
+        eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+        eq(profile_versions.status, "published"),
+      ),
+      columns: { slug: true, name: true },
+      orderBy: asc(profile_versions.sort),
+    }),
+    // Precomputed for every template × version pair rather than just the saved
+    // one: the type and version pickers are unsaved client state, so the page
+    // must be able to answer for whatever the applicant is currently eyeing.
+    getHiddenRequiredSkills(
+      layoutData.selectedProfile.id,
+      Array.isArray(requiredSkills) ? requiredSkills as string[] : [],
     ),
-    columns: { slug: true, name: true },
-    orderBy: asc(profile_versions.sort),
-  });
+  ]);
 
   return {
     versions: profileVersions.filter((v) => v.slug && v.name) as {
       slug: string;
       name: string;
     }[],
+    hiddenRequiredSkills,
   };
 };
 

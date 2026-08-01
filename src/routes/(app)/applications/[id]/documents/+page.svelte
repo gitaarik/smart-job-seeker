@@ -5,14 +5,17 @@ import { invalidateAll } from "$app/navigation";
 import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 import {
   faCheck,
+  faCircleNotch,
   faCloudUploadAlt,
   faDownload,
   faExternalLinkAlt,
+  faEyeSlash,
   faFile,
   faFileAlt,
   faFileImage,
   faFilePdf,
   faFileWord,
+  faPlus,
   faSave,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
@@ -40,9 +43,62 @@ let uploadErrors = $state<string[]>([]);
 let isDragging = $state(false);
 let cvSaved = $state(false);
 let docType = $state<string>(app.cv_sent_through || "resume");
+let versionSlug = $state<string>(app.cv_version_sent || "");
 let profileSlug = $derived(
   (data as any).selectedProfile?.slug as string | undefined,
 );
+
+/**
+ * Skills this job requires that the applicant has but the document they're
+ * about to send wouldn't print — profile-only ones, mostly. Precomputed by the
+ * server for every template × version pair, so flipping either picker answers
+ * instantly and without a round trip.
+ */
+interface HiddenSkill {
+  id: number;
+  name: string;
+  liftable: boolean;
+}
+let hiddenByDocument = $derived(
+  ((data as any).hiddenRequiredSkills ?? {}) as Record<string, HiddenSkill[]>,
+);
+let hiddenSkills = $derived(
+  hiddenByDocument[`${docType}:${versionSlug}`] ?? [],
+);
+let liftTarget = $derived(
+  versionSlug
+    ? versions.find((v) => v.slug === versionSlug)?.name ?? versionSlug
+    : "all your documents",
+);
+
+let lifting = $state<number | null>(null);
+let lifted = $state<number[]>([]);
+let liftError = $state<string | null>(null);
+
+async function lift(skill: HiddenSkill) {
+  if (lifting !== null) return;
+  lifting = skill.id;
+  liftError = null;
+  try {
+    const res = await fetch("/api/profile-skills", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: skill.id,
+        show_on: versionSlug || "all",
+      }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body?.error || "Couldn't update the skill.");
+    lifted = [...lifted, skill.id];
+    // Recompute the strip against the new tags.
+    await invalidateAll();
+  } catch (e) {
+    liftError = e instanceof Error ? e.message : "Couldn't update the skill.";
+  } finally {
+    lifting = null;
+  }
+}
 
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return "Unknown size";
@@ -196,11 +252,12 @@ function handleCvSubmit() {
         <div class="flex flex-col sm:flex-row gap-2">
           <select
             name="version_slug"
+            bind:value={versionSlug}
             class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm"
           >
             <option value="">Select</option>
             {#each versions as v}
-              <option value={v.slug} selected={v.slug === app.cv_version_sent}>
+              <option value={v.slug}>
                 {v.name}
               </option>
             {/each}
@@ -219,6 +276,75 @@ function handleCvSubmit() {
           </button>
         </div>
       </form>
+
+      <!-- Required skills the applicant has but this document won't print.
+           Profile-only skills are invisible by design and are stripped from the
+           AI snapshot too, so a generated letter won't raise them either — when
+           the job *requires* one, that silence is the wrong default. -->
+      {#if hiddenSkills.length > 0}
+        <div class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+          <p class="text-xs text-[var(--dash-text)] flex items-start gap-2">
+            <FontAwesomeIcon
+              icon={faEyeSlash}
+              class="w-3 h-3 mt-0.5 shrink-0 text-amber-600"
+            />
+            <span>
+              This job requires {hiddenSkills.length === 1
+              ? "a skill"
+              : `${hiddenSkills.length} skills`} you have, but
+              {hiddenSkills.length === 1 ? "it" : "they"} won't appear on the
+              {docType === "cv" ? "CV" : "resume"} you're sending.
+            </span>
+          </p>
+
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            {#each hiddenSkills as skill (skill.id)}
+              {#if skill.liftable}
+                <button
+                  type="button"
+                  onclick={() => lift(skill)}
+                  disabled={lifting !== null}
+                  title="Add {skill.name} to {liftTarget}"
+                  class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-card)] text-[var(--dash-text-secondary)] border border-[var(--dash-border)] hover:border-amber-500/50 hover:text-amber-700 transition-colors disabled:opacity-70"
+                >
+                  {#if lifting === skill.id}
+                    <FontAwesomeIcon icon={faCircleNotch} spin class="w-2.5 h-2.5" />
+                  {:else}
+                    <FontAwesomeIcon icon={faPlus} class="w-2.5 h-2.5" />
+                  {/if}
+                  {skill.name}
+                </button>
+              {:else}
+                <!-- Something other than the profile-only pair holds it back
+                     (a hidden category, or a "CV only" tag on a resume), so
+                     the one-click lift wouldn't reveal it — don't pretend. -->
+                <span
+                  title="Held back by another rule — edit it in your profile skills"
+                  class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border border-dashed border-[var(--dash-border)]"
+                >
+                  {skill.name}
+                </span>
+              {/if}
+            {/each}
+          </div>
+
+          <p class="text-[10px] text-[var(--dash-text-muted)] mt-2">
+            Adding puts the skill on <strong>{liftTarget}</strong>. Skills you
+            can't add here are held back by another rule — change them in
+            <a href="/profile/skills" class="dash-link">your skills</a>.
+          </p>
+
+          {#if liftError}
+            <p class="text-[10px] text-[var(--dash-error)] mt-1">{liftError}</p>
+          {/if}
+        </div>
+      {:else if lifted.length > 0}
+        <p class="mt-4 text-xs text-[var(--dash-success)] flex items-center gap-2">
+          <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+          Every skill this job requires now appears on the document you're
+          sending.
+        </p>
+      {/if}
 
       {#if app.cv_version_sent && app.cv_sent_through && profileSlug}
         {@const dt = app.cv_sent_through as DocType}

@@ -73,6 +73,33 @@ export const languageReorderSchema = z.object({
   order: z.array(positiveInt()),
 });
 
+// Tech skills
+
+/**
+ * Quick-add of a single skill, used by the "add this to my profile" flow on an
+ * unmatched job skill. `category_id` is optional — the endpoint falls back to
+ * the profile's first category (creating one if there are none) so the flow
+ * never dead-ends on a profile that hasn't set categories up yet.
+ */
+export const techSkillQuickAddSchema = z.object({
+  name: requiredTrimmedString("Skill name"),
+  level: optionalTrimmedString(50),
+  years_experience: positiveInt().max(80).optional().nullable(),
+  category_id: positiveInt().optional().nullable(),
+  /** Keep it for matching but off every resume/CV (the default here). */
+  profile_only: z.boolean().default(true),
+});
+
+/**
+ * Lift a profile-only skill onto documents: either everywhere ("all") or on a
+ * single named resume/CV version, which adds that version's slug as a positive
+ * tag alongside the exclusion pair.
+ */
+export const techSkillShowOnSchema = z.object({
+  id: positiveInt(),
+  show_on: requiredTrimmedString("Target", 255),
+});
+
 // References
 
 export const referenceReorderSchema = z.object({

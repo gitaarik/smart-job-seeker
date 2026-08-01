@@ -29,7 +29,7 @@
   import { track } from "$lib/tools/analytics";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
-  import SkillPill from "../components/SkillPill.svelte";
+  import AddSkillToProfile from "../components/AddSkillToProfile.svelte";
   import PlatformLogo from "$lib/components/PlatformLogo.svelte";
   import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
   import Card from "../../components/Card.svelte";
@@ -134,6 +134,13 @@
     const level = profileSkillLevels[skill.toLowerCase()];
     if (level === "weak") return "weak";
     return "strong";
+  }
+
+  let profileOnlySkillIds = $derived(data.profileOnlySkillIds);
+
+  /** Id of the matching skill when it's in the profile but off documents. */
+  function getProfileOnlyId(skill: string): number | null {
+    return profileOnlySkillIds[skill.trim().toLowerCase()] ?? null;
   }
 
   const tf = $derived(($page.data as { timeFormat: TimeFormat }).timeFormat);
@@ -475,7 +482,12 @@
               </p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_required as skill}
-                  <SkillPill {skill} strength={getSkillMatchStrength(skill)} variant="required" size="md" />
+                  <AddSkillToProfile
+                    {skill}
+                    strength={getSkillMatchStrength(skill)}
+                    profileOnlyId={getProfileOnlyId(skill)}
+                    variant="required"
+                  />
                 {/each}
               </div>
             </div>
@@ -490,7 +502,12 @@
               </p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_preferred as skill}
-                  <SkillPill {skill} strength={getSkillMatchStrength(skill)} variant="preferred" size="md" />
+                  <AddSkillToProfile
+                    {skill}
+                    strength={getSkillMatchStrength(skill)}
+                    profileOnlyId={getProfileOnlyId(skill)}
+                    variant="preferred"
+                  />
                 {/each}
               </div>
             </div>

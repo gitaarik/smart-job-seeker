@@ -119,6 +119,16 @@
 
   const work_experiences = filterOnTags(profile.work_experiences);
 
+  // Resolve visible skills per category up front: a category whose skills are
+  // all hidden (all profile-only, say) must not print an empty bullet — nor
+  // keep the SKILLS heading alive when it's the only category left.
+  const skillGroups = filterOnTags(profile.tech_skill_categories ?? [])
+    .map((group) => ({
+      name: group.name,
+      skills: filterOnTags(group.tech_skills ?? []),
+    }))
+    .filter((group) => group.skills.length > 0);
+
   // Contact fields show when set and not hidden by a `hide:<key>` version toggle.
   const showContact = (key: string, value: string | null | undefined) =>
     !!value && !isContactHidden(key, toggles);
@@ -274,27 +284,24 @@
   {/if}
 
   <!-- Skills -->
-  {#if profile.tech_skill_categories && filterOnTags(profile.tech_skill_categories).length > 0}
+  {#if skillGroups.length > 0}
     <section class="my-4 break-inside-avoid mb-[-20px]">
       <h2 class="text-sm font-bold">SKILLS</h2>
 
       <hr class="mt-1 mb-2" />
 
       <ul class="list-disc ml-3 print:ml-[18px] print:[&>li]:[text-indent:-6px]">
-        {#each filterOnTags(profile.tech_skill_categories) as skillGroup, index (index)}
-          {@const skills = filterOnTags(skillGroup.tech_skills ?? [])}
-          {#if skills.length > 0}
-            <li>
-              <span class="font-bold mr-1">{skillGroup.name}:</span>
-              <span class="text-xs">
-                {
-                  skills.map(
-                    (s: { name: string | null }) => s.name ?? "",
-                  ).join(" | ")
-                }
-              </span>
-            </li>
-          {/if}
+        {#each skillGroups as skillGroup, index (index)}
+          <li>
+            <span class="font-bold mr-1">{skillGroup.name}:</span>
+            <span class="text-xs">
+              {
+                skillGroup.skills.map(
+                  (s: { name: string | null }) => s.name ?? "",
+                ).join(" | ")
+              }
+            </span>
+          </li>
         {/each}
       </ul>
       <br>

@@ -7,9 +7,17 @@
  * forms the set of active identifiers. Each item (work experience,
  * achievement, skill category, education, …) can carry `tags`:
  *   - a positive `slug`  → whitelist: show only on matching versions
- *   - a negated `!slug`   → blacklist: hide on that version/template (wins)
+ *   - a negated `!slug`   → blacklist: hide on that version/template
  *   - `resume` / `cv`     → restrict to that base template
+ *
+ * Exclusions win over includes at the *same* specificity, but a positive tag
+ * naming the version being viewed is more specific than a base-template
+ * exclusion and re-admits the item there. That is what makes the profile-only
+ * pair (`!resume` + `!cv`, see $lib/profile-visibility) an overridable default:
+ * off every document, except the versions explicitly tagged back in.
  */
+
+import { BASE_TEMPLATE_TAGS, isNegated, tagSlug } from "$lib/profile-visibility";
 
 interface VersionObj {
   id: number;
@@ -75,29 +83,40 @@ export function createProfileFilter(
   function filterOnTags<
     T extends { tags?: string[] | unknown } & Record<string, any>,
   >(objList: T[]): T[] {
-    const currentType = type || "resume";
     // The identifiers active for the currently-rendered document: the base
     // template ("resume"/"cv") plus the viewed version's extension chain.
-    const activeIds = [
-      currentType.toLowerCase(),
-      ...versionSlugs.map((s) => s.toLowerCase()),
-    ];
+    const currentType = (type || "resume").toLowerCase();
+    const activeVersionIds = versionSlugs.map((s) => s.toLowerCase());
 
     return objList.filter((obj) => {
       if (!("tags" in obj && Array.isArray(obj.tags) && obj.tags.length)) {
         return true;
       }
-      const tagsArr = obj.tags as string[];
+      const tagsArr = (obj.tags as unknown[]).filter(
+        (t): t is string => typeof t === "string",
+      );
 
-      // A `!slug` tag excludes the item from that version/template. Negations
-      // are a blacklist and win over any positive (whitelist) tags.
-      const negatedIds = tagsArr
-        .filter((t) => t.startsWith("!"))
-        .map((t) => t.slice(1).trim().toLowerCase())
+      const negatedIds = tagsArr.filter(isNegated).map(tagSlug).filter(Boolean);
+      const positives = tagsArr
+        .filter((t) => !isNegated(t))
+        .map(tagSlug)
         .filter(Boolean);
-      if (negatedIds.some((id) => activeIds.includes(id))) return false;
 
-      const positives = tagsArr.filter((t) => !t.startsWith("!"));
+      const versionPositives = positives.filter(
+        (p) => !BASE_TEMPLATE_TAGS.includes(p),
+      );
+      // Is the item explicitly whitelisted for the version being viewed?
+      const onActiveVersion = versionPositives.some((p) =>
+        activeVersionIds.includes(p)
+      );
+
+      // A `!slug` naming the viewed version is the most specific instruction
+      // there is — it wins even over a positive tag for that same version.
+      if (negatedIds.some((id) => activeVersionIds.includes(id))) return false;
+
+      // A base-template exclusion is a blanket default (`!resume` + `!cv` =
+      // profile-only), so an explicit positive for the viewed version beats it.
+      if (negatedIds.includes(currentType) && !onActiveVersion) return false;
 
       if (
         !positives.includes(currentType) &&
@@ -108,13 +127,11 @@ export function createProfileFilter(
         return false;
       }
 
-      const versionTags = positives.filter(
-        (item) => !(["resume", "cv"].includes(item)),
-      );
-      if (!(versionTags.length && versionSlugs.length)) return true;
-
-      // Positive version tags act as a whitelist: show only on matching versions.
-      return versionSlugs.some((versionSlug) => versionTags.includes(versionSlug));
+      // Positive version tags act as a whitelist: show only on those versions.
+      // With no version being viewed nothing can satisfy the whitelist, so a
+      // version-restricted item stays off the plain base document.
+      if (!versionPositives.length) return true;
+      return onActiveVersion;
     });
   }
 

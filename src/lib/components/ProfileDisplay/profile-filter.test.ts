@@ -65,4 +65,50 @@ describe("filterOnTags — version include/exclude for skills", () => {
     expect(filterFor("cv", "frontend", items)).toHaveLength(1);
     expect(filterFor("resume", "frontend", items)).toHaveLength(0);
   });
+
+  it("keeps a version-restricted skill off the plain base document", () => {
+    // No version is being viewed, so nothing satisfies the whitelist.
+    const items: Item[] = [{ name: "Kubernetes", tags: ["backend"] }];
+    expect(filterFor("resume", "", items)).toHaveLength(0);
+  });
+});
+
+describe("filterOnTags — profile-only skills", () => {
+  // Kept for matching, off every document: the `!resume` + `!cv` pair.
+  const PROFILE_ONLY = ["!resume", "!cv"];
+
+  it("hides a profile-only skill on both base templates", () => {
+    const items: Item[] = [{ name: "Kubernetes", tags: PROFILE_ONLY }];
+    expect(filterFor("resume", "", items)).toHaveLength(0);
+    expect(filterFor("cv", "", items)).toHaveLength(0);
+    expect(filterFor("resume", "frontend", items)).toHaveLength(0);
+    expect(filterFor("cv", "senior", items)).toHaveLength(0);
+  });
+
+  it("re-admits a profile-only skill on an explicitly tagged version", () => {
+    const items: Item[] = [
+      { name: "Kubernetes", tags: [...PROFILE_ONLY, "backend"] },
+    ];
+    expect(filterFor("resume", "backend", items)).toHaveLength(1);
+    expect(filterFor("cv", "backend", items)).toHaveLength(1);
+    // Every other document still hides it.
+    expect(filterFor("resume", "frontend", items)).toHaveLength(0);
+    expect(filterFor("resume", "", items)).toHaveLength(0);
+  });
+
+  it("re-admits through the extension chain", () => {
+    // "senior" extends "frontend", so tagging frontend covers senior too.
+    const items: Item[] = [
+      { name: "Kubernetes", tags: [...PROFILE_ONLY, "frontend"] },
+    ];
+    expect(filterFor("resume", "senior", items)).toHaveLength(1);
+  });
+
+  it("lets a version exclusion override the re-admit", () => {
+    const items: Item[] = [
+      { name: "Kubernetes", tags: [...PROFILE_ONLY, "frontend", "!senior"] },
+    ];
+    expect(filterFor("resume", "frontend", items)).toHaveLength(1);
+    expect(filterFor("resume", "senior", items)).toHaveLength(0);
+  });
 });

@@ -7,6 +7,7 @@ import { db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { profiles, collected_data } from "$lib/server/db/schema";
 import removeMd from "remove-markdown";
+import { isProfileOnly } from "$lib/profile-visibility";
 
 interface SchemaNode {
   note?: string;
@@ -189,9 +190,16 @@ function buildSchemaNode(
 /**
  * Fetch complete profile data with all relations
  * Internal helper function used by exportProfile
+ *
+ * Profile-only skills are dropped here. They exist so jobs keep matching on a
+ * skill the applicant would rather not put on paper (see $lib/profile-visibility)
+ * — and this snapshot is what every AI prompt writes *from*, so leaving them in
+ * would let a generated cover letter claim exactly what the applicant chose to
+ * leave off their CV. Matching is unaffected: it queries `tech_skills` directly
+ * (server/job/match-utils.ts), not `collected_data`.
  */
 async function fetchProfileData(profileId: number) {
-  return await db.query.profiles.findFirst({
+  const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, profileId),
     columns: {
       name: true,
@@ -224,6 +232,7 @@ async function fetchProfileData(profileId: number) {
               name: true,
               years_experience: true,
               level: true,
+              tags: true,
             },
             orderBy: (t: any, { desc }: any) => desc(t.sort),
           },
@@ -357,6 +366,20 @@ async function fetchProfileData(profileId: number) {
       },
     },
   });
+
+  if (!profile) return profile;
+
+  return {
+    ...profile,
+    tech_skill_categories: profile.tech_skill_categories.map((category) => ({
+      ...category,
+      tech_skills: category.tech_skills
+        .filter((skill) => !isProfileOnly(skill.tags as string[] | null))
+        // `tags` is a visibility mechanism, not profile content — the prompts
+        // shouldn't see it.
+        .map(({ tags: _tags, ...skill }) => skill),
+    })),
+  };
 }
 
 /**

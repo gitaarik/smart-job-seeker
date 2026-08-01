@@ -15,8 +15,27 @@ knows, the sharper the results:
 - You can keep **multiple profiles** for genuinely different directions (e.g.
   "backend" vs "engineering management") rather than one blurred one.
 
-> If you add a skill and immediately run an AI feature, give it a moment — the
-> profile snapshot used by AI refreshes shortly after you edit.
+### Profile-only skills
+
+Every skill in your profile counts toward matching. Whether it appears on your
+resume/CV is a **separate** switch — **Show on CV**, on each skill.
+
+Turn it off and the skill becomes **profile-only**: matching still uses it, but
+no document prints it, and the AI won't write about it. That's the right home
+for something you'd happily discuss in an interview but wouldn't headline —
+picked up on the side, used once at a previous job, still rusty.
+
+The quickest way in: on a job page, click a skill you have that isn't matching
+and add it straight to your profile. It starts profile-only.
+
+If one turns out to be worth showing after all, you can put it on **all**
+documents, or on a single resume/CV version — useful when a skill belongs on
+your backend CV but not your frontend one.
+
+> Adding a skill doesn't re-score jobs you've already matched; it counts from
+> the next match onward. And if you add a skill and immediately run an AI
+> feature, give it a moment — the profile snapshot used by AI refreshes shortly
+> after you edit.
 
 ## 2. Finish setting up your Import Tasks
 

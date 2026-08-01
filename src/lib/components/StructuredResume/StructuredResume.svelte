@@ -103,7 +103,11 @@
     versionFromUrl,
   );
 
-  const skills = filterOnTags(profile.tech_skill_categories ?? []);
+  // Categories whose skills are all hidden (all profile-only, say) drop out
+  // entirely, so neither an empty category nor a lone heading gets printed.
+  const skills = filterOnTags(profile.tech_skill_categories ?? [])
+    .map((cat) => ({ ...cat, tech_skills: filterOnTags(cat.tech_skills ?? []) }))
+    .filter((cat) => cat.tech_skills.length > 0);
   const work = filterOnTags(profile.work_experiences ?? []);
   const education = filterOnTags(profile.educations ?? []);
 
@@ -198,13 +202,10 @@
             <h2>{templateLabel("skills", locale)}</h2>
             <div class="skills">
               {#each skills as cat (cat.name)}
-                {@const catSkills = filterOnTags(cat.tech_skills ?? [])}
-                {#if catSkills.length > 0}
-                  <div class="skill">
-                    <h3>{cat.name}</h3>
-                    <p>{catSkills.map((s) => s.name ?? "").filter(Boolean).join(", ")}</p>
-                  </div>
-                {/if}
+                <div class="skill">
+                  <h3>{cat.name}</h3>
+                  <p>{cat.tech_skills.map((s) => s.name ?? "").filter(Boolean).join(", ")}</p>
+                </div>
               {/each}
             </div>
           {/if}

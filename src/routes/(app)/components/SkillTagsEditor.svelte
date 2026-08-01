@@ -6,6 +6,7 @@
     faChevronDown,
     faChevronRight,
     faCircleNotch,
+    faEyeSlash,
     faGripVertical,
     faPlus,
     faTags,
@@ -15,6 +16,14 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
+  import { clickOutside, keepInView } from "$lib/actions/popover";
+  import {
+    BASE_TEMPLATE_TAGS,
+    isNegated,
+    isProfileOnly,
+    setProfileOnly,
+    tagSlug,
+  } from "$lib/profile-visibility";
 
   export interface SkillItem {
     name: string;
@@ -104,23 +113,47 @@
   });
 
   // Version tag editing state
-  const builtinTags = ["resume", "cv"];
+  const builtinTags = BASE_TEMPLATE_TAGS;
 
-  // The version/template slug of a tag, ignoring a leading "!" negation marker.
-  function tagSlug(tag: string): string {
-    return tag.replace(/^!/, "").trim().toLowerCase();
+  /** The `!resume`/`!cv` pair the "Show on CV" switch owns, not free-form tags. */
+  function isBaseExclusion(tag: string): boolean {
+    return isNegated(tag) && builtinTags.includes(tagSlug(tag));
   }
 
-  let editingTags = $derived.by(() => {
-    if (editingIndex === null) return [];
-    return skills[editingIndex]?.tags ?? [];
-  });
+  let editingSkillTags = $derived(
+    editingIndex === null ? [] : skills[editingIndex]?.tags ?? [],
+  );
+  let editingProfileOnly = $derived(isProfileOnly(editingSkillTags));
+
+  // Chips list the version tags. While profile-only is on, its exclusion pair
+  // is represented by the switch above, so don't also show it as chips.
+  let editingTags = $derived(
+    editingProfileOnly
+      ? editingSkillTags.filter((t) => !isBaseExclusion(t))
+      : editingSkillTags,
+  );
 
   let allSuggestions = $derived.by(() => {
-    const used = new Set(editingTags.map(tagSlug));
+    // Suggest from the stored tags, not the displayed chips: a version already
+    // decided in either form (include or exclude) shouldn't be offered again.
+    const used = new Set(editingSkillTags.map(tagSlug));
     const all = [...builtinTags, ...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))];
     return all.filter((s) => !used.has(s.toLowerCase()));
   });
+
+  function toggleProfileOnly() {
+    if (editingIndex === null) return;
+    const next = setProfileOnly(editingSkillTags, !editingProfileOnly);
+    skills[editingIndex].tags = next.length > 0 ? next : null;
+  }
+
+  /** Version tags worth badging on the pill — the switch covers the rest. */
+  function versionTagCount(tags: string[] | null | undefined): number {
+    if (!Array.isArray(tags)) return 0;
+    return isProfileOnly(tags)
+      ? tags.filter((t) => !isBaseExclusion(t)).length
+      : tags.length;
+  }
 
   function addSkillTag(tag: string) {
     if (editingIndex === null) return;
@@ -226,7 +259,9 @@
     editingSnapshot = { ...skills[index], tags: skills[index].tags ? [...skills[index].tags] : null };
     editingIsNew = false;
     editingIndex = index;
-    showVersionTags_popup = !!(skills[index].tags && skills[index].tags.length > 0);
+    // Auto-expand only for tags the section actually lists — a profile-only
+    // skill's exclusion pair lives on the switch, not in here.
+    showVersionTags_popup = versionTagCount(skills[index].tags) > 0;
     pushEditHistory();
   }
 
@@ -277,78 +312,6 @@
     onremove?.(removed);
   }
 
-  function keepInView(node: HTMLElement) {
-    const isMobile = window.innerWidth < 640;
-
-    function reposition() {
-      const margin = 8;
-      const vw = window.innerWidth;
-
-      if (isMobile) {
-        // On mobile: use fixed positioning, full-width at bottom of viewport
-        node.style.position = "fixed";
-        node.style.left = `${margin}px`;
-        node.style.right = `${margin}px`;
-        node.style.bottom = `${margin}px`;
-        node.style.top = "auto";
-        node.style.width = `${vw - margin * 2}px`;
-        node.style.maxHeight = "70vh";
-        node.style.overflowY = "auto";
-        return;
-      }
-
-      // Reset to default positioning
-      node.style.left = "0";
-      node.style.right = "auto";
-      node.style.width = "";
-
-      const rect = node.getBoundingClientRect();
-
-      if (rect.width >= vw - margin * 2) {
-        // Popup wider than viewport — constrain to viewport width
-        const parentRect = node.offsetParent!.getBoundingClientRect();
-        node.style.left = `${-parentRect.left + margin}px`;
-        node.style.width = `${vw - margin * 2}px`;
-      } else if (rect.right > vw - margin) {
-        // Overflows right — shift left
-        const overflow = rect.right - (vw - margin);
-        node.style.left = `${-overflow}px`;
-      } else if (rect.left < margin) {
-        // Overflows left — shift right
-        const shift = margin - rect.left;
-        node.style.left = `${shift}px`;
-      }
-    }
-    reposition();
-
-    // Re-check when popup content changes size (e.g. tags added/removed)
-    const ro = new ResizeObserver(() => reposition());
-    ro.observe(node);
-
-    return {
-      destroy() {
-        ro.disconnect();
-      },
-    };
-  }
-
-  function clickOutside(node: HTMLElement) {
-    function onClick(event: MouseEvent) {
-      if (!node.contains(event.target as Node)) {
-        confirmEditing();
-      }
-    }
-    // Use setTimeout so the opening click doesn't immediately close
-    const timer = setTimeout(() => {
-      document.addEventListener("click", onClick, true);
-    }, 0);
-    return {
-      destroy() {
-        clearTimeout(timer);
-        document.removeEventListener("click", onClick, true);
-      },
-    };
-  }
 </script>
 
 <!-- Legend bar -->
@@ -428,9 +391,14 @@
     onfinalize={handleDndFinalize}
   >
     {#each dndWrapped as item (item.id)}
+      {@const profileOnly = isProfileOnly(item.skill.tags)}
       <div animate:flip={{ duration: flipDurationMs }}>
         <div
-          class="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg text-sm cursor-grab active:cursor-grabbing"
+          class="
+            flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg text-sm cursor-grab active:cursor-grabbing {profileOnly
+            ? 'opacity-60'
+            : ''}
+          "
         >
           <FontAwesomeIcon
             icon={faGripVertical}
@@ -439,6 +407,11 @@
           <span class="text-[var(--dash-text)]">{
             item.skill.name || "new skill"
           }</span>
+          {#if profileOnly}
+            <span title="Profile-only — counts for matching, not shown on documents">
+              <FontAwesomeIcon icon={faEyeSlash} class="w-2.5 h-2.5 text-[var(--dash-text-muted)]" />
+            </span>
+          {/if}
           {#if showLevel && item.skill.level}
             <span
               class="
@@ -453,11 +426,11 @@
               class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-500/15 text-purple-600 border border-purple-500/30"
             >{item.skill.yearsExperience}y</span>
           {/if}
-          {#if showVersionTags && item.skill.tags && item.skill.tags.length > 0}
+          {#if showVersionTags && versionTagCount(item.skill.tags) > 0}
             <span
               class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
-              title={item.skill.tags.join(", ")}
-            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {item.skill.tags.length}</span>
+              title={item.skill.tags!.join(", ")}
+            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {versionTagCount(item.skill.tags)}</span>
           {/if}
         </div>
       </div>
@@ -494,15 +467,25 @@
 {:else}
   <div class="flex flex-wrap gap-2">
     {#each skills as skill, index}
+      {@const profileOnly = isProfileOnly(skill.tags)}
       <div class="relative">
         <button
           type="button"
           onclick={() => startEditing(index)}
-          class="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg text-sm hover:border-[var(--dash-primary)]/40 transition-colors"
+          class="
+            flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--dash-primary)]/5 border border-[var(--dash-primary)]/20 rounded-lg text-sm hover:border-[var(--dash-primary)]/40 transition-colors {profileOnly
+            ? 'opacity-60'
+            : ''}
+          "
         >
           <span class="text-[var(--dash-text)]">{
             skill.name || "new skill"
           }</span>
+          {#if profileOnly}
+            <span title="Profile-only — counts for matching, not shown on documents">
+              <FontAwesomeIcon icon={faEyeSlash} class="w-2.5 h-2.5 text-[var(--dash-text-muted)]" />
+            </span>
+          {/if}
           {#if showLevel && skill.level}
             <span
               class="
@@ -517,11 +500,11 @@
               class="px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-500/15 text-purple-600 border border-purple-500/30"
             >{skill.yearsExperience}y</span>
           {/if}
-          {#if showVersionTags && skill.tags && skill.tags.length > 0}
+          {#if showVersionTags && versionTagCount(skill.tags) > 0}
             <span
               class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-teal-500/15 text-teal-600 border border-teal-500/30"
-              title={skill.tags.join(", ")}
-            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {skill.tags.length}</span>
+              title={skill.tags!.join(", ")}
+            ><FontAwesomeIcon icon={faTags} class="w-2 h-2" /> {versionTagCount(skill.tags)}</span>
           {/if}
         </button>
 
@@ -529,7 +512,7 @@
           <!-- Mobile backdrop -->
           <div class="fixed inset-0 bg-black/30 z-40 sm:hidden"></div>
           <div
-            use:clickOutside
+            use:clickOutside={confirmEditing}
             use:keepInView
             class="absolute top-full left-0 mt-1 z-50 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg shadow-lg p-3 space-y-2 w-64"
           >
@@ -575,6 +558,44 @@
                 class="w-full px-2 py-1.5 text-sm border border-[var(--dash-border)] rounded bg-transparent text-[var(--dash-text)] focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)]"
               />
             </div>
+            <!-- Document visibility. Matching always uses every skill; this
+                 only controls whether the skill prints on a resume/CV. -->
+            <div>
+              <button
+                type="button"
+                onclick={() => toggleProfileOnly()}
+                aria-pressed={!editingProfileOnly}
+                class="w-full flex items-center justify-between gap-2 text-left"
+              >
+                <span class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)]">
+                  Show on CV
+                </span>
+                <span
+                  class="
+                    relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors {editingProfileOnly
+                    ? 'bg-[var(--dash-border)]'
+                    : 'bg-emerald-500'}
+                  "
+                >
+                  <span
+                    class="
+                      absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all {editingProfileOnly
+                      ? 'left-0.5'
+                      : 'left-3.5'}
+                    "
+                  ></span>
+                </span>
+              </button>
+              <p class="text-[10px] text-[var(--dash-text-muted)] mt-0.5 leading-snug">
+                {#if editingProfileOnly}
+                  Profile-only: counts for job matching, stays off your resume /
+                  CV.
+                {:else}
+                  Shown on your resume / CV, and counts for job matching.
+                {/if}
+              </p>
+            </div>
+
             <!-- Version Tags (collapsible) -->
             {#if versionSlugs.length > 0}
               <div>
@@ -611,10 +632,14 @@
                       {/each}
                     </div>
                   {:else}
-                    <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">All versions</p>
+                    <p class="text-[10px] text-[var(--dash-text-muted)] italic mb-1.5">
+                      {editingProfileOnly ? "No document" : "All versions"}
+                    </p>
                   {/if}
                   {#if allSuggestions.length > 0}
-                    <p class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">Show only on</p>
+                    <p class="text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)] mb-1">
+                      {editingProfileOnly ? "Show anyway on" : "Show only on"}
+                    </p>
                     <div class="flex flex-wrap gap-1.5 mb-2">
                       {#each allSuggestions as suggestion}
                         <button
