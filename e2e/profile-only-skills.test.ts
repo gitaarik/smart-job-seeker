@@ -84,6 +84,51 @@ describe("profile-only skills popover", () => {
     expect(await toggle.isVisible()).toBe(true);
   });
 
+  it("can file the skill under a category the profile doesn't have yet", async () => {
+    // Skills arrive in whatever order jobs do, so the category you want is
+    // regularly one that doesn't exist — and leaving to create it first loses
+    // the job you were reading. The request is intercepted so the profile is
+    // left alone; that the server then creates and reuses the category is
+    // covered by the API's own tests.
+    let posted: string | null = null;
+    await b.page.route("**/api/profile-skills", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      posted = route.request().postData();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, id: 0, name: "" }),
+      });
+    });
+
+    await openFirstPopover();
+    const select = b.page.getByLabel("Category", { exact: true });
+    await select.waitFor({ state: "visible", timeout: 10000 });
+
+    const options = await select.locator("option").allTextContents();
+    expect(options.at(-1)).toContain("New category");
+
+    const name = b.page.getByLabel("New category name");
+    expect(await name.count()).toBe(0);
+    await select.selectOption("new");
+    await name.waitFor({ state: "visible", timeout: 5000 });
+
+    // An unnamed new category is refused rather than quietly filed elsewhere.
+    await b.page.getByRole("button", { name: "Add" }).click();
+    await b.page.waitForTimeout(500);
+    expect(posted).toBe(null);
+    expect(await b.page.getByText("Name the new category.").isVisible())
+      .toBe(true);
+
+    await name.fill("  Data & ML  ");
+    await b.page.getByRole("button", { name: "Add" }).click();
+    await b.page.waitForTimeout(800);
+    expect(posted).toContain('"category_name":"Data & ML"');
+    expect(posted).toContain('"category_id":null');
+
+    await b.page.unroute("**/api/profile-skills");
+  });
+
   it("never offers to add a skill the profile already has", async () => {
     // The pill has to decide from data the page already holds. Asking the
     // server only once the popover is open means the answer lands mid-click,

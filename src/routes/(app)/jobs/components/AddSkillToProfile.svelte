@@ -52,6 +52,14 @@
     inProfile = false,
   }: Props = $props();
 
+  /**
+   * Skill names make bad ids — ".NET", "C++" and "Machine Learning" all appear
+   * in job listings, and the last one isn't a conforming id at all, which
+   * breaks the label/control pairing. A job can also require and prefer the
+   * same skill, which would emit the id twice.
+   */
+  const uid = $props.id();
+
   let open = $state(false);
   let loaded = $state(false);
   let saving = $state(false);
@@ -71,8 +79,18 @@
   let known = $derived(inProfile || discovered);
 
   let level = $state("");
-  let categoryId = $state<number | null>(null);
   let showOnCv = $state(false);
+
+  /**
+   * Sentinel for the category select. Skills arrive from jobs in whatever order
+   * the jobs come, so the one you want to file a skill under is regularly one
+   * the profile doesn't have yet — and being sent to the skills page to make it
+   * first would lose the job you were reading. Bound as a string so the "new"
+   * option and the ids share one type.
+   */
+  const NEW_CATEGORY = "new";
+  let categoryChoice = $state<string>("");
+  let newCategoryName = $state("");
 
   // "Held back" branch: the profile has it, but no document prints it. Worth
   // saying whether or not the match counted it — the applicant has the skill
@@ -122,7 +140,7 @@
       if (!res.ok) throw new Error();
       const data = await res.json();
       categories = data.categories ?? [];
-      categoryId = categories[0]?.id ?? null;
+      categoryChoice = categories[0] ? String(categories[0].id) : NEW_CATEGORY;
       discovered = (data.skills ?? []).some(
         (n: string) => n?.trim().toLowerCase() === skill.trim().toLowerCase(),
       );
@@ -139,6 +157,13 @@
 
   async function add() {
     if (saving) return;
+
+    const creating = categoryChoice === NEW_CATEGORY;
+    if (creating && !newCategoryName.trim()) {
+      error = "Name the new category.";
+      return;
+    }
+
     saving = true;
     error = null;
     try {
@@ -148,7 +173,8 @@
         body: JSON.stringify({
           name: skill,
           level: level || null,
-          category_id: categoryId,
+          category_id: creating ? null : Number(categoryChoice),
+          category_name: creating ? newCategoryName.trim() : null,
           profile_only: !showOnCv,
         }),
       });
@@ -314,11 +340,11 @@
 
           <div>
             <label
-              for="add-skill-level-{skill}"
+              for="add-skill-level-{uid}"
               class="mb-1 block text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
             >Level</label>
             <select
-              id="add-skill-level-{skill}"
+              id="add-skill-level-{uid}"
               bind:value={level}
               class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
             >
@@ -329,23 +355,31 @@
             </select>
           </div>
 
-          {#if categories.length > 1}
-            <div>
-              <label
-                for="add-skill-category-{skill}"
-                class="mb-1 block text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
-              >Category</label>
-              <select
-                id="add-skill-category-{skill}"
-                bind:value={categoryId}
-                class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
-              >
-                {#each categories as cat}
-                  <option value={cat.id}>{cat.name}</option>
-                {/each}
-              </select>
-            </div>
-          {/if}
+          <div>
+            <label
+              for="add-skill-category-{uid}"
+              class="mb-1 block text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
+            >Category</label>
+            <select
+              id="add-skill-category-{uid}"
+              bind:value={categoryChoice}
+              class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
+            >
+              {#each categories as cat}
+                <option value={String(cat.id)}>{cat.name}</option>
+              {/each}
+              <option value={NEW_CATEGORY}>+ New category…</option>
+            </select>
+            {#if categoryChoice === NEW_CATEGORY}
+              <input
+                type="text"
+                bind:value={newCategoryName}
+                placeholder="Category name"
+                aria-label="New category name"
+                class="mt-1 w-full rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
+              />
+            {/if}
+          </div>
 
           <div>
             <button

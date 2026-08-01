@@ -86,6 +86,13 @@ export const techSkillQuickAddSchema = z.object({
   level: optionalTrimmedString(50),
   years_experience: positiveInt().max(80).optional().nullable(),
   category_id: positiveInt().optional().nullable(),
+  /**
+   * A category to file the skill under by name, creating it if the profile
+   * has none like it. Takes precedence over `category_id`: naming one is the
+   * more specific request, and the alternative is making the applicant leave
+   * the job to go and create it on the skills page first.
+   */
+  category_name: optionalTrimmedString(),
   /** Keep it for matching but off every resume/CV (the default here). */
   profile_only: z.boolean().default(true),
 });

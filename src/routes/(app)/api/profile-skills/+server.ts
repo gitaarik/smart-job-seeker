@@ -71,7 +71,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
   const categories = await db.query.tech_skill_categories.findMany({
     where: eq(tech_skill_categories.profile_id, profileId),
-    columns: { id: true },
+    columns: { id: true, name: true, sort: true },
     orderBy: asc(tech_skill_categories.sort),
     with: { tech_skills: { columns: { id: true, name: true } } },
   });
@@ -85,17 +85,30 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
     return json({ duplicate: true, id: existing.id, name: existing.name });
   }
 
-  let categoryId = body.category_id ?? categories[0]?.id;
-  if (categoryId && !categories.some((c) => c.id === categoryId)) {
-    return json({ error: "Category not found" }, { status: 404 });
+  // A typed category name wins over a picked id, and reuses a category of that
+  // name if one exists — otherwise saying "Databases" on two different jobs
+  // would leave the profile with two of them.
+  const newCategoryName = body.category_name?.trim();
+  let categoryId: number | undefined;
+  if (newCategoryName) {
+    categoryId = categories.find(
+      (c) => c.name?.trim().toLowerCase() === newCategoryName.toLowerCase(),
+    )?.id;
+  } else {
+    categoryId = body.category_id ?? categories[0]?.id;
+    if (categoryId && !categories.some((c) => c.id === categoryId)) {
+      return json({ error: "Category not found" }, { status: 404 });
+    }
   }
+
   if (!categoryId) {
     const [created] = await db
       .insert(tech_skill_categories)
       .values({
-        name: FALLBACK_CATEGORY_NAME,
+        // Unnamed only when the profile had no categories at all to pick from.
+        name: newCategoryName || FALLBACK_CATEGORY_NAME,
         profile_id: profileId,
-        sort: 0,
+        sort: categories.reduce((max, c) => Math.max(max, c.sort ?? 0), -1) + 1,
         status: "published",
         date_created: new Date(),
       })
@@ -131,6 +144,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
     success: true,
     id: skill.id,
     name: body.name,
+    category_id: categoryId,
     profile_only: body.profile_only,
   });
 };
