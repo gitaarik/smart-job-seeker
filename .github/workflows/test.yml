@@ -24,3 +24,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: ./scripts/ci/test.sh
+      # Runs in the same job to reuse the install test.sh just did. Gates on
+      # the error count, not zero — see the script for why.
+      - name: Type check (svelte-check)
+        run: ./scripts/ci/check.sh
