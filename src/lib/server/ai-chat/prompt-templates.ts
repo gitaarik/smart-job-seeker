@@ -27,6 +27,8 @@ You have access to their full profile below. Use it to make every answer specifi
 
 \${applicationActivity}
 
+\${applicationPipeline}
+
 \${relevantProjects}
 
 \${relevantStories}
@@ -66,6 +68,8 @@ You have access to their full profile below. Use it to make every answer specifi
 \${jobDetails}
 
 \${applicationActivity}
+
+\${applicationPipeline}
 
 \${relevantProjects}
 

@@ -83,6 +83,11 @@ const APPLICATION_SCOPE: RouteScope = {
     "profile",
     "job",
     "application_activity",
+    // How this application compares with the rest of the pipeline. Always on
+    // rather than gated on the message looking comparative: "is this one even
+    // worth the effort?" is a comparison containing no comparison words, and
+    // the failure mode of gating is invisible to everyone.
+    "application_pipeline",
     "projects",
     "stories",
     "application_texts",
@@ -111,7 +116,14 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
     // No application exists yet, so there is nothing recorded and nothing
     // attached — but past application writing is still worth drawing on when
     // the user asks "should I apply?" or "how would I pitch this?".
-    sources: ["profile", "job", "projects", "stories", "application_texts"],
+    sources: [
+      "profile",
+      "job",
+      "application_pipeline",
+      "projects",
+      "stories",
+      "application_texts",
+    ],
     capabilities: ["edit_job_details", "edit_job_description"],
   },
   "/applications/interview": PROFILE_SCOPE,

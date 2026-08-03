@@ -34,6 +34,7 @@ import {
   relevantStoriesText,
 } from "$lib/server/documents/content-retrieval";
 import { applicationActivityText } from "./application-activity";
+import { applicationPipelineText } from "./application-pipeline";
 import { jobDetailsText } from "./job-context";
 import {
   fitProfileToBudget,
@@ -81,6 +82,12 @@ export type ContextSource =
    * two independent budgets. See planning/APPLICATION-ACTIVITY.md.
    */
   | "application_activity"
+  /**
+   * The applicant's OTHER applications, as a comparison table. The only source
+   * that reads beyond the entity the route authorized — see the profile_id
+   * note in application-pipeline.ts.
+   */
+  | "application_pipeline"
   | "projects"
   | "stories"
   | "application_texts";
@@ -267,6 +274,19 @@ const SOURCES: Record<ContextSource, SourceDef> = {
     },
   },
 
+  application_pipeline: {
+    variable: "applicationPipeline",
+    // Below this application's own history (40) — when something has to give,
+    // what happened HERE beats context about elsewhere — but above generically
+    // retrieved evidence. In practice it is ~4k and never the block dropped.
+    priority: 20,
+    // Always "looked": the pipeline is the profile's, so there is always an
+    // answer, even if the answer is that there is only this one application.
+    looked: () => true,
+    render: async (req) =>
+      applicationPipelineText(req.profileId, applicationId(req)),
+  },
+
   // Ranked sources.
   projects: {
     variable: "relevantProjects",
@@ -382,6 +402,7 @@ const SOURCE_LABELS: Record<ContextSource, string> = {
   profile: "the applicant's profile",
   job: "the job posting",
   application_activity: "the history recorded on this application",
+  application_pipeline: "the applicant's other applications",
   projects: "the applicant's projects",
   stories: "the applicant's prepared stories",
   application_texts: "the applicant's past application writing",

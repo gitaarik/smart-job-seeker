@@ -66,6 +66,7 @@ const MAX_CONTEXT_MESSAGES = 40;
 const CHAT_CONTEXT_PLACEHOLDERS = [
   "jobDetails",
   "applicationActivity",
+  "applicationPipeline",
   "relevantProjects",
   "relevantStories",
   "relevantApplicationTexts",
