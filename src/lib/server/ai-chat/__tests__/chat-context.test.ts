@@ -81,6 +81,51 @@ describe("scopeForRoute", () => {
     expect(scopeForRoute("/(app)/applications/interview").entity).toBeNull();
   });
 
+  /**
+   * These pages fell through to profile-only, so the assistant could see the
+   * applicant's projects but not a single one of the applications the page was
+   * listing — and "compare these two", asked while looking at exactly those
+   * two, had nothing to answer from.
+   */
+  describe("pages that are ABOUT the pipeline", () => {
+    it("gives the applications list the pipeline, with no single entity", () => {
+      const scope = scopeForRoute("/(app)/applications");
+      expect(scope.entity).toBeNull();
+      expect(scope.sources).toContain("application_pipeline");
+      // No application is in front of the user, so nothing scoped to one.
+      expect(scope.sources).not.toContain("application_activity");
+      expect(scope.sources).not.toContain("job");
+    });
+
+    it("extends to the sibling views, which are also across applications", () => {
+      for (const tab of ["active", "salary", "texts", "new"]) {
+        const scope = scopeForRoute(`/(app)/applications/${tab}`);
+        expect(scope.sources).toContain("application_pipeline");
+        expect(scope.entity).toBeNull();
+      }
+    });
+
+    // Longest-prefix, so the more specific rows still win.
+    it("does not swallow the routes that declare their own scope", () => {
+      expect(scopeForRoute("/(app)/applications/[id]").entity).toBe(
+        "application",
+      );
+      expect(scopeForRoute("/(app)/applications/interview").sources)
+        .not.toContain("application_pipeline");
+    });
+
+    // Nothing competes with it for room here, unlike on a detail page where
+    // the application's own history takes a third of the budget.
+    it("raises the pipeline's ceiling where the pipeline is the content", () => {
+      const list = scopeForRoute("/(app)/applications");
+      const detail = scopeForRoute("/(app)/applications/[id]");
+      expect(list.sourceOptions?.application_pipeline?.budgetChars)
+        .toBeGreaterThan(
+          detail.sourceOptions?.application_pipeline?.budgetChars ?? 12000,
+        );
+    });
+  });
+
   it("falls back to profile-only for unmapped and unknown routes", () => {
     for (const route of ["/(app)/home", "/(app)/settings", null]) {
       const scope = scopeForRoute(route);

@@ -100,6 +100,12 @@ export type ContextEntity =
 /** Per-source knobs. Sources not listed take their own defaults. */
 export interface SourceOptions {
   application_activity?: { detail: "full" | "compact" };
+  /**
+   * Char ceiling on the pipeline block, which degrades internally to fit it
+   * (see fitPipelineToBudget) rather than being dropped whole by the budgeter.
+   * Defaults to DEFAULT_PIPELINE_BUDGET_CHARS.
+   */
+  application_pipeline?: { budgetChars: number };
 }
 
 export interface ContextRequest {
@@ -278,13 +284,31 @@ const SOURCES: Record<ContextSource, SourceDef> = {
     variable: "applicationPipeline",
     // Below this application's own history (40) — when something has to give,
     // what happened HERE beats context about elsewhere — but above generically
-    // retrieved evidence. In practice it is ~4k and never the block dropped.
+    // retrieved evidence.
+    //
+    // ⚠️ This is the only block whose size grows with how long the user has
+    // been job-hunting, and attaching standing summaries roughly tripled its
+    // per-row cost. Measured on dev (6 live applications, 3 summarised): 3.8k,
+    // of which 1.2k is the fixed header and ~430 per row — but a SUMMARISED row
+    // is ~800, so an unbounded 25 would be ~20k of the 32k chat budget.
+    //
+    // Left unbounded it would not be the block dropped — the ranked sources
+    // (10/8/6) go first, which is right for a comparison question and wrong for
+    // "help me write this letter", where the pipeline is irrelevant background
+    // and the retrieved projects are the whole answer. So it caps and degrades
+    // itself instead (fitPipelineToBudget): applications are the last thing it
+    // gives up, depth the first. Never top-k, which drops applications whole
+    // and silently, and makes a comparison false rather than merely thin.
     priority: 20,
     // Always "looked": the pipeline is the profile's, so there is always an
     // answer, even if the answer is that there is only this one application.
     looked: () => true,
     render: async (req) =>
-      applicationPipelineText(req.profileId, applicationId(req)),
+      applicationPipelineText(
+        req.profileId,
+        applicationId(req),
+        req.sourceOptions?.application_pipeline?.budgetChars,
+      ),
   },
 
   // Ranked sources.

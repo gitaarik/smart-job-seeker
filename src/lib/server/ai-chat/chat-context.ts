@@ -21,7 +21,9 @@ import type {
   ContextSource,
   GenerationContextOption,
   RelevanceQuery,
+  SourceOptions,
 } from "./generation-context";
+import { LIST_PIPELINE_BUDGET_CHARS } from "./application-pipeline";
 import {
   type Capability,
   type LiveCapability,
@@ -67,12 +69,44 @@ interface RouteScope {
    * means they never hear about it.
    */
   capabilities?: Capability[];
+  /**
+   * Per-source tuning for this route. A source's default is sized against the
+   * page it was built for; a route where the same source means something
+   * different (background vs. subject) says so here rather than the source
+   * trying to infer it.
+   */
+  sourceOptions?: SourceOptions;
 }
 
 /** Profile-only pages: no entity, just the applicant and their material. */
 const PROFILE_SCOPE: RouteScope = {
   entity: null,
   sources: ["profile", "projects", "stories"],
+};
+
+/**
+ * The applications list and its siblings: no single application in front of the
+ * user, but every application is.
+ *
+ * These pages fell through to PROFILE_SCOPE, which meant the assistant could
+ * see the applicant's projects and stories but not one of their applications —
+ * so "compare my Acme and Northwind applications", asked on the page that lists
+ * exactly those two, had nothing to answer from. The pipeline is the whole
+ * content of these pages, so it gets the larger ceiling too (see
+ * LIST_PIPELINE_BUDGET_CHARS): nothing here competes with it for room.
+ */
+const PIPELINE_SCOPE: RouteScope = {
+  entity: null,
+  sources: [
+    "profile",
+    "application_pipeline",
+    "projects",
+    "stories",
+    "application_texts",
+  ],
+  sourceOptions: {
+    application_pipeline: { budgetChars: LIST_PIPELINE_BUDGET_CHARS },
+  },
 };
 
 /** Everything known about an application in progress. */
@@ -109,6 +143,11 @@ const APPLICATION_SCOPE: RouteScope = {
  * its own.
  */
 const ROUTE_SCOPES: Record<string, RouteScope> = {
+  // Longest prefix wins, so /applications/[id] keeps its own scope and
+  // /applications/interview keeps the profile-only one it declares below. The
+  // rest — the list itself, /active, /salary, /texts, /new — inherit this,
+  // which is what each of them wants: every one is a view ACROSS applications.
+  "/applications": PIPELINE_SCOPE,
   "/applications/[id]": APPLICATION_SCOPE,
   "/jobs/[id]": {
     entity: "job",
@@ -270,6 +309,7 @@ export async function resolveChatContext(opts: {
       query,
       entity: entity ?? undefined,
       sources,
+      sourceOptions: scope.sourceOptions,
       budgetChars: CHAT_BUDGET_CHARS,
     },
     capabilities,

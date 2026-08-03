@@ -55,6 +55,39 @@ import type { OfferTerms } from "./application-summary";
  */
 const MAX_APPLICATIONS = 25;
 
+/**
+ * Char ceiling on the whole block.
+ *
+ * This is the only context source whose size grows with how long the user has
+ * been job-hunting, and standing summaries roughly tripled its per-row cost.
+ * Measured on dev: the fixed header is ~1.2k, a bare row ~250, a summarised row
+ * ~800. So 25 bare rows is ~7.4k but 25 summarised rows is ~21k — two thirds of
+ * the 32k chat budget, for background on applications the user did not ask
+ * about.
+ *
+ * 12k leaves every row present with roughly the eight most active keeping their
+ * summaries, and sits far enough above the common case (six applications, all
+ * summarised, ~6k) that it does not bind until the pipeline is genuinely large.
+ */
+export const DEFAULT_PIPELINE_BUDGET_CHARS = 12000;
+
+/**
+ * The ceiling on a page where the pipeline is the SUBJECT rather than
+ * background — the applications list and its siblings.
+ *
+ * 12k was sized against the competition on an application page, where
+ * `application_activity` (10.2k measured) and `job` (1.7k) take a third of the
+ * chat budget before this source gets a look in. On a list page neither exists,
+ * so that space is simply free, and rationing the one source the page is
+ * actually about would be backwards.
+ *
+ * At ~800 chars a summarised row this covers the full MAX_APPLICATIONS cap, so
+ * in practice the ladder does not engage there at all. It is a ceiling, not a
+ * target: unusually long summaries will still shed a few, which is the ladder
+ * working rather than a limit being hit.
+ */
+export const LIST_PIPELINE_BUDGET_CHARS = 24000;
+
 /** Everything one row needs. Kept narrow so the renderer is testable dry. */
 export interface PipelineRow {
   id: number;
@@ -120,54 +153,58 @@ export function describeOffer(o: OfferTerms): string {
   return parts.length > 0 ? parts.join(" · ") : "terms not stated";
 }
 
+/** One application as its block of lines. Extracted so the budgeter can price
+ * a row exactly, by rendering it, rather than estimating. */
+function renderRow(r: PipelineRow, currency: string): string {
+  const who = [r.title, r.company].filter(Boolean).join(" at ") ||
+    `application #${r.id}`;
+  const stage = [getStatusLabel(r.status), r.step, r.action]
+    .filter(Boolean).join(" / ");
+  const stalled = r.daysInStage !== null
+    ? `${r.daysInStage}d in stage`
+    : "age unknown";
+  const pay = r.salary
+    ? r.salaryAnnual
+      ? `${r.salary} (~${r.salaryAnnual.toLocaleString()} ${currency}/yr)`
+      : r.salary
+    : "no salary stated";
+  const match = r.matchScore !== null
+    ? `match ${r.matchScore}${
+      r.matchRecommendation ? ` (${r.matchRecommendation})` : ""
+    }`
+    : "not scored";
+  const depth = [
+    `${r.entryCount} ${r.entryCount === 1 ? "entry" : "entries"}`,
+    r.hasOffer ? "OFFER RECORDED" : null,
+    r.employerContact === null
+      ? "employer contact unknown"
+      : r.employerContact
+      ? null
+      : "no employer contact recorded",
+  ].filter(Boolean).join(", ");
+
+  return [
+    `- ${r.isCurrent ? "**THIS ONE** — " : ""}${who}`,
+    `  ${stage} · ${stalled} · applied ${dash(r.appliedOn)}`,
+    `  ${pay} · ${dash(r.workLocation)} · ${match}`,
+    `  ${depth}`,
+    r.offer ? `  OFFER: ${describeOffer(r.offer)}` : null,
+    r.summary ? `  ${r.summary.replace(/\s+/g, " ").trim()}` : null,
+  ].filter(Boolean).join("\n");
+}
+
 /**
  * Render the pipeline as a prompt block. Pure — no DB — so both the layout and
  * the "what does the model do with it" guidance are directly testable.
  */
 export function formatPipelineContext(
   rows: PipelineRow[],
-  opts: { omitted?: number; currency?: string } = {},
+  opts: { omitted?: number; shed?: number; currency?: string } = {},
 ): string {
   if (rows.length === 0) return "";
 
   const currency = opts.currency ?? "EUR";
-  const lines = rows.map((r) => {
-    const who = [r.title, r.company].filter(Boolean).join(" at ") ||
-      `application #${r.id}`;
-    const stage = [getStatusLabel(r.status), r.step, r.action]
-      .filter(Boolean).join(" / ");
-    const stalled = r.daysInStage !== null
-      ? `${r.daysInStage}d in stage`
-      : "age unknown";
-    const pay = r.salary
-      ? r.salaryAnnual
-        ? `${r.salary} (~${r.salaryAnnual.toLocaleString()} ${currency}/yr)`
-        : r.salary
-      : "no salary stated";
-    const match = r.matchScore !== null
-      ? `match ${r.matchScore}${
-        r.matchRecommendation ? ` (${r.matchRecommendation})` : ""
-      }`
-      : "not scored";
-    const depth = [
-      `${r.entryCount} ${r.entryCount === 1 ? "entry" : "entries"}`,
-      r.hasOffer ? "OFFER RECORDED" : null,
-      r.employerContact === null
-        ? "employer contact unknown"
-        : r.employerContact
-        ? null
-        : "no employer contact recorded",
-    ].filter(Boolean).join(", ");
-
-    return [
-      `- ${r.isCurrent ? "**THIS ONE** — " : ""}${who}`,
-      `  ${stage} · ${stalled} · applied ${dash(r.appliedOn)}`,
-      `  ${pay} · ${dash(r.workLocation)} · ${match}`,
-      `  ${depth}`,
-      r.offer ? `  OFFER: ${describeOffer(r.offer)}` : null,
-      r.summary ? `  ${r.summary.replace(/\s+/g, " ").trim()}` : null,
-    ].filter(Boolean).join("\n");
-  });
+  const lines = rows.map((r) => renderRow(r, currency));
 
   const omission = opts.omitted && opts.omitted > 0
     ? [
@@ -177,23 +214,76 @@ export function formatPipelineContext(
     ]
     : [];
 
+  // The empty-vs-never-looked distinction again, one level down. A row with no
+  // summary looks identical whether none was ever generated or one was dropped
+  // to fit — and read as the former, a busy application reads as a dormant one.
+  //
+  // The count alone would leave the model guessing WHICH rows, so it is pointed
+  // at the discriminator already on every row: entries are counted whether or
+  // not a summary survived, so "entries but no summary" is exactly the set.
+  // Erring the other way is harmless (offering detail that turns out thin);
+  // erring this way tells someone an active application is dead.
+  const shedding = opts.shed && opts.shed > 0
+    ? [
+      "",
+      `NOTE: ${opts.shed} application(s) below show their headline facts`,
+      "without a summary, which did not fit. That is a budget limit, NOT an",
+      "empty history: a row with entries but no summary HAS a history you",
+      "cannot see from here. Offer to open that application rather than",
+      "treating it as one where nothing has happened.",
+    ]
+    : [];
+
+  // Two framings, because the same rows mean different things depending on
+  // where the user is. On an application page the pipeline is peripheral and an
+  // assistant that leads with it is answering a question nobody asked. On a
+  // list page it IS the subject, and the same restraint would make it refuse to
+  // do the one thing the page is for.
+  //
+  // Which one is decided by whether a row is marked, never by a flag a caller
+  // passes: the old header promised "the one they are looking at now (marked
+  // THIS ONE)" unconditionally, so on /jobs/[id] — where the pipeline has
+  // always been in scope with no application current — it told the model to
+  // find a marker no row carried. Pointing a model at something absent is an
+  // invitation to nominate a substitute.
+  const onOne = rows.some((r) => r.isCurrent);
+
+  const framing = onOne
+    ? [
+      "## The applicant's other applications in progress",
+      "",
+      // The tone guard. Always-on context makes an assistant volunteer
+      // summaries nobody asked for; most turns here are not about it.
+      "This is background on the rest of the applicant's pipeline, including the",
+      "one they are looking at now (marked THIS ONE). Draw on it when they ask",
+      "how this compares, when they ask what to prioritise, or when it materially",
+      "changes your advice — an application stuck for weeks, or an offer already",
+      "in hand elsewhere, changes what is worth doing here. Do NOT open every",
+      "reply with a pipeline summary, and do not bring up other applications when",
+      "the question is only about this one.",
+      "",
+      "Each line is a summary, not the whole story: you can read the full history",
+      "of the application they are ON, but not of the others. If they ask for",
+      "detail about another one, say it is on that application's page rather than",
+      "inventing it.",
+    ]
+    : [
+      "## The applicant's applications in progress",
+      "",
+      "The applicant is looking at a LIST of their applications rather than at",
+      "any single one, so none of these is the current one — do not single one",
+      "out as the application they must mean. Comparing, ranking and",
+      "prioritising across them is exactly what gets asked here, and the whole",
+      "set is below, so answering across all of them is normal rather than a",
+      "digression.",
+      "",
+      "Each line is a summary, not the whole story. If they ask for detail about",
+      "one of them — what an interviewer actually said, what a document contains",
+      "— say it is on that application's page rather than inventing it.",
+    ];
+
   return [
-    "## The applicant's other applications in progress",
-    "",
-    // The tone guard. Always-on context makes an assistant volunteer summaries
-    // nobody asked for; this is background, and most turns are not about it.
-    "This is background on the rest of the applicant's pipeline, including the",
-    "one they are looking at now (marked THIS ONE). Draw on it when they ask",
-    "how this compares, when they ask what to prioritise, or when it materially",
-    "changes your advice — an application stuck for weeks, or an offer already",
-    "in hand elsewhere, changes what is worth doing here. Do NOT open every",
-    "reply with a pipeline summary, and do not bring up other applications when",
-    "the question is only about this one.",
-    "",
-    "Each line is a summary, not the whole story: you can read the full history",
-    "of the application they are ON, but not of the others. If they ask for",
-    "detail about another one, say it is on that application's page rather than",
-    "inventing it.",
+    ...framing,
     "",
     "An OFFER line carries terms exactly as they were offered — quote those",
     "verbatim and never convert them. A RESPOND BY date is a deadline: if one",
@@ -203,9 +293,100 @@ export function formatPipelineContext(
     "they can be ranked. Quote the figure as written, never the converted one,",
     "and never present a conversion as what the employer offered.",
     ...omission,
+    ...shedding,
     "",
     ...lines,
   ].join("\n");
+}
+
+/**
+ * The degradation ladder: fit the block into `budgetChars` by giving up depth
+ * before giving up applications.
+ *
+ * Completeness is the invariant this whole source rests on — a comparison over
+ * a partial set is wrong rather than thin — so rows are the LAST thing to go.
+ * The rungs, cheapest loss first:
+ *
+ *  1. The current application's summary. It is the most redundant text in the
+ *     prompt: `application_activity` (priority 40, so it is always present when
+ *     this block is) carries that application's full history right alongside,
+ *     at roughly fifteen times the length.
+ *  2. Summaries from the stalest rows down. A summary earns its place by
+ *     describing something in motion; on an application that has not moved in
+ *     two months the structured line ("94d in stage", stage, entry count)
+ *     already says the useful part. Rows carrying an offer are held back to
+ *     last — an offer means a decision is pending, however long it has sat.
+ *  3. Only then, rows themselves, from the stalest end, counted into the
+ *     omission note so the model knows the picture is partial.
+ *
+ * Returns rows with shed summaries nulled, so the renderer stays unchanged.
+ */
+export function fitPipelineToBudget(
+  rows: PipelineRow[],
+  budgetChars: number,
+  currency = "EUR",
+): { rows: PipelineRow[]; omitted: number; shed: number } {
+  // Price by rendering. The block is at most 25 short rows, so measuring the
+  // real thing costs nothing and cannot drift from what actually ships — which
+  // an estimate of header + per-row would, silently, on the next layout edit.
+  const cost = (rs: PipelineRow[], omitted: number, shed: number) =>
+    formatPipelineContext(rs, { omitted, shed, currency }).length;
+
+  if (rows.length === 0) return { rows, omitted: 0, shed: 0 };
+  if (cost(rows, 0, 0) <= budgetChars) return { rows, omitted: 0, shed: 0 };
+
+  // Rung 1 and 2 — shed summaries in ascending order of what they are worth.
+  const working = rows.map((r) => ({ ...r }));
+  const order = working
+    .map((r, i) => ({ r, i }))
+    .filter(({ r }) => r.summary)
+    .sort((a, z) =>
+      // The current application first: its full history is in another block.
+      Number(z.r.isCurrent) - Number(a.r.isCurrent) ||
+      // Then anything without an offer, since an offer means a live decision.
+      Number(!!a.r.offer) - Number(!!z.r.offer) ||
+      // Then stalest down. An unknown age sorts last: it is a weak signal, and
+      // a known-stale row is the safer thing to thin.
+      (z.r.daysInStage ?? -1) - (a.r.daysInStage ?? -1)
+    )
+    .map(({ i }) => i);
+
+  // Tracked by object identity rather than index, so the count stays right
+  // whichever rows rung 3 goes on to remove.
+  const shedRows = new Set<PipelineRow>();
+  for (const i of order) {
+    if (cost(working, 0, shedRows.size) <= budgetChars) break;
+    working[i].summary = null;
+    shedRows.add(working[i]);
+  }
+  const shedIn = (rs: PipelineRow[]) =>
+    rs.filter((r) => shedRows.has(r)).length;
+
+  // Rung 3 — drop rows from the stale end. `rows` arrives sorted current-first
+  // then most-recently-active, so the last droppable row is the stalest.
+  //
+  // A current row is never dropped, and that is enforced here rather than left
+  // to the caller's sort order: losing it would not just omit a row, it would
+  // flip the framing above to "the applicant is looking at a list of these",
+  // which on an application page is simply false.
+  //
+  // The condition prices the CURRENT state, not the state after another drop.
+  // Dropping the first row is what makes the omission note appear, so asking
+  // "would it fit if I dropped one more" charges for a note that is not there
+  // yet, and drops rows that a block which already fits need not lose.
+  let kept = working;
+  let omitted = 0;
+  while (kept.length > 1 && cost(kept, omitted, shedIn(kept)) > budgetChars) {
+    let last = kept.length - 1;
+    while (last >= 0 && kept[last].isCurrent) last--;
+    if (last < 0) break;
+    kept = [...kept.slice(0, last), ...kept.slice(last + 1)];
+    omitted++;
+  }
+
+  // Only the surviving rows are worth announcing as shed — a dropped row is
+  // reported by the omission note, and counting it twice would overstate both.
+  return { rows: kept, omitted, shed: shedIn(kept) };
 }
 
 /** Whole days between then and now, or null when there is no date. */
@@ -276,6 +457,7 @@ function annualise(
 export async function applicationPipelineText(
   profileId: number,
   currentApplicationId: number | null,
+  budgetChars: number = DEFAULT_PIPELINE_BUDGET_CHARS,
 ): Promise<string> {
   try {
     const rows = await db.query.applications.findMany({
@@ -410,9 +592,14 @@ export async function applicationPipelineText(
       (x.daysInStage ?? 1e9) - (y.daysInStage ?? 1e9)
     );
 
-    const kept = built.slice(0, MAX_APPLICATIONS);
-    return formatPipelineContext(kept, {
-      omitted: built.length - kept.length,
+    // Two caps in series, and their omissions add up: the hard row cap first,
+    // then the char budget. Reporting only one would understate how partial
+    // the picture is.
+    const capped = built.slice(0, MAX_APPLICATIONS);
+    const fitted = fitPipelineToBudget(capped, budgetChars, "EUR");
+    return formatPipelineContext(fitted.rows, {
+      omitted: (built.length - capped.length) + fitted.omitted,
+      shed: fitted.shed,
       currency: "EUR",
     });
   } catch {
