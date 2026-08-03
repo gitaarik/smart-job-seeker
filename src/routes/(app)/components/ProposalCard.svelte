@@ -18,10 +18,13 @@
   import {
     faArrowRight,
     faCheck,
+    faChevronDown,
+    faChevronUp,
     faPenToSquare,
     faTriangleExclamation,
   } from "@fortawesome/free-solid-svg-icons";
   import Spinner from "$lib/components/Spinner.svelte";
+  import { computeDiff, isSmallDiff } from "$lib/utils/word-diff";
 
   /**
    * The consent step between what the assistant suggests and what happens.
@@ -45,6 +48,36 @@
     if (value === "—") return "empty";
     if (value.length <= LONG_VALUE_CHARS) return value;
     return `${value.length.toLocaleString()} characters`;
+  }
+
+  /**
+   * The summary above is honest but not reviewable: "107 characters → 355
+   * characters" tells you a rewrite happened, not whether you want it. This is
+   * the way to read the thing you are being asked to approve.
+   */
+  let expanded = $state(false);
+
+  /** Rows whose real content the summary hid. Short ones are already visible. */
+  function isLong(change: { from: string; to: string }): boolean {
+    return change.from.length > LONG_VALUE_CHARS ||
+      change.to.length > LONG_VALUE_CHARS;
+  }
+
+  const longChanges = $derived(proposal.changes.filter(isLong));
+
+  /** "—" is how an unset value is rendered; as diff input it means empty. */
+  const asText = (value: string) => (value === "—" ? "" : value);
+
+  /**
+   * A tweak gets a word diff, a wholesale rewrite gets the new text.
+   *
+   * Same threshold the version editors use. Diffing two texts that share
+   * almost nothing produces an unreadable stripe of every word deleted and
+   * every word added, which hides the very thing the user opened this to read.
+   */
+  function diffFor(change: { from: string; to: string }) {
+    const segments = computeDiff(asText(change.from), asText(change.to));
+    return isSmallDiff(segments) ? segments : null;
   }
 
   async function apply() {
@@ -109,18 +142,73 @@
           <div class="text-xs">
             <dt class="text-[var(--dash-text-muted)]">{change.label}</dt>
             <dd class="flex items-start gap-1.5 text-[var(--dash-text)]">
-              <span class="line-through text-[var(--dash-text-muted)] break-words">
-                {summarize(change.from)}
-              </span>
-              <FontAwesomeIcon
-                icon={faArrowRight}
-                class="w-2.5 h-2.5 mt-1 shrink-0 text-[var(--dash-text-muted)]"
-              />
+              <!--
+                Once applied there is no "from" to show: the transcript stops
+                re-reading current values for an applied proposal, so `from`
+                arrives as "—" and rendering the arrow claimed the field had
+                been empty when it had not. The new value is the whole story.
+              -->
+              {#if !appliedAt}
+                <span class="line-through text-[var(--dash-text-muted)] break-words">
+                  {summarize(change.from)}
+                </span>
+                <FontAwesomeIcon
+                  icon={faArrowRight}
+                  class="w-2.5 h-2.5 mt-1 shrink-0 text-[var(--dash-text-muted)]"
+                />
+              {/if}
               <span class="font-medium break-words">{summarize(change.to)}</span>
             </dd>
           </div>
         {/each}
       </dl>
+    {/if}
+
+    {#if longChanges.length > 0}
+      <button
+        type="button"
+        onclick={() => (expanded = !expanded)}
+        class="flex items-center gap-1 text-[11px] text-[var(--dash-primary)] hover:underline"
+      >
+        <FontAwesomeIcon
+          icon={expanded ? faChevronUp : faChevronDown}
+          class="w-2.5 h-2.5"
+        />
+        {expanded ? "Hide full text" : "View full text"}
+      </button>
+    {/if}
+
+    {#if expanded}
+      <div class="space-y-2">
+        {#each longChanges as change}
+          {@const segments = diffFor(change)}
+          <div>
+            <p class="text-[11px] text-[var(--dash-text-muted)] mb-0.5">
+              {change.label}
+              {#if !segments}
+                <span class="italic">— replaced, showing the new text</span>
+              {/if}
+            </p>
+            <div
+              class="max-h-64 overflow-y-auto rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5"
+            >
+              {#if segments}
+                <pre
+                  class="whitespace-pre-wrap break-words text-[11px] leading-relaxed text-[var(--dash-text)]"
+                >{#each segments as seg}{#if seg.type === "added"}<span
+                      class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                    >{seg.text}</span>{:else if seg.type === "removed"}<span
+                      class="bg-red-500/20 text-red-700 dark:text-red-300 line-through"
+                    >{seg.text}</span>{:else}{seg.text}{/if}{/each}</pre>
+              {:else}
+                <pre
+                  class="whitespace-pre-wrap break-words text-[11px] leading-relaxed text-[var(--dash-text)]"
+                >{asText(change.to) || "(empty)"}</pre>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
     {/if}
 
     {#if proposal.rationale && !appliedAt}
