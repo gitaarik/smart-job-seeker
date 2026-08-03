@@ -12,8 +12,10 @@ import { describe, expect, it } from "vitest";
 import {
   formatRecordsContext,
   type RecordForContext,
+  TRIM_ORDER,
   truncateKeepingEnds,
 } from "../application-records";
+import { recordTypeValues } from "$lib/application-records";
 
 function record(over: Partial<RecordForContext> = {}): RecordForContext {
   return {
@@ -27,6 +29,20 @@ function record(over: Partial<RecordForContext> = {}): RecordForContext {
 }
 
 const filler = (n: number, char = "x") => char.repeat(n);
+
+describe("TRIM_ORDER", () => {
+  // trimRank() returns 0 for anything it doesn't find, and 0 means "sacrifice
+  // this first". So a type added to the vocabulary but forgotten here does not
+  // fail loudly — it quietly becomes the cheapest thing in the budget. That is
+  // how an `offer` could end up dropped before a raw transcript.
+  it("ranks every type the vocabulary offers", () => {
+    expect([...TRIM_ORDER].sort()).toEqual([...recordTypeValues].sort());
+  });
+
+  it("puts offers and contracts last, so they are sacrificed last", () => {
+    expect(TRIM_ORDER.slice(-2)).toEqual(["offer", "contract"]);
+  });
+});
 
 describe("truncateKeepingEnds", () => {
   it("leaves short text alone", () => {

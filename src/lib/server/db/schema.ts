@@ -2649,16 +2649,27 @@ export const application_status_log = pgTable("application_status_log", {
 
 /**
  * Long-form written record of what actually happened during an application:
- * interview recaps and transcripts, recruiter/interviewer feedback, pasted
- * email threads, assessment briefs, company research, loose notes.
+ * correspondence, interview recaps and transcripts, recruiter feedback,
+ * assessment briefs, offers and contracts, company research, loose notes.
  *
- * Deliberately text (not files — those live in `applications_files`) so the
- * content is usable as AI context: prior rounds feed the cheat-sheet prompts
- * for the next one.
+ * This used to be text-only, with uploaded files living separately in
+ * `applications_files` — "deliberately text so the content is usable as AI
+ * context". That reasoning expired when `extracted_text` shipped: files ARE
+ * text now, and the split only ever sorted artefacts by whether their source
+ * happened to have a download button (an email exports cleanly and became a
+ * document; the same conversation on LinkedIn had to be pasted and became a
+ * record). One entity, two input methods — see planning/APPLICATION-ACTIVITY.md.
+ *
+ * `content` is the single text field either way: typed by the user, or filled
+ * by extraction from `file_id`. Once extracted it stays user-editable and may
+ * diverge from the file, which is deliberate (fix bad OCR, trim a quoted reply
+ * chain) — the file is provenance, not the source of truth.
  *
  * `status_log` optionally ties a record to the timeline event it belongs to,
  * so a "Technical interview" entry and its debrief stay one thing rather than
- * drifting apart in two lists.
+ * drifting apart in two lists. It is decorative rather than structural: `step`
+ * carries the stage label and is defaulted from the application's current
+ * status, so every record has a stage whether or not this FK is set.
  */
 export const application_records = pgTable("application_records", {
   id: serial().primaryKey().notNull(),
@@ -2672,12 +2683,61 @@ export const application_records = pgTable("application_records", {
   step: varchar({ length: 255 }),
   status_log: integer(),
   sort: integer(),
+  /** The uploaded file this record came from, if any. Null for typed entries. */
+  file_id: uuid(),
+  /**
+   * Extraction lifecycle for `file_id`. Four states, and the fourth matters:
+   * "none" is a typed record with no file, distinct from "pending" (has a file,
+   * never extracted). Without it every pasted note reads as an extraction
+   * backlog. "extracted" and "skipped" are terminal — file_id is immutable, so
+   * a re-upload is a new row and a skip is never retried.
+   */
+  extraction_status: varchar({ length: 32 }).default("none").notNull(),
+  extraction_error: text(),
+  date_extracted: timestamp({ withTimezone: true, mode: "date" }),
+  /**
+   * People involved: `[{ name, role }]`, role from `contactRoles`. A contact is
+   * not an attribute of one record but an entity recurring across them — the
+   * same interviewer appears in a recap, a transcript and three messages — so
+   * this is the read-time grouping key, and the promotion path when a person
+   * needs an identity is a table (see $lib/application-records.ts).
+   */
+  contacts: jsonb().$type<Array<{ name: string; role: string | null }>>()
+    .default([]).notNull(),
+  /**
+   * Raw provenance kept because discarding it is lossy: email headers,
+   * message-ids, file metadata. NEVER queried and never the basis of a feature
+   * — typed columns for what features consume, this for the rest, nothing in
+   * between. A general-purpose metadata bag would be write-flexible and
+   * read-useless: nothing can consume a key it does not know exists.
+   */
+  source_meta: jsonb(),
+  /**
+   * When the derivation pass last analysed `content` to fill title / type /
+   * event_date / contacts. NULL means never analysed — and that distinction is
+   * load-bearing, not cosmetic: aggregates like "no employer contact yet on
+   * this application" read `contacts` being empty, which without this column
+   * conflates *nobody was involved* with *nobody has looked yet*. Same
+   * empty-vs-never-looked trap as generation-context.ts's emptyNote/droppedNote.
+   *
+   * Re-derivation triggers on `date_updated > derived_at`, so edited content
+   * gets fresh metadata and untouched content never pays for a second LLM call.
+   */
+  derived_at: timestamp({ withTimezone: true, mode: "date" }),
   date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" })
     .defaultNow(),
   date_updated: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
 }, (table) => [
   index("application_records_application_idx").on(table.application_id),
   index("application_records_status_log_idx").on(table.status_log),
+  index("application_records_file_idx").on(table.file_id),
+  foreignKey({
+    columns: [table.file_id],
+    foreignColumns: [files.id],
+    name: "application_records_file_foreign",
+    // Losing the blob shouldn't delete the record written about it — the
+    // extracted text in `content` is the part that carries the value.
+  }).onDelete("set null"),
   foreignKey({
     columns: [table.application_id],
     foreignColumns: [applications.id],

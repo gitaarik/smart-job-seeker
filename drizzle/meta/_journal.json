@@ -512,6 +512,13 @@
       "when": 1785751724986,
       "tag": "0072_spooky_kang",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1785767182626,
+      "tag": "0073_smiling_clea",
+      "breakpoints": true
     }
   ]
 }

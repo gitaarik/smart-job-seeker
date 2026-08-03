@@ -42,16 +42,25 @@ const BUDGETS: Record<
 /**
  * Order records are sacrificed in when over budget — lowest signal-per-token
  * first. A raw transcript is the least efficient way to tell a writer what
- * happened; a recap or a piece of feedback is the most.
+ * happened; a recap or a piece of feedback is the most, and an offer or a
+ * signed contract is the last thing that should ever be dropped.
+ *
+ * ⚠️ This must list EVERY value in `recordTypes`. `trimRank` returns 0 for
+ * anything unlisted, and 0 means *sacrificed first* — so a type added to the
+ * vocabulary and forgotten here silently becomes the cheapest thing in the
+ * budget rather than the most expensive. Exported so that invariant is a test
+ * rather than a comment.
  */
-const TRIM_ORDER = [
+export const TRIM_ORDER = [
   "transcript",
   "note",
   "research",
+  "message",
   "assessment",
-  "email",
   "feedback",
   "interview_recap",
+  "offer",
+  "contract",
 ];
 
 function trimRank(recordType: string | null): number {
