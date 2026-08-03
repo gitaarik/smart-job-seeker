@@ -295,6 +295,40 @@ export const estimateSalaryExpectationsSchema = z.object({
 });
 
 /**
+ * Schema for derive_record_metadata.
+ *
+ * Deliberately LOOSE on the wire — no `.transform()` or `.preprocess()`, which
+ * throw "Transforms cannot be represented in JSON Schema" once LangChain
+ * converts this for structured output. Tightening happens on our side of the
+ * boundary in record-derivation.ts, which is also where an unknown
+ * `record_type` or `role` is dropped rather than trusted.
+ *
+ * Every field is required rather than optional: gpt-oss omits nullable keys
+ * unless told not to, and an absent key is indistinguishable from "the model
+ * found nothing" — which matters here, because "no contacts" is a real signal
+ * (see the authorship aggregate in planning/APPLICATION-ACTIVITY.md).
+ */
+export const deriveRecordMetadataSchema = z.object({
+  title: z.string().describe(
+    "A short scannable title for this entry, 3-10 words. No trailing period.",
+  ),
+  record_type: z.string().describe(
+    "Exactly one of the allowed type values listed in the prompt.",
+  ),
+  event_date: z.string().nullable().describe(
+    "The date the thing described actually happened, as YYYY-MM-DD, or null.",
+  ),
+  contacts: z.array(z.object({
+    name: z.string().describe("The person's name as written."),
+    role: z.string().nullable().describe(
+      "Exactly one of the allowed role values, or null when unclear.",
+    ),
+  })).describe(
+    "People from the employer's side named in the entry. Empty array if none.",
+  ),
+});
+
+/**
  * Preprocess to normalize the "text" key from LLMs that use alternative names
  * (e.g. "coverLetter", "cover_letter", "letter", "content", "email")
  */
@@ -602,6 +636,7 @@ export const extractDocumentSchema = z.object({
 
 export const aiPromptSchemas = {
   extract_job_data: extractJobDataSchema,
+  derive_record_metadata: deriveRecordMetadataSchema,
   extract_document: extractDocumentSchema,
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,

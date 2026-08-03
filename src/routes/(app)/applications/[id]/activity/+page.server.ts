@@ -7,6 +7,7 @@ import { getSelectedProfileId } from "../../../profile/utils";
 import { deriveRecordTitle, recordTypeValues } from "$lib/application-records";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import { extractRecordFile } from "$lib/server/ai-chat/application-activity";
+import { deriveRecordMetadata } from "$lib/server/ai-chat/record-derivation";
 import { Buffer } from "buffer";
 
 /**
@@ -26,9 +27,10 @@ type Denial = ActionFailure<{ error: string }>;
 type Resolved =
   | {
     app: { id: number; status: string; status_step: string | null };
+    profileId: number;
     error: null;
   }
-  | { app: null; error: Denial };
+  | { app: null; profileId: null; error: Denial };
 
 /**
  * Resolve the application for the current user's selected profile, so every
@@ -41,7 +43,11 @@ async function requireApplication(
   cookies: Cookies,
   idParam: string,
 ): Promise<Resolved> {
-  const deny = (error: Denial): Resolved => ({ app: null, error });
+  const deny = (error: Denial): Resolved => ({
+    app: null,
+    profileId: null,
+    error,
+  });
 
   const user = locals.user;
   if (!user) return deny(fail(401, { error: "Not authenticated" }));
@@ -61,7 +67,7 @@ async function requireApplication(
   });
   if (!existing) return deny(fail(404, { error: "Application not found" }));
 
-  return { app: existing, error: null };
+  return { app: existing, profileId, error: null };
 }
 
 /** Today, as the `date` column wants it. */
@@ -130,6 +136,12 @@ export const actions: Actions = {
       date_created: new Date(),
     }).returning({ id: application_records.id });
 
+    // A file-backed entry has no content yet, so its derivation rides the
+    // extract action instead — there would be nothing to read here.
+    if (!fileId) {
+      await deriveRecordMetadata(created.id, resolved.profileId);
+    }
+
     // Reported so the client can kick off extraction as a second request —
     // the entry is already written and visible, and a 40-page PDF must not
     // hold the composer open while it is read.
@@ -164,6 +176,9 @@ export const actions: Actions = {
     if (!record) return fail(404, { error: "Record not found" });
 
     const text = await extractRecordFile(id);
+    // Now there is content to read, so this is where a file-backed entry gets
+    // its real title, type, date and contacts.
+    if (text) await deriveRecordMetadata(id, resolved.profileId);
     // A file with no extractable text (an image, a scan) is not an error — the
     // entry and the download still stand. extractRecordFile has already marked
     // it "skipped" so nothing retries it.

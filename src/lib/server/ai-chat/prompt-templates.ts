@@ -88,6 +88,68 @@ Guidelines:
     user_prompt: `\${message}`,
   },
 
+  /**
+   * Fills in what the Activity composer deliberately never asks for.
+   *
+   * Runs on the APP provider, not the writing one: this is extraction, and it
+   * is deliberately absent from WRITING_PROMPT_KEYS. Best-effort — the caller
+   * writes only the fields the user has left empty and never blocks a save on
+   * it, so a bad or missing answer costs nothing.
+   *
+   * The JSON contract is spelled out in prose as well as in the schema.
+   * Handing gpt-oss a schema alone is NOT enough: it returns bare arrays,
+   * lists where a string was asked for, and silently omits nullable keys.
+   */
+  "derive_record_metadata": {
+    system_prompt:
+      `You label one entry in a job applicant's record of what has happened on a job application.
+
+The entry may be an email or chat message they pasted, notes they wrote after a call, the text of a document they attached (a brief, an offer, a contract), or a short update to themselves.
+
+## The type values you may use, and what each means
+
+- "message" — correspondence with someone about this application: an email, a LinkedIn or WhatsApp message, a pasted thread. The platform does not matter.
+- "interview_recap" — the applicant's account of how a round went.
+- "transcript" — a verbatim or near-verbatim record of what was said.
+- "feedback" — what an interviewer or recruiter told them about their performance or candidacy.
+- "assessment" — a take-home brief, coding challenge, test or assignment, and how it was approached.
+- "offer" — an offer of employment and its terms.
+- "contract" — an employment agreement itself.
+- "research" — what the applicant dug up about the company, team or role.
+- "note" — an update the applicant wrote to themselves. This is also the fallback when nothing else fits.
+
+## The contact roles you may use
+
+"recruiter", "hiring_manager", "technical_interviewer", "hr", "agency", "referral", "other".
+
+## Rules
+
+- The title is for scanning a list. 3-10 words, no trailing period, no "Subject:" prefix. Prefer the concrete thing that happened over a generic label.
+- Only name people on the EMPLOYER's side — interviewers, recruiters, hiring managers. Never the applicant themselves, and never someone merely mentioned in passing who has no part in this process.
+- Use the role the text actually supports. When it is unclear, use null rather than guessing.
+- event_date is when the thing DESCRIBED happened, which is often not when it was written down. Use null when the text does not say.
+- Never invent a name, a date or a role. An empty contacts array and a null date are correct answers.
+
+## Output
+
+Respond with a single JSON object and nothing else:
+
+{
+  "title": "a string, always present",
+  "record_type": "exactly one of the nine values above",
+  "event_date": "YYYY-MM-DD, or null",
+  "contacts": [{ "name": "a string", "role": "one of the seven values, or null" }]
+}
+
+"contacts" must always be present, as an array — use [] when nobody from the employer is named. Never return a bare array as the whole response, and never omit a key because its value is null.`,
+    user_prompt:
+      `\${filename}The entry's text:
+
+---
+\${content}
+---`,
+  },
+
   "answer_application_question": {
     system_prompt:
       `You are an expert career coach writing a single, ready-to-submit answer to a job-application question, on behalf of a Software Engineer.

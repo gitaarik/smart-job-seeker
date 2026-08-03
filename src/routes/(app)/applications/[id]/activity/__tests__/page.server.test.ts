@@ -41,6 +41,7 @@ const mockGetSelectedProfileId = vi.fn();
 const mockUploadFile = vi.fn();
 const mockDeleteFile = vi.fn();
 const mockExtract = vi.fn();
+const mockDerive = vi.fn();
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
@@ -83,6 +84,13 @@ vi.mock("$lib/server/files", () => ({
 
 vi.mock("$lib/server/ai-chat/application-activity", () => ({
   extractRecordFile: (...a: any[]) => mockExtract(...a),
+}));
+
+// Mocked explicitly rather than left to fall into its own catch: derivation is
+// best-effort by design, so an unmocked one would "pass" while doing nothing
+// and the wiring assertions below would prove nothing.
+vi.mock("$lib/server/ai-chat/record-derivation", () => ({
+  deriveRecordMetadata: (...a: any[]) => mockDerive(...a),
 }));
 
 // $lib/application-records is deliberately NOT mocked — the point of the type
@@ -136,6 +144,7 @@ beforeEach(() => {
   mockUploadFile.mockResolvedValue({ id: "file-uuid" });
   mockDeleteFile.mockResolvedValue(undefined);
   mockExtract.mockResolvedValue("extracted text");
+  mockDerive.mockResolvedValue({});
 });
 
 /**
@@ -237,6 +246,20 @@ describe("create action — derivation", () => {
     const res = await actions.create!(createEvent(typed));
     expect(res).toMatchObject({ needsExtraction: false });
   });
+
+  it("derives metadata for a typed entry straight away", async () => {
+    await actions.create!(createEvent(typed));
+    expect(mockDerive).toHaveBeenCalledWith(7, 12);
+  });
+
+  // A file-backed entry has no content until extraction runs, so deriving here
+  // would read an empty string and waste the call.
+  it("defers derivation for an upload until there is text", async () => {
+    await actions.create!(
+      createEvent({}, { file: new File(["x"], "brief.pdf") }),
+    );
+    expect(mockDerive).not.toHaveBeenCalled();
+  });
 });
 
 describe("update action", () => {
@@ -308,5 +331,16 @@ describe("extract action", () => {
     mockExtract.mockResolvedValueOnce(null);
     const res = await actions.extract!(createEvent({ id: "7" }));
     expect(res).toMatchObject({ success: true, extracted: false });
+  });
+
+  it("derives once the extracted text exists", async () => {
+    await actions.extract!(createEvent({ id: "7" }));
+    expect(mockDerive).toHaveBeenCalledWith(7, 12);
+  });
+
+  it("skips derivation when nothing could be read", async () => {
+    mockExtract.mockResolvedValueOnce(null);
+    await actions.extract!(createEvent({ id: "7" }));
+    expect(mockDerive).not.toHaveBeenCalled();
   });
 });
