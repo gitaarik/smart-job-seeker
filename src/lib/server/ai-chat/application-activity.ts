@@ -253,6 +253,38 @@ export function formatActivityContext(
   ].join("\n");
 }
 
+/**
+ * Extract one record's attached file into its `content`, on demand.
+ *
+ * The composer calls this straight after creating a file-backed record, so the
+ * entry is written and visible *before* the extraction runs — a 40-page PDF
+ * must not hold the form open. Idempotent via `extraction_status`, so calling
+ * it twice, or racing it with the lazy path in `applicationActivityText`, is
+ * harmless.
+ *
+ * Returns the extracted text, or null when there was none to get.
+ */
+export async function extractRecordFile(
+  recordId: number,
+): Promise<string | null> {
+  const row = await db.query.application_records.findFirst({
+    where: eq(application_records.id, recordId),
+    columns: {
+      id: true,
+      file_id: true,
+      extraction_status: true,
+      content: true,
+    },
+    with: { file: { columns: { filename_download: true, title: true } } },
+  });
+  if (!row) return null;
+  return ensureExtracted(
+    row as ExtractableRow,
+    application_records,
+    row.content,
+  );
+}
+
 /** The junction/record shape the extractor needs. */
 interface ExtractableRow {
   id: number;

@@ -1,15 +1,24 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
+  import type { ActionData, PageData } from "./$types";
+  import { enhance } from "$app/forms";
+  import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faChevronDown,
     faChevronUp,
     faDownload,
+    faEllipsisVertical,
     faPaperclip,
+    faPencil,
     faStream,
+    faTimes,
+    faTrash,
+    faTriangleExclamation,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../../components/Card.svelte";
   import EmptyState from "../../../profile/components/EmptyState.svelte";
+  import ConfirmModal from "../../../profile/components/ConfirmModal.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import {
     getContactRoleLabel,
     getRecordTypeColor,
@@ -20,7 +29,7 @@
   import { formatDate as fmtDate } from "$lib/format-date";
   import { renderSafeMarkdown } from "$lib/utils/safe-markdown";
 
-  let { data }: { data: PageData } = $props();
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let app = $derived(data.application);
   const basePath = $derived(`/applications/${app.id}`);
@@ -42,6 +51,8 @@
       contacts: { name: string; role: string | null }[];
       fileId: string | null;
       fromFile: boolean;
+      /** "pending" while the attached file is still being read. */
+      extractionStatus: string;
     }
     | {
       kind: "status";
@@ -73,6 +84,7 @@
       contacts: (r.contacts ?? []) as { name: string; role: string | null }[],
       fileId: r.file_id ?? null,
       fromFile: !!r.file_id,
+      extractionStatus: r.extraction_status,
     })),
   );
 
@@ -94,6 +106,7 @@
       contacts: [],
       fileId: f.file?.id ?? null,
       fromFile: true,
+      extractionStatus: f.extraction_status,
     })),
   );
 
@@ -169,7 +182,135 @@
 
   const statusLabel = (e: Extract<Entry, { kind: "status" }>) =>
     [getStatusLabel(e.to_status), e.step, e.action].filter(Boolean).join(" · ");
+
+  // ---------------------------------------------------------------------
+  // Composer
+  // ---------------------------------------------------------------------
+
+  let composerText = $state("");
+  let stagedFile = $state<File | null>(null);
+  let saving = $state(false);
+  let dragging = $state(false);
+  let fileInput = $state<HTMLInputElement | null>(null);
+
+  /**
+   * Route a File into the hidden input so the ordinary form submission carries
+   * it. A file arriving by paste or drop is not in any input, and assigning
+   * `.files` needs a DataTransfer — this is the only way to hand it to
+   * `use:enhance` without hand-rolling the whole request.
+   */
+  function stageFile(file: File) {
+    if (!fileInput) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    stagedFile = file;
+  }
+
+  function clearFile() {
+    if (fileInput) fileInput.value = "";
+    stagedFile = null;
+  }
+
+  /**
+   * One handler for every input method. `clipboardData` carries both files and
+   * text on the same event, so Ctrl+V covers an email body, a chat message, a
+   * screenshot and a PDF without the user choosing a mode first — which is the
+   * whole point of merging the two tabs.
+   */
+  function onPaste(event: ClipboardEvent) {
+    const file = event.clipboardData?.files?.[0];
+    if (!file) return; // plain text: let the textarea handle it normally
+    event.preventDefault();
+    stageFile(file);
+  }
+
+  function onDrop(event: DragEvent) {
+    event.preventDefault();
+    dragging = false;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) stageFile(file);
+  }
+
+  function handleCreate() {
+    saving = true;
+    return async (
+      { result, update }: {
+        result: { type: string; data?: Record<string, unknown> };
+        update: (opts?: { reset?: boolean }) => Promise<void>;
+      },
+    ) => {
+      await update({ reset: false });
+      saving = false;
+      if (result.type !== "success") return;
+
+      composerText = "";
+      clearFile();
+
+      // The entry is already written and on screen. Reading the file is a
+      // second request so a large PDF never holds the composer open — see the
+      // create action.
+      // The stream already shows the entry with "Reading the file…", because
+      // the row exists with extraction_status "pending" — no separate spinner
+      // state is needed here.
+      if (result.data?.needsExtraction && result.data?.createdId) {
+        const body = new FormData();
+        body.set("id", String(result.data.createdId));
+        await fetch("?/extract", { method: "POST", body });
+        await invalidateAll();
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Per-entry edit / delete
+  // ---------------------------------------------------------------------
+
+  let menuOpenId = $state<string | null>(null);
+  let editingId = $state<string | null>(null);
+  let deleteTarget = $state<{ id: string; title: string } | null>(null);
+
+  let editTitle = $state("");
+  let editType = $state("");
+  let editDate = $state("");
+  let editContent = $state("");
+
+  function startEdit(entry: Extract<Entry, { kind: "record" }>) {
+    editingId = entry.id;
+    editTitle = entry.title;
+    editType = entry.record_type ?? "note";
+    editDate = entry.at ? entry.at.toISOString().slice(0, 10) : "";
+    editContent = entry.content;
+    menuOpenId = null;
+  }
+
+  function handleMutation(onDone: () => void) {
+    return async (
+      { result, update }: {
+        result: { type: string };
+        update: () => Promise<void>;
+      },
+    ) => {
+      await update();
+      if (result.type === "success") onDone();
+    };
+  }
+
+  /** Legacy `applications_files` rows are read-only here — the Documents tab
+   * still owns them until the cutover moves them into records. */
+  const isEditable = (id: string) => id.startsWith("r");
+
+  /** The numeric record id the actions expect, from the stream's prefixed key. */
+  const rawId = (id: string) => id.slice(1);
+
+  let deleteForm = $state<HTMLFormElement | null>(null);
 </script>
+
+<svelte:window
+  onclick={() => {
+    if (menuOpenId !== null) menuOpenId = null;
+  }}
+/>
 
 <div class="space-y-5">
   <div class="flex items-center justify-between gap-3 flex-wrap">
@@ -203,6 +344,105 @@
       Show status changes
     </label>
   </div>
+
+  {#if form?.error}
+    <p
+      class="flex items-start gap-2 text-sm text-[var(--dash-error)] bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg px-3 py-2"
+    >
+      <FontAwesomeIcon
+        icon={faTriangleExclamation}
+        class="w-4 h-4 mt-0.5 shrink-0"
+      />
+      {form.error}
+    </p>
+  {/if}
+
+  <!--
+    The composer sits at the TOP because the stream is newest-first — what you
+    just added should appear directly beneath it. There is no type picker, no
+    stage picker, no date field and no title field: every one of those is
+    derived and stays editable afterwards.
+  -->
+  <form
+    method="POST"
+    action="?/create"
+    enctype="multipart/form-data"
+    use:enhance={handleCreate}
+  >
+    <div
+      role="presentation"
+      ondragover={(e) => {
+        e.preventDefault();
+        dragging = true;
+      }}
+      ondragleave={() => (dragging = false)}
+      ondrop={onDrop}
+      class="rounded-lg border transition-colors {dragging
+      ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5'
+      : 'border-[var(--dash-border)] bg-[var(--dash-card)]'}"
+    >
+      {#if stagedFile}
+        <div
+          class="flex items-center gap-2 px-3 pt-2.5 text-xs text-[var(--dash-text-secondary)]"
+        >
+          <FontAwesomeIcon icon={faPaperclip} class="w-3 h-3 shrink-0" />
+          <span class="truncate">{stagedFile.name}</span>
+          <button
+            type="button"
+            onclick={clearFile}
+            class="ml-auto shrink-0 p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
+            aria-label="Remove attachment"
+          >
+            <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+          </button>
+        </div>
+      {/if}
+
+      <textarea
+        name="content"
+        bind:value={composerText}
+        onpaste={onPaste}
+        rows={composerText || stagedFile ? 4 : 2}
+        placeholder="Paste an email, drop a file, or write an update…"
+        class="w-full px-3 py-2.5 bg-transparent text-sm text-[var(--dash-text)] placeholder:text-[var(--dash-text-muted)] focus:outline-none resize-y"
+      ></textarea>
+
+      <!-- Carries a pasted or dropped File into the ordinary form submission. -->
+      <input
+        bind:this={fileInput}
+        type="file"
+        name="file"
+        class="hidden"
+        onchange={(e) => {
+          const f = (e.currentTarget as HTMLInputElement).files?.[0];
+          if (f) stagedFile = f;
+        }}
+      />
+
+      <div
+        class="flex items-center justify-between gap-2 px-3 pb-2.5 border-t border-[var(--dash-border)] pt-2"
+      >
+        <button
+          type="button"
+          onclick={() => fileInput?.click()}
+          class="flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+        >
+          <FontAwesomeIcon icon={faPaperclip} class="w-3 h-3" />
+          Attach a file
+        </button>
+        <button
+          type="submit"
+          disabled={saving || (!composerText.trim() && !stagedFile)}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
+        >
+          {#if saving}
+            <Spinner size="w-3 h-3" />
+          {/if}
+          {saving ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </div>
+  </form>
 
   {#if presentTypes.length > 1}
     <div class="flex flex-wrap gap-1.5">
@@ -305,6 +545,50 @@
                   {formatDate(entry.at)}
                 </span>
               {/if}
+
+              {#if isEditable(entry.id)}
+                <div class="relative shrink-0">
+                  <button
+                    type="button"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      menuOpenId = menuOpenId === entry.id ? null : entry.id;
+                    }}
+                    class="p-1 -mt-0.5 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+                    aria-label="Actions"
+                  >
+                    <FontAwesomeIcon
+                      icon={faEllipsisVertical}
+                      class="w-3 h-3"
+                    />
+                  </button>
+                  {#if menuOpenId === entry.id}
+                    <div
+                      class="absolute right-0 top-7 z-20 min-w-[120px] py-1 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        onclick={() => startEdit(entry)}
+                        class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => {
+                          deleteTarget = { id: entry.id, title: entry.title };
+                          menuOpenId = null;
+                        }}
+                        class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--dash-error)] hover:bg-[var(--dash-bg)] transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                        Delete
+                      </button>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
             </div>
 
             {#if entry.contacts.length > 0 || entry.fromFile || entry.step}
@@ -330,7 +614,83 @@
               </div>
             {/if}
 
-            {#if entry.content}
+            {#if editingId === entry.id}
+              <!--
+                Editing is where the derived metadata becomes correctable. The
+                form deliberately omits `step`: the update action treats an
+                absent field as "leave alone" rather than "clear", so the stage
+                derived at save time survives an edit that never mentions it.
+              -->
+              <form
+                method="POST"
+                action="?/update"
+                use:enhance={() => handleMutation(() => (editingId = null))}
+                class="mt-2 space-y-2"
+              >
+                <input type="hidden" name="id" value={rawId(entry.id)} />
+                <input
+                  name="title"
+                  bind:value={editTitle}
+                  class="w-full px-2 py-1.5 text-sm rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+                />
+                <div class="flex gap-2">
+                  <select
+                    name="record_type"
+                    bind:value={editType}
+                    class="px-2 py-1.5 text-xs rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+                  >
+                    {#each recordTypes as type}
+                      <option value={type.value}>{type.label}</option>
+                    {/each}
+                  </select>
+                  <input
+                    type="date"
+                    name="event_date"
+                    bind:value={editDate}
+                    class="px-2 py-1.5 text-xs rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+                  />
+                </div>
+                <textarea
+                  name="content"
+                  bind:value={editContent}
+                  rows={8}
+                  class="w-full px-2 py-1.5 text-xs rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] resize-y"
+                ></textarea>
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onclick={() => (editingId = null)}
+                    class="px-3 py-1.5 text-xs rounded-md border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 text-xs rounded-md bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            {:else if !entry.content && entry.extractionStatus === "pending"}
+              <!--
+                The entry was written before its file was read, so the stream
+                can show it immediately. Blocking the composer on a 40-page PDF
+                would make dropping a file feel worse than pasting text, which
+                is exactly the split this page exists to remove.
+              -->
+              <p
+                class="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]"
+              >
+                <Spinner size="w-3 h-3" />
+                Reading the file…
+              </p>
+            {:else if !entry.content && entry.extractionStatus === "skipped"}
+              <p class="mt-1.5 text-xs text-[var(--dash-text-muted)] italic">
+                No text could be read from this file — it is still attached and
+                downloadable.
+              </p>
+            {:else if entry.content}
               {#if expanded[entry.id]}
                 <div
                   class="mt-2 max-h-96 overflow-y-auto rounded-md bg-[var(--dash-bg)] px-2.5 py-2 prose prose-sm max-w-none text-[var(--dash-text)]"
@@ -370,3 +730,30 @@
     </div>
   {/if}
 </div>
+
+<!--
+  Submitted programmatically from the modal. A real form rather than a
+  constructed one so it goes through use:enhance like every other mutation
+  here, instead of a full page navigation.
+-->
+<form
+  method="POST"
+  action="?/delete"
+  bind:this={deleteForm}
+  use:enhance={() => handleMutation(() => (deleteTarget = null))}
+  class="hidden"
+>
+  <input
+    type="hidden"
+    name="id"
+    value={deleteTarget ? rawId(deleteTarget.id) : ""}
+  />
+</form>
+
+<ConfirmModal
+  isOpen={deleteTarget !== null}
+  title="Delete entry"
+  message={`Delete "${deleteTarget?.title ?? ""}"? Any file attached to it is deleted too. This cannot be undone.`}
+  onCancel={() => (deleteTarget = null)}
+  onConfirm={() => deleteForm?.requestSubmit()}
+/>

@@ -141,3 +141,29 @@ export interface RecordContact {
 export function getContactRoleLabel(role: string | null): string {
   return contactRoles.find((r) => r.value === role)?.label || "";
 }
+
+/** Titles longer than this stop being scannable in a stream. */
+const TITLE_MAX = 120;
+
+/**
+ * A usable title from an entry's content.
+ *
+ * The non-LLM fallback: the derivation pass will do better, and until it lands
+ * the composer must still never ask for a title. A first line is right
+ * surprisingly often — pasted emails lead with a subject, notes lead with their
+ * point — which is what makes "no title field" viable before any AI is wired up.
+ *
+ * Lives here rather than in the route because SvelteKit only permits its own
+ * named exports from `+page.server.ts`, and because pure derivation deserves a
+ * unit test that does not need a request.
+ */
+export function deriveRecordTitle(content: string): string {
+  const firstLine = content.split("\n").map((l) => l.trim()).find(Boolean) ??
+    "";
+  // Strip a leading "Subject:" so a pasted email doesn't title itself with it.
+  const cleaned = firstLine.replace(/^(subject|onderwerp)\s*:\s*/i, "").trim();
+  if (!cleaned) return "Untitled";
+  return cleaned.length > TITLE_MAX
+    ? cleaned.slice(0, TITLE_MAX).trimEnd() + "…"
+    : cleaned;
+}
