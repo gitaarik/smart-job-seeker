@@ -2,7 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, like, inArray, desc, count, exists, notExists, type SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
-import { files, profiles, applications_files, user_feedback_files, profile_exports, applications as applicationsTable, import_logs } from "$lib/server/db/schema";
+import { files, profiles, application_records, user_feedback_files, profile_exports, applications as applicationsTable, import_logs } from "$lib/server/db/schema";
 
 export const load: PageServerLoad = async ({ url }) => {
   const typeFilter = url.searchParams.get("type") || "";
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ url }) => {
   if (usageFilter === "cv") {
     conditions.push(exists(db.select({ v: sql`1` }).from(profiles).where(eq(profiles.profile_picture_id, files.id))));
   } else if (usageFilter === "application") {
-    conditions.push(exists(db.select({ v: sql`1` }).from(applications_files).where(eq(applications_files.file_id, files.id))));
+    conditions.push(exists(db.select({ v: sql`1` }).from(application_records).where(eq(application_records.file_id, files.id))));
   } else if (usageFilter === "feedback") {
     conditions.push(exists(db.select({ v: sql`1` }).from(user_feedback_files).where(eq(user_feedback_files.file_id, files.id))));
   } else if (usageFilter === "export") {
@@ -38,7 +38,9 @@ export const load: PageServerLoad = async ({ url }) => {
   } else if (usageFilter === "orphan") {
     conditions.push(
       notExists(db.select({ v: sql`1` }).from(profiles).where(eq(profiles.profile_picture_id, files.id))),
-      notExists(db.select({ v: sql`1` }).from(applications_files).where(eq(applications_files.file_id, files.id))),
+      // Orphan is the filter used to decide what is safe to delete, so this
+      // must name every table that can hold a file reference.
+      notExists(db.select({ v: sql`1` }).from(application_records).where(eq(application_records.file_id, files.id))),
       notExists(db.select({ v: sql`1` }).from(user_feedback_files).where(eq(user_feedback_files.file_id, files.id))),
       notExists(db.select({ v: sql`1` }).from(profile_exports).where(eq(profile_exports.file_id, files.id))),
       notExists(db.select({ v: sql`1` }).from(applicationsTable).where(eq(applicationsTable.cv_file_sent_id, files.id))),
@@ -55,7 +57,8 @@ export const load: PageServerLoad = async ({ url }) => {
       limit: pageSize,
       with: {
         profiles: { columns: { id: true, name: true } },
-        applications_files: {
+        application_records: {
+          columns: { id: true },
           with: {
             application: {
               columns: { id: true },

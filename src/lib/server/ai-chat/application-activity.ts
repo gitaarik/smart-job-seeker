@@ -28,7 +28,7 @@
 
 import { db } from "$lib/server/db";
 import { asc, eq } from "drizzle-orm";
-import { application_records, applications_files } from "$lib/server/db/schema";
+import { application_records } from "$lib/server/db/schema";
 import { getFile } from "$lib/server/files";
 import { extractUpload } from "$lib/server/documents/extract";
 import { getRecordTypeLabel } from "$lib/application-records";
@@ -278,11 +278,7 @@ export async function extractRecordFile(
     with: { file: { columns: { filename_download: true, title: true } } },
   });
   if (!row) return null;
-  return ensureExtracted(
-    row as ExtractableRow,
-    application_records,
-    row.content,
-  );
+  return ensureExtracted(row as ExtractableRow, row.content);
 }
 
 /** The junction/record shape the extractor needs. */
@@ -298,20 +294,16 @@ interface ExtractableRow {
  * use. Terminal states ("extracted"/"skipped") short-circuit; any failure is
  * recorded as "skipped" so it is never retried, and never fails the caller —
  * context is a bonus, not a precondition.
- *
- * `table` is passed because the same lifecycle runs against `application_records`
- * (the new home) and `applications_files` (until the cutover drops it).
  */
 async function ensureExtracted(
   row: ExtractableRow,
-  table: typeof application_records | typeof applications_files,
   cached: string | null,
 ): Promise<string | null> {
   if (row.extraction_status === "extracted") return cached?.trim() || null;
   if (row.extraction_status === "skipped") return null;
 
   if (!row.file_id) {
-    await markSkipped(row.id, "no file attached", table);
+    await markSkipped(row.id, "no file attached");
     return null;
   }
 
@@ -321,95 +313,65 @@ async function ensureExtracted(
     const result = await extractUpload({ filename, bytes: buffer });
     const text = result.files.map((f) => f.text).join("\n\n").trim();
     if (!text) {
-      await markSkipped(row.id, "no extractable text", table);
+      await markSkipped(row.id, "no extractable text");
       return null;
     }
-    // The extracted text lands in the row's own text column: `content` for a
-    // record (where it stays user-editable — fix bad OCR, trim a quoted reply
-    // chain), `extracted_text` for a legacy junction row.
-    const column = table === application_records
-      ? { content: text }
-      : { extracted_text: text };
-    await db.update(table).set({
-      ...column,
+    // The extracted text lands in `content`, where it stays user-editable —
+    // fix bad OCR, trim a quoted reply chain. The file is provenance, not the
+    // source of truth.
+    await db.update(application_records).set({
+      content: text,
       extraction_status: "extracted",
       extraction_error: null,
       date_extracted: new Date(),
-      // deno-lint-ignore no-explicit-any -- two tables, structurally identical
-      // extraction columns, different text column; narrowing this properly
-      // would mean two near-identical functions for the weeks until cutover.
-    } as any).where(eq(table.id, row.id));
+    }).where(eq(application_records.id, row.id));
     return text;
   } catch (err) {
-    await markSkipped(row.id, (err as Error).message, table);
+    await markSkipped(row.id, (err as Error).message);
     return null;
   }
 }
 
-async function markSkipped(
-  id: number,
-  reason: string,
-  table: typeof application_records | typeof applications_files,
-): Promise<void> {
-  await db.update(table).set({
+async function markSkipped(id: number, reason: string): Promise<void> {
+  await db.update(application_records).set({
     extraction_status: "skipped",
     extraction_error: reason.slice(0, 2000),
     date_extracted: new Date(),
-    // deno-lint-ignore no-explicit-any -- see ensureExtracted
-  } as any).where(eq(table.id, id));
+  }).where(eq(application_records.id, id));
 }
 
 /**
  * Load everything recorded against an application and render it as prompt
  * context. Returns "" when there is nothing — callers interpolate it blindly.
  *
- * ⚠️ TEMPORARY DUAL READ. `applications_files` is still the Documents tab's
- * write target, so its rows are unioned in here. Both halves are deleted at
- * cutover (step 5 of the plan) when the tab goes and the rows are moved into
- * `application_records`. Copying the data earlier would diverge from every
- * upload made in between, which is why this reads two tables instead.
+ * Attached files were unioned in from `applications_files` during the Activity
+ * transition; migration 0074 moved those rows into `application_records` and
+ * dropped the table, so there is one read again.
  */
 export async function applicationActivityText(
   applicationId: number,
   mode: ActivityContextMode = "full",
 ): Promise<string> {
   try {
-    const cap = TOTALS.full.maxEntries * 2;
-
-    const [records, legacyFiles] = await Promise.all([
-      db.query.application_records.findMany({
-        where: eq(application_records.application_id, applicationId),
-        // Oldest first: the model reads the rounds in the order they happened.
-        orderBy: [
-          asc(application_records.event_date),
-          asc(application_records.date_created),
-        ],
-        // Read a little past the cap so the budget pass has something to choose
-        // between rather than being handed a pre-truncated set.
-        limit: cap,
-        with: {
-          file: { columns: { filename_download: true, title: true } },
-        },
-      }),
-      db.query.applications_files.findMany({
-        where: eq(applications_files.applications_id, applicationId),
-        orderBy: asc(applications_files.id),
-        limit: cap,
-        with: {
-          file: { columns: { filename_download: true, title: true } },
-        },
-      }),
-    ]);
+    const rows = await db.query.application_records.findMany({
+      where: eq(application_records.application_id, applicationId),
+      // Oldest first: the model reads the rounds in the order they happened.
+      orderBy: [
+        asc(application_records.event_date),
+        asc(application_records.date_created),
+      ],
+      // Read a little past the cap so the budget pass has something to choose
+      // between rather than being handed a pre-truncated set.
+      limit: TOTALS.full.maxEntries * 2,
+      with: {
+        file: { columns: { filename_download: true, title: true } },
+      },
+    });
 
     const entries: ActivityEntry[] = [];
-
-    for (const row of records) {
+    for (const row of rows) {
       const content = row.file_id
-        ? await ensureExtracted(
-          row as ExtractableRow,
-          application_records,
-          row.content,
-        )
+        ? await ensureExtracted(row as ExtractableRow, row.content)
         : row.content;
       if (!content?.trim()) continue;
       entries.push({
@@ -419,26 +381,6 @@ export async function applicationActivityText(
         step: row.step,
         event_date: row.event_date,
         from_file: !!row.file_id,
-      });
-    }
-
-    for (const row of legacyFiles) {
-      const text = await ensureExtracted(
-        row as ExtractableRow,
-        applications_files,
-        row.extracted_text,
-      );
-      if (!text?.trim()) continue;
-      entries.push({
-        // Matches what the cutover migration will type these as: a file someone
-        // attached is far more likely received than written, so `message`
-        // ("correspondence, sender unknown") is the honest default.
-        record_type: "message",
-        title: row.file?.title || row.file?.filename_download || null,
-        content: text,
-        step: null,
-        event_date: null,
-        from_file: true,
       });
     }
 

@@ -88,28 +88,6 @@
     })),
   );
 
-  /**
-   * Attached files still live in `applications_files` until the cutover, so the
-   * stream unions them in exactly as the prompt context does. Without this the
-   * Documents tab's contents would simply be missing from the page that claims
-   * to show everything. Both halves go when the tab does.
-   */
-  const legacyFiles = $derived<Entry[]>(
-    (app.applications_files ?? []).map((f) => ({
-      kind: "record" as const,
-      id: `f${f.id}`,
-      at: toDate(f.date_extracted),
-      record_type: "message",
-      title: f.file?.title || f.file?.filename_download || "Attached file",
-      content: f.extracted_text || "",
-      step: null,
-      contacts: [],
-      fileId: f.file?.id ?? null,
-      fromFile: true,
-      extractionStatus: f.extraction_status,
-    })),
-  );
-
   const statusEntries = $derived<Entry[]>(
     (app.application_status_logs ?? []).map((s) => ({
       kind: "status" as const,
@@ -128,7 +106,6 @@
   const stream = $derived(
     [
       ...records,
-      ...legacyFiles,
       ...(showStatusEvents ? statusEntries : []),
     ]
       .filter((e) =>
@@ -139,7 +116,7 @@
       .sort((a, b) => (b.at?.getTime() ?? 0) - (a.at?.getTime() ?? 0)),
   );
 
-  const recordCount = $derived(records.length + legacyFiles.length);
+  const recordCount = $derived(records.length);
   const shownRecordCount = $derived(
     stream.filter((e) => e.kind === "record").length,
   );
@@ -147,7 +124,7 @@
   /** Types actually present, so the filter never offers an empty result. */
   const presentTypes = $derived(
     recordTypes.filter((t) =>
-      [...records, ...legacyFiles].some((e) =>
+      records.some((e) =>
         e.kind === "record" && e.record_type === t.value
       )
     ),
@@ -296,8 +273,7 @@
     };
   }
 
-  /** Legacy `applications_files` rows are read-only here — the Documents tab
-   * still owns them until the cutover moves them into records. */
+  /** Status markers are not editable; records are. */
   const isEditable = (id: string) => id.startsWith("r");
 
   /** The numeric record id the actions expect, from the stream's prefixed key. */
@@ -603,7 +579,7 @@
                 {/if}
                 {#if entry.fromFile && entry.fileId}
                   <a
-                    href="{basePath}/documents/download?fileId={entry.fileId}"
+                    href="{basePath}/activity/download?fileId={entry.fileId}"
                     class="inline-flex items-center gap-1 hover:text-[var(--dash-primary)] transition-colors"
                   >
                     <FontAwesomeIcon icon={faPaperclip} class="w-2.5 h-2.5" />

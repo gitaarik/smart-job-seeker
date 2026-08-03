@@ -11,8 +11,7 @@ import { Buffer } from "buffer";
 
 /**
  * The Activity stream reads entirely from the layout's application query —
- * records, the legacy `applications_files` rows, and the status log are all
- * already loaded there for the other tabs.
+ * records and the status log are both already loaded there.
  */
 export const load: PageServerLoad = async ({ parent }) => {
   await parent();

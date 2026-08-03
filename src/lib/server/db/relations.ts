@@ -5,13 +5,11 @@ import {
   ai_chats,
   ai_prompts,
   api_keys,
-  application_activity_log,
   application_letters,
   application_questions,
   application_records,
   application_status_log,
   applications,
-  applications_files,
   billing_customers,
   certificates,
   cheat_sheets,
@@ -81,21 +79,9 @@ import {
 
 export const ai_promptsRelations = relations(ai_prompts, ({ one }) => ({}));
 
-export const application_activity_logRelations = relations(
-  application_activity_log,
-  ({ one }) => ({
-    application: one(applications, {
-      fields: [application_activity_log.application_id],
-      references: [applications.id],
-    }),
-  }),
-);
-
 export const applicationsRelations = relations(
   applications,
   ({ one, many }) => ({
-    application_activity_logs: many(application_activity_log),
-    applications_files: many(applications_files),
     file: one(files, {
       fields: [applications.cv_file_sent_id],
       references: [files.id],
@@ -115,22 +101,8 @@ export const applicationsRelations = relations(
   }),
 );
 
-export const applications_filesRelations = relations(
-  applications_files,
-  ({ one }) => ({
-    application: one(applications, {
-      fields: [applications_files.applications_id],
-      references: [applications.id],
-    }),
-    file: one(files, {
-      fields: [applications_files.file_id],
-      references: [files.id],
-    }),
-  }),
-);
-
 export const filesRelations = relations(files, ({ one, many }) => ({
-  applications_files: many(applications_files),
+  application_records: many(application_records),
   educations: many(education),
   job_resources: many(job_resources),
   profile_exports: many(profile_exports),

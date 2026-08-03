@@ -1,12 +1,52 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, isNull, asc } from "drizzle-orm";
-import { applications, application_status_log } from "$lib/server/db/schema";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import {
+  application_status_log,
+  applications,
+  profile_versions,
+} from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
+import { getHiddenRequiredSkills } from "$lib/server/profile/hidden-required-skills";
 
-export const load: PageServerLoad = async () => {
-  return {};
+/**
+ * The published-version list and the hidden-required-skills map feed
+ * CvSentCard, which moved here from the Documents tab: "which version did I
+ * send them?" is application state, not activity, and it was the one thing on
+ * that page unrelated to attached files.
+ */
+export const load: PageServerLoad = async ({ parent }) => {
+  const layoutData = await parent();
+  if (!layoutData.selectedProfile) return {};
+
+  const requiredSkills = layoutData.application?.job?.skills_required;
+
+  const [profileVersions, hiddenRequiredSkills] = await Promise.all([
+    db.query.profile_versions.findMany({
+      where: and(
+        eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+        eq(profile_versions.status, "published"),
+      ),
+      columns: { slug: true, name: true },
+      orderBy: asc(profile_versions.sort),
+    }),
+    // Precomputed for every template x version pair rather than just the saved
+    // one: the type and version pickers are unsaved client state, so the page
+    // must be able to answer for whatever the applicant is currently eyeing.
+    getHiddenRequiredSkills(
+      layoutData.selectedProfile.id,
+      Array.isArray(requiredSkills) ? requiredSkills as string[] : [],
+    ),
+  ]);
+
+  return {
+    versions: profileVersions.filter((v) => v.slug && v.name) as {
+      slug: string;
+      name: string;
+    }[],
+    hiddenRequiredSkills,
+  };
 };
 
 export const actions: Actions = {
@@ -21,7 +61,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -69,7 +112,9 @@ export const actions: Actions = {
       updateData.status_action = null;
     }
 
-    await db.update(applications).set(updateData).where(eq(applications.id, appId));
+    await db.update(applications).set(updateData).where(
+      eq(applications.id, appId),
+    );
 
     // If still in the initial phase (from_status is null = the creation entry),
     // and the phase hasn't changed, replace that initial entry instead of creating a new one.
@@ -128,7 +173,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -136,8 +184,14 @@ export const actions: Actions = {
     const text = (formData.get("text") as string)?.trim();
     if (!text) return fail(400, { error: "Note text is required" });
 
-    const notes = (existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
-    notes.push({ id: crypto.randomUUID(), text, created_at: new Date().toISOString() });
+    const notes = (existing.application_notes as Array<
+      { id: string; text: string; created_at: string }
+    >) || [];
+    notes.push({
+      id: crypto.randomUUID(),
+      text,
+      created_at: new Date().toISOString(),
+    });
 
     await db.update(applications).set({
       application_notes: notes,
@@ -158,7 +212,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -167,7 +224,9 @@ export const actions: Actions = {
     const text = (formData.get("text") as string)?.trim();
     if (!text) return fail(400, { error: "Note text is required" });
 
-    const notes = (existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
+    const notes = (existing.application_notes as Array<
+      { id: string; text: string; created_at: string }
+    >) || [];
     const note = notes.find((n) => n.id === noteId);
     if (!note) return fail(404, { error: "Note not found" });
     note.text = text;
@@ -191,14 +250,19 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     const formData = await request.formData();
     const noteId = formData.get("note_id") as string;
 
-    const notes = (existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
+    const notes = (existing.application_notes as Array<
+      { id: string; text: string; created_at: string }
+    >) || [];
     const filtered = notes.filter((n) => n.id !== noteId);
 
     await db.update(applications).set({
@@ -220,7 +284,10 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
@@ -256,12 +323,46 @@ export const actions: Actions = {
     if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
 
     const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
     });
     if (!existing) return fail(404, { error: "Application not found" });
 
     await db.delete(applications).where(eq(applications.id, appId));
 
     redirect(303, "/applications/active");
+  },
+
+  setCvSent: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) return fail(401, { error: "Not authenticated" });
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) return fail(400, { error: "No profile selected" });
+
+    const appId = parseInt(params.id);
+    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+
+    const existing = await db.query.applications.findFirst({
+      where: and(
+        eq(applications.id, appId),
+        eq(applications.profile_id, profileId),
+      ),
+    });
+    if (!existing) return fail(404, { error: "Application not found" });
+
+    const formData = await request.formData();
+    const versionSlug = (formData.get("version_slug") as string) || null;
+    const cvSentThrough = (formData.get("cv_sent_through") as string) || null;
+
+    await db.update(applications).set({
+      cv_version_sent: versionSlug,
+      cv_sent_through: cvSentThrough,
+      date_updated: new Date(),
+    }).where(eq(applications.id, appId));
+
+    return { success: true };
   },
 };

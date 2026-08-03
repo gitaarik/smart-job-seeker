@@ -70,7 +70,7 @@
     for (const p of file.profiles || []) {
       labels.push({ label: "Source CV", detail: p.name || `Profile #${p.id}` });
     }
-    for (const af of file.applications_files || []) {
+    for (const af of file.application_records || []) {
       const app = af.application;
       if (app) {
         const job = app.job;

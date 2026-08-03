@@ -1,5 +1,5 @@
 /**
- * File download for an application's attached documents.
+ * File download for an application's attached files.
  *
  * Deliberately on its own route rather than alongside +page.svelte: where a
  * page and an endpoint share a route, SvelteKit prefers the page for any
@@ -10,7 +10,11 @@ import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { and, eq } from "drizzle-orm";
-import { applications, applications_files, files } from "$lib/server/db/schema";
+import {
+  application_records,
+  applications,
+  files,
+} from "$lib/server/db/schema";
 import { getFile } from "$lib/server/files";
 import { getSelectedProfileId } from "../../../../profile/utils";
 
@@ -35,15 +39,17 @@ export const GET: RequestHandler = async ({ url, locals, cookies, params }) => {
   const fileId = url.searchParams.get("fileId");
   if (!fileId) error(400, "File ID required");
 
-  // Verify file belongs to this application (either as attached file or CV sent)
-  const isAttached = await db.query.applications_files.findFirst({
+  // Verify the file belongs to this application, as an Activity entry's
+  // attachment or as the CV that was sent.
+  const onRecord = await db.query.application_records.findFirst({
     where: and(
-      eq(applications_files.applications_id, appId),
-      eq(applications_files.file_id, fileId),
+      eq(application_records.application_id, appId),
+      eq(application_records.file_id, fileId),
     ),
+    columns: { id: true },
   });
   const isCvFile = application.cv_file_sent_id === fileId;
-  if (!isAttached && !isCvFile) {
+  if (!onRecord && !isCvFile) {
     error(403, "File not associated with this application");
   }
 

@@ -1,8 +1,16 @@
 import type { LayoutServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { eq, and, desc, asc } from "drizzle-orm";
-import { applications, application_letters, application_questions, application_activity_log, application_records, application_status_log, letter_versions, profile_versions } from "$lib/server/db/schema";
+import { and, asc, desc, eq } from "drizzle-orm";
+import {
+  application_letters,
+  application_questions,
+  application_records,
+  application_status_log,
+  applications,
+  letter_versions,
+  profile_versions,
+} from "$lib/server/db/schema";
 
 export const load: LayoutServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -17,7 +25,10 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
   }
 
   const application = await db.query.applications.findFirst({
-    where: and(eq(applications.id, appId), eq(applications.profile_id, layoutData.selectedProfile.id)),
+    where: and(
+      eq(applications.id, appId),
+      eq(applications.profile_id, layoutData.selectedProfile.id),
+    ),
     with: {
       job: {
         with: {
@@ -38,9 +49,6 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
       application_questions: {
         orderBy: asc(application_questions.sort),
       },
-      application_activity_logs: {
-        orderBy: desc(application_activity_log.date),
-      },
       application_status_logs: {
         orderBy: desc(application_status_log.date_created),
       },
@@ -55,18 +63,10 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
           // For the Activity stream's attachment affordance — a record can now
           // carry the file its text was extracted from.
           file: {
-            columns: { id: true, filename_download: true, type: true, title: true },
-          },
-        },
-      },
-      applications_files: {
-        with: {
-          file: {
             columns: {
               id: true,
               filename_download: true,
               type: true,
-              filesize: true,
               title: true,
             },
           },
@@ -92,7 +92,10 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
   let cvVersionName: string | null = null;
   if (application.cv_version_sent) {
     const version = await db.query.profile_versions.findFirst({
-      where: and(eq(profile_versions.slug, application.cv_version_sent), eq(profile_versions.profile_id, layoutData.selectedProfile.id)),
+      where: and(
+        eq(profile_versions.slug, application.cv_version_sent),
+        eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+      ),
       columns: { name: true },
     });
     cvVersionName = version?.name || null;

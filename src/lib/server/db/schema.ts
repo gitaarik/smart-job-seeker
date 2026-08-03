@@ -585,49 +585,6 @@ export const ai_prompts = pgTable("ai_prompts", {
   ),
 ]);
 
-export const application_activity_log = pgTable("application_activity_log", {
-  id: serial().primaryKey().notNull(),
-  date_created: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
-  date_updated: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
-  date: date(),
-  title: varchar({ length: 255 }),
-  note: text(),
-  application_id: integer(),
-}, (table) => [
-  foreignKey({
-    columns: [table.application_id],
-    foreignColumns: [applications.id],
-    name: "application_activity_log_application_foreign",
-  }).onDelete("cascade"),
-]);
-
-export const applications_files = pgTable("applications_files", {
-  id: serial().primaryKey().notNull(),
-  applications_id: integer(),
-  file_id: uuid(),
-  // Cached extracted text of the attached file, for AI-generation context (the
-  // "Documents" tab). Extraction is lazy — done on first use by a generator via
-  // the shared extractUpload orchestrator; see ai-chat/application-documents.ts.
-  // The raw bytes are retained (the tab is a download feature), so file_id is
-  // immutable: a "pending" status means "never extracted", and "skipped" (an
-  // unsupported type or a file with no extractable text) is terminal.
-  extracted_text: text(),
-  extraction_status: varchar({ length: 32 }).default("pending").notNull(),
-  extraction_error: text(),
-  date_extracted: timestamp({ withTimezone: true, mode: "date" }),
-}, (table) => [
-  foreignKey({
-    columns: [table.applications_id],
-    foreignColumns: [applications.id],
-    name: "applications_files_applications_id_foreign",
-  }).onDelete("set null"),
-  foreignKey({
-    columns: [table.file_id],
-    foreignColumns: [files.id],
-    name: "applications_files_file_id_foreign",
-  }).onDelete("set null"),
-]);
-
 export const collected_data = pgTable("collected_data", {
   id: serial().primaryKey().notNull(),
   date_updated: timestamp({ withTimezone: true, mode: "date" }),
@@ -3706,9 +3663,6 @@ export type ProfileDocumentProjects =
 export type ProfileDocumentFiles = typeof profile_document_files.$inferSelect;
 export type AiChatTemplates = typeof ai_chat_templates.$inferSelect;
 export type AiPrompts = typeof ai_prompts.$inferSelect;
-export type ApplicationActivityLog =
-  typeof application_activity_log.$inferSelect;
-export type ApplicationsFiles = typeof applications_files.$inferSelect;
 export type CollectedData = typeof collected_data.$inferSelect;
 export type Config = typeof config.$inferSelect;
 export type Education = typeof education.$inferSelect;

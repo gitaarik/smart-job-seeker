@@ -37,6 +37,7 @@
     getQuickStatusActions,
   } from "$lib/application-status";
   import StatusStepper from "./StatusStepper.svelte";
+  import CvSentCard from "./CvSentCard.svelte";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
   import { formatDate as fmtDate } from "$lib/format-date";
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
@@ -119,7 +120,9 @@
 
   let letterCount = $derived(app.application_letters?.length || 0);
   let questionCount = $derived(app.application_questions?.length || 0);
-  let fileCount = $derived(app.applications_files?.length || 0);
+  let fileCount = $derived(
+    (app.application_records ?? []).filter((r) => r.file_id).length,
+  );
   let statusLogCount = $derived(app.application_status_logs?.length || 0);
   let recentStatusLog = $derived(
     app.application_status_logs?.slice(0, 5) || [],
@@ -348,9 +351,9 @@
           <div class="flex items-center gap-1.5">
             <FontAwesomeIcon icon={faFileAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
             <span class="text-[var(--dash-text-secondary)]">{dt === "cv" ? "CV" : "Resume"} sent</span>
-            <a href="/applications/{app.id}/documents" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+            <span class="text-[var(--dash-text)] font-medium">
               {data.cvVersionName || (dt === "cv" ? "CV" : "Resume")}
-            </a>
+            </span>
             {#if app.cv_version_sent && profileSlug}
               <a
                 href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
@@ -395,7 +398,7 @@
               <FontAwesomeIcon icon={faFileAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
               Documents
             </span>
-            <a href="/applications/{app.id}/documents" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
+            <a href="/applications/{app.id}/activity" class="text-[var(--dash-text)] font-medium hover:text-[var(--dash-primary)] transition-colors">
               {fileCount} attached
             </a>
           </div>
@@ -420,23 +423,13 @@
 
       <!-- Footer links -->
       <div class="flex flex-wrap items-center gap-4 -mx-6 -mb-6 mt-2 px-6 py-3 border-t border-[var(--dash-border)]">
-        {#if !app.cv_sent_through}
-          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
-            Set resume/CV <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-          </a>
-        {/if}
         <a href="/applications/{app.id}/texts" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
           Write texts <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
         </a>
-        {#if fileCount === 0}
-          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
-            Add documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-          </a>
-        {:else}
-          <a href="/applications/{app.id}/documents" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
-            Manage documents <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
-          </a>
-        {/if}
+        <a href="/applications/{app.id}/activity" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
+          {fileCount === 0 ? "Log activity" : "Open activity"}
+          <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+        </a>
         {#if !app.salary_expectation}
           <a href="/applications/{app.id}/salary" class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline whitespace-nowrap">
             Set salary <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
@@ -445,6 +438,13 @@
       </div>
     </div>
   </Card>
+
+  <CvSentCard
+    {app}
+    versions={data.versions ?? []}
+    hiddenRequiredSkills={data.hiddenRequiredSkills ?? {}}
+    {profileSlug}
+  />
 
   <!-- Notes -->
   <Card padding="lg">
@@ -613,7 +613,7 @@
         </div>
         {#if statusLogCount > 5}
           <a
-            href="/applications/{app.id}/timeline"
+            href="/applications/{app.id}/activity"
             class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
           >
             View all ({statusLogCount})
@@ -673,7 +673,7 @@
 
       {#if statusLogCount <= 5 && statusLogCount > 0}
         <a
-          href="/applications/{app.id}/timeline"
+          href="/applications/{app.id}/activity"
           class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline pt-2"
         >
           View full timeline
