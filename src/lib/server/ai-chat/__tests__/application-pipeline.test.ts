@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  describeOffer,
   formatPipelineContext,
   type PipelineRow,
 } from "../application-pipeline";
@@ -31,6 +32,8 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
     matchRecommendation: "strong",
     entryCount: 5,
     hasOffer: false,
+    summary: null,
+    offer: null,
     employerContact: true,
     ...over,
   };
@@ -161,5 +164,71 @@ describe("formatPipelineContext", () => {
       row({ id: 42, title: null, company: null }),
     ]);
     expect(out).toContain("application #42");
+  });
+
+  // The digest is what turns a counting line into a saying-something line.
+  it("carries the standing summary when there is one", () => {
+    const out = formatPipelineContext([
+      row({ summary: "Waiting on their feedback since the technical round." }),
+    ]);
+    expect(out).toContain("Waiting on their feedback");
+  });
+
+  it("flattens a multi-line summary so one application stays one block", () => {
+    const out = formatPipelineContext([
+      row({ summary: "First line.\n\nSecond line." }),
+    ]);
+    expect(out).toContain("First line. Second line.");
+  });
+});
+
+describe("describeOffer", () => {
+  const terms = {
+    base: 92000,
+    bonus: null,
+    equity: null,
+    currency: "EUR",
+    period: "year",
+    start_date: null,
+    respond_by: null,
+    notes: null,
+  };
+
+  it("states the terms as offered", () => {
+    expect(describeOffer(terms)).toBe("EUR 92,000/year");
+  });
+
+  // The only field here with a deadline attached, and missing it costs the
+  // applicant the offer — so it is shouted, not tucked in.
+  it("shouts a response deadline", () => {
+    const out = describeOffer({ ...terms, respond_by: "2026-08-15" });
+    expect(out).toContain("RESPOND BY 2026-08-15");
+  });
+
+  it("survives an offer whose terms were never stated", () => {
+    expect(
+      describeOffer({
+        base: null,
+        bonus: null,
+        equity: null,
+        currency: null,
+        period: null,
+        start_date: null,
+        respond_by: null,
+        notes: null,
+      }),
+    ).toBe("terms not stated");
+  });
+
+  it("keeps bonus, equity and free-text notes", () => {
+    const out = describeOffer({
+      ...terms,
+      bonus: "10% annual",
+      equity: "0.15% over 4 years",
+      notes: "27 days leave",
+    });
+    expect(out).toContain("bonus 10% annual");
+    expect(out).toContain("equity 0.15% over 4 years");
+    expect(out).toContain("27 days leave");
   });
 });

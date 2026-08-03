@@ -43,6 +43,7 @@ import {
   rateToHourly,
 } from "$lib/salary/conversion";
 import { getStatusLabel, isFinishedStatus } from "$lib/application-status";
+import type { OfferTerms } from "./application-summary";
 
 /**
  * Cap on applications rendered. Set well above a realistic open pipeline so it
@@ -76,6 +77,13 @@ export interface PipelineRow {
   /** What depth exists, so the model knows when to say "I can look that up". */
   entryCount: number;
   hasOffer: boolean;
+  /** The standing digest, when one has been generated. */
+  summary: string | null;
+  /**
+   * Offer terms as extracted fields. This is what turns "an offer exists" into
+   * "which offer is better" — the answer the spine could not give before.
+   */
+  offer: OfferTerms | null;
   /**
    * Whether anyone from the employer has been recorded on this application.
    * NULL means nothing has been analysed yet, which is NOT the same as "nobody
@@ -87,6 +95,30 @@ export interface PipelineRow {
 
 const dash = (v: string | number | null | undefined) =>
   v === null || v === undefined || v === "" ? "—" : String(v);
+
+/**
+ * The offer's terms, as offered. Deliberately NOT converted: a comparison the
+ * model makes across currencies is its own business, but quoting a converted
+ * number as what an employer put in writing would be a fabrication about the
+ * most consequential thing in the product.
+ */
+export function describeOffer(o: OfferTerms): string {
+  const parts: string[] = [];
+  if (o.base !== null) {
+    parts.push(
+      [o.currency, o.base.toLocaleString()].filter(Boolean).join(" ") +
+        (o.period ? `/${o.period}` : ""),
+    );
+  }
+  if (o.bonus) parts.push(`bonus ${o.bonus}`);
+  if (o.equity) parts.push(`equity ${o.equity}`);
+  if (o.start_date) parts.push(`starts ${o.start_date}`);
+  // Last, and labelled loudly: it is the only field here with a deadline
+  // attached, and missing it costs the applicant the offer.
+  if (o.respond_by) parts.push(`RESPOND BY ${o.respond_by}`);
+  if (o.notes) parts.push(o.notes);
+  return parts.length > 0 ? parts.join(" · ") : "terms not stated";
+}
 
 /**
  * Render the pipeline as a prompt block. Pure — no DB — so both the layout and
@@ -132,7 +164,9 @@ export function formatPipelineContext(
       `  ${stage} · ${stalled} · applied ${dash(r.appliedOn)}`,
       `  ${pay} · ${dash(r.workLocation)} · ${match}`,
       `  ${depth}`,
-    ].join("\n");
+      r.offer ? `  OFFER: ${describeOffer(r.offer)}` : null,
+      r.summary ? `  ${r.summary.replace(/\s+/g, " ").trim()}` : null,
+    ].filter(Boolean).join("\n");
   });
 
   const omission = opts.omitted && opts.omitted > 0
@@ -160,6 +194,10 @@ export function formatPipelineContext(
     "of the application they are ON, but not of the others. If they ask for",
     "detail about another one, say it is on that application's page rather than",
     "inventing it.",
+    "",
+    "An OFFER line carries terms exactly as they were offered — quote those",
+    "verbatim and never convert them. A RESPOND BY date is a deadline: if one",
+    "is close, say so unprompted, because missing it costs the offer.",
     "",
     "Salary figures in brackets are converted to one currency and period so",
     "they can be ranked. Quote the figure as written, never the converted one,",
@@ -255,6 +293,8 @@ export async function applicationPipelineText(
         application_sent_date: true,
         date_updated: true,
         date_created: true,
+        context_summary: true,
+        offer_terms: true,
       },
       with: {
         job: {
@@ -334,9 +374,15 @@ export async function applicationPipelineText(
         matchScore: null,
         matchRecommendation: null,
         entryCount: entries.length,
-        hasOffer: entries.some((e) =>
-          e.record_type === "offer" || e.record_type === "contract"
-        ),
+        summary: a.context_summary,
+        offer: a.offer_terms ?? null,
+        // True from either direction: an entry typed as an offer, or terms
+        // actually extracted. The type alone is what shows before the
+        // summariser has run.
+        hasOffer: !!a.offer_terms ||
+          entries.some((e) =>
+            e.record_type === "offer" || e.record_type === "contract"
+          ),
         // Unknown until something has actually looked. Reporting "no contact"
         // for an un-analysed application would make it look stalled when it
         // may be the most active one.

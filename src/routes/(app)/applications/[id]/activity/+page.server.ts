@@ -8,6 +8,7 @@ import { deriveRecordTitle, recordTypeValues } from "$lib/application-records";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import { extractRecordFile } from "$lib/server/ai-chat/application-activity";
 import { deriveRecordMetadata } from "$lib/server/ai-chat/record-derivation";
+import { summarizeApplication } from "$lib/server/ai-chat/application-summary";
 import { Buffer } from "buffer";
 
 /**
@@ -140,6 +141,9 @@ export const actions: Actions = {
     // extract action instead — there would be nothing to read here.
     if (!fileId) {
       await deriveRecordMetadata(created.id, resolved.profileId);
+      // After derivation, so the digest sees the real type and contacts rather
+      // than the write-time fallbacks.
+      await summarizeApplication(resolved.app.id, resolved.profileId);
     }
 
     // Reported so the client can kick off extraction as a second request —
@@ -178,7 +182,10 @@ export const actions: Actions = {
     const text = await extractRecordFile(id);
     // Now there is content to read, so this is where a file-backed entry gets
     // its real title, type, date and contacts.
-    if (text) await deriveRecordMetadata(id, resolved.profileId);
+    if (text) {
+      await deriveRecordMetadata(id, resolved.profileId);
+      await summarizeApplication(resolved.app.id, resolved.profileId);
+    }
     // A file with no extractable text (an image, a scan) is not an error — the
     // entry and the download still stand. extractRecordFile has already marked
     // it "skipped" so nothing retries it.
@@ -223,6 +230,7 @@ export const actions: Actions = {
       date_updated: new Date(),
     }).where(eq(application_records.id, id));
 
+    await summarizeApplication(resolved.app.id, resolved.profileId);
     return { success: true };
   },
 
@@ -255,6 +263,9 @@ export const actions: Actions = {
       }
     }
 
+    // A deletion changes the digest as surely as an addition does, and a
+    // summary describing an entry that no longer exists is worse than none.
+    await summarizeApplication(resolved.app.id, resolved.profileId);
     return { success: true };
   },
 };

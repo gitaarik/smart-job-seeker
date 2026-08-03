@@ -329,6 +329,40 @@ export const deriveRecordMetadataSchema = z.object({
 });
 
 /**
+ * Schema for summarize_application.
+ *
+ * Loose on the wire for the same reason as deriveRecordMetadataSchema: a
+ * `.transform()` here throws "Transforms cannot be represented in JSON Schema"
+ * under LangChain. Every key required, because gpt-oss omits nullable ones and
+ * an absent `offer` is indistinguishable from "there is no offer" — which is
+ * exactly the distinction the comparison spine turns on.
+ */
+export const summarizeApplicationSchema = z.object({
+  summary: z.string().describe(
+    "3-6 sentences on where this application stands and what has happened.",
+  ),
+  offer: z.object({
+    base: z.union([z.number(), z.string()]).nullable().describe(
+      "Base salary as a number, or null.",
+    ),
+    // string|number throughout, because gpt-oss returns "0.15% over 4 years"
+    // for one offer and the bare number 0.15 for the next. Measured: a strict
+    // z.string() here failed the whole parse on `equity`, losing the summary
+    // and the deadline along with it. Tightening happens in coerceOffer, on
+    // our side of the boundary — see the same lesson in record-derivation.ts.
+    bonus: z.union([z.string(), z.number()]).nullable(),
+    equity: z.union([z.string(), z.number()]).nullable(),
+    currency: z.string().nullable().describe("ISO code, e.g. EUR."),
+    period: z.string().nullable().describe("year, month, day or hour."),
+    start_date: z.string().nullable().describe("YYYY-MM-DD or null."),
+    respond_by: z.string().nullable().describe("YYYY-MM-DD or null."),
+    notes: z.union([z.string(), z.number()]).nullable(),
+  }).nullable().describe(
+    "The offer's terms, or null when no offer has been made.",
+  ),
+});
+
+/**
  * Preprocess to normalize the "text" key from LLMs that use alternative names
  * (e.g. "coverLetter", "cover_letter", "letter", "content", "email")
  */
@@ -637,6 +671,7 @@ export const extractDocumentSchema = z.object({
 export const aiPromptSchemas = {
   extract_job_data: extractJobDataSchema,
   derive_record_metadata: deriveRecordMetadataSchema,
+  summarize_application: summarizeApplicationSchema,
   extract_document: extractDocumentSchema,
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,

@@ -1957,6 +1957,44 @@ export const applications = pgTable("applications", {
   status_action: varchar({ length: 255 }),
   status_action_date: date(),
   cv_version_sent: varchar({ length: 255 }),
+  /**
+   * A digest of everything recorded on this application, for the
+   * cross-application comparison spine. The spine can afford one line per
+   * application, not their histories — this is what makes that line say
+   * something rather than only count things.
+   *
+   * Regenerated FROM SOURCE, never revised incrementally: "old summary + a new
+   * entry -> revised summary" compounds errors and squeezes out early detail
+   * over time. For a handful of entries a clean pass is cheap and correct.
+   */
+  context_summary: text(),
+  /**
+   * sha256 over the entries the summary was built from. Gates regeneration, so
+   * an edit that does not change what the summary depends on costs nothing.
+   */
+  context_summary_hash: varchar({ length: 64 }),
+  context_summary_at: timestamp({ withTimezone: true, mode: "date" }),
+  /**
+   * Offer terms as structured data rather than prose.
+   *
+   * Extracted by the same pass as the summary. The point is that comparing two
+   * offers stops being re-extraction from two prose blobs at answer time, with
+   * no consistency guarantee, on the single highest-stakes question in the
+   * product. It also surfaces `respond_by`, which is urgent, actionable and
+   * completely invisible today.
+   */
+  offer_terms: jsonb().$type<
+    {
+      base: number | null;
+      bonus: string | null;
+      equity: string | null;
+      currency: string | null;
+      period: string | null;
+      start_date: string | null;
+      respond_by: string | null;
+      notes: string | null;
+    } | null
+  >(),
 }, (table) => [
   index("applications_profile_status_updated_idx").on(
     table.profile_id,
