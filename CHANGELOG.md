@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.9.0] - 2026-08-03
+
+68 commits since v0.8.0.
+
+### Added
+- Standing per-application summary, kept up to date as you add to its history
+- AI assistant can compare an application against the rest of your pipeline,
+  including offer terms and response deadlines
+- Unified Activity timeline merging records and documents into one stream
+- Activity composer for managing application history and notes
+- AI proposal editing with multiple edits per turn, each shown as its own card
+- Editable job skill pills inline in job listings
+- Job skill category picker in the add-skill popover
+- Profile-only skills that match internally but stay off exported documents
+- Manual job title editing for user-created jobs
+- Evidence context preservation in AI revision turns
+- AI assistant on the applications list can compare and rank across everything
+  in progress
+
+### Changed
+- Activity record metadata now derived automatically from application content
+- Scraper's cookie/CMP dismissal handling improved with frame-aware autoconsent execution
+
+### Fixed
+- Profile-only skills now correctly included in job matching
+- Add-skill popover no longer closes unexpectedly on open
+- High-severity dependency security vulnerabilities
+- FontAwesome package suite aligned to v7
+- TypeScript 7 compatibility
+
 ## [0.8.0] - 2026-07-31
 
 44 commits since v0.7.2.
