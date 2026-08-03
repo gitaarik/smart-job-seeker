@@ -2287,25 +2287,6 @@ export const agent_messages = pgTable("agent_messages", {
   profile_id: integer(),
   // Links an assistant turn to its ai_chats audit row for token/credit accounting.
   ai_chat_id: integer(),
-  /**
-   * An edit this turn proposed, pending the user's decision — see
-   * ai-chat/capabilities.ts. Stored rather than held client-side because
-   * threads resume for 12h and the card has to come back with them; it also
-   * gives `proposal_applied_at` somewhere to hang, so an applied proposal shows
-   * as applied instead of being offered a second time.
-   *
-   * The payload is the model's, so it is re-validated and re-authorized at
-   * apply time. Nothing here is trusted on the way back out.
-   */
-  proposal: jsonb().$type<
-    {
-      capability: string;
-      rationale: string;
-      fields: Record<string, unknown>;
-      target: { id: number; label: string };
-    } | null
-  >(),
-  proposal_applied_at: timestamp({ withTimezone: true, mode: "date" }),
   date_created: timestamp({ withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
@@ -2324,6 +2305,42 @@ export const agent_messages = pgTable("agent_messages", {
     foreignColumns: [ai_chats.id],
     name: "agent_messages_ai_chat_foreign",
   }).onDelete("set null"),
+]);
+
+/**
+ * Edits an assistant turn proposed, each pending its own decision — see
+ * ai-chat/capabilities.ts.
+ *
+ * A row per proposal rather than a column on the turn, because one message can
+ * propose several: asked to fix a salary *and* rewrite a description, the
+ * assistant answers with one entry per capability, and each becomes its own
+ * card with its own Apply button. That is the whole reason this is a table —
+ * `applied_at` has to be per proposal, or accepting the salary fix would mark
+ * the rewrite accepted too.
+ *
+ * `fields` and `rationale` are the model's, so both are re-validated and
+ * re-authorized at apply time. Nothing here is trusted on the way back out.
+ */
+export const agent_message_proposals = pgTable("agent_message_proposals", {
+  id: serial().primaryKey().notNull(),
+  message_id: integer().notNull(),
+  /** A key of CAPABILITIES. Text, not an enum: the registry is the authority. */
+  capability: varchar({ length: 64 }).notNull(),
+  rationale: text().notNull().default(""),
+  fields: jsonb().$type<Record<string, unknown>>().notNull(),
+  target: jsonb().$type<{ id: number; label: string }>().notNull(),
+  applied_at: timestamp({ withTimezone: true, mode: "date" }),
+  date_created: timestamp({ withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  // Every read is "the proposals for these messages" — the transcript endpoint
+  // fetches them for a whole thread at once.
+  index("agent_message_proposals_message_idx").on(table.message_id),
+  foreignKey({
+    columns: [table.message_id],
+    foreignColumns: [agent_messages.id],
+    name: "agent_message_proposals_message_foreign",
+  }).onDelete("cascade"),
 ]);
 
 export const search_tasks_job_sites = pgTable("search_tasks_job_sites", {

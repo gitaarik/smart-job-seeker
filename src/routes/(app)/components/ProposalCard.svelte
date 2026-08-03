@@ -1,7 +1,8 @@
 <script lang="ts" module>
   /** A pending (or applied) edit the assistant proposed. Shaped by the API. */
   export type Proposal = {
-    message_id: number;
+    /** agent_message_proposals row — one turn can carry several. */
+    id: number;
     capability: string;
     title: string;
     rationale: string;
@@ -52,7 +53,7 @@
     error = "";
     try {
       const res = await fetch(
-        `/api/ai/agent/proposals/${proposal.message_id}/apply`,
+        `/api/ai/agent/proposals/${proposal.id}/apply`,
         { method: "POST" },
       );
       const data = await res.json().catch(() => null);

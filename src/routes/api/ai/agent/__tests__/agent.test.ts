@@ -16,6 +16,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockCreateAndGenerate = vi.fn();
 const mockResolveChatContext = vi.fn();
 const mockInsertValues = vi.fn();
+const mockProposalInsert = vi.fn();
 const mockRequireCredits = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("$lib/server/db", () => {
@@ -28,9 +29,21 @@ vi.mock("$lib/server/db", () => {
   return {
     dbDirect: {
       select: () => selectChain,
-      insert: () => ({
-        values: (...a: unknown[]) => {
-          mockInsertValues(...a);
+      // Keyed on the table, because the two inserts are no longer
+      // interchangeable: the message insert's second row is the assistant turn
+      // the proposals hang off, and the proposal insert returns one id per
+      // proposal — which is what the client posts back to apply one.
+      insert: (table: { _name?: string }) => ({
+        values: (rows: unknown) => {
+          if (table?._name === "agent_message_proposals") {
+            mockProposalInsert(rows);
+            const list = Array.isArray(rows) ? rows : [rows];
+            return {
+              returning: () =>
+                Promise.resolve(list.map((_, i) => ({ id: 900 + i }))),
+            };
+          }
+          mockInsertValues(rows);
           return {
             returning: () => Promise.resolve([{ id: 100 }, { id: 101 }]),
           };
@@ -50,6 +63,7 @@ vi.mock("drizzle-orm", () => ({
 vi.mock("$lib/server/db/schema", () => ({
   agent_conversations: { id: "ac.id", user_id: "ac.user_id" },
   agent_messages: { id: "am.id", conversation_id: "am.conversation_id" },
+  agent_message_proposals: { _name: "agent_message_proposals", id: "amp.id" },
 }));
 
 vi.mock("$lib/server/utils/api-helpers", () => ({
@@ -190,11 +204,11 @@ describe("capability routing", () => {
         id: 7,
         response: JSON.stringify({
           reply: "I can do that.",
-          proposal: {
+          proposals: [{
             capability: "edit_job_details",
             rationale: "You asked.",
             changes: [{ field: "salary_min", value: 6 }],
-          },
+          }],
         }),
       },
     });
@@ -209,10 +223,16 @@ describe("capability routing", () => {
       "CAPABILITY BLOCK",
     );
     expect(body.reply).toBe("I can do that.");
-    expect(body.proposal).toMatchObject({
+    expect(body.proposals).toHaveLength(1);
+    // The id the card posts back is the proposal row's, not the message's.
+    expect(body.proposals[0]).toMatchObject({
       capability: "edit_job_details",
-      message_id: 101,
+      id: 900,
     });
+    // And it hangs off the assistant turn, which is the second inserted row.
+    expect(mockProposalInsert).toHaveBeenCalledWith([
+      expect.objectContaining({ message_id: 101 }),
+    ]);
   });
 
   it("resolves capabilities against the session's staff flag", async () => {
@@ -245,7 +265,7 @@ describe("degrading a bad structured reply", () => {
 
     const body = await (await POST(event())).json();
     expect(body.reply).toBe("Sorry, plain text here.");
-    expect(body.proposal).toBeNull();
+    expect(body.proposals).toEqual([]);
   });
 
   it("drops a proposal naming a capability that wasn't live", async () => {
@@ -255,18 +275,18 @@ describe("degrading a bad structured reply", () => {
         id: 7,
         response: JSON.stringify({
           reply: "Done.",
-          proposal: {
+          proposals: [{
             capability: "edit_application_details",
             rationale: "x",
             changes: [{ field: "cv_sent_through", value: "LinkedIn" }],
-          },
+          }],
         }),
       },
     });
 
     const body = await (await POST(event())).json();
     expect(body.reply).toBe("Done.");
-    expect(body.proposal).toBeNull();
+    expect(body.proposals).toEqual([]);
   });
 
   it("drops a proposal with no usable changes", async () => {
@@ -276,17 +296,77 @@ describe("degrading a bad structured reply", () => {
         id: 7,
         response: JSON.stringify({
           reply: "Nothing to change.",
-          proposal: {
+          proposals: [{
             capability: "edit_job_details",
             rationale: "x",
             changes: [],
-          },
+          }],
         }),
       },
     });
 
     const body = await (await POST(event())).json();
     expect(body.reply).toBe("Nothing to change.");
-    expect(body.proposal).toBeNull();
+    expect(body.proposals).toEqual([]);
+  });
+
+  it("keeps the good proposal when its partner is unusable", async () => {
+    // The point of separate cards: one bad entry must not take the other down
+    // with it. Under the old single-proposal shape this was not expressible.
+    mockCreateAndGenerate.mockResolvedValue({
+      success: true,
+      aiChat: {
+        id: 7,
+        response: JSON.stringify({
+          reply: "Did what I could.",
+          proposals: [
+            {
+              capability: "edit_application_details",
+              rationale: "not live here",
+              changes: [{ field: "cv_sent_through", value: "LinkedIn" }],
+            },
+            {
+              capability: "edit_job_details",
+              rationale: "live",
+              changes: [{ field: "salary_min", value: 6 }],
+            },
+          ],
+        }),
+      },
+    });
+
+    const body = await (await POST(event())).json();
+    expect(body.proposals).toHaveLength(1);
+    expect(body.proposals[0].capability).toBe("edit_job_details");
+  });
+
+  it("keeps one card per capability when the model repeats itself", async () => {
+    // Two cards over the same row would let the user apply both, and the
+    // second write would silently overwrite the first.
+    mockCreateAndGenerate.mockResolvedValue({
+      success: true,
+      aiChat: {
+        id: 7,
+        response: JSON.stringify({
+          reply: "Twice over.",
+          proposals: [
+            {
+              capability: "edit_job_details",
+              rationale: "first",
+              changes: [{ field: "salary_min", value: 6 }],
+            },
+            {
+              capability: "edit_job_details",
+              rationale: "second",
+              changes: [{ field: "salary_min", value: 9 }],
+            },
+          ],
+        }),
+      },
+    });
+
+    const body = await (await POST(event())).json();
+    expect(body.proposals).toHaveLength(1);
+    expect(body.proposals[0].rationale).toBe("first");
   });
 });

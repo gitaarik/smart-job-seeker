@@ -2,17 +2,25 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { and, eq } from "drizzle-orm";
-import { agent_conversations, agent_messages } from "$lib/server/db/schema";
+import {
+  agent_conversations,
+  agent_message_proposals,
+  agent_messages,
+} from "$lib/server/db/schema";
 import { requireAuth } from "$lib/server/utils/api-helpers";
 import {
-  type Capability,
   CAPABILITIES,
+  type Capability,
   pickCapabilityFields,
 } from "$lib/server/ai-chat/capabilities";
 
 /**
  * POST /api/ai/agent/proposals/:id/apply — commit an edit the assistant
- * proposed, where `:id` is the assistant `agent_messages` row that carries it.
+ * proposed, where `:id` is an `agent_message_proposals` row.
+ *
+ * Keyed on the proposal, not the turn that produced it: one message can propose
+ * several, each its own card, and accepting the salary fix must not mark the
+ * description rewrite accepted too.
  *
  * One endpoint for every capability, rather than routing each through the page
  * action that would otherwise do the write. Three reasons that isn't laziness:
@@ -27,41 +35,47 @@ import {
  * further down — in applyJobFields — rather than one calling the other.
  *
  * Everything is re-derived here. The stored payload came from a model, and the
- * message id came from the client; the only things trusted are the session and
+ * proposal id came from the client; the only things trusted are the session and
  * the database.
  */
 export const POST: RequestHandler = async ({ locals, params }) => {
   const user = requireAuth(locals);
 
-  const messageId = parseInt(params.id ?? "", 10);
-  if (Number.isNaN(messageId)) {
+  const proposalId = parseInt(params.id ?? "", 10);
+  if (Number.isNaN(proposalId)) {
     return json({ success: false, message: "Invalid proposal id." }, {
       status: 400,
     });
   }
 
-  // Join through the conversation: that is what ties this message to a user.
+  // Join out to the conversation: that is what ties this proposal to a user.
   const [row] = await db
     .select({
-      id: agent_messages.id,
+      id: agent_message_proposals.id,
       profile_id: agent_messages.profile_id,
-      proposal: agent_messages.proposal,
-      applied_at: agent_messages.proposal_applied_at,
+      capability: agent_message_proposals.capability,
+      fields: agent_message_proposals.fields,
+      target: agent_message_proposals.target,
+      applied_at: agent_message_proposals.applied_at,
     })
-    .from(agent_messages)
+    .from(agent_message_proposals)
+    .innerJoin(
+      agent_messages,
+      eq(agent_message_proposals.message_id, agent_messages.id),
+    )
     .innerJoin(
       agent_conversations,
       eq(agent_messages.conversation_id, agent_conversations.id),
     )
     .where(
       and(
-        eq(agent_messages.id, messageId),
+        eq(agent_message_proposals.id, proposalId),
         eq(agent_conversations.user_id, user.id),
       ),
     )
     .limit(1);
 
-  if (!row?.proposal) {
+  if (!row) {
     return json({ success: false, message: "Proposal not found." }, {
       status: 404,
     });
@@ -74,7 +88,7 @@ export const POST: RequestHandler = async ({ locals, params }) => {
     );
   }
 
-  const stored = row.proposal;
+  const stored = row;
   const capability = stored.capability as Capability;
   const def = CAPABILITIES[capability];
   if (!def) {
@@ -126,9 +140,9 @@ export const POST: RequestHandler = async ({ locals, params }) => {
   await def.apply(target, fields, current);
 
   await db
-    .update(agent_messages)
-    .set({ proposal_applied_at: new Date() })
-    .where(eq(agent_messages.id, messageId));
+    .update(agent_message_proposals)
+    .set({ applied_at: new Date() })
+    .where(eq(agent_message_proposals.id, proposalId));
 
   return json({ success: true });
 };

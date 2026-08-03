@@ -37,7 +37,10 @@ vi.mock("$lib/server/db", () => ({
 }));
 
 vi.mock("$lib/server/db/schema", () => ({
-  applications: { id: "applications.id", profile_id: "applications.profile_id" },
+  applications: {
+    id: "applications.id",
+    profile_id: "applications.profile_id",
+  },
   jobs: { id: "jobs.id" },
   job_importers: {},
 }));
@@ -55,8 +58,8 @@ vi.mock("$lib/server/jobs/edit-job", async (importOriginal) => ({
 
 import {
   buildProposalSchema,
-  type Capability,
   CAPABILITIES,
+  type Capability,
   describeProposalChanges,
   fieldsFromChanges,
   pickCapabilityFields,
@@ -397,7 +400,7 @@ describe("buildProposalSchema", () => {
     const schema = buildProposalSchema(["edit_job_details"]);
     const parsed = schema.parse({
       reply: "Sure.",
-      proposal: {
+      proposals: [{
         capability: "edit_job_details",
         rationale: "Matches the posting.",
         changes: [
@@ -405,11 +408,11 @@ describe("buildProposalSchema", () => {
           { field: "work_location", value: "remote" },
           { field: "job_types", value: ["contract"] },
         ],
-      },
+      }],
     });
 
-    expect(parsed.proposal?.changes[0].value).toBe("55,000");
-    expect(parsed.proposal?.changes[1].value).toBe("remote");
+    expect(parsed.proposals?.[0].changes[0].value).toBe("55,000");
+    expect(parsed.proposals?.[0].changes[1].value).toBe("remote");
   });
 
   it("rejects a field name outside the live capabilities", () => {
@@ -419,13 +422,45 @@ describe("buildProposalSchema", () => {
     expect(() =>
       schema.parse({
         reply: "x",
-        proposal: {
+        proposals: [{
           capability: "edit_job_description",
           rationale: "y",
           changes: [{ field: "salary_min", value: 1 }],
-        },
+        }],
       })
     ).toThrow();
+  });
+
+  it("carries two proposals from one turn", () => {
+    // The shape that removes the two-turn dance: a message asking for a field
+    // fix AND a rewrite comes back as two entries, which become two cards with
+    // independent Apply buttons. Measured against the real model before it was
+    // built — 3/3 runs returned both, populated.
+    const schema = buildProposalSchema([
+      "edit_job_details",
+      "edit_job_description",
+    ]);
+    const parsed = schema.parse({
+      reply: "Both done.",
+      proposals: [
+        {
+          capability: "edit_job_details",
+          rationale: "Corrects the salary.",
+          changes: [{ field: "salary_min", value: 120000 }],
+        },
+        {
+          capability: "edit_job_description",
+          rationale: "Leads with the migration.",
+          changes: [{ field: "job_description", value: "New text." }],
+        },
+      ],
+    });
+
+    expect(parsed.proposals).toHaveLength(2);
+    expect(parsed.proposals?.map((p) => p.capability)).toEqual([
+      "edit_job_details",
+      "edit_job_description",
+    ]);
   });
 
   it("folds a change list into coerced fields", () => {
@@ -463,10 +498,12 @@ describe("buildProposalSchema", () => {
     ).not.toThrow();
   });
 
-  it("treats an absent or null proposal as no proposal", () => {
+  it("treats absent, null or empty proposals as no proposal", () => {
     const schema = buildProposalSchema(["edit_job_details"]);
-    expect(schema.parse({ reply: "Just answering." }).proposal).toBeUndefined();
-    expect(schema.parse({ reply: "x", proposal: null }).proposal).toBeNull();
+    expect(schema.parse({ reply: "Just answering." }).proposals)
+      .toBeUndefined();
+    expect(schema.parse({ reply: "x", proposals: null }).proposals).toBeNull();
+    expect(schema.parse({ reply: "x", proposals: [] }).proposals).toEqual([]);
   });
 
   it("only admits the capabilities that are live this turn", () => {
@@ -474,11 +511,11 @@ describe("buildProposalSchema", () => {
     expect(() =>
       schema.parse({
         reply: "x",
-        proposal: {
+        proposals: [{
           capability: "edit_job_details",
           rationale: "y",
           changes: [],
-        },
+        }],
       })
     ).toThrow();
   });
@@ -587,7 +624,7 @@ describe("renderCapabilityPrompt", () => {
 
     const prompt = renderCapabilityPrompt(live);
     expect(prompt).toContain('"reply"');
-    expect(prompt).toContain('"proposal"');
+    expect(prompt).toContain('"proposals"');
     expect(prompt).toContain("edit_job_details");
     // The three rules that stop a partial edit losing or wiping data. `\s+`
     // because the contract is hard-wrapped prose — asserting on the wrapping
@@ -597,6 +634,10 @@ describe("renderCapabilityPrompt", () => {
     // The count-what-they-asked-for rule, which is what stopped the model
     // promising a salary change in its reply and then omitting it.
     expect(prompt).toMatch(/count\s+the\s+distinct\s+things/i);
+    // And the same rule one level up: two kinds of change asked for in one
+    // message must come back as two entries, not one plus an apology.
+    expect(prompt).toMatch(/TWO\s+entries/);
+    expect(prompt).toMatch(/separate\s+card/i);
   });
 
   it("shows the current values so the model proposes a diff", async () => {

@@ -2,7 +2,11 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { and, desc, eq } from "drizzle-orm";
-import { agent_conversations, agent_messages } from "$lib/server/db/schema";
+import {
+  agent_conversations,
+  agent_message_proposals,
+  agent_messages,
+} from "$lib/server/db/schema";
 import {
   requireAuth,
   requireProfileAccess,
@@ -14,8 +18,8 @@ import { createAndGenerateAiChat } from "$lib/server/ai-chat/utils";
 import { resolveChatContext } from "$lib/server/ai-chat/chat-context";
 import {
   buildProposalSchema,
-  type Capability,
   CAPABILITIES,
+  type Capability,
   describeProposalChanges,
   fieldsFromChanges,
   type LiveCapability,
@@ -106,45 +110,23 @@ function describeChanges(
   );
 }
 
+/** One entry of the model's `proposals` list, before any of it is trusted. */
+type ProposalCandidate = {
+  capability?: unknown;
+  rationale?: unknown;
+  changes?: unknown;
+};
+
 /**
- * Read a structured reply, keeping the message even when the proposal is
- * unusable.
- *
- * Every failure here degrades to "reply, no proposal" rather than failing the
- * turn. The user asked a question and the model answered it; a malformed or
- * unauthorized edit suggestion is not a reason to show them an error, and
- * silently dropping it is exactly the conservative direction — the worst case
- * is that a change they wanted isn't offered, and they ask again.
+ * Validate one candidate against the capabilities that were live this turn.
+ * Returns null for anything unusable — see readCapableReply for why that is
+ * always a drop rather than an error.
  */
-function readCapableReply(
-  raw: string,
+function readProposal(
+  candidate: ProposalCandidate,
   live: LiveCapability[],
-): { reply: string; proposal: StoredProposal | null } {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    // Structured output was requested but didn't come back as JSON. The text
-    // is still the assistant's answer.
-    return { reply: raw, proposal: null };
-  }
-
-  const body = parsed as {
-    reply?: unknown;
-    proposal?: {
-      capability?: unknown;
-      rationale?: unknown;
-      changes?: unknown;
-    } | null;
-  };
-  const reply = typeof body.reply === "string" && body.reply.trim()
-    ? body.reply
-    : raw;
-
-  const candidate = body.proposal;
-  if (!candidate || typeof candidate.capability !== "string") {
-    return { reply, proposal: null };
-  }
+): StoredProposal | null {
+  if (!candidate || typeof candidate.capability !== "string") return null;
 
   // Only a capability that was live for *this* turn, i.e. one already resolved
   // and authorized above. A model naming anything else is ignored outright.
@@ -153,7 +135,7 @@ function readCapableReply(
     console.warn(
       `[agent] dropped a proposal for un-live capability ${candidate.capability}`,
     );
-    return { reply, proposal: null };
+    return null;
   }
 
   const changes = Array.isArray(candidate.changes) ? candidate.changes : [];
@@ -161,26 +143,79 @@ function readCapableReply(
     match.capability,
     changes as { field: string; value: unknown }[],
   );
-  if (Object.keys(fields).length === 0) {
-    return { reply, proposal: null };
-  }
+  if (Object.keys(fields).length === 0) return null;
 
   const valid = CAPABILITIES[match.capability].validate(fields, match.current);
   if (!valid.ok) {
     console.warn(`[agent] dropped an invalid proposal: ${valid.error}`);
-    return { reply, proposal: null };
+    return null;
   }
 
   return {
+    capability: match.capability,
+    rationale: typeof candidate.rationale === "string"
+      ? candidate.rationale
+      : "",
+    fields,
+    target: match.target,
+  };
+}
+
+/**
+ * Read a structured reply, keeping the message even when the proposals are
+ * unusable.
+ *
+ * Every failure here degrades to "reply, fewer proposals" rather than failing
+ * the turn. The user asked a question and the model answered it; a malformed or
+ * unauthorized edit suggestion is not a reason to show them an error, and
+ * silently dropping it is exactly the conservative direction — the worst case
+ * is that a change they wanted isn't offered, and they ask again.
+ *
+ * Each entry is judged on its own: one bad proposal in a pair does not take the
+ * good one down with it, which is the point of them being separate cards.
+ */
+function readCapableReply(
+  raw: string,
+  live: LiveCapability[],
+): { reply: string; proposals: StoredProposal[] } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // Structured output was requested but didn't come back as JSON. The text
+    // is still the assistant's answer.
+    return { reply: raw, proposals: [] };
+  }
+
+  const body = parsed as {
+    reply?: unknown;
+    proposals?: unknown;
+  };
+  const reply = typeof body.reply === "string" && body.reply.trim()
+    ? body.reply
+    : raw;
+
+  const candidates = Array.isArray(body.proposals) ? body.proposals : [];
+  const proposals = candidates
+    .map((c) => readProposal(c as ProposalCandidate, live))
+    .filter((p): p is StoredProposal => p !== null);
+
+  // One card per capability. A model that splits the same capability across two
+  // entries would otherwise render two cards over the same row, where applying
+  // both means the second silently overwrites the first.
+  const seen = new Set<string>();
+  return {
     reply,
-    proposal: {
-      capability: match.capability,
-      rationale: typeof candidate.rationale === "string"
-        ? candidate.rationale
-        : "",
-      fields,
-      target: match.target,
-    },
+    proposals: proposals.filter((p) => {
+      if (seen.has(p.capability)) {
+        console.warn(
+          `[agent] dropped a duplicate proposal for ${p.capability}`,
+        );
+        return false;
+      }
+      seen.add(p.capability);
+      return true;
+    }),
   };
 }
 
@@ -265,7 +300,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     capable ? "personal_agent_chat_capable" : "personal_agent_chat",
     {
       message,
-      ...(capable ? { capabilities: renderCapabilityPrompt(capabilities) } : {}),
+      ...(capable
+        ? { capabilities: renderCapabilityPrompt(capabilities) }
+        : {}),
     },
     undefined,
     {
@@ -298,9 +335,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     );
   }
 
-  const { reply, proposal } = capable
+  const { reply, proposals } = capable
     ? readCapableReply(result.aiChat.response, capabilities)
-    : { reply: result.aiChat.response, proposal: null };
+    : { reply: result.aiChat.response, proposals: [] as StoredProposal[] };
   const now = new Date();
 
   // Persist only now that we have a reply: create the thread on first message,
@@ -327,9 +364,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       .where(eq(agent_conversations.id, conversation.id));
   }
 
-  // Still one insert (a half-written exchange is worse than none), but now
-  // returning: the assistant row's id is what the client posts back to apply
-  // the proposal, so it has to come out of the same statement.
+  // Still one insert for the exchange itself (a half-written one is worse than
+  // none), and returning, because the assistant row's id is what the proposals
+  // hang off.
   const [, assistantMessage] = await db.insert(agent_messages).values([
     {
       conversation_id: conversation.id,
@@ -344,10 +381,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       content: reply,
       profile_id,
       ai_chat_id: result.aiChat.id,
-      proposal,
       date_created: now,
     },
   ]).returning({ id: agent_messages.id });
+
+  // A row per proposal, and their ids are what the client posts back to apply
+  // one — so they have to come out of the insert, not be derived from the
+  // message. Skipped entirely when there is nothing to propose, which is the
+  // overwhelmingly common turn.
+  const stored = proposals.length > 0
+    ? await db.insert(agent_message_proposals).values(
+      proposals.map((p) => ({
+        message_id: assistantMessage.id,
+        capability: p.capability,
+        rationale: p.rationale,
+        fields: p.fields,
+        target: p.target,
+        date_created: now,
+      })),
+    ).returning({ id: agent_message_proposals.id })
+    : [];
 
   return json({
     success: true,
@@ -355,19 +408,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     conversation_id: conversation.id,
     title: conversation.title,
     message_id: assistantMessage.id,
-    proposal: proposal
-      ? {
-        message_id: assistantMessage.id,
-        capability: proposal.capability,
-        title: CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES]
-          .title,
-        rationale: proposal.rationale,
-        target: proposal.target,
-        // Paired with the current value so the card renders a diff, not a
-        // list of new values with no idea what they replace.
-        changes: describeChanges(proposal, capabilities),
-        applied_at: null,
-      }
-      : null,
+    proposals: proposals.map((proposal, i) => ({
+      id: stored[i].id,
+      capability: proposal.capability,
+      title: CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES]
+        .title,
+      rationale: proposal.rationale,
+      target: proposal.target,
+      // Paired with the current value so the card renders a diff, not a
+      // list of new values with no idea what they replace.
+      changes: describeChanges(proposal, capabilities),
+      applied_at: null,
+    })),
   });
 };

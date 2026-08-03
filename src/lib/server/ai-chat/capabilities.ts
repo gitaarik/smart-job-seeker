@@ -572,16 +572,29 @@ function fieldNamesFor(capabilities: Capability[]): string[] {
 /**
  * The structured reply schema for a turn, built from the live capabilities.
  *
+ * Lists at both levels, and neither is a stylistic choice.
+ *
  * The edits are a LIST of {field, value} pairs, not an object with one optional
- * key per field. That is not a stylistic choice — the object shape was measured
- * against the real writing model and it under-fills: asked to correct a work
- * arrangement and a salary range in one message, three consecutive runs
- * proposed `{work_location}`, `{salary_min, salary_period, work_location}` and
- * `{work_location}`. It said in its reply that it was changing the salary each
- * time, and then didn't. Selectively populating thirteen optional keys is a
- * shape these models are bad at; enumerating what you changed is one they are
- * good at, and it makes the count visible in the output rather than implied by
- * absence.
+ * key per field. The object shape was measured against the real writing model
+ * and it under-fills: asked to correct a work arrangement and a salary range in
+ * one message, three consecutive runs proposed `{work_location}`,
+ * `{salary_min, salary_period, work_location}` and `{work_location}`. It said
+ * in its reply that it was changing the salary each time, and then didn't.
+ * Selectively populating thirteen optional keys is a shape these models are bad
+ * at; enumerating what you changed is one they are good at, and it makes the
+ * count visible in the output rather than implied by absence.
+ *
+ * The proposals are a LIST too, one per capability, because a single message
+ * routinely asks for two kinds of change — fix the salary AND rewrite the
+ * description. One-per-turn made the user ask twice for that. Each entry
+ * becomes its own card with its own Apply button, so bundling them costs the
+ * user nothing: they can still take one and leave the other, which a merged
+ * capability would not allow.
+ *
+ * The obvious worry was that this reintroduces the under-fill above one level
+ * up. Measured before it was built, same request, three runs: the model
+ * returned two complete proposals every time. Selectively populating optional
+ * keys is the failure mode, not nesting.
  *
  * `field` is an enum of the live capabilities' names, so the provider is
  * constrained at generation time rather than corrected afterwards.
@@ -591,7 +604,7 @@ export function buildProposalSchema(capabilities: Capability[]) {
 
   return z.object({
     reply: z.string().describe("The message shown to the user."),
-    proposal: z.object({
+    proposals: z.array(z.object({
       capability: z.enum(
         capabilities as [Capability, ...Capability[]],
       ),
@@ -612,7 +625,9 @@ export function buildProposalSchema(capabilities: Capability[]) {
       })).describe(
         "Every field being changed. One entry per field.",
       ),
-    }).nullish(),
+    })).nullish().describe(
+      "One entry per kind of change. Omit or leave empty when proposing nothing.",
+    ),
   });
 }
 
@@ -706,9 +721,11 @@ your power here, and a proposal the user does not apply changes nothing.
 Answer with a JSON object with these keys:
 - "reply": your message to the user, as you would normally write it. Always
   present, and it must read as a complete answer on its own.
-- "proposal": omit it entirely, or set it to null, unless you are proposing a
-  change. When you are, it is an object with "capability" (one of the ids
-  below), "rationale" (one sentence), and "changes".
+- "proposals": a LIST of the changes you are proposing. Omit it, or leave it
+  empty, when you are proposing nothing.
+
+Each entry in "proposals" is one KIND of change, with "capability" (one of the
+ids below), "rationale" (one sentence), and "changes".
 
 "changes" is a LIST, one entry per field you are changing, each
 {"field": "...", "value": ...}. Fields you don't list keep their current value;
@@ -721,10 +738,14 @@ them. If your reply says you are changing the salary and the location, then
 that promises more than the list delivers leaves half the correction unmade, and
 the user has to ask twice.
 
-One proposal per message, and it can change as many fields as needed. The limit
-is one *kind* of change: you cannot edit a job and an application in the same
-message. If they ask for both, do the one they led with and say in your reply
-what is left.
+If the user asks for two different kinds of change in one message — a correction
+to the structured fields AND a rewrite of the description, say — return TWO
+entries in "proposals", one per capability. Do not do one and describe the other
+in prose. Each entry becomes a separate card the user accepts or rejects on its
+own, so there is no cost to listing both, and no reason to make them ask twice.
+
+Count the kinds of change the same way you counted the fields: "proposals" has
+exactly as many entries as there are kinds you were asked for.
 
 ${blocks.join("\n\n")}`;
 }

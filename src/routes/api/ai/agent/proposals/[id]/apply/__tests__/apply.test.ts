@@ -3,13 +3,17 @@
  *
  * This is the only path from a model's suggestion to a database write, so what
  * matters is everything it refuses to take on trust: the payload came from an
- * LLM, and the message id came from the client. Rights are re-checked here
+ * LLM, and the proposal id came from the client. Rights are re-checked here
  * because a proposal can sit in a 12h-resumable thread, and current values are
  * re-read here because the row can have moved in the meantime.
+ *
+ * Keyed on the proposal rather than the turn, because one turn can carry
+ * several — accepting the salary fix must leave the description rewrite still
+ * pending.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-let messageRow: Record<string, unknown> | undefined;
+let storedRow: Record<string, unknown> | undefined;
 const mockUpdateWhere = vi.fn().mockResolvedValue(undefined);
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 
@@ -18,7 +22,7 @@ vi.mock("$lib/server/db", () => {
     from: () => selectChain,
     innerJoin: () => selectChain,
     where: () => selectChain,
-    limit: () => Promise.resolve(messageRow ? [messageRow] : []),
+    limit: () => Promise.resolve(storedRow ? [storedRow] : []),
   };
   return {
     dbDirect: {
@@ -39,8 +43,14 @@ vi.mock("$lib/server/db/schema", () => ({
     id: "am.id",
     conversation_id: "am.conversation_id",
     profile_id: "am.profile_id",
-    proposal: "am.proposal",
-    proposal_applied_at: "am.proposal_applied_at",
+  },
+  agent_message_proposals: {
+    id: "amp.id",
+    message_id: "amp.message_id",
+    capability: "amp.capability",
+    fields: "amp.fields",
+    target: "amp.target",
+    applied_at: "amp.applied_at",
   },
 }));
 
@@ -80,17 +90,16 @@ function event(id = "77") {
   return { locals: {}, params: { id } } as never;
 }
 
+/** A row of agent_message_proposals, joined out to its message's profile. */
 function proposalRow(overrides: Record<string, unknown> = {}) {
   return {
     id: 77,
     profile_id: 12,
     applied_at: null,
-    proposal: {
-      capability: "edit_job_details",
-      rationale: "The posting says remote.",
-      fields: { salary_min: 120000 },
-      target: { id: 900, label: "Senior Backend Engineer at Acme" },
-    },
+    capability: "edit_job_details",
+    rationale: "The posting says remote.",
+    fields: { salary_min: 120000 },
+    target: { id: 900, label: "Senior Backend Engineer at Acme" },
     ...overrides,
   };
 }
@@ -98,7 +107,7 @@ function proposalRow(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   currentUser = { id: "user-1" };
-  messageRow = proposalRow();
+  storedRow = proposalRow();
   mockAuthorize.mockResolvedValue(true);
   mockCurrent.mockResolvedValue({ title: "Senior Backend Engineer" });
   mockValidate.mockReturnValue({ ok: true });
@@ -114,23 +123,17 @@ describe("POST /api/ai/agent/proposals/:id/apply", () => {
   });
 
   it("404s a proposal that belongs to another user", async () => {
-    // The query joins through agent_conversations on user_id, so someone
-    // else's message id simply returns no row — indistinguishable from a
-    // missing one, which is the point.
-    messageRow = undefined;
+    // The query joins out through agent_messages to agent_conversations on
+    // user_id, so someone else's proposal id simply returns no row —
+    // indistinguishable from a missing one, which is the point.
+    storedRow = undefined;
     const res = await POST(event());
     expect(res.status).toBe(404);
     expect(mockApply).not.toHaveBeenCalled();
   });
 
-  it("404s a message that carries no proposal", async () => {
-    messageRow = proposalRow({ proposal: null });
-    const res = await POST(event());
-    expect(res.status).toBe(404);
-  });
-
   it("refuses to apply the same proposal twice", async () => {
-    messageRow = proposalRow({ applied_at: new Date() });
+    storedRow = proposalRow({ applied_at: new Date() });
     const res = await POST(event());
     expect(res.status).toBe(409);
     expect(mockApply).not.toHaveBeenCalled();
@@ -174,11 +177,8 @@ describe("POST /api/ai/agent/proposals/:id/apply", () => {
   it("drops stored fields outside the capability", async () => {
     // Defence in depth: the propose path filters these too, but this row has
     // been sitting in the database and nothing about it is trusted.
-    messageRow = proposalRow({
-      proposal: {
-        ...proposalRow().proposal,
-        fields: { salary_min: 120000, cv_sent_through: "LinkedIn" },
-      },
+    storedRow = proposalRow({
+      fields: { salary_min: 120000, cv_sent_through: "LinkedIn" },
     });
     await POST(event());
     expect(mockApply).toHaveBeenCalledWith(
@@ -189,22 +189,36 @@ describe("POST /api/ai/agent/proposals/:id/apply", () => {
   });
 
   it("rejects an unknown capability", async () => {
-    messageRow = proposalRow({
-      proposal: { ...proposalRow().proposal, capability: "delete_everything" },
-    });
+    storedRow = proposalRow({ capability: "delete_everything" });
     const res = await POST(event());
     expect(res.status).toBe(400);
     expect(mockApply).not.toHaveBeenCalled();
   });
 
-  it("applies and stamps the message as applied", async () => {
+  it("400s a proposal whose changes all fell away", async () => {
+    storedRow = proposalRow({ fields: { cv_sent_through: "LinkedIn" } });
+    const res = await POST(event());
+    expect(res.status).toBe(400);
+    expect(mockApply).not.toHaveBeenCalled();
+  });
+
+  it("applies and stamps that proposal as applied", async () => {
     const res = await POST(event());
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ success: true });
     expect(mockApply).toHaveBeenCalledTimes(1);
     expect(mockUpdateSet).toHaveBeenCalledWith(
-      expect.objectContaining({ proposal_applied_at: expect.any(Date) }),
+      expect.objectContaining({ applied_at: expect.any(Date) }),
     );
+  });
+
+  it("stamps the proposal, not the turn that carried it", async () => {
+    // The whole reason proposals are their own rows: a turn can carry two, and
+    // accepting one must leave the other pending. Stamping by message id would
+    // mark both. `eq` is mocked to return its value, so this is the id the
+    // update was scoped to.
+    await POST(event("77"));
+    expect(mockUpdateWhere).toHaveBeenCalledWith(77);
   });
 
   it("stamps only after the write succeeded", async () => {

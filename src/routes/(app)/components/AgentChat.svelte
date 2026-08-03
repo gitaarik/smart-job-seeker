@@ -22,8 +22,11 @@
   type ChatMessage = {
     role: "user" | "assistant";
     content: string;
-    /** An edit this turn suggested, awaiting the user's decision. */
-    proposal?: Proposal | null;
+    /**
+     * Edits this turn suggested, each awaiting its own decision. A turn asked
+     * to fix a field and rewrite a text proposes both, as two cards.
+     */
+    proposals?: Proposal[];
   };
   type ConversationSummary = {
     id: number;
@@ -219,7 +222,7 @@
         {
           role: "assistant",
           content: data.reply,
-          proposal: data.proposal ?? null,
+          proposals: data.proposals ?? [],
         },
       ];
       writePointer();
@@ -439,9 +442,9 @@
                 >
                   {@html renderSafeMarkdown(msg.content)}
                 </div>
-                {#if msg.proposal}
-                  <ProposalCard proposal={msg.proposal} />
-                {/if}
+                {#each msg.proposals ?? [] as proposal (proposal.id)}
+                  <ProposalCard {proposal} />
+                {/each}
               </div>
             </div>
           {/if}
