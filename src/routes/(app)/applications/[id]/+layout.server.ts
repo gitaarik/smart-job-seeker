@@ -51,6 +51,13 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
           desc(application_records.event_date),
           desc(application_records.date_created),
         ],
+        with: {
+          // For the Activity stream's attachment affordance — a record can now
+          // carry the file its text was extracted from.
+          file: {
+            columns: { id: true, filename_download: true, type: true, title: true },
+          },
+        },
       },
       applications_files: {
         with: {

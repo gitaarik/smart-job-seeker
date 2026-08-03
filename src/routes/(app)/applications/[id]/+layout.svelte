@@ -10,6 +10,7 @@
     faFileAlt,
     faHistory,
     faMoneyBillWave,
+    faStream,
   } from "@fortawesome/free-solid-svg-icons";
   import type { Snippet } from "svelte";
   import TabNav from "../../components/TabNav.svelte";
@@ -20,9 +21,15 @@
 
   const basePath = $derived(`/applications/${app.id}`);
 
+  // Activity is the read-only merged stream (records + attached files + status
+  // transitions). Interviews, Documents and Timeline stay until it grows a
+  // composer — they are still the only way to create and edit entries, and
+  // Timeline's "Add Event" has no replacement yet. All three go together then.
+  // See planning/APPLICATION-ACTIVITY.md.
   const tabs = $derived([
     { label: "Overview", href: basePath, icon: faClipboardList },
     { label: "Texts", href: `${basePath}/texts`, icon: faEnvelope },
+    { label: "Activity", href: `${basePath}/activity`, icon: faStream },
     { label: "Interviews", href: `${basePath}/interviews`, icon: faComments },
     { label: "Salary", href: `${basePath}/salary`, icon: faMoneyBillWave },
     { label: "Documents", href: `${basePath}/documents`, icon: faFileAlt },
