@@ -838,6 +838,10 @@ export const application_recordsRelations = relations(
       fields: [application_records.status_log],
       references: [application_status_log.id],
     }),
+    file: one(files, {
+      fields: [application_records.file_id],
+      references: [files.id],
+    }),
   }),
 );
 

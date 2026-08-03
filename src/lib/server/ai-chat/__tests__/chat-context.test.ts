@@ -56,7 +56,7 @@ describe("scopeForRoute", () => {
   it("scopes an application page to that application", () => {
     const scope = scopeForRoute("/(app)/applications/[id]");
     expect(scope.entity).toBe("application");
-    expect(scope.sources).toContain("application_records");
+    expect(scope.sources).toContain("application_activity");
   });
 
   it("inherits the parent scope on a nested tab", () => {
@@ -65,7 +65,7 @@ describe("scopeForRoute", () => {
     for (const tab of ["texts", "documents", "timeline", "salary"]) {
       const scope = scopeForRoute(`/(app)/applications/[id]/${tab}`);
       expect(scope.entity).toBe("application");
-      expect(scope.sources).toContain("application_documents");
+      expect(scope.sources).toContain("application_activity");
     }
   });
 
@@ -73,7 +73,7 @@ describe("scopeForRoute", () => {
     const scope = scopeForRoute("/(app)/jobs/[id]");
     expect(scope.entity).toBe("job");
     expect(scope.sources).toContain("job");
-    expect(scope.sources).not.toContain("application_records");
+    expect(scope.sources).not.toContain("application_activity");
   });
 
   it("does not confuse a sibling route with a prefix match", () => {
@@ -110,7 +110,7 @@ describe("resolveChatContext", () => {
     });
 
     expect(ctx.entity).toEqual({ type: "application", id: 42 });
-    expect(ctx.sources).toContain("application_records");
+    expect(ctx.sources).toContain("application_activity");
     expect(ctx.budgetChars).toBe(CHAT_BUDGET_CHARS);
   });
 
@@ -146,8 +146,8 @@ describe("resolveChatContext", () => {
 
     expect(ctx.entity).toBeUndefined();
     expect(ctx.sources).not.toContain("job");
-    expect(ctx.sources).not.toContain("application_records");
-    expect(ctx.sources).not.toContain("application_documents");
+    expect(ctx.sources).not.toContain("application_activity");
+    expect(ctx.sources).not.toContain("application_activity");
     expect(ctx.sources).toContain("profile");
   });
 
@@ -159,7 +159,7 @@ describe("resolveChatContext", () => {
     });
 
     expect(ctx.entity).toBeUndefined();
-    expect(ctx.sources).not.toContain("application_records");
+    expect(ctx.sources).not.toContain("application_activity");
   });
 
   it("resolves a job page without requiring an application", async () => {

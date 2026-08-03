@@ -46,11 +46,8 @@ vi.mock("$lib/server/ai-chat/entity-versions", () => ({
   ensureBaselineVersion: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("$lib/server/ai-chat/application-records", () => ({
-  interviewRecordsText: vi.fn().mockResolvedValue(""),
-}));
-vi.mock("$lib/server/ai-chat/application-documents", () => ({
-  applicationDocumentsText: vi.fn().mockResolvedValue(""),
+vi.mock("$lib/server/ai-chat/application-activity", () => ({
+  applicationActivityText: vi.fn().mockResolvedValue(""),
 }));
 
 vi.mock("drizzle-orm", () => ({

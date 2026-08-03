@@ -132,8 +132,7 @@ export async function generateApplicationQuestionAnswer(
   };
   const sources: ContextSource[] = [
     "job",
-    "application_records",
-    "application_documents",
+    "application_activity",
   ];
   if (isWriting) sources.push("projects", "stories", "application_texts");
 

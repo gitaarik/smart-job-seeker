@@ -93,10 +93,9 @@ export async function createApplicationLetterFollowup(
           : "compact" as const;
         context = {
           entity: { type: "application", id: applicationId },
-          sources: ["job", "application_records", "application_documents"],
+          sources: ["job", "application_activity"],
           sourceOptions: {
-            application_records: { detail },
-            application_documents: { detail },
+            application_activity: { detail },
           },
         };
       }

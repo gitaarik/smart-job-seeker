@@ -59,14 +59,13 @@ const MAX_CONTEXT_MESSAGES = 40;
  *
  * These go to `placeholderDefaults`, never to customVariables. As
  * customVariables they overrode the assembled evidence instead of backfilling
- * it, so every one of these six sources was blanked before the model saw it —
+ * it, so every one of these sources was blanked before the model saw it —
  * the assistant reported it "can't access your uploaded documents" on a page
  * whose scope had just fetched them.
  */
 const CHAT_CONTEXT_PLACEHOLDERS = [
   "jobDetails",
-  "interviewHistory",
-  "applicationDocuments",
+  "applicationActivity",
   "relevantProjects",
   "relevantStories",
   "relevantApplicationTexts",

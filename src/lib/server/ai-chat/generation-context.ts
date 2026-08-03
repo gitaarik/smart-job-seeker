@@ -33,8 +33,7 @@ import {
   relevantApplicationTextsText,
   relevantStoriesText,
 } from "$lib/server/documents/content-retrieval";
-import { interviewRecordsText } from "./application-records";
-import { applicationDocumentsText } from "./application-documents";
+import { applicationActivityText } from "./application-activity";
 import { jobDetailsText } from "./job-context";
 import {
   fitProfileToBudget,
@@ -61,9 +60,8 @@ export interface RelevanceQuery {
  * Two families:
  *  - RANKED (projects, stories, application_texts) — many candidates, scored
  *    against `query`, the best few cited.
- *  - SCOPED (profile, job, application_records, application_documents) — one
- *    known thing, rendered whole (each internally clipped). These need
- *    `entity`, not `query`.
+ *  - SCOPED (profile, job, application_activity) — one known thing, rendered
+ *    whole (each internally clipped). These need `entity`, not `query`.
  *
  * `profile` is the `${data}` blob every prompt already interpolates. It is a
  * source rather than a special case so the budgeter can see the single largest
@@ -75,8 +73,14 @@ export interface RelevanceQuery {
 export type ContextSource =
   | "profile"
   | "job"
-  | "application_records"
-  | "application_documents"
+  /**
+   * Everything recorded against the application: correspondence, rounds,
+   * feedback, offers, attached documents. One source since the Activity
+   * unification — it was `application_records` + `application_documents`, which
+   * showed the model one history through two differently-worded windows with
+   * two independent budgets. See planning/APPLICATION-ACTIVITY.md.
+   */
+  | "application_activity"
   | "projects"
   | "stories"
   | "application_texts";
@@ -88,8 +92,7 @@ export type ContextEntity =
 
 /** Per-source knobs. Sources not listed take their own defaults. */
 export interface SourceOptions {
-  application_records?: { detail: "full" | "compact" };
-  application_documents?: { detail: "full" | "compact" };
+  application_activity?: { detail: "full" | "compact" };
 }
 
 export interface ContextRequest {
@@ -247,29 +250,19 @@ const SOURCES: Record<ContextSource, SourceDef> = {
       );
     },
   },
-  application_records: {
-    variable: "interviewHistory",
+  application_activity: {
+    variable: "applicationActivity",
+    // Takes the higher of the two priorities it replaces (records 40,
+    // documents 30). It is now the whole concrete history of this application,
+    // so it should outlast anything retrieved generically.
     priority: 40,
     looked: (req) => applicationId(req) != null,
     render: async (req) => {
       const id = applicationId(req);
       if (id == null) return "";
-      return interviewRecordsText(
+      return applicationActivityText(
         id,
-        req.sourceOptions?.application_records?.detail ?? "compact",
-      );
-    },
-  },
-  application_documents: {
-    variable: "applicationDocuments",
-    priority: 30,
-    looked: (req) => applicationId(req) != null,
-    render: async (req) => {
-      const id = applicationId(req);
-      if (id == null) return "";
-      return applicationDocumentsText(
-        id,
-        req.sourceOptions?.application_documents?.detail ?? "compact",
+        req.sourceOptions?.application_activity?.detail ?? "compact",
       );
     },
   },
@@ -388,8 +381,7 @@ export function fitToBudget(
 const SOURCE_LABELS: Record<ContextSource, string> = {
   profile: "the applicant's profile",
   job: "the job posting",
-  application_records: "the interview and contact records on this application",
-  application_documents: "the documents attached to this application",
+  application_activity: "the history recorded on this application",
   projects: "the applicant's projects",
   stories: "the applicant's prepared stories",
   application_texts: "the applicant's past application writing",

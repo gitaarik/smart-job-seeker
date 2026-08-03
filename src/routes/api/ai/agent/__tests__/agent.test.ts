@@ -111,8 +111,8 @@ import { POST } from "../+server";
 /** The evidence placeholders the chat templates reference. */
 const EVIDENCE_KEYS = [
   "jobDetails",
-  "interviewHistory",
-  "applicationDocuments",
+  "applicationActivity",
+  "applicationActivity",
   "relevantProjects",
   "relevantStories",
   "relevantApplicationTexts",

@@ -36,7 +36,8 @@ import {
  * single generator does.
  *
  * Raised from 20000, which was under what one application actually needs. On a
- * real application with eleven attached emails, the sources measured:
+ * real application with eleven attached emails, the sources measured (under the
+ * pre-Activity split, when records and documents were two sources):
  *
  *   jobDetails 5258 · applicationDocuments 15738 · stories 1983 · texts 3362
  *
@@ -46,6 +47,10 @@ import {
  * further bought nothing on the same application. For scale, the profile blob
  * alongside it is 56k and is not charged against this at all, so the extra 12k
  * is a fraction of what every turn already sends.
+ *
+ * The merge into `application_activity` lowered the ceiling rather than raised
+ * it: the two sources had independent totals (40k each in full mode) that could
+ * both arrive, where one stream is capped once. Re-measure before tightening.
  */
 export const CHAT_BUDGET_CHARS = 32000;
 
@@ -77,8 +82,7 @@ const APPLICATION_SCOPE: RouteScope = {
   sources: [
     "profile",
     "job",
-    "application_records",
-    "application_documents",
+    "application_activity",
     "projects",
     "stories",
     "application_texts",
@@ -238,10 +242,7 @@ export async function resolveChatContext(opts: {
   // sources that need one, rather than shipping empty blocks with headings.
   const sources = entity
     ? scope.sources
-    : scope.sources.filter((s) =>
-      s !== "job" && s !== "application_records" &&
-      s !== "application_documents"
-    );
+    : scope.sources.filter((s) => s !== "job" && s !== "application_activity");
 
   // Jobs resolve for any signed-in user by design (see resolveEntity), so the
   // entity resolving says nothing about edit rights. resolveCapabilities asks

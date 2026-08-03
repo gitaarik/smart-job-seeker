@@ -25,9 +25,7 @@ You have access to their full profile below. Use it to make every answer specifi
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 \${relevantProjects}
 
@@ -67,9 +65,7 @@ You have access to their full profile below. Use it to make every answer specifi
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 \${relevantProjects}
 
@@ -110,9 +106,7 @@ Guidelines:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 Respond with a single JSON object with these keys, in this order:
 - "feedback": a brief note (1-2 sentences) to the applicant, citing the SPECIFIC experiences, skills, or projects from their profile you drew on to write this answer. Name the actual entries; be concrete. If the profile lacked something relevant, say so honestly.
@@ -154,9 +148,7 @@ Return a single JSON object with exactly two keys: "text" (the answer — use th
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 - The applicant sent you a message (below). First decide what they want:
   - If they are asking a QUESTION, seeking advice, or discussing the approach (e.g. "how should I frame this?", "how should I approach answering this?", "is this too long?", "what should I emphasize?") → set "text" to null and put your helpful, specific, job-grounded reply in "feedback". Do NOT write the answer. A message about HOW to answer is advice even when it is short, and even when it contains the word "answer" — asking how to answer is not the same as asking you to write one.
@@ -212,9 +204,7 @@ Respond with a JSON OBJECT with a single key "pairs" whose value is the array of
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 Respond with JSON containing:
 - "feedback": a single markdown string with your review (what works, what to improve, specific suggestions). This MUST be one cohesive markdown text, NOT an array or list of separate strings.
@@ -251,9 +241,7 @@ In your feedback:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 Guidelines:
 - Revise the applicant's OWN draft — keep their voice; make the change they asked for, don't rewrite into a different persona.
@@ -288,9 +276,7 @@ Guidelines:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 Rules:
 - Focus on THIS specific question and THIS job — what from their profile best answers it?
@@ -334,9 +320,7 @@ What specific experiences, skills, and achievements from their profile should th
 
 \${answerContent}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 ## Rules:
 - Your earlier turns with this applicant are part of this conversation. Read them as commitments, not as background: anything you and they agreed to include, change, emphasise or drop is STILL IN FORCE unless a later message overrode it.
@@ -1367,9 +1351,7 @@ Return JSON with:
 
 \${letterContent}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 ## Rules:
 - Your earlier turns with this user are part of this conversation. Read them as commitments, not as background: anything you and the user agreed to include, change, emphasise or drop is STILL IN FORCE unless a later message overrode it.
@@ -1486,9 +1468,7 @@ Return a single JSON object with exactly two keys: "text" (the cover letter itse
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 \${additionalContext}`,
   },
@@ -1511,9 +1491,7 @@ Rules:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 What specific experiences, skills, and achievements from their profile should they highlight for THIS role? Which job requirements can they address directly? Give a brief suggested angle or hook.
 
@@ -1543,9 +1521,7 @@ In your feedback:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 ## Their cover letter:
 
@@ -1594,9 +1570,7 @@ Use the key "text" (NOT "letter") for the letter.`,
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 \${additionalContext}`,
   },
@@ -1696,9 +1670,7 @@ Return a single JSON object with exactly two keys: "text" (the cheat sheet as on
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 \${additionalContext}`,
   },
@@ -1748,9 +1720,7 @@ Use the key "text" for the cheat sheet.`,
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 \${additionalContext}`,
   },
@@ -1773,9 +1743,7 @@ Rules:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 What key points should they prepare for THIS role's interview? What strengths to highlight, potential challenges to address, and questions to have ready?
 
@@ -1805,9 +1773,7 @@ In your feedback:
 
 \${jobDetails}
 
-\${interviewHistory}
-
-\${applicationDocuments}
+\${applicationActivity}
 
 ## Their interview cheat sheet:
 

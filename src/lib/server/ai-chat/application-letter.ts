@@ -145,8 +145,7 @@ export async function generateApplicationLetter(
     : "compact" as const;
   const sources: ContextSource[] = [
     "job",
-    "application_records",
-    "application_documents",
+    "application_activity",
   ];
   if (mode === "generate" || mode === "auto") {
     sources.push("projects", "stories", "application_texts");
@@ -159,8 +158,7 @@ export async function generateApplicationLetter(
     entity: { type: "application", id: letter.application.id },
     sources,
     sourceOptions: {
-      application_records: { detail },
-      application_documents: { detail },
+      application_activity: { detail },
     },
   };
 

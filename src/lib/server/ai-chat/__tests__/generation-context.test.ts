@@ -12,10 +12,9 @@ vi.mock("$lib/server/documents/content-retrieval", () => ({
 }));
 // The scoped sources each load their own entity; mock the loaders so these
 // tests exercise the registry and budgeting, not the DB.
-vi.mock("../application-records", () => ({ interviewRecordsText: vi.fn() }));
 vi.mock(
-  "../application-documents",
-  () => ({ applicationDocumentsText: vi.fn() }),
+  "../application-activity",
+  () => ({ applicationActivityText: vi.fn() }),
 );
 vi.mock("../job-context", () => ({ jobDetailsText: vi.fn() }));
 // Only the DB read is mocked — the trimmer and renderer are pure, so the tests
@@ -30,8 +29,7 @@ import {
   relevantApplicationTextsText,
   relevantStoriesText,
 } from "$lib/server/documents/content-retrieval";
-import { interviewRecordsText } from "../application-records";
-import { applicationDocumentsText } from "../application-documents";
+import { applicationActivityText } from "../application-activity";
 import { jobDetailsText } from "../job-context";
 import { loadProfileData } from "../profile-data";
 import {
@@ -43,8 +41,7 @@ import {
 const mockRelevantProjects = vi.mocked(relevantProjectsText);
 const mockRelevantStories = vi.mocked(relevantStoriesText);
 const mockRelevantAppTexts = vi.mocked(relevantApplicationTextsText);
-const mockRecords = vi.mocked(interviewRecordsText);
-const mockDocuments = vi.mocked(applicationDocumentsText);
+const mockActivity = vi.mocked(applicationActivityText);
 const mockJobDetails = vi.mocked(jobDetailsText);
 const mockLoadProfile = vi.mocked(loadProfileData);
 
@@ -52,8 +49,7 @@ beforeEach(() => {
   mockRelevantProjects.mockReset();
   mockRelevantStories.mockReset();
   mockRelevantAppTexts.mockReset();
-  mockRecords.mockReset().mockResolvedValue("");
-  mockDocuments.mockReset().mockResolvedValue("");
+  mockActivity.mockReset().mockResolvedValue("");
   mockJobDetails.mockReset().mockResolvedValue("");
   mockLoadProfile.mockReset().mockResolvedValue({ data: {}, schema: {} });
 });
@@ -251,9 +247,13 @@ describe("assembleGenerationContext", () => {
     expect(ctx.droppedSources).toEqual([]);
     expect(ctx.usedSources).toEqual(["stories"]);
     expect(ctx.variables.relevantProjects).toContain("nothing here");
-    expect(ctx.variables.relevantProjects).toMatch(/never say you lack access/i);
+    expect(ctx.variables.relevantProjects).toMatch(
+      /never say you lack access/i,
+    );
     // Not the dropped wording — that would assert material that isn't there.
-    expect(ctx.variables.relevantProjects).not.toContain("could not be included");
+    expect(ctx.variables.relevantProjects).not.toContain(
+      "could not be included",
+    );
   });
 
   it("says nothing at all about a source that wasn't requested", async () => {
@@ -267,7 +267,7 @@ describe("assembleGenerationContext", () => {
       sources: ["stories"],
     });
 
-    expect(ctx.variables.applicationDocuments).toBeUndefined();
+    expect(ctx.variables.applicationActivity).toBeUndefined();
     expect(ctx.variables.relevantProjects).toBeUndefined();
   });
 
@@ -296,15 +296,17 @@ describe("scoped sources", () => {
     entity: { type: "application" as const, id: 42 },
     sources: [
       "job",
-      "application_records",
-      "application_documents",
+      "application_activity",
     ] as const,
   };
 
-  it("loads the job, records and documents from the entity", async () => {
+  it("loads the job and the application's history from the entity", async () => {
     mockJobDetails.mockResolvedValue("**Position:** Staff Engineer");
-    mockRecords.mockResolvedValue("## What has already happened");
-    mockDocuments.mockResolvedValue("## Attached documents");
+    // One source now, so one block: typed records and the text extracted from
+    // attached documents arrive interleaved rather than as two variables.
+    mockActivity.mockResolvedValue(
+      "## What has already happened\n\n### Message: offer.pdf",
+    );
 
     const ctx = await assembleGenerationContext({
       ...applicationRequest,
@@ -312,19 +314,20 @@ describe("scoped sources", () => {
     });
 
     expect(ctx.variables.jobDetails).toContain("Staff Engineer");
-    expect(ctx.variables.interviewHistory).toContain("already happened");
-    expect(ctx.variables.applicationDocuments).toContain("Attached documents");
+    expect(ctx.variables.applicationActivity).toContain("already happened");
+    expect(ctx.variables.applicationActivity).toContain("offer.pdf");
     expect(mockJobDetails).toHaveBeenCalledWith({ applicationId: 42 });
+    expect(mockActivity).toHaveBeenCalledWith(42, "compact");
   });
 
   it("needs no query — scoped sources render the entity, not a ranking", async () => {
-    mockRecords.mockResolvedValue("## records");
+    mockActivity.mockResolvedValue("## records");
     const ctx = await assembleGenerationContext({
       profileId: 1,
       entity: { type: "application", id: 42 },
-      sources: ["application_records"],
+      sources: ["application_activity"],
     });
-    expect(ctx.usedSources).toEqual(["application_records"]);
+    expect(ctx.usedSources).toEqual(["application_activity"]);
   });
 
   it("renders nothing for application sources when the entity is a job", async () => {
@@ -332,26 +335,22 @@ describe("scoped sources", () => {
     const ctx = await assembleGenerationContext({
       profileId: 1,
       entity: { type: "job", id: 5 },
-      sources: ["job", "application_records", "application_documents"],
+      sources: ["job", "application_activity"],
     });
-    expect(mockRecords).not.toHaveBeenCalled();
-    expect(mockDocuments).not.toHaveBeenCalled();
+    expect(mockActivity).not.toHaveBeenCalled();
+    expect(mockActivity).not.toHaveBeenCalled();
     expect(mockJobDetails).toHaveBeenCalledWith({ jobId: 5 });
-    expect(ctx.variables.interviewHistory).toBe("");
+    expect(ctx.variables.applicationActivity).toBe("");
   });
 
   it("passes the per-source detail knob through", async () => {
     await assembleGenerationContext({
       profileId: 1,
       entity: { type: "application", id: 42 },
-      sources: ["application_records", "application_documents"],
-      sourceOptions: {
-        application_records: { detail: "full" },
-        application_documents: { detail: "full" },
-      },
+      sources: ["application_activity"],
+      sourceOptions: { application_activity: { detail: "full" } },
     });
-    expect(mockRecords).toHaveBeenCalledWith(42, "full");
-    expect(mockDocuments).toHaveBeenCalledWith(42, "full");
+    expect(mockActivity).toHaveBeenCalledWith(42, "full");
   });
 
   it("defaults exclusion to the application in scope", async () => {
