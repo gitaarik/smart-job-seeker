@@ -6,6 +6,7 @@
   import { timeAgo } from "$lib/format";
   import { agentChatState } from "./agent-chat-state.svelte";
   import AutoGrowTextarea from "$lib/components/AutoGrowTextarea.svelte";
+  import ProposalCard, { type Proposal } from "./ProposalCard.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faChevronLeft,
@@ -18,7 +19,12 @@
     faXmark,
   } from "@fortawesome/free-solid-svg-icons";
 
-  type ChatMessage = { role: "user" | "assistant"; content: string };
+  type ChatMessage = {
+    role: "user" | "assistant";
+    content: string;
+    /** An edit this turn suggested, awaiting the user's decision. */
+    proposal?: Proposal | null;
+  };
   type ConversationSummary = {
     id: number;
     title: string | null;
@@ -208,7 +214,14 @@
         return;
       }
       conversationId = data.conversation_id;
-      messages = [...messages, { role: "assistant", content: data.reply }];
+      messages = [
+        ...messages,
+        {
+          role: "assistant",
+          content: data.reply,
+          proposal: data.proposal ?? null,
+        },
+      ];
       writePointer();
       scrollToBottom();
     } catch {
@@ -420,10 +433,15 @@
             </div>
           {:else}
             <div class="flex justify-start">
-              <div
-                class="agent-md max-w-[90%] px-3 py-2 rounded-2xl rounded-bl-sm bg-[var(--dash-bg)] text-[var(--dash-text)] text-sm"
-              >
-                {@html renderSafeMarkdown(msg.content)}
+              <div class="max-w-[90%] min-w-0">
+                <div
+                  class="agent-md px-3 py-2 rounded-2xl rounded-bl-sm bg-[var(--dash-bg)] text-[var(--dash-text)] text-sm"
+                >
+                  {@html renderSafeMarkdown(msg.content)}
+                </div>
+                {#if msg.proposal}
+                  <ProposalCard proposal={msg.proposal} />
+                {/if}
               </div>
             </div>
           {/if}

@@ -119,13 +119,18 @@ describe("queryToJobLike", () => {
 
 describe("assembleGenerationContext", () => {
   it("gives every requested source a variable key even when it renders nothing", async () => {
+    // The key must exist either way — an unsupplied placeholder ships to the
+    // model as the literal "${relevantProjects}". Here the retrieval did run
+    // and came back empty, so the key carries the "we looked, there is none"
+    // note; a source that never looked gets "" (covered below).
     mockRelevantProjects.mockResolvedValue("");
     const ctx = await assembleGenerationContext({
       profileId: 1,
       query: { text: "gardening" },
       sources: ["projects"],
     });
-    expect(ctx.variables).toHaveProperty("relevantProjects", "");
+    expect(ctx.variables).toHaveProperty("relevantProjects");
+    expect(ctx.variables.relevantProjects).toContain("nothing here");
     expect(ctx.usedSources).toEqual([]);
   });
 
@@ -202,6 +207,68 @@ describe("assembleGenerationContext", () => {
     expect(mockRelevantStories).not.toHaveBeenCalled();
     expect(ctx.variables.relevantStories).toBe("");
     expect(ctx.usedSources).toEqual([]);
+  });
+
+  it("says so when a source rendered but lost the budget race", async () => {
+    // The failure this replaces: the documents source produced eleven attached
+    // emails, lost the budget race to the job description, and arrived as ""
+    // — which the model read as "no documents exist" and reported to the user
+    // as having no access to them at all.
+    mockRelevantProjects.mockResolvedValue("P".repeat(4000));
+    mockRelevantStories.mockResolvedValue("S".repeat(4000));
+
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "anything" },
+      sources: ["projects", "stories"],
+      budgetChars: 5000,
+    });
+
+    // Stories rank below projects, so stories is the one that gives way.
+    expect(ctx.droppedSources).toEqual(["stories"]);
+    expect(ctx.variables.relevantStories).toContain("could not be included");
+    // It must not read as an absence — that is the whole point.
+    expect(ctx.variables.relevantStories).not.toBe("");
+    expect(ctx.variables.relevantProjects).toBe("P".repeat(4000));
+    expect(ctx.usedSources).toEqual(["projects"]);
+  });
+
+  it("distinguishes a requested-and-empty source from a dropped one", async () => {
+    // Three states, not two. "Empty" must not claim the material exists (that
+    // is the dropped case) and must not read as "out of scope" either — an
+    // empty section is what made the assistant answer "I can't access your
+    // uploaded documents" on a page where it could read them and there simply
+    // were none, sending the user off to look for a bug that wasn't there.
+    mockRelevantProjects.mockResolvedValue("");
+    mockRelevantStories.mockResolvedValue("## stories\n1. Bar");
+
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "anything" },
+      sources: ["projects", "stories"],
+    });
+
+    expect(ctx.droppedSources).toEqual([]);
+    expect(ctx.usedSources).toEqual(["stories"]);
+    expect(ctx.variables.relevantProjects).toContain("nothing here");
+    expect(ctx.variables.relevantProjects).toMatch(/never say you lack access/i);
+    // Not the dropped wording — that would assert material that isn't there.
+    expect(ctx.variables.relevantProjects).not.toContain("could not be included");
+  });
+
+  it("says nothing at all about a source that wasn't requested", async () => {
+    // Out of scope is the fourth state and stays silent: the prompt's own
+    // wording tells the model that absent sections don't apply to this page.
+    mockRelevantStories.mockResolvedValue("## stories\n1. Bar");
+
+    const ctx = await assembleGenerationContext({
+      profileId: 1,
+      query: { text: "anything" },
+      sources: ["stories"],
+    });
+
+    expect(ctx.variables.applicationDocuments).toBeUndefined();
+    expect(ctx.variables.relevantProjects).toBeUndefined();
   });
 
   it("threads excludeApplicationId to the application_texts source", async () => {
@@ -365,6 +432,10 @@ describe("scoped sources", () => {
 
     // Only one 500-char evidence block fits; the job outranks retrieval.
     expect(ctx.usedSources.sort()).toEqual(["job", "profile"]);
-    expect(ctx.variables.relevantProjects).toBe("");
+    // The loser is announced rather than blanked: an empty section reads to the
+    // model as "this doesn't exist", which is how the assistant came to tell a
+    // user it had no access to documents it had just been handed.
+    expect(ctx.droppedSources).toEqual(["projects"]);
+    expect(ctx.variables.relevantProjects).toContain("could not be included");
   });
 });

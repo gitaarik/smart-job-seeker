@@ -12,11 +12,10 @@
     faWandMagicSparkles,
   } from "@fortawesome/free-solid-svg-icons";
   import Card from "../../components/Card.svelte";
-  import {
-    EXPERIENCE_LEVELS,
-    JOB_TYPES,
-    WORK_LOCATIONS,
-  } from "$lib/data/job-taxonomy";
+  import JobFieldsForm, {
+    emptyJobFields,
+    type JobFields,
+  } from "../../components/JobFieldsForm.svelte";
 
   let { form }: { form: ActionData } = $props();
 
@@ -55,35 +54,12 @@
   let didParse = $state(false);
   let creating = $state(false);
 
-  // Review-step form values. Kept as strings so they map straight onto inputs.
-  let fTitle = $state("");
-  let fCompany = $state("");
-  let fJobPoster = $state("");
-  let fLocation = $state("");
-  let fSourceUrl = $state("");
-  let fDatePosted = $state("");
-  let fSalaryMin = $state("");
-  let fSalaryMax = $state("");
-  let fSalaryCurrency = $state("");
-  let fSalaryPeriod = $state("");
+  // Review-step form values. The shared field set lives in `fields`; the
+  // description is ours alone (it drives the parse, so it sits above the form
+  // in the paste step and below it in the review step).
+  let fields = $state<JobFields>(emptyJobFields());
   let fDescription = $state("");
-  let fWorkLocation = $state<string[]>([]);
-  let fJobTypes = $state<string[]>([]);
-  let fExperienceLevels = $state<string[]>([]);
   let preview = $state<ParsedPreview | null>(null);
-
-  const workLocationOptions = WORK_LOCATIONS.values.map((v) => ({
-    value: v.canonical,
-    label: v.label,
-  }));
-  const jobTypeOptions = JOB_TYPES.values.map((v) => ({
-    value: v.canonical,
-    label: v.label,
-  }));
-  const experienceLevelOptions = EXPERIENCE_LEVELS.values.map((v) => ({
-    value: v.canonical,
-    label: v.label,
-  }));
 
   let previewGroups = $derived(
     preview
@@ -106,7 +82,7 @@
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           description: fDescription,
-          source_url: fSourceUrl || null,
+          source_url: fields.source_url || null,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -139,29 +115,29 @@
    * stale values behind. The one exception is a URL the user typed themselves,
    * which is more reliable than one recovered from the posting text.
    */
-  function applyParsedFields(fields: ParsedFields) {
+  function applyParsedFields(parsedFields: ParsedFields) {
     const str = (v: string | number | null) => (v == null ? "" : String(v));
-    fTitle = str(fields.title);
-    fCompany = str(fields.company);
-    fJobPoster = str(fields.job_poster);
-    fLocation = str(fields.office_location);
-    fSourceUrl ||= str(fields.source_url);
-    fDatePosted = str(fields.date_posted);
-    fSalaryMin = str(fields.salary_min);
-    fSalaryMax = str(fields.salary_max);
-    fSalaryCurrency = str(fields.salary_currency);
-    fSalaryPeriod = str(fields.salary_period);
-    fWorkLocation = fields.work_location;
-    fJobTypes = fields.job_types;
-    fExperienceLevels = fields.experience_levels;
+    fields = {
+      title: str(parsedFields.title),
+      company: str(parsedFields.company),
+      job_poster: str(parsedFields.job_poster),
+      office_location: str(parsedFields.office_location),
+      source_url: fields.source_url || str(parsedFields.source_url),
+      date_posted: str(parsedFields.date_posted),
+      salary_min: str(parsedFields.salary_min),
+      salary_max: str(parsedFields.salary_max),
+      salary_currency: str(parsedFields.salary_currency),
+      salary_period: str(parsedFields.salary_period),
+      work_location: parsedFields.work_location,
+      job_types: parsedFields.job_types,
+      experience_levels: parsedFields.experience_levels,
+    };
   }
 
   const inputClass =
     "w-full px-3 py-2 text-sm bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]";
   const labelClass =
     "block text-xs font-medium text-[var(--dash-text-muted)] mb-1";
-  const pillClass =
-    "inline-block px-3 py-1.5 text-xs rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] peer-checked:bg-[var(--dash-primary)] peer-checked:text-white peer-checked:border-[var(--dash-primary)] transition-colors";
 </script>
 
 <svelte:head>
@@ -220,7 +196,7 @@
           <input
             id="na-paste-url"
             type="url"
-            bind:value={fSourceUrl}
+            bind:value={fields.source_url}
             placeholder="https://…"
             class={inputClass}
           />
@@ -300,124 +276,7 @@
         <input type="hidden" name="parse_failed" value="1" />
       {/if}
 
-      <Card padding="responsive">
-        <div class="space-y-4">
-          <div>
-            <label for="na-title" class={labelClass}>Job title</label>
-            <input id="na-title" name="title" type="text" bind:value={fTitle}
-              placeholder="e.g. Senior Frontend Engineer" class={inputClass} />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="na-company" class={labelClass}>Company</label>
-              <input id="na-company" name="company" type="text" bind:value={fCompany}
-                placeholder="e.g. Acme Inc." class={inputClass} />
-            </div>
-            <div>
-              <label for="na-poster" class={labelClass}>
-                Recruiter <span class="font-normal">(if not the company)</span>
-              </label>
-              <input id="na-poster" name="job_poster" type="text" bind:value={fJobPoster}
-                placeholder="e.g. Acme Recruitment" class={inputClass} />
-            </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="na-location" class={labelClass}>Office location</label>
-              <input id="na-location" name="office_location" type="text" bind:value={fLocation}
-                placeholder="e.g. Amsterdam" class={inputClass} />
-            </div>
-            <div>
-              <label for="na-posted" class={labelClass}>Date posted</label>
-              <input id="na-posted" name="date_posted" type="date" bind:value={fDatePosted}
-                class={inputClass} />
-            </div>
-          </div>
-          <div>
-            <label for="na-url" class={labelClass}>Job URL</label>
-            <input id="na-url" name="source_url" type="url" bind:value={fSourceUrl}
-              placeholder="https://…" class={inputClass} />
-            <p class="text-xs text-[var(--dash-text-muted)] mt-1">
-              If it's from a known job platform, we'll link it automatically.
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      <Card padding="responsive">
-        <div class="space-y-4">
-          <fieldset>
-            <legend class="{labelClass} mb-2">Work arrangement</legend>
-            <div class="flex flex-wrap gap-2">
-              {#each workLocationOptions as opt}
-                <label class="cursor-pointer">
-                  <input type="checkbox" name="work_location" value={opt.value}
-                    bind:group={fWorkLocation} class="peer sr-only" />
-                  <span class={pillClass}>{opt.label}</span>
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend class="{labelClass} mb-2">Employment type</legend>
-            <div class="flex flex-wrap gap-2">
-              {#each jobTypeOptions as opt}
-                <label class="cursor-pointer">
-                  <input type="checkbox" name="job_types" value={opt.value}
-                    bind:group={fJobTypes} class="peer sr-only" />
-                  <span class={pillClass}>{opt.label}</span>
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend class="{labelClass} mb-2">Experience level</legend>
-            <div class="flex flex-wrap gap-2">
-              {#each experienceLevelOptions as opt}
-                <label class="cursor-pointer">
-                  <input type="checkbox" name="experience_levels" value={opt.value}
-                    bind:group={fExperienceLevels} class="peer sr-only" />
-                  <span class={pillClass}>{opt.label}</span>
-                </label>
-              {/each}
-            </div>
-          </fieldset>
-        </div>
-      </Card>
-
-      <Card padding="responsive">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div>
-            <label for="na-salmin" class={labelClass}>Salary min</label>
-            <input id="na-salmin" name="salary_min" type="number" inputmode="numeric"
-              bind:value={fSalaryMin} placeholder="0" class={inputClass} />
-          </div>
-          <div>
-            <label for="na-salmax" class={labelClass}>Salary max</label>
-            <input id="na-salmax" name="salary_max" type="number" inputmode="numeric"
-              bind:value={fSalaryMax} placeholder="0" class={inputClass} />
-          </div>
-          <div>
-            <label for="na-cur" class={labelClass}>Currency</label>
-            <input id="na-cur" name="salary_currency" type="text"
-              bind:value={fSalaryCurrency} placeholder="EUR" class={inputClass} />
-          </div>
-          <div>
-            <label for="na-per" class={labelClass}>Period</label>
-            <select id="na-per" name="salary_period" bind:value={fSalaryPeriod} class={inputClass}>
-              <option value="">—</option>
-              <option value="year">year</option>
-              <option value="month">month</option>
-              <option value="week">week</option>
-              <option value="day">day</option>
-              <option value="hour">hour</option>
-              <option value="project">project</option>
-            </select>
-          </div>
-        </div>
-      </Card>
+      <JobFieldsForm bind:fields idPrefix="na" />
 
       <Card padding="responsive">
         <label for="na-desc" class={labelClass}>Description</label>

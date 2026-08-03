@@ -10,6 +10,7 @@ import {
   type ChatMessage,
   generateChatCompletionTracked,
   isFatalLLMError,
+  z,
 } from "$lib/server/llm";
 import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
 import { promptTemplates } from "./prompt-templates.js";
@@ -40,6 +41,7 @@ import {
  */
 const WRITING_PROMPT_KEYS = new Set<string>([
   "personal_agent_chat",
+  "personal_agent_chat_capable",
   "write_cover_letter",
   "write_or_advise_cover_letter",
   "advise_cover_letter",
@@ -296,6 +298,31 @@ export async function createAndGenerateAiChat(
      * recap of one. Built by conversation-messages.ts from the version trail.
      */
     historyMessages?: ChatMessage[];
+    /**
+     * Schema override for prompts whose output shape isn't fixed at the prompt
+     * key. The assistant's capability replies are the case this exists for:
+     * which edits are proposable depends on the page and the user's rights, so
+     * the schema is built per turn (see capabilities.buildProposalSchema)
+     * rather than looked up in the static registry.
+     */
+    responseSchema?: z.ZodType<unknown>;
+    /**
+     * Fallbacks for placeholders a template references but this call may not
+     * fill — spread BENEATH the assembled evidence, so they cover the gaps
+     * without overwriting anything real.
+     *
+     * The distinction matters, and getting it wrong is silent. A caller whose
+     * template references every context placeholder has to pre-fill them with
+     * "" or an unsupplied one ships to the model as the literal text
+     * "${jobDetails}". Doing that through `customVariables` looks equivalent
+     * and is not: customVariables are the deliberate override and win over
+     * assembled evidence, so the empties blank the very sources the call just
+     * paid to assemble. That is exactly what happened to the personal
+     * assistant — it requested job, records, documents, projects, stories and
+     * past texts on every application page and then overwrote all six with ""
+     * before the model saw them.
+     */
+    placeholderDefaults?: Record<string, string>;
   },
 ): Promise<{
   success: boolean;
@@ -375,14 +402,17 @@ export async function createAndGenerateAiChat(
     const context = {
       schema: schemaJson,
       data: dataJson,
+      ...(options?.placeholderDefaults || {}),
       ...assembled,
       ...(customVariables || {}),
     } as Record<string, unknown>;
 
     // Step 5: Prepare variables for interpolation (stringified for prompts).
-    // Assembled evidence overrides the base blob (the `profile` source renders
-    // `data` under the budget); explicit customVariables override both.
+    // Layered lowest-to-highest: placeholder fallbacks, then the base blob,
+    // then assembled evidence (the `profile` source renders `data` under the
+    // budget), then explicit customVariables, which are the override.
     const interpolationVariables: Record<string, string> = {
+      ...(options?.placeholderDefaults || {}),
       schema: JSON.stringify(schemaJson, null, 2),
       data: renderProfileData(dataJson),
       ...assembled,
@@ -443,8 +473,9 @@ export async function createAndGenerateAiChat(
       .where(eq(ai_chats.id, aiChat.id));
 
     // Step 7: Generate AI response using generic LLM function
-    // Look up Zod schema from code registry (no longer using database format field)
-    const zodSchema = getSchemaForPrompt(promptKey);
+    // Schema from the caller when the shape is decided per call, else the code
+    // registry keyed by prompt (no longer the database format field).
+    const zodSchema = options?.responseSchema ?? getSchemaForPrompt(promptKey);
     const structuredOutput = zodSchema
       ? {
         name: promptKey.replace(/[^a-zA-Z0-9_]/g, "_"),

@@ -1,62 +1,21 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { ilike, or } from "drizzle-orm";
-import { applications, application_status_log, job_importers, job_platforms, jobs } from "$lib/server/db/schema";
+import { applications, application_status_log, job_importers, jobs } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../profile/utils";
 import { parseJobDescription, type ParsedJobDescription } from "$lib/server/jobs/parse-job-description";
 import { parseCacheKey, recallParse } from "$lib/server/jobs/parse-cache";
+import {
+  datePostedOrNull,
+  detectPlatformId,
+  parseIntOrNull,
+  strArrayOrNull,
+  strOrNull,
+} from "$lib/server/jobs/job-fields";
 import { triggerMatchForImport } from "$lib/server/job/match-trigger";
 import { classifyRegion } from "$lib/data/job-taxonomy";
 import { normalizeExperienceLevels, normalizeJobType, normalizeWorkLocation } from "$lib/data/job-normalize";
 import { normalizeSalaryPeriod } from "$lib/salary/conversion";
-
-/**
- * Best-effort lookup of a job_platforms row whose URL matches the host of the
- * given job URL, mirroring the domain-candidate matching in
- * /api/platforms/detect. Returns null when the URL is empty/invalid or no
- * platform matches — manual jobs are allowed to have no platform.
- */
-async function detectPlatformId(sourceUrl: string | null): Promise<number | null> {
-  if (!sourceUrl) return null;
-  let domain: string;
-  try {
-    const parsed = new URL(sourceUrl.startsWith("http") ? sourceUrl : `https://${sourceUrl}`);
-    domain = parsed.hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-  const labels = domain.split(".");
-  const candidates: string[] = [];
-  for (let i = 0; i < Math.max(labels.length - 1, 1); i++) {
-    candidates.push(labels.slice(i).join("."));
-  }
-  const platform = await db.query.job_platforms.findFirst({
-    where: or(...candidates.map((d) => ilike(job_platforms.url, `%${d}%`))),
-    columns: { id: true },
-  });
-  return platform?.id ?? null;
-}
-
-function parseIntOrNull(value: FormDataEntryValue | null): number | null {
-  const n = parseInt(String(value ?? "").trim(), 10);
-  return Number.isNaN(n) ? null : n;
-}
-
-function strOrNull(value: FormDataEntryValue | null): string | null {
-  const s = String(value ?? "").trim();
-  return s === "" ? null : s;
-}
-
-/**
- * Read a repeated form field (checkbox group) as a canonical string array.
- * Returns null rather than [] so it lines up with the nullable columns and the
- * `?? parsed?.x` fallbacks.
- */
-function strArrayOrNull(values: FormDataEntryValue[]): string[] | null {
-  const list = values.map((v) => String(v).trim()).filter(Boolean);
-  return list.length > 0 ? list : null;
-}
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -171,14 +130,10 @@ export const actions: Actions = {
         : normalizeExperienceLevels(parsed?.experience_levels ?? null);
 
       const effectiveSalaryPeriod = pick(salaryPeriod, parsed?.salary_period ?? null);
-      // date_posted is a Drizzle date() column (string mode); <input type="date">
-      // already posts YYYY-MM-DD, but don't take that on trust.
       const parsedDatePosted = parsed?.date_posted
         ? parsed.date_posted.toISOString().split("T")[0]
         : null;
-      const datePosted = datePostedForm && /^\d{4}-\d{2}-\d{2}$/.test(datePostedForm)
-        ? datePostedForm
-        : null;
+      const datePosted = datePostedOrNull(datePostedForm);
 
       // Detect the platform from whichever URL we settled on — the parser can
       // now recover a job URL from the posting text when the user left the

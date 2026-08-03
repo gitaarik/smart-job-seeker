@@ -498,6 +498,13 @@
       "when": 1785449545190,
       "tag": "0070_application_document_extraction",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1785691936190,
+      "tag": "0071_agent_message_proposals",
+      "breakpoints": true
     }
   ]
 }

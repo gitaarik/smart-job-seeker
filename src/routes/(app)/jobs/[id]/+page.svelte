@@ -16,6 +16,7 @@
     faMoneyBillWave,
     faPaperPlane,
     faPenToSquare,
+    faPlus,
     faBoxArchive,
     faSearch,
     faStar as faStarSolid,
@@ -35,6 +36,10 @@
   import Card from "../../components/Card.svelte";
   import Spinner from "$lib/components/Spinner.svelte";
   import ConfirmModal from "../../profile/components/ConfirmModal.svelte";
+  import JobFieldsForm, {
+    emptyJobFields,
+    type JobFields,
+  } from "../../components/JobFieldsForm.svelte";
   import { formatJobStatus, formatSalaryRange, timeAgo } from "$lib/format";
   import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from "$lib/salary/conversion";
   import CategoryPill from "$lib/components/CategoryPill.svelte";
@@ -59,17 +64,55 @@
   let showReparseConfirm = $state(false);
   let reparseFormEl: HTMLFormElement | undefined = $state();
 
-  // Title editing (manually-created jobs only)
-  let isEditingTitle = $state(false);
-  let titleDraft = $state(data.job.title ?? "");
-  let isSavingTitle = $state(false);
-  let titleError = $state("");
+  // Header-card editing (manually-created jobs only). One mode for the whole
+  // block rather than a pencil per row: salary is four correlated inputs that
+  // make no sense apart, and — the deciding reason — an empty field renders
+  // nothing in view mode, so per-field editing gives you nothing to click to
+  // *add* a missing company.
+  let isEditingDetails = $state(false);
+  let isSavingDetails = $state(false);
+  let detailsError = $state("");
+  // Filled by startEditingDetails() every time the form opens, so it always
+  // reflects the row as last saved rather than as first rendered.
+  let detailsFields = $state<JobFields>(emptyJobFields());
 
-  function startEditingTitle() {
-    titleDraft = job.title ?? "";
-    titleError = "";
-    isEditingTitle = true;
+  /** Snapshot the job's current values into form strings. */
+  function fieldsFromJob(): JobFields {
+    const str = (v: string | number | null | undefined) =>
+      v == null ? "" : String(v);
+    const list = (v: unknown) => (Array.isArray(v) ? [...v] as string[] : []);
+    return {
+      title: str(job.title),
+      company: str(job.company),
+      job_poster: str(job.job_poster),
+      office_location: str(job.office_location),
+      source_url: str(job.source_url),
+      // `date_posted` is a Drizzle date() column in string mode, so it already
+      // arrives as the YYYY-MM-DD that <input type="date"> wants.
+      date_posted: str(job.date_posted),
+      salary_min: str(job.salary_min),
+      salary_max: str(job.salary_max),
+      salary_currency: str(job.salary_currency),
+      // Through the normalizer, so a stored alias ("yearly") still selects its
+      // canonical <option> instead of showing a blank dropdown.
+      salary_period: str(normalizeSalaryPeriod(job.salary_period)),
+      work_location: list(job.work_location),
+      job_types: list(job.job_types),
+      experience_levels: list(job.experience_levels),
+    };
   }
+
+  function startEditingDetails() {
+    detailsFields = fieldsFromJob();
+    detailsError = "";
+    isEditingDetails = true;
+  }
+
+  /** Whether the details list has anything in it beyond the always-on date. */
+  let hasDetailRows = $derived(
+    !!(job.company || job.office_location || job.salary_min ||
+      job.salary_max || job.job_poster || job.job_platform || job.source_url),
+  );
 
   // Description editing (manually-created jobs only)
   let isEditingDescription = $state(false);
@@ -85,6 +128,20 @@
     descriptionDraft = job.job_description ?? "";
     descriptionError = "";
     isEditingDescription = true;
+  }
+
+  // Company-profile editing. Its own editor rather than a field on the header
+  // form: it is long-form prose in its own card, and unlike the description it
+  // is NOT parse input, so it has no re-parse variant.
+  let isEditingCompany = $state(false);
+  let companyDraft = $state("");
+  let isSavingCompany = $state(false);
+  let companyError = $state("");
+
+  function startEditingCompany() {
+    companyDraft = job.company_description ?? "";
+    companyError = "";
+    isEditingCompany = true;
   }
 
   // Staff archive / delete
@@ -206,46 +263,53 @@
           />
         </div>
 
-        <!-- Title -->
-        {#if isEditingTitle}
+        <!-- Header fields: view, or the whole block as one form -->
+        {#if isEditingDetails}
           <form
             method="POST"
-            action="?/updateTitle"
+            action="?/updateDetails"
             use:enhance={() => {
-              isSavingTitle = true;
-              titleError = "";
-              return async ({ result }) => {
-                isSavingTitle = false;
+              isSavingDetails = true;
+              detailsError = "";
+              return async ({ result, update }) => {
+                isSavingDetails = false;
                 if (result.type === "failure") {
-                  titleError = (result.data as { error?: string })?.error ||
+                  detailsError = (result.data as { error?: string })?.error ||
                     "Save failed";
                   return;
                 }
-                job.title = titleDraft.trim();
-                isEditingTitle = false;
+                // The saved row can differ from what was typed — a bare
+                // "Remote" in the location box moves to the work arrangement,
+                // the platform is re-resolved from the URL, salary period is
+                // canonicalized. Take the reloaded row rather than guessing at
+                // those locally. `reset: false` keeps the form's bound values
+                // from being wiped on the way out.
+                await update({ reset: false });
+                job = data.job;
+                isEditingDetails = false;
               };
             }}
           >
-            <input
-              name="title"
-              bind:value={titleDraft}
-              maxlength="255"
-              disabled={isSavingTitle}
-              aria-label="Job title"
-              class="w-full px-3 py-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+            <JobFieldsForm
+              bind:fields={detailsFields}
+              layout="flat"
+              idPrefix="jd"
+              titleSize="heading"
+              disabled={isSavingDetails}
+              datePostedHint="Empty shows the date the job was added instead."
             />
 
-            {#if titleError}
-              <p class="mt-2 text-sm text-red-500">{titleError}</p>
+            {#if detailsError}
+              <p class="mt-3 text-sm text-red-500">{detailsError}</p>
             {/if}
 
-            <div class="flex flex-wrap items-center gap-2 mt-3">
+            <div class="flex flex-wrap items-center gap-2 mt-5">
               <button
                 type="submit"
-                disabled={isSavingTitle}
+                disabled={isSavingDetails}
                 class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
               >
-                {#if isSavingTitle}
+                {#if isSavingDetails}
                   <Spinner size="w-4 h-4" />
                 {/if}
                 Save
@@ -253,8 +317,8 @@
 
               <button
                 type="button"
-                disabled={isSavingTitle}
-                onclick={() => (isEditingTitle = false)}
+                disabled={isSavingDetails}
+                onclick={() => (isEditingDetails = false)}
                 class="px-4 py-2 rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50"
               >
                 Cancel
@@ -262,6 +326,7 @@
             </div>
           </form>
         {:else}
+          <!-- Title -->
           <div class="flex items-start justify-between gap-4">
             <h1 class="text-2xl font-bold text-[var(--dash-text)]">
               {job.title || "Untitled Job"}
@@ -269,112 +334,125 @@
             {#if data.canEditContent}
               <button
                 type="button"
-                onclick={startEditingTitle}
+                onclick={startEditingDetails}
                 class="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors shrink-0"
               >
                 <FontAwesomeIcon icon={faPenToSquare} class="w-3.5 h-3.5" />
-                {job.title ? "Edit" : "Add title"}
+                Edit
+              </button>
+            {/if}
+          </div>
+
+          <!-- Tags (status, job types, work location) -->
+          <div class="flex flex-wrap gap-2 mt-3">
+            {#if job.status !== "hiring"}
+              <span
+                class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+              >
+                {formatJobStatus(job.status)}
+              </span>
+            {/if}
+            {#if job.job_types && Array.isArray(job.job_types)}
+              {#each job.job_types as type}
+                <CategoryPill category="job_type" value={type} />
+              {/each}
+            {/if}
+            {#if job.work_location && Array.isArray(job.work_location)}
+              {#each job.work_location as loc}
+                <CategoryPill category="work_location" value={loc} />
+              {/each}
+            {/if}
+            {#if job.experience_levels && Array.isArray(job.experience_levels)}
+              {#each job.experience_levels as level}
+                <CategoryPill category="experience_level" value={level} />
+              {/each}
+            {/if}
+          </div>
+
+          <!-- Details -->
+          <div class="flex flex-col gap-2 text-sm mt-4 mb-1">
+            {#if job.company}
+              <div class="flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faBuilding} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                <span class="text-[var(--dash-text-muted)]">Company</span>
+                <span class="text-[var(--dash-text)]">{job.company}</span>
+              </div>
+            {/if}
+            {#if job.office_location}
+              <div class="flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                <span class="text-[var(--dash-text-muted)]">Location</span>
+                <span class="text-[var(--dash-text)]">{job.office_location}</span>
+              </div>
+            {/if}
+            {#if job.salary_min || job.salary_max}
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Salary</span>
+              <span class="text-[var(--dash-text)]">
+                {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
+                {#if job.salary_duration_weeks}
+                  <span class="text-[var(--dash-text-secondary)]">
+                    ({job.salary_duration_weeks} week{job.salary_duration_weeks === 1 ? "" : "s"})
+                  </span>
+                {/if}
+              </span>
+              {#if normalizeSalaryPeriod(job.salary_period) === "project" && job.salary_duration_weeks && job.salary_min}
+                <span class="text-xs text-[var(--dash-text-muted)]">
+                  ≈ {formatCurrency(Math.round(projectToHourly(job.salary_min, job.salary_duration_weeks)), job.salary_currency || "USD")}/hr
+                </span>
+              {/if}
+            </div>
+            {/if}
+            <div class="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faCalendar} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+              <span class="text-[var(--dash-text-muted)]">Posted</span>
+              <span class="text-[var(--dash-text)]">{timeAgo(job.date_posted || job.date_created)}</span>
+              <span class="text-[var(--dash-text-muted)]/50">{formatDate(job.date_posted || job.date_created)}</span>
+            </div>
+            {#if job.job_poster && job.job_poster !== job.job_platform?.name}
+              <div class="flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faUser} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                <span class="text-[var(--dash-text-muted)]">Posted by</span>
+                <span class="text-[var(--dash-text)]">{job.job_poster}</span>
+              </div>
+            {/if}
+            {#if job.job_platform}
+              <div class="flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                <span class="text-[var(--dash-text-muted)]">Platform</span>
+                <span class="text-[var(--dash-text)]">{job.job_platform.name}</span>
+              </div>
+            {/if}
+            {#if job.source_url}
+              <div class="flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
+                <span class="text-[var(--dash-text-muted)]">Source</span>
+                <a
+                  href={job.source_url}
+                  target="_blank"
+                  rel="noopener"
+                  class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors truncate"
+                >
+                  {job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
+                </a>
+              </div>
+            {/if}
+
+            <!-- Empty fields render nothing above, so a job with only its date
+                 would otherwise show no way in. -->
+            {#if data.canEditContent && !hasDetailRows}
+              <button
+                type="button"
+                onclick={startEditingDetails}
+                class="flex items-center gap-1.5 self-start text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+              >
+                <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                Add the company, location and salary
               </button>
             {/if}
           </div>
         {/if}
-
-        <!-- Tags (status, job types, work location) -->
-        <div class="flex flex-wrap gap-2 mt-3">
-          {#if job.status !== "hiring"}
-            <span
-              class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-            >
-              {formatJobStatus(job.status)}
-            </span>
-          {/if}
-          {#if job.job_types && Array.isArray(job.job_types)}
-            {#each job.job_types as type}
-              <CategoryPill category="job_type" value={type} />
-            {/each}
-          {/if}
-          {#if job.work_location && Array.isArray(job.work_location)}
-            {#each job.work_location as loc}
-              <CategoryPill category="work_location" value={loc} />
-            {/each}
-          {/if}
-          {#if job.experience_levels && Array.isArray(job.experience_levels)}
-            {#each job.experience_levels as level}
-              <CategoryPill category="experience_level" value={level} />
-            {/each}
-          {/if}
-        </div>
-
-        <!-- Details -->
-        <div class="flex flex-col gap-2 text-sm mt-4 mb-1">
-          {#if job.company}
-            <div class="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faBuilding} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              <span class="text-[var(--dash-text-muted)]">Company</span>
-              <span class="text-[var(--dash-text)]">{job.company}</span>
-            </div>
-          {/if}
-          {#if job.office_location}
-            <div class="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              <span class="text-[var(--dash-text-muted)]">Location</span>
-              <span class="text-[var(--dash-text)]">{job.office_location}</span>
-            </div>
-          {/if}
-          {#if job.salary_min || job.salary_max}
-          <div class="flex items-center gap-1.5">
-            <FontAwesomeIcon icon={faMoneyBillWave} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-            <span class="text-[var(--dash-text-muted)]">Salary</span>
-            <span class="text-[var(--dash-text)]">
-              {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-              {#if job.salary_duration_weeks}
-                <span class="text-[var(--dash-text-secondary)]">
-                  ({job.salary_duration_weeks} week{job.salary_duration_weeks === 1 ? "" : "s"})
-                </span>
-              {/if}
-            </span>
-            {#if normalizeSalaryPeriod(job.salary_period) === "project" && job.salary_duration_weeks && job.salary_min}
-              <span class="text-xs text-[var(--dash-text-muted)]">
-                ≈ {formatCurrency(Math.round(projectToHourly(job.salary_min, job.salary_duration_weeks)), job.salary_currency || "USD")}/hr
-              </span>
-            {/if}
-          </div>
-          {/if}
-          <div class="flex items-center gap-1.5">
-            <FontAwesomeIcon icon={faCalendar} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-            <span class="text-[var(--dash-text-muted)]">Posted</span>
-            <span class="text-[var(--dash-text)]">{timeAgo(job.date_posted || job.date_created)}</span>
-            <span class="text-[var(--dash-text-muted)]/50">{formatDate(job.date_posted || job.date_created)}</span>
-          </div>
-          {#if job.job_poster && job.job_poster !== job.job_platform?.name}
-            <div class="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faUser} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              <span class="text-[var(--dash-text-muted)]">Posted by</span>
-              <span class="text-[var(--dash-text)]">{job.job_poster}</span>
-            </div>
-          {/if}
-          {#if job.job_platform}
-            <div class="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              <span class="text-[var(--dash-text-muted)]">Platform</span>
-              <span class="text-[var(--dash-text)]">{job.job_platform.name}</span>
-            </div>
-          {/if}
-          {#if job.source_url}
-            <div class="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3.5 h-3.5 text-[var(--dash-text-muted)]" />
-              <span class="text-[var(--dash-text-muted)]">Source</span>
-              <a
-                href={job.source_url}
-                target="_blank"
-                rel="noopener"
-                class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors truncate"
-              >
-                {job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
-              </a>
-            </div>
-          {/if}
-        </div>
 
         <!-- Action Buttons (footer) -->
         <div class="flex flex-wrap items-center gap-2 -mx-6 -mb-6 mt-4 px-6 py-4 border-t border-[var(--dash-border)]">
@@ -639,16 +717,93 @@
       {/if}
 
       <!-- Company Description -->
-      {#if job.company_description}
+      {#if job.company_description || data.canEditContent}
         <Card padding="lg">
-          <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
-            About {job.company || "the Company"}
-          </h2>
-          <div
-            class="prose prose-sm max-w-none text-[var(--dash-text)] whitespace-pre-wrap"
-          >
-            {job.company_description}
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <h2 class="text-lg font-semibold text-[var(--dash-text)]">
+              About {job.company || "the Company"}
+            </h2>
+            {#if data.canEditContent && !isEditingCompany}
+              <button
+                type="button"
+                onclick={startEditingCompany}
+                class="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors shrink-0"
+              >
+                <FontAwesomeIcon icon={faPenToSquare} class="w-3.5 h-3.5" />
+                {job.company_description ? "Edit" : "Add company profile"}
+              </button>
+            {/if}
           </div>
+
+          {#if isEditingCompany}
+            <form
+              method="POST"
+              action="?/updateCompanyDescription"
+              use:enhance={() => {
+                isSavingCompany = true;
+                companyError = "";
+                return async ({ result }) => {
+                  isSavingCompany = false;
+                  if (result.type === "failure") {
+                    companyError = (result.data as { error?: string })?.error ||
+                      "Save failed";
+                    return;
+                  }
+                  job.company_description = companyDraft.trim() || null;
+                  isEditingCompany = false;
+                };
+              }}
+            >
+              <textarea
+                name="company_description"
+                bind:value={companyDraft}
+                rows="8"
+                disabled={isSavingCompany}
+                aria-label="About the company"
+                class="w-full px-3 py-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+              ></textarea>
+
+              <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+                Who the company is, not what the role is. Leave empty to remove it.
+              </p>
+
+              {#if companyError}
+                <p class="mt-2 text-sm text-red-500">{companyError}</p>
+              {/if}
+
+              <div class="flex flex-wrap items-center gap-2 mt-3">
+                <button
+                  type="submit"
+                  disabled={isSavingCompany}
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
+                >
+                  {#if isSavingCompany}
+                    <Spinner size="w-4 h-4" />
+                  {/if}
+                  Save
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSavingCompany}
+                  onclick={() => (isEditingCompany = false)}
+                  class="px-4 py-2 rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          {:else if job.company_description}
+            <div
+              class="prose prose-sm max-w-none text-[var(--dash-text)] whitespace-pre-wrap"
+            >
+              {job.company_description}
+            </div>
+          {:else}
+            <p class="text-sm text-[var(--dash-text-muted)]">
+              Nothing about the company yet.
+            </p>
+          {/if}
         </Card>
       {/if}
     </div>

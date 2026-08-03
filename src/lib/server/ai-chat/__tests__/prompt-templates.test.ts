@@ -107,6 +107,9 @@ const INTERVIEW_HISTORY_SUPPLIED_BY: Record<string, string> = {
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
   personal_agent_chat: "routes/api/ai/agent",
+  // Same caller, same evidence — the capable variant only adds
+  // ${capabilities} on top and is chosen per turn.
+  personal_agent_chat_capable: "routes/api/ai/agent",
   // ai-chat/application-letter.ts — all letter types share customVariables.
   write_cover_letter: "application-letter.ts",
   write_or_advise_cover_letter: "application-letter.ts",
@@ -209,6 +212,9 @@ const APPLICATION_DOCUMENTS_SUPPLIED_BY: Record<string, string> = {
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
   personal_agent_chat: "routes/api/ai/agent",
+  // Same caller, same evidence — the capable variant only adds
+  // ${capabilities} on top and is chosen per turn.
+  personal_agent_chat_capable: "routes/api/ai/agent",
   // ai-chat/application-letter.ts — all letter types share customVariables.
   write_cover_letter: "application-letter.ts",
   write_or_advise_cover_letter: "application-letter.ts",
@@ -374,6 +380,9 @@ const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
   personal_agent_chat: "routes/api/ai/agent",
+  // Same caller, same evidence — the capable variant only adds
+  // ${capabilities} on top and is chosen per turn.
+  personal_agent_chat_capable: "routes/api/ai/agent",
   // ai-chat/application-letter.ts — generate and auto modes (both letter types);
   // auto may write a draft, which needs the retrieval.
   write_cover_letter: "application-letter.ts",
@@ -437,6 +446,9 @@ const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
   personal_agent_chat: "routes/api/ai/agent",
+  // Same caller, same evidence — the capable variant only adds
+  // ${capabilities} on top and is chosen per turn.
+  personal_agent_chat_capable: "routes/api/ai/agent",
   // ai-chat/profile-cheatsheet.ts — generate + auto, via the generation-context
   // provider (sources include "stories").
   write_prep_sheet: "profile-cheatsheet.ts",
@@ -488,6 +500,9 @@ const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
   // the page route (ai-chat/chat-context.ts); the placeholder is pre-filled
   // with "" on routes whose scope doesn't include the source.
   personal_agent_chat: "routes/api/ai/agent",
+  // Same caller, same evidence — the capable variant only adds
+  // ${capabilities} on top and is chosen per turn.
+  personal_agent_chat_capable: "routes/api/ai/agent",
   write_prep_sheet: "profile-cheatsheet.ts",
   write_or_advise_prep_sheet: "profile-cheatsheet.ts",
   write_star_story: "profile-story.ts",

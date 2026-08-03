@@ -22,15 +22,32 @@ import type {
   GenerationContextOption,
   RelevanceQuery,
 } from "./generation-context";
+import {
+  type Capability,
+  type LiveCapability,
+  resolveCapabilities,
+} from "./capabilities";
 
 /**
  * Char budget for the chat's evidence blocks (the profile blob is exempt — see
- * ContextRequest.budgetChars). Tighter than a generator's default: a chat also
+ * ContextRequest.budgetChars). Still below a generator's default: a chat also
  * replays up to MAX_CONTEXT_MESSAGES turns of conversation into the same
  * window, and on an application page it requests more sources at once than any
  * single generator does.
+ *
+ * Raised from 20000, which was under what one application actually needs. On a
+ * real application with eleven attached emails, the sources measured:
+ *
+ *   jobDetails 5258 · applicationDocuments 15738 · stories 1983 · texts 3362
+ *
+ * — 26.3k in total, so at 20k the documents lost the budget race to the job
+ * description and the assistant reported it could not see them at all. 32k
+ * clears that case with room to spare, and the totals plateau there: raising it
+ * further bought nothing on the same application. For scale, the profile blob
+ * alongside it is 56k and is not charged against this at all, so the extra 12k
+ * is a fraction of what every turn already sends.
  */
-export const CHAT_BUDGET_CHARS = 20000;
+export const CHAT_BUDGET_CHARS = 32000;
 
 /** Which entity a route is about, and what the assistant should draw on there. */
 interface RouteScope {
@@ -38,6 +55,13 @@ interface RouteScope {
   /** Route param holding the entity id. Ignored when entity is null. */
   param?: string;
   sources: ContextSource[];
+  /**
+   * Edits the assistant may propose here — see capabilities.ts. Declaring one
+   * is not granting it: each is re-resolved and re-authorized per turn, and
+   * again at apply time, so listing a capability a user can't exercise just
+   * means they never hear about it.
+   */
+  capabilities?: Capability[];
 }
 
 /** Profile-only pages: no entity, just the applicant and their material. */
@@ -59,6 +83,14 @@ const APPLICATION_SCOPE: RouteScope = {
     "stories",
     "application_texts",
   ],
+  // The job capabilities reach the attached job through `application.job_id`,
+  // so a manually-created job can be corrected from the application it belongs
+  // to without leaving the page. They drop out for scraped jobs.
+  capabilities: [
+    "edit_application_details",
+    "edit_job_details",
+    "edit_job_description",
+  ],
 };
 
 /**
@@ -76,6 +108,7 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
     // attached — but past application writing is still worth drawing on when
     // the user asks "should I apply?" or "how would I pitch this?".
     sources: ["profile", "job", "projects", "stories", "application_texts"],
+    capabilities: ["edit_job_details", "edit_job_description"],
   },
   "/applications/interview": PROFILE_SCOPE,
   "/profile": PROFILE_SCOPE,
@@ -172,16 +205,26 @@ async function entityQueryTerms(
 }
 
 /**
- * Build the context request for a chat turn. `message` is the user's newest
- * message — it is the primary ranking signal, since what they just asked is
- * what they want evidence about.
+ * Build the context request for a chat turn, plus the edits the assistant may
+ * propose on it. `message` is the user's newest message — it is the primary
+ * ranking signal, since what they just asked is what they want evidence about.
+ *
+ * `isStaff` is read from the session by the caller, never from the request
+ * body: the route and its params are client-supplied, and once they gate a
+ * capability rather than only scoping reads, everything they touch has to be
+ * re-derived server-side. That is why capabilities are resolved here, against
+ * the entity this function authorized, and not trusted from the payload.
  */
 export async function resolveChatContext(opts: {
   routeId: string | null | undefined;
   params: Record<string, string>;
   profileId: number;
+  isStaff: boolean;
   message: string;
-}): Promise<GenerationContextOption> {
+}): Promise<{
+  context: GenerationContextOption;
+  capabilities: LiveCapability[];
+}> {
   const scope = scopeForRoute(opts.routeId);
   const entity = await resolveEntity(scope, opts.params, opts.profileId);
   const terms = await entityQueryTerms(entity);
@@ -200,10 +243,22 @@ export async function resolveChatContext(opts: {
       s !== "application_documents"
     );
 
+  // Jobs resolve for any signed-in user by design (see resolveEntity), so the
+  // entity resolving says nothing about edit rights. resolveCapabilities asks
+  // each capability's own authorize().
+  const capabilities = await resolveCapabilities(
+    scope.capabilities ?? [],
+    entity,
+    { profileId: opts.profileId, isStaff: opts.isStaff },
+  );
+
   return {
-    query,
-    entity: entity ?? undefined,
-    sources,
-    budgetChars: CHAT_BUDGET_CHARS,
+    context: {
+      query,
+      entity: entity ?? undefined,
+      sources,
+      budgetChars: CHAT_BUDGET_CHARS,
+    },
+    capabilities,
   };
 }

@@ -1,5 +1,5 @@
 /**
- * Tests for the `updateTitle` and `updateDescription` form actions.
+ * Tests for the `updateDetails` and `updateDescription` form actions.
  *
  * Both share an edit permission gate (manual jobs, owned or staff) and an empty
  * guard. The description's extra concern — and the point of that feature — is
@@ -7,6 +7,11 @@
  * reads in preference to `job_description`. Without that mirror a
  * "Save & re-parse" would re-read the stale capture and silently ignore the
  * edit.
+ *
+ * `updateDetails` carries the header card's fields. Its own concerns are that
+ * the form is authoritative (a cleared box clears the column, which is the only
+ * way to remove a wrong salary), that the taxonomy/location split matches the
+ * create path, and that it leaves scoring alone.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,6 +25,7 @@ const mockDelete = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 const mockGetSelectedProfileId = vi.fn();
 const mockParseJobDescription = vi.fn();
 const mockAddMatchJob = vi.fn().mockResolvedValue({ score: 77 });
+const mockDetectPlatformId = vi.fn().mockResolvedValue(null);
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
@@ -72,26 +78,54 @@ vi.mock("../../../profile/utils", () => ({
 vi.mock("$lib/server/jobs/parse-job-description", () => ({
   parseJobDescription: (...a: any[]) => mockParseJobDescription(...a),
 }));
+vi.mock("$lib/server/jobs/job-fields", async (importOriginal) => ({
+  // Only the platform lookup touches the DB; the coercion helpers are pure and
+  // are exactly what these tests are checking the action wires up correctly.
+  ...(await importOriginal<typeof import("$lib/server/jobs/job-fields")>()),
+  detectPlatformId: (...a: any[]) => mockDetectPlatformId(...a),
+}));
 
 import { actions } from "../+page.server";
 
+/** Repeated fields (the taxonomy checkbox groups) post as arrays. */
+type DetailFields = Record<string, string | string[]>;
+
 function createEvent(opts: {
   description?: string;
-  title?: string;
   reparse?: string;
+  fields?: DetailFields;
   user?: any;
   params?: Record<string, string>;
 } = {}) {
   const fd = new FormData();
   if (opts.description !== undefined) fd.set("description", opts.description);
-  if (opts.title !== undefined) fd.set("title", opts.title);
   if (opts.reparse !== undefined) fd.set("reparse", opts.reparse);
+  for (const [key, value] of Object.entries(opts.fields ?? {})) {
+    for (const v of Array.isArray(value) ? value : [value]) fd.append(key, v);
+  }
   return {
     params: opts.params ?? { id: "3815" },
     locals: { user: opts.user === undefined ? { id: "user-1" } : opts.user },
     cookies: {} as any,
     request: { formData: async () => fd },
   } as any;
+}
+
+/** The header form as the browser posts it: every field present, blanks empty. */
+function detailsForm(overrides: DetailFields = {}): DetailFields {
+  return {
+    title: "Senior Svelte Engineer",
+    company: "",
+    job_poster: "",
+    office_location: "",
+    source_url: "",
+    date_posted: "",
+    salary_min: "",
+    salary_max: "",
+    salary_currency: "",
+    salary_period: "",
+    ...overrides,
+  };
 }
 
 /** A parse result with only the fields the action reads back. */
@@ -132,46 +166,54 @@ function resetMocks() {
   mockJobFindFirst.mockResolvedValue({ created_manually: true });
   mockImporterFindFirst.mockResolvedValue({ job_id: 3815 });
   mockAddMatchJob.mockResolvedValue({ score: 77 });
+  mockDetectPlatformId.mockResolvedValue(null);
 }
 
-describe("updateTitle action", () => {
+describe("updateDetails action", () => {
   beforeEach(resetMocks);
 
   it("rejects unauthenticated", async () => {
-    const res = await actions.updateTitle!(
-      createEvent({ title: "New Title", user: null }),
+    const res = await actions.updateDetails!(
+      createEvent({ fields: detailsForm(), user: null }),
     );
     expect(res).toMatchObject({ status: 401 });
   });
 
   it("rejects a scraped job", async () => {
     mockJobFindFirst.mockResolvedValueOnce({ created_manually: false });
-    const res = await actions.updateTitle!(createEvent({ title: "New Title" }));
+    const res = await actions.updateDetails!(
+      createEvent({ fields: detailsForm() }),
+    );
     expect(res).toMatchObject({ status: 403 });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it("rejects a manual job this profile did not import", async () => {
     mockImporterFindFirst.mockResolvedValueOnce(undefined);
-    const res = await actions.updateTitle!(createEvent({ title: "New Title" }));
+    const res = await actions.updateDetails!(
+      createEvent({ fields: detailsForm() }),
+    );
     expect(res).toMatchObject({ status: 403 });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it("lets staff edit a manual job they did not import", async () => {
     mockImporterFindFirst.mockResolvedValue(undefined);
-    const res = await actions.updateTitle!(
+    const res = await actions.updateDetails!(
       createEvent({
-        title: "New Title",
+        fields: detailsForm(),
         user: { id: "user-1", is_staff: true },
       }),
     );
-    expect(res).toMatchObject({ success: true, action: "titleSaved" });
+    expect(res).toMatchObject({ success: true, action: "detailsSaved" });
+    // Staff short-circuit the ownership lookup entirely.
     expect(mockImporterFindFirst).not.toHaveBeenCalled();
   });
 
   it("rejects a blank title", async () => {
-    const res = await actions.updateTitle!(createEvent({ title: "   " }));
+    const res = await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ title: "   " }) }),
+    );
     expect(res).toMatchObject({ status: 400 });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
@@ -179,32 +221,151 @@ describe("updateTitle action", () => {
   it("rejects a title past the column width", async () => {
     // The browser caps this with maxlength; a direct POST would otherwise
     // reach the varchar(255) column and fail at the DB instead.
-    const res = await actions.updateTitle!(
-      createEvent({ title: "x".repeat(256) }),
+    const res = await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ title: "x".repeat(256) }) }),
     );
     expect(res).toMatchObject({ status: 400 });
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it("saves the trimmed title without touching the parse input", async () => {
-    const res = await actions.updateTitle!(
-      createEvent({ title: "  Senior Svelte Engineer  " }),
+  it("saves the posted fields without touching the parse input", async () => {
+    const res = await actions.updateDetails!(
+      createEvent({
+        fields: detailsForm({
+          title: "  Senior Svelte Engineer  ",
+          company: "Acme Inc.",
+          job_poster: "Roman",
+          office_location: "Amsterdam",
+          date_posted: "2026-07-30",
+          salary_min: "50",
+          salary_max: "150",
+          salary_currency: "USD",
+          salary_period: "hour",
+          job_types: ["contract"],
+          experience_levels: ["senior"],
+        }),
+      }),
     );
     expect(res).toMatchObject({
       success: true,
-      action: "titleSaved",
+      action: "detailsSaved",
       title: "Senior Svelte Engineer",
     });
     expect(mockUpdateSet).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Senior Svelte Engineer" }),
+      expect.objectContaining({
+        title: "Senior Svelte Engineer",
+        company: "Acme Inc.",
+        job_poster: "Roman",
+        office_location: "Amsterdam",
+        date_posted: "2026-07-30",
+        salary_min: 50,
+        salary_max: 150,
+        salary_currency: "USD",
+        salary_period: "hour",
+        job_types: ["contract"],
+        experience_levels: ["senior"],
+      }),
     );
-    // A title edit is not parse input — the stored content and the score are
+    // A metadata edit is not parse input — the stored content and the score are
     // left exactly as they were.
     expect(mockUpdateSet).not.toHaveBeenCalledWith(
       expect.objectContaining({ source_html_stripped: expect.anything() }),
     );
     expect(mockParseJobDescription).not.toHaveBeenCalled();
     expect(mockAddMatchJob).not.toHaveBeenCalled();
+  });
+
+  it("clears the columns whose boxes were emptied", async () => {
+    // The form is authoritative, which is the only reading under which
+    // "remove the salary I got wrong" works at all.
+    await actions.updateDetails!(createEvent({ fields: detailsForm() }));
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        company: null,
+        job_poster: null,
+        office_location: null,
+        source_url: null,
+        date_posted: null,
+        salary_min: null,
+        salary_max: null,
+        salary_currency: null,
+        salary_period: null,
+        work_location: null,
+        job_types: null,
+        experience_levels: null,
+      }),
+    );
+  });
+
+  it("folds a work arrangement typed into the location box", async () => {
+    // Mirrors upsertJob and the create form: "Remote" is an arrangement, not a
+    // city, so it moves rather than being lost to a location column nobody
+    // filters on.
+    await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ office_location: "Remote" }) }),
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        office_location: null,
+        work_location: ["remote"],
+      }),
+    );
+  });
+
+  it("canonicalizes a salary period alias", async () => {
+    await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ salary_period: "yearly" }) }),
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ salary_period: "year" }),
+    );
+  });
+
+  it("rejects a malformed date rather than writing it", async () => {
+    await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ date_posted: "30-07-2026" }) }),
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ date_posted: null }),
+    );
+  });
+
+  it("re-resolves the platform from a changed URL", async () => {
+    mockDetectPlatformId.mockResolvedValueOnce(7);
+    await actions.updateDetails!(
+      createEvent({
+        fields: detailsForm({ source_url: "https://www.linkedin.com/jobs/1" }),
+      }),
+    );
+    expect(mockDetectPlatformId).toHaveBeenCalledWith(
+      "https://www.linkedin.com/jobs/1",
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ job_platform_id: 7 }),
+    );
+  });
+
+  it("keeps a project duration only while the period is still a project", async () => {
+    // The duration isn't on the form, so it would otherwise survive a switch to
+    // an hourly rate and render "$50/hour (6 weeks)".
+    mockJobFindFirst.mockResolvedValue({
+      created_manually: true,
+      salary_duration_weeks: 6,
+    });
+
+    await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ salary_period: "project" }) }),
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ salary_duration_weeks: 6 }),
+    );
+
+    await actions.updateDetails!(
+      createEvent({ fields: detailsForm({ salary_period: "hour" }) }),
+    );
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ salary_duration_weeks: null }),
+    );
   });
 });
 

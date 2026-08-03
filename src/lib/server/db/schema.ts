@@ -2287,6 +2287,25 @@ export const agent_messages = pgTable("agent_messages", {
   profile_id: integer(),
   // Links an assistant turn to its ai_chats audit row for token/credit accounting.
   ai_chat_id: integer(),
+  /**
+   * An edit this turn proposed, pending the user's decision — see
+   * ai-chat/capabilities.ts. Stored rather than held client-side because
+   * threads resume for 12h and the card has to come back with them; it also
+   * gives `proposal_applied_at` somewhere to hang, so an applied proposal shows
+   * as applied instead of being offered a second time.
+   *
+   * The payload is the model's, so it is re-validated and re-authorized at
+   * apply time. Nothing here is trusted on the way back out.
+   */
+  proposal: jsonb().$type<
+    {
+      capability: string;
+      rationale: string;
+      fields: Record<string, unknown>;
+      target: { id: number; label: string };
+    } | null
+  >(),
+  proposal_applied_at: timestamp({ withTimezone: true, mode: "date" }),
   date_created: timestamp({ withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [

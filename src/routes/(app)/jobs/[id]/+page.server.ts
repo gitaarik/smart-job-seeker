@@ -21,6 +21,19 @@ import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
 import { parseJobDescription } from "$lib/server/jobs/parse-job-description";
+import {
+  parseIntOrNull,
+  strArrayOrNull,
+  strOrNull,
+} from "$lib/server/jobs/job-fields";
+import {
+  applyJobDescription,
+  applyJobFields,
+  applyJobTexts,
+  canEditJobContent,
+  type JobFieldValues,
+  validateJobFields,
+} from "$lib/server/jobs/edit-job";
 import { classifyRegion } from "$lib/data/job-taxonomy";
 import {
   normalizeExperienceLevels,
@@ -36,9 +49,6 @@ import { normalizeSalaryPeriod } from "$lib/salary/conversion";
  * score that lands a cycle later.
  */
 const RESCORE_TIMEOUT_MS = 45_000;
-
-/** Matches the `jobs.title` varchar width — a longer value errors at the DB. */
-const TITLE_MAX_LENGTH = 255;
 
 /**
  * Re-extract parser-owned fields from a job's stored content and re-score it.
@@ -164,33 +174,6 @@ async function reparseAndRescore(
   }
 
   return { ok: true, title: parsed.title ?? job.title };
-}
-
-/**
- * Whether `profileId` may hand-edit this job's title and description.
- *
- * Jobs are shared across profiles, so editing is limited to manually-created
- * ones — a scraped job's content is a page capture that the next rescrape
- * would overwrite anyway. Within those, only the profile that created the job
- * (its importer) or staff can edit.
- */
-async function canEditJobContent(
-  jobId: number,
-  profileId: number,
-  createdManually: boolean,
-  isStaff: boolean,
-): Promise<boolean> {
-  if (!createdManually) return false;
-  if (isStaff) return true;
-
-  const importer = await db.query.job_importers.findFirst({
-    where: and(
-      eq(job_importers.job_id, jobId),
-      eq(job_importers.profile_id, profileId),
-    ),
-    columns: { job_id: true },
-  });
-  return !!importer;
 }
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -710,13 +693,22 @@ export const actions: Actions = {
   },
 
   /**
-   * Hand-edit a manually-created job's title.
+   * Hand-edit a manually-created job's header fields: title, company, poster,
+   * location, URL, date posted, salary and the three taxonomy groups.
    *
-   * No re-parse variant, unlike the description: the title is parser *output*,
-   * not input, so a hand-set title stands until the next "Save & re-parse"
-   * overwrites it from the description text.
+   * No re-parse variant, unlike the description. These are all parser *output*,
+   * not input, so hand-set values stand until the next "Save & re-parse"
+   * overwrites them from the description text — and re-scoring is deliberately
+   * left alone, matching what the description edit does when saved without
+   * re-parse. Nothing here feeds the score except the taxonomy fields, and a
+   * metadata fix shouldn't quietly spend AI usage; the staff "Re-score" button
+   * and "Save & re-parse" remain the explicit paths.
+   *
+   * The form is authoritative for every field it posts — clearing a box clears
+   * the column. That mirrors the create form's reviewed-parse branch, and it is
+   * the only reading under which "remove the salary I got wrong" works.
    */
-  updateTitle: async ({ request, locals, cookies, params }) => {
+  updateDetails: async ({ request, locals, cookies, params }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
@@ -749,26 +741,34 @@ export const actions: Actions = {
       isStaff,
     );
     if (!allowed) {
-      return fail(403, { error: "This job's title can't be edited" });
+      return fail(403, { error: "This job's details can't be edited" });
     }
 
     const formData = await request.formData();
-    const title = ((formData.get("title") as string) ?? "").trim();
+    const fields: JobFieldValues = {
+      title: strOrNull(formData.get("title")) ?? "",
+      company: strOrNull(formData.get("company")),
+      job_poster: strOrNull(formData.get("job_poster")),
+      office_location: strOrNull(formData.get("office_location")),
+      source_url: strOrNull(formData.get("source_url")),
+      date_posted: strOrNull(formData.get("date_posted")),
+      salary_min: parseIntOrNull(formData.get("salary_min")),
+      salary_max: parseIntOrNull(formData.get("salary_max")),
+      salary_currency: strOrNull(formData.get("salary_currency")),
+      salary_period: strOrNull(formData.get("salary_period")),
+      work_location: strArrayOrNull(formData.getAll("work_location")),
+      job_types: strArrayOrNull(formData.getAll("job_types")),
+      experience_levels: strArrayOrNull(formData.getAll("experience_levels")),
+    };
 
-    if (!title) {
-      return fail(400, { error: "Title cannot be empty" });
+    const valid = validateJobFields(fields);
+    if (!valid.ok) {
+      return fail(400, { error: valid.error });
     }
-    if (title.length > TITLE_MAX_LENGTH) {
-      return fail(400, {
-        error: `Title cannot be longer than ${TITLE_MAX_LENGTH} characters`,
-      });
-    }
 
-    await db.update(jobsTable)
-      .set({ title, date_updated: new Date() })
-      .where(eq(jobsTable.id, jobId));
+    await applyJobFields(jobId, fields);
 
-    return { success: true, action: "titleSaved", title };
+    return { success: true, action: "detailsSaved", title: fields.title.trim() };
   },
 
   /**
@@ -819,17 +819,7 @@ export const actions: Actions = {
       return fail(400, { error: "Description cannot be empty" });
     }
 
-    // The edited text becomes the canonical content: mirror it into
-    // source_html_stripped, which re-parse reads in preference to the
-    // description. Without this the parser would re-read the stale capture and
-    // the edit would silently have no effect.
-    await db.update(jobsTable)
-      .set({
-        job_description: description,
-        source_html_stripped: description,
-        date_updated: new Date(),
-      })
-      .where(eq(jobsTable.id, jobId));
+    await applyJobDescription(jobId, description);
 
     if (!reparse) {
       return { success: true, action: "descriptionSaved", description };
@@ -848,6 +838,68 @@ export const actions: Actions = {
       success: true,
       action: "descriptionReparsed",
       title: result.title,
+    };
+  },
+
+  /**
+   * Hand-edit the "About the company" blurb.
+   *
+   * Separate from updateDescription and with no re-parse variant, because it is
+   * parser *output*, not parse input: it must never be mirrored into
+   * `source_html_stripped`, or a re-parse would read a company profile back in
+   * as though it were the posting.
+   *
+   * Unlike the other two texts this one is also reachable by the assistant
+   * (`edit_job_description`), so a field only the AI could change would be an
+   * odd asymmetry — both write through applyJobTexts.
+   */
+  updateCompanyDescription: async ({ request, locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobsTable.id, jobId),
+      columns: { created_manually: true },
+    });
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff ||
+      !!(user as { is_admin?: boolean }).is_admin;
+    const allowed = await canEditJobContent(
+      jobId,
+      profileId,
+      job.created_manually,
+      isStaff,
+    );
+    if (!allowed) {
+      return fail(403, { error: "This job's company profile can't be edited" });
+    }
+
+    const formData = await request.formData();
+    // Empty is legitimate here — not every job has anything worth saying about
+    // the company, and clearing a stale blurb is a real thing to want.
+    const companyDescription = strOrNull(formData.get("company_description"));
+
+    await applyJobTexts(jobId, { company_description: companyDescription });
+
+    return {
+      success: true,
+      action: "companyDescriptionSaved",
+      companyDescription,
     };
   },
 

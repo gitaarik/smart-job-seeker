@@ -166,6 +166,12 @@ export interface AssembledContext {
   /** Sources that contributed non-empty content (for logging / tests). */
   usedSources: ContextSource[];
   /**
+   * Sources that produced content and were then dropped to fit the budget —
+   * as opposed to the ones that simply had nothing. Their variable carries a
+   * note saying so rather than "" (see droppedNote).
+   */
+  droppedSources: ContextSource[];
+  /**
    * Size of the profile blob, which is exempt from `budgetChars`. Reported so
    * the dominant block in the prompt is at least observable — it is typically
    * 2–4× everything else combined.
@@ -193,6 +199,17 @@ interface SourceDef {
   priority: number;
   /** Render this source to a self-contained prompt block ("" when nothing fits). */
   render(req: ContextRequest): Promise<string>;
+  /**
+   * Whether this request actually performed a lookup, as opposed to declining
+   * to (no entity of the right type, no query to rank against).
+   *
+   * `render` returns "" for both, and the difference is exactly what the model
+   * needs: "we looked and there is none" is worth saying, "we never looked"
+   * must stay silent, and conflating them is how the assistant came to tell a
+   * user on a job page that their application had no interview records.
+   * Omitted means never — silence is the safe default.
+   */
+  looked?(req: ContextRequest): boolean;
 }
 
 /**
@@ -220,6 +237,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   job: {
     variable: "jobDetails",
     priority: 50,
+    looked: (req) => !!req.entity,
     render: async (req) => {
       if (!req.entity) return "";
       return jobDetailsText(
@@ -232,6 +250,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   application_records: {
     variable: "interviewHistory",
     priority: 40,
+    looked: (req) => applicationId(req) != null,
     render: async (req) => {
       const id = applicationId(req);
       if (id == null) return "";
@@ -244,6 +263,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   application_documents: {
     variable: "applicationDocuments",
     priority: 30,
+    looked: (req) => applicationId(req) != null,
     render: async (req) => {
       const id = applicationId(req);
       if (id == null) return "";
@@ -258,6 +278,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   projects: {
     variable: "relevantProjects",
     priority: 10,
+    looked: (req) => hasQuery(req),
     render: async (req) => {
       // No query → nothing to rank against; skip the retrieval (and its
       // embedding search) entirely rather than rank against noise.
@@ -272,6 +293,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   stories: {
     variable: "relevantStories",
     priority: 8,
+    looked: (req) => hasQuery(req),
     render: async (req) => {
       if (!hasQuery(req)) return "";
       return relevantStoriesText(
@@ -284,6 +306,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   application_texts: {
     variable: "relevantApplicationTexts",
     priority: 6,
+    looked: (req) => hasQuery(req),
     render: async (req) => {
       if (!hasQuery(req)) return "";
       return relevantApplicationTextsText(
@@ -361,6 +384,48 @@ export function fitToBudget(
   return kept;
 }
 
+/** What the user would call each source, for the dropped-for-budget note. */
+const SOURCE_LABELS: Record<ContextSource, string> = {
+  profile: "the applicant's profile",
+  job: "the job posting",
+  application_records: "the interview and contact records on this application",
+  application_documents: "the documents attached to this application",
+  projects: "the applicant's projects",
+  stories: "the applicant's prepared stories",
+  application_texts: "the applicant's past application writing",
+};
+
+/**
+ * Stand-in for a source that rendered but didn't fit.
+ *
+ * Deliberately states that the material exists and is reachable, because the
+ * failure this replaces was the model concluding from an empty section that it
+ * had no access at all and telling the user so.
+ */
+function droppedNote(source: ContextSource): string {
+  return `[${SOURCE_LABELS[source]} could not be included in this reply — ` +
+    `there is more of it than fits alongside the rest of the context. It ` +
+    `exists and you can see it; say so plainly and ask the user to narrow ` +
+    `what they need from it, rather than saying you have no access to it.]`;
+}
+
+/**
+ * Stand-in for a source that was requested and found nothing.
+ *
+ * The third state, and the one that cost a user three round trips: a page where
+ * documents ARE readable but none are attached rendered "", exactly like a page
+ * where documents aren't in scope at all. The model couldn't tell the two apart
+ * and reported the capability missing — "I can't access your uploaded
+ * documents" — when the accurate answer was "this application has none", which
+ * would have pointed straight at the real problem (the documents were on a
+ * different application).
+ */
+function emptyNote(source: ContextSource): string {
+  return `[${SOURCE_LABELS[source]}: nothing here. You CAN read this, and ` +
+    `there is simply none of it on what the user is currently looking at — ` +
+    `never say you lack access. Only bring this up if they ask about it.]`;
+}
+
 /**
  * Assemble the evidence context for a generation. Renders every requested source
  * (in parallel — each may hit the DB or an embedding search), trims to budget,
@@ -394,14 +459,38 @@ export async function assembleGenerationContext(
 
   const variables: Record<string, string> = {};
   const usedSources: ContextSource[] = [];
+  const droppedSources: ContextSource[] = [];
   for (const source of req.sources) {
     const text = kept.get(source) ?? "";
-    variables[SOURCES[source].variable] = text;
-    if (text) usedSources.push(source);
+    if (text) {
+      variables[SOURCES[source].variable] = text;
+      usedSources.push(source);
+      continue;
+    }
+
+    // Empty and dropped are different facts, and conflating them is what let
+    // the assistant tell a user it "can't access your uploaded documents" on an
+    // application that had eleven attached: they rendered, then lost the budget
+    // race to the job description, and arrived as "" — indistinguishable from
+    // having none. A source that produced text and didn't fit says so, so the
+    // model reports a limit instead of denying the data exists.
+    const rendered = evidence.find((b) => b.source === source);
+    if (rendered?.text) {
+      droppedSources.push(source);
+      variables[SOURCES[source].variable] = droppedNote(source);
+    } else {
+      // Requested and empty is NOT the same as never looked, and the model
+      // has to be told which one it is holding. Only a source that ran its
+      // lookup gets to say "there is none"; anything else stays silent.
+      variables[SOURCES[source].variable] = SOURCES[source].looked?.(req)
+        ? emptyNote(source)
+        : "";
+    }
   }
   return {
     variables,
     usedSources,
+    droppedSources,
     profileChars: profileBlock?.text.length ?? 0,
   };
 }
