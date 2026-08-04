@@ -168,7 +168,21 @@ describe("formatPipelineContext", () => {
     it("says plainly that none of them is the current one", () => {
       const out = formatPipelineContext([row()]);
       expect(out).toContain("none of these is the current one");
-      expect(out).toContain("do not single one");
+    });
+
+    // Page fact vs block fact. "The user is not looking at any one
+    // application" belongs to page_scope, which states it once for every block;
+    // this one only reports what is true of ITS rows. The two used to say it
+    // both, from different evidence, which is how a rule drifts from itself.
+    it("leaves where-the-user-is to the page_scope block", () => {
+      const out = formatPipelineContext([row()]);
+
+      expect(out).not.toContain("do not single one");
+      expect(out).not.toContain("looking at a LIST");
+      // What it still owns: no marker is present, so do not go looking. Said
+      // without naming the marker — see the test above, which is what naming
+      // it would break.
+      expect(out).toContain("No row below is marked");
     });
 
     // The detail page's restraint, applied here, would make it decline the one
@@ -183,6 +197,18 @@ describe("formatPipelineContext", () => {
     it("still refuses to invent detail it cannot see", () => {
       const out = formatPipelineContext([row()]);
       expect(out).toContain("rather than inventing it");
+    });
+
+    // It was written twice, once per framing, in near-identical words. One
+    // copy, both modes — a guard that has to be kept in sync in two places is
+    // a guard that stops being in two places.
+    it("gives both modes the same summary-not-the-whole-story guard", () => {
+      const guard = "Each line is a summary, not the whole story";
+
+      expect(formatPipelineContext([row()])).toContain(guard);
+      expect(formatPipelineContext([row({ isCurrent: true })])).toContain(
+        guard,
+      );
     });
 
     it("keeps the guidance that does not depend on where the user is", () => {
@@ -214,7 +240,22 @@ describe("formatPipelineContext", () => {
     const out = formatPipelineContext([
       row({ id: 42, title: null, company: null }),
     ]);
-    expect(out).toContain("application #42");
+    expect(out).toContain("(application 42)");
+  });
+
+  // The activity index names the same applications, and the model has to be
+  // able to match the two up. It could not: one application appeared as
+  // "Senior Backend Engineer" here and "Senior Backend Engineer (application
+  // 16)" there, and the assistant duly reported a transcript belonging to
+  // "another Senior Backend Engineer position" — a second application invented
+  // out of two spellings of one. So the id is stated even when there is a
+  // perfectly good name to use instead.
+  it("states the id even when the application has a name", () => {
+    const out = formatPipelineContext([
+      row({ id: 16, title: "Senior Backend Engineer", company: "Acme" }),
+    ]);
+
+    expect(out).toContain("Senior Backend Engineer at Acme (application 16)");
   });
 
   // The digest is what turns a counting line into a saying-something line.

@@ -34,8 +34,10 @@ import {
   relevantStoriesText,
 } from "$lib/server/documents/content-retrieval";
 import { applicationActivityText } from "./application-activity";
+import { activityManifestText } from "./activity-manifest";
 import { applicationPipelineText } from "./application-pipeline";
 import { jobDetailsText } from "./job-context";
+import { formatPageScope, type PageScope } from "./page-scope";
 import {
   fitProfileToBudget,
   formatTrimNote,
@@ -88,6 +90,17 @@ export type ContextSource =
    * note in application-pipeline.ts.
    */
   | "application_pipeline"
+  /**
+   * Which page the user is on, stated rather than inferred from which of these
+   * sources happen to be present. See page-scope.ts.
+   */
+  | "page_scope"
+  /**
+   * An index — not the contents — of everything recorded on every application.
+   * Cheap and unconditional, so that a source this route did not request is
+   * distinguishable from a thing that does not exist. See activity-manifest.ts.
+   */
+  | "activity_manifest"
   | "projects"
   | "stories"
   | "application_texts";
@@ -126,6 +139,11 @@ export interface ContextRequest {
   preloadedProfile?: ProfileData;
   /** Per-source overrides — see SourceOptions. */
   sourceOptions?: SourceOptions;
+  /**
+   * Which page this generation is happening on, for the `page_scope` source.
+   * Set by the route, not inferred here — see page-scope.ts.
+   */
+  scopeHint?: PageScope;
   /**
    * Cap on the rendered profile blob, trimmed by dropping list entries (see
    * fitProfileToBudget). Separate from `budgetChars` because the profile isn't
@@ -207,7 +225,39 @@ export const DEFAULT_BUDGET_CHARS = 24000;
  */
 export const DEFAULT_PROFILE_BUDGET_CHARS = 60000;
 
-/** How the provider assembles one source. */
+/**
+ * How the provider assembles one source.
+ *
+ * ## load / format / compose
+ *
+ * Every source module is three functions, and the split matters:
+ *
+ *  - `load*` — the DB reads, the derived columns, the sort. Returns typed data
+ *    and THROWS on failure.
+ *  - `format*` — pure, data in, prompt block out. Owns the budgets, the
+ *    trimming, the headings and the guidance.
+ *  - `*Text` — composes the two and swallows errors, because context is a bonus
+ *    and never a reason to fail a generation.
+ *
+ * The reason to keep them apart is that `format*` writes text addressed to
+ * *this* assistant — "do not open every reply with a pipeline summary", "no row
+ * below is marked". That is behavioural instruction, correct in this prompt and
+ * wrong anywhere else, so a consumer that is not building this prompt (an MCP
+ * tool, a tool result inside an agent loop) needs the data without it. Shipping
+ * the framing to someone else's model means injecting orders into their agent.
+ *
+ * Swallowing splits the same way. Returning "" for a failed query is right when
+ * the alternative is failing a cover letter; it is wrong for a data caller,
+ * where it makes a broken connection indistinguishable from an empty pipeline
+ * — the same empty-vs-never-looked confusion the blocks below work to keep out
+ * of the model's hands, one layer down.
+ *
+ * `SourceDef` deliberately carries only `render`. A `load` on the registry
+ * would be structure with no consumer, and the sources do not map one-to-one
+ * onto tools anyway: a tool is `get_application(id)`, not "the
+ * application_activity source". The module-level `load*` exports are the
+ * contract; this registry is one of their callers.
+ */
 interface SourceDef {
   /** Prompt-variable key this source fills. */
   variable: string;
@@ -237,6 +287,27 @@ const SOURCES: Record<ContextSource, SourceDef> = {
   // Scoped sources. Priorities sit above the ranked ones: concrete facts about
   // the applicant and about *this* application beat generically retrieved
   // evidence when something has to give.
+
+  // Two orientation blocks first. Both are small and fixed-size, and both exist
+  // so the model knows what it is looking at and what it is missing — so both
+  // sit above every source they describe. Dropping either to make room for the
+  // evidence it frames would be the wrong trade at any budget.
+  page_scope: {
+    variable: "pageScope",
+    priority: 95,
+    looked: (req) => !!req.scopeHint,
+    render: async (req) => formatPageScope(req.scopeHint),
+  },
+  activity_manifest: {
+    variable: "activityManifest",
+    priority: 90,
+    // Always "looked": every profile has an answer, even if the answer is that
+    // nothing has been recorded anywhere yet.
+    looked: () => true,
+    render: async (req) =>
+      activityManifestText(req.profileId, applicationId(req) ?? undefined),
+  },
+
   profile: {
     variable: "data",
     priority: 100,
@@ -425,6 +496,11 @@ export function fitToBudget(
 const SOURCE_LABELS: Record<ContextSource, string> = {
   profile: "the applicant's profile",
   job: "the job posting",
+  // Neither should ever reach this note — both are small and rank above
+  // everything they describe — but a label is cheaper than reasoning about
+  // whether that stays true.
+  page_scope: "which page the user is on",
+  activity_manifest: "the index of everything on record",
   application_activity: "the history recorded on this application",
   application_pipeline: "the applicant's other applications",
   projects: "the applicant's projects",

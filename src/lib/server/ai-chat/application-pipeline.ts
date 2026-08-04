@@ -156,8 +156,17 @@ export function describeOffer(o: OfferTerms): string {
 /** One application as its block of lines. Extracted so the budgeter can price
  * a row exactly, by rendering it, rather than estimating. */
 function renderRow(r: PipelineRow, currency: string): string {
-  const who = [r.title, r.company].filter(Boolean).join(" at ") ||
-    `application #${r.id}`;
+  // The id is always stated, even when there is a perfectly good name, because
+  // the activity index names the same applications and the model has to be able
+  // to match the two up. Without it: profile 12's one application appeared as
+  // "Senior Backend Engineer" here and "Senior Backend Engineer (application
+  // 16)" there, and the assistant reported a transcript belonging to "another
+  // Senior Backend Engineer position" — inventing a second application out of
+  // two spellings of one.
+  const who = [
+    [r.title, r.company].filter(Boolean).join(" at "),
+    `(application ${r.id})`,
+  ].filter(Boolean).join(" ");
   const stage = [getStatusLabel(r.status), r.step, r.action]
     .filter(Boolean).join(" / ");
   const stalled = r.daysInStage !== null
@@ -235,10 +244,10 @@ export function formatPipelineContext(
     : [];
 
   // Two framings, because the same rows mean different things depending on
-  // where the user is. On an application page the pipeline is peripheral and an
-  // assistant that leads with it is answering a question nobody asked. On a
-  // list page it IS the subject, and the same restraint would make it refuse to
-  // do the one thing the page is for.
+  // whether one of them is the one on screen. On an application page the
+  // pipeline is peripheral and an assistant that leads with it is answering a
+  // question nobody asked. Where none is current it IS the subject, and the
+  // same restraint would make it refuse to do the one thing the page is for.
   //
   // Which one is decided by whether a row is marked, never by a flag a caller
   // passes: the old header promised "the one they are looking at now (marked
@@ -246,6 +255,22 @@ export function formatPipelineContext(
   // always been in scope with no application current — it told the model to
   // find a marker no row carried. Pointing a model at something absent is an
   // invitation to nominate a substitute.
+  //
+  // ## What this block does NOT say any more
+  //
+  // Where the user is, and what a bare question means there, is now stated once
+  // by the `page_scope` block (page-scope.ts). This one used to say it too —
+  // "the applicant is looking at a LIST ... do not single one out" — which was
+  // the same claim sourced from different evidence, and two places wording one
+  // rule is how they drift.
+  //
+  // The division that survives is page fact vs block fact. That the user is not
+  // on any single application is a fact about the PAGE, and page_scope owns it.
+  // That no row here carries a marker is a fact about THESE ROWS, and it stays,
+  // because it is what stops the model hunting for a THIS ONE that is not there
+  // — the bug above. Both are true at once and neither implies the other: the
+  // pipeline appears on /jobs/[id] with no row marked and no application page
+  // in sight.
   const onOne = rows.some((r) => r.isCurrent);
 
   const framing = onOne
@@ -262,28 +287,33 @@ export function formatPipelineContext(
       "reply with a pipeline summary, and do not bring up other applications when",
       "the question is only about this one.",
       "",
-      "Each line is a summary, not the whole story: you can read the full history",
-      "of the application they are ON, but not of the others. If they ask for",
-      "detail about another one, say it is on that application's page rather than",
-      "inventing it.",
+      // Wrapped so "not of the others" stays whole — these lines are joined
+      // with "\n" and a phrase broken across two of them can never be asserted
+      // on. Same convention as application-activity.ts's guidance block.
+      "You can read the full history of the application they are ON,",
+      "but not of the others.",
     ]
     : [
       "## The applicant's applications in progress",
       "",
-      "The applicant is looking at a LIST of their applications rather than at",
-      "any single one, so none of these is the current one — do not single one",
-      "out as the application they must mean. Comparing, ranking and",
-      "prioritising across them is exactly what gets asked here, and the whole",
-      "set is below, so answering across all of them is normal rather than a",
-      "digression.",
-      "",
-      "Each line is a summary, not the whole story. If they ask for detail about",
-      "one of them — what an interviewer actually said, what a document contains",
-      "— say it is on that application's page rather than inventing it.",
+      // Deliberately does not name the marker. Saying which token is absent
+      // still puts it in front of the model, and the whole bug this framing
+      // exists for was the model going looking for one.
+      "No row below is marked: none of these is the current one.",
+      "Comparing, ranking and prioritising across them is exactly what gets",
+      "asked of this block, and the whole set is below, so answering across all",
+      "of them is normal rather than a digression.",
     ];
 
   return [
     ...framing,
+    "",
+    // Was written out twice, once per framing, in near-identical words. The
+    // guard is the same either way: a line here is a digest, and the thing it
+    // digests is readable somewhere else.
+    "Each line is a summary, not the whole story. If they ask for detail about",
+    "one of them — what an interviewer actually said, what a document contains",
+    "— say it is on that application's page rather than inventing it.",
     "",
     "An OFFER line carries terms exactly as they were offered — quote those",
     "verbatim and never convert them. A RESPOND BY date is a deadline: if one",
@@ -447,12 +477,164 @@ function annualise(
 }
 
 /**
- * Load the profile's in-progress applications and render them.
+ * Load the profile's in-progress applications as rows: the DB reads, the
+ * derived columns (days in stage, normalised salary, match score, entry count,
+ * employer contact) and the sort. Every application is returned — the caps are
+ * a prompt-budget concern and live in `applicationPipelineText`, which
+ * announces what they cost.
  *
  * ⚠️ This is the first context source that reads rows the route never
  * authorized. Every other scoped source reads only the entity resolved and
  * checked in chat-context.ts, so the `profile_id` filter here is load-bearing
  * rather than hygiene.
+ *
+ * THROWS on a real failure, deliberately. Swallowing is a prompt-assembly
+ * policy, and it lives one level up; for this source especially, a caller
+ * reading it as data must not receive a failed query as an empty pipeline —
+ * a comparison over a set that silently lost rows is wrong, not thin.
+ */
+export async function loadPipelineRows(
+  profileId: number,
+  currentApplicationId: number | null,
+): Promise<PipelineRow[]> {
+  const rows = await db.query.applications.findMany({
+    where: eq(applications.profile_id, profileId),
+    columns: {
+      id: true,
+      // Selected because the match score is keyed by job, not application.
+      // Without it every lookup below missed and the whole pipeline rendered
+      // "not scored" — silently, since "not scored" is a legitimate state.
+      job_id: true,
+      status: true,
+      status_step: true,
+      status_action: true,
+      status_action_date: true,
+      application_sent_date: true,
+      date_updated: true,
+      date_created: true,
+      context_summary: true,
+      offer_terms: true,
+    },
+    with: {
+      job: {
+        columns: {
+          title: true,
+          company: true,
+          job_poster: true,
+          salary_min: true,
+          salary_max: true,
+          salary_currency: true,
+          salary_period: true,
+          work_location: true,
+        },
+      },
+    },
+  });
+
+  // Finished applications are excluded: they grow without bound and dilute
+  // "what am I working on". The current one is kept even if finished — the
+  // user is looking at it, so a table that omits it reads as a bug.
+  const live = rows.filter((a) =>
+    !isFinishedStatus(a.status) || a.id === currentApplicationId
+  );
+  if (live.length === 0) return [];
+
+  const ids = live.map((a) => a.id);
+  const [matches, records, rates] = await Promise.all([
+    db.query.job_matches.findMany({
+      where: eq(job_matches.profile_id, profileId),
+      columns: {
+        job_id: true,
+        score: true,
+        recommendation: true,
+      },
+    }),
+    db.query.application_records.findMany({
+      where: inArray(application_records.application_id, ids),
+      columns: {
+        application_id: true,
+        record_type: true,
+        contacts: true,
+        derived_at: true,
+      },
+    }),
+    getFxRates(),
+  ]);
+
+  const byApp = new Map<number, typeof records>();
+  for (const r of records) {
+    const list = byApp.get(r.application_id) ?? [];
+    list.push(r);
+    byApp.set(r.application_id, list);
+  }
+
+  const built: PipelineRow[] = live.map((a) => {
+    const entries = byApp.get(a.id) ?? [];
+    const analysed = entries.filter((e) => e.derived_at);
+    return {
+      id: a.id,
+      isCurrent: a.id === currentApplicationId,
+      title: a.job?.title ?? null,
+      company: a.job?.company ?? a.job?.job_poster ?? null,
+      status: a.status,
+      step: a.status_step,
+      action: a.status_action,
+      // The stage's own date first: date_updated moves on any edit, so it
+      // would report a freshly retitled note as "the stage just changed".
+      daysInStage: daysSince(
+        a.status_action_date ?? a.date_updated ?? a.date_created,
+      ),
+      appliedOn: a.application_sent_date,
+      salary: a.job ? describeSalary(a.job) : null,
+      salaryAnnual: a.job ? annualise(a.job, "EUR", rates) : null,
+      workLocation: Array.isArray(a.job?.work_location)
+        ? (a.job.work_location as string[]).join(", ")
+        : null,
+      matchScore: null,
+      matchRecommendation: null,
+      entryCount: entries.length,
+      summary: a.context_summary,
+      offer: a.offer_terms ?? null,
+      // True from either direction: an entry typed as an offer, or terms
+      // actually extracted. The type alone is what shows before the
+      // summariser has run.
+      hasOffer: !!a.offer_terms ||
+        entries.some((e) =>
+          e.record_type === "offer" || e.record_type === "contract"
+        ),
+      // Unknown until something has actually looked. Reporting "no contact"
+      // for an un-analysed application would make it look stalled when it
+      // may be the most active one.
+      employerContact: analysed.length === 0
+        ? null
+        : analysed.some((e) => ((e.contacts ?? []) as unknown[]).length > 0),
+    };
+  });
+
+  // Match scores are keyed by job, not application; attach them separately so
+  // an application with no job (hand-created) simply has none.
+  const scoreByJob = new Map(matches.map((m) => [m.job_id, m]));
+  for (const [i, a] of live.entries()) {
+    const m = a.job_id != null ? scoreByJob.get(a.job_id) : undefined;
+    if (m) {
+      built[i].matchScore = m.score;
+      built[i].matchRecommendation = m.recommendation;
+    }
+  }
+
+  // Current first, then most recently active — so a long pipeline is
+  // truncated from its stalest end rather than arbitrarily.
+  built.sort((x, y) =>
+    Number(y.isCurrent) - Number(x.isCurrent) ||
+    (x.daysInStage ?? 1e9) - (y.daysInStage ?? 1e9)
+  );
+
+  return built;
+}
+
+/**
+ * Load, fit and render. Returns "" when the applicant has no live applications
+ * — callers interpolate it blindly.
  */
 export async function applicationPipelineText(
   profileId: number,
@@ -460,137 +642,7 @@ export async function applicationPipelineText(
   budgetChars: number = DEFAULT_PIPELINE_BUDGET_CHARS,
 ): Promise<string> {
   try {
-    const rows = await db.query.applications.findMany({
-      where: eq(applications.profile_id, profileId),
-      columns: {
-        id: true,
-        // Selected because the match score is keyed by job, not application.
-        // Without it every lookup below missed and the whole pipeline rendered
-        // "not scored" — silently, since "not scored" is a legitimate state.
-        job_id: true,
-        status: true,
-        status_step: true,
-        status_action: true,
-        status_action_date: true,
-        application_sent_date: true,
-        date_updated: true,
-        date_created: true,
-        context_summary: true,
-        offer_terms: true,
-      },
-      with: {
-        job: {
-          columns: {
-            title: true,
-            company: true,
-            job_poster: true,
-            salary_min: true,
-            salary_max: true,
-            salary_currency: true,
-            salary_period: true,
-            work_location: true,
-          },
-        },
-      },
-    });
-
-    // Finished applications are excluded: they grow without bound and dilute
-    // "what am I working on". The current one is kept even if finished — the
-    // user is looking at it, so a table that omits it reads as a bug.
-    const live = rows.filter((a) =>
-      !isFinishedStatus(a.status) || a.id === currentApplicationId
-    );
-    if (live.length === 0) return "";
-
-    const ids = live.map((a) => a.id);
-    const [matches, records, rates] = await Promise.all([
-      db.query.job_matches.findMany({
-        where: eq(job_matches.profile_id, profileId),
-        columns: {
-          job_id: true,
-          score: true,
-          recommendation: true,
-        },
-      }),
-      db.query.application_records.findMany({
-        where: inArray(application_records.application_id, ids),
-        columns: {
-          application_id: true,
-          record_type: true,
-          contacts: true,
-          derived_at: true,
-        },
-      }),
-      getFxRates(),
-    ]);
-
-    const byApp = new Map<number, typeof records>();
-    for (const r of records) {
-      const list = byApp.get(r.application_id) ?? [];
-      list.push(r);
-      byApp.set(r.application_id, list);
-    }
-
-    const built: PipelineRow[] = live.map((a) => {
-      const entries = byApp.get(a.id) ?? [];
-      const analysed = entries.filter((e) => e.derived_at);
-      return {
-        id: a.id,
-        isCurrent: a.id === currentApplicationId,
-        title: a.job?.title ?? null,
-        company: a.job?.company ?? a.job?.job_poster ?? null,
-        status: a.status,
-        step: a.status_step,
-        action: a.status_action,
-        // The stage's own date first: date_updated moves on any edit, so it
-        // would report a freshly retitled note as "the stage just changed".
-        daysInStage: daysSince(
-          a.status_action_date ?? a.date_updated ?? a.date_created,
-        ),
-        appliedOn: a.application_sent_date,
-        salary: a.job ? describeSalary(a.job) : null,
-        salaryAnnual: a.job ? annualise(a.job, "EUR", rates) : null,
-        workLocation: Array.isArray(a.job?.work_location)
-          ? (a.job.work_location as string[]).join(", ")
-          : null,
-        matchScore: null,
-        matchRecommendation: null,
-        entryCount: entries.length,
-        summary: a.context_summary,
-        offer: a.offer_terms ?? null,
-        // True from either direction: an entry typed as an offer, or terms
-        // actually extracted. The type alone is what shows before the
-        // summariser has run.
-        hasOffer: !!a.offer_terms ||
-          entries.some((e) =>
-            e.record_type === "offer" || e.record_type === "contract"
-          ),
-        // Unknown until something has actually looked. Reporting "no contact"
-        // for an un-analysed application would make it look stalled when it
-        // may be the most active one.
-        employerContact: analysed.length === 0
-          ? null
-          : analysed.some((e) => ((e.contacts ?? []) as unknown[]).length > 0),
-      };
-    });
-
-    // Match scores are keyed by job, not application; attach them separately so
-    // an application with no job (hand-created) simply has none.
-    const scoreByJob = new Map(matches.map((m) => [m.job_id, m]));
-    for (const [i, a] of live.entries()) {
-      const m = a.job_id != null ? scoreByJob.get(a.job_id) : undefined;
-      if (m) {
-        built[i].matchScore = m.score;
-        built[i].matchRecommendation = m.recommendation;
-      }
-    }
-
-    // Current first, then most recently active — so a long pipeline is
-    // truncated from its stalest end rather than arbitrarily.
-    built.sort((x, y) =>
-      Number(y.isCurrent) - Number(x.isCurrent) ||
-      (x.daysInStage ?? 1e9) - (y.daysInStage ?? 1e9)
-    );
+    const built = await loadPipelineRows(profileId, currentApplicationId);
 
     // Two caps in series, and their omissions add up: the hard row cap first,
     // then the char budget. Reporting only one would understate how partial

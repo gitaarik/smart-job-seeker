@@ -126,11 +126,16 @@ describe("scopeForRoute", () => {
     });
   });
 
+  // /home used to be here. It has its own row now — a dashboard asking "how is
+  // my search going" needs the pipeline — which is the point of the table: a
+  // page graduates out of the fallback the moment anyone knows what it is for.
   it("falls back to profile-only for unmapped and unknown routes", () => {
-    for (const route of ["/(app)/home", "/(app)/settings", null]) {
+    for (const route of ["/(app)/settings", "/(app)/nothing/here", null]) {
       const scope = scopeForRoute(route);
       expect(scope.entity).toBeNull();
       expect(scope.sources).toEqual(["profile", "projects", "stories"]);
+      // Profile-only in what it can SEE, but never silent about where it is.
+      expect(scope.hint).toBeDefined();
     }
   });
 });
@@ -218,6 +223,136 @@ describe("resolveChatContext", () => {
 
     expect(ctx.entity).toEqual({ type: "job", id: 5 });
     expect(ctx.query?.skills).toEqual(["Rust"]);
+  });
+});
+
+describe("resolveChatContext — orientation blocks", () => {
+  const base = {
+    profileId: 7,
+    isStaff: false,
+    message: "How is it going?",
+  };
+
+  // These two are the guarantee that a route cannot silently blind the
+  // assistant, so they are appended centrally rather than listed per scope.
+  // The test is over EVERY route in the table on purpose: a per-scope list is
+  // exactly the thing that gets forgotten, which is the bug they exist to kill.
+  const ROUTES = [
+    ["/(app)/applications", {}],
+    ["/(app)/applications/[id]", { id: "42" }],
+    ["/(app)/applications/active", {}],
+    ["/(app)/applications/interview", {}],
+    ["/(app)/jobs/[id]", { id: "9" }],
+    ["/(app)/profile", {}],
+    ["/(app)/some/page/nobody/scoped", {}],
+  ] as const;
+
+  // The scope block existed to stop the model inferring where it was. A route
+  // nobody listed used to get an empty one, which is the same silence in a
+  // different place — and /home and /jobs, both real pages, were exactly that.
+  it("tells even an unlisted route that it has not been told", async () => {
+    const { context: ctx } = await resolveChatContext({
+      ...base,
+      routeId: "/(app)/somewhere/nobody/scoped",
+      params: {},
+    });
+
+    expect(ctx.scopeHint).toBeDefined();
+    expect(ctx.scopeHint?.page).toContain("has not been described to you");
+    expect(ctx.scopeHint?.subject).toBeNull();
+  });
+
+  it("declares the jobs list rather than letting it fall through", async () => {
+    // It had no entry at all, so "no job search in the chat" was an accident
+    // of the default rather than a decision anyone could read.
+    const scope = scopeForRoute("/(app)/jobs");
+
+    expect(scope.hint?.page).toContain("filter controls");
+    expect(scope.sources).not.toContain("job");
+    // The list is not the detail page: /jobs/[id] still gets its job.
+    expect(scopeForRoute("/(app)/jobs/[id]").sources).toContain("job");
+  });
+
+  it("gives the dashboard the pipeline, which is what it is for", async () => {
+    const scope = scopeForRoute("/(app)/home");
+
+    expect(scope.sources).toContain("application_pipeline");
+    expect(scope.hint?.page).toContain("dashboard");
+  });
+
+  it("gives every route the manifest and the scope block", async () => {
+    for (const [routeId, params] of ROUTES) {
+      applicationRow = { id: 42, job: { title: "Staff Engineer" } };
+      jobRow = { id: 9, title: "Staff Engineer" };
+
+      const { context: ctx } = await resolveChatContext({
+        ...base,
+        routeId,
+        params: params as Record<string, string>,
+      });
+
+      expect(ctx.sources, routeId).toContain("activity_manifest");
+      expect(ctx.sources, routeId).toContain("page_scope");
+    }
+  });
+
+  it("tells the model a bare question means THIS application on a detail page", async () => {
+    applicationRow = { id: 42, job: { title: "Staff Engineer" } };
+
+    const { context: ctx } = await resolveChatContext({
+      ...base,
+      routeId: "/(app)/applications/[id]",
+      params: { id: "42" },
+    });
+
+    expect(ctx.scopeHint?.subject).toBe("that application");
+  });
+
+  it("tells it a bare question means no single one on the list", async () => {
+    const { context: ctx } = await resolveChatContext({
+      ...base,
+      routeId: "/(app)/applications",
+      params: {},
+    });
+
+    expect(ctx.scopeHint?.subject).toBeNull();
+    expect(ctx.scopeHint?.page).toContain("list");
+  });
+
+  // Same scope object, different pages. If the hint lived on the scope these
+  // two would claim to be the same place.
+  it("distinguishes pages that share a scope", async () => {
+    const profile = await resolveChatContext({
+      ...base,
+      routeId: "/(app)/profile",
+      params: {},
+    });
+    const interview = await resolveChatContext({
+      ...base,
+      routeId: "/(app)/applications/interview",
+      params: {},
+    });
+
+    expect(profile.context.scopeHint?.page).not.toBe(
+      interview.context.scopeHint?.page,
+    );
+  });
+
+  // A hint saying "they are on one application's page" while the application
+  // block is missing would point the model at something it cannot see.
+  it("drops the hint when the entity failed to resolve", async () => {
+    applicationRow = null;
+
+    const { context: ctx } = await resolveChatContext({
+      ...base,
+      routeId: "/(app)/applications/[id]",
+      params: { id: "42" },
+    });
+
+    expect(ctx.scopeHint).toBeUndefined();
+    // But the manifest still ships: what exists does not depend on what
+    // resolved.
+    expect(ctx.sources).toContain("activity_manifest");
   });
 });
 

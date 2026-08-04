@@ -24,6 +24,7 @@ import type {
   SourceOptions,
 } from "./generation-context";
 import { LIST_PIPELINE_BUDGET_CHARS } from "./application-pipeline";
+import type { PageScope } from "./page-scope";
 import {
   type Capability,
   type LiveCapability,
@@ -53,8 +54,27 @@ import {
  * The merge into `application_activity` lowered the ceiling rather than raised
  * it: the two sources had independent totals (40k each in full mode) that could
  * both arrive, where one stream is capped once. Re-measure before tightening.
+ *
+ * Raised again to 250000 when the application scope moved to `full` activity
+ * detail. This is NOT a bigger appetite for the same blocks — it is the size
+ * one application actually is. Measured on a real profile's two busiest
+ * applications, the rendered blocks came to 137043 and 142031 respectively
+ * (activity 129303 / 136556, job 3923 / 1658, pipeline 3817 each). The activity
+ * cap above it is 200000, so the ceiling that binds first is that one and not
+ * this one — which is the right way round, because it degrades with a note
+ * where this one drops the block whole and silently.
+ *
+ * ⚠️ It has to move WITH the activity ceilings, not after them. `fitToBudget`
+ * drops whole blocks that do not fit, and activity (40) packs after job (50) —
+ * so a 150k block against a 32k budget is not a truncated history, it is no
+ * history at all, silently. That is the exact failure recorded above at 20k.
+ *
+ * For scale, a worst-case turn is now ~250k of blocks plus the 56k exempt
+ * profile blob: ~77k tokens, against a 1M-token writing model and a 131k-token
+ * fallback. Room, but no longer negligible — see TOTALS in
+ * application-activity.ts on what that costs per turn.
  */
-export const CHAT_BUDGET_CHARS = 32000;
+export const CHAT_BUDGET_CHARS = 250000;
 
 /** Which entity a route is about, and what the assistant should draw on there. */
 interface RouteScope {
@@ -76,12 +96,38 @@ interface RouteScope {
    * trying to infer it.
    */
   sourceOptions?: SourceOptions;
+  /**
+   * What this page is, in prose, for the model. Every route states its own —
+   * including the ones sharing a scope object, because two pages can want the
+   * same evidence and still mean different things by a bare question.
+   */
+  hint?: PageScope;
 }
 
 /** Profile-only pages: no entity, just the applicant and their material. */
 const PROFILE_SCOPE: RouteScope = {
   entity: null,
   sources: ["profile", "projects", "stories"],
+};
+
+/**
+ * What an unlisted route gets. Same sources as PROFILE_SCOPE, but it says so
+ * rather than saying nothing.
+ *
+ * Without this the fallback rendered an empty scope block, so on /home the
+ * assistant knew what existed and had no idea where it was standing — the
+ * silent-absence pattern the scope block was built to remove, reappearing one
+ * level up in the thing that removes it. "I have not been told" is a fact and
+ * beats an invented one; a route that wants better says so in the table.
+ */
+const UNKNOWN_PAGE_SCOPE: RouteScope = {
+  ...PROFILE_SCOPE,
+  hint: {
+    page:
+      "a page of the app that has not been described to you — you can see who " +
+      "they are and what they have on record, but not what is on screen",
+    subject: null,
+  },
 };
 
 /**
@@ -126,6 +172,14 @@ const APPLICATION_SCOPE: RouteScope = {
     "stories",
     "application_texts",
   ],
+  // `full`, because on this page the history is the SUBJECT, not background.
+  // The compact ceilings are sized for cover letters, which want the gist — and
+  // the chat inherited them by default, so a 29k interview transcript reached
+  // the assistant as 1.5k of head and tail. Asked what the interviewer had said
+  // mid-call, it correctly answered that it could not see that part. This is
+  // the distinction the compact/full split exists to draw; the chat was simply
+  // on the wrong side of it.
+  sourceOptions: { application_activity: { detail: "full" } },
   // The job capabilities reach the attached job through `application.job_id`,
   // so a manually-created job can be corrected from the application it belongs
   // to without leaving the page. They drop out for scraped jobs.
@@ -142,13 +196,35 @@ const APPLICATION_SCOPE: RouteScope = {
  * (`/applications/[id]/texts`) inherits its parent's scope unless it declares
  * its own.
  */
+/**
+ * Orientation blocks every route gets, appended centrally rather than listed in
+ * each scope.
+ *
+ * A scope that can forget them is a scope that will: the whole class of bug
+ * these two exist to kill is a route silently not requesting something. Listing
+ * them per-scope would reproduce it one level up.
+ */
+const ALWAYS: ContextSource[] = ["page_scope", "activity_manifest"];
+
 const ROUTE_SCOPES: Record<string, RouteScope> = {
   // Longest prefix wins, so /applications/[id] keeps its own scope and
   // /applications/interview keeps the profile-only one it declares below. The
   // rest — the list itself, /active, /salary, /texts, /new — inherit this,
   // which is what each of them wants: every one is a view ACROSS applications.
-  "/applications": PIPELINE_SCOPE,
-  "/applications/[id]": APPLICATION_SCOPE,
+  "/applications": {
+    ...PIPELINE_SCOPE,
+    hint: {
+      page: "the list of their applications",
+      subject: null,
+    },
+  },
+  "/applications/[id]": {
+    ...APPLICATION_SCOPE,
+    hint: {
+      page: "one application's own page, where its whole history is shown",
+      subject: "that application",
+    },
+  },
   "/jobs/[id]": {
     entity: "job",
     param: "id",
@@ -164,9 +240,63 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
       "application_texts",
     ],
     capabilities: ["edit_job_details", "edit_job_description"],
+    hint: {
+      page: "a job posting they have not applied to yet",
+      subject: "that job",
+    },
   },
-  "/applications/interview": PROFILE_SCOPE,
-  "/profile": PROFILE_SCOPE,
+  /**
+   * Browsing job listings. No job data on purpose — this is a decision, not the
+   * fallthrough it used to be.
+   *
+   * The page has its own search and filters, which do the narrowing better than
+   * a chat turn can, and the list runs to hundreds of rows where the
+   * applications list runs to a dozen. What the assistant would add here —
+   * judgement about which are worth the effort — is what the match score
+   * already does, per row, without being asked.
+   *
+   * A specific job is a different matter: /jobs/[id] gets that job in full.
+   */
+  "/jobs": {
+    ...PROFILE_SCOPE,
+    hint: {
+      page:
+        "the list of jobs they are browsing, which has its own search and " +
+        "filter controls for narrowing it down",
+      subject: null,
+    },
+  },
+  /**
+   * The dashboard. It gets the pipeline because "how is my search going?" is
+   * the question this page exists to answer, and without it the assistant could
+   * see that applications existed (the manifest lists them) but nothing about
+   * where any of them stood.
+   */
+  "/home": {
+    ...PROFILE_SCOPE,
+    sources: [...PROFILE_SCOPE.sources, "application_pipeline"],
+    hint: {
+      page: "their dashboard, the overview of how their search is going",
+      subject: null,
+    },
+  },
+  // Same scope object, deliberately different hints: both pages want the
+  // applicant and their material, and a bare question means something
+  // different on each.
+  "/applications/interview": {
+    ...PROFILE_SCOPE,
+    hint: {
+      page: "their interview preparation, which is not tied to one application",
+      subject: null,
+    },
+  },
+  "/profile": {
+    ...PROFILE_SCOPE,
+    hint: {
+      page: "their own profile — the material they apply with, not any one application",
+      subject: null,
+    },
+  },
 };
 
 /** Drop `(group)` segments so route ids match the table above. */
@@ -192,7 +322,7 @@ export function scopeForRoute(routeId: string | null | undefined): RouteScope {
       bestLength = prefix.length;
     }
   }
-  return best ?? PROFILE_SCOPE;
+  return best ?? UNKNOWN_PAGE_SCOPE;
 }
 
 /**
@@ -291,9 +421,20 @@ export async function resolveChatContext(opts: {
 
   // An entity that failed to resolve (deleted, not owned, bad id) drops the
   // sources that need one, rather than shipping empty blocks with headings.
-  const sources = entity
-    ? scope.sources
-    : scope.sources.filter((s) => s !== "job" && s !== "application_activity");
+  const sources = [
+    ...(entity
+      ? scope.sources
+      : scope.sources.filter((s) =>
+        s !== "job" && s !== "application_activity"
+      )),
+    ...ALWAYS,
+  ];
+
+  // A hint claiming "they are on one application's page" while the application
+  // block is missing is worse than no hint: it tells the model to read a bare
+  // question as being about something it cannot see. An entity that failed to
+  // resolve therefore drops the hint rather than keeping half of it.
+  const scopeHint = entity || scope.entity === null ? scope.hint : undefined;
 
   // Jobs resolve for any signed-in user by design (see resolveEntity), so the
   // entity resolving says nothing about edit rights. resolveCapabilities asks
@@ -310,6 +451,7 @@ export async function resolveChatContext(opts: {
       entity: entity ?? undefined,
       sources,
       sourceOptions: scope.sourceOptions,
+      scopeHint,
       budgetChars: CHAT_BUDGET_CHARS,
     },
     capabilities,
