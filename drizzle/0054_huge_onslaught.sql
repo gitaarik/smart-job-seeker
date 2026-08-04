@@ -1,2 +1,0 @@
-DROP INDEX "profile_translations_key";--> statement-breakpoint
-CREATE UNIQUE INDEX "profile_translations_key" ON "profile_translations" USING btree ("profile_id","entity_type","entity_id","field","locale");

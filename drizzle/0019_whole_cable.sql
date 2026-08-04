@@ -1,2 +1,0 @@
-ALTER TABLE "search_tasks" ADD COLUMN "preset_id" integer;--> statement-breakpoint
-ALTER TABLE "search_tasks" ADD CONSTRAINT "search_tasks_preset_id_fk" FOREIGN KEY ("preset_id") REFERENCES "public"."job_platform_search_presets"("id") ON DELETE set null ON UPDATE no action;

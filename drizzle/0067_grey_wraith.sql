@@ -1,1 +1,0 @@
-ALTER TABLE "side_projects" DROP COLUMN "url_label";

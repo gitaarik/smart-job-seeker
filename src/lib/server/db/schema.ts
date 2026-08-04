@@ -389,6 +389,25 @@ export const job_resources_id_seq3 = pgSequence("job_resources_id_seq3", {
   cache: "1",
   cycle: false,
 });
+/**
+ * `highlights.id` defaults to `nextval('highlights_id_seq')`, and this is the
+ * declaration that says the sequence exists.
+ *
+ * It was the ONE sequence referenced by a default and never declared — which is
+ * how a from-scratch build died on `CREATE TABLE "highlights"` referring to a
+ * sequence nothing had created. Likely collateral from working around
+ * `drizzle-kit push` wanting to `DROP SEQUENCE highlights_id_seq`: push wants
+ * to drop what the schema does not claim, so removing the declaration silenced
+ * push and left the schema unable to describe itself.
+ */
+export const highlights_id_seq = pgSequence("highlights_id_seq", {
+  startWith: "1",
+  increment: "1",
+  minValue: "1",
+  maxValue: "2147483647",
+  cache: "1",
+  cycle: false,
+});
 export const jobs_id_seq = pgSequence("jobs_id_seq", {
   startWith: "1",
   increment: "1",
@@ -578,10 +597,10 @@ export const ai_prompts = pgTable("ai_prompts", {
   system_prompt: text(),
   messages: json(),
 }, (table) => [
-  index().using("btree", table.name.asc().nullsLast().op("text_ops")),
+  index().using("btree", table.name.asc().nullsLast()),
   uniqueIndex("ai_prompts_name_unique").using(
     "btree",
-    table.name.asc().nullsLast().op("text_ops"),
+    table.name.asc().nullsLast(),
   ),
 ]);
 
@@ -762,8 +781,8 @@ export const job_matches = pgTable("job_matches", {
   ),
   index("job_matches_profile_id_job_id_idx").using(
     "btree",
-    table.profile_id.asc().nullsLast().op("int4_ops"),
-    table.job_id.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast(),
+    table.job_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.ai_chat_scoring],
@@ -830,8 +849,8 @@ export const search_task_runs = pgTable("search_task_runs", {
   ),
   index("search_task_runs_search_task_id_started_at_idx").using(
     "btree",
-    table.search_task_id.asc().nullsLast().op("int4_ops"),
-    table.started_at.asc().nullsLast().op("int4_ops"),
+    table.search_task_id.asc().nullsLast(),
+    table.started_at.asc().nullsLast(),
   ),
   index("search_task_runs_api_key_id_started_at_idx").using(
     "btree",
@@ -1043,8 +1062,8 @@ export const search_task_run_items = pgTable("search_task_run_items", {
 }, (table) => [
   index("idx_search_task_run_items_run_status").using(
     "btree",
-    table.run_id.asc().nullsLast().op("int4_ops"),
-    table.status.asc().nullsLast().op("int4_ops"),
+    table.run_id.asc().nullsLast(),
+    table.status.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.job_id],
@@ -1107,13 +1126,13 @@ export const jobs = pgTable("jobs", {
   ),
   index("idx_jobs_uniqueness").using(
     "btree",
-    table.title.asc().nullsLast().op("date_ops"),
-    table.job_poster.asc().nullsLast().op("date_ops"),
-    table.date_posted.asc().nullsLast().op("text_ops"),
+    table.title.asc().nullsLast(),
+    table.job_poster.asc().nullsLast(),
+    table.date_posted.asc().nullsLast(),
   ),
   index("jobs_source_url_idx").using(
     "btree",
-    table.source_url.asc().nullsLast().op("text_ops"),
+    table.source_url.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.ai_chat_extraction],
@@ -1152,11 +1171,11 @@ export const profile_tokens = pgTable("profile_tokens", {
 }, (table) => [
   uniqueIndex("profile_tokens_token_hash_unique").using(
     "btree",
-    table.token_hash.asc().nullsLast().op("text_ops"),
+    table.token_hash.asc().nullsLast(),
   ),
   uniqueIndex("profile_tokens_token_unique").using(
     "btree",
-    table.token.asc().nullsLast().op("text_ops"),
+    table.token.asc().nullsLast(),
   ),
 ]);
 
@@ -1326,7 +1345,7 @@ export const search_form_probe_logs = pgTable("search_form_probe_logs", {
 }, (table) => [
   index("search_form_probe_logs_run_id_timestamp_idx").using(
     "btree",
-    table.discovery_run_id.asc().nullsLast().op("int4_ops"),
+    table.discovery_run_id.asc().nullsLast(),
     table.timestamp.asc().nullsLast(),
   ),
   foreignKey({
@@ -1358,7 +1377,7 @@ export const search_form_probe_debug = pgTable("search_form_probe_debug", {
 }, (table) => [
   index("search_form_probe_debug_run_id_idx").using(
     "btree",
-    table.discovery_run_id.asc().nullsLast().op("int4_ops"),
+    table.discovery_run_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.discovery_run_id],
@@ -1392,12 +1411,12 @@ export const scraper_log_steps = pgTable("scraper_log_steps", {
 }, (table) => [
   index("scraper_log_steps_run_id_started_idx").using(
     "btree",
-    table.run_id.asc().nullsLast().op("int4_ops"),
+    table.run_id.asc().nullsLast(),
     table.started_at.asc().nullsLast(),
   ),
   index("scraper_log_steps_parent_idx").using(
     "btree",
-    table.parent_step_id.asc().nullsLast().op("int4_ops"),
+    table.parent_step_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.run_id],
@@ -1439,12 +1458,12 @@ export const scraper_logs = pgTable("scraper_logs", {
   index("scraper_logs_timestamp_idx").on(table.timestamp),
   index("scraper_logs_run_id_timestamp_idx").using(
     "btree",
-    table.run_id.asc().nullsLast().op("int4_ops"),
-    table.timestamp.asc().nullsLast().op("int4_ops"),
+    table.run_id.asc().nullsLast(),
+    table.timestamp.asc().nullsLast(),
   ),
   index("scraper_logs_step_id_idx").using(
     "btree",
-    table.step_id.asc().nullsLast().op("int4_ops"),
+    table.step_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.run_id],
@@ -1589,7 +1608,7 @@ export const tech_skill_types = pgTable("tech_skill_types", {
 }, (table) => [
   uniqueIndex("tech_skill_types_slug_key").using(
     "btree",
-    table.slug.asc().nullsLast().op("text_ops"),
+    table.slug.asc().nullsLast(),
   ),
 ]);
 
@@ -1606,7 +1625,7 @@ export const sessions = pgTable("sessions", {
 }, (table) => [
   uniqueIndex("session_token_unique").using(
     "btree",
-    table.token.asc().nullsLast().op("text_ops"),
+    table.token.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.userId],
@@ -2061,11 +2080,11 @@ export const api_keys = pgTable("api_keys", {
 }, (table) => [
   uniqueIndex("api_keys_key_hash_key").using(
     "btree",
-    table.key_hash.asc().nullsLast().op("text_ops"),
+    table.key_hash.asc().nullsLast(),
   ),
   index("idx_api_keys_user").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.user_id],
@@ -2146,7 +2165,7 @@ export const search_tasks = pgTable("search_tasks", {
   ),
   index("idx_search_tasks_platform_profile").using(
     "btree",
-    table.platform_profile_id.asc().nullsLast().op("int4_ops"),
+    table.platform_profile_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.profile_id],
@@ -2391,8 +2410,8 @@ export const scraper_agent_iterations = pgTable("scraper_agent_iterations", {
 }, (table) => [
   index("scraper_agent_iterations_session_id_iteration_idx").using(
     "btree",
-    table.session_id.asc().nullsLast().op("int4_ops"),
-    table.iteration.asc().nullsLast().op("int4_ops"),
+    table.session_id.asc().nullsLast(),
+    table.iteration.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.session_id],
@@ -2427,11 +2446,11 @@ export const scraper_agent_sessions = pgTable("scraper_agent_sessions", {
 }, (table) => [
   index("scraper_agent_sessions_search_task_id_idx").using(
     "btree",
-    table.search_task_id.asc().nullsLast().op("int4_ops"),
+    table.search_task_id.asc().nullsLast(),
   ),
   index("scraper_agent_sessions_status_idx").using(
     "btree",
-    table.status.asc().nullsLast().op("text_ops"),
+    table.status.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.search_task_id],
@@ -2459,11 +2478,11 @@ export const import_logs = pgTable("import_logs", {
 }, (table) => [
   index("import_logs_date_created_idx").using(
     "btree",
-    table.date_created.asc().nullsLast().op("timestamptz_ops"),
+    table.date_created.asc().nullsLast(),
   ),
   index("import_logs_user_id_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
 ]);
 
@@ -2477,13 +2496,13 @@ export const job_statuses = pgTable("job_statuses", {
 }, (table) => [
   uniqueIndex("job_statuses_profile_job_key").using(
     "btree",
-    table.profile_id.asc().nullsLast().op("int4_ops"),
-    table.job_id.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast(),
+    table.job_id.asc().nullsLast(),
   ),
   index("job_statuses_profile_status_idx").using(
     "btree",
-    table.profile_id.asc().nullsLast().op("int4_ops"),
-    table.status.asc().nullsLast().op("text_ops"),
+    table.profile_id.asc().nullsLast(),
+    table.status.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.job_id],
@@ -2568,7 +2587,7 @@ export const profiles = pgTable("profiles", {
 }, (table) => [
   index("profiles_user_id_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.profile_picture_id],
@@ -2881,13 +2900,13 @@ export const job_match_history = pgTable("job_match_history", {
 }, (table) => [
   index("job_match_history_date_idx").using(
     "btree",
-    table.job_id.asc().nullsLast().op("int4_ops"),
-    table.date_created.desc().nullsFirst().op("int4_ops"),
+    table.job_id.asc().nullsLast(),
+    table.date_created.desc().nullsFirst(),
   ),
   index("job_match_history_profile_job_idx").using(
     "btree",
-    table.profile_id.asc().nullsLast().op("int4_ops"),
-    table.job_id.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast(),
+    table.job_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.job_id],
@@ -2912,8 +2931,8 @@ export const job_importers = pgTable("job_importers", {
   index("job_importers_profile_job_idx").on(table.profile_id, table.job_id),
   uniqueIndex("job_importers_job_profile_unique").using(
     "btree",
-    table.job_id.asc().nullsLast().op("int4_ops"),
-    table.profile_id.asc().nullsLast().op("int4_ops"),
+    table.job_id.asc().nullsLast(),
+    table.profile_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.job_id],
@@ -2934,7 +2953,7 @@ export const user_feedback_files = pgTable("user_feedback_files", {
 }, (table) => [
   index("user_feedback_files_feedback_idx").using(
     "btree",
-    table.user_feedback_id.asc().nullsLast().op("int4_ops"),
+    table.user_feedback_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.user_feedback_id],
@@ -2964,23 +2983,23 @@ export const user_feedback = pgTable("user_feedback", {
 }, (table) => [
   index("user_feedback_category_idx").using(
     "btree",
-    table.category.asc().nullsLast().op("text_ops"),
+    table.category.asc().nullsLast(),
   ),
   index("user_feedback_date_created_idx").using(
     "btree",
-    table.date_created.asc().nullsLast().op("timestamptz_ops"),
+    table.date_created.asc().nullsLast(),
   ),
   index("user_feedback_merged_into_idx").using(
     "btree",
-    table.merged_into_id.asc().nullsLast().op("int4_ops"),
+    table.merged_into_id.asc().nullsLast(),
   ),
   index("user_feedback_status_idx").using(
     "btree",
-    table.status.asc().nullsLast().op("text_ops"),
+    table.status.asc().nullsLast(),
   ),
   index("user_feedback_user_id_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.merged_into_id],
@@ -3031,11 +3050,11 @@ export const subscriptions = pgTable("subscriptions", {
 }, (table) => [
   index("subscriptions_status_idx").using(
     "btree",
-    table.status.asc().nullsLast().op("text_ops"),
+    table.status.asc().nullsLast(),
   ),
   index("subscriptions_user_id_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.user_id],
@@ -3059,7 +3078,7 @@ export const credit_purchases = pgTable("credit_purchases", {
 }, (table) => [
   index("credit_purchases_user_id_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.user_id],
@@ -3085,7 +3104,7 @@ export const usage_counters = pgTable("usage_counters", {
 }, (table) => [
   index("usage_counters_period_idx").using(
     "btree",
-    table.period.asc().nullsLast().op("text_ops"),
+    table.period.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.user_id],
@@ -3110,11 +3129,11 @@ export const verification_email_addresses = pgTable(
   (table) => [
     uniqueIndex("verification_email_addresses_email_token_key").using(
       "btree",
-      table.email_token.asc().nullsLast().op("text_ops"),
+      table.email_token.asc().nullsLast(),
     ),
     uniqueIndex("verification_email_addresses_profile_id_key").using(
       "btree",
-      table.profile_id.asc().nullsLast().op("int4_ops"),
+      table.profile_id.asc().nullsLast(),
     ),
     foreignKey({
       columns: [table.profile_id],
@@ -3153,12 +3172,12 @@ export const credit_transactions = pgTable("credit_transactions", {
 }, (table) => [
   index("credit_transactions_operation_idx").using(
     "btree",
-    table.operation.asc().nullsLast().op("text_ops"),
+    table.operation.asc().nullsLast(),
   ),
   index("credit_transactions_user_id_created_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
-    table.created_at.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
+    table.created_at.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.user_id],
@@ -3181,7 +3200,7 @@ export const certificates = pgTable("certificates", {
 }, (table) => [
   index("idx_certificates_profile").using(
     "btree",
-    table.profile_id.asc().nullsLast().op("int4_ops"),
+    table.profile_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.profile_id],
@@ -3209,23 +3228,23 @@ export const inbound_emails = pgTable("inbound_emails", {
 }, (table) => [
   index("idx_inbound_emails_address").using(
     "btree",
-    table.verification_address_id.asc().nullsLast().op("int4_ops"),
+    table.verification_address_id.asc().nullsLast(),
   ),
   index("idx_inbound_emails_handler").using(
     "btree",
-    table.handler.asc().nullsLast().op("text_ops"),
+    table.handler.asc().nullsLast(),
   ),
   index("idx_inbound_emails_received").using(
     "btree",
-    table.received_at.asc().nullsLast().op("timestamptz_ops"),
+    table.received_at.asc().nullsLast(),
   ),
   index("idx_inbound_emails_run").using(
     "btree",
-    table.run_id.asc().nullsLast().op("int4_ops"),
+    table.run_id.asc().nullsLast(),
   ),
   index("idx_inbound_emails_status").using(
     "btree",
-    table.status.asc().nullsLast().op("text_ops"),
+    table.status.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.verification_address_id],
@@ -3254,19 +3273,19 @@ export const sent_emails = pgTable("sent_emails", {
 }, (table) => [
   index("idx_sent_emails_type").using(
     "btree",
-    table.type.asc().nullsLast().op("text_ops"),
+    table.type.asc().nullsLast(),
   ),
   index("idx_sent_emails_status").using(
     "btree",
-    table.status.asc().nullsLast().op("text_ops"),
+    table.status.asc().nullsLast(),
   ),
   index("idx_sent_emails_sent_at").using(
     "btree",
-    table.sent_at.asc().nullsLast().op("timestamptz_ops"),
+    table.sent_at.asc().nullsLast(),
   ),
   index("idx_sent_emails_user").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
 ]);
 
@@ -3281,12 +3300,12 @@ export const contacts = pgTable("contacts", {
 }, (table) => [
   uniqueIndex("contacts_pair_unique").using(
     "btree",
-    table.requester_id.asc().nullsLast().op("text_ops"),
-    table.recipient_id.asc().nullsLast().op("text_ops"),
+    table.requester_id.asc().nullsLast(),
+    table.recipient_id.asc().nullsLast(),
   ),
   index("idx_contacts_recipient").using(
     "btree",
-    table.recipient_id.asc().nullsLast().op("text_ops"),
+    table.recipient_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.recipient_id],
@@ -3315,12 +3334,12 @@ export const credential_shares = pgTable("credential_shares", {
 }, (table) => [
   uniqueIndex("credential_shares_credential_user_unique").using(
     "btree",
-    table.platform_credential_id.asc().nullsLast().op("int4_ops"),
-    table.shared_with.asc().nullsLast().op("text_ops"),
+    table.platform_credential_id.asc().nullsLast(),
+    table.shared_with.asc().nullsLast(),
   ),
   index("idx_credential_shares_shared_with").using(
     "btree",
-    table.shared_with.asc().nullsLast().op("text_ops"),
+    table.shared_with.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.shared_with],
@@ -3343,12 +3362,12 @@ export const device_shares = pgTable("device_shares", {
 }, (table) => [
   uniqueIndex("device_shares_key_user_unique").using(
     "btree",
-    table.api_key_id.asc().nullsLast().op("text_ops"),
-    table.shared_with.asc().nullsLast().op("int4_ops"),
+    table.api_key_id.asc().nullsLast(),
+    table.shared_with.asc().nullsLast(),
   ),
   index("idx_device_shares_shared_with").using(
     "btree",
-    table.shared_with.asc().nullsLast().op("text_ops"),
+    table.shared_with.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.shared_with],
@@ -3387,15 +3406,15 @@ export const demo_links = pgTable("demo_links", {
 }, (table) => [
   uniqueIndex("demo_links_token_unique").using(
     "btree",
-    table.token.asc().nullsLast().op("text_ops"),
+    table.token.asc().nullsLast(),
   ),
   index("idx_demo_links_created_by").using(
     "btree",
-    table.created_by.asc().nullsLast().op("text_ops"),
+    table.created_by.asc().nullsLast(),
   ),
   index("idx_demo_links_demo_user").using(
     "btree",
-    table.demo_user_id.asc().nullsLast().op("text_ops"),
+    table.demo_user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.created_by],
@@ -3418,8 +3437,8 @@ export const demo_link_devices = pgTable("demo_link_devices", {
 }, (table) => [
   uniqueIndex("demo_link_devices_link_key_unique").using(
     "btree",
-    table.demo_link_id.asc().nullsLast().op("int4_ops"),
-    table.api_key_id.asc().nullsLast().op("int4_ops"),
+    table.demo_link_id.asc().nullsLast(),
+    table.api_key_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.demo_link_id],
@@ -3444,7 +3463,7 @@ export const feedback_replies = pgTable("feedback_replies", {
 }, (table) => [
   index("feedback_replies_feedback_idx").using(
     "btree",
-    table.feedback_id.asc().nullsLast().op("int4_ops"),
+    table.feedback_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.feedback_id],
@@ -3462,12 +3481,12 @@ export const user_feedback_subscribers = pgTable("user_feedback_subscribers", {
 }, (table) => [
   uniqueIndex("user_feedback_subscribers_unique").using(
     "btree",
-    table.feedback_id.asc().nullsLast().op("int4_ops"),
-    table.user_id.asc().nullsLast().op("int4_ops"),
+    table.feedback_id.asc().nullsLast(),
+    table.user_id.asc().nullsLast(),
   ),
   index("user_feedback_subscribers_user_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
   ),
   foreignKey({
     columns: [table.feedback_id],
@@ -3489,8 +3508,8 @@ export const notifications = pgTable("notifications", {
 }, (table) => [
   index("notifications_user_unread_idx").using(
     "btree",
-    table.user_id.asc().nullsLast().op("text_ops"),
-    table.read_at.asc().nullsLast().op("text_ops"),
+    table.user_id.asc().nullsLast(),
+    table.read_at.asc().nullsLast(),
   ),
 ]);
 

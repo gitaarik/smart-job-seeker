@@ -1,1 +1,0 @@
-ALTER TABLE "profile_exports" ADD COLUMN "template" varchar(50);

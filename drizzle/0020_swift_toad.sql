@@ -1,1 +1,0 @@
-CREATE INDEX "idx_search_tasks_preset_id" ON "search_tasks" USING btree ("preset_id") WHERE "search_tasks"."preset_id" IS NOT NULL;

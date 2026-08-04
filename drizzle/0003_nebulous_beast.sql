@@ -1,1 +1,0 @@
-ALTER TABLE "search_tasks" ADD COLUMN "schedule_preferred_hour" integer DEFAULT 9;

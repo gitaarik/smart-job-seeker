@@ -1,1 +1,0 @@
-ALTER TABLE "tech_skill_categories" ADD COLUMN "note" text;

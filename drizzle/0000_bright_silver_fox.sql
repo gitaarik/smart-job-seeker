@@ -1,2 +1,0 @@
--- Initial introspection migration (no-op)
--- The database schema already exists, this migration is only tracked for the journal.

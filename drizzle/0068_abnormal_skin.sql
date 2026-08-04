@@ -1,1 +1,0 @@
-ALTER TABLE "side_projects" ADD COLUMN "repo_url" varchar(255);

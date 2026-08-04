@@ -1,1 +1,0 @@
-ALTER TABLE "search_tasks" ADD COLUMN "search_location" text;
