@@ -14,7 +14,7 @@ See `package.json` for container-related scripts.
 
 - TypeScript strict throughout. Use `npx tsx` (not `node`) and ES Modules `import` (not `require`).
 - When removing files, use `rm -f`.
-- Drizzle schema: `src/lib/server/db/schema.ts`. Dev push: `npx drizzle-kit push`. Generate a migration before release — see meta-repo CLAUDE.md.
+- Drizzle schema: `src/lib/server/db/schema.ts`. Generate a migration and apply it — dev runs the same files deploy does (`npx tsx scripts/migrate-deploy.ts`). `scripts/check-migrations.ts` proves the files build what the schema describes, and CI runs it. See `drizzle/README.md` and meta-repo CLAUDE.md.
 
 ## AI features and `collected_data`
 
