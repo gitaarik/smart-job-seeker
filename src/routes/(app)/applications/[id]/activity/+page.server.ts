@@ -4,7 +4,11 @@ import { dbDirect as db } from "$lib/server/db";
 import { and, eq } from "drizzle-orm";
 import { application_records, applications } from "$lib/server/db/schema";
 import { getSelectedProfileId } from "../../../profile/utils";
-import { deriveRecordTitle, recordTypeValues } from "$lib/application-records";
+import {
+  deriveRecordTitle,
+  recordTypeValues,
+  today,
+} from "$lib/application-records";
 import { deleteFile, uploadFile } from "$lib/server/files";
 import { extractRecordFile } from "$lib/server/ai-chat/application-activity";
 import { deriveRecordMetadata } from "$lib/server/ai-chat/record-derivation";
@@ -85,11 +89,6 @@ async function requireApplication(
   if (!existing) return deny(fail(404, { error: "Application not found" }));
 
   return { app: existing, profileId, error: null };
-}
-
-/** Today, as the `date` column wants it. */
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function readOptionalType(formData: FormData): string | null {

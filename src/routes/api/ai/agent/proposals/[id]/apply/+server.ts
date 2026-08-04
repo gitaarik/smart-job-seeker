@@ -11,7 +11,8 @@ import { requireAuth } from "$lib/server/utils/api-helpers";
 import {
   CAPABILITIES,
   type Capability,
-  pickCapabilityFields,
+  type CapabilityRefusal,
+  executeCapability,
 } from "$lib/server/ai-chat/capabilities";
 
 /**
@@ -34,9 +35,11 @@ import {
  * So the capability owns the write, and the page form and this endpoint meet
  * further down — in applyJobFields — rather than one calling the other.
  *
- * Everything is re-derived here. The stored payload came from a model, and the
- * proposal id came from the client; the only things trusted are the session and
- * the database.
+ * What this route owns is the *proposal*: finding it, proving it belongs to the
+ * caller, and marking it applied exactly once. The write itself is
+ * `executeCapability`, which re-authorizes, re-reads and re-validates on the way
+ * through — deliberately not this route's code, so the same guarantees hold for
+ * a caller that never had a proposal at all.
  */
 export const POST: RequestHandler = async ({ locals, params }) => {
   const user = requireAuth(locals);
@@ -108,36 +111,27 @@ export const POST: RequestHandler = async ({ locals, params }) => {
     !!(user as { is_admin?: boolean }).is_admin;
   const actor = { profileId, isStaff };
 
-  // Re-authorize against the row as it is *now*, not as it was when proposed.
-  // Rights can have been lost in between — a job un-imported, an application
-  // moved — and a proposal sitting in a 12h-resumable thread is exactly the
-  // window in which that happens.
   const target = { id: stored.target.id, label: stored.target.label };
-  if (!await def.authorize(target, actor)) {
-    return json(
-      { success: false, message: "You can no longer make this change." },
-      { status: 403 },
-    );
-  }
+  const outcome = await executeCapability(
+    capability,
+    target,
+    actor,
+    stored.fields ?? {},
+  );
 
-  // Re-read current values and re-validate. The row may have moved since the
-  // proposal was made, and a partial edit is merged over whatever is there now
-  // — applying stale values around the changed field would quietly revert
-  // whatever else happened in between.
-  const current = await def.current(target);
-  const fields = pickCapabilityFields(capability, stored.fields ?? {});
-  if (Object.keys(fields).length === 0) {
-    return json({ success: false, message: "Nothing to change." }, {
-      status: 400,
+  if (!outcome.ok) {
+    const status: Record<CapabilityRefusal, number> = {
+      // Rights lost since the proposal was made — a job un-imported, an
+      // application moved. A 12h-resumable thread is exactly the window in
+      // which that happens.
+      unauthorized: 403,
+      empty: 400,
+      invalid: 400,
+    };
+    return json({ success: false, message: outcome.error }, {
+      status: status[outcome.reason],
     });
   }
-
-  const valid = def.validate(fields, current);
-  if (!valid.ok) {
-    return json({ success: false, message: valid.error }, { status: 400 });
-  }
-
-  await def.apply(target, fields, current);
 
   await db
     .update(agent_message_proposals)

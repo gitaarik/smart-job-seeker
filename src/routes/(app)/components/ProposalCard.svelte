@@ -147,8 +147,13 @@
                 re-reading current values for an applied proposal, so `from`
                 arrives as "—" and rendering the arrow claimed the field had
                 been empty when it had not. The new value is the whole story.
+
+                Nor is there one when nothing is being replaced — a field that
+                was unset, or a proposal that CREATES a row, where every `from`
+                is "—" because there is no row yet. A struck-through "empty"
+                with an arrow reads as something having been cleared.
               -->
-              {#if !appliedAt}
+              {#if !appliedAt && change.from !== "—"}
                 <span class="line-through text-[var(--dash-text-muted)] break-words">
                   {summarize(change.from)}
                 </span>

@@ -16,22 +16,35 @@ import { z } from "zod";
 
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
+let recordRows: unknown[] = [];
 const mockAppUpdateSet = vi.fn().mockReturnValue({
   where: vi.fn().mockResolvedValue(undefined),
 });
+const mockRecordInsert = vi.fn();
 
+// vi.mock is hoisted above every top-level binding, so the query object is
+// written out twice rather than shared through a helper — a helper here is a
+// ReferenceError at import time, not a tidier test.
 vi.mock("$lib/server/db", () => ({
   db: {
     query: {
       applications: { findFirst: () => Promise.resolve(applicationRow) },
       jobs: { findFirst: () => Promise.resolve(jobRow) },
+      application_records: { findMany: () => Promise.resolve(recordRows) },
     },
     update: () => ({ set: (...a: unknown[]) => mockAppUpdateSet(...a) }),
+    insert: () => ({
+      values: (v: unknown) => {
+        mockRecordInsert(v);
+        return { returning: () => Promise.resolve([{ id: 777 }]) };
+      },
+    }),
   },
   dbDirect: {
     query: {
       applications: { findFirst: () => Promise.resolve(applicationRow) },
       jobs: { findFirst: () => Promise.resolve(jobRow) },
+      application_records: { findMany: () => Promise.resolve(recordRows) },
     },
   },
 }));
@@ -43,6 +56,22 @@ vi.mock("$lib/server/db/schema", () => ({
   },
   jobs: { id: "jobs.id" },
   job_importers: {},
+  application_records: {
+    application_id: "application_records.application_id",
+    event_date: "application_records.event_date",
+    date_created: "application_records.date_created",
+  },
+}));
+
+// The two passes an applied entry triggers. Mocked to assert they run, in the
+// order they have to run in — see the comment on add_activity_record's apply.
+const mockDeriveRecord = vi.fn().mockResolvedValue(undefined);
+const mockSummarize = vi.fn().mockResolvedValue(undefined);
+vi.mock("../record-derivation", () => ({
+  deriveRecordMetadata: (...a: unknown[]) => mockDeriveRecord(...a),
+}));
+vi.mock("../application-summary", () => ({
+  summarizeApplication: (...a: unknown[]) => mockSummarize(...a),
 }));
 
 const mockCanEditJob = vi.fn();
@@ -60,7 +89,9 @@ import {
   buildProposalSchema,
   CAPABILITIES,
   type Capability,
+  capabilityFieldSchema,
   describeProposalChanges,
+  executeCapability,
   fieldsFromChanges,
   pickCapabilityFields,
   renderCapabilityPrompt,
@@ -73,6 +104,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   applicationRow = null;
   jobRow = null;
+  recordRows = [];
+  mockDeriveRecord.mockResolvedValue(undefined);
+  mockSummarize.mockResolvedValue(undefined);
   mockCanEditJob.mockResolvedValue(true);
   mockApplyJobFields.mockResolvedValue(undefined);
   mockApplyJobTexts.mockResolvedValue(undefined);
@@ -654,5 +688,216 @@ describe("renderCapabilityPrompt", () => {
     );
 
     expect(renderCapabilityPrompt(live)).toContain("100000");
+  });
+});
+
+describe("add_activity_record", () => {
+  const def = CAPABILITIES.add_activity_record;
+  const TARGET = { id: 42, label: "Staff Engineer at Acme" };
+
+  beforeEach(() => {
+    applicationRow = {
+      id: 42,
+      profile_id: 12,
+      status_step: "screening",
+      job: { title: "Staff Engineer", company: "Acme" },
+    };
+  });
+
+  it("writes the entry, then derives, then summarises", async () => {
+    // Order is load-bearing: the summariser reads the derived type and
+    // contacts, so summarising first would digest the write-time fallbacks.
+    const order: string[] = [];
+    mockDeriveRecord.mockImplementation(() => {
+      order.push("derive");
+      return Promise.resolve();
+    });
+    mockSummarize.mockImplementation(() => {
+      order.push("summarise");
+      return Promise.resolve();
+    });
+
+    await def.apply(TARGET, { entry_content: "They want two office days." }, {});
+
+    expect(mockRecordInsert).toHaveBeenCalledTimes(1);
+    expect(order).toEqual(["derive", "summarise"]);
+    expect(mockDeriveRecord).toHaveBeenCalledWith(777, 12);
+    expect(mockSummarize).toHaveBeenCalledWith(42, 12);
+  });
+
+  it("fills type, title, date and stage when the proposal omits them", async () => {
+    await def.apply(
+      TARGET,
+      { entry_content: "Recruiter called\n\nThey want two office days." },
+      {},
+    );
+
+    expect(mockRecordInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        application_id: 42,
+        record_type: "note",
+        title: "Recruiter called",
+        event_date: new Date().toISOString().slice(0, 10),
+        step: "screening",
+        extraction_status: "none",
+      }),
+    );
+  });
+
+  it("keeps the proposed type, title and date when it has them", async () => {
+    await def.apply(TARGET, {
+      entry_content: "Base 92000, respond by Friday.",
+      entry_type: "offer",
+      entry_title: "Verbal offer",
+      entry_date: "2026-07-30",
+    }, {});
+
+    expect(mockRecordInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        record_type: "offer",
+        title: "Verbal offer",
+        event_date: "2026-07-30",
+      }),
+    );
+  });
+
+  it("clamps a long title rather than letting the column reject it", async () => {
+    // `title` is varchar(255) NOT NULL, so an over-long value is a database
+    // error at apply time — a 500 on a button the user just pressed.
+    await def.apply(TARGET, {
+      entry_content: "…",
+      entry_title: "x".repeat(400),
+    }, {});
+
+    const values = mockRecordInsert.mock.calls[0][0] as { title: string };
+    expect(values.title.length).toBeLessThanOrEqual(255);
+  });
+
+  it("refuses an entry with no content", () => {
+    expect(def.validate({ entry_title: "Just a title" }, {}).ok).toBe(false);
+    expect(def.validate({ entry_content: "   " }, {}).ok).toBe(false);
+  });
+
+  it("refuses a type outside the known set", () => {
+    // An unknown type renders as the fallback label and is invisible to the
+    // filters, so it has to be rejected rather than stored.
+    expect(def.validate({ entry_content: "x", entry_type: "phone" }, {}).ok)
+      .toBe(false);
+    expect(def.validate({ entry_content: "x", entry_type: "offer" }, {}).ok)
+      .toBe(true);
+  });
+
+  it("refuses a date that isn't YYYY-MM-DD", () => {
+    expect(def.validate({ entry_content: "x", entry_date: "last Tuesday" }, {})
+      .ok).toBe(false);
+    expect(def.validate({ entry_content: "x", entry_date: "2026-07-30" }, {}).ok)
+      .toBe(true);
+  });
+
+  it("shows the model what is already logged, so it doesn't log it twice", async () => {
+    recordRows = [
+      {
+        id: 3,
+        record_type: "interview_recap",
+        title: "Second round",
+        event_date: "2026-07-28",
+      },
+    ];
+
+    const current = await def.current(TARGET);
+    expect(def.describe(TARGET, current)).toContain("Second round");
+  });
+
+  it("says so when there is nothing logged yet", async () => {
+    const current = await def.current(TARGET);
+    expect(def.describe(TARGET, current)).toContain("Nothing is logged");
+  });
+
+  it("does not resolve on a page that is not an application", async () => {
+    expect(await def.resolve({ type: "job", id: 900 }, ACTOR)).toBeNull();
+    expect(await def.resolve(null, ACTOR)).toBeNull();
+  });
+});
+
+describe("executeCapability", () => {
+  const TARGET = { id: 42, label: "Staff Engineer at Acme" };
+
+  beforeEach(() => {
+    applicationRow = {
+      id: 42,
+      profile_id: 12,
+      status_step: "screening",
+      job: { title: "Staff Engineer", company: "Acme" },
+    };
+  });
+
+  it("writes on the happy path", async () => {
+    const outcome = await executeCapability(
+      "add_activity_record",
+      TARGET,
+      ACTOR,
+      { entry_content: "They want two office days." },
+    );
+
+    expect(outcome).toEqual({ ok: true });
+    expect(mockRecordInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses, and writes nothing, when the actor no longer owns the row", async () => {
+    // The window this closes is real: a proposal sits in a 12h-resumable
+    // thread, and rights can be lost inside it rather than only outside.
+    applicationRow = null;
+
+    const outcome = await executeCapability(
+      "add_activity_record",
+      TARGET,
+      ACTOR,
+      { entry_content: "They want two office days." },
+    );
+
+    expect(outcome).toMatchObject({ ok: false, reason: "unauthorized" });
+    expect(mockRecordInsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses when nothing survives coercion", async () => {
+    const outcome = await executeCapability(
+      "add_activity_record",
+      TARGET,
+      ACTOR,
+      { salary_min: 90000 },
+    );
+
+    expect(outcome).toMatchObject({ ok: false, reason: "empty" });
+    expect(mockRecordInsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses what validate refuses", async () => {
+    const outcome = await executeCapability(
+      "add_activity_record",
+      TARGET,
+      ACTOR,
+      { entry_content: "x", entry_type: "phone" },
+    );
+
+    expect(outcome).toMatchObject({ ok: false, reason: "invalid" });
+    expect(mockRecordInsert).not.toHaveBeenCalled();
+  });
+});
+
+describe("capabilityFieldSchema", () => {
+  it("gives each capability its own object, keyed by its own fields", () => {
+    for (const [name, def] of Object.entries(CAPABILITIES)) {
+      const shape = capabilityFieldSchema(name as Capability).shape;
+      expect(Object.keys(shape).sort()).toEqual(Object.keys(def.fields).sort());
+    }
+  });
+
+  it("accepts a partial call and the loose wire values models send", () => {
+    // Same permissiveness as the chat's schema, for the same reason: the
+    // coercion is on our side of the boundary, not in the schema.
+    const schema = capabilityFieldSchema("edit_job_details");
+    expect(schema.safeParse({}).success).toBe(true);
+    expect(schema.safeParse({ salary_min: "55,000" }).success).toBe(true);
+    expect(schema.safeParse({ work_location: "remote" }).success).toBe(true);
   });
 });

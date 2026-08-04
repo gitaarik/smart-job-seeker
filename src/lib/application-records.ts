@@ -108,6 +108,18 @@ export function getRecordTypeColor(type: string | null): string {
 }
 
 /**
+ * Today, as the `event_date` column wants it.
+ *
+ * Shared rather than redefined per writer: an entry created by the composer and
+ * one created from the chat land in the same column and the same chronology,
+ * and two definitions of "today" is how one of them ends up a day off in a
+ * timezone nobody tested.
+ */
+export function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
  * How many entries with content an application needs before its standing
  * summary is worth writing. Below this the entries ARE the summary.
  *
@@ -158,6 +170,20 @@ export function getContactRoleLabel(role: string | null): string {
 const TITLE_MAX = 120;
 
 /**
+ * Cut a title to the length the stream can show.
+ *
+ * Also the guard on the `title` column, which is varchar(255) and NOT NULL: a
+ * writer that hands it a longer string gets a database error rather than a
+ * truncation, so every writer has to clamp and this is the one that does it.
+ */
+export function clampRecordTitle(title: string): string {
+  const cleaned = title.trim();
+  return cleaned.length > TITLE_MAX
+    ? cleaned.slice(0, TITLE_MAX).trimEnd() + "…"
+    : cleaned;
+}
+
+/**
  * A usable title from an entry's content.
  *
  * The non-LLM fallback: the derivation pass will do better, and until it lands
@@ -175,7 +201,5 @@ export function deriveRecordTitle(content: string): string {
   // Strip a leading "Subject:" so a pasted email doesn't title itself with it.
   const cleaned = firstLine.replace(/^(subject|onderwerp)\s*:\s*/i, "").trim();
   if (!cleaned) return "Untitled";
-  return cleaned.length > TITLE_MAX
-    ? cleaned.slice(0, TITLE_MAX).trimEnd() + "…"
-    : cleaned;
+  return clampRecordTitle(cleaned);
 }

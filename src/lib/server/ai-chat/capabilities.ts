@@ -30,9 +30,13 @@
  */
 
 import { db } from "$lib/server/db";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { applications, jobs } from "$lib/server/db/schema";
+import {
+  application_records,
+  applications,
+  jobs,
+} from "$lib/server/db/schema";
 import type { ContextEntity } from "./generation-context";
 import {
   applyJobFields,
@@ -41,11 +45,21 @@ import {
   type JobFieldValues,
   validateJobFields,
 } from "$lib/server/jobs/edit-job";
+import {
+  clampRecordTitle,
+  deriveRecordTitle,
+  getRecordTypeLabel,
+  recordTypeValues,
+  today,
+} from "$lib/application-records";
+import { deriveRecordMetadata } from "./record-derivation";
+import { summarizeApplication } from "./application-summary";
 
 export type Capability =
   | "edit_job_details"
   | "edit_job_description"
-  | "edit_application_details";
+  | "edit_application_details"
+  | "add_activity_record";
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -401,6 +415,44 @@ they may not match the new one until it is re-parsed.`,
  * edit_application_details
  * ------------------------------------------------------------------ */
 
+/** The application a page is about, or null on a page that is about something else. */
+async function resolveApplicationTarget(
+  entity: ContextEntity | null,
+): Promise<CapabilityTarget | null> {
+  if (entity?.type !== "application") return null;
+  const app = await db.query.applications.findFirst({
+    where: eq(applications.id, entity.id),
+    columns: { id: true },
+    with: { job: { columns: { title: true, company: true } } },
+  });
+  if (!app) return null;
+  return {
+    id: app.id,
+    label: [app.job?.title ?? "Application", app.job?.company]
+      .filter(Boolean)
+      .join(" at "),
+  };
+}
+
+/**
+ * Applications are profile-scoped, unlike jobs: owning the row is the whole
+ * check, and resolveEntity already required it. Asked again anyway — this runs
+ * at apply time too, when nothing else has.
+ */
+async function ownsApplication(
+  target: CapabilityTarget,
+  actor: CapabilityActor,
+): Promise<boolean> {
+  const owned = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.id, target.id),
+      eq(applications.profile_id, actor.profileId),
+    ),
+    columns: { id: true },
+  });
+  return !!owned;
+}
+
 /**
  * Deliberately the three fields the page's own `?/updateDetails` action covers.
  * Status is excluded: it writes an application_status_log row and drives the
@@ -409,34 +461,8 @@ they may not match the new one until it is re-parsed.`,
  */
 const editApplicationDetails: CapabilityDef = {
   title: "Edit the application's details",
-  resolve: async (entity) => {
-    if (entity?.type !== "application") return null;
-    const app = await db.query.applications.findFirst({
-      where: eq(applications.id, entity.id),
-      columns: { id: true },
-      with: { job: { columns: { title: true, company: true } } },
-    });
-    if (!app) return null;
-    return {
-      id: app.id,
-      label: [app.job?.title ?? "Application", app.job?.company]
-        .filter(Boolean)
-        .join(" at "),
-    };
-  },
-  // Applications are profile-scoped, unlike jobs: owning the row is the whole
-  // check, and resolveEntity already required it. Asked again anyway — this
-  // runs at apply time too, when nothing else has.
-  authorize: async (target, actor) => {
-    const owned = await db.query.applications.findFirst({
-      where: and(
-        eq(applications.id, target.id),
-        eq(applications.profile_id, actor.profileId),
-      ),
-      columns: { id: true },
-    });
-    return !!owned;
-  },
+  resolve: resolveApplicationTarget,
+  authorize: ownsApplication,
   current: async (target) => {
     const app = await db.query.applications.findFirst({
       where: eq(applications.id, target.id),
@@ -500,6 +526,198 @@ want, tell them to use the status control on the page.`,
   },
 };
 
+/* ------------------------------------------------------------------ *
+ * add_activity_record
+ * ------------------------------------------------------------------ */
+
+/** How much of the chronology the model sees, so it doesn't re-log what's there. */
+const RECENT_ENTRIES_SHOWN = 12;
+
+/**
+ * Write down something the user mentioned in conversation, as an entry on the
+ * application's Activity tab.
+ *
+ * ## Why this writes an entry and not a detail
+ *
+ * The overview's "Worth remembering" list (`applications.context_details`) is a
+ * PROJECTION of the entries, not a store. Every summarisation replaces it
+ * wholesale, which is exactly what stops a superseded salary figure living on
+ * beside the one that replaced it. So a detail written straight into that column
+ * would survive until the next entry the user added and then disappear, with
+ * nothing anywhere to say where it went — a bug that would present as the
+ * assistant lying about having saved something.
+ *
+ * Writing at the source instead makes every consumer correct from one write:
+ * derivation types the entry and pulls out who was involved, the summariser
+ * re-reads the chronology, details are re-extracted with a real entry behind
+ * them so the card's "source" link resolves, offer terms update if what they
+ * mentioned was an offer, and the comparison spine picks it up. The alternative
+ * is four writes and a consistency problem.
+ *
+ * ## Why it is proposed and not just written
+ *
+ * Every capability here is proposed — but this one would be the tempting
+ * exception, because "just remember that for me" sounds like an instruction
+ * rather than an edit. It isn't one. An entry is evidence: the summariser reads
+ * it as something that happened, the details card cites it as a source, and the
+ * spine counts it as contact with the employer. A half-heard "I think they said
+ * maybe hybrid?" entering that store unreviewed is indistinguishable, later,
+ * from an offer letter the user pasted in verbatim — and the whole reason the
+ * details card carries "source" links is so a fact on the overview page can be
+ * traced to something the user vouched for.
+ */
+const addActivityRecord: CapabilityDef = {
+  title: "Add an entry to the activity log",
+  resolve: resolveApplicationTarget,
+  authorize: ownsApplication,
+  // Not a diff — there is no row yet. What the model needs instead is the
+  // chronology it is about to add to, so it can tell "they told me something
+  // new" from "they are referring to the interview already logged on Tuesday".
+  current: async (target) => {
+    const recent = await db.query.application_records.findMany({
+      where: eq(application_records.application_id, target.id),
+      columns: { id: true, record_type: true, title: true, event_date: true },
+      orderBy: [
+        desc(application_records.event_date),
+        desc(application_records.date_created),
+      ],
+      limit: RECENT_ENTRIES_SHOWN,
+    });
+    return {
+      recent_entries: recent.map((r) =>
+        `${r.event_date ?? "undated"} — ${
+          getRecordTypeLabel(r.record_type)
+        }: ${r.title}`
+      ),
+    };
+  },
+  // Prefixed, because buildProposalSchema merges every live capability's fields
+  // into one object for the provider and a collision would land one
+  // capability's value in another's payload. `title` and `date_posted` are
+  // already taken by the job.
+  fields: {
+    entry_content: "string",
+    entry_type: "string",
+    entry_title: "string",
+    entry_date: "string",
+  },
+  describe: (target, current) => {
+    const recent = (current.recent_entries as string[] | undefined) ?? [];
+    return `### Capability: add_activity_record — ${target.label}
+
+The user sometimes tells you things about an application that are nowhere in it
+yet — what a recruiter said on the phone, a number that came up, a condition
+mentioned in passing. You may propose writing that down as an entry on the
+activity log, which they review and apply.
+
+This is how a fact reaches the rest of the application. An applied entry is
+re-read by the summariser, so it updates "Where this stands", the details on the
+overview page and the offer terms, all by itself. You do not need to — and
+cannot — propose those separately.
+
+${
+      recent.length > 0
+        ? `Already logged, most recent first. Do not propose an entry that repeats one of these:\n\n${
+          recent.map((line) => `  - ${line}`).join("\n")
+        }`
+        : "Nothing is logged on this application yet."
+    }
+
+Fields:
+- "entry_content" is the entry itself and is REQUIRED — a proposal without it is
+  discarded. Write what the user told you, in their terms, as a short factual
+  note. Not your advice about it, not a summary of your own reply.
+- "entry_type" is one of: ${recordTypeValues.join(", ")}. Pick "note" when the
+  user is relaying something themselves, "message" or "feedback" when they are
+  quoting the employer, "offer" only for actual offered terms.
+- "entry_title" is a short scannable line, under 120 characters. Omit it and one
+  is derived from the content.
+- "entry_date" is YYYY-MM-DD and means WHEN IT HAPPENED, not today. If they say
+  "they called on Tuesday", resolve it and say in your reply which date you
+  used, so a wrong guess is visible and correctable. Omit it for today.
+
+When to propose one:
+- They state a fact about this application that is not already logged above.
+- They confirm something you asked about.
+
+When NOT to propose one:
+- They asked you a question. Answer it.
+- They are speculating, or thinking out loud, or asking what they should do.
+  A possibility is not an event, and the log is for what happened.
+- The fact is already in the entries listed above.
+- It is your own suggestion. You may write down what they told you; you may not
+  write down what you told them.
+
+One entry per thing that happened. Two unrelated facts in one message are two
+proposals, not one entry with both in it — the user may want to keep one and
+drop the other, and an entry is also the unit the chronology is read in.`;
+  },
+  validate: (fields) => {
+    const content = fields.entry_content;
+    if (typeof content !== "string" || content.trim() === "") {
+      return { ok: false, error: "The entry has no content" };
+    }
+    const type = fields.entry_type;
+    if (
+      type !== undefined && type !== null &&
+      !recordTypeValues.includes(String(type))
+    ) {
+      return { ok: false, error: `"${String(type)}" is not an entry type` };
+    }
+    const date = fields.entry_date;
+    if (
+      date !== undefined && date !== null &&
+      !/^\d{4}-\d{2}-\d{2}$/.test(String(date))
+    ) {
+      return { ok: false, error: "entry_date must be a YYYY-MM-DD date" };
+    }
+    return { ok: true };
+  },
+  apply: async (target, fields) => {
+    // authorize() has already confirmed the row and its owner; this re-reads it
+    // for the two values the insert needs and the proposal cannot carry.
+    const app = await db.query.applications.findFirst({
+      where: eq(applications.id, target.id),
+      columns: { profile_id: true, status_step: true },
+    });
+    if (!app?.profile_id) throw new Error("Application has no profile");
+
+    const content = String(fields.entry_content);
+    const proposedTitle = typeof fields.entry_title === "string"
+      ? fields.entry_title.trim()
+      : "";
+
+    const [created] = await db.insert(application_records).values({
+      application_id: target.id,
+      record_type: typeof fields.entry_type === "string"
+        ? fields.entry_type
+        : "note",
+      title: proposedTitle
+        ? clampRecordTitle(proposedTitle)
+        : deriveRecordTitle(content),
+      content,
+      // The stage the application is in now, same as the composer: things are
+      // logged as they happen, and this is free and right more often than a
+      // guess would be.
+      step: app.status_step,
+      event_date: typeof fields.entry_date === "string"
+        ? fields.entry_date
+        : today(),
+      extraction_status: "none",
+      date_created: new Date(),
+    }).returning({ id: application_records.id });
+
+    // The same two passes the composer runs, in the same order and for the same
+    // reasons: derivation fills only what is still empty (here, essentially the
+    // contacts — this proposal already carries a type and a title), and the
+    // summariser runs after it so the digest reads the derived entry rather than
+    // the write-time fallbacks. Both are best-effort by construction, so a
+    // failure in either leaves the entry written and visible.
+    await deriveRecordMetadata(created.id, app.profile_id);
+    await summarizeApplication(target.id, app.profile_id);
+  },
+};
+
 /**
  * The capability registry — the one place a write is taught to the assistant.
  * Add an entry here and every route scope that lists it can propose that edit.
@@ -508,6 +726,7 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
   edit_job_details: editJobDetails,
   edit_job_description: editJobDescription,
   edit_application_details: editApplicationDetails,
+  add_activity_record: addActivityRecord,
 };
 
 /** A capability that resolved and authorized for this turn. */
@@ -562,6 +781,90 @@ export function pickCapabilityFields(
       .filter(([key]) => key in kinds)
       .map(([key, value]) => [key, coerceValue(kinds[key], value)]),
   );
+}
+
+/**
+ * One capability's fields as a single object schema — the shape a TOOL has.
+ *
+ * Distinct from `buildProposalSchema`, which flattens every live capability into
+ * one change-list for a single structured-output turn. That shape suits the chat
+ * and nothing else: it exists because the assistant answers and proposes in the
+ * same breath, and because models under-fill wide optional objects. A caller
+ * that already knows which capability it wants and is not also writing a reply —
+ * a LangChain tool binding, an MCP server exposing one tool per capability —
+ * wants this instead.
+ *
+ * zod rather than JSON Schema because `bindTools` and `DynamicStructuredTool`
+ * take zod directly, and because a JSON Schema is one `zodToJsonSchema` away
+ * while the reverse is not. Built from the same `fields` map as the prompt, the
+ * coercion and the proposal card, so a capability cannot grow a field that only
+ * some of its surfaces know about.
+ */
+export function capabilityFieldSchema(capability: Capability) {
+  return z.object(
+    Object.fromEntries(
+      Object.entries(CAPABILITIES[capability].fields).map(
+        ([name, kind]) => [name, WIRE_TYPES[kind]],
+      ),
+    ),
+  );
+}
+
+/** Why a write was refused, for a caller to map onto its own error shape. */
+export type CapabilityRefusal = "unauthorized" | "empty" | "invalid";
+
+export type CapabilityOutcome =
+  | { ok: true }
+  | { ok: false; reason: CapabilityRefusal; error: string };
+
+/**
+ * Authorize, re-read, coerce, validate, write — the whole of a capability's
+ * write path, with nothing HTTP in it.
+ *
+ * Extracted so the proposal endpoint is not the only way to reach `apply`. It is
+ * the only *caller* today; it should not also be the only place the order of
+ * these five steps is written down. An MCP server exposing capabilities as tools
+ * resolves a target through `CAPABILITIES[c].resolve` and then calls this, and
+ * gets re-authorization and re-validation because they are here rather than in a
+ * route it does not share.
+ *
+ * Everything is re-derived from the database on the way through. Whatever the
+ * caller holds — a stored proposal, a tool call, a form post — came from a model
+ * or a client and is treated as a request, not as fact. In particular
+ * `authorize` runs again here even when the caller has already asked: a proposal
+ * can sit in a resumable thread for twelve hours, and rights are lost inside
+ * that window, not only outside it.
+ */
+export async function executeCapability(
+  capability: Capability,
+  target: CapabilityTarget,
+  actor: CapabilityActor,
+  rawFields: Record<string, unknown>,
+): Promise<CapabilityOutcome> {
+  const def = CAPABILITIES[capability];
+
+  if (!await def.authorize(target, actor)) {
+    return {
+      ok: false,
+      reason: "unauthorized",
+      error: "You can no longer make this change.",
+    };
+  }
+
+  // Current values re-read now, not as they were when this was proposed: a
+  // partial edit is merged over whatever is there, and merging stale values
+  // around the changed field would quietly revert anything that happened since.
+  const current = await def.current(target);
+  const fields = pickCapabilityFields(capability, rawFields);
+  if (Object.keys(fields).length === 0) {
+    return { ok: false, reason: "empty", error: "Nothing to change." };
+  }
+
+  const valid = def.validate(fields, current);
+  if (!valid.ok) return { ok: false, reason: "invalid", error: valid.error };
+
+  await def.apply(target, fields, current);
+  return { ok: true };
 }
 
 /** Every field name the live capabilities can address, for the `field` enum. */
@@ -668,6 +971,10 @@ const FIELD_LABELS: Record<string, string> = {
   cv_sent_through: "Sent through",
   application_sent_date: "Sent on",
   application_seen_date: "Seen on",
+  entry_content: "Entry",
+  entry_type: "Kind",
+  entry_title: "Title",
+  entry_date: "Happened on",
 };
 
 function labelFor(field: string): string {
