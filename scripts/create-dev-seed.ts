@@ -126,8 +126,17 @@ async function seedDevUsers() {
 // ============================================================================
 
 const EXCLUDE_TABLES = [
-  // Legacy system tables
-  "directus_%",
+  // Fossils. No live database has these any more — dev, preview and the
+  // current schema all carry zero — but the Feb 2026 seed shipped 27 Directus
+  // tables with schema and data, and a regeneration from an old restored
+  // backup could carry them again.
+  //
+  // The pattern used to be `directus_%`, which never excluded anything:
+  // pg_dump globs with `*`, not SQL's `%`. That went unnoticed because
+  // `dev:reset` recreated the fossil each time instead of building the current
+  // schema, so nothing ever complained about tables nothing reads.
+  "directus_*",
+  "_prisma_migrations",
   // App tables not needed
   "session",
   "verification",
