@@ -12,14 +12,30 @@ import { summarizeApplication } from "$lib/server/ai-chat/application-summary";
 import { Buffer } from "buffer";
 
 /**
- * The Activity stream reads entirely from the layout's application query —
- * records and the status log are both already loaded there.
+ * The status log comes from the layout, which loads it for every tab. The
+ * entries' *text* does not: this is the only page that renders it, and leaving
+ * it in the layout meant the overview, texts and salary tabs each shipped every
+ * transcript on the application to the browser to display none of it. The
+ * layout still carries each entry's metadata — this query is the text.
  */
 export const load: PageServerLoad = async ({ parent }) => {
-  await parent();
-  // Label for the assistant's "I can see this page" chip. The entries
-  // themselves are resolved server-side — see ai-chat/chat-context.ts.
-  return { chatContext: { label: "Application activity" } };
+  const { application } = await parent();
+
+  const records = await db.query.application_records.findMany({
+    where: eq(application_records.application_id, application.id),
+    columns: { id: true, content: true },
+  });
+
+  return {
+    // Keyed by id rather than returned as a list, because the layout already
+    // owns the ordering and the two would drift the first time it changed.
+    recordContent: Object.fromEntries(
+      records.map((r) => [r.id, r.content ?? ""]),
+    ) as Record<number, string>,
+    // Label for the assistant's "I can see this page" chip. The entries
+    // themselves are resolved server-side — see ai-chat/chat-context.ts.
+    chatContext: { label: "Application activity" },
+  };
 };
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;

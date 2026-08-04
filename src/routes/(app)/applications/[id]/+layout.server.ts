@@ -1,7 +1,7 @@
 import type { LayoutServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import {
   application_letters,
   application_questions,
@@ -54,7 +54,35 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
       },
       // Newest first, falling back to creation order for records without a
       // known event date (a pasted email, a note jotted down later).
+      //
+      // WITHOUT `content`, deliberately. Only the Activity tab renders the text
+      // and it loads its own copy; every other tab under this layout was
+      // shipping the lot to the browser to render none of it — 146 kB of
+      // transcript on one dev application's overview page, 125 kB on another.
+      // `has_content` carries the one fact the other tabs need (which is also
+      // the summariser's own floor: an entry with no text is not one it could
+      // have summarised).
       application_records: {
+        columns: {
+          id: true,
+          record_type: true,
+          title: true,
+          event_date: true,
+          step: true,
+          status_log: true,
+          sort: true,
+          file_id: true,
+          extraction_status: true,
+          extraction_error: true,
+          date_extracted: true,
+          contacts: true,
+          date_created: true,
+          date_updated: true,
+        },
+        extras: {
+          has_content: sql<boolean>`coalesce(btrim(${application_records.content}), '') <> ''`
+            .as("has_content"),
+        },
         orderBy: [
           desc(application_records.event_date),
           desc(application_records.date_created),

@@ -79,7 +79,7 @@
       at: toDate(r.event_date) ?? toDate(r.date_created),
       record_type: r.record_type,
       title: r.title || "Untitled",
-      content: r.content || "",
+      content: data.recordContent?.[r.id] ?? "",
       step: r.step,
       contacts: (r.contacts ?? []) as { name: string; role: string | null }[],
       fileId: r.file_id ?? null,

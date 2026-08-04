@@ -128,9 +128,10 @@
   );
   // The entries the summariser reads: an extraction with no text in it is not
   // one it could have summarised, so counting rows would overstate what the
-  // absence of a summary means.
+  // absence of a summary means. `has_content` is computed in the layout query
+  // rather than derived from the text, which this page no longer receives.
   let summarisedEntryCount = $derived(
-    (app.application_records ?? []).filter((r) => r.content?.trim()).length,
+    (app.application_records ?? []).filter((r) => r.has_content).length,
   );
   let activityHref = $derived(`/applications/${app.id}/activity`);
   let statusLogCount = $derived(app.application_status_logs?.length || 0);
