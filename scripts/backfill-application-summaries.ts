@@ -1,5 +1,8 @@
 /**
- * Generate the standing summary for applications that have never had one.
+ * Generate the standing summary for applications the current summariser has
+ * never been over — the ones that have no summary at all, and the ones whose
+ * summary was written before the summariser learned to extract what it extracts
+ * today.
  *
  * `summarizeApplication` runs at write time — when a record is added, edited or
  * deleted. That keeps the cost bounded and the summary fresh, but it means an
@@ -13,6 +16,13 @@
  * an already-summarised application is a DB read and nothing more. Dry-run by
  * default, because each application it does process costs an LLM call.
  *
+ * The selection deliberately mirrors that gate rather than approximating it.
+ * When it was `hash IS NULL` and the gate was a hash over the entries, the two
+ * agreed on everything except the case that mattered: a summary written by an
+ * older summariser. The write path skipped those because the entries had not
+ * changed, this skipped them because they had a hash, and `context_details`
+ * shipped to an audience of zero applications as a result.
+ *
  *   # from cloud/oss, against whichever DB SJS_DATABASE_URL points at
  *   npx dotenvx run -f ../.env -- npx tsx scripts/backfill-application-summaries.ts
  *   npx dotenvx run -f ../.env -- npx tsx scripts/backfill-application-summaries.ts --apply
@@ -20,9 +30,12 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
-import { asc, isNull, sql } from "drizzle-orm";
+import { asc, isNull, not, or, sql } from "drizzle-orm";
 import { application_records, applications } from "$lib/server/db/schema";
-import { summarizeApplication } from "$lib/server/ai-chat/application-summary";
+import {
+  CONTRACT_PREFIX,
+  summarizeApplication,
+} from "$lib/server/ai-chat/application-summary";
 import { isFinishedStatus } from "$lib/application-status";
 import { MIN_ENTRIES_FOR_SUMMARY } from "$lib/application-records";
 
@@ -47,7 +60,12 @@ async function main() {
       sql`${application_records.application_id} = ${applications.id}
           AND coalesce(btrim(${application_records.content}), '') <> ''`,
     )
-    .where(isNull(applications.context_summary_hash))
+    .where(or(
+      isNull(applications.context_summary_hash),
+      not(sql`${applications.context_summary_hash} LIKE ${
+        CONTRACT_PREFIX + "%"
+      }`),
+    ))
     .groupBy(applications.id, applications.profile_id, applications.status)
     .orderBy(asc(applications.id));
 
@@ -58,7 +76,7 @@ async function main() {
   );
 
   console.log(
-    `${rows.length} application(s) without a summary; ` +
+    `${rows.length} application(s) not on the current extraction (${CONTRACT_PREFIX}); ` +
       `${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, not finished).`,
   );
 

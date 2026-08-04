@@ -1,0 +1,1 @@
+ALTER TABLE "applications" ALTER COLUMN "context_summary_hash" SET DATA TYPE text;

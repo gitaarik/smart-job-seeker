@@ -1988,10 +1988,18 @@ export const applications = pgTable("applications", {
    */
   context_summary: text(),
   /**
-   * sha256 over the entries the summary was built from. Gates regeneration, so
-   * an edit that does not change what the summary depends on costs nothing.
+   * `v<n>:` + sha256 over the entries the summary was built from. Gates
+   * regeneration, so an edit that does not change what the summary depends on
+   * costs nothing — and the version makes "what we extract changed" stale the
+   * same way "the entries changed" does. See SUMMARY_CONTRACT_VERSION.
+   *
+   * Text, not varchar(64). Sixty-four is exactly a bare sha256 in hex, so the
+   * first thing the version prefix did was fail every update with a value too
+   * long — the summariser's own catch swallowed it and four applications
+   * silently kept their old summaries. A fingerprint that carries a tag has no
+   * natural width; giving it one buys nothing and costs that.
    */
-  context_summary_hash: varchar({ length: 64 }),
+  context_summary_hash: text(),
   context_summary_at: timestamp({ withTimezone: true, mode: "date" }),
   /**
    * Offer terms as structured data rather than prose.

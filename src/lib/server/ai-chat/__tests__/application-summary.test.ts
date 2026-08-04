@@ -10,6 +10,8 @@
 import { describe, expect, it } from "vitest";
 import {
   coerceOffer,
+  CONTRACT_PREFIX,
+  isCurrentContract,
   renderSourceEntries,
   summaryHash,
   type SummarySource,
@@ -56,6 +58,39 @@ describe("summaryHash", () => {
       derived_at: new Date(),
     } as SummarySource;
     expect(summaryHash([withExtra])).toBe(summaryHash([entry()]));
+  });
+});
+
+/**
+ * The gate has to notice two different kinds of staleness, and only ever
+ * noticed one. When the summariser learned to extract `context_details`, every
+ * application already summarised kept a hash that still matched its unchanged
+ * entries — so the write path skipped them and the backfill, selecting on
+ * `hash IS NULL`, skipped them too. The feature shipped to nothing.
+ */
+describe("contract versioning", () => {
+  it("stamps the contract version on every hash", () => {
+    expect(summaryHash([entry()]).startsWith(CONTRACT_PREFIX)).toBe(true);
+  });
+
+  it("treats a hash from an older summariser as not current", () => {
+    // What the column held before versioning: bare hex, no prefix.
+    expect(isCurrentContract("a".repeat(64))).toBe(false);
+    expect(isCurrentContract("v1:" + "a".repeat(64))).toBe(false);
+    expect(isCurrentContract(null)).toBe(false);
+    expect(isCurrentContract("")).toBe(false);
+  });
+
+  it("treats a hash it just wrote as current", () => {
+    expect(isCurrentContract(summaryHash([entry()]))).toBe(true);
+  });
+
+  it("still distinguishes entries within one contract version", () => {
+    // The prefix must not swallow the original signal.
+    const a = summaryHash([entry()]);
+    const b = summaryHash([entry({ content: "Wednesday instead." })]);
+    expect(a).not.toBe(b);
+    expect(isCurrentContract(a) && isCurrentContract(b)).toBe(true);
   });
 });
 
