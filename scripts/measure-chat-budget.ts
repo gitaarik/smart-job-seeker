@@ -37,8 +37,13 @@ async function main() {
   });
   if (!app) throw new Error(`no application ${appId}`);
 
-  const [pipeline, activity, job] = await Promise.all([
+  // Both modes: the chat asks for `full` on an application page, writing
+  // prompts ask for `compact`, and the gap between them is the thing worth
+  // seeing — it is what a cover letter would start carrying if the two were
+  // ever collapsed back into one number.
+  const [pipeline, activity, activityCompact, job] = await Promise.all([
     applicationPipelineText(app.profile_id, app.id),
+    applicationActivityText(app.id, "full"),
     applicationActivityText(app.id, "compact"),
     jobDetailsText({ applicationId: app.id }),
   ]);
@@ -47,7 +52,8 @@ async function main() {
   const frame = pipeline.length - rows.join("").length;
   console.log(`application #${app.id} (profile ${app.profile_id})`);
   console.log(`  job          ${job.length}`);
-  console.log(`  activity     ${activity.length}  (compact)`);
+  console.log(`  activity     ${activity.length}  (full — what the chat gets)`);
+  console.log(`  activity     ${activityCompact.length}  (compact — writing)`);
   console.log(
     `  pipeline     ${pipeline.length}  (${rows.length} rows, frame ${frame}, ` +
       `cap ${DEFAULT_PIPELINE_BUDGET_CHARS})`,

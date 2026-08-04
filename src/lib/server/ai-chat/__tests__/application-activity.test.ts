@@ -17,8 +17,11 @@ import {
 } from "../application-activity";
 import { recordTypeValues } from "$lib/application-records";
 
+let nextId = 1;
+
 function record(over: Partial<ActivityEntry> = {}): ActivityEntry {
   return {
+    id: nextId++,
     record_type: "interview_recap",
     title: "A round",
     content: "Something happened.",
@@ -58,11 +61,14 @@ describe("RECORD_WEIGHTS", () => {
   // One table, not two. These were separate before — TRIM_ORDER said what to
   // sacrifice, BUDGETS.perRecord said how much to keep — and two tables
   // encoding the same judgement drift the first time a type lands in one only.
+  // Only compact rations by type now — full mode has one backstop ceiling, so
+  // there is no per-type room to compare there. The judgement still has to hold
+  // where scarcity is real.
   it("gives the dearest types the most room, not just the best rank", () => {
-    expect(RECORD_WEIGHTS.offer.ceiling)
-      .toBeGreaterThan(RECORD_WEIGHTS.transcript.ceiling);
-    expect(RECORD_WEIGHTS.contract.ceiling)
-      .toBeGreaterThan(RECORD_WEIGHTS.note.ceiling);
+    expect(RECORD_WEIGHTS.offer.compact)
+      .toBeGreaterThan(RECORD_WEIGHTS.transcript.compact);
+    expect(RECORD_WEIGHTS.contract.compact)
+      .toBeGreaterThan(RECORD_WEIGHTS.note.compact);
   });
 });
 
@@ -160,13 +166,48 @@ describe("formatActivityContext", () => {
 
   it("keeps full output within its total budget", () => {
     const records = Array.from(
-      { length: 30 },
+      { length: 40 },
       (_, i) => record({ title: `Round ${i}`, content: filler(9000) }),
     );
 
     const out = formatActivityContext(records, "full");
 
-    expect(out.length).toBeLessThan(42000);
+    // 200k total + the guidance/omission preamble.
+    expect(out.length).toBeLessThan(202000);
+  });
+
+  // The whole point of the full-mode change: one application's history is not
+  // large enough to ration, so a real interview transcript arrives whole rather
+  // than as head-and-tail. 29163 is the record that prompted this — the
+  // assistant had 1478 of it and correctly said it could not see the answer.
+  it("passes a real-sized transcript through full mode untouched", () => {
+    const content = `OPENING${filler(29000)}CLOSING`;
+    const out = formatActivityContext(
+      [record({ record_type: "transcript", title: "The call", content })],
+      "full",
+    );
+
+    expect(out).toContain(content);
+    expect(out).not.toContain("[…middle omitted…]");
+    expect(out).not.toContain("Shown:");
+  });
+
+  it("still cuts that transcript hard in compact mode", () => {
+    // Writing prompts want the gist. Raising full must not raise letters too —
+    // the two modes had a shared scale factor until this change, and that is
+    // exactly how a cover letter would have quietly started carrying 29k of
+    // transcript.
+    const out = formatActivityContext(
+      [record({
+        record_type: "transcript",
+        title: "The call",
+        content: filler(29163),
+      })],
+      "compact",
+    );
+
+    expect(out).toContain("[…middle omitted…]");
+    expect(out.length).toBeLessThan(4000);
   });
 
   it("truncates rather than drops while the total still fits", () => {
@@ -261,6 +302,56 @@ describe("formatActivityContext", () => {
       "compact",
     );
     expect(out).not.toContain("omitted to fit");
+  });
+
+  // Three distinct states the model must not confuse: an entry that was dropped
+  // (announced), an entry that is present but cut (this), and an entry that
+  // genuinely says nothing. The inline marker alone conflated the last two —
+  // it says something is missing without saying how much, and 5% of a
+  // transcript reads like a short transcript.
+  it("says how much of a cut entry it is actually holding", () => {
+    const out = formatActivityContext(
+      [record({
+        record_type: "transcript",
+        title: "The call",
+        content: filler(29163),
+      })],
+      "compact",
+    );
+
+    expect(out).toMatch(/Shown: \d+ of 29163 characters/);
+  });
+
+  it("tells the model a cut entry is cut, not empty", () => {
+    const out = formatActivityContext(
+      [record({ record_type: "transcript", content: filler(29163) })],
+      "compact",
+    );
+
+    expect(out).toMatch(/entry\(s\) below are shown only in part/);
+    expect(out).toContain("say the entry is cut rather than concluding");
+  });
+
+  it("says nothing about cutting when every entry arrives whole", () => {
+    const out = formatActivityContext([record({ content: "short" })], "full");
+
+    expect(out).not.toContain("shown only in part");
+    expect(out).not.toContain("Shown:");
+  });
+
+  // Dropped and cut are reported separately: a set can be both (the oldest
+  // sacrificed, the survivors trimmed), and collapsing them into one note loses
+  // which of the two happened.
+  it("reports dropping and cutting independently", () => {
+    const records = Array.from(
+      { length: 30 },
+      (_, i) => record({ title: `Round ${i}`, content: filler(9000) }),
+    );
+
+    const out = formatActivityContext(records, "compact");
+
+    expect(out).toMatch(/entry\(s\) exist but were omitted/);
+    expect(out).toMatch(/entry\(s\) below are shown only in part/);
   });
 
   it("keeps one record rather than none when a single one blows the budget", () => {

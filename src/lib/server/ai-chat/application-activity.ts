@@ -41,7 +41,7 @@ import { getRecordTypeLabel } from "$lib/application-records";
 export type ActivityContextMode = "compact" | "full";
 
 /**
- * Per-type trim rank AND char ceiling, from one table.
+ * Per-type trim rank AND compact-mode char ceiling, from one table.
  *
  * These were two independent judgements before — `TRIM_ORDER` said what to
  * sacrifice, `BUDGETS.perRecord` said how much of it to keep — both encoding
@@ -52,52 +52,86 @@ export type ActivityContextMode = "compact" | "full";
  * the least efficient way to say what happened; a recap or a piece of feedback
  * is the most; an offer or a signed contract should be the last thing dropped.
  *
+ * `compact` is the per-entry ceiling for writing prompts only — see
+ * FULL_ENTRY_CEILING for why full mode has no per-type ceiling at all.
+ *
  * ⚠️ EVERY value in `recordTypes` must appear here — `weightFor` falls back to
  * rank 0, which means "sacrifice first", so a type added to the vocabulary and
  * forgotten here quietly becomes cheaper than a raw transcript instead of
  * dearer. There is a test asserting the two stay in step.
  */
-export const RECORD_WEIGHTS: Record<string, { rank: number; ceiling: number }> =
+export const RECORD_WEIGHTS: Record<string, { rank: number; compact: number }> =
   {
-    transcript: { rank: 0, ceiling: 4000 },
-    note: { rank: 1, ceiling: 2000 },
-    research: { rank: 2, ceiling: 2000 },
-    message: { rank: 3, ceiling: 2000 },
-    assessment: { rank: 4, ceiling: 4000 },
-    feedback: { rank: 5, ceiling: 4000 },
-    interview_recap: { rank: 6, ceiling: 4000 },
-    offer: { rank: 7, ceiling: 8000 },
-    contract: { rank: 8, ceiling: 8000 },
+    transcript: { rank: 0, compact: 1500 },
+    note: { rank: 1, compact: 750 },
+    research: { rank: 2, compact: 750 },
+    message: { rank: 3, compact: 750 },
+    assessment: { rank: 4, compact: 1500 },
+    feedback: { rank: 5, compact: 1500 },
+    interview_recap: { rank: 6, compact: 1500 },
+    offer: { rank: 7, compact: 3000 },
+    contract: { rank: 8, compact: 3000 },
   };
 
-const FALLBACK_WEIGHT = { rank: 0, ceiling: 2000 };
+const FALLBACK_WEIGHT = { rank: 0, compact: 750 };
 
 function weightFor(recordType: string | null) {
   return RECORD_WEIGHTS[recordType || "note"] ?? FALLBACK_WEIGHT;
 }
 
 /**
- * Compact mode scales every ceiling by one constant rather than restating the
- * table. 0.375 is what both predecessors already used (records 1500/4000,
- * documents 3000/8000 — the same ratio by coincidence, kept deliberately).
+ * Full mode does NOT ration by type. Rationing is a scarcity behaviour, and for
+ * ONE application there is no scarcity: the largest real application measured
+ * holds 149k chars over 17 entries — 37k tokens, against a 1M-token writing
+ * model and a 131k-token fallback. The per-type table below it existed because
+ * everything shared a 40k total; at that size a 29k interview transcript
+ * arrived as 1.5k of head and tail with the middle cut, and the assistant
+ * correctly reported it could not see the answer the user was asking about.
+ *
+ * So full mode keeps ONE ceiling, and it is a backstop against pathological
+ * input (a 2MB book attached to an application), not a budget. `rank` still
+ * decides what goes first if the total is ever reached — the value judgement
+ * lives there, which is where it belongs.
  */
-const COMPACT_SCALE = 0.375;
+const FULL_ENTRY_CEILING = 60000;
 
+/**
+ * ⚠️ `full` is sized to hold one whole application, so it is ~10x the sum of
+ * everything else the chat sends. It only reaches that size when the
+ * application really has that much history — blocks are rendered from what
+ * exists, not padded — but a heavily-documented application now costs
+ * materially more per turn than it did. Re-measure with
+ * `scripts/measure-chat-budget.ts` before assuming a number here is free.
+ *
+ * 200000 rather than 150000 because 150000 was already binding: measured on the
+ * two busiest real applications, one rendered 129303 over 5 entries and fitted,
+ * the other 136556 over 17 — and at 150000 that second one lost its oldest
+ * entry on day one. A cap that trims today's largest case is the mistake the
+ * 32000 chat budget made; this leaves ~60000 of headroom above it.
+ */
 const TOTALS: Record<
   ActivityContextMode,
   { total: number; maxEntries: number }
 > = {
-  full: { total: 40000, maxEntries: 16 },
+  full: { total: 200000, maxEntries: 30 },
   compact: { total: 15000, maxEntries: 10 },
 };
 
 function ceilingFor(entry: ActivityEntry, mode: ActivityContextMode): number {
-  const base = weightFor(entry.record_type).ceiling;
-  return mode === "compact" ? Math.round(base * COMPACT_SCALE) : base;
+  return mode === "compact"
+    ? weightFor(entry.record_type).compact
+    : FULL_ENTRY_CEILING;
 }
 
 /** The shape the formatter needs — kept narrow so tests need no DB row. */
 export interface ActivityEntry {
+  /**
+   * The `application_records` row id. No prompt block prints it, but the
+   * activity *index* (activity-manifest.ts) lists these same rows by `#id`, and
+   * a contents shape that could not be matched back to the index would be
+   * strictly less useful as data than the index of it.
+   */
+  id: number;
   record_type: string | null;
   title: string | null;
   content: string | null;
@@ -129,7 +163,26 @@ export function truncateKeepingEnds(text: string, max: number): string {
   }`;
 }
 
+/** How much of an entry survives its ceiling, or null when all of it does. */
+function truncationOf(
+  entry: ActivityEntry,
+  mode: ActivityContextMode,
+): { shown: number; total: number } | null {
+  const text = entry.content!.trim();
+  const ceiling = ceilingFor(entry, mode);
+  if (text.length <= ceiling) return null;
+  return {
+    shown: truncateKeepingEnds(text, ceiling).length,
+    total: text.length,
+  };
+}
+
 function renderBlock(entry: ActivityEntry, mode: ActivityContextMode): string {
+  // Say the size out loud on the entry itself. The […middle omitted…] marker
+  // alone says "something is missing"; it does not say whether that is a
+  // sentence or 95% of an interview, and the model reads a heavily-cut entry as
+  // a short one. Stated as a count, "1478 of 29163" is unmistakable.
+  const cut = truncationOf(entry, mode);
   const heading = [
     `### ${getRecordTypeLabel(entry.record_type)}: ${
       entry.title?.trim() || "Untitled"
@@ -137,6 +190,9 @@ function renderBlock(entry: ActivityEntry, mode: ActivityContextMode): string {
     entry.step ? `Stage: ${entry.step}` : null,
     entry.event_date ? `Date: ${entry.event_date}` : null,
     entry.from_file ? "Source: text extracted from an attached file" : null,
+    cut
+      ? `Shown: ${cut.shown} of ${cut.total} characters — the rest is missing`
+      : null,
   ].filter(Boolean).join("\n");
 
   return `${heading}\n\n${
@@ -243,11 +299,27 @@ export function formatActivityContext(
     ]
     : [];
 
+  // A dropped entry is announced; a cut one used to announce only itself, with
+  // an inline marker mid-text that is easy to read past. The two failures are
+  // not the same and neither is "there is nothing there": an entry you hold 5%
+  // of is one whose answer you have probably not been shown.
+  const cutCount = kept.filter((e) => truncationOf(e, mode)).length;
+  const truncation = cutCount > 0
+    ? [
+      "",
+      `NOTE: ${cutCount} entry(s) below are shown only in part, marked with a`,
+      "[…middle omitted…] break and a Shown: count in the heading. Where you",
+      "were asked about something an entry should contain and you cannot find",
+      "it there, say the entry is cut rather than concluding it is absent.",
+    ]
+    : [];
+
   return [
     "## What has already happened in this application",
     "",
     ...guidance,
     ...omission,
+    ...truncation,
     "",
     kept.map((e) => renderBlock(e, mode)).join("\n\n---\n\n"),
   ].join("\n");
@@ -341,50 +413,76 @@ async function markSkipped(id: number, reason: string): Promise<void> {
 }
 
 /**
- * Load everything recorded against an application and render it as prompt
- * context. Returns "" when there is nothing — callers interpolate it blindly.
+ * Load everything recorded against an application, oldest first — the order the
+ * rounds happened in, which is the order the formatter and the reader both
+ * assume. Entries whose text is still empty (a file that failed to extract) are
+ * left out: this is the *contents* shape, and the activity index is what says
+ * an entry exists at all.
  *
  * Attached files were unioned in from `applications_files` during the Activity
  * transition; migration 0074 moved those rows into `application_records` and
- * dropped the table, so there is one read again.
+ * dropped the table, so there is one read again. Extraction happens here rather
+ * than in the formatter because filling `content` from an attached file is
+ * materialising the data, not framing it.
+ *
+ * THROWS on a real failure, deliberately. Swallowing is a prompt-assembly
+ * policy, and it lives one level up in `applicationActivityText`; a caller
+ * reading this as data needs "the query failed" and "nothing is recorded" to be
+ * different answers.
+ */
+export async function loadActivityEntries(
+  applicationId: number,
+  opts: { limit?: number } = {},
+): Promise<ActivityEntry[]> {
+  const rows = await db.query.application_records.findMany({
+    where: eq(application_records.application_id, applicationId),
+    // Oldest first: the model reads the rounds in the order they happened.
+    orderBy: [
+      asc(application_records.event_date),
+      asc(application_records.date_created),
+    ],
+    // Read a little past the cap so the budget pass has something to choose
+    // between rather than being handed a pre-truncated set. A caller that is
+    // not assembling a prompt can raise it — this is a default, not a rule.
+    limit: opts.limit ?? TOTALS.full.maxEntries * 2,
+    with: {
+      file: { columns: { filename_download: true, title: true } },
+    },
+  });
+
+  const entries: ActivityEntry[] = [];
+  for (const row of rows) {
+    const content = row.file_id
+      ? await ensureExtracted(row as ExtractableRow, row.content)
+      : row.content;
+    if (!content?.trim()) continue;
+    entries.push({
+      id: row.id,
+      record_type: row.record_type,
+      title: row.title,
+      content,
+      step: row.step,
+      event_date: row.event_date,
+      from_file: !!row.file_id,
+    });
+  }
+
+  return entries;
+}
+
+/**
+ * Load and render. Returns "" when there is nothing — callers interpolate it
+ * blindly.
  */
 export async function applicationActivityText(
   applicationId: number,
   mode: ActivityContextMode = "full",
 ): Promise<string> {
   try {
-    const rows = await db.query.application_records.findMany({
-      where: eq(application_records.application_id, applicationId),
-      // Oldest first: the model reads the rounds in the order they happened.
-      orderBy: [
-        asc(application_records.event_date),
-        asc(application_records.date_created),
-      ],
-      // Read a little past the cap so the budget pass has something to choose
-      // between rather than being handed a pre-truncated set.
-      limit: TOTALS.full.maxEntries * 2,
-      with: {
-        file: { columns: { filename_download: true, title: true } },
-      },
-    });
-
-    const entries: ActivityEntry[] = [];
-    for (const row of rows) {
-      const content = row.file_id
-        ? await ensureExtracted(row as ExtractableRow, row.content)
-        : row.content;
-      if (!content?.trim()) continue;
-      entries.push({
-        record_type: row.record_type,
-        title: row.title,
-        content,
-        step: row.step,
-        event_date: row.event_date,
-        from_file: !!row.file_id,
-      });
-    }
-
-    return formatActivityContext(entries, mode);
+    return formatActivityContext(
+      await loadActivityEntries(applicationId),
+      mode,
+    );
   } catch {
     // Context is a bonus, never a reason to fail the generation.
     return "";

@@ -493,6 +493,18 @@ async function generateWithLangChain(
 
       // For Groq and Cerebras, use JSON mode instead of structured output (tool calling)
       // These providers' tool calling has strict validation that conflicts with our schemas
+      //
+      // ⚠️ That claim is about Llama 4 and no longer holds for the configured
+      // Groq model. Probed 2026-08-04 against openai/gpt-oss-120b with
+      // `scripts/probe-groq-tools.ts`: bound tools, argument extraction, a
+      // two-step loop feeding a tool result back, and the loose proposal schema
+      // (enums, optional fields, array-of-objects) all worked — 4/4.
+      //
+      // It is left in place anyway, because "tool calling works" is not a
+      // reason to change a JSON-mode path that works: the win would be nil and
+      // the blast radius is every structured prompt in the app. What it DOES
+      // settle is the question that made anyone ask — an agent/tool loop, which
+      // cannot avoid tool calls, is not blocked on this provider.
       if (provider === "groq" || provider === "cerebras") {
         // IMPORTANT: Do NOT use zodToJsonSchema here - Llama 4 tends to echo JSON schema definitions
         // Instead, we rely on the system prompt already describing the expected output format
