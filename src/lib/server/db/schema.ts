@@ -1995,6 +1995,26 @@ export const applications = pgTable("applications", {
       notes: string | null;
     } | null
   >(),
+  /**
+   * Things this application picked up along the way that the summary cannot
+   * carry: a mandatory office day nobody put in the ad, a band named before any
+   * offer, a promise to send a take-home on Monday.
+   *
+   * Written by the same pass as the summary and, like it, REGENERATED FROM
+   * SOURCE rather than appended to. A negotiation contradicts itself by design,
+   * so a list that accumulated would hold every superseded figure with no way
+   * to say which is current. See $lib/application-details.ts for the shape and
+   * the reasoning; the type is inlined here because drizzle-kit runs outside
+   * Vite and cannot resolve `$lib`.
+   */
+  context_details: jsonb().$type<
+    Array<{
+      category: string;
+      label: string;
+      value: string;
+      record_id: number | null;
+    }>
+  >().default([]).notNull(),
 }, (table) => [
   index("applications_profile_status_updated_idx").on(
     table.profile_id,

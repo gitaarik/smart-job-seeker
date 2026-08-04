@@ -500,6 +500,12 @@
             </p>
           {/if}
         {:else}
+          <!--
+            Anchor target for the "source" links on the overview page's details
+            card. `scroll-mt` keeps the entry clear of the sticky tab bar rather
+            than landing underneath it.
+          -->
+          <div id={entry.id} class="scroll-mt-24">
           <Card padding="sm">
             <div class="flex items-start gap-2 flex-wrap">
               <span
@@ -701,6 +707,7 @@
               </button>
             {/if}
           </Card>
+          </div>
         {/if}
       {/each}
     </div>

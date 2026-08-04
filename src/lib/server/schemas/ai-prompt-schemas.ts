@@ -360,6 +360,23 @@ export const summarizeApplicationSchema = z.object({
   }).nullable().describe(
     "The offer's terms, or null when no offer has been made.",
   ),
+  // Loose on `category` and `record_id` for the same reason as `offer` above:
+  // an enum here would fail the WHOLE parse over one invented category, taking
+  // the summary and the offer deadline down with it. coerceDetails normalises
+  // an unknown category to "other" and drops a citation to an entry that was
+  // never shown — see $lib/application-details.ts.
+  details: z.array(z.object({
+    category: z.string().describe(
+      "One of: requirement, compensation, logistics, commitment, role_detail, other.",
+    ),
+    label: z.string().describe("Short noun phrase naming the thing."),
+    value: z.string().describe("The fact itself, in one line."),
+    record_id: z.union([z.number(), z.string()]).nullable().describe(
+      "The [entry N] number this came from, or null.",
+    ),
+  })).describe(
+    "Concrete details worth remembering. Empty array when there are none.",
+  ),
 });
 
 /**

@@ -195,16 +195,30 @@ When there is one, fill only what is stated. Never infer a number that is not wr
 - "respond_by" is the deadline to accept, as YYYY-MM-DD. This is the single most actionable field here — do not miss it, and do not invent it.
 - "notes" is for terms that do not fit the other fields: leave, pension, relocation, conditions.
 
+## The details
+
+Concrete things this application picked up along the way that someone would want in front of them and would otherwise have to reread every entry to find. A requirement nobody put in the job ad. A salary figure named before any offer existed. Something either side promised to do. A fact about the team or the work that only came up in conversation.
+
+Write the CURRENT state of each. These entries contradict each other on purpose — a band becomes an offer becomes a renegotiated offer — so give the figure that stands now, not every figure ever mentioned. If something was superseded, it is not a detail; it is history, and the summary covers it.
+
+- "label" is a short noun phrase: "Office days", "Notice period", "Take-home deadline".
+- "value" is the fact in one line, quoting numbers and dates as they were written.
+- "category" is one of: requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job or team that was not in the ad), other.
+- "record_id" is the number in the [entry N] heading you took it from. Use null rather than guessing.
+
+Only what is written down. Do not restate the job ad, do not repeat the offer's own terms — those are fields already — and do not pad the list: three details that matter beat ten that do not. Return an empty array when the entries contain nothing of this kind.
+
 ## Output
 
 Respond with a single JSON object and nothing else:
 
 {
   "summary": "a string, always present",
-  "offer": null
+  "offer": null,
+  "details": []
 }
 
-or, when an offer exists:
+or, when an offer exists and things have come up along the way:
 
 {
   "summary": "a string, always present",
@@ -212,10 +226,14 @@ or, when an offer exists:
     "base": 92000, "bonus": null, "equity": null,
     "currency": "EUR", "period": "year",
     "start_date": null, "respond_by": "2026-08-15", "notes": null
-  }
+  },
+  "details": [
+    { "category": "requirement", "label": "Office days", "value": "Tuesdays and Thursdays, in Amsterdam", "record_id": 12 },
+    { "category": "commitment", "label": "References", "value": "You agreed to send two by Friday", "record_id": 14 }
+  ]
 }
 
-Both keys must always be present. Never omit "offer" — write null. Never return a bare string or array as the whole response.`,
+All three keys must always be present. Never omit "offer" — write null. Never omit "details" — write []. Never return a bare string or array as the whole response.`,
     user_prompt: `\${activity}`,
   },
 

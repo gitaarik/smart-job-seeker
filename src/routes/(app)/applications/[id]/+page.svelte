@@ -40,6 +40,7 @@
   import CvSentCard from "./CvSentCard.svelte";
   import ActivitySummaryCard from "./ActivitySummaryCard.svelte";
   import OfferCard from "./OfferCard.svelte";
+  import DetailsCard from "./DetailsCard.svelte";
   import { hasOfferContent } from "$lib/application-offer";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
   import { formatDate as fmtDate } from "$lib/format-date";
@@ -253,6 +254,12 @@
     summary={app.context_summary}
     updatedAt={app.context_summary_at}
     entryCount={summarisedEntryCount}
+    {activityHref}
+  />
+
+  <DetailsCard
+    details={app.context_details ?? []}
+    updatedAt={app.context_summary_at}
     {activityHref}
   />
 

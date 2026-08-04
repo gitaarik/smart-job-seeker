@@ -44,6 +44,7 @@ import {
 } from "$lib/salary/conversion";
 import { getStatusLabel, isFinishedStatus } from "$lib/application-status";
 import type { OfferTerms } from "./application-summary";
+import type { StoredDetail } from "$lib/application-details";
 
 /**
  * Cap on applications rendered. Set well above a realistic open pipeline so it
@@ -112,6 +113,14 @@ export interface PipelineRow {
   hasOffer: boolean;
   /** The standing digest, when one has been generated. */
   summary: string | null;
+  /**
+   * The details extracted from this application's entries. On OTHER
+   * applications these are the only specifics the model gets — the current
+   * one's entries are already in the prompt in full — so this is where a
+   * question like "which of these needs a certification I don't have?" finds
+   * its answer instead of hedging.
+   */
+  details: StoredDetail[];
   /**
    * Offer terms as extracted fields. This is what turns "an offer exists" into
    * "which offer is better" — the answer the spine could not give before.
@@ -199,6 +208,15 @@ function renderRow(r: PipelineRow, currency: string): string {
     `  ${depth}`,
     r.offer ? `  OFFER: ${describeOffer(r.offer)}` : null,
     r.summary ? `  ${r.summary.replace(/\s+/g, " ").trim()}` : null,
+    // Optional-chained though the type says it is always there: a throw here
+    // is swallowed by applicationPipelineText and reaches the model as an
+    // EMPTY pipeline, which is the one failure this source cannot afford — a
+    // comparison over a set that silently lost every row is wrong, not thin.
+    r.details?.length
+      ? `  Noted: ${
+        r.details.map((d) => `${d.label} — ${d.value}`).join("; ")
+      }`
+      : null,
   ].filter(Boolean).join("\n");
 }
 
@@ -337,19 +355,30 @@ export function formatPipelineContext(
  * a partial set is wrong rather than thin — so rows are the LAST thing to go.
  * The rungs, cheapest loss first:
  *
- *  1. The current application's summary. It is the most redundant text in the
- *     prompt: `application_activity` (priority 40, so it is always present when
- *     this block is) carries that application's full history right alongside,
- *     at roughly fifteen times the length.
- *  2. Summaries from the stalest rows down. A summary earns its place by
+ *  1. The current application's summary AND its details — both are the most
+ *     redundant text in the prompt: `application_activity` (priority 40, so it
+ *     is always present when this block is) carries that application's full
+ *     history right alongside, at roughly fifteen times the length.
+ *  2. Details from the stalest rows down, before any surviving summary. A
+ *     summary is the row's spine — where this stands, what is outstanding — and
+ *     the details are specifics hanging off it. Given the choice, a model
+ *     answering "how is my search going" needs the position more than the
+ *     particulars, and the particulars are exactly what it can offer to look up.
+ *  3. Summaries from the stalest rows down. A summary earns its place by
  *     describing something in motion; on an application that has not moved in
  *     two months the structured line ("94d in stage", stage, entry count)
  *     already says the useful part. Rows carrying an offer are held back to
  *     last — an offer means a decision is pending, however long it has sat.
- *  3. Only then, rows themselves, from the stalest end, counted into the
+ *  4. Only then, rows themselves, from the stalest end, counted into the
  *     omission note so the model knows the picture is partial.
  *
- * Returns rows with shed summaries nulled, so the renderer stays unchanged.
+ * Returns rows with shed details emptied and shed summaries nulled, so the
+ * renderer stays unchanged.
+ *
+ * Only summaries are counted into `shed`. The note it drives exists to stop a
+ * summary-less row reading as an empty history; a row that kept its summary and
+ * lost its details has not lost its history, and announcing it would train the
+ * model to hedge about applications it can see perfectly well.
  */
 export function fitPipelineToBudget(
   rows: PipelineRow[],
@@ -365,26 +394,39 @@ export function fitPipelineToBudget(
   if (rows.length === 0) return { rows, omitted: 0, shed: 0 };
   if (cost(rows, 0, 0) <= budgetChars) return { rows, omitted: 0, shed: 0 };
 
-  // Rung 1 and 2 — shed summaries in ascending order of what they are worth.
   const working = rows.map((r) => ({ ...r }));
-  const order = working
-    .map((r, i) => ({ r, i }))
-    .filter(({ r }) => r.summary)
-    .sort((a, z) =>
-      // The current application first: its full history is in another block.
-      Number(z.r.isCurrent) - Number(a.r.isCurrent) ||
-      // Then anything without an offer, since an offer means a live decision.
-      Number(!!a.r.offer) - Number(!!z.r.offer) ||
-      // Then stalest down. An unknown age sorts last: it is a weak signal, and
-      // a known-stale row is the safer thing to thin.
-      (z.r.daysInStage ?? -1) - (a.r.daysInStage ?? -1)
-    )
-    .map(({ i }) => i);
+
+  /**
+   * Ascending order of what a row's depth is worth, shared by both shedding
+   * rungs so they cannot disagree about which application matters least.
+   */
+  const orderBy = (has: (r: PipelineRow) => boolean) =>
+    working
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) => has(r))
+      .sort((a, z) =>
+        // The current application first: its full history is in another block.
+        Number(z.r.isCurrent) - Number(a.r.isCurrent) ||
+        // Then anything without an offer, since an offer means a live decision.
+        Number(!!a.r.offer) - Number(!!z.r.offer) ||
+        // Then stalest down. An unknown age sorts last: it is a weak signal,
+        // and a known-stale row is the safer thing to thin.
+        (z.r.daysInStage ?? -1) - (a.r.daysInStage ?? -1)
+      )
+      .map(({ i }) => i);
 
   // Tracked by object identity rather than index, so the count stays right
-  // whichever rows rung 3 goes on to remove.
+  // whichever rows the last rung goes on to remove.
   const shedRows = new Set<PipelineRow>();
-  for (const i of order) {
+
+  // Rungs 1 and 2 — details go before any summary does.
+  for (const i of orderBy((r) => r.details.length > 0)) {
+    if (cost(working, 0, shedRows.size) <= budgetChars) break;
+    working[i].details = [];
+  }
+
+  // Rungs 1 and 3 — then summaries, in the same order.
+  for (const i of orderBy((r) => !!r.summary)) {
     if (cost(working, 0, shedRows.size) <= budgetChars) break;
     working[i].summary = null;
     shedRows.add(working[i]);
@@ -514,6 +556,7 @@ export async function loadPipelineRows(
       date_created: true,
       context_summary: true,
       offer_terms: true,
+      context_details: true,
     },
     with: {
       job: {
@@ -595,6 +638,7 @@ export async function loadPipelineRows(
       entryCount: entries.length,
       summary: a.context_summary,
       offer: a.offer_terms ?? null,
+      details: a.context_details ?? [],
       // True from either direction: an entry typed as an offer, or terms
       // actually extracted. The type alone is what shows before the
       // summariser has run.

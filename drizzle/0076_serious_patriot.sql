@@ -1,0 +1,1 @@
+ALTER TABLE "applications" ADD COLUMN "context_details" jsonb DEFAULT '[]'::jsonb NOT NULL;

@@ -35,6 +35,7 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
     hasOffer: false,
     summary: null,
     offer: null,
+    details: [],
     employerContact: true,
     ...over,
   };
@@ -301,6 +302,11 @@ describe("fitPipelineToBudget", () => {
   const chars = (rows: PipelineRow[], o = {}) =>
     formatPipelineContext(rows, o).length;
 
+  const DETAILS = [
+    { category: "requirement", label: "Office days", value: LINE, record_id: 1 },
+    { category: "logistics", label: "Next round", value: LINE, record_id: 2 },
+  ];
+
   it("changes nothing when the whole pipeline fits", () => {
     const rows = pipeline(4);
     const out = fitPipelineToBudget(rows, 100_000);
@@ -330,6 +336,44 @@ describe("fitPipelineToBudget", () => {
     expect(out.rows).toHaveLength(20);
     expect(out.omitted).toBe(0);
     expect(out.rows.every((r) => r.summary === null)).toBe(true);
+  });
+
+  // A summary is the row's spine — where this stands, what is outstanding —
+  // and the details are specifics hanging off it. Asked "how is my search
+  // going", a model needs the position more than the particulars, and the
+  // particulars are exactly what it can offer to look up.
+  it("gives up every detail before it gives up a single summary", () => {
+    const rows = pipeline(20, { details: DETAILS });
+    // Loose enough for 20 rows that kept their summaries but lost details.
+    const withoutDetails = chars(rows.map((r) => ({ ...r, details: [] })));
+    const out = fitPipelineToBudget(rows, withoutDetails);
+    expect(out.rows.every((r) => r.details.length === 0)).toBe(true);
+    expect(out.rows.every((r) => r.summary !== null)).toBe(true);
+    expect(out.omitted).toBe(0);
+  });
+
+  // Same order as summaries, so the two rungs cannot disagree about which
+  // application matters least.
+  it("sheds the current application's details first", () => {
+    const rows = pipeline(6, { details: DETAILS });
+    const out = fitPipelineToBudget(rows, chars(rows) - 60);
+    expect(out.rows.find((r) => r.isCurrent)!.details).toHaveLength(0);
+    expect(out.rows.filter((r) => !r.isCurrent).some((r) => r.details.length))
+      .toBe(true);
+  });
+
+  // The note exists to stop a summary-less row reading as an empty history. A
+  // row that kept its summary has not lost its history, so counting it would
+  // train the model to hedge about applications it can see perfectly well.
+  it("does not report shed details as a missing history", () => {
+    const rows = pipeline(20, { details: DETAILS });
+    const out = fitPipelineToBudget(
+      rows,
+      chars(rows.map((r) => ({ ...r, details: [] }))),
+    );
+    expect(out.shed).toBe(0);
+    expect(formatPipelineContext(out.rows, { shed: out.shed }))
+      .not.toContain("without a summary");
   });
 
   // Its full history is in application_activity alongside, so this is the most

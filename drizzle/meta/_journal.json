@@ -533,6 +533,13 @@
       "when": 1785780025976,
       "tag": "0075_ordinary_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1785867483361,
+      "tag": "0076_serious_patriot",
+      "breakpoints": true
     }
   ]
 }

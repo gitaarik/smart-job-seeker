@@ -145,6 +145,18 @@ describe("renderSourceEntries", () => {
     expect(out.indexOf("First")).toBeLessThan(out.indexOf("Second"));
   });
 
+  // Detail provenance rests entirely on this: without an id in the heading the
+  // model has nothing to cite, and coerceDetails drops every citation it
+  // cannot match back to an entry that was actually shown.
+  it("names each entry by id so an extracted detail can cite it", () => {
+    const out = renderSourceEntries([
+      entry({ id: 41, title: "First" }),
+      entry({ id: 42, title: "Second" }),
+    ]);
+    expect(out).toContain("[entry 41]");
+    expect(out).toContain("[entry 42]");
+  });
+
   it("caps what it sends so one huge attachment cannot blow the call", () => {
     const out = renderSourceEntries([entry({ content: "x".repeat(80_000) })]);
     expect(out.length).toBeLessThanOrEqual(40_000);
