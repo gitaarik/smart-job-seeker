@@ -6,6 +6,9 @@
  * how the *initial* application-question path ended up interpolating a bare
  * `job_description` while its own follow-up turn got title, company and company
  * description too. One copy, one shape, every caller.
+ *
+ * Split load / format / compose — see the seam described on `SourceDef` in
+ * generation-context.ts.
  */
 
 import { db } from "$lib/server/db";
@@ -13,6 +16,12 @@ import { eq } from "drizzle-orm";
 import { applications, jobs } from "$lib/server/db/schema";
 
 export interface JobDetailsRow {
+  /**
+   * Carried even though no prompt block prints it: a caller that asked by
+   * `applicationId` has no other way to learn *which* job it got back, and the
+   * whole point of the data half is being usable without the prose.
+   */
+  id: number;
   title: string | null;
   job_description: string | null;
   company_description: string | null;
@@ -44,6 +53,7 @@ export function formatJobDetails(job: JobDetailsRow): string {
 }
 
 const JOB_COLUMNS = {
+  id: true,
   title: true,
   job_description: true,
   company_description: true,
@@ -52,27 +62,43 @@ const JOB_COLUMNS = {
 } as const;
 
 /**
- * Load the job behind an application (or a job directly) and render it.
- * Returns "" when there is no job attached — callers interpolate it blindly.
+ * Load the job behind an application (or a job directly). Null when there is no
+ * job attached — a hand-created application has none.
+ *
+ * THROWS on a real failure, deliberately. Swallowing is a prompt-assembly
+ * policy, and it lives one level up in `jobDetailsText`; a caller reading this
+ * as data needs "the query failed" and "there is no job" to be different
+ * answers.
+ */
+export async function loadJobDetails(
+  ref: { applicationId: number } | { jobId: number },
+): Promise<JobDetailsRow | null> {
+  if ("jobId" in ref) {
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobs.id, ref.jobId),
+      columns: JOB_COLUMNS,
+    });
+    return job ?? null;
+  }
+
+  const application = await db.query.applications.findFirst({
+    where: eq(applications.id, ref.applicationId),
+    columns: { id: true },
+    with: { job: { columns: JOB_COLUMNS } },
+  });
+  return application?.job ?? null;
+}
+
+/**
+ * Load and render. Returns "" when there is no job attached — callers
+ * interpolate it blindly.
  */
 export async function jobDetailsText(
   ref: { applicationId: number } | { jobId: number },
 ): Promise<string> {
   try {
-    if ("jobId" in ref) {
-      const job = await db.query.jobs.findFirst({
-        where: eq(jobs.id, ref.jobId),
-        columns: JOB_COLUMNS,
-      });
-      return job ? formatJobDetails(job) : "";
-    }
-
-    const application = await db.query.applications.findFirst({
-      where: eq(applications.id, ref.applicationId),
-      columns: { id: true },
-      with: { job: { columns: JOB_COLUMNS } },
-    });
-    return application?.job ? formatJobDetails(application.job) : "";
+    const job = await loadJobDetails(ref);
+    return job ? formatJobDetails(job) : "";
   } catch {
     // Context is a bonus, never a reason to fail the generation.
     return "";

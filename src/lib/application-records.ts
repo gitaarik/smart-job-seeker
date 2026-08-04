@@ -108,6 +108,18 @@ export function getRecordTypeColor(type: string | null): string {
 }
 
 /**
+ * How many entries with content an application needs before its standing
+ * summary is worth writing. Below this the entries ARE the summary.
+ *
+ * Shared rather than duplicated because the summariser and the overview card
+ * read it for opposite reasons, and they have to agree: the server skips
+ * generation below it, and the card uses it to tell "nothing to condense" apart
+ * from "nobody has looked yet". Drifting versions would make the card
+ * cheerfully report a gap that is really the rule working.
+ */
+export const MIN_ENTRIES_FOR_SUMMARY = 2;
+
+/**
  * Who a record involves, stored on `application_records.contacts` as
  * `[{ name, role }]`.
  *

@@ -24,6 +24,7 @@ import { asc, isNull, sql } from "drizzle-orm";
 import { application_records, applications } from "$lib/server/db/schema";
 import { summarizeApplication } from "$lib/server/ai-chat/application-summary";
 import { isFinishedStatus } from "$lib/application-status";
+import { MIN_ENTRIES_FOR_SUMMARY } from "$lib/application-records";
 
 const APPLY = process.argv.includes("--apply");
 const LIMIT = (() => {
@@ -31,9 +32,6 @@ const LIMIT = (() => {
   const n = i === -1 ? NaN : Number(process.argv[i + 1]);
   return Number.isFinite(n) && n > 0 ? n : Infinity;
 })();
-
-/** Matches summarizeApplication's own floor — below it there is nothing to condense. */
-const MIN_ENTRIES = 2;
 
 async function main() {
   const rows = await db
@@ -56,12 +54,12 @@ async function main() {
   // Finished applications are excluded from the spine, so summarising them
   // would be paying for a line nothing renders.
   const eligible = rows.filter((r) =>
-    Number(r.entries) >= MIN_ENTRIES && !isFinishedStatus(r.status)
+    Number(r.entries) >= MIN_ENTRIES_FOR_SUMMARY && !isFinishedStatus(r.status)
   );
 
   console.log(
     `${rows.length} application(s) without a summary; ` +
-      `${eligible.length} eligible (>= ${MIN_ENTRIES} entries, not finished).`,
+      `${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, not finished).`,
   );
 
   if (!APPLY) {

@@ -38,6 +38,9 @@
   } from "$lib/application-status";
   import StatusStepper from "./StatusStepper.svelte";
   import CvSentCard from "./CvSentCard.svelte";
+  import ActivitySummaryCard from "./ActivitySummaryCard.svelte";
+  import OfferCard from "./OfferCard.svelte";
+  import { hasOfferContent } from "$lib/application-offer";
   import { formatSalaryRange, isSalarySingleValue, timeAgo } from "$lib/format";
   import { formatDate as fmtDate } from "$lib/format-date";
   import { profileDocUrl } from "$lib/utils/profile-doc-url";
@@ -123,6 +126,13 @@
   let fileCount = $derived(
     (app.application_records ?? []).filter((r) => r.file_id).length,
   );
+  // The entries the summariser reads: an extraction with no text in it is not
+  // one it could have summarised, so counting rows would overstate what the
+  // absence of a summary means.
+  let summarisedEntryCount = $derived(
+    (app.application_records ?? []).filter((r) => r.content?.trim()).length,
+  );
+  let activityHref = $derived(`/applications/${app.id}/activity`);
   let statusLogCount = $derived(app.application_status_logs?.length || 0);
   let recentStatusLog = $derived(
     app.application_status_logs?.slice(0, 5) || [],
@@ -227,6 +237,23 @@
       {/if}
     </div>
   </Card>
+
+  <!-- Offer: above everything else it competes with, because a response
+       deadline is the most time-critical thing this page can carry. -->
+  {#if hasOfferContent(app.offer_terms)}
+    <OfferCard
+      offer={app.offer_terms}
+      {activityHref}
+      extractedAt={app.context_summary_at}
+    />
+  {/if}
+
+  <ActivitySummaryCard
+    summary={app.context_summary}
+    updatedAt={app.context_summary_at}
+    entryCount={summarisedEntryCount}
+    {activityHref}
+  />
 
   <!-- Job Details -->
   <Card padding="lg">
