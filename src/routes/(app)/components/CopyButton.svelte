@@ -6,10 +6,13 @@
     text,
     size = "md",
     label = "",
+    title = "Copy",
   }: {
     text: string;
     size?: "sm" | "md";
     label?: string;
+    /** Tooltip — worth overriding when the label alone doesn't say what gets copied. */
+    title?: string;
   } = $props();
 
   let copied = $state(false);
@@ -31,7 +34,7 @@
   type="button"
   onclick={copy}
   class="inline-flex items-center gap-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-  title={copied ? "Copied!" : "Copy"}
+  title={copied ? "Copied!" : title}
 >
   <FontAwesomeIcon
     icon={copied ? faCheck : faCopy}

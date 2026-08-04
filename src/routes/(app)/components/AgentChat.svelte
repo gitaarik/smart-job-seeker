@@ -6,6 +6,7 @@
   import { timeAgo } from "$lib/format";
   import { agentChatState } from "./agent-chat-state.svelte";
   import AutoGrowTextarea from "$lib/components/AutoGrowTextarea.svelte";
+  import CopyButton from "./CopyButton.svelte";
   import ProposalCard, { type Proposal } from "./ProposalCard.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
@@ -403,14 +404,31 @@
         {/if}
       </div>
     {:else}
-      <!-- Page-awareness hint -->
-      {#if pageContext?.label}
+      <!-- Page-awareness hint, plus the thread's id: the handle to quote when
+           reporting a bad answer, and what `agent_messages.conversation_id`
+           is keyed on when digging one up. Absent until the first reply,
+           because until then there is no stored conversation. -->
+      {#if pageContext?.label || conversationId != null}
         <div
-          class="px-4 py-1.5 text-[11px] text-[var(--dash-text-muted)] border-b border-[var(--dash-border)] shrink-0 truncate"
+          class="flex items-center gap-3 px-4 py-1.5 text-[11px] text-[var(--dash-text-muted)] border-b border-[var(--dash-border)] shrink-0"
         >
-          Looking at: <span class="text-[var(--dash-text-secondary)]">{
-            pageContext.label
-          }</span>
+          {#if pageContext?.label}
+            <span class="truncate">
+              Looking at: <span class="text-[var(--dash-text-secondary)]">{
+                pageContext.label
+              }</span>
+            </span>
+          {/if}
+          {#if conversationId != null}
+            <span class="ml-auto shrink-0">
+              <CopyButton
+                text={String(conversationId)}
+                label="#{conversationId}"
+                size="sm"
+                title="Conversation ID — copy it to refer to this chat"
+              />
+            </span>
+          {/if}
         </div>
       {/if}
 

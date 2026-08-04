@@ -725,7 +725,10 @@
 <CopyButton text="value to copy" label="Copy" />
 
 <!-- Small size -->
-<CopyButton text="value to copy" size="sm" />`}</code></pre>
+<CopyButton text="value to copy" size="sm" />
+
+<!-- Custom tooltip, for when the label alone doesn't say what gets copied -->
+<CopyButton text="42" label="#42" title="Conversation ID" />`}</code></pre>
         </div>
       </div>
     </Card>
