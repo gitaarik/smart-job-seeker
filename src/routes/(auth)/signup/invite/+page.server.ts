@@ -5,6 +5,10 @@ import { and, gt, like } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { verifications } from "$lib/server/db/schema";
 import { createOrLinkAccount } from "$lib/server/auth/invite-account";
+import {
+  applyInviteGrants,
+  grantsFromInvitePayload,
+} from "$lib/server/auth/invite-grants";
 
 function findInviteByToken(
   invites: { id: string; identifier: string; value: string }[],
@@ -95,8 +99,9 @@ export const actions: Actions = {
     const data = JSON.parse(invite.value);
     const email = invite.identifier.replace("invite:", "");
 
+    let userId: string;
     try {
-      await createOrLinkAccount({
+      ({ userId } = await createOrLinkAccount({
         email,
         password,
         name: data.name,
@@ -105,13 +110,18 @@ export const actions: Actions = {
           is_staff: data.is_staff,
           is_admin: data.is_admin,
         },
-      });
+      }));
     } catch (e: unknown) {
       const message = e instanceof Error
         ? e.message
         : "Failed to set up account";
       return fail(400, { error: message });
     }
+
+    // Plan / shared devices the inviting admin attached. Best-effort by
+    // design: the account is already created, so a device revoked since the
+    // invite was minted is reported to the inviter, not to the new user.
+    await applyInviteGrants(userId, grantsFromInvitePayload(data));
 
     // Clean up the invite
     await db.delete(verifications).where(eq(verifications.id, invite.id));

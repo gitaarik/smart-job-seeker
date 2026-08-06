@@ -13,6 +13,7 @@
 
   let users = $derived(data.users);
   let pendingInvitations = $derived(data.pendingInvitations);
+  let devices = $derived(data.devices);
   let showAddForm = $state(false);
   let showPendingInvites = $state(false);
   let addingUser = $state(false);
@@ -34,6 +35,9 @@
   let newApproved = $state(true);
   let newStaff = $state(false);
   let newAdmin = $state(false);
+  let newPlan = $state("explorer");
+  let newPlanMonths = $state(12);
+  let newDeviceIds = $state<number[]>([]);
 
   function resetAddForm() {
     showAddForm = false;
@@ -44,6 +48,15 @@
     newApproved = true;
     newStaff = false;
     newAdmin = false;
+    newPlan = "explorer";
+    newPlanMonths = 12;
+    newDeviceIds = [];
+  }
+
+  function toggleDevice(id: number) {
+    newDeviceIds = newDeviceIds.includes(id)
+      ? newDeviceIds.filter((d) => d !== id)
+      : [...newDeviceIds, id];
   }
 
   function handleAddSubmit() {
@@ -61,6 +74,12 @@
       }
     };
   }
+
+  // Only ?/create returns this (grants applied immediately) — the union from
+  // the other actions has no `warning`, hence the `in` check.
+  let grantWarning = $derived(
+    form && "warning" in form ? (form.warning as string) : null,
+  );
 
   function formatDate(date: Date | string | null) {
     if (!date) return "—";
@@ -96,6 +115,11 @@
       <p class="text-green-700 text-sm dark:text-green-400">
         Operation completed successfully.
       </p>
+      {#if grantWarning}
+        <p class="text-green-700/80 text-xs mt-1 dark:text-green-400/80">
+          {grantWarning}
+        </p>
+      {/if}
     </div>
   {/if}
 
@@ -226,10 +250,102 @@
         </div>
       </div>
 
+      <!-- Plan + device grants (applied on acceptance for invites) -->
+      <div class="mt-4 pt-4 border-t border-[var(--dash-border)] space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="new-plan"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            >
+              Plan
+            </label>
+            <select
+              id="new-plan"
+              name="plan"
+              bind:value={newPlan}
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md bg-[var(--dash-bg)] text-[var(--dash-text)] capitalize focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            >
+              {#each data.planOptions as plan}
+                <option value={plan}>
+                  {plan === "explorer" ? "Explorer (free — no grant)" : plan}
+                </option>
+              {/each}
+            </select>
+          </div>
+          {#if newPlan !== "explorer"}
+            <div>
+              <label
+                for="new-plan-months"
+                class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+              >
+                Plan length
+              </label>
+              <select
+                id="new-plan-months"
+                name="plan_months"
+                bind:value={newPlanMonths}
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+              >
+                {#each data.planDurations as months}
+                  <option value={months}>
+                    {months} month{months === 1 ? "" : "s"}
+                  </option>
+                {/each}
+              </select>
+              <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+                {#if newSendInvite}
+                  Counted from when they accept, not from today.
+                {:else}
+                  Counted from today.
+                {/if}
+              </p>
+            </div>
+          {/if}
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            Share my devices
+          </span>
+          {#if devices.length === 0}
+            <p class="text-xs text-[var(--dash-text-muted)]">
+              You have no connected devices to share. Set one up under
+              <code>/jobs/import/devices</code>.
+            </p>
+          {:else}
+            <div class="flex flex-wrap gap-x-4 gap-y-2">
+              {#each devices as device}
+                <label
+                  class="flex items-center gap-2 text-sm text-[var(--dash-text)]"
+                >
+                  <input
+                    type="checkbox"
+                    name="device_ids"
+                    value={device.id}
+                    checked={newDeviceIds.includes(device.id)}
+                    onchange={() => toggleDevice(device.id)}
+                    class="rounded border-[var(--dash-border)]"
+                  />
+                  {device.name}
+                </label>
+              {/each}
+            </div>
+            {#if newDeviceIds.length > 0}
+              <p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+                They'll become an accepted contact of yours so the shared
+                {newDeviceIds.length === 1 ? "device shows" : "devices show"}
+                up under their imports.
+              </p>
+            {/if}
+          {/if}
+        </div>
+      </div>
+
       {#if newSendInvite}
         <p class="mt-3 text-xs text-[var(--dash-text-muted)]">
           An invitation email will be sent. The user will set their own
-          password.
+          password. Any plan and devices above are granted when they accept.
         </p>
       {/if}
 
@@ -283,6 +399,16 @@
                   {#if invite.is_staff}
                     <span class="px-1.5 py-0.5 text-xs rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400">Staff</span>
                   {/if}
+                  {#if invite.plan && invite.plan !== "explorer"}
+                    <span class="px-1.5 py-0.5 text-xs rounded-full capitalize bg-[var(--dash-primary)]/15 text-[var(--dash-primary)]">
+                      {invite.plan}{invite.planMonths ? ` · ${invite.planMonths}mo` : ""}
+                    </span>
+                  {/if}
+                  {#each invite.deviceNames as deviceName}
+                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400">
+                      {deviceName}
+                    </span>
+                  {/each}
                 </div>
                 {#if invite.name}
                   <div class="text-[var(--dash-text-muted)] text-xs">{invite.email}</div>

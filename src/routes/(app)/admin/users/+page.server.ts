@@ -2,18 +2,47 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { eq, and, gt, like, inArray, desc, count } from "drizzle-orm";
-import { users as usersTable, profiles, verifications, subscriptions } from "$lib/server/db/schema";
+import { users as usersTable, profiles, verifications, subscriptions, api_keys } from "$lib/server/db/schema";
 import { auth } from "$lib/server/auth/better-auth";
 import { sendEmail } from "$lib/server/email";
 import { getEnv } from "$lib/tools/get-env";
+import { PLAN_LIMITS, type PlanId } from "$lib/server/billing/plans";
+import {
+  applyInviteGrants,
+  PLAN_DURATION_MONTHS,
+  parseInviteGrants,
+} from "$lib/server/auth/invite-grants";
 import crypto from "crypto";
 
-export const load: PageServerLoad = async ({ parent }) => {
+/** Escape a value being dropped into the invite email's HTML body. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export const load: PageServerLoad = async ({ parent, locals }) => {
   await parent();
 
   const users = await db.query.users.findMany({
     orderBy: desc(usersTable.createdAt),
   });
+
+  // The admin's own devices — what an invite can hand out (see invite-grants).
+  const myDevices = locals.user
+    ? await db.query.api_keys.findMany({
+      where: and(
+        eq(api_keys.user_id, locals.user.id),
+        eq(api_keys.revoked, false),
+      ),
+      columns: { id: true, name: true },
+    })
+    : [];
+  const deviceNameMap = new Map(
+    myDevices.map((d) => [d.id, d.name ?? `Device ${d.id}`]),
+  );
 
   const profileCounts = await db.select({ user_id: profiles.user_id, count: count() })
     .from(profiles)
@@ -64,17 +93,47 @@ export const load: PageServerLoad = async ({ parent }) => {
       let is_approved = false;
       let is_staff = false;
       let is_admin = false;
+      let plan: string | null = null;
+      let planMonths: number | null = null;
+      let deviceNames: string[] = [];
       try {
         const data = JSON.parse(v.value);
         name = data.name || "";
         is_approved = data.is_approved || false;
         is_staff = data.is_staff || false;
         is_admin = data.is_admin || false;
+        plan = data.plan || null;
+        planMonths = data.planMonths ?? null;
+        // Only the viewing admin's own devices resolve to a name; devices on
+        // another admin's invite fall back to their id.
+        deviceNames = (data.deviceIds ?? []).map(
+          (id: number) => deviceNameMap.get(id) ?? `Device ${id}`,
+        );
       } catch {}
-      return { email, name, is_approved, is_staff, is_admin, expiresAt: v.expiresAt, createdAt: v.createdAt };
+      return {
+        email,
+        name,
+        is_approved,
+        is_staff,
+        is_admin,
+        plan,
+        planMonths,
+        deviceNames,
+        expiresAt: v.expiresAt,
+        createdAt: v.createdAt,
+      };
     });
 
-  return { users: usersWithProfiles, pendingInvitations };
+  return {
+    users: usersWithProfiles,
+    pendingInvitations,
+    devices: myDevices.map((d) => ({
+      id: d.id,
+      name: d.name ?? `Device ${d.id}`,
+    })),
+    planOptions: Object.keys(PLAN_LIMITS) as PlanId[],
+    planDurations: [...PLAN_DURATION_MONTHS],
+  };
 };
 
 export const actions: Actions = {
@@ -98,6 +157,14 @@ export const actions: Actions = {
       return fail(400, { error: "Password must be at least 8 characters" });
     }
 
+    // Same plan/device fields as the invite path. Here the account exists
+    // immediately, so the grants are applied straight away rather than stored.
+    const parsed = await parseInviteGrants(formData, locals.user.id);
+    if ("error" in parsed) {
+      return fail(400, { error: parsed.error });
+    }
+
+    let userId: string;
     try {
       const result = await auth.api.signUpEmail({
         body: {
@@ -107,12 +174,19 @@ export const actions: Actions = {
         },
       });
 
-      if (result.user) {
-        await db.update(usersTable).set({ is_approved, is_staff, is_admin }).where(eq(usersTable.id, result.user.id));
+      if (!result.user) {
+        return fail(400, { error: "Failed to create user" });
       }
+      userId = result.user.id;
+      await db.update(usersTable).set({ is_approved, is_staff, is_admin }).where(eq(usersTable.id, userId));
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Failed to create user";
       return fail(400, { error: message });
+    }
+
+    const warnings = await applyInviteGrants(userId, parsed.grants);
+    if (warnings.length > 0) {
+      return { success: true, warning: warnings.join(" ") };
     }
 
     return { success: true };
@@ -141,6 +215,13 @@ export const actions: Actions = {
       return fail(400, { error: "A user with this email already exists" });
     }
 
+    // Plan + device grants travel in the payload and are applied when the
+    // invite is accepted — see auth/invite-grants.ts for why not now.
+    const parsed = await parseInviteGrants(formData, locals.user.id);
+    if ("error" in parsed) {
+      return fail(400, { error: parsed.error });
+    }
+
     // Delete any existing invite for this email
     await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
 
@@ -151,6 +232,7 @@ export const actions: Actions = {
       is_approved,
       is_staff,
       is_admin,
+      ...parsed.grants,
     });
 
     await db.insert(verifications).values({
@@ -161,6 +243,16 @@ export const actions: Actions = {
       createdAt: new Date(),
     });
 
+    const deviceCount = parsed.grants.deviceIds?.length ?? 0;
+    const grantLines = [
+      parsed.grants.plan
+        ? `<p>Your account comes with the <strong>${parsed.grants.plan}</strong> plan for ${parsed.grants.planMonths} months.</p>`
+        : "",
+      deviceCount > 0
+        ? `<p>${escapeHtml(locals.user.name || "Your host")} is also sharing ${deviceCount} ${deviceCount === 1 ? "device" : "devices"} with you, so job imports work straight away.</p>`
+        : "",
+    ].join("");
+
     const baseUrl = getEnv("SJS_APP_URL_HOST", "http://localhost:5173");
     try {
       await sendEmail({
@@ -169,6 +261,7 @@ export const actions: Actions = {
         html: `
           <h2>You've been invited!</h2>
           <p>You've been invited to join Smart Job Seeker.</p>
+          ${grantLines}
           <p>Click the link below to set up your account:</p>
           <p><a href="${baseUrl}/signup/invite?token=${token}">Accept Invitation & Set Password</a></p>
           <p>This invitation expires in 30 days.</p>

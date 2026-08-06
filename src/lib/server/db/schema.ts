@@ -1637,7 +1637,11 @@ export const sessions = pgTable("sessions", {
 export const verifications = pgTable("verifications", {
   id: text().primaryKey().notNull(),
   identifier: varchar({ length: 255 }).notNull(),
-  value: varchar({ length: 255 }).notNull(),
+  // `text`, not the varchar(255) better-auth's scaffold ships: this column
+  // carries JSON payloads for both invite flavours (admin invites now include
+  // plan + device grants), and a 255-char ceiling turns a long name into a
+  // failed insert at invite time. See auth/invite-grants.ts.
+  value: text().notNull(),
   expiresAt: timestamp({ precision: 6, withTimezone: true, mode: "date" })
     .notNull(),
   createdAt: timestamp({ precision: 6, withTimezone: true, mode: "date" }),

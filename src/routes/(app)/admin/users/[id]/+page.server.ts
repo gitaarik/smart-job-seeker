@@ -1,13 +1,12 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
-import { and, count, eq, gt, inArray, type SQL } from "drizzle-orm";
+import { and, count, eq, gt, type SQL } from "drizzle-orm";
 import { dbDirect as db, queryRaw, sql, sqlJoin } from "$lib/server/db";
 import {
   accounts,
   credit_balances,
   profiles,
   sessions,
-  subscriptions,
   usage_counters,
   users as usersTable,
   verifications,
@@ -18,6 +17,11 @@ import { getEnv } from "$lib/tools/get-env";
 import { getActiveSubscription } from "$lib/server/billing/subscription";
 import { getBalance, getRecentTransactions } from "$lib/server/billing/credits";
 import { PLAN_LIMITS, type PlanId } from "$lib/server/billing/plans";
+import {
+  addMonths,
+  cancelActiveSubscriptions,
+  insertAdminGrant,
+} from "$lib/server/auth/invite-grants";
 import crypto from "crypto";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
@@ -119,21 +123,13 @@ export const actions: Actions = {
     const userId = params.id;
 
     if (plan === "explorer") {
-      // Cancel any active subscription
-      await db.update(subscriptions).set({
-        status: "canceled",
-        date_updated: new Date(),
-      })
-        .where(
-          and(
-            eq(subscriptions.user_id, userId),
-            inArray(subscriptions.status, ["active", "trialing", "past_due"]),
-          ),
-        );
+      await cancelActiveSubscriptions(userId);
       return { success: true };
     }
 
-    // Parse expiry date
+    // An absolute date is right here (unlike the invite form, which stores a
+    // duration): the user exists, so there is no mint-to-acceptance gap for
+    // the date to drift across. See auth/invite-grants.ts.
     let periodEnd: Date;
     if (expiresAt) {
       periodEnd = new Date(expiresAt);
@@ -141,35 +137,13 @@ export const actions: Actions = {
         return fail(400, { error: "Invalid expiry date" });
       }
     } else {
-      // Default: 1 month from now
-      periodEnd = new Date();
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
+      periodEnd = addMonths(new Date(), 1);
     }
 
-    // Cancel any existing active subs first
-    await db.update(subscriptions).set({
-      status: "canceled",
-      date_updated: new Date(),
-    })
-      .where(
-        and(
-          eq(subscriptions.user_id, userId),
-          inArray(subscriptions.status, ["active", "trialing", "past_due"]),
-        ),
-      );
-
-    // Create admin-granted subscription (no Stripe IDs)
-    await db.insert(subscriptions).values({
-      user_id: userId,
-      stripe_subscription_id: `admin_grant_${crypto.randomUUID()}`,
-      stripe_price_id: "admin_grant",
-      plan,
-      status: "active",
-      current_period_start: new Date(),
-      current_period_end: periodEnd,
-      cancel_at_period_end: false,
-      date_created: new Date(),
-    });
+    // An explicit plan change replaces whatever is there — unlike the invite
+    // path, which leaves an existing subscription alone.
+    await cancelActiveSubscriptions(userId);
+    await insertAdminGrant(userId, plan, periodEnd);
 
     return { success: true };
   },
