@@ -188,6 +188,7 @@ const APPLICATION_SCOPE: RouteScope = {
     "add_activity_record",
     "edit_job_details",
     "edit_job_description",
+    "edit_job_skills",
   ],
 };
 
@@ -240,7 +241,11 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
       "stories",
       "application_texts",
     ],
-    capabilities: ["edit_job_details", "edit_job_description"],
+    capabilities: [
+      "edit_job_details",
+      "edit_job_description",
+      "edit_job_skills",
+    ],
     hint: {
       page: "a job posting they have not applied to yet",
       subject: "that job",

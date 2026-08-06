@@ -373,7 +373,7 @@ describe("resolveChatContext — capabilities", () => {
     });
 
     expect(mockResolveCapabilities).toHaveBeenCalledWith(
-      ["edit_job_details", "edit_job_description"],
+      ["edit_job_details", "edit_job_description", "edit_job_skills"],
       { type: "job", id: 5 },
       { profileId: 7, isStaff: false },
     );
@@ -394,6 +394,7 @@ describe("resolveChatContext — capabilities", () => {
     expect(declared).toContain("edit_application_details");
     expect(declared).toContain("edit_job_details");
     expect(declared).toContain("edit_job_description");
+    expect(declared).toContain("edit_job_skills");
   });
 
   it("inherits capabilities on a nested application tab", async () => {

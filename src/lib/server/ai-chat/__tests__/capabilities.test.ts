@@ -77,12 +77,14 @@ vi.mock("../application-summary", () => ({
 const mockCanEditJob = vi.fn();
 const mockApplyJobFields = vi.fn().mockResolvedValue(undefined);
 const mockApplyJobTexts = vi.fn().mockResolvedValue(undefined);
+const mockApplyJobSkills = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("$lib/server/jobs/edit-job", async (importOriginal) => ({
   ...(await importOriginal<typeof import("$lib/server/jobs/edit-job")>()),
   canEditJob: (...a: unknown[]) => mockCanEditJob(...a),
   applyJobFields: (...a: unknown[]) => mockApplyJobFields(...a),
   applyJobTexts: (...a: unknown[]) => mockApplyJobTexts(...a),
+  applyJobSkills: (...a: unknown[]) => mockApplyJobSkills(...a),
 }));
 
 import {
@@ -110,6 +112,7 @@ beforeEach(() => {
   mockCanEditJob.mockResolvedValue(true);
   mockApplyJobFields.mockResolvedValue(undefined);
   mockApplyJobTexts.mockResolvedValue(undefined);
+  mockApplyJobSkills.mockResolvedValue(undefined);
   mockAppUpdateSet.mockReturnValue({
     where: vi.fn().mockResolvedValue(undefined),
   });
@@ -382,6 +385,143 @@ describe("edit_job_description", () => {
     expect(prompt).toMatch(/about the ROLE/i);
     expect(prompt).toMatch(/about the COMPANY/i);
     expect(prompt).toMatch(/change THAT field/i);
+  });
+});
+
+describe("edit_job_skills", () => {
+  const def = CAPABILITIES.edit_job_skills;
+  const target = { id: 900, label: "Senior Full Stack Engineer at Verdo" };
+
+  it("writes only the list that was proposed", async () => {
+    // Each list is replaced whole, so passing the untouched one through as null
+    // would empty it. Absent has to stay absent all the way to the column.
+    await def.apply(target, { skills_required: ["React", "Node.js"] }, {
+      skills_required: ["React", "Next.js", "Node.js"],
+      skills_preferred: ["LangGraph"],
+    });
+
+    expect(mockApplyJobSkills).toHaveBeenCalledWith(900, {
+      skills_required: ["React", "Node.js"],
+    });
+    expect(mockApplyJobSkills.mock.calls[0][1]).not.toHaveProperty(
+      "skills_preferred",
+    );
+  });
+
+  it("lets an explicit null clear a list", async () => {
+    await def.apply(target, { skills_preferred: null }, {});
+    expect(mockApplyJobSkills).toHaveBeenCalledWith(900, {
+      skills_preferred: null,
+    });
+  });
+
+  it("reads both lists as the current values", async () => {
+    jobRow = {
+      id: 900,
+      skills_required: ["React", "Next.js"],
+      skills_preferred: ["pgvector"],
+    };
+    expect(await def.current(target)).toEqual({
+      skills_required: ["React", "Next.js"],
+      skills_preferred: ["pgvector"],
+    });
+  });
+
+  it("reads an unextracted job's lists as unset, not as empty", async () => {
+    // A job the parser never got to has null columns. They must render as "not
+    // set" so the model proposes a list rather than a diff against [].
+    jobRow = { id: 900 };
+    expect(await def.current(target)).toEqual({
+      skills_required: null,
+      skills_preferred: null,
+    });
+  });
+
+  it("refuses a sentence dressed as a skill", () => {
+    // The failure mode the length cap exists for: the model pastes a
+    // requirement line out of the posting, and it renders as a chip.
+    const res = def.validate({
+      skills_required: [
+        "React",
+        "At least 5 years of experience building distributed payment " +
+          "systems in a regulated environment",
+      ],
+    }, {});
+    expect(res.ok).toBe(false);
+  });
+
+  it("refuses a list longer than any real posting", () => {
+    const res = def.validate(
+      { skills_preferred: Array.from({ length: 61 }, (_, i) => `skill${i}`) },
+      {},
+    );
+    expect(res.ok).toBe(false);
+  });
+
+  it("accepts a realistic list, and a clear", () => {
+    expect(def.validate({ skills_required: ["React", "Node.js"] }, {}).ok)
+      .toBe(true);
+    expect(def.validate({ skills_required: null }, {}).ok).toBe(true);
+    expect(def.validate({}, {}).ok).toBe(true);
+  });
+
+  it("tells the model the list is replaced whole, not edited", async () => {
+    // Without this the model sends ["Next.js"] meaning "drop this one" and
+    // deletes the other thirteen. It is the single rule this capability cannot
+    // ship without.
+    jobRow = { id: 900, title: "Senior Full Stack Engineer", company: "Verdo" };
+    const live = await resolveCapabilities(
+      ["edit_job_skills"],
+      { type: "job", id: 900 },
+      ACTOR,
+    );
+
+    const prompt = renderCapabilityPrompt(live);
+    expect(prompt).toMatch(/REPLACED\s+WHOLE/);
+    expect(prompt).toMatch(/deletes\s+all\s+the\s+others/i);
+    expect(prompt).toMatch(/re-scores\s+it/i);
+  });
+
+  it("shows the current skills so the model can drop one", async () => {
+    // The whole reason chat 53 removed Next.js from the description and left it
+    // in the skills: nothing the model could see listed it as a skill.
+    jobRow = {
+      id: 900,
+      title: "Senior Full Stack Engineer",
+      company: "Verdo",
+      skills_required: ["React", "Next.js", "Node.js"],
+    };
+    const live = await resolveCapabilities(
+      ["edit_job_skills"],
+      { type: "job", id: 900 },
+      ACTOR,
+    );
+
+    expect(renderCapabilityPrompt(live)).toContain("Next.js");
+  });
+
+  it("is offered on an application page too, via the attached job", async () => {
+    applicationRow = { id: 42, job_id: 900 };
+    jobRow = { id: 900, title: "Staff Engineer", company: "Acme" };
+
+    const live = await resolveCapabilities(
+      ["edit_job_skills"],
+      { type: "application", id: 42 },
+      ACTOR,
+    );
+    expect(live[0]?.target).toMatchObject({ id: 900 });
+  });
+
+  it("drops out for a job this profile may not edit", async () => {
+    jobRow = { id: 900, title: "Staff Engineer", company: "Acme" };
+    mockCanEditJob.mockResolvedValue(false);
+
+    expect(
+      await resolveCapabilities(["edit_job_skills"], {
+        type: "job",
+        id: 900,
+      }, ACTOR),
+    ).toEqual([]);
   });
 });
 

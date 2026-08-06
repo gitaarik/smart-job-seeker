@@ -40,6 +40,7 @@ import {
 import type { ContextEntity } from "./generation-context";
 import {
   applyJobFields,
+  applyJobSkills,
   applyJobTexts,
   canEditJob,
   type JobFieldValues,
@@ -58,6 +59,7 @@ import { summarizeApplication } from "./application-summary";
 export type Capability =
   | "edit_job_details"
   | "edit_job_description"
+  | "edit_job_skills"
   | "edit_application_details"
   | "add_activity_record";
 
@@ -346,6 +348,12 @@ const editJobDescription: CapabilityDef = {
   // the posting instead, then insisted it had removed details that were still
   // sitting in the field it could not reach.
   fields: { job_description: "string", company_description: "string" },
+  // NB: this contract renders only the LENGTH of each text, not the text. The
+  // texts themselves reach the model through the `job` context source, which is
+  // why the block says "shown to you in the job section above" — a caller that
+  // makes this capability live without that source hands the model a rewrite
+  // button for something it cannot read. It then proposes nothing, which reads
+  // as the contract failing rather than as the context being absent.
   describe: (target, current) =>
     `### Capability: edit_job_description — ${target.label}
 
@@ -377,9 +385,11 @@ Do not invent requirements, benefits or company details that are not in the
 material you have been given; tidying and restructuring are in scope, inventing
 facts is not.
 
-Note worth putting in your reply when you propose a new job_description: the
-skills, salary and other structured fields were extracted from the old text, so
-they may not match the new one until it is re-parsed.`,
+The structured fields — skills, salary, location — were extracted from the OLD
+text, so anything your rewrite changes is now stale in them. Correct the ones
+you have a capability for, in the same answer. For the ones you do not, say so
+in your reply: they stay wrong until the job is re-parsed, and the user is the
+only one who can decide to do that.`,
   validate: (fields) => {
     if (
       fields.job_description !== undefined &&
@@ -406,6 +416,117 @@ they may not match the new one until it is re-parsed.`,
         : {}),
       ...("company_description" in fields
         ? { company_description: fields.company_description as string | null }
+        : {}),
+    });
+  },
+};
+
+/* ------------------------------------------------------------------ *
+ * edit_job_skills
+ * ------------------------------------------------------------------ */
+
+/** Longer than this and the model has written a requirement, not a skill. */
+const MAX_SKILL_LENGTH = 80;
+/** Well clear of a real posting — the widest on dev lists 17 preferred. */
+const MAX_SKILLS = 60;
+
+/**
+ * Separate from `edit_job_details` even though both write columns on `jobs`,
+ * because the two are not one editing job. Details are thirteen scalars with a
+ * taxonomy behind them; these are two free-text lists with whole-list
+ * replacement semantics and a re-score attached. Folding them together would
+ * mean one prompt contract carrying both sets of rules, and a model that
+ * reaches for the salary rules when it is editing skills.
+ *
+ * It also keeps the blast radius honest: a user asking to fix a skill gets a
+ * card that only ever touches skills.
+ */
+const editJobSkills: CapabilityDef = {
+  title: "Edit the job's required and preferred skills",
+  resolve: (entity) => resolveJobTarget(entity),
+  authorize: (target, actor) =>
+    canEditJob(target.id, actor.profileId, actor.isStaff),
+  current: async (target) => {
+    const job = await db.query.jobs.findFirst({
+      where: eq(jobs.id, target.id),
+      columns: { skills_required: true, skills_preferred: true },
+    });
+    return {
+      skills_required: (job?.skills_required as string[] | null) ?? null,
+      skills_preferred: (job?.skills_preferred as string[] | null) ?? null,
+    };
+  },
+  // Deliberately not `soft_skills` or `responsibilities`, which the parser also
+  // extracts: nothing reads them. They are on no page, in no email and in no
+  // match score, so exposing them would be asking the model to maintain fields
+  // whose only reader would be the next model.
+  fields: { skills_required: "stringArray", skills_preferred: "stringArray" },
+  describe: (target, current) =>
+    `### Capability: edit_job_skills — ${target.label}
+
+You may propose changes to the two skill lists extracted from this posting.
+Current values:
+
+${renderCurrent(current)}
+
+- "skills_required" — what the posting presents as necessary.
+- "skills_preferred" — what it presents as a bonus or a nice-to-have.
+
+Both are JSON arrays of strings, and each is REPLACED WHOLE. There is no way to
+say "remove this one": to drop a skill, send the complete list with that skill
+left out and every other skill still in it. A list containing only the skill you
+meant to remove deletes all the others. Send only the list you are changing —
+the one you leave out is untouched.
+
+One skill per entry, named the way the posting names it: "PostgreSQL", not
+"experience with PostgreSQL databases" and not "React and Next.js".
+
+These two lists are what this job's match score is computed from, so changing
+them re-scores it. Propose a change when the user asks for one, or when they
+have just accepted a rewrite of the description that changed which technologies
+the role calls for — in that case say so in your reply, because they will not
+expect the score to move. Never as an unrequested tidy-up.
+
+Do not add a skill nobody has mentioned. If the user tells you a skill does not
+belong, that is reason enough to remove it — you do not need to find it in the
+text first, because the reason it is wrong is usually that the text was wrong.`,
+  validate: (fields) => {
+    for (const key of ["skills_required", "skills_preferred"] as const) {
+      const value = fields[key];
+      // Absent means unchanged and null means clear; both are fine here.
+      if (value === undefined || value === null) continue;
+
+      if (!Array.isArray(value)) {
+        return { ok: false, error: "Skills must be a list" };
+      }
+      if (value.length > MAX_SKILLS) {
+        return {
+          ok: false,
+          error: `That is ${value.length} skills — more than a posting lists`,
+        };
+      }
+      const sentence = value.find((s) => String(s).length > MAX_SKILL_LENGTH);
+      if (sentence !== undefined) {
+        return {
+          ok: false,
+          error: `"${
+            String(sentence).slice(0, 40)
+          }…" is a requirement, not a skill`,
+        };
+      }
+    }
+    return { ok: true };
+  },
+  apply: async (target, fields) => {
+    // Only the lists actually proposed. This matters more here than it does for
+    // the two texts: each list is written whole, so a list that arrived as
+    // "unchanged" and got passed through as null would be silently emptied.
+    await applyJobSkills(target.id, {
+      ...("skills_required" in fields
+        ? { skills_required: fields.skills_required as string[] | null }
+        : {}),
+      ...("skills_preferred" in fields
+        ? { skills_preferred: fields.skills_preferred as string[] | null }
         : {}),
     });
   },
@@ -730,6 +851,7 @@ drop the other, and an entry is also the unit the chronology is read in.`;
 export const CAPABILITIES: Record<Capability, CapabilityDef> = {
   edit_job_details: editJobDetails,
   edit_job_description: editJobDescription,
+  edit_job_skills: editJobSkills,
   edit_application_details: editApplicationDetails,
   add_activity_record: addActivityRecord,
 };
@@ -994,6 +1116,8 @@ const FIELD_LABELS: Record<string, string> = {
   job_types: "Employment type",
   experience_levels: "Experience level",
   job_description: "Description",
+  skills_required: "Required skills",
+  skills_preferred: "Preferred skills",
   cv_sent_through: "Sent through",
   application_sent_date: "Sent on",
   application_seen_date: "Seen on",

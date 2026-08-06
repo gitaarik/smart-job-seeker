@@ -12,7 +12,11 @@
 
 import { dbDirect as db } from "$lib/server/db";
 import { and, eq } from "drizzle-orm";
-import { job_importers, jobs as jobsTable } from "$lib/server/db/schema";
+import {
+  job_importers,
+  job_matches,
+  jobs as jobsTable,
+} from "$lib/server/db/schema";
 import { classifyRegion } from "$lib/data/job-taxonomy";
 import {
   normalizeExperienceLevels,
@@ -204,6 +208,57 @@ export async function applyJobTexts(
   }
 
   await db.update(jobsTable).set(patch).where(eq(jobsTable.id, jobId));
+}
+
+/**
+ * Save a job's two extracted skill lists.
+ *
+ * Each list is written whole — there is no per-skill write, because there is no
+ * per-skill anything: the columns are JSON arrays. An omitted list is left
+ * alone, so changing the required skills never touches the preferred ones;
+ * passing null clears one.
+ *
+ * Flagging the job's matches for re-scoring is part of the write rather than
+ * something callers remember, because these two columns *are* the score's
+ * inputs (see `matcher.ts` — they're the only job-side skill fields it reads).
+ * A hand-edited skill list with a stale score attached is worse than either
+ * alone: the number on the page is now evidence for a job description that no
+ * longer says that.
+ *
+ * Flag rather than delete, and flag rather than re-score inline: the old score
+ * stays visible until the new one lands, and the background matcher picks the
+ * job up on its next cycle. Every other caller that invalidates a score does it
+ * this way, and none of them have an acting profile to score inline for —
+ * neither does this one, since jobs are shared across profiles.
+ */
+export async function applyJobSkills(
+  jobId: number,
+  skills: {
+    skills_required?: string[] | null;
+    skills_preferred?: string[] | null;
+  },
+): Promise<void> {
+  const patch: Record<string, unknown> = {};
+
+  if (skills.skills_required !== undefined) {
+    patch.skills_required = skills.skills_required;
+  }
+  if (skills.skills_preferred !== undefined) {
+    patch.skills_preferred = skills.skills_preferred;
+  }
+
+  // Nothing to write is not the same as "write nothing": without this, a call
+  // with no lists would still bump date_updated and invalidate every match row
+  // for the job, which is a rescore of the whole fleet for a no-op.
+  if (Object.keys(patch).length === 0) return;
+
+  await db.update(jobsTable)
+    .set({ ...patch, date_updated: new Date() })
+    .where(eq(jobsTable.id, jobId));
+
+  await db.update(job_matches)
+    .set({ rescore_requested_at: new Date() })
+    .where(eq(job_matches.job_id, jobId));
 }
 
 /** Back-compat shim for the description-only callers. */
