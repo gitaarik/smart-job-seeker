@@ -483,6 +483,33 @@ export const REGIONS: TaxonomyCategory = {
         { pattern: "nijmegen", mode: "includes" },
         { pattern: "den bosch", mode: "includes" },
         { pattern: "hybride werken", mode: "includes" },
+        // More Dutch towns, from locations that were landing unclassified:
+        // "Nieuwegein", "Coevorden", "De Rijp". Word-bounded rather than plain
+        // substring — "tiel" and "weert" are short enough to appear inside
+        // unrelated words, and over-eager substring matching is exactly what
+        // put every Dutch job under `us` in the first place.
+        {
+          pattern:
+            "\\b(nieuwegein|driebergen|coevorden|tiel|flevoland|de rijp|venray|drunen|schagen|veldhoven|beverwijk|nootdorp|abcoude|zwijndrecht|hoofddorp|woubrugge|nijkerk|weert|almelo|voorhout|zwolle|capelle aan den ijssel)\\b",
+          mode: "regex",
+        },
+        // Dutch address format: "<street> <nr>, <4-digit postcode> <city>", or
+        // just "<postcode> <city>" — e.g. "2215 Voorhout", "Hanzelaan 95, 8017
+        // Zwolle". Anchored to the END of the string, which is what keeps a US
+        // street address out: "1200 Main Street, Springfield" has a comma after
+        // the number, so [a-z\s]*$ cannot reach the end and it does not match.
+        {
+          pattern: "(^|,\\s*)[0-9]{4}\\s+[a-z][a-z\\s]*$",
+          mode: "regex",
+        },
+        // Country names as substrings, not just exact aliases. "Netherlands"
+        // alone matched; "Rotterdam, Netherlands" did not, because aliases are
+        // compared against the whole string. Long enough to be unambiguous.
+        {
+          pattern:
+            "\\b(netherlands|nederland|germany|deutschland|belgium|belgië|denmark|danmark|sweden|norway|finland|ireland|austria|switzerland|portugal)\\b",
+          mode: "regex",
+        },
         // German cities
         { pattern: "berlin", mode: "includes" },
         { pattern: "münchen", mode: "includes" },
@@ -611,6 +638,11 @@ export const REGIONS: TaxonomyCategory = {
         { text: "lithuania" },
         { text: "latvia" },
         { text: "estonia" },
+        // ISO alpha-3 codes — exact-match only, see the note in asia_pacific.
+        { text: "pol" },
+        { text: "rou" },
+        { text: "cze" },
+        { text: "hun" },
       ],
       patterns: [
         { pattern: "warsaw", mode: "includes" },
@@ -626,6 +658,13 @@ export const REGIONS: TaxonomyCategory = {
         { pattern: "tallinn", mode: "includes" },
         { pattern: "riga", mode: "includes" },
         { pattern: "vilnius", mode: "includes" },
+        // Polish and Romanian cities seen in the wild, including the
+        // all-caps site-code style ("POL - PM - GDANSK", "CRAIOVA (REMOTE)").
+        {
+          pattern:
+            "\\b(gdansk|gdańsk|wroclaw|wrocław|poznan|poznań|lodz|łódź|cluj-napoca|craiova|timisoara|timișoara|targu mures|iasi|brasov)\\b",
+          mode: "regex",
+        },
         { pattern: ", poland", mode: "includes" },
         { pattern: ", romania", mode: "includes" },
         { pattern: ", hungary", mode: "includes" },
@@ -659,6 +698,11 @@ export const REGIONS: TaxonomyCategory = {
         { pattern: "abu dhabi", mode: "includes" },
         { pattern: "riyadh", mode: "includes" },
         { pattern: "tel aviv", mode: "includes" },
+        // "israel" was an alias, and aliases only ever match the WHOLE string —
+        // so "Ramat Gan, Israel" and "Israel, Yokneam" both fell through to
+        // null despite naming the country outright.
+        { pattern: "israel", mode: "includes" },
+        { pattern: "ramat gan", mode: "includes" },
         { pattern: "istanbul", mode: "includes" },
         { pattern: "doha", mode: "includes" },
         { pattern: "ankara", mode: "includes" },
@@ -687,8 +731,17 @@ export const REGIONS: TaxonomyCategory = {
         { text: "thailand" },
         { text: "pakistan" },
         { text: "bangladesh" },
+        // ISO alpha-3 codes. Aliases are exact-match only, which is what makes
+        // these safe to add here and NOT as substring patterns — a bare "AUS"
+        // or "IND" field classifies, while "ind" inside a word cannot.
+        { text: "aus" },
+        { text: "ind" },
+        { text: "pak" },
+        { text: "twn" },
+        { text: "sgp" },
       ],
       patterns: [
+        { pattern: "taipei", mode: "includes" },
         { pattern: "bengaluru", mode: "includes" },
         { pattern: "bangalore", mode: "includes" },
         { pattern: "mumbai", mode: "includes" },

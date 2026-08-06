@@ -118,4 +118,61 @@ describe("classifyRegion", () => {
     expect(classifyRegion("Somewhere Nice-ish")).not.toBe("us");
     expect(classifyRegion("qwertyville")).toBeNull();
   });
+
+  // Every string below is a real office_location that was landing unclassified
+  // on preview. Kept verbatim rather than idealised, because the shapes are the
+  // point: bare Dutch towns, "<street> <nr>, <postcode> <city>", all-caps site
+  // codes, and countries named inside a longer string.
+  describe("locations that used to fall through to null", () => {
+    it.each([
+      // Dutch postcode + city, with and without a street prefix
+      ["2215 Voorhout", "western_europe"],
+      ["7600 Almelo", "western_europe"],
+      ["Hanzelaan 95, 8017 Zwolle", "western_europe"],
+      ["Betuwehaven 8, 3433 Nieuwegein", "western_europe"],
+      ["Rivium Quadrant 2, 2909 Capelle aan den IJssel", "western_europe"],
+      // Bare Dutch towns
+      ["Nieuwegein", "western_europe"],
+      ["Coevorden", "western_europe"],
+      ["De Rijp", "western_europe"],
+      ["Prismastraat 4, Nootdorp", "western_europe"],
+      // Country named inside the string — an alias only ever matched the whole
+      // string, so these named their country and still got null
+      ["Rotterdam, Netherlands", "western_europe"],
+      ["Ramat Gan, Israel", "middle_east"],
+      ["Israel, Yokneam", "middle_east"],
+      // All-caps site codes
+      ["POL - PM - GDANSK", "eastern_europe"],
+      ["CRAIOVA (REMOTE)", "eastern_europe"],
+      // ISO alpha-3, exact match only
+      ["AUS", "asia_pacific"],
+      ["IND", "asia_pacific"],
+    ])("%s -> %s", (input, want) => {
+      expect(classifyRegion(input)).toBe(want);
+    });
+  });
+
+  // The postcode rule is the one most able to go greedy: "<4 digits> <word>"
+  // also describes a US street address. It is anchored to the end of the
+  // string, so a US address — which continues past the city with a comma —
+  // cannot reach it.
+  describe("the Dutch postcode rule does not swallow US addresses", () => {
+    // The assertion that matters is "not Western Europe". Some of these are
+    // legitimately `us` on a city or state match — "Washington" is a US state —
+    // and pinning an exact value here would be testing those patterns, not this
+    // rule.
+    it.each([
+      ["1200 Main Street, Springfield"],
+      ["1600 Pennsylvania Avenue, Washington"],
+      ["350 Fifth Avenue, New York, NY"],
+      ["Austin, TX 78701"],
+      ["4200 Some Boulevard, Phoenix, AZ"],
+    ])("%s is not claimed by Western Europe", (input) => {
+      expect(classifyRegion(input)).not.toBe("western_europe");
+    });
+
+    it("leaves a bare US street address unclassified rather than European", () => {
+      expect(classifyRegion("1200 Main Street, Springfield")).toBeNull();
+    });
+  });
 });
