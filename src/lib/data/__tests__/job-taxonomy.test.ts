@@ -147,7 +147,24 @@ describe("classifyRegion", () => {
       // ISO alpha-3, exact match only
       ["AUS", "asia_pacific"],
       ["IND", "asia_pacific"],
+      // US cities — the list had states but no cities
+      ["San Francisco", "us"],
+      ["Boston or Remote", "us"],
+      // "US - Remote" forms: the suffix strip only removes a parenthesised
+      // "(Remote)", so these arrived as "us - remote" and matched no alias
+      ["US Remote", "us"],
+      ["US - REMOTE (REMOTE)", "us"],
+      ["BOSTON - USA (REMOTE)", "us"],
     ])("%s -> %s", (input, want) => {
+      expect(classifyRegion(input)).toBe(want);
+    });
+
+    // The `^us\b` and `\busa\b` rules are two letters from being a repeat of
+    // the original bug, so pin the words they must not claim.
+    it.each([
+      ["Uster, Switzerland", "western_europe"],
+      ["Ushuaia, Argentina", "latin_america"],
+    ])("%s is not claimed by the US rules", (input, want) => {
       expect(classifyRegion(input)).toBe(want);
     });
   });

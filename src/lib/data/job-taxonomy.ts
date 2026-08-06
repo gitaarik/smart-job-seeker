@@ -385,6 +385,21 @@ export const REGIONS: TaxonomyCategory = {
         { pattern: "illinois", mode: "includes" },
         { pattern: "north america", mode: "includes" },
         { pattern: "united states", mode: "includes" },
+        // Major US cities. There were state names here but no city names, so a
+        // bare "San Francisco" or "Boston" classified as nothing at all.
+        // Deliberately omitting names that are equally a UK city — Birmingham,
+        // Manchester, Cambridge — since those would be a coin flip.
+        {
+          pattern:
+            "\\b(san francisco|boston|chicago|seattle|austin|denver|atlanta|los angeles|san diego|san jose|philadelphia|phoenix|dallas|houston|miami|minneapolis|detroit|baltimore|pittsburgh|nashville)\\b",
+          mode: "regex",
+        },
+        // "US Remote", "US - Remote", "BOSTON - USA (REMOTE)". The suffix strip
+        // only removes a parenthesised "(Remote)", so these arrived as
+        // "us - remote" and matched no alias. Word-bounded so that "us" cannot
+        // claim "Uster" and "usa" cannot claim "usability".
+        { pattern: "^us\\b", mode: "regex" },
+        { pattern: "\\busa\\b", mode: "regex" },
       ],
     },
     {
