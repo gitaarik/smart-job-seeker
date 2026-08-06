@@ -177,9 +177,19 @@ export const WORK_LOCATIONS: TaxonomyCategory = {
         { text: "remote" },
         { text: "fully remote" },
         { text: "remote (no onsite)" },
-        // Dutch
+        { text: "work from home" },
+        // "Worldwide" and "Anywhere" name a work arrangement, not a place. They
+        // were the single largest group of jobs with an unclassifiable
+        // office_location — 804 rows of "Worldwide" on preview alone.
+        { text: "worldwide" },
+        { text: "wereldwijd" },
+        { text: "anywhere" },
+        // Dutch. "thuiswerk"/"thuiswerken" were here; "werk van thuis" is the
+        // more common phrasing and was not, which left 326 rows unreadable.
         { text: "thuiswerk" },
         { text: "thuiswerken" },
+        { text: "werk van thuis" },
+        { text: "werken van thuis" },
         // German
         { text: "homeoffice" },
         { text: "home office" },
@@ -191,6 +201,9 @@ export const WORK_LOCATIONS: TaxonomyCategory = {
       ],
       patterns: [
         { pattern: "remote", mode: "startsWith" },
+        // "Thuiswerk in Nederland" and friends
+        { pattern: "thuiswerk", mode: "startsWith" },
+        { pattern: "werk van thuis", mode: "startsWith" },
       ],
     },
     {
