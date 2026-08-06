@@ -8,6 +8,10 @@ import { dbDirect as db } from "$lib/server/db";
 import { eq } from "drizzle-orm";
 import { users } from "$lib/server/db/schema";
 import { initSentry, Sentry } from "$lib/server/monitoring/sentry";
+import {
+  aiRateLimiter,
+  createRateLimitResponse,
+} from "$lib/server/middleware/rate-limit";
 
 initSentry("sveltekit");
 
@@ -159,6 +163,16 @@ export const handle: Handle = async ({ event, resolve }) => {
       !event.locals.adminUser
     ) {
       return json({ error: "Account pending approval" }, { status: 403 });
+    }
+
+    // Throttle AI writes, for the same reason the auth gate above is central:
+    // a new /api/ai route should be covered by default rather than by
+    // remembering. Reads are exempt — opening the assistant fetches a
+    // transcript, and that must not spend from the bucket its next turn needs.
+    if (pathname.startsWith("/api/ai/") && event.request.method !== "GET") {
+      if (!aiRateLimiter.tryConsumeKey(event.locals.user.id)) {
+        return createRateLimitResponse(aiRateLimiter.retryAfterSeconds());
+      }
     }
   }
 

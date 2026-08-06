@@ -14,6 +14,17 @@ interface RateLimitOptions {
   identifier?: (request: Request) => string;
 }
 
+/**
+ * Sweep idle buckets once the map passes this many keys.
+ *
+ * `cleanup()` has always existed and nothing has ever called it, which is
+ * harmless for a limiter keyed on user id (bounded by the user count) and a
+ * slow leak for one keyed on client IP (unbounded). Sweeping opportunistically
+ * from the consume path keeps that bounded without a global timer, which in a
+ * SvelteKit server would outlive the request that started it.
+ */
+const SWEEP_THRESHOLD = 5000;
+
 class RateLimiter {
   private buckets = new Map<string, TokenBucket>();
   private maxTokens: number;
@@ -64,11 +75,24 @@ class RateLimiter {
    * Try to consume a token from the bucket
    */
   tryConsume(request: Request, tokens: number = 1): boolean {
-    const key = this.identifier(request);
+    return this.tryConsumeKey(this.identifier(request), tokens);
+  }
+
+  /**
+   * Try to consume a token from the bucket for an explicit key.
+   *
+   * The `Request`-derived key is the wrong one for an authenticated route: it
+   * falls back to client IP, so everyone behind one NAT shares a bucket while
+   * one user across two networks gets two. A caller that has already resolved
+   * who is asking — which every route behind the auth gate has — should key on
+   * that instead, and this is how.
+   */
+  tryConsumeKey(key: string, tokens: number = 1): boolean {
     let bucket = this.buckets.get(key);
 
     // Create bucket if it doesn't exist
     if (!bucket) {
+      if (this.buckets.size >= SWEEP_THRESHOLD) this.cleanup();
       bucket = {
         tokens: this.maxTokens,
         lastRefill: Date.now(),
@@ -129,6 +153,11 @@ class RateLimiter {
   reset(): void {
     this.buckets.clear();
   }
+
+  /** Seconds until one more token is available, for the Retry-After header. */
+  retryAfterSeconds(): number {
+    return Math.max(1, Math.ceil(1 / this.refillRate));
+  }
 }
 
 // Create rate limiter instances for different endpoints
@@ -140,6 +169,28 @@ export const webhookRateLimiter = new RateLimiter({
 export const apiRateLimiter = new RateLimiter({
   maxTokens: 60, // 60 requests
   refillRate: 1, // 1 request per second
+});
+
+/**
+ * Every write under /api/ai — assistant turns, letters, answers, stories,
+ * cheat sheets, applying a proposal. Keyed on user id by the caller
+ * (hooks.server.ts), never on IP.
+ *
+ * Credits already bound what a user can spend in a month, so this is not there
+ * to cap cost — it is there to cap RATE. One assistant turn on a busy
+ * application page assembles up to ~250k chars of evidence and calls the paid
+ * writing model (see CHAT_BUDGET_CHARS); a script firing those in a loop is a
+ * provider bill and a queue of slow requests before it is ever a credit
+ * balance, and nothing else in the stack notices.
+ *
+ * 12/minute sustained with a burst of 15. A person clicking generate on a
+ * letter, then an answer, then asking the assistant about both is nowhere near
+ * it — these calls take seconds each, so the ceiling is roughly "faster than
+ * anyone can read the output".
+ */
+export const aiRateLimiter = new RateLimiter({
+  maxTokens: 15, // burst
+  refillRate: 0.2, // 1 every 5s → 12/min sustained
 });
 
 /**
