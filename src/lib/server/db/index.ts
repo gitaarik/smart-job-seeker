@@ -13,18 +13,22 @@ const pool = new pg.Pool({
 });
 export const db = drizzle(pool, { schema: allSchema });
 
-// Direct PostgreSQL connection for CLI scripts
-// When running in Docker: use 'database' as hostname (Docker service name)
-// When running on host: use 'localhost' to connect to the exposed port
+// Direct PostgreSQL connection for CLI scripts.
+//
+// Both are required — no default. They used to fall back to
+// `…@database:5432/…`, the Docker service name, on BOTH branches. In Docker
+// that default was unreachable anyway (compose always sets
+// SJS_POSTGRES_URL_DOCKER), and on a host it was simply wrong: `database` does
+// not resolve there, so an unset SJS_POSTGRES_URL_HOST surfaced as
+// `EAI_AGAIN database` rather than as the missing configuration it was — while
+// the comment above it promised localhost.
+//
+// A localhost default would be worse, not better: on a box running more than
+// one Postgres it would silently connect to the wrong database. Failing with
+// "Environment variable … is not set" names the actual problem.
 const postgresUrl = isRunningInDocker()
-  ? getEnv(
-    "SJS_POSTGRES_URL_DOCKER",
-    "postgres://postgres:postgres@database:5432/smartjobseeker",
-  )
-  : getEnv(
-    "SJS_POSTGRES_URL_HOST",
-    "postgres://postgres:postgres@database:5432/smartjobseeker",
-  );
+  ? getEnv("SJS_POSTGRES_URL_DOCKER")
+  : getEnv("SJS_POSTGRES_URL_HOST");
 
 const directPool = new pg.Pool({
   connectionString: postgresUrl,
