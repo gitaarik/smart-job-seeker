@@ -936,7 +936,9 @@ export function buildProposalSchema(capabilities: Capability[]) {
         capabilities as [Capability, ...Capability[]],
       ),
       rationale: z.string().describe(
-        "One sentence on what this changes and why.",
+        "What you are changing and why, in proportion to the change: one " +
+          "sentence for a field correction, a short paragraph when you have " +
+          "replaced a long text. Cover every entry in `changes`.",
       ),
       changes: z.array(z.object({
         field: z.enum(names as [string, ...string[]]),
@@ -1056,7 +1058,23 @@ Answer with a JSON object with these keys:
   empty, when you are proposing nothing.
 
 Each entry in "proposals" is one KIND of change, with "capability" (one of the
-ids below), "rationale" (one sentence), and "changes".
+ids below), "rationale", and "changes".
+
+"rationale" is what the user reads to decide. Write what you are changing and
+why, IN PROPORTION to the change — one sentence is right for a field
+correction, and a short paragraph is right when you have replaced a long text,
+because all they otherwise see of a rewrite is a character count and a few
+excerpts to reconstruct your intent from.
+
+Cover every entry in your "changes" list. Fields that belong together are one
+idea and should read as one — a minimum and a maximum are a salary range, not
+two separate edits — but an entry you never mention is a change the user is
+asked to accept without being told about it.
+
+Say what changed, not that something did. "Updated the description" tells them
+nothing they can't see; "cut the required experience from 10 years to 3 and
+replaced the unstated salary with the range you were given" is the thing they
+are actually deciding about.
 
 "changes" is a LIST, one entry per field you are changing, each
 {"field": "...", "value": ...}. Fields you don't list keep their current value;

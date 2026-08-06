@@ -130,6 +130,23 @@
   </div>
 
   <div class="px-3 py-2 space-y-2">
+    <!--
+      The assistant's own account of the edit, and the first thing read. It
+      used to sit at the bottom as a muted footnote, which was right when it
+      was one sentence of justification and wrong now it carries the change
+      itself — a rewritten description is a character count and a few excerpts
+      otherwise, and this is the only part that says what it MEANS.
+
+      Kept after applying, unlike before. An applied proposal is history, and
+      the explanation is the most useful thing in it when reading back why a
+      field holds what it holds.
+    -->
+    {#if proposal.rationale}
+      <p class="text-xs leading-relaxed text-[var(--dash-text)]">
+        {proposal.rationale}
+      </p>
+    {/if}
+
     {#if proposal.changes.length === 0}
       <p class="text-xs text-[var(--dash-text-muted)]">
         {appliedAt
@@ -143,17 +160,21 @@
             <dt class="text-[var(--dash-text-muted)]">{change.label}</dt>
             <dd class="flex items-start gap-1.5 text-[var(--dash-text)]">
               <!--
-                Once applied there is no "from" to show: the transcript stops
-                re-reading current values for an applied proposal, so `from`
-                arrives as "—" and rendering the arrow claimed the field had
-                been empty when it had not. The new value is the whole story.
+                No arrow when nothing is being replaced — a field that was
+                unset, or a proposal that CREATES a row, where every `from` is
+                "—" because there is no row yet. A struck-through "empty" with
+                an arrow reads as something having been cleared.
 
-                Nor is there one when nothing is being replaced — a field that
-                was unset, or a proposal that CREATES a row, where every `from`
-                is "—" because there is no row yet. A struck-through "empty"
-                with an arrow reads as something having been cleared.
+                Applied proposals used to be suppressed here too: the transcript
+                had no history for them, so `from` arrived as "—" and the arrow
+                claimed a field had been empty when it had not. They now carry
+                the before-image stored at apply time, so the arrow is correct
+                and worth showing — an applied change without its old value is
+                the half of the history you actually want later. Rows predating
+                that column still have no `from`, and fall through to the same
+                no-arrow branch on their own.
               -->
-              {#if !appliedAt && change.from !== "—"}
+              {#if change.from !== "—"}
                 <span class="line-through text-[var(--dash-text-muted)] break-words">
                   {summarize(change.from)}
                 </span>
@@ -214,12 +235,6 @@
           </div>
         {/each}
       </div>
-    {/if}
-
-    {#if proposal.rationale && !appliedAt}
-      <p class="text-[11px] text-[var(--dash-text-muted)] italic">
-        {proposal.rationale}
-      </p>
     {/if}
 
     {#if error}
