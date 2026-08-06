@@ -48,3 +48,6 @@ uploads/*
 # synthetic profile. The dev-seeded one currently clones a real profile (PII),
 # so it's ignored here. Author a synthetic template, then force-add it.
 scripts/fixtures/demo-template.json
+
+# Build output of scripts/build-ops-scripts.mjs — regenerated in the image build.
+dist-scripts/

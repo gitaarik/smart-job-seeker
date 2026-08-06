@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { dbDirect } from "$lib/server/db";
-import { generateUniqueSlug } from "$lib/server/slug-generator";
+import { generateUniqueSlug } from "$lib/server/utils/slug-generator";
 
 async function generateSlugsForExistingProfiles() {
   console.log("🔄 Generating slugs for profiles without slugs...\n");
@@ -36,5 +36,8 @@ async function generateSlugsForExistingProfiles() {
 }
 
 generateSlugsForExistingProfiles()
-  .catch(console.error)
-  .finally(() => dbDirect.$disconnect());
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  })
+  .then(() => process.exit(0));

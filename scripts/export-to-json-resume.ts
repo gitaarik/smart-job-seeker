@@ -258,5 +258,5 @@ main()
     process.exit(1);
   })
   .finally(() => {
-    dbDirect.$disconnect();
+    process.exit(0);
   });
