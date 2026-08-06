@@ -2261,6 +2261,18 @@ export const ai_chats = pgTable("ai_chats", {
   input_tokens: integer(),
   output_tokens: integer(),
   total_tokens: integer(),
+  /**
+   * The part of `input_tokens` the provider served from a cached prefix — a
+   * subset of it, not an addition. Null on rows written before this existed,
+   * and on providers that report nothing.
+   *
+   * Here rather than only in the charge metadata because it is the number that
+   * decides whether prompt caching is worth engineering: Gemini 2.5 caches
+   * implicitly, so this can be non-zero without anyone having built anything,
+   * and until it was recorded a cached turn and an uncached one looked
+   * identical.
+   */
+  cached_input_tokens: integer(),
   credits_charged: integer(),
 }, (table) => [
   index("ai_chats_profile_id_idx").on(table.profile_id),

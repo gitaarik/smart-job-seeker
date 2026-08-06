@@ -238,7 +238,7 @@ export async function parseResumeWithLLM(
     if (creditsCost > 0) {
       const providerCostUsd = estimateProviderCostUsd(
         config.llmProvider, config.llmModel,
-        usage.inputTokens, usage.outputTokens,
+        usage.inputTokens, usage.outputTokens, usage.cachedInputTokens,
       );
       await chargeCredits(
         userId,

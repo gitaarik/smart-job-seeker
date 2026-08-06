@@ -1,0 +1,1 @@
+ALTER TABLE "ai_chats" ADD COLUMN "cached_input_tokens" integer;

@@ -512,6 +512,7 @@ export async function createAndGenerateAiChat(
       input_tokens: usage?.inputTokens ?? null,
       output_tokens: usage?.outputTokens ?? null,
       total_tokens: usage?.totalTokens ?? null,
+      cached_input_tokens: usage?.cachedInputTokens ?? null,
       credits_charged: creditsCost || null,
     }).where(eq(ai_chats.id, aiChat.id));
 
@@ -528,6 +529,7 @@ export async function createAndGenerateAiChat(
           activeModel,
           usage.inputTokens,
           usage.outputTokens,
+          usage.cachedInputTokens,
         );
         await chargeCredits(
           profileForCredits.user_id,

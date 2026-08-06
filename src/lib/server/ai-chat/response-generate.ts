@@ -57,6 +57,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       input_tokens: usage?.inputTokens ?? null,
       output_tokens: usage?.outputTokens ?? null,
       total_tokens: usage?.totalTokens ?? null,
+      cached_input_tokens: usage?.cachedInputTokens ?? null,
       credits_charged: creditsCost || null,
     }).where(eq(ai_chats.id, aiChatId));
 
@@ -74,7 +75,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
         if (profile?.user_id) {
           const providerCostUsd = estimateProviderCostUsd(
             writingProvider, writingModel,
-            usage.inputTokens, usage.outputTokens,
+            usage.inputTokens, usage.outputTokens, usage.cachedInputTokens,
           );
           await chargeCredits(
             profile.user_id,

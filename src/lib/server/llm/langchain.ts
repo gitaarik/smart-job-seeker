@@ -425,6 +425,31 @@ export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
   totalTokens: number;
+  /**
+   * The part of `inputTokens` the provider served from a cached prefix — a
+   * subset, not an addition.
+   *
+   * Gemini 2.5 caches implicitly, and measuring it was the point: two identical
+   * 13.4k-token prefixes back to back on gemini-2.5-pro, 2026-08-06, came back
+   *
+   *   call 1: in=13399 cached=0     out=17  $0.01692
+   *   call 2: in=13399 cached=12264 out=22  $0.00317
+   *
+   * — 91% of the prefix cached and 81% off, with nothing built to make it
+   * happen. It works because the prompt is already the right shape: the profile
+   * blob is the single largest block and sits first, so every turn of a thread
+   * shares a long stable prefix. Anything that puts varying content ahead of it
+   * would quietly cost most of that, which is the real reason to record this —
+   * a regression in prompt ORDER now shows up as a number instead of a bill.
+   *
+   * The discount has a TTL, so the first turn of a conversation pays full price
+   * and its successors don't.
+   *
+   * 0 when the provider reports nothing, which is also what a provider that
+   * doesn't cache looks like. The two are not distinguished, deliberately:
+   * pricing treats both as "bill at the full rate".
+   */
+  cachedInputTokens: number;
 }
 
 /**
@@ -444,6 +469,9 @@ function extractTokenUsage(result: any): TokenUsage | null {
       inputTokens: usage.input_tokens ?? 0,
       outputTokens: usage.output_tokens ?? 0,
       totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+      // Standard LangChain shape. Providers that don't cache omit the whole
+      // `input_token_details` object rather than reporting a zero.
+      cachedInputTokens: usage.input_token_details?.cache_read ?? 0,
     };
   }
 
@@ -455,6 +483,9 @@ function extractTokenUsage(result: any): TokenUsage | null {
       inputTokens: tu.promptTokens ?? tu.input_tokens ?? 0,
       outputTokens: tu.completionTokens ?? tu.output_tokens ?? 0,
       totalTokens: tu.totalTokens ?? tu.total_tokens ?? 0,
+      // No standard place for it on this path; the providers that land here
+      // are the ones not reporting the standard shape in the first place.
+      cachedInputTokens: 0,
     };
   }
 
