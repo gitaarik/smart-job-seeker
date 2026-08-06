@@ -11,6 +11,10 @@ const gitignorePath = fileURLToPath(new URL("./.gitignore", import.meta.url));
 
 export default ts.config(
   includeIgnoreFile(gitignorePath),
+  // noVNC, vendored wholesale for the tunnel VNC viewer. It is third-party
+  // code we do not edit, and linting it only ever reports other people's
+  // style choices back at us.
+  { ignores: ["static/vnc/**"] },
   js.configs.recommended,
   ...ts.configs.recommended,
   ...svelte.configs.recommended,
