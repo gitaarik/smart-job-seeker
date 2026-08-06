@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Type-check gate for scripts/ — the sibling of check.sh, which covers the app.
+#
+# scripts/ was type-checked by nothing at all. SvelteKit's generated
+# .svelte-kit/tsconfig.json includes src/, test/ and tests/, and TypeScript
+# does not merge `include` from an extended config, so the directory simply sat
+# outside every gate the repo had.
+#
+# What that cost: the Prisma → Drizzle migration missed 11 scripts, which still
+# call db.<table>.findMany() and throw on first use. generate-profile-slugs.ts
+# imported $lib/server/slug-generator, a path that has never existed. Both
+# surfaced only when the scripts were bundled for the production image.
+#
+# Same ratchet as check.sh: gate on the COUNT, so the existing backlog is
+# tolerated and new errors fail the build.
+#
+# BASELINE must only ever go DOWN. The script nags when the real count drops
+# below it, so the ratchet cannot quietly slip back up.
+#
+# Current backlog is concentrated — lib/__tests__/resume-importer.test.ts (48)
+# and import-profile.ts (40) are over a third of it between them.
+BASELINE=189
+
+npx svelte-kit sync
+
+# tsc exits non-zero whenever errors exist, which is the thing we are deciding
+# for ourselves — so don't let it abort the script.
+output=$(npx tsc -p tsconfig.scripts.json --noEmit 2>&1) || true
+
+errors=$(printf '%s\n' "$output" | grep -c 'error TS' || true)
+
+if [ "$errors" -gt "$BASELINE" ]; then
+  echo "::error::scripts/ type-check found $errors errors, baseline is $BASELINE — $((errors - BASELINE)) new."
+  echo "Fix them, or if a baseline error was legitimately replaced, adjust"
+  echo "BASELINE in scripts/ci/check-scripts.sh."
+  printf '%s\n' "$output" | grep 'error TS' | head -40
+  exit 1
+fi
+
+if [ "$errors" -lt "$BASELINE" ]; then
+  echo "::notice::scripts/ type-check found $errors errors, below the baseline of $BASELINE."
+  echo "Lower BASELINE in scripts/ci/check-scripts.sh to $errors to lock the improvement in."
+fi
+
+echo "scripts/ type-check: $errors errors (baseline $BASELINE) — no new type errors."

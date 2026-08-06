@@ -58,6 +58,7 @@
     "container:match:jobs": "echo 'Moved to cloud — use npm run match:jobs from the cloud directory'",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:scripts": "svelte-kit sync && tsc -p tsconfig.scripts.json --noEmit",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
