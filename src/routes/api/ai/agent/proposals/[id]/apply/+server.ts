@@ -133,9 +133,14 @@ export const POST: RequestHandler = async ({ locals, params }) => {
     });
   }
 
+  // `previous` is rewritten, not left as proposed. It was captured when the
+  // assistant answered; the write happened later — up to twelve hours later, in
+  // a resumable thread — and what it replaced is what executeCapability read on
+  // its way through. Keeping the proposal-time values would record an undo that
+  // reverts to a state that never immediately preceded this edit.
   await db
     .update(agent_message_proposals)
-    .set({ applied_at: new Date() })
+    .set({ applied_at: new Date(), previous: outcome.previous })
     .where(eq(agent_message_proposals.id, proposalId));
 
   return json({ success: true });

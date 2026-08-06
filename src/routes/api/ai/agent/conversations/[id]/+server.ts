@@ -14,6 +14,7 @@ import {
   describeProposalChanges,
 } from "$lib/server/ai-chat/capabilities";
 import { requireConversationProfile } from "../../scope";
+import { summarizeProposal } from "$lib/server/ai-chat/proposal-summary";
 
 /**
  * GET /api/ai/agent/conversations/:id — full transcript for resuming a thread.
@@ -79,27 +80,48 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
     byMessage.set(p.message_id, list);
   }
 
-  // Rebuild each card's diff against the row's *current* values, not the ones
-  // captured when it was proposed. A thread resumes up to 12h later, by which
-  // time the user may well have made the change by hand — showing the stale
-  // "from" would invite them to re-apply an edit that is already in place.
+  // A PENDING proposal is rebuilt against the row's *current* values, not the
+  // ones captured when it was proposed: a thread resumes up to 12h later, by
+  // which time the user may well have made the change by hand, and showing the
+  // stale "from" would invite them to re-apply an edit already in place.
+  //
+  // An APPLIED one is the opposite — its "from" is history and re-reading would
+  // return the value it wrote. That case used to fall through to `{}`, so every
+  // applied field rendered as "— → value" and claimed to have been empty
+  // beforehand; a salary corrected from 75000 to 55000 read back as
+  // "— → 55,000". It now uses the before-image stored at apply time. Rows from
+  // before that column keep the old behaviour rather than inventing a history.
   const messages = await Promise.all(rows.map(async (m) => {
     const mine = byMessage.get(m.id) ?? [];
     const proposals = await Promise.all(mine.map(async (p) => {
       const capability = p.capability as Capability;
       const def = CAPABILITIES[capability];
-      const current = def && !p.applied_at
-        ? await def.current(p.target).catch(() => ({}))
-        : {};
+      const current = !def
+        ? {}
+        : p.applied_at
+        ? p.previous ?? {}
+        : await def.current(p.target).catch(() => ({}));
+      const changes = def
+        ? describeProposalChanges(capability, p.fields, current)
+        : [];
       return {
         id: p.id,
         capability,
         title: def?.title ?? capability,
         rationale: p.rationale,
         target: p.target,
-        changes: def
-          ? describeProposalChanges(capability, p.fields, current)
-          : [],
+        changes,
+        // The same edit as prose, for anything that isn't the card — see
+        // proposal-summary.ts.
+        summary: def
+          ? summarizeProposal({
+            title: def.title,
+            target: p.target,
+            changes,
+            rationale: p.rationale,
+            applied: !!p.applied_at,
+          })
+          : "",
         applied_at: p.applied_at?.toISOString() ?? null,
       };
     }));

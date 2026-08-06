@@ -43,6 +43,13 @@
       "when": 1786012332395,
       "tag": "0005_new_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786013930727,
+      "tag": "0006_organic_albert_cleary",
+      "breakpoints": true
     }
   ]
 }

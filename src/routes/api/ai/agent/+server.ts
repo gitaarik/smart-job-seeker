@@ -25,6 +25,7 @@ import {
   type LiveCapability,
   renderCapabilityPrompt,
 } from "$lib/server/ai-chat/capabilities";
+import { summarizeProposal } from "$lib/server/ai-chat/proposal-summary";
 
 // Profile fields the agent is allowed to reason over. Mirrors the cover-letter
 // feature's set — enough to give grounded, personal advice without leaking
@@ -93,6 +94,8 @@ type StoredProposal = {
   capability: string;
   rationale: string;
   fields: Record<string, unknown>;
+  /** What those fields hold right now, so the diff survives being applied. */
+  previous: Record<string, unknown>;
   target: { id: number; label: string };
 };
 
@@ -159,6 +162,14 @@ function readProposal(
       ? candidate.rationale
       : "",
     fields,
+    // Narrowed to the proposed fields — the whole `current` blob would store a
+    // row snapshot rather than a before-image of this edit, and the two drift
+    // apart the moment a capability grows a field.
+    previous: Object.fromEntries(
+      Object.keys(fields)
+        .filter((key) => key in match.current)
+        .map((key) => [key, match.current[key]]),
+    ),
     target: match.target,
   };
 }
@@ -405,6 +416,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         capability: p.capability,
         rationale: p.rationale,
         fields: p.fields,
+        previous: p.previous,
         target: p.target,
         date_created: now,
       })),
@@ -417,17 +429,29 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     conversation_id: conversation.id,
     title: conversation.title,
     message_id: assistantMessage.id,
-    proposals: proposals.map((proposal, i) => ({
-      id: stored[i].id,
-      capability: proposal.capability,
-      title: CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES]
-        .title,
-      rationale: proposal.rationale,
-      target: proposal.target,
+    proposals: proposals.map((proposal, i) => {
+      const title =
+        CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES].title;
       // Paired with the current value so the card renders a diff, not a
       // list of new values with no idea what they replace.
-      changes: describeChanges(proposal, capabilities),
-      applied_at: null,
-    })),
+      const changes = describeChanges(proposal, capabilities);
+      return {
+        id: stored[i].id,
+        capability: proposal.capability,
+        title,
+        rationale: proposal.rationale,
+        target: proposal.target,
+        changes,
+        // The same edit as prose. The card doesn't need it; everything that
+        // isn't a card does — see proposal-summary.ts.
+        summary: summarizeProposal({
+          title,
+          target: proposal.target,
+          changes,
+          rationale: proposal.rationale,
+        }),
+        applied_at: null,
+      };
+    }),
   });
 };

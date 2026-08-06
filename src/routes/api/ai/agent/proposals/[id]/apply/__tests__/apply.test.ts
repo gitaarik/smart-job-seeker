@@ -98,7 +98,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   currentUser = { id: "user-1" };
   storedRow = proposalRow();
-  mockExecute.mockResolvedValue({ ok: true });
+  mockExecute.mockResolvedValue({ ok: true, previous: { salary_min: 55000 } });
   mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
 });
 
@@ -183,5 +183,22 @@ describe("POST /api/ai/agent/proposals/:id/apply", () => {
     mockExecute.mockRejectedValue(new Error("db down"));
     await expect(POST(event())).rejects.toThrow("db down");
     expect(mockUpdateSet).not.toHaveBeenCalled();
+  });
+});
+
+describe("the before-image", () => {
+  it("records what the write actually replaced, not what was proposed", async () => {
+    // `previous` is captured again here rather than left as stored. It was
+    // written when the assistant answered; the write happens later — up to
+    // twelve hours later in a resumable thread — so the proposal-time values
+    // would record an undo reverting to a state that never immediately
+    // preceded this edit.
+    await POST(event());
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        applied_at: expect.any(Date),
+        previous: { salary_min: 55000 },
+      }),
+    );
   });
 });

@@ -2417,6 +2417,24 @@ export const agent_message_proposals = pgTable("agent_message_proposals", {
   capability: varchar({ length: 64 }).notNull(),
   rationale: text().notNull().default(""),
   fields: jsonb().$type<Record<string, unknown>>().notNull(),
+  /**
+   * What the fields above held before — captured when the proposal was made,
+   * and rewritten at apply time with what the write actually replaced.
+   *
+   * Two things depend on it. An applied proposal had no readable history: the
+   * transcript only re-reads current values for PENDING ones, so an applied
+   * change rendered against `{}` and every field claimed to have been empty
+   * before — a salary corrected from 75000 to 55000 read back as "— → 55,000".
+   *
+   * And nothing a capability writes is reversible. `applyJobFields` keeps no
+   * audit trail and only profiles, letters, questions, stories and cheat sheets
+   * have version tables, so a rewritten job description used to be gone. This
+   * is the before-image that makes an undo possible at all.
+   *
+   * Null on rows written before this column existed; those keep the old
+   * behaviour rather than inventing a history for themselves.
+   */
+  previous: jsonb().$type<Record<string, unknown>>(),
   target: jsonb().$type<{ id: number; label: string }>().notNull(),
   applied_at: timestamp({ withTimezone: true, mode: "date" }),
   date_created: timestamp({ withTimezone: true, mode: "date" })

@@ -819,7 +819,16 @@ export function capabilityFieldSchema(capability: Capability) {
 export type CapabilityRefusal = "unauthorized" | "empty" | "invalid";
 
 export type CapabilityOutcome =
-  | { ok: true }
+  /**
+   * `previous` is what the written fields held immediately before, read inside
+   * the same call rather than by the caller beforehand — a caller reading it
+   * first would record a before-image from before its own authorize/validate
+   * round trip, which is exactly the window in which it can go stale.
+   *
+   * Only the fields being written appear in it, so it pairs one-for-one with
+   * what was proposed and can be replayed as an undo.
+   */
+  | { ok: true; previous: Record<string, unknown> }
   | { ok: false; reason: CapabilityRefusal; error: string };
 
 /**
@@ -868,8 +877,18 @@ export async function executeCapability(
   const valid = def.validate(fields, current);
   if (!valid.ok) return { ok: false, reason: "invalid", error: valid.error };
 
+  // Narrowed to the fields actually being written, before apply() runs. A
+  // capability with no prior row for a field (add_activity_record has none at
+  // all) simply contributes nothing here, which reads correctly as "there was
+  // nothing there".
+  const previous = Object.fromEntries(
+    Object.keys(fields)
+      .filter((key) => key in current)
+      .map((key) => [key, current[key]]),
+  );
+
   await def.apply(target, fields, current);
-  return { ok: true };
+  return { ok: true, previous };
 }
 
 /** Every field name the live capabilities can address, for the `field` enum. */

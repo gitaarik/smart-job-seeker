@@ -839,8 +839,39 @@ describe("executeCapability", () => {
       { entry_content: "They want two office days." },
     );
 
-    expect(outcome).toEqual({ ok: true });
+    // add_activity_record appends, so there is no prior value for the field it
+    // writes — an empty before-image is the correct answer here, not a missing
+    // one. An editing capability returns the values it replaced (below).
+    expect(outcome).toEqual({ ok: true, previous: {} });
     expect(mockRecordInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("hands back what an edit replaced, read inside the call", async () => {
+    // The before-image is what makes an applied proposal reviewable and an
+    // undo possible at all: applyJobFields keeps no audit trail, and jobs have
+    // no version table. Read here rather than by the caller beforehand, so it
+    // reflects the row as it was immediately before this write rather than
+    // before the caller's own authorize/validate round trip.
+    jobRow = {
+      id: 3818,
+      title: "Data Engineer",
+      company: "Acme",
+      salary_min: 55000,
+      salary_max: 70000,
+    };
+
+    const outcome = await executeCapability(
+      "edit_job_details",
+      { id: 3818, label: "Data Engineer at Acme" },
+      ACTOR,
+      { salary_min: 75000 },
+    );
+
+    expect(outcome.ok).toBe(true);
+    // Only the field being written — not a snapshot of the whole row, which
+    // would drift from the proposal the moment a capability grew a field.
+    expect((outcome as { previous: Record<string, unknown> }).previous)
+      .toEqual({ salary_min: 55000 });
   });
 
   it("refuses, and writes nothing, when the actor no longer owns the row", async () => {
