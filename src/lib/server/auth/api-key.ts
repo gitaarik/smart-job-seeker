@@ -11,6 +11,7 @@ import { db } from "$lib/server/db";
 import { and, eq } from "drizzle-orm";
 import { api_keys } from "$lib/server/db/schema";
 import { getErrorMessage } from "$lib/server/utils/errors";
+import { decryptCredential, encryptCredential } from "./crypto";
 
 /** API key prefix for identification */
 const API_KEY_PREFIX = "sjs_";
@@ -38,6 +39,33 @@ export function generateApiKey(): { key: string; hash: string } {
 /** Hash an API key using SHA-256 for secure storage. */
 export function hashApiKey(key: string): string {
   return crypto.createHash("sha256").update(key).digest("hex");
+}
+
+/**
+ * Recover a stored key for display, or null when it can't be read.
+ *
+ * Null is a normal outcome, not an error: `decryptCredential` needs
+ * SJS_CREDENTIALS_KEY, and a row written under a key that has since been
+ * rotated is simply no longer readable. The device keeps working — that side
+ * authenticates on the sha256, which this does not touch — so the only loss is
+ * the ability to re-read the key, and the UI already hides the reveal and copy
+ * controls when there is nothing to show.
+ *
+ * The prefix check is what makes that distinction reliable. `decryptCredential`
+ * deliberately passes non-ciphertext through unchanged so credentials could be
+ * migrated in place, which means "failed to decrypt" and "was never encrypted"
+ * both come back as the input. For a value with a known shape that ambiguity is
+ * resolvable: a real key always starts with `sjs_`, so anything else is
+ * unreadable rather than legacy, whatever it looks like.
+ */
+export function readStoredKey(stored: string | null): string | null {
+  if (!stored) return null;
+  try {
+    const value = decryptCredential(stored);
+    return value?.startsWith(API_KEY_PREFIX) ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -139,7 +167,7 @@ export async function createApiKey(
     user_id: userId,
     name,
     key_hash: hash,
-    key_plain: key,
+    key_encrypted: encryptCredential(key),
     expires_at: expiresAt,
   }).returning({ id: api_keys.id });
 
@@ -199,19 +227,61 @@ export async function deleteApiKey(
   return (result.rowCount ?? 0) > 0;
 }
 
-/** List API keys for a user (without exposing the actual key plaintext). */
+/**
+ * Rewrite a row still holding its pre-encryption plaintext.
+ *
+ * Lazy, in the manner of `last_used` above: fire-and-forget, and a failure
+ * leaves the row exactly as it was. Belt and braces alongside
+ * `scripts/encrypt-api-keys.ts` — that script is the deterministic answer, and
+ * this is what covers the case where it is forgotten on an environment, which
+ * is not hypothetical here (the jobs.region backfill has never been run on
+ * preview). Between them, a key reaches ciphertext either when the script runs
+ * or the first time its owner opens the devices page.
+ *
+ * The try/catch is not decoration: encryptCredential throws synchronously when
+ * SJS_CREDENTIALS_KEY is unset, before there is a promise for .catch to attach
+ * to.
+ */
+function upgradeStoredKey(id: number, key: string): void {
+  try {
+    db.update(api_keys)
+      .set({ key_encrypted: encryptCredential(key) })
+      .where(eq(api_keys.id, id))
+      .catch(() => {
+        // Ignore — the next read tries again.
+      });
+  } catch {
+    // No encryption key configured; leave the row alone.
+  }
+}
+
+/**
+ * List a user's API keys, each with its key decrypted for display.
+ *
+ * `key_plain` on the way out is accurate — it is the plain key — even though
+ * the column behind it is `key_encrypted`. Null means unreadable (see
+ * readStoredKey), which the devices page already renders as "no reveal button"
+ * rather than as an error.
+ */
 export async function listApiKeys(userId: string) {
-  return db.query.api_keys.findMany({
+  const rows = await db.query.api_keys.findMany({
     where: eq(api_keys.user_id, userId),
     columns: {
       id: true,
       name: true,
-      key_plain: true,
+      key_encrypted: true,
       date_created: true,
       expires_at: true,
       last_used: true,
       revoked: true,
     },
     orderBy: (api_keys, { desc }) => desc(api_keys.date_created),
+  });
+
+  return rows.map(({ key_encrypted, ...rest }) => {
+    const key = readStoredKey(key_encrypted);
+    // Unchanged by the round trip means it was never encrypted — a legacy row.
+    if (key !== null && key === key_encrypted) upgradeStoredKey(rest.id, key);
+    return { ...rest, key_plain: key };
   });
 }

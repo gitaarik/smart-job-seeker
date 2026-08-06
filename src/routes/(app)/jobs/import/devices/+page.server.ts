@@ -17,19 +17,11 @@ export const load: PageServerLoad = async ({ parent, cookies }) => {
   // the right state on refresh (no expand→collapse flash). Defaults to open.
   const setupExpanded = cookies.get("devices_setup_expanded") !== "false";
 
+  // listSharedWithMe no longer carries the device key at all — a contact uses
+  // the device through the import flow rather than configuring a tunnel client
+  // — so there is nothing left to strip here.
   const apiKeys = await listApiKeys(layoutData.user.id);
-  const sharedRaw = await listSharedWithMe(layoutData.user.id);
-
-  // Drop key_plain — the contact uses the device via import flow, not by configuring a tunnel client themselves
-  const sharedDevices = sharedRaw.map((s) => ({
-    id: s.id,
-    date_created: s.date_created,
-    api_key: {
-      id: s.api_key.id,
-      name: s.api_key.name,
-      owner: s.api_key.owner,
-    },
-  }));
+  const sharedDevices = await listSharedWithMe(layoutData.user.id);
 
   return {
     apiKeys,

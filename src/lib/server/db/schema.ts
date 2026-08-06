@@ -2084,7 +2084,21 @@ export const api_keys = pgTable("api_keys", {
   expires_at: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
   last_used: timestamp({ precision: 6, withTimezone: true, mode: "date" }),
   revoked: boolean().default(false).notNull(),
-  key_plain: varchar({ length: 100 }),
+  /**
+   * The key itself, AES-256-GCM encrypted (see auth/crypto.ts).
+   *
+   * Stored at all — unlike a password — because this is a DEVICE key: it gets
+   * pasted into a long-lived tunnel-client config on a NAS or desktop, and the
+   * owner has to be able to read it back rather than reconfigure the device
+   * every time they lose it. It used to be stored as plaintext beside its own
+   * sha256, which made the hash decorative: anyone who could read the table had
+   * working credentials, and this project has already had to rewrite git
+   * history once to purge real-data database dumps.
+   *
+   * `text`, not the varchar(100) it replaces — the ciphertext is 128 base64
+   * chars for a 68-char key, and a wrapped secret has no natural width.
+   */
+  key_encrypted: text(),
 }, (table) => [
   uniqueIndex("api_keys_key_hash_key").using(
     "btree",

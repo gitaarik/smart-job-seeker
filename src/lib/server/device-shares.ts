@@ -162,7 +162,17 @@ export async function listDeviceShares(apiKeyId: number) {
   });
 }
 
-/** List devices shared with a user (devices they can use from contacts). */
+/**
+ * List devices shared with a user (devices they can use from contacts).
+ *
+ * Deliberately without the key. A contact uses a shared device through the
+ * import flow, which goes via the owner's device — they never configure a
+ * tunnel client themselves, so there is nothing here for a key to be for. It
+ * used to be selected and returned anyway, and every one of this function's
+ * five callers dropped it: the devices page explicitly, the other four by never
+ * looking. That is a device credential travelling to someone who isn't its
+ * owner for no reason, which is worth not doing even when nobody reads it.
+ */
 export async function listSharedWithMe(userId: string) {
   const shares = await db.query.device_shares.findMany({
     where: eq(device_shares.shared_with, userId),
@@ -175,7 +185,6 @@ export async function listSharedWithMe(userId: string) {
         columns: {
           id: true,
           name: true,
-          key_plain: true,
           user_id: true,
         },
       },
@@ -200,7 +209,6 @@ export async function listSharedWithMe(userId: string) {
       api_key: {
         id: s.api_key.id,
         name: s.api_key.name,
-        key_plain: s.api_key.key_plain,
         owner,
       },
     };

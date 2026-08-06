@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generateApiKey, hashApiKey, verifyApiKey, verifyApiKeyDetailed } from "../api-key";
+import {
+  generateApiKey,
+  hashApiKey,
+  readStoredKey,
+  verifyApiKey,
+  verifyApiKeyDetailed,
+} from "../api-key";
+import { encryptCredential } from "../crypto";
 
 // Mock the db module with Drizzle-style API
 const mockFindFirst = vi.fn();
@@ -182,5 +189,52 @@ describe("verifyApiKeyDetailed", () => {
     mockFindFirst.mockRejectedValue(new Error("Connection refused"));
     const result = await verifyApiKeyDetailed("sjs_valid");
     expect(result).toEqual({ valid: false, error: "Connection refused" });
+  });
+});
+
+/**
+ * `key_plain` became `key_encrypted`: the column used to hold the device key as
+ * plaintext beside its own sha256, which made the hash decorative.
+ *
+ * The case worth pinning is the ambiguous one. `decryptCredential` deliberately
+ * passes non-ciphertext through unchanged so credentials could be migrated in
+ * place, so "this key predates encryption" and "this ciphertext is not mine"
+ * both come back as the input string. Only the first is a key.
+ */
+describe("readStoredKey", () => {
+  const REAL = `sjs_${"a".repeat(64)}`;
+
+  it("recovers a key it encrypted", () => {
+    expect(readStoredKey(encryptCredential(REAL))).toBe(REAL);
+  });
+
+  it("reads a legacy plaintext row unchanged", () => {
+    // What every row held before the migration, and what the lazy upgrade in
+    // listApiKeys keys off. Reading these has to keep working or the devices
+    // page loses the key before anything has had a chance to rewrite it.
+    expect(readStoredKey(REAL)).toBe(REAL);
+  });
+
+  it("returns null for ciphertext this key cannot decrypt", () => {
+    // A rotated SJS_CREDENTIALS_KEY. The device keeps authenticating — that
+    // side runs on the sha256 — so the only loss is being able to re-read the
+    // key, and the UI renders null as "no reveal button" rather than an error.
+    const foreign = Buffer.concat([
+      Buffer.alloc(12, 7),
+      Buffer.from("not a key of ours"),
+      Buffer.alloc(16, 9),
+    ]).toString("base64");
+    expect(readStoredKey(foreign)).toBeNull();
+  });
+
+  it("returns null rather than passing through a non-key string", () => {
+    // The prefix check earning its keep: without it this would be reported as
+    // a legacy plaintext key and offered to the user as one.
+    expect(readStoredKey("hunter2")).toBeNull();
+  });
+
+  it("returns null for an empty or absent value", () => {
+    expect(readStoredKey(null)).toBeNull();
+    expect(readStoredKey("")).toBeNull();
   });
 });
