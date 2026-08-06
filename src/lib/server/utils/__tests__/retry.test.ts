@@ -46,6 +46,31 @@ describe("isRetryableError — other statuses", () => {
   });
 });
 
+describe("isRetryableError — structured generation cut short", () => {
+  /** The shape langchain.ts throws when `withStructuredOutput` parses to null. */
+  const truncated = (finish: string) =>
+    new Error(
+      "Failed to generate JSON matching personal_agent_chat_capable: " +
+        `gemini returned no usable structured output (finish reason: ${finish}, ` +
+        "958 output tokens).",
+    );
+
+  it("retries a generation stopped by the output cap", () => {
+    // A reasoning model's thoughts are charged against that cap and vary run to
+    // run — 1,078 to 7,219 measured across nine calls on one identical prompt,
+    // of which only the 7,219 failed. The retry gets a different draw.
+    expect(isRetryableError(truncated("MAX_TOKENS"))).toBe(true);
+  });
+
+  it("does NOT retry output that simply would not parse", () => {
+    // The line this draws: a schema the model cannot satisfy is not transient,
+    // and retrying it costs three calls every time instead of one.
+    expect(isRetryableError(truncated("STOP"))).toBe(false);
+    expect(isRetryableError(truncated("unknown"))).toBe(false);
+    expect(isRetryableError(truncated("SAFETY"))).toBe(false);
+  });
+});
+
 describe("withRetry — honors provider retry-after", () => {
   it("waits the retry-after window, then succeeds on the next attempt", async () => {
     vi.useFakeTimers();

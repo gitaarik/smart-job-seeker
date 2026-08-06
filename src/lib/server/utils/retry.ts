@@ -183,5 +183,19 @@ export function isRetryableError(error: Error): boolean {
     return true;
   }
 
+  // A structured generation stopped by the output cap. The same class of
+  // transient as json_validate_failed above, and for a concrete reason: a
+  // reasoning model's thoughts are charged against that cap and vary run to
+  // run, so an identical prompt fits or doesn't depending on the draw —
+  // measured 1,078 to 7,219 thinking tokens across nine calls on one prompt,
+  // of which only the 7,219 failed. A retry gets a different draw.
+  //
+  // Deliberately narrower than "output would not parse": a schema the model
+  // genuinely cannot satisfy is not transient, and blanket-retrying it would
+  // cost three calls every time instead of one.
+  if (message.includes("finish reason: max_tokens")) {
+    return true;
+  }
+
   return false;
 }

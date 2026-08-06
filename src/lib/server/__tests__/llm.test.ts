@@ -404,6 +404,53 @@ describe("a null structured parse", () => {
     });
   });
 
+  it("names the finish reason, because that is the whole diagnosis", async () => {
+    // The message is all the log line and `ai_chats.error` will ever carry.
+    // MAX_TOKENS with a small output count looks like a contradiction and is
+    // not: Gemini's thinking tokens are charged against the same cap and
+    // appear in neither `output_tokens` nor anywhere else. Without this in the
+    // message, diagnosing it took a replay harness and nine calls.
+    mockGeminiStructuredInvoke.mockResolvedValue({
+      raw: new AIMessage({
+        content: '{"reply": "I can do that. I have prepared two propos',
+        response_metadata: { finishReason: "MAX_TOKENS" },
+        usage_metadata: {
+          input_tokens: 18022,
+          output_tokens: 958,
+          total_tokens: 26199,
+        },
+      }),
+      parsed: null,
+    });
+
+    const err = await generateChatCompletion(messages, {
+      structuredOutput,
+      provider: "gemini",
+      model: "gemini-2.5-pro",
+    }).catch((e) => e);
+
+    expect(err.message).toMatch(/finish reason: MAX_TOKENS/);
+    expect(err.message).toMatch(/958 output tokens/);
+  });
+
+  it("says so when the provider gave no finish reason at all", async () => {
+    mockGeminiStructuredInvoke.mockResolvedValue({
+      raw: new AIMessage({
+        content: "",
+        usage_metadata: { input_tokens: 10, output_tokens: 0, total_tokens: 10 },
+      }),
+      parsed: null,
+    });
+
+    const err = await generateChatCompletion(messages, {
+      structuredOutput,
+      provider: "gemini",
+      model: "gemini-2.5-pro",
+    }).catch((e) => e);
+
+    expect(err.message).toMatch(/finish reason: unknown/);
+  });
+
   it("still returns a valid parse untouched", async () => {
     mockGeminiStructuredInvoke.mockResolvedValue({
       raw: new AIMessage({

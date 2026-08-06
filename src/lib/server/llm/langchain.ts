@@ -333,11 +333,41 @@ function createLangChainModel(
 
     case "gemini": {
       const apiKey = config.geminiApiKey;
+      // Gemini 2.5 thinks before it answers, and the thoughts are billed as
+      // output AND charged against maxOutputTokens — the same shape as the
+      // gpt-oss reasoning problem handled above, on the provider where nothing
+      // bounded it. They appear in `total_tokens` and in neither of the other
+      // two counts, so the budget can be exhausted by tokens no log shows: a
+      // turn asking for a full job-description rewrite spent 7,219 thinking and
+      // had 958 left for the answer against a cap of 8,192. The JSON stopped
+      // mid-object, withStructuredOutput parsed it to null, and the user got an
+      // error for a turn that had cost real money. Identical prompt, other runs:
+      // ~3,800 thinking and a complete answer — which is why it presents as
+      // intermittent rather than as the systematic mis-sizing it is.
+      //
+      // `maxTokens` means "how long an answer may be" — it is what every
+      // non-thinking provider above gets, for the answer alone. So the thoughts
+      // are given their own room ON TOP of it rather than being made to share
+      // it. Sharing is the bug; halving the budget and hoping is the same bug
+      // with a smaller constant.
+      //
+      // The budget is a steer, not a ceiling: asked for 4,096 the model has
+      // still returned 5,571 (measured). That is exactly why the ceiling is the
+      // sum and not the max of the two — a soft budget inside a hard cap needs
+      // the slack to be somewhere, and here it is above the answer's share
+      // instead of inside it. 2.5 Pro cannot have thinking turned off and
+      // rejects a budget below 128.
+      //
+      // Only for models that have it: the field is an error on models that
+      // don't think, which is every Gemini before 2.5.
+      const thinks = /gemini-(2\.5|[3-9])/.test(model);
+      const thinkingBudget = Math.max(128, Math.floor(maxTokens / 2));
       return new ChatGoogleGenerativeAI({
         apiKey,
         model,
         temperature,
-        maxOutputTokens: maxTokens,
+        maxOutputTokens: thinks ? maxTokens + thinkingBudget : maxTokens,
+        ...(thinks ? { thinkingConfig: { thinkingBudget } } : {}),
       });
     }
 
@@ -768,9 +798,25 @@ async function generateWithLangChain(
        * the only place left that can record them.
        */
       if (result === null || result === undefined) {
+        /**
+         * The finish reason belongs IN the message, because the message is all
+         * the log line and the `ai_chats.error` column will ever carry.
+         * Diagnosing the first occurrence without it took a replay harness and
+         * nine calls to reproduce; "MAX_TOKENS" would have said it outright.
+         *
+         * The output-token count is here for the same reason and reads as a
+         * contradiction without the explanation: a generation can stop at the
+         * cap having emitted a tenth of it, because Gemini's thinking tokens
+         * are charged against the same budget and counted in neither
+         * `output_tokens` nor anything else visible.
+         */
+        const finish =
+          (raw as { response_metadata?: { finishReason?: string } })
+            ?.response_metadata?.finishReason ?? "unknown";
         const failure = new LLMOutputValidationError(
           `Failed to generate JSON matching ${structuredOutput.name}: ` +
-            `${provider} returned no usable structured output.`,
+            `${provider} returned no usable structured output ` +
+            `(finish reason: ${finish}, ${usage?.outputTokens ?? 0} output tokens).`,
           provider,
           model,
         );
