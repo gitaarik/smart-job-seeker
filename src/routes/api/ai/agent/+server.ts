@@ -238,6 +238,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // Resolve the target conversation up front (ownership-checked). A new thread
   // is created lazily only after a successful reply, below.
+  //
+  // Matched on the profile as well as the user: a thread is conducted AS a
+  // profile, and every turn in it is answered from that profile's material and
+  // stamped with its id. Appending a turn under a different profile produced a
+  // thread that was half one applicant and half another, with nothing in the
+  // transcript marking where it changed hands.
   let conversation: { id: number; title: string | null } | undefined;
   if (conversation_id != null) {
     const [existing] = await db
@@ -247,6 +253,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         and(
           eq(agent_conversations.id, conversation_id),
           eq(agent_conversations.user_id, user.id),
+          eq(agent_conversations.profile_id, profile_id),
         ),
       )
       .limit(1);

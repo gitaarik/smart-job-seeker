@@ -54,14 +54,20 @@ vi.mock("$lib/server/db", () => {
   };
 });
 
+const mockEq = vi.fn((_c: unknown, v: unknown) => v);
+
 vi.mock("drizzle-orm", () => ({
-  eq: vi.fn((_c: unknown, v: unknown) => v),
+  eq: (...a: [unknown, unknown]) => mockEq(...a),
   and: vi.fn((...a: unknown[]) => a),
   desc: vi.fn((c: unknown) => c),
 }));
 
 vi.mock("$lib/server/db/schema", () => ({
-  agent_conversations: { id: "ac.id", user_id: "ac.user_id" },
+  agent_conversations: {
+    id: "ac.id",
+    user_id: "ac.user_id",
+    profile_id: "ac.profile_id",
+  },
   agent_messages: { id: "am.id", conversation_id: "am.conversation_id" },
   agent_message_proposals: { _name: "agent_message_proposals", id: "amp.id" },
 }));
@@ -118,7 +124,10 @@ const EVIDENCE_KEYS = [
   "relevantApplicationTexts",
 ];
 
-function event(message = "What does this job ask for?") {
+function event(
+  message = "What does this job ask for?",
+  overrides: Record<string, unknown> = {},
+) {
   return {
     locals: { user: { id: "user-1" } },
     request: {
@@ -128,6 +137,7 @@ function event(message = "What does this job ask for?") {
         message,
         route: "/(app)/jobs/[id]",
         routeParams: { id: "3818" },
+        ...overrides,
       }),
     },
   } as never;
@@ -175,6 +185,29 @@ describe("evidence placeholders", () => {
     expect(callArgs().customVariables).toMatchObject({
       message: "Tell me about this role",
     });
+  });
+});
+
+describe("resuming a thread", () => {
+  it("matches the thread on the profile as well as the user", async () => {
+    // A thread is conducted AS a profile — every turn is answered from that
+    // profile's material and stamped with its id. Appending under a different
+    // one produced a transcript that changed applicant partway through with
+    // nothing marking where.
+    await POST(event("Carry on", { conversation_id: 5 }));
+
+    expect(mockEq).toHaveBeenCalledWith("ac.profile_id", 12);
+    expect(mockEq).toHaveBeenCalledWith("ac.user_id", "user-1");
+  });
+
+  it("404s a thread belonging to another profile rather than appending", async () => {
+    // The select mock resolves to [], which is what a profile mismatch looks
+    // like. Silently starting a new thread instead would be worse: the user
+    // would see their message answered with none of the context they built up.
+    const res = await POST(event("Carry on", { conversation_id: 5 }));
+
+    expect(res.status).toBe(404);
+    expect(mockCreateAndGenerate).not.toHaveBeenCalled();
   });
 });
 

@@ -2295,28 +2295,49 @@ export const ai_generations = pgTable("ai_generations", {
 ]);
 
 /**
- * A personal-assistant chat thread. Scoped to a user (not a profile) so the
- * thread can keep going across profile switches; the profile that was active
- * when it started is recorded for reference, and each message records its own.
+ * A personal-assistant chat thread, belonging to a user AND a profile.
+ *
+ * It used to be scoped to the user alone, on the theory that a thread should
+ * survive a profile switch — `profile_id` was written on every row and read by
+ * nothing. That theory doesn't hold: every turn is answered from the active
+ * profile's material and each message records the profile it was sent under, so
+ * a thread carried across a switch is one whose second half is about a
+ * different applicant, with nothing in the transcript marking where. The pair
+ * is now the identity, and the endpoints match on both.
  */
 export const agent_conversations = pgTable("agent_conversations", {
   id: serial().primaryKey().notNull(),
   user_id: text().notNull(),
-  profile_id: integer(),
+  profile_id: integer().notNull(),
   title: varchar({ length: 255 }),
   date_created: timestamp({ withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
   last_message_at: timestamp({ withTimezone: true, mode: "date" })
     .default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
-  index("agent_conversations_user_idx").using(
+  // Covers the history list exactly: filter on (user, profile), take the most
+  // recent 100 by last_message_at. Replaces a user_id-only index, which this
+  // one's leftmost prefix already serves — nothing queries this table by user
+  // alone, and the two remaining lookups go through the primary key.
+  index("agent_conversations_user_profile_idx").using(
     "btree",
     table.user_id.asc().nullsLast(),
+    table.profile_id.asc().nullsLast(),
+    table.last_message_at.desc().nullsFirst(),
   ),
   foreignKey({
     columns: [table.user_id],
     foreignColumns: [users.id],
     name: "agent_conversations_user_foreign",
+  }).onDelete("cascade"),
+  // Cascade, like the 30-odd other profile-owned tables and like user_id above.
+  // Without it `profile_id NOT NULL` would be only half true: deleting a
+  // profile (the settings page does) would leave threads pointing at a row that
+  // no longer exists, unlistable by the query above and reachable by nothing.
+  foreignKey({
+    columns: [table.profile_id],
+    foreignColumns: [profiles.id],
+    name: "agent_conversations_profile_foreign",
   }).onDelete("cascade"),
 ]);
 

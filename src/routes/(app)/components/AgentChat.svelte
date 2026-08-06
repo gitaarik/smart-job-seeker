@@ -42,17 +42,11 @@
   const RESUME_WINDOW_MS = 12 * 60 * 60 * 1000; // 12h
 
   // Open-state is shared so other entry points (e.g. the mobile menu) can
-  // toggle the assistant; scrolls to the bottom whenever it opens.
+  // toggle the assistant; scrolls to the bottom whenever it opens. The restore
+  // itself lives below, with the profile it needs.
   let isOpen = $derived(agentChatState.open);
-  let restored = false;
   $effect(() => {
-    if (isOpen) {
-      if (!restored) {
-        restored = true;
-        restoreFromPointer();
-      }
-      scrollToBottom();
-    }
+    if (isOpen) scrollToBottom();
   });
 
   let messages = $state<ChatMessage[]>([]);
@@ -81,6 +75,39 @@
     ($page.data as { selectedProfile?: { id?: number } }).selectedProfile?.id,
   );
 
+  // Switching profile ends the thread rather than carrying it over. The server
+  // refuses to append to a thread under a different profile, so without this
+  // the open panel would keep showing a conversation whose next message fails —
+  // an error where the honest answer is that this is a different applicant now.
+  //
+  // Only a switch between two REAL profiles counts. Treating undefined → 12 as
+  // one would call newChat() the moment layout data resolves, and newChat()
+  // drops the resume pointer — so a slow load would silently cost the user the
+  // thread they had open, which is the opposite of the point.
+  let lastProfileId: number | undefined;
+  $effect(() => {
+    const current = profileId;
+    if (current === undefined) return;
+    if (lastProfileId === undefined) {
+      lastProfileId = current;
+      return;
+    }
+    if (current === lastProfileId) return;
+    lastProfileId = current;
+    newChat();
+  });
+
+  // Resume the stored thread the first time the panel opens with a profile to
+  // resume it AS. Gated on both, not just `isOpen`: the request now carries the
+  // profile id, so consuming the one-shot before layout data resolved would
+  // spend it on a request that cannot be made and never retry.
+  let restored = false;
+  $effect(() => {
+    if (!isOpen || restored || !profileId) return;
+    restored = true;
+    restoreFromPointer();
+  });
+
   async function scrollToBottom() {
     await tick();
     if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
@@ -94,14 +121,15 @@
     }
     localStorage.setItem(
       POINTER_KEY,
-      JSON.stringify({ conversationId, lastActiveAt: Date.now() }),
+      JSON.stringify({ conversationId, profileId, lastActiveAt: Date.now() }),
     );
   }
 
   async function restoreFromPointer() {
-    if (!browser) return;
-    let pointer: { conversationId?: number; lastActiveAt?: number } | null =
-      null;
+    if (!browser || !profileId) return;
+    let pointer:
+      | { conversationId?: number; profileId?: number; lastActiveAt?: number }
+      | null = null;
     try {
       const raw = localStorage.getItem(POINTER_KEY);
       pointer = raw ? JSON.parse(raw) : null;
@@ -114,6 +142,15 @@
       typeof pointer.lastActiveAt !== "number"
     ) return;
 
+    // A thread belongs to the profile it was conducted as, and the server now
+    // says so too. Restoring one under a different profile would put a thread
+    // on screen that the next message 404s on. Pointers written before this
+    // carry no profileId and are simply not restored — one lost resume, once.
+    if (pointer.profileId !== profileId) {
+      localStorage.removeItem(POINTER_KEY);
+      return;
+    }
+
     if (Date.now() - pointer.lastActiveAt > RESUME_WINDOW_MS) {
       // Idle too long — abandon the thread and start fresh.
       localStorage.removeItem(POINTER_KEY);
@@ -123,8 +160,11 @@
   }
 
   async function loadConversation(id: number, opts?: { silent?: boolean }) {
+    if (!profileId) return;
     try {
-      const res = await fetch(`/api/ai/agent/conversations/${id}`);
+      const res = await fetch(
+        `/api/ai/agent/conversations/${id}?profile_id=${profileId}`,
+      );
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
         if (res.status === 404) {
@@ -161,7 +201,9 @@
     view = "history";
     historyLoading = true;
     try {
-      const res = await fetch("/api/ai/agent/conversations");
+      const res = await fetch(
+        `/api/ai/agent/conversations?profile_id=${profileId}`,
+      );
       const data = await res.json().catch(() => null);
       conversations = res.ok && data?.success ? data.conversations : [];
     } catch {

@@ -13,10 +13,18 @@ import {
   type Capability,
   describeProposalChanges,
 } from "$lib/server/ai-chat/capabilities";
+import { requireConversationProfile } from "../../scope";
 
-/** GET /api/ai/agent/conversations/:id — full transcript for resuming a thread. */
-export const GET: RequestHandler = async ({ locals, params }) => {
+/**
+ * GET /api/ai/agent/conversations/:id — full transcript for resuming a thread.
+ *
+ * Scoped to the profile as well as the user (see ../scope.ts). That is what
+ * makes the client's stored pointer self-healing across a profile switch: the
+ * thread 404s, and the 404 path already drops the pointer and starts fresh.
+ */
+export const GET: RequestHandler = async ({ locals, params, url }) => {
   const user = requireAuth(locals);
+  const profileId = await requireConversationProfile(url, user.id);
   const id = parseInt(params.id ?? "", 10);
   if (Number.isNaN(id)) {
     return json({ success: false, message: "Invalid conversation id." }, {
@@ -31,6 +39,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
       and(
         eq(agent_conversations.id, id),
         eq(agent_conversations.user_id, user.id),
+        eq(agent_conversations.profile_id, profileId),
       ),
     )
     .limit(1);
@@ -100,7 +109,14 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   return json({ success: true, conversation, messages });
 };
 
-/** DELETE /api/ai/agent/conversations/:id — remove a thread (messages cascade). */
+/**
+ * DELETE /api/ai/agent/conversations/:id — remove a thread (messages cascade).
+ *
+ * User-scoped only, deliberately unlike the GET above. Scoping a read stops the
+ * user being shown a thread they cannot resume; scoping a delete would only
+ * stop them discarding their own, and a thread that has become invisible in
+ * every list is the one case where they most plainly should be able to.
+ */
 export const DELETE: RequestHandler = async ({ locals, params }) => {
   const user = requireAuth(locals);
   const id = parseInt(params.id ?? "", 10);
