@@ -10,6 +10,8 @@ import {
   type ChatMessage,
   generateChatCompletionTracked,
   isFatalLLMError,
+  isLLMOutputValidationMessage,
+  type TokenUsage,
   z,
 } from "$lib/server/llm";
 import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
@@ -581,10 +583,26 @@ export async function createAndGenerateAiChat(
       ? error.message
       : "Unknown error";
 
-    // Save error to ai_chats record if it was created
+    // Save error to ai_chats record if it was created, with the tokens the
+    // call really spent when the failure carries them. A structured-output
+    // failure is billed by the provider exactly like a success, and this is
+    // the only path that can record it — the usual save happens after a
+    // return that never came. The user is not charged credits for it (that
+    // is further down the success path), but the cost is real and belongs in
+    // the table that tracks cost.
     if (aiChatId) {
-      await db.update(ai_chats).set({ error: errorMessage })
-        .where(eq(ai_chats.id, aiChatId));
+      const usage = (error as { usage?: TokenUsage })?.usage;
+      await db.update(ai_chats).set({
+        error: errorMessage,
+        ...(usage
+          ? {
+            input_tokens: usage.inputTokens,
+            output_tokens: usage.outputTokens,
+            total_tokens: usage.totalTokens,
+            cached_input_tokens: usage.cachedInputTokens,
+          }
+          : {}),
+      }).where(eq(ai_chats.id, aiChatId));
       console.error(
         `      📋 Error details: ai_chat ID ${aiChatId}`,
       );
@@ -593,6 +611,20 @@ export async function createAndGenerateAiChat(
     // Re-throw fatal LLM errors so they can abort scraping
     if (isFatalLLMError(error)) {
       throw error;
+    }
+
+    // The model answering in an unusable shape is a retryable hiccup, not
+    // something the user can act on, and this message is rendered straight
+    // into the chat panel. "Error creating and generating ai_chats: Failed to
+    // generate JSON matching personal_agent_chat_capable" is a sentence for
+    // whoever is reading the logs — and the logs still get it, along with
+    // ai_chats.error above, which is where it belongs.
+    if (isLLMOutputValidationMessage(errorMessage)) {
+      return {
+        success: false,
+        message:
+          "The assistant's answer didn't come back in a usable form. Please try again.",
+      };
     }
 
     return {

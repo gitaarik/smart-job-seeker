@@ -22,11 +22,17 @@ vi.mock("../config", () => ({
 }));
 
 // Create hoisted mocks for LangChain
-const { mockInvoke, mockWithStructuredOutput, mockGeminiInvoke } = vi.hoisted(
+const {
+  mockInvoke,
+  mockWithStructuredOutput,
+  mockGeminiInvoke,
+  mockGeminiStructuredInvoke,
+} = vi.hoisted(
   () => ({
     mockInvoke: vi.fn(),
     mockWithStructuredOutput: vi.fn(),
     mockGeminiInvoke: vi.fn(),
+    mockGeminiStructuredInvoke: vi.fn(),
   }),
 );
 
@@ -35,6 +41,11 @@ vi.mock("@langchain/google-genai", () => ({
     constructor(config: any) {}
     async invoke(messages: any, options?: any) {
       return mockGeminiInvoke(messages);
+    }
+    // Everything except Groq and Cerebras goes through withStructuredOutput,
+    // so this is the path the writing model actually takes.
+    withStructuredOutput(_schema: any, _options?: any) {
+      return { invoke: (m: any) => mockGeminiStructuredInvoke(m) };
     }
   },
 }));
@@ -314,5 +325,100 @@ describe("generateChatCompletion", () => {
     await expect(generateChatCompletion(messages)).rejects.toThrow(
       /🔐 Authentication failed for groq/,
     );
+  });
+});
+
+/**
+ * A structured generation that produced nothing usable.
+ *
+ * `withStructuredOutput` resolves `parsed: null` when the model returns no
+ * valid structured output, and `JSON.stringify(null)` is the string "null" —
+ * which used to be returned as successful content. It was saved to ai_chats
+ * with no error, charged for, and then crashed the assistant endpoint, which
+ * did `JSON.parse("null").reply`. The user saw "Internal Error" for a turn
+ * that had already spent 1783 output tokens.
+ *
+ * None of the schemas here are nullable, so a null parse never means the model
+ * correctly answered null.
+ */
+describe("a null structured parse", () => {
+  const schema = z.object({ reply: z.string() });
+  const structuredOutput: StructuredOutputConfig = {
+    name: "personal_agent_chat_capable",
+    schema,
+  };
+  const messages: ChatMessage[] = [{ role: "user", content: "hi" }];
+
+  beforeEach(() => {
+    llmCache.clear?.();
+    vi.clearAllMocks();
+  });
+
+  it("fails the call instead of returning the string 'null'", async () => {
+    mockGeminiStructuredInvoke.mockResolvedValue({
+      raw: new AIMessage({
+        content: "",
+        usage_metadata: {
+          input_tokens: 17496,
+          output_tokens: 1783,
+          total_tokens: 19279,
+        },
+      }),
+      parsed: null,
+    });
+
+    await expect(
+      generateChatCompletion(messages, {
+        structuredOutput,
+        provider: "gemini",
+        model: "gemini-2.5-pro",
+      }),
+    ).rejects.toThrow(/no usable structured output/i);
+  });
+
+  it("carries the tokens the failed call really spent", async () => {
+    // The provider bills a failed structured call exactly like a successful
+    // one, and the caller's error path is the only place left that can record
+    // it — the usual save happens after a return that never comes.
+    mockGeminiStructuredInvoke.mockResolvedValue({
+      raw: new AIMessage({
+        content: "",
+        usage_metadata: {
+          input_tokens: 17496,
+          output_tokens: 1783,
+          total_tokens: 19279,
+        },
+      }),
+      parsed: null,
+    });
+
+    const err = await generateChatCompletion(messages, {
+      structuredOutput,
+      provider: "gemini",
+      model: "gemini-2.5-pro",
+    }).catch((e) => e);
+
+    expect(err.usage).toMatchObject({
+      inputTokens: 17496,
+      outputTokens: 1783,
+    });
+  });
+
+  it("still returns a valid parse untouched", async () => {
+    mockGeminiStructuredInvoke.mockResolvedValue({
+      raw: new AIMessage({
+        content: "",
+        usage_metadata: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+      }),
+      parsed: { reply: "Here you go." },
+    });
+
+    // With structuredOutput, this overload resolves to the parsed object.
+    const result = await generateChatCompletion(messages, {
+      structuredOutput,
+      provider: "gemini",
+      model: "gemini-2.5-pro",
+    });
+    expect(result).toEqual({ reply: "Here you go." });
   });
 });

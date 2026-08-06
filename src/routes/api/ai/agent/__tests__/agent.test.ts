@@ -403,3 +403,47 @@ describe("degrading a bad structured reply", () => {
     expect(body.proposals[0].rationale).toBe("first");
   });
 });
+
+/**
+ * What a failed structured generation must not do.
+ *
+ * `withStructuredOutput` returns a null parse when the model produces nothing
+ * usable, and JSON.stringify(null) is the string "null" — which reached here,
+ * survived JSON.parse, and threw on `.reply`. The user saw "Internal Error"
+ * for a turn that had already cost 1783 output tokens and two credits.
+ *
+ * Fixed at the LLM layer, where a null parse is now the failure it always was.
+ * Pinned here as well because this function's whole contract is that a bad
+ * model response costs the user an answer, never a stack trace.
+ */
+describe("a response that is valid JSON but not an object", () => {
+  beforeEach(() => {
+    mockResolveChatContext.mockResolvedValue({
+      context: { sources: ["profile", "job"] },
+      capabilities: [{
+        capability: "edit_job_details",
+        target: { id: 3818, label: "Data Engineer at Testco" },
+        current: {},
+      }],
+    });
+  });
+
+  it.each([
+    ["null", "null"],
+    ["a bare array", "[]"],
+    ["a number", "42"],
+    ["a quoted string", '"just text"'],
+  ])("degrades on %s instead of throwing", async (_label, response) => {
+    mockCreateAndGenerate.mockResolvedValue({
+      success: true,
+      aiChat: { id: 7, response },
+    });
+
+    const res = await POST(event());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.proposals).toEqual([]);
+    expect(typeof body.reply).toBe("string");
+  });
+});

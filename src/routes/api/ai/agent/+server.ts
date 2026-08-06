@@ -200,6 +200,20 @@ function readCapableReply(
     return { reply: raw, proposals: [] };
   }
 
+  // Valid JSON that isn't an object — null, an array, a bare number. `null` is
+  // the one that happened: a failed structured generation reached here as the
+  // literal string "null", which JSON.parse accepts, and reading `.reply` off
+  // it threw. A function whose entire contract is "degrade rather than fail
+  // the turn" was the one place that 500'd.
+  //
+  // The root cause is fixed in the LLM layer, which now treats a null parse as
+  // the failed generation it is. This stays because the guarantee belongs here
+  // too: whatever a model returns, the user gets an answer or a clean error,
+  // never a stack trace.
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return { reply: raw, proposals: [] };
+  }
+
   const body = parsed as {
     reply?: unknown;
     proposals?: unknown;

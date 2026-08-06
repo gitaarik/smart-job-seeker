@@ -750,6 +750,33 @@ async function generateWithLangChain(
         langChainMessages,
       );
       const usage = extractTokenUsage(raw);
+
+      /**
+       * A null parse is a FAILED generation, and it used to be reported as a
+       * successful one: `JSON.stringify(null)` is the string "null", which was
+       * returned as content, saved to ai_chats with no error, and charged for.
+       * The caller then had a response that looked fine and wasn't — the
+       * assistant endpoint did `JSON.parse("null").reply` and 500'd, having
+       * already billed two credits for a turn that produced nothing.
+       *
+       * None of the schemas here are nullable, so a null parse never means
+       * "the model correctly answered null". It means the model returned no
+       * usable structured output — which is this error's whole subject.
+       *
+       * Usage rides along because the tokens were really spent (1783 output
+       * tokens on the turn that surfaced this) and the caller's error path is
+       * the only place left that can record them.
+       */
+      if (result === null || result === undefined) {
+        const failure = new LLMOutputValidationError(
+          `Failed to generate JSON matching ${structuredOutput.name}: ` +
+            `${provider} returned no usable structured output.`,
+          provider,
+          model,
+        );
+        throw Object.assign(failure, { usage });
+      }
+
       try {
         return { content: JSON.stringify(result), usage };
       } catch (stringifyError) {
@@ -784,7 +811,20 @@ async function generateWithLangChain(
 
     return { content: responseContent, usage };
   } catch (error) {
-    handleLLMError(error, provider, model);
+    // handleLLMError classifies by inspecting the message and throws a NEW
+    // typed error, which drops anything attached to the original. Token usage
+    // is the one thing worth carrying across that: the provider bills a failed
+    // call exactly like a successful one, and the caller's error path is the
+    // only place left that can record what it cost.
+    try {
+      handleLLMError(error, provider, model);
+    } catch (classified) {
+      const usage = (error as { usage?: TokenUsage })?.usage;
+      if (usage && typeof classified === "object" && classified !== null) {
+        Object.assign(classified, { usage });
+      }
+      throw classified;
+    }
   }
 }
 
