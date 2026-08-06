@@ -96,6 +96,7 @@ import {
   executeCapability,
   fieldsFromChanges,
   pickCapabilityFields,
+  renderCapabilityBlock,
   renderCapabilityPrompt,
   resolveCapabilities,
 } from "../capabilities";
@@ -781,6 +782,86 @@ describe("describeProposalChanges", () => {
   });
 });
 
+/**
+ * Invariants over the registry as a whole, which no single capability's tests
+ * can see. Both are stated in CapabilityDef's doc comment and neither was
+ * checked anywhere — the kind of rule that holds until the day someone adds the
+ * entry that breaks it, and then fails somewhere else entirely.
+ */
+describe("the registry as a whole", () => {
+  it("has no two capabilities declaring the same field name", () => {
+    // buildProposalSchema flattens every live capability's fields into ONE
+    // enum for the provider. A shared name is therefore not a collision the
+    // model can be blamed for: it can put a value under a name two
+    // capabilities answer to, and pickCapabilityFields — which filters by
+    // name, having no other signal — hands it to whichever one is being read.
+    // The proposal that loses is dropped silently.
+    //
+    // Enforced across ALL capabilities rather than only co-live ones. The
+    // stricter rule is the one the doc comment states, it costs nothing while
+    // the names are already distinct, and "these two are never live together"
+    // is a fact about ROUTE_SCOPES that a future route can change without
+    // anyone thinking about this file.
+    const owners = new Map<string, Capability[]>();
+    for (const [capability, def] of Object.entries(CAPABILITIES)) {
+      for (const field of Object.keys(def.fields)) {
+        owners.set(field, [
+          ...(owners.get(field) ?? []),
+          capability as Capability,
+        ]);
+      }
+    }
+
+    const shared = [...owners.entries()].filter(([, caps]) => caps.length > 1);
+    expect(
+      shared.map(([field, caps]) => `${field}: ${caps.join(", ")}`),
+    ).toEqual([]);
+  });
+
+  it("keeps the whole capability block inside its budget", () => {
+    // A ratchet, in the style of CI's svelte-check baseline: it may go down
+    // freely and up only deliberately.
+    //
+    // Every live capability's contract ships on every capable turn, because a
+    // single structured-output call has to carry the rules for anything it
+    // might propose. That cost is inherent to the shape and can't be hoisted
+    // away — measured, when the shared rules were pulled into the preamble it
+    // saved 524 characters across the five blocks and spent 550 stating them
+    // once, because only edit_job_details had carried all three. What CAN be
+    // hoisted already has been; the remaining lever is progressive disclosure
+    // (the model asks for a contract when it wants one), which needs
+    // tool-calling and a second round trip.
+    //
+    // So the number is pinned rather than reduced. Adding a capability is
+    // supposed to fail this and make you decide the turn is worth it — the
+    // alternative is finding out from a token bill, or from Gemini's thinking
+    // budget quietly eating the answer.
+    const BUDGET_CHARS = 11500;
+
+    const live = (Object.keys(CAPABILITIES) as Capability[]).map(
+      (capability) => ({
+        capability,
+        target: { id: 1, label: "x" },
+        current: {},
+      }),
+    );
+    expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(
+      BUDGET_CHARS,
+    );
+  });
+
+  it("keeps every contract renderable without a target", () => {
+    // `contract` is the half of the old describe() that an MCP list_tools
+    // response can answer with, long before anyone has said which job they
+    // mean. A leftover `${...}` is what a botched split leaves behind, and it
+    // would ship to the model as literal text.
+    for (const [capability, def] of Object.entries(CAPABILITIES)) {
+      expect(def.contract, capability).toBeTruthy();
+      expect(def.contract, capability).not.toContain("${");
+    }
+  });
+});
+
 describe("renderCapabilityPrompt", () => {
   it("is empty when nothing is proposable", () => {
     expect(renderCapabilityPrompt([])).toBe("");
@@ -945,12 +1026,14 @@ describe("add_activity_record", () => {
     ];
 
     const current = await def.current(TARGET);
-    expect(def.describe(TARGET, current)).toContain("Second round");
+    expect(renderCapabilityBlock("add_activity_record", TARGET, current))
+      .toContain("Second round");
   });
 
   it("says so when there is nothing logged yet", async () => {
     const current = await def.current(TARGET);
-    expect(def.describe(TARGET, current)).toContain("Nothing is logged");
+    expect(renderCapabilityBlock("add_activity_record", TARGET, current))
+      .toContain("Nothing is logged");
   });
 
   it("does not resolve on a page that is not an application", async () => {

@@ -106,14 +106,33 @@ export interface CapabilityDef {
    */
   fields: Record<string, FieldKind>;
   /**
-   * The prose contract for this capability, spliced into the system prompt.
+   * The prose contract for this capability — what its fields mean and what a
+   * valid value looks like.
    *
    * Prose, not just a schema: passing a schema is not enough with either
    * provider here — gpt-oss returns bare arrays and lists where strings belong,
    * and Gemini has silently dropped `.transform()`ed fields. Spelling out the
    * JSON contract in words is what makes structured output hold.
+   *
+   * A plain string, and deliberately so: it holds nothing about the row being
+   * edited, so it can be rendered before a target exists. That is what an MCP
+   * server needs — `list_tools` answers with descriptions long before anyone
+   * has said which job they mean — and it is why this was split out of the
+   * function that used to render the whole block. Rules that hold for *every*
+   * capability don't belong here either; they live once in the preamble of
+   * renderCapabilityPrompt, not n times in the prompt.
    */
-  describe(target: CapabilityTarget, current: Record<string, unknown>): string;
+  contract: string;
+  /**
+   * This capability's current state, for the model to propose against.
+   *
+   * Defaults to `renderCurrent` — a list of the fields and their values, which
+   * is what a diff needs. Capabilities override it when what the model needs to
+   * see isn't that: the long texts show their lengths because the texts
+   * themselves arrive through a context source, and an entry log shows the
+   * chronology it is about to add to because there is no row to diff yet.
+   */
+  renderState?(current: Record<string, unknown>): string;
   /** Checks the schema can't express. Runs before apply, and before storing a proposal. */
   validate(
     fields: Record<string, unknown>,
@@ -176,7 +195,13 @@ function coerceValue(kind: FieldKind, value: unknown): unknown {
   return trimmed === "" ? null : trimmed;
 }
 
-/** Render current values for the prompt, so the model can propose a diff. */
+/**
+ * Render current values for the prompt, so the model can propose a diff.
+ *
+ * Carries its own heading because the block renderer composes it blind: it
+ * knows a capability has state to show, not what that state is called. The two
+ * capabilities that override this label theirs differently for the same reason.
+ */
 function renderCurrent(current: Record<string, unknown>): string {
   const lines = Object.entries(current).map(([key, value]) => {
     const rendered = value === null || value === undefined || value === ""
@@ -186,7 +211,7 @@ function renderCurrent(current: Record<string, unknown>): string {
       : String(value);
     return `  - ${key}: ${rendered}`;
   });
-  return lines.join("\n");
+  return `Current values:\n\n${lines.join("\n")}`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -268,15 +293,7 @@ const editJobDetails: CapabilityDef = {
     job_types: "stringArray",
     experience_levels: "stringArray",
   },
-  describe: (target, current) =>
-    `### Capability: edit_job_details — ${target.label}
-
-You may propose corrections to this job's structured fields. Current values:
-
-${renderCurrent(current)}
-
-List only the fields you are changing. Don't restate a field whose value is
-already correct — an entry that changes nothing is noise the user reads past.
+  contract: `You may propose corrections to this job's structured fields.
 
 Field rules, all of which are enforced after you answer:
 - "title" is a plain string and can never be empty or null.
@@ -297,15 +314,7 @@ Field rules, all of which are enforced after you answer:
 - "office_location" is a real place. A working arrangement like "Remote" belongs
   in "work_location" instead. Setting "work_location" to remote does NOT mean
   clearing "office_location" — a remote role can still be attached to an office,
-  and the user did not ask you to forget which one.
-
-Change what you were asked to change and nothing adjacent to it. If a correction
-seems to imply a second one, say so in your reply and let the user decide,
-rather than folding it into the same proposal.
-
-Only propose a change the user actually asked for, or one they have clearly
-confirmed. If they are asking a question rather than requesting an edit, answer
-it and propose nothing.`,
+  and the user did not ask you to forget which one.`,
   validate: (fields, current) => {
     const merged = { ...current, ...fields };
     return validateJobFields({
@@ -348,24 +357,10 @@ const editJobDescription: CapabilityDef = {
   // the posting instead, then insisted it had removed details that were still
   // sitting in the field it could not reach.
   fields: { job_description: "string", company_description: "string" },
-  // NB: this contract renders only the LENGTH of each text, not the text. The
-  // texts themselves reach the model through the `job` context source, which is
-  // why the block says "shown to you in the job section above" — a caller that
-  // makes this capability live without that source hands the model a rewrite
-  // button for something it cannot read. It then proposes nothing, which reads
-  // as the contract failing rather than as the context being absent.
-  describe: (target, current) =>
-    `### Capability: edit_job_description — ${target.label}
+  contract: `You may propose replacements for this job's two long-form texts.
 
-You may propose replacements for this job's two long-form texts. Both are shown
-to you in the job section above:
-
-- "job_description" — the posting itself (currently ${
-      String(current.job_description ?? "").length
-    } characters).
-- "company_description" — the "About the company" blurb (currently ${
-      String(current.company_description ?? "").length
-    } characters).
+- "job_description" — the posting itself.
+- "company_description" — the "About the company" blurb.
 
 Each is replaced outright, so send the complete new text as the value, not a
 fragment or a diff. Change one or both in the same proposal.
@@ -390,6 +385,18 @@ text, so anything your rewrite changes is now stale in them. Correct the ones
 you have a capability for, in the same answer. For the ones you do not, say so
 in your reply: they stay wrong until the job is re-parsed, and the user is the
 only one who can decide to do that.`,
+  // Lengths, not the texts. The texts themselves reach the model through the
+  // `job` context source — which is why this says "shown in full above". A
+  // caller that makes this capability live without that source hands the model
+  // a rewrite button for something it cannot read; it then proposes nothing,
+  // which reads as the contract failing rather than as the context being
+  // absent.
+  renderState: (current) =>
+    `Both are shown in full in the job section above — currently ${
+      String(current.job_description ?? "").length
+    } characters of job_description and ${
+      String(current.company_description ?? "").length
+    } of company_description.`,
   validate: (fields) => {
     if (
       fields.job_description !== undefined &&
@@ -461,13 +468,8 @@ const editJobSkills: CapabilityDef = {
   // match score, so exposing them would be asking the model to maintain fields
   // whose only reader would be the next model.
   fields: { skills_required: "stringArray", skills_preferred: "stringArray" },
-  describe: (target, current) =>
-    `### Capability: edit_job_skills — ${target.label}
-
-You may propose changes to the two skill lists extracted from this posting.
-Current values:
-
-${renderCurrent(current)}
+  contract: `You may propose changes to the two skill lists extracted from this
+posting.
 
 - "skills_required" — what the posting presents as necessary.
 - "skills_preferred" — what it presents as a bonus or a nice-to-have.
@@ -485,7 +487,7 @@ These two lists are what this job's match score is computed from, so changing
 them re-scores it. Propose a change when the user asks for one, or when they
 have just accepted a rewrite of the description that changed which technologies
 the role calls for — in that case say so in your reply, because they will not
-expect the score to move. Never as an unrequested tidy-up.
+expect the score to move.
 
 Do not add a skill nobody has mentioned. If the user tells you a skill does not
 belong, that is reason enough to remove it — you do not need to find it in the
@@ -604,15 +606,8 @@ const editApplicationDetails: CapabilityDef = {
     application_sent_date: "string",
     application_seen_date: "string",
   },
-  describe: (target, current) =>
-    `### Capability: edit_application_details — ${target.label}
-
-You may propose corrections to how and when this application was sent. Current
-values:
-
-${renderCurrent(current)}
-
-List only the fields you are changing.
+  contract: `You may propose corrections to how and when this application was
+sent.
 
 - "cv_sent_through" is free text naming the channel (e.g. "LinkedIn Easy Apply",
   "company website", "referral from Sam").
@@ -722,27 +717,15 @@ const addActivityRecord: CapabilityDef = {
     entry_title: "string",
     entry_date: "string",
   },
-  describe: (target, current) => {
-    const recent = (current.recent_entries as string[] | undefined) ?? [];
-    return `### Capability: add_activity_record — ${target.label}
-
-The user sometimes tells you things about an application that are nowhere in it
-yet — what a recruiter said on the phone, a number that came up, a condition
-mentioned in passing. You may propose writing that down as an entry on the
-activity log, which they review and apply.
+  contract: `The user sometimes tells you things about an application that are
+nowhere in it yet — what a recruiter said on the phone, a number that came up, a
+condition mentioned in passing. You may propose writing that down as an entry on
+the activity log, which they review and apply.
 
 This is how a fact reaches the rest of the application. An applied entry is
 re-read by the summariser, so it updates "Where this stands", the details on the
 overview page and the offer terms, all by itself. You do not need to — and
 cannot — propose those separately.
-
-${
-      recent.length > 0
-        ? `Already logged, most recent first. Do not propose an entry that repeats one of these:\n\n${
-          recent.map((line) => `  - ${line}`).join("\n")
-        }`
-        : "Nothing is logged on this application yet."
-    }
 
 Fields:
 - "entry_content" is the entry itself and is REQUIRED — a proposal without it is
@@ -763,20 +746,27 @@ Fields:
   used, so a wrong guess is visible and correctable. Omit it for today.
 
 When to propose one:
-- They state a fact about this application that is not already logged above.
+- They state a fact about this application that is not already in the chronology
+  shown below.
 - They confirm something you asked about.
 
 When NOT to propose one:
-- They asked you a question. Answer it.
 - They are speculating, or thinking out loud, or asking what they should do.
   A possibility is not an event, and the log is for what happened.
-- The fact is already in the entries listed above.
+- The fact is already in the chronology shown below.
 - It is your own suggestion. You may write down what they told you; you may not
   write down what you told them.
 
 One entry per thing that happened. Two unrelated facts in one message are two
 proposals, not one entry with both in it — the user may want to keep one and
-drop the other, and an entry is also the unit the chronology is read in.`;
+drop the other, and an entry is also the unit the chronology is read in.`,
+  renderState: (current) => {
+    const recent = (current.recent_entries as string[] | undefined) ?? [];
+    return recent.length > 0
+      ? `Already logged, most recent first. Do not propose an entry that repeats one of these:\n\n${
+        recent.map((line) => `  - ${line}`).join("\n")
+      }`
+      : "Nothing is logged on this application yet.";
   },
   validate: (fields) => {
     const content = fields.entry_content;
@@ -1161,12 +1151,36 @@ export function describeProposalChanges(
     .filter((change) => change.from !== change.to);
 }
 
+/**
+ * One capability's section of the prompt: what it is, what its fields mean, and
+ * what they hold right now.
+ *
+ * Composed here rather than by each capability so the three parts stay
+ * separable. The header and the state are the target-dependent halves; the
+ * contract is not, and a surface with no page behind it — an MCP `list_tools`
+ * response, a tool description — takes `contract` on its own and never calls
+ * this at all.
+ */
+export function renderCapabilityBlock(
+  capability: Capability,
+  target: CapabilityTarget,
+  current: Record<string, unknown>,
+): string {
+  const def = CAPABILITIES[capability];
+  const state = (def.renderState ?? renderCurrent)(current);
+  return `### Capability: ${capability} — ${target.label}
+
+${def.contract}
+
+${state}`;
+}
+
 /** The capability block spliced into the system prompt, or "" when none are live. */
 export function renderCapabilityPrompt(live: LiveCapability[]): string {
   if (live.length === 0) return "";
 
   const blocks = live.map((c) =>
-    CAPABILITIES[c.capability].describe(c.target, c.current)
+    renderCapabilityBlock(c.capability, c.target, c.current)
   );
 
   return `## Changes you can propose
@@ -1219,6 +1233,17 @@ own, so there is no cost to listing both, and no reason to make them ask twice.
 
 Count the kinds of change the same way you counted the fields: "proposals" has
 exactly as many entries as there are kinds you were asked for.
+
+These hold for every kind of change below:
+
+- List only the fields you are changing. Don't restate a field whose value is
+  already correct — an entry that changes nothing is noise the user reads past.
+- Only propose a change the user actually asked for, or one they have clearly
+  confirmed, never as an unrequested tidy-up. If they are asking a question
+  rather than requesting an edit, answer it and propose nothing.
+- Change what you were asked to change and nothing adjacent to it. If a
+  correction seems to imply a second one, say so in your reply and let the user
+  decide, rather than folding it into the same proposal.
 
 ${blocks.join("\n\n")}`;
 }

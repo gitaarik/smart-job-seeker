@@ -98,7 +98,14 @@ vi.mock("$lib/server/ai-chat/capabilities", () => ({
   CAPABILITIES: {
     edit_job_details: {
       title: "Edit the job's details",
-      validate: () => ({ ok: true }),
+      // Enough of the real rule to exercise the reject path — an empty title
+      // is the one thing validateJobFields refuses outright. The endpoint's
+      // job is to surface whatever a validate() returns, not to know which
+      // rule produced it.
+      validate: (fields: Record<string, unknown>) =>
+        fields.title === "" || fields.title === null
+          ? { ok: false, error: "Title cannot be empty" }
+          : { ok: true },
     },
   },
   buildProposalSchema: () => ({ schema: true }),
@@ -318,8 +325,12 @@ describe("degrading a bad structured reply", () => {
     });
 
     const body = await (await POST(event())).json();
-    expect(body.reply).toBe("Done.");
     expect(body.proposals).toEqual([]);
+    // The answer survives, and now says the change didn't. A bare "Done." with
+    // no card is the assistant claiming to have done something it hasn't.
+    expect(body.reply).toContain("Done.");
+    expect(body.reply).toContain("couldn't be offered");
+    expect(body.reply).toContain("this page");
   });
 
   it("drops a proposal with no usable changes", async () => {
@@ -339,8 +350,48 @@ describe("degrading a bad structured reply", () => {
     });
 
     const body = await (await POST(event())).json();
-    expect(body.reply).toBe("Nothing to change.");
     expect(body.proposals).toEqual([]);
+    expect(body.reply).toContain("Nothing to change.");
+    expect(body.reply).toContain("no usable fields");
+    // Named in the user's terms. The capability id is ours and means nothing
+    // to them.
+    expect(body.reply).toContain("Edit the job's details");
+    expect(body.reply).not.toContain("edit_job_details");
+  });
+
+  it("persists the notice with the message, so a reload still shows it", async () => {
+    // The whole point of appending to the reply rather than returning it
+    // beside: threads resume for 12h, and a notice that lives only in the HTTP
+    // response leaves the reloaded transcript back where it started — a reply
+    // describing a change with no card and no explanation.
+    mockCreateAndGenerate.mockResolvedValue({
+      success: true,
+      aiChat: {
+        id: 7,
+        response: JSON.stringify({
+          reply: "Fixed the salary.",
+          proposals: [{
+            capability: "edit_job_details",
+            rationale: "x",
+            changes: [{ field: "title", value: "" }],
+          }],
+        }),
+      },
+    });
+
+    const body = await (await POST(event())).json();
+    // The conversation insert goes through the same mock, so find the call
+    // that carried the exchange rather than assuming it came first.
+    const rows = mockInsertValues.mock.calls
+      .map(([v]) => v)
+      .find((v) => Array.isArray(v)) as { role: string; content: string }[];
+    const [, assistantRow] = rows;
+    expect(assistantRow.role).toBe("assistant");
+    expect(assistantRow.content).toBe(body.reply);
+    expect(assistantRow.content).toContain("couldn't be offered");
+    // The validator's own words, not a generic apology: it is written for the
+    // user already, and it is the only thing that says what to do differently.
+    expect(assistantRow.content).toContain("Title cannot be empty");
   });
 
   it("keeps the good proposal when its partner is unusable", async () => {
@@ -401,6 +452,10 @@ describe("degrading a bad structured reply", () => {
     const body = await (await POST(event())).json();
     expect(body.proposals).toHaveLength(1);
     expect(body.proposals[0].rationale).toBe("first");
+    // And says nothing about it. Both entries were the same KIND of change, so
+    // the user has a card for what the reply described — a note here would be
+    // describing our deduplication, not a change they are missing.
+    expect(body.reply).toBe("Twice over.");
   });
 });
 

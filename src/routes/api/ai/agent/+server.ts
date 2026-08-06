@@ -123,15 +123,33 @@ type ProposalCandidate = {
 };
 
 /**
+ * A proposal that didn't survive, and what to tell the user about it.
+ *
+ * `what` names the change in the user's terms — a capability title where we
+ * have one, since the ids are ours and mean nothing to them.
+ */
+type DroppedProposal = { what: string | null; why: string };
+
+type ReadProposal =
+  | { ok: true; proposal: StoredProposal }
+  | { ok: false; drop: DroppedProposal };
+
+/**
  * Validate one candidate against the capabilities that were live this turn.
- * Returns null for anything unusable — see readCapableReply for why that is
- * always a drop rather than an error.
+ * Anything unusable is dropped — see readCapableReply for why that is never an
+ * error — but it is dropped *with a reason*, because the reply that came back
+ * alongside it has usually already promised the user the change.
  */
 function readProposal(
   candidate: ProposalCandidate,
   live: LiveCapability[],
-): StoredProposal | null {
-  if (!candidate || typeof candidate.capability !== "string") return null;
+): ReadProposal {
+  if (!candidate || typeof candidate.capability !== "string") {
+    return {
+      ok: false,
+      drop: { what: null, why: "it didn't name a change to make" },
+    };
+  }
 
   // Only a capability that was live for *this* turn, i.e. one already resolved
   // and authorized above. A model naming anything else is ignored outright.
@@ -140,38 +158,91 @@ function readProposal(
     console.warn(
       `[agent] dropped a proposal for un-live capability ${candidate.capability}`,
     );
-    return null;
+    return {
+      ok: false,
+      drop: {
+        what: titleFor(candidate.capability),
+        why: "that isn't something you can change from this page",
+      },
+    };
   }
 
+  const title = CAPABILITIES[match.capability].title;
   const changes = Array.isArray(candidate.changes) ? candidate.changes : [];
   const fields = fieldsFromChanges(
     match.capability,
     changes as { field: string; value: unknown }[],
   );
-  if (Object.keys(fields).length === 0) return null;
+  if (Object.keys(fields).length === 0) {
+    console.warn(`[agent] dropped an empty proposal for ${match.capability}`);
+    return {
+      ok: false,
+      // The common cause is a field name belonging to a different capability:
+      // the wire schema offers every live capability's names under one enum,
+      // so the model can file a job field under an application proposal, and
+      // fieldsFromChanges drops what doesn't belong.
+      drop: { what: title, why: "it came back with no usable fields" },
+    };
+  }
 
   const valid = CAPABILITIES[match.capability].validate(fields, match.current);
   if (!valid.ok) {
     console.warn(`[agent] dropped an invalid proposal: ${valid.error}`);
-    return null;
+    return { ok: false, drop: { what: title, why: valid.error } };
   }
 
   return {
-    capability: match.capability,
-    rationale: typeof candidate.rationale === "string"
-      ? candidate.rationale
-      : "",
-    fields,
-    // Narrowed to the proposed fields — the whole `current` blob would store a
-    // row snapshot rather than a before-image of this edit, and the two drift
-    // apart the moment a capability grows a field.
-    previous: Object.fromEntries(
-      Object.keys(fields)
-        .filter((key) => key in match.current)
-        .map((key) => [key, match.current[key]]),
-    ),
-    target: match.target,
+    ok: true,
+    proposal: {
+      capability: match.capability,
+      rationale: typeof candidate.rationale === "string"
+        ? candidate.rationale
+        : "",
+      fields,
+      // Narrowed to the proposed fields — the whole `current` blob would store
+      // a row snapshot rather than a before-image of this edit, and the two
+      // drift apart the moment a capability grows a field.
+      previous: Object.fromEntries(
+        Object.keys(fields)
+          .filter((key) => key in match.current)
+          .map((key) => [key, match.current[key]]),
+      ),
+      target: match.target,
+    },
   };
+}
+
+/** A capability's user-facing name, when it names one we know. */
+function titleFor(capability: string): string | null {
+  return capability in CAPABILITIES
+    ? CAPABILITIES[capability as Capability].title
+    : null;
+}
+
+/**
+ * The note appended to a reply when a change it describes never became a card.
+ *
+ * This exists because the reply and the proposals fail independently. The model
+ * writes "I've corrected the salary and rewritten the description", and if the
+ * salary entry doesn't validate the user gets that sentence with one card under
+ * it and nothing saying why — a promise silently half-kept, which reads as the
+ * assistant lying rather than as a check doing its job.
+ *
+ * Written in the user's terms, not ours: capability ids are internal, so a drop
+ * we can't name says only that something didn't come through.
+ */
+function renderDropNotice(drops: DroppedProposal[]): string {
+  if (drops.length === 0) return "";
+
+  const lines = drops.map(({ what, why }) =>
+    what ? `- **${what}** — ${why}.` : `- One change didn't come through: ${why}.`
+  );
+
+  return `---\n\n${
+    drops.length === 1
+      ? "*One change I described couldn't be offered:*"
+      : "*Some changes I described couldn't be offered:*"
+  }\n\n${lines.join("\n")}\n\n*Ask again and I'll retry it.*`;
 }
 
 /**
@@ -181,8 +252,13 @@ function readProposal(
  * Every failure here degrades to "reply, fewer proposals" rather than failing
  * the turn. The user asked a question and the model answered it; a malformed or
  * unauthorized edit suggestion is not a reason to show them an error, and
- * silently dropping it is exactly the conservative direction — the worst case
- * is that a change they wanted isn't offered, and they ask again.
+ * dropping it is the conservative direction — the worst case is that a change
+ * they wanted isn't offered, and they ask again.
+ *
+ * Dropping it *silently* was not, which is what this used to do. "They ask
+ * again" only works if they know there is something to ask again for, and the
+ * reply routinely describes the change that just vanished. So every drop
+ * carries a reason and the reasons are appended to the reply.
  *
  * Each entry is judged on its own: one bad proposal in a pair does not take the
  * good one down with it, which is the point of them being separate cards.
@@ -223,17 +299,21 @@ function readCapableReply(
     : raw;
 
   const candidates = Array.isArray(body.proposals) ? body.proposals : [];
-  const proposals = candidates
-    .map((c) => readProposal(c as ProposalCandidate, live))
-    .filter((p): p is StoredProposal => p !== null);
+  const read = candidates.map((c) => readProposal(c as ProposalCandidate, live));
+  const drops = read.filter((r) => !r.ok).map((r) => r.drop);
 
   // One card per capability. A model that splits the same capability across two
   // entries would otherwise render two cards over the same row, where applying
   // both means the second silently overwrites the first.
+  //
+  // Not reported as a drop: both entries are the same KIND of change, so the
+  // user still gets a card for what the reply described. Telling them one was
+  // discarded would describe our deduplication, not a change they're missing.
   const seen = new Set<string>();
-  return {
-    reply,
-    proposals: proposals.filter((p) => {
+  const proposals = read
+    .filter((r) => r.ok)
+    .map((r) => r.proposal)
+    .filter((p) => {
       if (seen.has(p.capability)) {
         console.warn(
           `[agent] dropped a duplicate proposal for ${p.capability}`,
@@ -242,7 +322,17 @@ function readCapableReply(
       }
       seen.add(p.capability);
       return true;
-    }),
+    });
+
+  const notice = renderDropNotice(drops);
+  return {
+    // Appended to the reply itself rather than returned beside it, so it is
+    // persisted with the message. Two things follow that a separate field
+    // wouldn't give: reloading a 12h-resumable thread shows the same thing the
+    // live turn did, and the next turn replays the note to the model as its own
+    // words — so a retry starts out knowing which change was rejected and why.
+    reply: notice ? `${reply}\n\n${notice}` : reply,
+    proposals,
   };
 }
 
