@@ -54,6 +54,13 @@ jobs:
       # separate ~1,500-error backlog and is deliberately not run here.
       - name: Formatting (prettier)
         run: npx prettier --check .
+      # Third ratchet. eslint has never run in CI and carries ~1,500 errors,
+      # almost none auto-fixable, so this gates the count rather than zero. Two
+      # of its rules matter more than their count suggests — see the script:
+      # no-at-html-tags guards HTML sinks on public pages, and require-each-key
+      # catches state mismatches in a UI full of drag-reordering.
+      - name: Lint (eslint)
+        run: ./scripts/ci/check-lint.sh
       # Builds one database from the migration files and another from
       # schema.ts, then compares them. Catches a migration that cannot run on a
       # fresh database — which is how the history came to be un-runnable in the
