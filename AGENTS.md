@@ -71,8 +71,11 @@ back up. New errors fail a PR; the existing backlog is tolerated.
 Any tool run inside that container reads the overlay; CI reads the stubs. This
 has now produced a wrong eslint baseline (1,508 vs 1,521 — the entire gap is
 those paths) and a prettier run that reported clean while 13 files were
-unformatted. Before trusting a tree-wide number from the container, ask whether
-it touches those paths.
+unformatted.
+
+Measure with `cloud/scripts/check-oss.sh` instead. It runs these same gates in a
+throwaway container with only `./oss` mounted, so it reports what CI reports.
+Use it before changing any baseline here.
 
 Within the eslint backlog, two rules are worth reading rather than counting:
 
