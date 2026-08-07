@@ -19,9 +19,10 @@ set -euo pipefail
 # BASELINE must only ever go DOWN. The script nags when the real count drops
 # below it, so the ratchet cannot quietly slip back up.
 #
-# Current backlog is concentrated — lib/__tests__/resume-importer.test.ts (48)
-# and import-profile.ts (40) are over a third of it between them.
-BASELINE=189
+# Was 189 when this gate was added. Deleting the Prisma-era script cluster —
+# superseded by src/lib/server/resume/ and src/lib/server/profile/, and broken
+# since the Drizzle cutover in 2026-04 — took out 150 of those errors.
+BASELINE=39
 
 npx svelte-kit sync
 
