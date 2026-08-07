@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Approximately 70 commits since v0.9.0.
 
 ### Added
+
 - Job location region gap reporting for geographic awareness
 - Assistant can now edit job skill lists
 - Grant plan and shared devices from admin invite form
@@ -22,6 +23,7 @@ Approximately 70 commits since v0.9.0.
 - Type-checking gate for build scripts
 
 ### Changed
+
 - Database schema simplified: dropped unused ai_chat_templates column
 - Migration history squashed; schema now reproducible from migration files
 - Prettier is the standard formatter, enforced by CI
@@ -31,6 +33,7 @@ Approximately 70 commits since v0.9.0.
 - Billing: provider cost table mirrored to cloud overlay
 
 ### Fixed
+
 - Security: Portfolio XSS vulnerability (user content now escaped before rendering)
 - Security: Device API keys encrypted at rest
 - Job location classification (US cities, remote forms, edge cases)
@@ -46,6 +49,7 @@ Approximately 70 commits since v0.9.0.
 - Scraper: work arrangement classification preserved
 
 ### Removed
+
 - Eight unused dependencies
 - Prisma-era build scripts (superseded by Drizzle migration)
 - verify-prompt-templates validation script
