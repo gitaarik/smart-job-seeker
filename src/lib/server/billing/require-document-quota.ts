@@ -11,9 +11,9 @@
  * @param incomingProjects number of new document projects this upload creates
  */
 export async function requireDocumentQuota(
-  _userId: string,
-  _incomingBytes: number,
-  _incomingProjects: number,
+	_userId: string,
+	_incomingBytes: number,
+	_incomingProjects: number
 ): Promise<void> {
-  // No-op: unlimited in OSS.
+	// No-op: unlimited in OSS.
 }

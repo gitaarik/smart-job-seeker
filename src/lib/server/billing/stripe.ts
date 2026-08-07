@@ -4,13 +4,13 @@
  */
 
 export function getStripe(): never {
-  throw new Error("Billing is not configured. Stripe is only available in the cloud version.");
+	throw new Error('Billing is not configured. Stripe is only available in the cloud version.');
 }
 
 export function getStripeWebhookSecret(): string {
-  return "";
+	return '';
 }
 
 export function getStripePublishableKey(): string {
-  return "";
+	return '';
 }
