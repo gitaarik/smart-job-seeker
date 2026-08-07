@@ -31,33 +31,34 @@ npm run test    # unit (Vitest)
 npm run check   # typecheck — svelte-check, NOT raw tsc
 ```
 
-**There is no working auto-formatter. Match the surrounding file by hand.**
+**Prettier is the formatter.** Run `npm run format` freely — the tree is at a
+fixed point and CI gates `prettier --check .`, so an unformatted file fails a
+PR.
 
-The repo carries three mutually contradictory formatter configs, and none of
-them describes the tree:
+`.prettierignore` keeps it away from generated output. `drizzle/meta/` matters
+most: those are drizzle-kit's migration snapshots and `check-migrations.ts`
+builds a database from them, so reformatting them would poke at the check
+standing between a broken migration history and a deploy.
 
-| Config            | Claims                | Reality                                                                   |
-| ----------------- | --------------------- | ------------------------------------------------------------------------- |
-| `deno.json` `fmt` | deno is the formatter | deno isn't installed; the tree _is_ in its style (2-space, double quotes) |
-| `.prettierrc`     | tabs, single quotes   | SvelteKit scaffold leftover; disagrees with every file                    |
-| `npm run format`  | `prettier --write .`  | would rewrite **881 files**                                               |
+Two things worth knowing:
 
-So: running `prettier --write` on a file you touched rewrites the whole file and
-buries the real diff — a 59-line edit once became 211 changed lines. Running
-`deno fmt --unstable-component` on a `.svelte` file de-indents the entire
-`<script>` block to column 0, on _every_ file including untouched ones. Both end
-in `git checkout` and re-applying by hand.
+- **Prettier is not always idempotent in one pass.** Formatting the tree took
+  two: the first split a Drizzle method chain across lines, which changed the
+  line-width arithmetic so the second re-collapsed it. If `--check` still
+  complains right after `--write`, run it again rather than hand-editing.
+- **Never run `deno fmt`.** deno was the previous half-finished answer here.
+  It cannot format `.svelte` at all without `--unstable-component`, and with
+  that flag it de-indents every `<script>` block to column 0 — including files
+  you never touched. `deno.json` no longer configures `fmt`; its `imports`
+  alias is unrelated.
 
-`npm run lint` (`prettier --check . && eslint .`) is in no workflow and fails
-hard either way: 881 files fail the format check, and eslint reports ~1,600
-errors — 68 of them in vendored `static/vnc/**` that shouldn't be linted at all.
+**In CI:** three gates, all in `.github/workflows/test.yml`. `check.sh` gates
+`svelte-check` and `check-scripts.sh` gates `scripts/`, both on an error-count
+ratchet that may only ever go down (33 and 30). Formatting is gated on zero.
 
-**In CI:** `scripts/ci/check.sh` gates `svelte-check` on an error-count ratchet
-(`BASELINE=33`, may only ever go down). New type errors fail a PR; the existing
-backlog is tolerated. Lint and format are not gated.
-
-_Cleanup pending — pick one formatter, reformat once, delete the other two
-configs, then gate it. Until then, hand-match._
+`npm run lint` also runs eslint, which is **not** gated: ~1,500 errors, mostly
+`no-explicit-any` and Svelte rules. It needs its own ratchet before it can go
+in a workflow.
 
 ## Testing with Playwright MCP
 
