@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.0] - 2026-08-07
+
+Approximately 70 commits since v0.9.0.
+
+### Added
+- Job location region gap reporting for geographic awareness
+- Assistant can now edit job skill lists
+- Grant plan and shared devices from admin invite form
+- Enhanced AI chat: location context, activity entries, copyable conversation IDs
+- Chat-based activity proposals with automatic extraction and tracking
+- Application overview shows offer status and standing summary
+- Rate limiting on AI generation endpoints
+- Type-checking gate for build scripts
+
+### Changed
+- Database schema simplified: dropped unused ai_chat_templates column
+- Migration history squashed; schema now reproducible from migration files
+- Prettier is the standard formatter, enforced by CI
+- Production image includes bundled CLI scripts
+- Assistant proposals redesigned for visibility; contracts are now target-free
+- Applications payload optimized (activities shipped per-user, not broadcast)
+- Billing: provider cost table mirrored to cloud overlay
+
+### Fixed
+- Security: Portfolio XSS vulnerability (user content now escaped before rendering)
+- Security: Device API keys encrypted at rest
+- Job location classification (US cities, remote forms, edge cases)
+- Gemini model: thinking tokens no longer starve answer generation
+- Null structured parse errors handled gracefully
+- Billing model pricing visibility and cache accounting
+- Assistant conversations scoped to their profile
+- Application summaries re-extracted when model changes
+- Database: direct-connection URL validation (loud failure)
+- Deploy: script re-execution safety (runs from private copy)
+- Deploy: fetch failures now reported with details
+- Worker: production .env file correctly read
+- Scraper: work arrangement classification preserved
+
+### Removed
+- Eight unused dependencies
+- Prisma-era build scripts (superseded by Drizzle migration)
+- verify-prompt-templates validation script
+
 ## [0.9.0] - 2026-08-03
 
 68 commits since v0.8.0.
