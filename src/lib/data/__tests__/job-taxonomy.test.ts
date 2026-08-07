@@ -309,6 +309,44 @@ describe('classifyRegion', () => {
 			});
 		});
 
+		// Canada is its own region, not part of a merged "North America" — see the
+		// note in REGIONS. Every string here is verbatim from preview.
+		describe('Canada', () => {
+			it.each([
+				['Canada', 'canada'],
+				['Canada (Remote)', 'canada'],
+				['CAN', 'canada'],
+				['Toronto', 'canada'],
+				['Toronto, Canada', 'canada'],
+				['Montreal, Québec, Canada', 'canada'],
+				['Cambridge, Ontario, Canada', 'canada']
+			])('%s -> %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+
+			// The ordering constraints that make the above safe. Canada sits after
+			// `us` and before `uk` in REGIONS, and these are why.
+			it('leaves Ontario, California to the US', () => {
+				expect(classifyRegion('Ontario, CA')).toBe('us');
+			});
+
+			it('leaves Vancouver, Washington to the US', () => {
+				expect(classifyRegion('Vancouver, WA')).toBe('us');
+			});
+
+			it('does not let the uk london rule claim London, Ontario', () => {
+				expect(classifyRegion('London, Ontario, Canada')).toBe('canada');
+			});
+
+			it('still gives plain London to the UK', () => {
+				expect(classifyRegion('London, UK')).toBe('uk');
+			});
+
+			it('does not read "can" inside a word as Canada', () => {
+				expect(classifyRegion('Cancún, Mexico')).not.toBe('canada');
+			});
+		});
+
 		// "Remote US" needed a trailing-country rule. It is word-bounded so that
 		// countries merely ENDING in those letters cannot be dragged into the US.
 		describe('country last', () => {

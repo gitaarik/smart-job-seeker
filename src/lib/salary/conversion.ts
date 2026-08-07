@@ -86,6 +86,11 @@ export type SalaryRegionOverrides = Record<string, SalaryRegionOverride>;
 /** Default currencies per region. Regions not listed default to EUR. */
 export const REGION_CURRENCIES: Record<string, string> = {
 	us: 'USD',
+	// Not optional: unlisted regions fall through to EUR above, so omitting this
+	// would quietly price Toronto salaries in euros. This entry is the whole
+	// reason `canada` is a region of its own rather than part of a merged
+	// "North America" — that bucket would have no correct currency.
+	canada: 'CAD',
 	uk: 'GBP',
 	western_europe: 'EUR',
 	eastern_europe: 'EUR',

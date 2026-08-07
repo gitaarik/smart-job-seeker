@@ -418,6 +418,46 @@ export const REGIONS: TaxonomyCategory = {
 			]
 		},
 		{
+			// Canada is its own region rather than part of a merged "North America".
+			// `region` is not a geography label — it keys REGION_CURRENCIES, and USD
+			// is not CAD, so a merged bucket has no correct currency. It is also a
+			// separate labour market, exactly like the uk/western_europe split below.
+			// The UI is free to present "North America" as us OR canada; that grouping
+			// is recoverable, whereas a merged value is not.
+			//
+			// ORDER MATTERS: this sits AFTER `us` on purpose. "Ontario, CA" is Ontario,
+			// California and "Vancouver, WA" is in Washington state — both are caught by
+			// the US state-code rule above before anything here can claim them. It sits
+			// BEFORE `uk` for the mirror reason: "London, Ontario, Canada" must not be
+			// taken by the uk `london` pattern.
+			canonical: 'canada',
+			label: 'Canada',
+			aliases: [
+				{ text: 'canada' },
+				// ISO alpha-3, exact-match only.
+				{ text: 'can' }
+			],
+			patterns: [
+				{ pattern: 'canada', mode: 'includes' },
+				{ pattern: 'toronto', mode: 'includes' },
+				{ pattern: 'montreal', mode: 'includes' },
+				{ pattern: 'montréal', mode: 'includes' },
+				{ pattern: 'vancouver', mode: 'includes' },
+				{ pattern: 'ottawa', mode: 'includes' },
+				{ pattern: 'calgary', mode: 'includes' },
+				{ pattern: 'edmonton', mode: 'includes' },
+				{ pattern: 'winnipeg', mode: 'includes' },
+				// Provinces, comma-prefixed. A bare "ontario" would collide with
+				// Ontario, California — the comma is what makes these safe.
+				{ pattern: ', ontario', mode: 'includes' },
+				{ pattern: ', quebec', mode: 'includes' },
+				{ pattern: ', québec', mode: 'includes' },
+				{ pattern: ', british columbia', mode: 'includes' },
+				{ pattern: ', alberta', mode: 'includes' },
+				{ pattern: ', nova scotia', mode: 'includes' }
+			]
+		},
+		{
 			canonical: 'uk',
 			label: 'UK',
 			aliases: [
