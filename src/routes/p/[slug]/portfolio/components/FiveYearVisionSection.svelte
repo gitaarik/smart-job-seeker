@@ -52,7 +52,17 @@
 
 	// Convert markdown-style bold text to HTML
 	function formatContent(content: string): string {
-		return content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+		// Escape BEFORE adding markup. The result goes through {@html} on a public
+		// portfolio page, and the content is user-authored — so without this, a
+		// profile containing `<img src=x onerror=...>` executes for every visitor.
+		// Same order as $lib/utils/linkify: escape, then add the markup we intend.
+		const escaped = content
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;');
+
+		return escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 	}
 </script>
 
