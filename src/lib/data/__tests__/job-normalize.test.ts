@@ -36,6 +36,28 @@ describe('normalizeWorkLocation', () => {
 		});
 	});
 
+	// From preview's unclassified bucket. These say "remote" without leading
+	// with the word, so neither the exact alias nor the startsWith rule saw
+	// them, and they were being counted as unreadable places.
+	describe('remote phrased without leading with the word', () => {
+		it.each([
+			['100% Remote'],
+			['Work fully remote, globally'],
+			['Home Based - Americas'],
+			['Home based - EMEA'],
+			['Distributed'],
+			['Fully Remote (Targeting LATAM or Europe time zones for team overlap)']
+		])('%s -> remote', (input) => {
+			expect(normalizeWorkLocation(input)).toEqual(['remote']);
+		});
+	});
+
+	describe('consultancy phrasing for on-site', () => {
+		it.each([['Customer Site'], ['Client Site']])('%s -> onsite', (input) => {
+			expect(normalizeWorkLocation(input)).toEqual(['onsite']);
+		});
+	});
+
 	// The consequence of a false positive here is losing a real location, so
 	// actual places must not normalize to anything.
 	describe('leaves real places alone', () => {

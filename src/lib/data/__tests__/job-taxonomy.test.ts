@@ -192,4 +192,136 @@ describe('classifyRegion', () => {
 			expect(classifyRegion('1200 Main Street, Springfield')).toBeNull();
 		});
 	});
+
+	// Every string below is verbatim from preview's `unclassified location`
+	// bucket — the audit's only real defect count. They are grouped by what was
+	// actually wrong, because the fixes are not interchangeable.
+	describe('gaps found by auditing real data', () => {
+		// Aliases match the WHOLE string, so a country named with any suffix at
+		// all fell through. Same shape as the earlier `israel` fix.
+		describe('country named with a suffix', () => {
+			it.each([
+				['UNITED KINGDOM - REMOTE', 'uk'],
+				['Virtual UK', 'uk'],
+				['Indonesia - Remote', 'asia_pacific'],
+				['Manila, Philippines', 'asia_pacific'],
+				['Taiwan, Hsinchu', 'asia_pacific'],
+				['Seoul, South Korea', 'asia_pacific'],
+				['HO CHI MINH CITY, HO CHI MINH CITY, VIETNAM (REMOTE)', 'asia_pacific'],
+				['Asia / South East Asia', 'asia_pacific'],
+				['Brazil - Remote', 'latin_america'],
+				['Brazil; Mexico', 'latin_america'],
+				['Home based - EMEA', 'western_europe'],
+				['Remote (LATAM, excluding Brazil due to geo-restrictions)', 'latin_america'],
+				// Named twice and still missed: the old rule only matched a TRAILING
+				// ", china".
+				['China, Beijing; China, Shanghai', 'asia_pacific']
+			])('%s -> %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+		});
+
+		// ISO alpha-3 codes arrive as the entire field. These go in as aliases,
+		// never as substring patterns — see the negative cases further down.
+		describe('bare ISO alpha-3 codes', () => {
+			it.each([
+				['GBR', 'uk'],
+				['CHE', 'western_europe'],
+				['ESP', 'western_europe'],
+				['ITA', 'western_europe'],
+				['ALB', 'eastern_europe'],
+				['ARE', 'middle_east'],
+				['ISR', 'middle_east'],
+				['PHL', 'asia_pacific'],
+				['PER', 'latin_america'],
+				['KEN', 'africa']
+			])('%s -> %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+		});
+
+		describe('towns and regions with no country attached', () => {
+			it.each([
+				['Alphen aan den Rijn', 'western_europe'],
+				['Amstelveen', 'western_europe'],
+				['Hengelo OV', 'western_europe'],
+				['Nieuw-Vennep', 'western_europe'],
+				['Petten', 'western_europe'],
+				['Reeuwijk', 'western_europe'],
+				['Schiphol', 'western_europe'],
+				['Heidelberg', 'western_europe'],
+				['Hauptstraße 65, Binswangen', 'western_europe'],
+				['Benelux', 'western_europe'],
+				['BRNO-ŽIDENICE, SOUTH MORAVIA', 'eastern_europe'],
+				['Hong Kong', 'asia_pacific'],
+				['BANGKOK', 'asia_pacific'],
+				['Jaipur (Remote + occasional meetups)', 'asia_pacific'],
+				['IND - Coimbatore (708)', 'asia_pacific'],
+				['IDN, Jakarta', 'asia_pacific'],
+				['Rio de Janeiro', 'latin_america'],
+				['Uganda', 'africa'],
+				['Arizona', 'us'],
+				['District of Columbia', 'us'],
+				['Remote in Maryland', 'us'],
+				// US territories file under `us` — employment law, not longitude.
+				['Puerto Rico', 'us'],
+				['Guam', 'us'],
+				['Gibraltar - Remote', 'uk']
+			])('%s -> %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+		});
+
+		// Continental addresses lead with the postcode ("92130 Issy-les-Moulineaux");
+		// US addresses trail with it ("Boston, MA 02101"). The rule is anchored to
+		// the start for exactly that reason.
+		describe('postcode-first continental addresses', () => {
+			it.each([
+				['92130 Issy-les-Moulineaux', 'western_europe'],
+				['93400 Saint-Ouen', 'western_europe']
+			])('%s -> %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+
+			it('does not fire on a US address whose ZIP comes last', () => {
+				expect(classifyRegion('Boston, MA 02101')).toBe('us');
+				expect(classifyRegion('Austin, TX 78701')).toBe('us');
+			});
+		});
+
+		// The whole reason ISO codes are aliases rather than patterns. Each of
+		// these contains a code as a substring and must not be claimed by it.
+		describe('short codes never match inside a word', () => {
+			it('does not read the verb "are" as the Emirates', () => {
+				expect(classifyRegion('Engineers are welcome')).not.toBe('middle_east');
+			});
+
+			it('does not read "ken" inside Kensington as Kenya', () => {
+				expect(classifyRegion('Kensington, London')).toBe('uk');
+			});
+
+			it('does not read "per" inside Performance as Peru', () => {
+				expect(classifyRegion('Performance Engineering')).not.toBe('latin_america');
+			});
+
+			it('does not read "ind" inside Individual as India', () => {
+				expect(classifyRegion('Individual contributor')).not.toBe('asia_pacific');
+			});
+		});
+
+		// "Remote US" needed a trailing-country rule. It is word-bounded so that
+		// countries merely ENDING in those letters cannot be dragged into the US.
+		describe('country last', () => {
+			it('classifies Remote US', () => {
+				expect(classifyRegion('Remote US')).toBe('us');
+			});
+
+			it.each([['Belarus'], ['Aarhus'], ['Minsk, Belarus']])(
+				'%s is not claimed by the US',
+				(input) => {
+					expect(classifyRegion(input)).not.toBe('us');
+				}
+			);
+		});
+	});
 });

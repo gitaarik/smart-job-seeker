@@ -29,6 +29,10 @@ function isRemote(workLocation: unknown): boolean {
 	return Array.isArray(workLocation) && workLocation.includes('remote');
 }
 
+function hasWorkLocation(workLocation: unknown): boolean {
+	return Array.isArray(workLocation) && workLocation.length > 0;
+}
+
 function pct(n: number, total: number): string {
 	if (total === 0) return '—';
 	return `${((n / total) * 100).toFixed(1)}%`;
@@ -56,10 +60,24 @@ async function main() {
 
 	// A location that reads as a work arrangement ("Worldwide") is not a place
 	// either — those want backfill-work-location, not a classifier change.
-	const arrangementNotPlace = withLocation.filter(
-		(r) => normalizeWorkLocation(r.office_location) !== null
+	//
+	// But only the ones with no work_location of their own are actionable.
+	// backfill-work-location is additive by design and never overwrites an
+	// explicit value, so a row whose work_location already says "hybrid" while
+	// its office_location says "Werk van thuis" is finished business — the
+	// explicit value wins, deliberately. Counting those as "run the backfill"
+	// advertises a no-op, and the number can never reach zero no matter how
+	// many times you run it. That is what this split is for.
+	const isArrangement = (r: (typeof withLocation)[number]) =>
+		normalizeWorkLocation(r.office_location) !== null;
+
+	const arrangementPending = withLocation.filter(
+		(r) => isArrangement(r) && !hasWorkLocation(r.work_location)
 	);
-	const stillAPlace = withLocation.filter((r) => normalizeWorkLocation(r.office_location) === null);
+	const arrangementSettled = withLocation.filter(
+		(r) => isArrangement(r) && hasWorkLocation(r.work_location)
+	);
+	const stillAPlace = withLocation.filter((r) => !isArrangement(r));
 
 	// Split what is left by whether the CURRENT classifier can read it. Without
 	// this the report tells you to add a pattern for a city you added an hour
@@ -84,7 +102,10 @@ async function main() {
 		`  no office_location          ${String(noLocation.length).padStart(6)}   correct — nothing to derive from`
 	);
 	console.log(
-		`  location is an arrangement  ${String(arrangementNotPlace.length).padStart(6)}   run backfill-work-location`
+		`  arrangement, no work_loc    ${String(arrangementPending.length).padStart(6)}   run backfill-work-location`
+	);
+	console.log(
+		`  arrangement, work_loc set   ${String(arrangementSettled.length).padStart(6)}   correct — explicit value wins`
 	);
 	console.log(
 		`  classifier reads it now     ${String(pendingBackfill.length).padStart(6)}   run backfill-job-regions`

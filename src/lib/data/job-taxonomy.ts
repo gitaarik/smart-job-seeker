@@ -197,13 +197,21 @@ export const WORK_LOCATIONS: TaxonomyCategory = {
 				{ text: 'télétravail' },
 				// Spanish
 				{ text: 'teletrabajo' },
-				{ text: 'remoto' }
+				{ text: 'remoto' },
+				// Company-speak for the same thing
+				{ text: 'distributed' }
 			],
 			patterns: [
 				{ pattern: 'remote', mode: 'startsWith' },
 				// "Thuiswerk in Nederland" and friends
 				{ pattern: 'thuiswerk', mode: 'startsWith' },
-				{ pattern: 'werk van thuis', mode: 'startsWith' }
+				{ pattern: 'werk van thuis', mode: 'startsWith' },
+				// Forms that say remote without leading with the word, so neither the
+				// exact alias nor the startsWith above could see them: "100% Remote",
+				// "Work fully remote, globally", "Home based - EMEA".
+				{ pattern: '% remote', mode: 'includes' },
+				{ pattern: 'fully remote', mode: 'includes' },
+				{ pattern: 'home based', mode: 'includes' }
 			]
 		},
 		{
@@ -248,6 +256,9 @@ export const WORK_LOCATIONS: TaxonomyCategory = {
 				{ text: 'on-site' },
 				{ text: 'on_site' },
 				{ text: 'on site' },
+				// Consultancy phrasing — the site is the client's, but it is on-site.
+				{ text: 'customer site' },
+				{ text: 'client site' },
 				// German
 				{ text: 'vor ort' },
 				// French
@@ -390,7 +401,20 @@ export const REGIONS: TaxonomyCategory = {
 				// "us - remote" and matched no alias. Word-bounded so that "us" cannot
 				// claim "Uster" and "usa" cannot claim "usability".
 				{ pattern: '^us\\b', mode: 'regex' },
-				{ pattern: '\\busa\\b', mode: 'regex' }
+				{ pattern: '\\busa\\b', mode: 'regex' },
+				// The mirror of the above: "Remote US" puts the country last. Anchored
+				// to the end and word-bounded, so "Belarus" and "Aarhus" cannot match —
+				// neither has a boundary before the "us".
+				{ pattern: '\\bus$', mode: 'regex' },
+				// More full state names, in the same spirit as the block above.
+				{ pattern: 'arizona', mode: 'includes' },
+				{ pattern: 'maryland', mode: 'includes' },
+				{ pattern: 'district of columbia', mode: 'includes' },
+				// Territories. Puerto Rico and Guam file under US for hiring purposes —
+				// US employment law, no visa for US citizens — even though Guam sits in
+				// the Pacific. Filed by who can take the job, not by longitude.
+				{ pattern: 'puerto rico', mode: 'includes' },
+				{ pattern: 'guam', mode: 'includes' }
 			]
 		},
 		{
@@ -403,10 +427,19 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'england' },
 				{ text: 'scotland' },
 				{ text: 'wales' },
-				{ text: 'northern ireland' }
+				{ text: 'northern ireland' },
+				// ISO alpha-3. Exact-match only, so this cannot claim a substring.
+				{ text: 'gbr' },
+				// British Overseas Territory — hires under UK terms.
+				{ text: 'gibraltar' }
 			],
 			patterns: [
 				{ pattern: ', uk', mode: 'includes' },
+				// "UNITED KINGDOM - REMOTE" and "Virtual UK" name the country outright
+				// but matched neither the exact alias nor ", uk".
+				{ pattern: 'united kingdom', mode: 'includes' },
+				{ pattern: 'virtual uk', mode: 'includes' },
+				{ pattern: 'gibraltar', mode: 'includes' },
 				{ pattern: 'london', mode: 'includes' },
 				{ pattern: 'manchester', mode: 'includes' },
 				{ pattern: 'birmingham, uk', mode: 'includes' },
@@ -463,7 +496,14 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'portugal' },
 				{ text: 'italy' },
 				{ text: 'italia' },
-				{ text: 'greece' }
+				{ text: 'greece' },
+				// Multi-country shorthand seen in real postings.
+				{ text: 'benelux' },
+				// ISO alpha-3. Exact-match only — safe here, unsafe as a substring
+				// pattern ("ita" and "che" both sit inside ordinary words).
+				{ text: 'che' },
+				{ text: 'esp' },
+				{ text: 'ita' }
 			],
 			patterns: [
 				// Dutch provinces and cities
@@ -621,7 +661,27 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', switzerland', mode: 'includes' },
 				{ pattern: ', greece', mode: 'includes' },
 				{ pattern: ', luxembourg', mode: 'includes' },
-				{ pattern: ', iceland', mode: 'includes' }
+				{ pattern: ', iceland', mode: 'includes' },
+				// "emea" exists as an alias, but aliases match the whole string only, so
+				// "Home based - EMEA" fell through. Same shape as the israel fix below.
+				{ pattern: 'emea', mode: 'includes' },
+				// More Dutch and German towns. The list above covers the big cities;
+				// real postings are full of small ones.
+				{ pattern: 'alphen aan den rijn', mode: 'includes' },
+				{ pattern: 'amstelveen', mode: 'includes' },
+				{ pattern: 'hengelo', mode: 'includes' },
+				{ pattern: 'nieuw-vennep', mode: 'includes' },
+				{ pattern: 'reeuwijk', mode: 'includes' },
+				{ pattern: 'schiphol', mode: 'includes' },
+				{ pattern: 'petten', mode: 'includes' },
+				{ pattern: 'heidelberg', mode: 'includes' },
+				{ pattern: 'binswangen', mode: 'includes' },
+				// Continental postcode-first addresses: "92130 Issy-les-Moulineaux",
+				// "10115 Berlin". France, Germany, Spain and Italy all write five digits
+				// BEFORE the town. The US writes its five digits last ("Boston, MA
+				// 02101"), which is why this is anchored to the start — otherwise it
+				// would swallow every US address carrying a ZIP.
+				{ pattern: '^[0-9]{5}\\s+[a-zà-ÿ]', mode: 'regex' }
 			]
 		},
 		{
@@ -644,11 +704,14 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'lithuania' },
 				{ text: 'latvia' },
 				{ text: 'estonia' },
+				// Albania had no coverage at all — not the name, not the code.
+				{ text: 'albania' },
 				// ISO alpha-3 codes — exact-match only, see the note in asia_pacific.
 				{ text: 'pol' },
 				{ text: 'rou' },
 				{ text: 'cze' },
-				{ text: 'hun' }
+				{ text: 'hun' },
+				{ text: 'alb' }
 			],
 			patterns: [
 				{ pattern: 'warsaw', mode: 'includes' },
@@ -678,7 +741,10 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', croatia', mode: 'includes' },
 				{ pattern: ', ukraine', mode: 'includes' },
 				{ pattern: ', serbia', mode: 'includes' },
-				{ pattern: ', bulgaria', mode: 'includes' }
+				{ pattern: ', bulgaria', mode: 'includes' },
+				// Czech regional forms — "BRNO-ŽIDENICE, SOUTH MORAVIA" names no country.
+				{ pattern: 'brno', mode: 'includes' },
+				{ pattern: 'moravia', mode: 'includes' }
 			]
 		},
 		{
@@ -697,7 +763,12 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'jordan' },
 				{ text: 'lebanon' },
 				{ text: 'turkey' },
-				{ text: 'türkiye' }
+				{ text: 'türkiye' },
+				// ISO alpha-3. "uae" was already here as the colloquial form, but the
+				// actual ISO code for the Emirates is ARE, and that is what the feeds
+				// send. Exact-match only, so "are" cannot claim the English verb.
+				{ text: 'are' },
+				{ text: 'isr' }
 			],
 			patterns: [
 				{ pattern: 'dubai', mode: 'includes' },
@@ -744,7 +815,11 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'ind' },
 				{ text: 'pak' },
 				{ text: 'twn' },
-				{ text: 'sgp' }
+				{ text: 'sgp' },
+				{ text: 'phl' },
+				{ text: 'idn' },
+				{ text: 'hkg' },
+				{ text: 'hong kong' }
 			],
 			patterns: [
 				{ pattern: 'taipei', mode: 'includes' },
@@ -764,7 +839,32 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', india', mode: 'includes' },
 				{ pattern: ', japan', mode: 'includes' },
 				{ pattern: ', australia', mode: 'includes' },
-				{ pattern: ', china', mode: 'includes' }
+				{ pattern: ', china', mode: 'includes' },
+				// More of the region's hubs.
+				{ pattern: 'hong kong', mode: 'includes' },
+				{ pattern: 'seoul', mode: 'includes' },
+				{ pattern: 'bangkok', mode: 'includes' },
+				{ pattern: 'ho chi minh', mode: 'includes' },
+				{ pattern: 'manila', mode: 'includes' },
+				{ pattern: 'jakarta', mode: 'includes' },
+				{ pattern: 'jaipur', mode: 'includes' },
+				{ pattern: 'coimbatore', mode: 'includes' },
+				{ pattern: 'hsinchu', mode: 'includes' },
+				// Country names that were aliases only, so anything with a suffix
+				// ("Indonesia - Remote", "Taiwan, Hsinchu") fell through to null.
+				{ pattern: 'indonesia', mode: 'includes' },
+				{ pattern: 'philippines', mode: 'includes' },
+				{ pattern: 'vietnam', mode: 'includes' },
+				{ pattern: 'south korea', mode: 'includes' },
+				{ pattern: 'taiwan', mode: 'includes' },
+				{ pattern: 'south east asia', mode: 'includes' },
+				// ", china" only catches the country when it TRAILS. Multi-site
+				// postings lead with it — "China, Beijing; China, Shanghai" names it
+				// twice and still classified as nothing.
+				{ pattern: 'china', mode: 'includes' },
+				// "IND - Coimbatore (708)" leads with the ISO code. Word-bounded so it
+				// cannot fire inside "index" or "individual".
+				{ pattern: '^ind\\b', mode: 'regex' }
 			]
 		},
 		{
@@ -783,7 +883,11 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'peru' },
 				{ text: 'perú' },
 				{ text: 'costa rica' },
-				{ text: 'uruguay' }
+				{ text: 'uruguay' },
+				// ISO alpha-3, exact-match only.
+				{ text: 'per' },
+				{ text: 'bra' },
+				{ text: 'mex' }
 			],
 			patterns: [
 				{ pattern: 'são paulo', mode: 'includes' },
@@ -797,7 +901,13 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', brazil', mode: 'includes' },
 				{ pattern: ', mexico', mode: 'includes' },
 				{ pattern: ', argentina', mode: 'includes' },
-				{ pattern: ', colombia', mode: 'includes' }
+				{ pattern: ', colombia', mode: 'includes' },
+				{ pattern: 'rio de janeiro', mode: 'includes' },
+				// Country names as substrings: "Brazil - Remote", "Brazil; Mexico".
+				{ pattern: 'brazil', mode: 'includes' },
+				// "Remote (LATAM, excluding Brazil…)" — the region shorthand, which
+				// existed as an alias but never as a substring.
+				{ pattern: 'latam', mode: 'includes' }
 			]
 		},
 		{
@@ -812,7 +922,10 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'ghana' },
 				{ text: 'ethiopia' },
 				{ text: 'tanzania' },
-				{ text: 'morocco' }
+				{ text: 'morocco' },
+				{ text: 'uganda' },
+				// ISO alpha-3, exact-match only.
+				{ text: 'ken' }
 			],
 			patterns: [
 				{ pattern: 'cape town', mode: 'includes' },
@@ -824,7 +937,8 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', south africa', mode: 'includes' },
 				{ pattern: ', nigeria', mode: 'includes' },
 				{ pattern: ', kenya', mode: 'includes' },
-				{ pattern: ', egypt', mode: 'includes' }
+				{ pattern: ', egypt', mode: 'includes' },
+				{ pattern: 'uganda', mode: 'includes' }
 			]
 		}
 	]
