@@ -52,13 +52,28 @@ Two things worth knowing:
   you never touched. `deno.json` no longer configures `fmt`; its `imports`
   alias is unrelated.
 
-**In CI:** three gates, all in `.github/workflows/test.yml`. `check.sh` gates
-`svelte-check` and `check-scripts.sh` gates `scripts/`, both on an error-count
-ratchet that may only ever go down (33 and 30). Formatting is gated on zero.
+**In CI:** four gates, all in `.github/workflows/test.yml`.
 
-`npm run lint` also runs eslint, which is **not** gated: ~1,500 errors, mostly
-`no-explicit-any` and Svelte rules. It needs its own ratchet before it can go
-in a workflow.
+| Gate             | Script                | Baseline          |
+| ---------------- | --------------------- | ----------------- |
+| `svelte-check`   | `ci/check.sh`         | 33 errors         |
+| `scripts/` types | `ci/check-scripts.sh` | 30 errors         |
+| eslint           | `ci/check-lint.sh`    | 1,508 errors      |
+| prettier         | `prettier --check .`  | zero — no backlog |
+
+The three counts are ratchets: they may only ever go **down**, and each script
+nags when the real number drops below its baseline so it cannot quietly creep
+back up. New errors fail a PR; the existing backlog is tolerated.
+
+Within the eslint backlog, two rules are worth reading rather than counting:
+
+- **`svelte/no-at-html-tags`** — all 10 sites were audited 2026-08-07 and are
+  sound. A new hit is an unreviewed HTML sink, not backlog, and `/p/[slug]`
+  renders user-authored content publicly. Two sites there were injectable until
+  that audit.
+- **`svelte/require-each-key`** (236) — an unkeyed `{#each}` mismatches
+  component state when a list reorders, and this UI has drag-reordering
+  throughout. Some of those are latent bugs rather than noise.
 
 ## Testing with Playwright MCP
 
