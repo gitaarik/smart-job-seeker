@@ -1,9 +1,13 @@
 /**
  * Embedding utilities for semantic skill matching and RAG retrieval.
  *
- * Separate from the chat-completion layer (langchain.ts): the chat default
- * provider (Groq) has no embeddings API, so embeddings get their own
- * provider/model config (see config.embedding*). Reuses the chat API keys.
+ * Separate from the chat-completion layer (langchain.ts): the app provider
+ * (Groq) has no embeddings API, so embeddings get their own provider/model
+ * config (see config.embedding*). Reuses the same API keys.
+ *
+ * "Chat" above means the chat-COMPLETION API, not the assistant chat. That is a
+ * writing prompt (WRITING_PROMPT_KEYS in ai-chat/utils.ts) and runs on
+ * config.llmWritingProvider — gemini.
  *
  * All semantic features must guard on isEmbeddingConfigured() and degrade to
  * the existing exact matching when embeddings are unavailable — embedding is

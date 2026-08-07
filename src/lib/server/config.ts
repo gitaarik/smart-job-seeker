@@ -45,8 +45,10 @@ export interface AppConfig {
 	cerebrasApiKey: string;
 
 	// Embeddings (semantic skill matching / RAG retrieval)
-	// Separate from the chat provider: the chat default (groq) has no embeddings
-	// API, so embeddings get their own provider/model. Reuses the chat API keys.
+	// Separate from the completion providers: the app provider (groq) has no
+	// embeddings API at all, so embeddings get their own provider/model. Reuses
+	// the same API keys. Note "chat" here means chat-COMPLETION, not the assistant
+	// chat — that follows llmWritingProvider above, and runs on gemini.
 	embeddingProvider: 'openai' | 'gemini';
 	embeddingModel: string;
 	// Native dimensionality the model returns; what we persist in skill_embeddings.
@@ -145,13 +147,37 @@ const EMBEDDING_DEFAULTS: Record<
 function loadConfig(): AppConfig {
 	const nodeEnv = getEnv('NODE_ENV', 'development');
 	const llmProvider = getEnv('SJS_LLM_PROVIDER', 'groq');
-	// Translation and user-facing writing can each run on a different provider
-	// than the rest of the app (defaults to the app provider).
-	const llmTranslateProvider = getEnv('SJS_LLM_TRANSLATE_PROVIDER', '') || llmProvider;
-	const llmWritingProvider = getEnv('SJS_LLM_WRITING_PROVIDER', '') || llmProvider;
+	const geminiApiKey = getEnv('SJS_LLM_API_KEY_GEMINI', '');
+	/**
+	 * Translation and user-facing writing can each run on a different provider
+	 * than the rest of the app.
+	 *
+	 * Both default to gemini WHEN A GEMINI KEY IS PRESENT, and to the app
+	 * provider otherwise. Two things make that the right default rather than a
+	 * preference:
+	 *
+	 *  - The prompts that follow `llmWritingProvider` include the assistant chat
+	 *    (`personal_agent_chat*` — see WRITING_PROMPT_KEYS in ai-chat/utils.ts),
+	 *    whose context budget is sized against a 1M-token model. On the app
+	 *    default (gpt-oss-120b, 131k) a busy application page runs close to the
+	 *    wall: ~250k chars of context blocks plus the exempt profile blob.
+	 *  - Falling through to the app provider is silent. Dev and preview both set
+	 *    these explicitly, so the fallthrough only ever described an env nobody
+	 *    had configured — which is exactly where writing on the extraction model
+	 *    would go unnoticed.
+	 *
+	 * Keyed on the API key because there is NO runtime failover (see
+	 * createChatModel): an unconditional gemini default would turn a missing key
+	 * from a quiet downgrade into a hard failure on every writing call. Same
+	 * lesson as the embedding provider below, where defaulting to a provider
+	 * with no quota was the bug.
+	 */
+	const preferredWritingProvider = geminiApiKey ? 'gemini' : llmProvider;
+	const llmTranslateProvider = getEnv('SJS_LLM_TRANSLATE_PROVIDER', '') || preferredWritingProvider;
+	const llmWritingProvider = getEnv('SJS_LLM_WRITING_PROVIDER', '') || preferredWritingProvider;
 	// Default to gemini: it is the provider this project actually pays for
 	// (SJS_LLM_WRITING_PROVIDER / SJS_LLM_TRANSLATE_PROVIDER), and Groq — the
-	// chat default — has no embeddings API at all. Defaulting to openai meant
+	// app default, which has no embeddings API at all. Defaulting to openai meant
 	// the default config pointed at a provider with no quota.
 	const embeddingProvider: 'openai' | 'gemini' =
 		getEnv('SJS_EMBEDDING_PROVIDER', 'gemini') === 'openai' ? 'openai' : 'gemini';
@@ -198,7 +224,7 @@ function loadConfig(): AppConfig {
 				? 'gemini-2.5-pro'
 				: getModelForProvider(llmWritingProvider)),
 		groqApiKey: getEnv('SJS_LLM_API_KEY_GROQ', ''),
-		geminiApiKey: getEnv('SJS_LLM_API_KEY_GEMINI', ''),
+		geminiApiKey,
 		openaiApiKey: getEnv('SJS_LLM_API_KEY_OPENAI', ''),
 		deepseekApiKey: getEnv('SJS_LLM_API_KEY_DEEPSEEK', ''),
 		cerebrasApiKey: getEnv('SJS_LLM_API_KEY_CEREBRAS', ''),
