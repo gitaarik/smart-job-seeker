@@ -30,9 +30,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			provider: true,
 			model: true,
 			request_type: true
-		},
-		with: {
-			ai_chat_template: true
 		}
 	});
 

@@ -1,7 +1,6 @@
 import { relations } from 'drizzle-orm/relations';
 import {
 	accounts,
-	ai_chat_templates,
 	ai_chats,
 	ai_prompts,
 	api_keys,
@@ -248,10 +247,6 @@ export const job_matchesRelations = relations(job_matches, ({ one }) => ({
 export const ai_chatsRelations = relations(ai_chats, ({ one, many }) => ({
 	job_matches: many(job_matches),
 	jobs: many(jobs),
-	ai_chat_template: one(ai_chat_templates, {
-		fields: [ai_chats.ai_chat_template],
-		references: [ai_chat_templates.id]
-	}),
 	ai_chat: one(ai_chats, {
 		fields: [ai_chats.followup_to],
 		references: [ai_chats.id],
@@ -632,10 +627,6 @@ export const api_keysRelations = relations(api_keys, ({ one, many }) => ({
 	}),
 	search_tasks: many(search_tasks),
 	device_shares: many(device_shares)
-}));
-
-export const ai_chat_templatesRelations = relations(ai_chat_templates, ({ many }) => ({
-	ai_chats: many(ai_chats)
 }));
 
 export const search_tasks_job_sitesRelations = relations(search_tasks_job_sites, ({ one }) => ({

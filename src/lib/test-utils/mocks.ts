@@ -27,14 +27,6 @@ export function createMockDb() {
 			update: vi.fn(),
 			delete: vi.fn()
 		},
-		ai_chat_templates: {
-			findUnique: vi.fn(),
-			findMany: vi.fn(),
-			findFirst: vi.fn(),
-			create: vi.fn(),
-			update: vi.fn(),
-			delete: vi.fn()
-		},
 		collected_data: {
 			findUnique: vi.fn(),
 			findMany: vi.fn(),

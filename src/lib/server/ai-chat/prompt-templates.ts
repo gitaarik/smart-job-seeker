@@ -1,6 +1,7 @@
 /**
  * All AI prompt templates, versioned in code.
- * Previously stored in ai_chat_templates database table.
+ * Previously stored in the ai_chat_templates database table, which was dropped
+ * once nothing read it any more.
  *
  * Each prompt has:
  *   - system_prompt: Sets the AI's role and behavior

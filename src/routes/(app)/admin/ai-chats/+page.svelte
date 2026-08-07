@@ -193,9 +193,6 @@
 									>{/if}
 								{#if expandedDetail.model}<span><strong>Model:</strong> {expandedDetail.model}</span
 									>{/if}
-								{#if expandedDetail.ai_chat_template}<span
-										><strong>Template:</strong> {expandedDetail.ai_chat_template}</span
-									>{/if}
 								{#if expandedDetail.followup_to}<span
 										><strong>Followup to:</strong> #{expandedDetail.followup_to}</span
 									>{/if}

@@ -516,20 +516,6 @@ export const work_experience_technologies_id_seq = pgSequence(
 	}
 );
 
-export const ai_chat_templates = pgTable(
-	'ai_chat_templates',
-	{
-		id: serial().primaryKey().notNull(),
-		date_created: timestamp({ withTimezone: true, mode: 'date' }),
-		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
-		key: varchar({ length: 255 }).notNull(),
-		system_prompt: text(),
-		user_prompt: text(),
-		format: json()
-	},
-	(table) => [unique('ai_chat_templates_key_key').on(table.key)]
-);
-
 export const ai_prompts = pgTable(
 	'ai_prompts',
 	{
@@ -2369,7 +2355,6 @@ export const ai_chats = pgTable(
 		provider: varchar({ length: 255 }),
 		model: varchar({ length: 255 }),
 		request_type: varchar({ length: 255 }),
-		ai_chat_template: integer(),
 		input_tokens: integer(),
 		output_tokens: integer(),
 		total_tokens: integer(),
@@ -2392,11 +2377,6 @@ export const ai_chats = pgTable(
 		index('ai_chats_followup_to_idx').on(table.followup_to),
 		index('ai_chats_request_type_idx').on(table.request_type),
 		index('ai_chats_date_created_idx').on(table.date_created),
-		foreignKey({
-			columns: [table.ai_chat_template],
-			foreignColumns: [ai_chat_templates.id],
-			name: 'ai_chats_ai_chat_template_foreign'
-		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.followup_to],
 			foreignColumns: [table.id],
@@ -4024,7 +4004,6 @@ export type ContentEmbeddings = typeof content_embeddings.$inferSelect;
 // Inferred select types for all application tables
 export type ProfileDocumentProjects = typeof profile_document_projects.$inferSelect;
 export type ProfileDocumentFiles = typeof profile_document_files.$inferSelect;
-export type AiChatTemplates = typeof ai_chat_templates.$inferSelect;
 export type AiPrompts = typeof ai_prompts.$inferSelect;
 export type CollectedData = typeof collected_data.$inferSelect;
 export type Config = typeof config.$inferSelect;

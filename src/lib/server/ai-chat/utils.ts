@@ -221,8 +221,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 	// Prepare replacements (use empty objects as defaults).
 	//
 	// This path re-interpolates a stored chat and has no idea which template it
-	// came from — `ai_chats.ai_chat_template` is null on effectively every row
-	// since templates moved into code. So it takes the conservative reading:
+	// came from — templates moved into code in 2026-03, and the column that used
+	// to record it has since been dropped. So it takes the conservative reading:
 	// withholding a held-back skill from an analysis is recoverable, putting one
 	// into a document the applicant sends is not.
 	const variables = {
@@ -241,9 +241,10 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 }
 
 /**
- * Create and fully generate an AI chat instance using prompt templates from ai_chat_templates
+ * Create and fully generate an AI chat instance using the prompt templates in
+ * prompt-templates.ts.
  * Orchestrates the entire process:
- * 1. Fetches prompt template from ai_chat_templates by key identifier
+ * 1. Looks the prompt template up by key in prompt-templates.ts
  * 2. Fetches collected_data for the profile to get schema and data
  * 3. Merges standard variables (schema, data) with custom variables
  * 4. Interpolates prompts with all variables (stringifying JSON as needed)
@@ -253,7 +254,7 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
  * 8. Returns the complete ai_chats record
  *
  * @param profileId - The profile ID for this AI chat
- * @param promptKey - The unique key identifier from ai_chat_templates table
+ * @param promptKey - Key into `promptTemplates` in prompt-templates.ts
  * @param customVariables - Optional custom variables (strings or objects) for interpolation and context
  * @param followupTo - Optional parent ai_chats ID if this is a follow-up
  * @returns Object with success status, message, and the created ai_chats record (if successful)

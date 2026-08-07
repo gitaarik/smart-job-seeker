@@ -42,7 +42,7 @@ export async function getProfileIdForSearchTask(searchTaskId: number): Promise<n
  * to the database for debugging and audit purposes.
  *
  * @param profileId - Profile whose `collected_data` seeds the prompt
- * @param promptKey - Template identifier from ai_chat_templates table
+ * @param promptKey - Key into `promptTemplates` in prompt-templates.ts
  * @param customVariables - Variables to interpolate into the prompt template
  * @returns Result with parsed response and aiChatId for database linking
  */
@@ -100,7 +100,7 @@ export async function runProfileAiChat<T>(
  * Looks up the profile from the search_tasks record, then runs the prompt.
  *
  * @param searchTaskId - ID of the job search (used to lookup profile)
- * @param promptKey - Template identifier from ai_chat_templates table
+ * @param promptKey - Key into `promptTemplates` in prompt-templates.ts
  * @param customVariables - Variables to interpolate into the prompt template
  * @returns Result with parsed response and aiChatId for database linking
  *
@@ -141,7 +141,7 @@ export async function createJobScrapingAiChat<T>(
  * Automatically saves prompts and responses for debugging.
  *
  * @param profileId - User's profile ID
- * @param promptKey - Template identifier from ai_chat_templates table
+ * @param promptKey - Key into `promptTemplates` in prompt-templates.ts
  * @param customVariables - Variables to interpolate (job data, preferences, etc.)
  * @returns Result with parsed response and aiChatId for database linking
  */
