@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.1] - 2026-08-07
+
+6 commits since v0.10.0.
+
+### Added
+
+- Canada now available as its own region
+
+### Fixed
+
+- Fixed 53 region classification gaps discovered in testing
+- Fixed changelog entry formatting
+
 ## [0.10.0] - 2026-08-07
 
 Approximately 70 commits since v0.9.0.
