@@ -1,9 +1,32 @@
-# Package Managers
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
-bun.lock
-bun.lockb
+# Prettier ignores node_modules by default and nothing else, so this file was
+# empty and `npm run format` reformatted everything below. That is 42% of the
+# diff a full run produces, and none of it is ours to format.
 
-# Miscellaneous
-static/
+# --- Generated: reformatting these is actively harmful -----------------------
+
+# Drizzle's migration snapshots. check-migrations.ts builds a database from
+# these and compares it against schema.ts; they are drizzle-kit's output and
+# must stay byte-for-byte as it wrote them.
+drizzle/meta/
+
+# npm's output. Reformatting it guarantees a conflict on the next dependency
+# bump and tells npm nothing.
+package-lock.json
+
+# --- Vendored: someone else's code -------------------------------------------
+
+# noVNC, added wholesale for the tunnel viewer. Also excluded from eslint for
+# the same reason.
+static/vnc/
+
+# --- Build output ------------------------------------------------------------
+
+build/
+.svelte-kit/
+dist-scripts/
+
+# --- Data, not source --------------------------------------------------------
+
+db-dumps/
+uploads/
+static/uploads/
