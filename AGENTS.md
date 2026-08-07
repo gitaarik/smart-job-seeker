@@ -58,12 +58,21 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 33 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 30 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,508 errors      |
+| eslint           | `ci/check-lint.sh`    | 1,521 errors      |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
 nags when the real number drops below its baseline so it cannot quietly creep
 back up. New errors fail a PR; the existing backlog is tolerated.
+
+**A count taken in the dev app container is not the count CI sees.**
+`docker-compose.yml` bind-mounts cloud's billing overlay over OSS's stubs at
+`src/lib/server/billing`, `src/routes/api/billing` and `src/routes/(app)/billing`.
+Any tool run inside that container reads the overlay; CI reads the stubs. This
+has now produced a wrong eslint baseline (1,508 vs 1,521 — the entire gap is
+those paths) and a prettier run that reported clean while 13 files were
+unformatted. Before trusting a tree-wide number from the container, ask whether
+it touches those paths.
 
 Within the eslint backlog, two rules are worth reading rather than counting:
 

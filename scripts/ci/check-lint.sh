@@ -31,9 +31,21 @@ set -euo pipefail
 #     when a list reorders, and this app has drag-reordering throughout
 #     (svelte-dnd-action). Some of these 236 are latent bugs, not lint noise.
 #
+# DO NOT set this from a count taken in the dev app container. It will be wrong.
+# docker-compose.yml bind-mounts cloud's billing overlay over OSS's stubs:
+#
+#   ./src/lib/server/billing -> /app/src/lib/server/billing
+#   ./src/routes/api/billing -> /app/src/routes/api/billing
+#   ./src/routes/(app)/billing -> /app/src/routes/(app)/billing
+#
+# so eslint in the container lints the overlay (8 errors) while CI lints the
+# stubs (21). Everything else agrees exactly — 1,500 either way — and the whole
+# 13-error gap is those paths. This baseline is CI's number, which is the one
+# that counts. The same mount had already produced a false-clean prettier run.
+#
 # BASELINE must only ever go DOWN. The script nags when the real count drops
 # below it, so the ratchet cannot quietly slip back up.
-BASELINE=1508
+BASELINE=1521
 
 npx svelte-kit sync
 
