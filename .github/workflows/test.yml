@@ -48,6 +48,12 @@ jobs:
       # survived. Same count-based ratchet.
       - name: Type check (scripts/)
         run: ./scripts/ci/check-scripts.sh
+      # Formatting was unenforced, and three configs disagreed about what it
+      # even was — the tree matched none of them. Now that it is at a fixed
+      # point, gate it, or it drifts straight back. Format only: eslint is a
+      # separate ~1,500-error backlog and is deliberately not run here.
+      - name: Formatting (prettier)
+        run: npx prettier --check .
       # Builds one database from the migration files and another from
       # schema.ts, then compares them. Catches a migration that cannot run on a
       # fresh database — which is how the history came to be un-runnable in the
