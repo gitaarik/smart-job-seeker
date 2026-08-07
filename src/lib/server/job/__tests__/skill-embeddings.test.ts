@@ -79,7 +79,8 @@ vi.mock('drizzle-orm', () => ({ eq: vi.fn((_c: any, v: any) => v) }));
 import {
 	_resetVocabCache,
 	backfillSkillVocabulary,
-	expandProfileSkills
+	expandProfileSkills,
+	EXPANSION_CACHE_MAX
 } from '../skill-embeddings';
 
 // Mirrors normalizeSkill + findExactSkillMatches in
@@ -203,6 +204,54 @@ describe('expandProfileSkills', () => {
 		await expandProfileSkills(['React']);
 		h.cosineSpy.mockClear();
 		await expandProfileSkills(['Python']);
+		expect(h.cosineSpy).toHaveBeenCalled();
+	});
+
+	it('recomputes once an entry passes its TTL', async () => {
+		vi.useFakeTimers();
+		try {
+			await expandProfileSkills(['React']);
+
+			h.cosineSpy.mockClear();
+			vi.advanceTimersByTime(4 * 60 * 1000);
+			await expandProfileSkills(['React']);
+			expect(h.cosineSpy).not.toHaveBeenCalled(); // inside the 5-minute TTL
+
+			h.cosineSpy.mockClear();
+			vi.advanceTimersByTime(2 * 60 * 1000);
+			await expandProfileSkills(['React']);
+			expect(h.cosineSpy).toHaveBeenCalled(); // expired
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	// The TTL alone does not bound the cache — it is only consulted when a key is
+	// read again, and the key is the skill SET, so every set ever seen (including
+	// each intermediate state of a profile being edited) would otherwise persist.
+	it('evicts the least-recently-used entry past the cap', async () => {
+		for (let i = 0; i < EXPANSION_CACHE_MAX; i++) {
+			await expandProfileSkills([`Filler${i}`]);
+			// Each filler joins the vocabulary, so recorded cosine calls would pile
+			// up quadratically over this loop for no assertion's benefit.
+			h.cosineSpy.mockClear();
+		}
+
+		// Touch the oldest entry, making it most-recently-used.
+		await expandProfileSkills(['Filler0']);
+		expect(h.cosineSpy).not.toHaveBeenCalled();
+
+		// One more distinct set overflows the cap by one.
+		await expandProfileSkills(['Overflow']);
+
+		// Filler0 survives because it was just used...
+		h.cosineSpy.mockClear();
+		await expandProfileSkills(['Filler0']);
+		expect(h.cosineSpy).not.toHaveBeenCalled();
+
+		// ...and Filler1, which became the LRU, was the one evicted.
+		h.cosineSpy.mockClear();
+		await expandProfileSkills(['Filler1']);
 		expect(h.cosineSpy).toHaveBeenCalled();
 	});
 });

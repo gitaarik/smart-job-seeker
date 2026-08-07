@@ -55,7 +55,19 @@ let vocab: Map<string, VocabEntry> | null = null;
 // calls expandProfileSkills once per job for the same profile, so without this
 // the full vocab cosine scan would repeat for every job. Short TTL so a mid-run
 // profile edit is picked up reasonably soon.
+//
+// Bounded and LRU-evicted. The TTL alone does not bound this: it is only checked
+// when a key is read again, so every skill set ever seen — including each
+// intermediate state of a profile being edited — otherwise leaves a permanent
+// entry holding its expanded list. Invisible at 19 profiles, a steady leak in a
+// worker that runs for weeks.
+//
+// LRU rather than plain insertion-order eviction because the access pattern is
+// skewed: one matching run reuses a single profile's entry across thousands of
+// jobs, and a burst of other profiles must not evict the one in active use.
 const EXPANSION_TTL_MS = 5 * 60 * 1000;
+/** Exported so the eviction test tracks the real cap rather than a copy of it. */
+export const EXPANSION_CACHE_MAX = 500;
 const expansionCache = new Map<string, { ts: number; result: string[] }>();
 
 function expansionKey(skills: string[]): string {
@@ -63,6 +75,32 @@ function expansionKey(skills: string[]): string {
 		.map((s) => s.trim().toLowerCase())
 		.sort()
 		.join('|');
+}
+
+/** Cached expansion for `key`, or null if absent or past its TTL. */
+function readExpansion(key: string): string[] | null {
+	const hit = expansionCache.get(key);
+	if (!hit) return null;
+	if (Date.now() - hit.ts >= EXPANSION_TTL_MS) {
+		expansionCache.delete(key);
+		return null;
+	}
+	// Re-insert to mark most-recently-used; Map iterates in insertion order. The
+	// original `ts` rides along, so recency does not extend the TTL.
+	expansionCache.delete(key);
+	expansionCache.set(key, hit);
+	return hit.result;
+}
+
+/** Store an expansion, evicting the least-recently-used entries past the cap. */
+function writeExpansion(key: string, result: string[]): void {
+	expansionCache.delete(key);
+	expansionCache.set(key, { ts: Date.now(), result });
+	while (expansionCache.size > EXPANSION_CACHE_MAX) {
+		const lru = expansionCache.keys().next().value;
+		if (lru === undefined) break;
+		expansionCache.delete(lru);
+	}
 }
 
 async function ensureVocabLoaded(): Promise<Map<string, VocabEntry>> {
@@ -180,10 +218,8 @@ export async function expandProfileSkills(profileSkills: string[]): Promise<stri
 	}
 
 	const key = expansionKey(profileSkills);
-	const cached = expansionCache.get(key);
-	if (cached && Date.now() - cached.ts < EXPANSION_TTL_MS) {
-		return cached.result;
-	}
+	const cached = readExpansion(key);
+	if (cached !== null) return cached;
 
 	try {
 		const cache = await ensureVocabLoaded();
@@ -199,7 +235,7 @@ export async function expandProfileSkills(profileSkills: string[]): Promise<stri
 			}
 		}
 		const result = [...expanded];
-		expansionCache.set(key, { ts: Date.now(), result });
+		writeExpansion(key, result);
 		return result;
 	} catch (err) {
 		console.warn('[skill-embeddings] expansion failed, falling back to exact skills:', err);
